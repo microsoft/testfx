@@ -1,0 +1,6 @@
+<RunSettings>
+ <MSAppContainerTest>
+	<DisableAppContainerCheck>true</DisableAppContainerCheck>
+	<EnableDerivedTypesFromOtherAssemblies>true</EnableDerivedTypesFromOtherAssemblies>
+ </MSAppContainerTest>
+</RunSettings>

@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SrcRoot>..\..\..\..</SrcRoot>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{599833DC-EC5A-40CA-B5CF-DEF719548EEF}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MSTestAdapter.PlatformServices.Desktop.UnitTests</RootNamespace>
+    <AssemblyName>MSTestAdapter.PlatformServices.Desktop.UnitTests</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
+    <IsCodedUITest>False</IsCodedUITest>
+    <TestProjectType>UnitTest</TestProjectType>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>$(SrcRoot)\FinalPublicKey.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.QualityTools.Testing.Fakes, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Fakes">
+      <HintPath>FakesAssemblies\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Fakes.dll</HintPath>
+    </Reference>
+    <Reference Include="Moq">
+      <HintPath>..\..\..\..\internalApis\Moq\v4.2\Moq.dll</HintPath>
+    </Reference>
+    <Reference Include="mscorlib.4.1.0.0.Fakes">
+      <HintPath>FakesAssemblies\mscorlib.4.1.0.0.Fakes.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Aliases>FrameworkV1</Aliases>
+    </Reference>
+    <Reference Include="msdia140typelib_clr0200, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\internalApis\vctools\ref\v2.0\ret\msdia140typelib_clr0200.dll</HintPath>
+    </Reference>
+    <Reference Include="System.4.1.0.0.Fakes">
+      <HintPath>FakesAssemblies\System.4.1.0.0.Fakes.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyResolverTests.cs" />
+    <Compile Include="Deployment\DeploymentItemTests.cs" />
+    <Compile Include="Deployment\TestRunDirectoriesTests.cs" />
+    <Compile Include="Extensions\ExceptionExtensionsTests.cs" />
+    <Compile Include="Services\DesktopAdapterSettingsTests.cs" />
+    <Compile Include="Services\DesktopSettingsProviderTests.cs" />
+    <Compile Include="Services\DesktopTestDataSourceTests.cs" />
+    <Compile Include="Services\DesktopTestContextImplTests.cs" />
+    <Compile Include="Services\DesktopTestDeploymentTests.cs" />
+    <Compile Include="Services\DesktopTestSourceHostTests.cs" />
+    <Compile Include="Services\DesktopTestSourceTests.cs" />
+    <Compile Include="Utilities\DeploymentItemUtilityTests.cs" />
+    <Compile Include="Services\DesktopFileOperationsTests.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilities\DeploymentUtilityTests.cs" />
+    <Compile Include="Utilities\FileUtilityTests.cs" />
+    <Compile Include="Utilities\VSInstallationUtilitiesTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="DataTestSourceFile.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(SrcRoot)\FinalPublicKey.snk" />
+    <Fakes Include="Fakes\System.fakes" />
+    <Fakes Include="Fakes\mscorlib.fakes" />
+    <Fakes Include="Fakes\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.fakes" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\sdk\ObjectModel\TestPlatform.ObjectModel.Desktop.csproj">
+      <Project>{5836aece-38e4-43fa-aaa6-868b1d50c01a}</Project>
+      <Name>TestPlatform.ObjectModel.Desktop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Adapter\MSTestAdapter.PlatformServices.Desktop\MSTestAdapter.PlatformServices.Desktop.csproj">
+      <Project>{b0fce474-14bc-449a-91ea-a433342c0d63}</Project>
+      <Name>MSTestAdapter.PlatformServices.Desktop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Adapter\MSTestAdapter.PlatformServices.Interface\MSTestAdapter.PlatformServices.Interface.csproj">
+      <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
+      <Name>MSTestAdapter.PlatformServices.Interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\TestFramework\UnitTestFramework.Extension.Desktop\UnitTestFramework.Extension.Desktop.csproj">
+      <Project>{a7ea583b-a2b0-47da-a058-458f247c7575}</Project>
+      <Name>UnitTestFramework.Extension.Desktop</Name>
+      <Aliases>FrameworkV2DesktopExtension</Aliases>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\TestFramework\vnext\UnitTestFramework.csproj">
+      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
+      <Name>UnitTestFramework</Name>
+      <Aliases>FrameworkV2</Aliases>
+    </ProjectReference>
+    <ProjectReference Include="..\MSTestAdapter.TestUtilities\MSTestAdapter.TestUtilities.csproj">
+      <Project>{F81C7549-E3A3-4770-AC3F-3BC7356E61E8}</Project>
+      <Name>MSTestAdapter.TestUtilities</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SrcRoot)\TestPlatform.Microbuild.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

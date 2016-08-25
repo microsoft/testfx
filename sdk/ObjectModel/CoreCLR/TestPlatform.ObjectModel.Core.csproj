@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+  </PropertyGroup>
+  <Import Project="$(TestFxRoot)tools\build\TestFx.Settings.targets" />
+  <PropertyGroup>
+    <TestPlatformObjectModelSourcePath>..\</TestPlatformObjectModelSourcePath>
+    <ProjectGuid>{D8EAFCC3-EEA6-4568-9C02-1C726D761770}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.VisualStudio.TestPlatform.ObjectModel</RootNamespace>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.ObjectModel</AssemblyName>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <Define>SILVERLIGHT</Define>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\IFrameworkHandle.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\IRunContext.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\IRunSettings.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ISettingsProvider.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ITestCaseDiscoverySink.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ITestCaseFilterExpression.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ITestDiscoverer.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ITestExecutor.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ITestLog.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\TestsCanceledException.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\TestPlatformFormatException.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\IRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestPlatformCapabilities.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunCompleteEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)CommonResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)CommonResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\DiscoveredTestsEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\DiscoveryCompleteEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\DiscoveryCriteria.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\IDiscoveryRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestRunConfiguration.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestExecutorLauncher.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestPlatform.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestRunRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestRunStatistics.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunChangedEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunCriteria.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunState.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\IMultiTestRunRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Constants.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)RunConfiguration.cs" />
+
+    <Compile Include="$(TestPlatformObjectModelSourcePath)SettingsException.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestRunSettings.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)AttachmentSet.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)DefaultExecutorUriAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)EqtMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)EqtMessages.resx</DependentUpon>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Friends.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)GlobalSuppressions.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\DataCollectionMessageEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\IMessageLogger.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestCaseEndEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestCaseStartEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestRunStartedEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)ResourceHelper.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)SettingsNameAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestMessageLevel.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)ExtensionUriAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)FileExtensionAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\Logger\ITestLogger.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\Logger\ITestLoggerWithParams.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestCase.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\Logger\TestLoggerEvents.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestRunMessageEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)LazyPropertyValue.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestObject.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TraitCollection.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Trait.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestOutcome.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestOutcomeHelper.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestProperty\TestProperty.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestProperty\TestPropertyAttributes.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestResult.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestResultEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)CoreSystem\EqtTraceUap.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)XmlRunSettingsUtilitiesCommon.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\EqtHash.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\StringUtilities.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)ValidateArg.cs">
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)ValidateArg.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)FriendlyNameAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\XmlReaderUtilities.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestRunParameters.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)CoreSystem\StorageFileEventListener.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)CoreSystem\UnitTestEventSource.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Navigation\INavigationData.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Navigation\INavigationSession.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)CommonResources.resx">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)CommonResources.tt</DependentUpon>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)CommonResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)EqtMessages.resx" />
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)ValidateArgStrings.resx">
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)ValidateArgStrings.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(TestPlatformObjectModelSourcePath)CommonResources.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)CommonResources.resx</LastGenOutput>
+    </None>
+    <None Include="$(TestPlatformObjectModelSourcePath)ValidateArg.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)ValidateArg.cs</LastGenOutput>
+    </None>
+    <None Include="$(TestPlatformObjectModelSourcePath)ValidateArgStrings.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)ValidateArgStrings.resx</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FilesToLocalize Include="$(OutDir)\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll">
+      <TranslationFile>$(SrcRoot)\loc\lcl\{Lang}\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll.lcl</TranslationFile>
+    </FilesToLocalize>
+  </ItemGroup>
+  <Import Project="$(TestFxRoot)tools\build\TestFx.targets" />
+</Project>

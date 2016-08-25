@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<tests>
+  <settings>
+    <debugTarget>Local</debugTarget>
+    <configuration>Debug</configuration>
+    <targetPlatform>x86</targetPlatform>
+    <adapter>v1</adapter>
+  </settings>
+</tests>

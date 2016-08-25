@@ -1,0 +1,1 @@
+namespace System.Security.Permissions{}

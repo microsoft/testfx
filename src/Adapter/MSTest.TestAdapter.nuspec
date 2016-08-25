@@ -1,0 +1,90 @@
+﻿<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>MSTest.TestAdapter</id>
+    <version>1.0.4-preview</version>
+    <title>MSTest.TestAdapter</title>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <description>The adapter to discover and execute MSTest Framework based tests. This supports following platforms: Desktop and UWP. </description>
+    <licenseUrl>http://www.microsoft.com/web/webpi/eula/net_library_eula_enu.htm</licenseUrl>
+    <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
+    <copyright>Copyright © Microsoft Corporation</copyright>
+  </metadata>
+  <files>
+    <file src="MSTestAdapter\bin\release\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\_common\" />
+    <file src="MSTestAdapter.PlatformServices.Interface\bin\release\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="build\_common\" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\release\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
+    <file src="..\TestFramework\vnext\bin\release\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\_common\" />
+    <file src="..\TestFramework\UnitTestFramework.Extension.Desktop\bin\release\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\_common" />
+
+    <file src="MSTestAdapter\bin\Release\localize\CHS\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\zh-Hans" />
+    <file src="MSTestAdapter\bin\Release\localize\CHT\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\zh-Hant" />
+    <file src="MSTestAdapter\bin\Release\localize\CSY\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\cs" />
+    <file src="MSTestAdapter\bin\Release\localize\DEU\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\de" />
+    <file src="MSTestAdapter\bin\Release\localize\ESN\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\es" />
+    <file src="MSTestAdapter\bin\Release\localize\FRA\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\fr" />
+    <file src="MSTestAdapter\bin\Release\localize\ITA\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\it" />
+    <file src="MSTestAdapter\bin\Release\localize\JPN\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ja" />
+    <file src="MSTestAdapter\bin\Release\localize\KOR\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ko" />
+    <file src="MSTestAdapter\bin\Release\localize\PLK\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\pl" />
+    <file src="MSTestAdapter\bin\Release\localize\PTB\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\pt" />
+    <file src="MSTestAdapter\bin\Release\localize\RUS\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ru" />
+    <file src="MSTestAdapter\bin\Release\localize\TRK\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\tr" />
+
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\CHS\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\zh-Hans" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\CHT\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\zh-Hant" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\CSY\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\cs" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\DEU\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\de" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\ESN\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\es" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\FRA\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\fr" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\ITA\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\it" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\JPN\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ja" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\KOR\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ko" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\PLK\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\pl" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\PTB\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\pt" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\RUS\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ru" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\localize\TRK\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\tr" />
+
+    <file src="..\TestFramework\vnext\bin\Release\localize\CHS\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\zh-Hans" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\CHT\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\zh-Hant" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\CSY\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\cs" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\DEU\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\de" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\ESN\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\es" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\FRA\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\fr" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\ITA\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\it" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\JPN\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ja" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\KOR\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ko" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\PLK\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\pl" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\PTB\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\pt" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\RUS\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ru" />
+    <file src="..\TestFramework\vnext\bin\Release\localize\TRK\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\tr" />
+
+    <!-- Portable -->
+    <file src="tools\Portable\MSTest.TestAdapter.props" target="build\dotnet\MSTest.TestAdapter.Portable.props" />
+    <file src="MSTestAdapter.PlatformServices.Portable\bin\release\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\dotnet\" />
+
+    <!-- UWP -->
+    <file src="tools\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />
+    <file src="MSTestAdapter.PlatformServices.Universal\bin\release\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\uap10.0\" />
+
+    <!-- Desktop -->
+    <file src="tools\Desktop\MSTest.TestAdapter.props" target="build\net451\MSTest.TestAdapter.props" />
+
+	<!-- Phone 
+	  <file src="tools\Universal\MSTest.TestAdapter.props" target="build\wpa\MSTest.TestAdapter.props" />
+	  -->
+    <!-- Store 
+	  <file src="tools\Universal\MSTest.TestAdapter.props" target="build\win\MSTest.TestAdapter.props" />	
+	  -->
+
+    <!-- PDB files
+    <file src="MSTestAdapter\bin\debug\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" target="build\_common\" />
+    <file src="MSTestAdapter.PlatformServices.Interface\bin\debug\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" target="build\_common\" />
+    <file src="MSTestAdapter.PlatformServices.Desktop\bin\debug\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\_common\" />
+    <file src="..\TestFramework\vnext\bin\debug\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="build\_common\" />
+    <file src="..\TestFramework\UnitTestFramework.Extension.Desktop\bin\debug\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="build\_common" />
+	-->
+  </files>
+</package>

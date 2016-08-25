@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SrcRoot>..\..\..\..</SrcRoot>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{E3C630FE-AF89-4C95-B1B9-2409B1107208}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MSTestAdapter.PlatformServices.Portable.Tests</RootNamespace>
+    <AssemblyName>MSTestAdapter.PlatformServices.Portable.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <IsCodedUITest>False</IsCodedUITest>
+    <TestProjectType>UnitTest</TestProjectType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>$(SrcRoot)\FinalPublicKey.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Aliases>FrameworkV1</Aliases>
+    </Reference>
+    <Reference Include="Moq">
+      <HintPath>..\..\..\..\internalApis\Moq\v4.2\Moq.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Services\PortableFileOperationsTests.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\PortableSettingsProviderTests.cs" />
+    <Compile Include="Services\PortableTestContextImplementationTests.cs" />
+    <Compile Include="Services\PortableTestSourceHostTests.cs" />
+    <Compile Include="Services\PortableTestSourceValidatorTests.cs" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="$(SrcRoot)\FinalPublicKey.snk" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\sdk\ObjectModel\CoreCLR\TestPlatform.ObjectModel.Core.csproj">
+      <Project>{d8eafcc3-eea6-4568-9c02-1c726d761770}</Project>
+      <Name>TestPlatform.ObjectModel.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Adapter\MSTestAdapter.PlatformServices.Interface\MSTestAdapter.PlatformServices.Interface.csproj">
+      <Project>{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}</Project>
+      <Name>MSTestAdapter.PlatformServices.Interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Adapter\MSTestAdapter.PlatformServices.Portable\MSTestAdapter.PlatformServices.Portable.csproj">
+      <Project>{58bdd63d-5e58-4d23-bdf5-592e5e03d29d}</Project>
+      <Name>MSTestAdapter.PlatformServices.Portable</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\TestFramework\UnitTestFramework.Core\UnitTestFramework.Extension.Core.csproj">
+      <Project>{6c9fe494-8315-4667-b3f6-75dc62a62319}</Project>
+      <Name>UnitTestFramework.Extension.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\TestFramework\vnext\UnitTestFramework.csproj">
+      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
+      <Name>UnitTestFramework</Name>
+      <Aliases>FrameworkV2</Aliases>
+    </ProjectReference>
+    <ProjectReference Include="..\MSTestAdapter.TestUtilities\MSTestAdapter.TestUtilities.csproj">
+      <Project>{f81c7549-e3a3-4770-ac3f-3bc7356e61e8}</Project>
+      <Name>MSTestAdapter.TestUtilities</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SrcRoot)\TestPlatform.Microbuild.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

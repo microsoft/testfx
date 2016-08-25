@@ -1,0 +1,3 @@
+﻿<#@ include file = "ValidateArgCommon.tt" #>
+<#+ private const string Namespace = "Microsoft.VisualStudio.TestPlatform.ObjectModel"; #>
+<#+ private const string _resourceNamespace = "Microsoft.VisualStudio.TestPlatform.ObjectModel"; #>

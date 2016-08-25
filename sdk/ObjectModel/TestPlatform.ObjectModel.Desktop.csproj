@@ -1,0 +1,254 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\managed\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('..\..\managed\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
+  <PropertyGroup Condition="'$(BuildForCoreSystem)'!='true'">
+    <AllowCrossTargeting>true</AllowCrossTargeting>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{5836AECE-38E4-43FA-AAA6-868B1D50C01A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <AssemblyName Condition="'$(AssemblyName)'==''">Microsoft.VisualStudio.TestPlatform.ObjectModel</AssemblyName>
+    <UseVsVersion>true</UseVsVersion>
+    <RootNamespace>Microsoft.VisualStudio.TestPlatform.ObjectModel</RootNamespace>
+    <FileAlignment>512</FileAlignment>
+    <CreateMetaAssembly>true</CreateMetaAssembly>
+    <PublishMetaAssembly>true</PublishMetaAssembly>
+    <NoWarn>3008</NoWarn>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SrcRoot>..\..</SrcRoot>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ReferencePath>$(ReferencePath);$(InternalAPIsPath)\vctools\ref\v2.0\ret</ReferencePath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateLCE>true</GenerateLCE>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>$(SrcRoot)\FinalPublicKey.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="msdia140typelib_clr0200">
+      <HintPath>..\..\internalApis\vctools\ref\v2.0\ret\msdia140typelib_clr0200.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.XML" />
+    <Reference Include="System.ServiceModel" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Properties\AssemblyInfo.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\IFrameworkHandle.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\IRunContext.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\IRunSettings.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ISettingsProvider.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ITestCaseDiscoverySink.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ITestCaseFilterExpression.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ITestDiscoverer.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ITestExecutor.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ITestLog.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\TestsCanceledException.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\TestPlatformFormatException.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\IRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestPlatformCapabilities.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunCompleteEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)CommonResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)CommonResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\DiscoveredTestsEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\DiscoveryCompleteEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\DiscoveryCriteria.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\IDiscoveryRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestRunConfiguration.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestExecutorLauncher.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestPlatform.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestRunRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestRunStatistics.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunChangedEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunCriteria.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunState.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\IMultiTestRunRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Constants.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)DataCollectionRunSettings.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)RunConfiguration.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)DataCollectorSettings.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)SettingsException.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestRunSettings.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)AttachmentSet.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)DefaultExecutorUriAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)EqtMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)EqtMessages.resx</DependentUpon>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Friends.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)GlobalSuppressions.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\DataCollectionMessageEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\IMessageLogger.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestCaseEndEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestCaseStartEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestRunStartedEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Navigation\DiaNavigationData.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Navigation\DiaSession.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)ResourceHelper.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)SettingsNameAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestMessageLevel.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)ExtensionUriAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)FileExtensionAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\Logger\ITestLogger.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\Logger\ITestLoggerWithParams.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestCase.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\Logger\TestLoggerEvents.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestRunMessageEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)LazyPropertyValue.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestObject.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TraitCollection.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Trait.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestOutcome.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestOutcomeHelper.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestProperty\TestProperty.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestProperty\TestPropertyAttributes.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestResult.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestResultEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)EqtTrace.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)XmlRunSettingsUtilitiesCommon.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\AssemblyUtilities.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\SuspendCodeCoverage.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\EqtHash.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\StringUtilities.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)ValidateArg.cs">
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)ValidateArg.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)FriendlyNameAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)RollingFileTraceListener.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\XmlRunSettingsUtilities.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\XmlReaderUtilities.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestRunParameters.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Navigation\INavigationData.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Navigation\INavigationSession.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)CommonResources.resx">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)CommonResources.tt</DependentUpon>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)CommonResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)EqtMessages.resx" />
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)ValidateArgStrings.resx">
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)ValidateArgStrings.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(TestPlatformObjectModelSourcePath)CommonResources.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)CommonResources.resx</LastGenOutput>
+    </None>
+    <None Include="$(TestPlatformObjectModelSourcePath)ValidateArg.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)ValidateArg.cs</LastGenOutput>
+    </None>
+    <None Include="$(TestPlatformObjectModelSourcePath)ValidateArgStrings.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)ValidateArgStrings.resx</LastGenOutput>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <FilesToLocalize Include="$(OutDir)\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll">
+      <TranslationFile>$(SrcRoot)\loc\lcl\{Lang}\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll.lcl</TranslationFile>
+    </FilesToLocalize>
+    <FilesToSign Include="$(OutDir)\$(AssemblyName).dll">
+      <Authenticode>Microsoft</Authenticode>
+      <StrongName>StrongName</StrongName>
+    </FilesToSign>
+    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning">
+      <!-- Do not have this show up in Solution Explorer in VS -->
+      <InProject>false</InProject>
+    </SignFilesDependsOn>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <!-- Import the targets -->
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SrcRoot)\TestPlatform.Microbuild.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\managed\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\managed\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props'))" />
+    <Error Condition="!Exists('..\..\managed\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\managed\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
+  </Target>
+  <Target Name="GatherLocalizedOutputsForSigning" Condition="'$(LocalizationEnabled)' == 'true'">
+    <ItemGroup>
+      <FilesToSign Include="$(OutDir)\localize\**\$(AssemblyName).resources.dll">
+        <Authenticode>Microsoft</Authenticode>
+        <StrongName>StrongName</StrongName>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+  <Import Project="..\..\managed\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('..\..\managed\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

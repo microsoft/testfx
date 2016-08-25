@@ -1,0 +1,288 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+   <PropertyGroup>
+     <TestPlatformObjectModelSourcePath>..\</TestPlatformObjectModelSourcePath>
+     <SrcRoot>..\..\..\</SrcRoot>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{AD7A612A-B62F-41EA-A3A5-4A8423ABBE1B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.VisualStudio.TestPlatform.ObjectModel</RootNamespace>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.ObjectModel</AssemblyName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+    <TargetPlatformVersion>10.0.10586.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
+    <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP;SILVERLIGHT</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+	<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UAP;SILVERLIGHT</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+	<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
+    <PlatformTarget>ARM</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\ARM\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP;SILVERLIGHT</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
+    <PlatformTarget>ARM</PlatformTarget>
+    <OutputPath>bin\ARM\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UAP;SILVERLIGHT</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>ARM</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP;SILVERLIGHT</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UAP;SILVERLIGHT</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP;SILVERLIGHT</DefineConstants>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <PlatformTarget>x86</PlatformTarget>
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UAP;SILVERLIGHT</DefineConstants>
+    <Optimize>true</Optimize>
+    <NoWarn>;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup> 
+    <GenerateLCE>true</GenerateLCE> 
+  </PropertyGroup>
+  <PropertyGroup>
+     <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+     <AssemblyOriginatorKeyFile>$(SrcRoot)\FinalPublicKey.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+     <DelaySign>true</DelaySign>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <None Include="$(SrcRoot)\FinalPublicKey.snk" />
+    <None Include="project.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)\Adapter\IFrameworkHandle.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)\Adapter\IRunContext.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)\Adapter\IRunSettings.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)\Adapter\ISettingsProvider.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)\Adapter\ITestCaseDiscoverySink.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)\Adapter\ITestCaseFilterExpression.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)\Adapter\ITestDiscoverer.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)\Adapter\ITestExecutor.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Adapter\ITestLog.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)\Adapter\TestsCanceledException.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)\Adapter\TestPlatformFormatException.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\IRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestPlatformCapabilities.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunCompleteEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)CommonResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)CommonResources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\DiscoveredTestsEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\DiscoveryCompleteEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\DiscoveryCriteria.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\IDiscoveryRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestRunConfiguration.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestExecutorLauncher.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestPlatform.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestRunRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\ITestRunStatistics.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunChangedEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunCriteria.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\TestRunState.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\IMultiTestRunRequest.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Constants.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)RunConfiguration.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)SettingsException.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestRunSettings.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)AttachmentSet.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)DefaultExecutorUriAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)EqtMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)EqtMessages.resx</DependentUpon>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Friends.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)GlobalSuppressions.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\DataCollectionMessageEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\IMessageLogger.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestCaseEndEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestCaseStartEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestRunStartedEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)ResourceHelper.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)SettingsNameAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestMessageLevel.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)ExtensionUriAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)FileExtensionAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\Logger\ITestLogger.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\Logger\ITestLoggerWithParams.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestCase.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Client\Logger\TestLoggerEvents.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestRunMessageEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)LazyPropertyValue.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestObject.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TraitCollection.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Trait.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestOutcome.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestOutcomeHelper.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestProperty\TestProperty.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestProperty\TestPropertyAttributes.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestResult.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Logging\TestResultEventArgs.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)CoreSystem\EqtTraceUap.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)XmlRunSettingsUtilitiesCommon.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\EqtHash.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\StringUtilities.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)ValidateArg.cs">
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)ValidateArg.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)FriendlyNameAttribute.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Utilities\XmlReaderUtilities.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)TestRunParameters.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)CoreSystem\StorageFileEventListener.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)CoreSystem\UnitTestEventSource.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Navigation\INavigationData.cs" />
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Navigation\INavigationSession.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)CommonResources.resx">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)CommonResources.tt</DependentUpon>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)CommonResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)EqtMessages.resx" />
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="$(TestPlatformObjectModelSourcePath)ValidateArgStrings.resx">
+      <DependentUpon>$(TestPlatformObjectModelSourcePath)ValidateArgStrings.tt</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(TestPlatformObjectModelSourcePath)CommonResources.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)CommonResources.resx</LastGenOutput>
+    </None>
+    <None Include="$(TestPlatformObjectModelSourcePath)ValidateArg.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)ValidateArg.cs</LastGenOutput>
+    </None>
+    <None Include="$(TestPlatformObjectModelSourcePath)ValidateArgStrings.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>$(TestPlatformObjectModelSourcePath)ValidateArgStrings.resx</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(TestPlatformObjectModelSourcePath)Properties\AssemblyInfo.cs" />
+    <Content Include="$(TestPlatformObjectModelSourcePath)Properties\TestPlatform.ObjectModel.UAP.NonRazzle.rd.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <FilesToSign Include="$(OutDir)\$(AssemblyName).dll">
+      <Authenticode>Microsoft</Authenticode>
+      <StrongName>StrongName</StrongName>
+    </FilesToSign>
+  </ItemGroup>
+  <ItemGroup>
+    <FilesToLocalize Include="$(OutDir)\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll">
+      <TranslationFile>$(SrcRoot)\loc\lcl\{Lang}\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll.lcl</TranslationFile>
+    </FilesToLocalize>
+  </ItemGroup>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
+    <VisualStudioVersion>14.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
+  <Import Project="$(SrcRoot)\TestPlatform.Microbuild.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

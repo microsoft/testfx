@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>MSTest.TestAdapter.Dnx</id>
+    <version>1.0</version>
+    <title>MSTest TestAdapter Dnx</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A nuget package targeting running MSTest tests on asp.net vnext projects.</description>
+    <releaseNotes>Introducing MSTest tests for asp.net vnext projects.</releaseNotes>
+    <copyright>Copyright 2015</copyright>
+  </metadata>
+  <files>	
+	<file src="MSTestAdapter\bin\Debug\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="lib\dotnet\" />
+    <file src="MSTestAdapter.PlatformServices.Interface\bin\Debug\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="lib\dotnet\" />
+	<file src="MSTestAdapter.PlatformServices.Portable\bin\Debug\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="lib\dotnet\" />
+	
+	<!-- Pdb files -->
+	<file src="MSTestAdapter\bin\Debug\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" target="lib\dotnet\" />
+    <file src="MSTestAdapter.PlatformServices.Interface\bin\Debug\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" target="lib\dotnet\" />
+	<file src="MSTestAdapter.PlatformServices.Portable\bin\Debug\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="lib\dotnet\" />
+  </files>
+</package>

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>MSTest.TestAdapter.Dotnet</id>
+    <version>1.0.4-preview</version>
+    <title>MSTest.TestAdapter.Dotnet</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>A nuget package targeting running MSTest tests on Dotnet vnext projects.</description>
+    <licenseUrl>http://www.microsoft.com/web/webpi/eula/net_library_eula_enu.htm</licenseUrl>
+    <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
+    <copyright>Copyright © Microsoft Corporation</copyright>
+  </metadata>
+  <files>	
+	<file src="MSTestAdapter\bin\Release\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="lib\dotnet\" />
+        <file src="MSTestAdapter.PlatformServices.Interface\bin\Release\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="lib\dotnet\" />
+	<file src="MSTestAdapter.PlatformServices.Portable\bin\Release\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="lib\dotnet\" />
+	
+	<file src="MSTestAdapter\bin\Release\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="lib\net451\" />
+        <file src="MSTestAdapter.PlatformServices.Interface\bin\Release\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="lib\net451\" />
+	<file src="MSTestAdapter.PlatformServices.Desktop\bin\Release\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="lib\net451\" />
+	<!-- Added the below so source navigation works in dotnet-test scenarios -->
+	<file src="..\..\internalApis\vctools\ref\v2.0\ret\msdia140typelib_clr0200.dll" target="lib\net451\" />
+  </files>
+</package>
