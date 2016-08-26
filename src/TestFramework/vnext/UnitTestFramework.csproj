@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+  </PropertyGroup>
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <PropertyGroup>
+    <ProjectGuid>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework</AssemblyName>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="FrameworkMessages.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FrameworkMessages.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DataAccessMethod.cs" />
+    <Compile Include="ExpectedExceptionAttribute.cs" />
+    <Compile Include="ExpectedExceptionBaseAttribute.cs" />
+    <Compile Include="Friends.cs" />
+    <Compile Include="GenericParameterHelper.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="CategoryAttribute.cs" />
+    <Compile Include="AssertFailedException.cs" />
+    <Compile Include="Assertion.cs" />
+    <Compile Include="StringAssertion.cs" />
+    <Compile Include="CollectionsAssertion.cs" />
+    <Compile Include="UnitTestOutcome.cs" />
+    <Compile Include="FrameworkMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FrameworkMessages.resx</DependentUpon>
+    </Compile>
+    <Compile Include="VSTestAttributes.cs" />
+    <Compile Include="DataTestMethodAttribute.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(SrcRoot)\FinalPublicKey.snk" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <FilesToLocalize Include="$(OutDir)\Microsoft.VisualStudio.TestPlatform.TestFramework.dll">
+      <TranslationFile>$(TestFxRoot)\loc\lcl\{Lang}\Microsoft.VisualStudio.TestPlatform.TestFramework.dll.lcl</TranslationFile>
+      <HasLceComments>false</HasLceComments>
+    </FilesToLocalize>
+  </ItemGroup>
+  <Target Name="AfterBuild">
+    <Message Text="Creating nuget package for $(AssemblyName)" />
+    <Copy SourceFiles="UnitTestFramework.nuspec" DestinationFolder="$(OutputPath)" />
+    <MakeDir Directories="$(OutputPath)\Packages" />
+    <!---Exec Command="$(ToolsPath)\.nuget\nuget.exe pack $(OutputPath)\UnitTestFramework.nuspec -OutputDirectory $(OutputPath)\Packages -NoPackageAnalysis" WorkingDirectory="$(ProjectDir)" /-->
+  </Target>
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+</Project>

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>93f6db7b-1636-4aba-ba64-1ae9980f48a9</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>MSTestAdapter.PlatformServices.CoreSystem</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)MarshalByRefObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SerializableAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CoreSettingsProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTestContextImplementation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTestDataSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTestDeployment.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTestSourceHost.cs" />
+  </ItemGroup>
+</Project>
