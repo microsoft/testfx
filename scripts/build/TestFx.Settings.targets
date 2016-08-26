@@ -16,9 +16,9 @@
     <GenerateLCE>true</GenerateLCE>
     <DelaySign>true</DelaySign>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(TestFxRoot)tools\build\key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(TestFxRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
 
-    <OutputPath Condition="$(OutputPath) == ''">$(TestFxRoot)artifacts\bin\$(Configuration)</OutputPath>
-    <IntermediatePath Condition="$(IntermediatePath) == ''">$(TestFxRoot)artifacts\obj\$(Configuration)</IntermediatePath>
+    <OutputPath Condition="$(OutputPath) == ''">$(TestFxRoot)artifacts\$(MSBuildProjectName)\bin\$(Configuration)</OutputPath>
+    <IntermediatePath Condition="$(IntermediatePath) == ''">$(TestFxRoot)artifacts\$(MSBuildProjectName)\obj\$(Configuration)</IntermediatePath>
   </PropertyGroup>    
 </Project>

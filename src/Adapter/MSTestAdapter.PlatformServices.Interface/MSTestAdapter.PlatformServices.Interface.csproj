@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
   </PropertyGroup>
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
   <PropertyGroup>
     <ProjectGuid>{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -29,10 +30,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\sdk\ObjectModel\CoreCLR\TestPlatform.ObjectModel.Core.csproj">
-      <Project>{d8eafcc3-eea6-4568-9c02-1c726d761770}</Project>
-      <Name>TestPlatform.ObjectModel.Core</Name>
-    </ProjectReference>
+    <Reference Include="$(TestFxRoot)sdk\TestPlatform.ObjectModel.Core\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\TestFramework\UnitTestFramework.Core\UnitTestFramework.Extension.Core.csproj">
       <Project>{6c9fe494-8315-4667-b3f6-75dc62a62319}</Project>
       <Name>UnitTestFramework.Extension.Core</Name>
@@ -42,5 +42,5 @@
       <Name>UnitTestFramework</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(TestFxRoot)tools\build\TestFx.targets" />
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>
