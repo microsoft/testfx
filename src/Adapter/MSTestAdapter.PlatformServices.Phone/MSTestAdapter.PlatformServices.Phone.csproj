@@ -12,8 +12,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
-    <TargetPlatformVersion>8.1</TargetPlatformVersion>
     <ProjectTypeGuids>{76F1466A-8B6D-4E39-A767-685A06062A39};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
@@ -29,8 +30,5 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(TargetPlatformIdentifier)' == '' ">
-    <TargetPlatformIdentifier>WindowsPhoneApp</TargetPlatformIdentifier>
-  </PropertyGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>
