@@ -20,5 +20,5 @@
 
     <OutputPath Condition="$(OutputPath) == ''">$(TestFxRoot)artifacts\$(MSBuildProjectName)\bin\$(Configuration)</OutputPath>
     <IntermediatePath Condition="$(IntermediatePath) == ''">$(TestFxRoot)artifacts\$(MSBuildProjectName)\obj\$(Configuration)</IntermediatePath>
-  </PropertyGroup>    
+  </PropertyGroup>
 </Project>
