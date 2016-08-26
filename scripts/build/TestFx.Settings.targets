@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\</TestFxRoot>
+  </PropertyGroup>
+
+  <Import Project="$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+
+  <PropertyGroup>
+    <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <FileAlignment>512</FileAlignment>
+    <GenerateLCE>true</GenerateLCE>
+    <DelaySign>true</DelaySign>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$(TestFxRoot)tools\build\key.snk</AssemblyOriginatorKeyFile>
+
+    <OutputPath Condition="$(OutputPath) == ''">$(TestFxRoot)artifacts\bin\$(Configuration)</OutputPath>
+    <IntermediatePath Condition="$(IntermediatePath) == ''">$(TestFxRoot)artifacts\obj\$(Configuration)</IntermediatePath>
+  </PropertyGroup>    
+</Project>

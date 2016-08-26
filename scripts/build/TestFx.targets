@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+
+  <Import Project="$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
+
+  <ItemGroup>
+    <FilesToSign Include="$(OutDir)\$(AssemblyName).dll">
+      <Authenticode>Microsoft</Authenticode>
+      <StrongName>StrongName</StrongName>
+    </FilesToSign>
+    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning">
+      <!-- Do not have this show up in Solution Explorer in VS -->
+      <InProject>false</InProject>
+    </SignFilesDependsOn>
+  </ItemGroup>
+
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props'))" />
+    <Error Condition="!Exists('$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
+  </Target>
+
+  <Target Name="GatherLocalizedOutputsForSigning" Condition="'$(LocalizationEnabled)' == 'true'">
+    <ItemGroup>
+      <FilesToSign Include="$(OutDir)\localize\**\$(AssemblyName).resources.dll">
+        <Authenticode>Microsoft</Authenticode>
+        <StrongName>StrongName</StrongName>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
+  <!-- Generate AssemblyInfo.cs -->
+  <PropertyGroup>
+    <BuildNumber Condition=" '$(BuildNumber)' == '' ">0.1</BuildNumber>
+    <MajorVersion>14.0</MajorVersion>
+    <AssemblyVersion>$(MajorVersion).0.0</AssemblyVersion>
+    <BuildVersion>$(MajorVersion).$(BuildNumber)</BuildVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyVersionAttribute Include="System.Reflection.AssemblyVersionAttribute">
+      <_Parameter1>$(AssemblyVersion)</_Parameter1>
+    </AssemblyVersionAttribute>
+    <AssemblyVersionAttribute Include="System.Reflection.AssemblyFileVersionAttribute">
+      <_Parameter1>$(BuildVersion)</_Parameter1>
+    </AssemblyVersionAttribute>
+    <AssemblyVersionAttribute Include="System.Reflection.AssemblyInformationalVersionAttribute">
+      <_Parameter1>$(BuildVersion)</_Parameter1>
+    </AssemblyVersionAttribute>
+  </ItemGroup>
+  <Target Name="GenerateAssemblyInfoFile">
+    <WriteCodeFragment AssemblyAttributes="@(AssemblyVersionAttribute)" Language="C#" OutputFile="$(MSBuildProjectDirectory)\GlobalAssemblyInfo.cs">
+      <Output TaskParameter="OutputFile" ItemName="Compile" />
+      <Output TaskParameter="OutputFile" ItemName="FileWrites" />
+    </WriteCodeFragment>
+  </Target>
+  <PropertyGroup>
+    <CompileDependsOn>GenerateAssemblyInfoFile;$(CompileDependsOn)</CompileDependsOn>
+  </PropertyGroup>
+</Project>
