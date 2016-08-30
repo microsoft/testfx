@@ -34,7 +34,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         [TestMethod]
         public void GetPropertiesShouldReturnDeploymentInformation()
         {
-            var properties = this.settingsProvider.GetProperties();
+            // this is a base case and we just validating that properties does not remain uninitialised,
+            // so passing 'null' source will also suffice.
+            var properties = this.settingsProvider.GetProperties(null);
 
             Assert.IsNotNull(properties);
             Assert.IsTrue(properties.Count > 0);

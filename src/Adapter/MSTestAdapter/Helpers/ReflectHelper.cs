@@ -127,10 +127,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             if (attributes == null)
             {
                 // TODO: mkolt: important: consider beter way. When running ObjectModel\Common tests I get this.
-                if (EqtTrace.IsWarningEnabled)
-                {
-                    EqtTrace.Warning("ReflectHelper.DefinesAttributeDerivedFrom: this does not really work when we failed to get attribute cache. Lose attribute inheritance and fall into 'type defines Attribute model', so that at least do something, not the best...");
-                }
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("ReflectHelper.DefinesAttributeDerivedFrom: this does not really work when we failed to get attribute cache. Lose attribute inheritance and fall into 'type defines Attribute model', so that at least do something, not the best...");
 
                 // If we could not obtain attrs in a fast (with cache) way, use slow reflection directly.
                 return type.GetTypeInfo().IsDefined(baseAttributeType, inherit);
@@ -198,10 +195,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             if (attributes == null)
             {
                 // TODO: mkolt: important: consider beter way. When running ObjectModel\Common tests I get this.
-                if (EqtTrace.IsWarningEnabled)
-                {
-                    EqtTrace.Warning("ReflectHelper.DefinesAttributeDerivedFrom: this does not really work when we failed to get attribute cache. Lose attribute inheritance and fall into 'type defines Attribute model', so that at least do something, not the best...");
-                }
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("ReflectHelper.DefinesAttributeDerivedFrom: this does not really work when we failed to get attribute cache. Lose attribute inheritance and fall into 'type defines Attribute model', so that at least do something, not the best...");
 
                 // If we could not obtain attrs in a fast (with cache) way, use slow reflection directly.
                 return memberInfo.IsDefined(baseAttributeType, inherit);
@@ -602,11 +596,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                                 ": (Failed to get exception description due to an exception of type " +
                                     ex2.GetType().FullName + ')';
                         }
-                        if (EqtTrace.IsWarningEnabled)
-                        {
-                            EqtTrace.Warning("Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}",
-                                memberInfo.GetType().FullName, description);
-                        }
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
+                            "Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}",
+                            memberInfo.GetType().FullName,
+                            description);
 
                         // Since we cannot check by attribute names, do it in reflection way.
                         // Note 1: this will not work for different version of assembly but it is better than nothing.

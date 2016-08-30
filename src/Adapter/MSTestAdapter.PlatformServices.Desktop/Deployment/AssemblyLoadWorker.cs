@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
                     if (declaringType != null)
                     {
                         string attributeName = declaringType.FullName;
-                        if (string.Equals(attributeName, Constants.TargetFrameworkAttributeFullName, StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(attributeName, PlatformServices.Constants.TargetFrameworkAttributeFullName, StringComparison.OrdinalIgnoreCase))
                         {
                             dotNetVersion = data.ConstructorArguments[0].Value.ToString();
                             break;

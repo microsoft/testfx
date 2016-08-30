@@ -2,6 +2,14 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    extern alias FrameworkV2CoreExtension;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+
     using System;
     using System.Collections.Generic;
     using System.Reflection;
@@ -12,10 +20,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-    
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
+
     [TestClass]
     public class TestMethodFilterTests
     {
@@ -144,7 +152,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         internal class DummyTestClassWithTestMethods
         {
-            public UTF.TestContext TestContext { get; set; }
+            public UTFExtension.TestContext TestContext { get; set; }
 
             [UTF.TestMethod]
             public void TestMethod()

@@ -7,7 +7,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Reflection;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Navigation;
 
     /// <summary>
     /// The file operations.

@@ -2,11 +2,17 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 {
+    extern alias FrameworkV1;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    
     using System;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
     
     /// <summary>
     /// Tests for <see cref="ExceptionExtensions"/> class.

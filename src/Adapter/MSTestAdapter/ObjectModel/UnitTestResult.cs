@@ -89,6 +89,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public string StandardOut { get; internal set; }
 
         /// <summary>
+        /// Gets the Standard Error of the result
+        /// </summary>
+        public string StandardError { get; internal set; }
+
+        /// <summary>
         /// Gets the debug trace of the result 
         /// </summary>
         public string DebugTrace { get; internal set; }
@@ -138,6 +143,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             if (!string.IsNullOrEmpty(this.StandardOut))
             {
                 TestResultMessage message = new TestResultMessage(TestResultMessage.StandardOutCategory, this.StandardOut);
+                testResult.Messages.Add(message);
+            }
+            if (!string.IsNullOrEmpty(this.StandardError))
+            {
+                TestResultMessage message = new TestResultMessage(TestResultMessage.StandardErrorCategory, this.StandardError);
                 testResult.Messages.Add(message);
             }
 

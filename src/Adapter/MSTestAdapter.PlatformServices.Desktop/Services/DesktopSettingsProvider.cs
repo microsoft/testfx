@@ -59,9 +59,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             settings = MSTestAdapterSettings.ToSettings(reader);
         }
 
-        public IDictionary<string, object> GetProperties()
+        public IDictionary<string, object> GetProperties(string source)
         {
-            return TestDeployment.GetDeploymentInformation();
+            return TestDeployment.GetDeploymentInformation(source);
         }
 
         public const string SettingsName = "MSTestV2";

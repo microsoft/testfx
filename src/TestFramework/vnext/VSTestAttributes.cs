@@ -335,6 +335,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public string LogOutput { get; set; }
 
         /// <summary>
+        /// Gets or sets the output of the message logged by test code.
+        /// </summary>
+        public string LogError { get; set; }
+
+        /// <summary>
         /// Gets or sets the debug traces by test code.
         /// </summary>
         public string DebugTrace { get; set; }

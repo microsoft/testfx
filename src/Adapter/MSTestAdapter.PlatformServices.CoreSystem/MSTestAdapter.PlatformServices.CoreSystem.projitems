@@ -16,5 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTestDataSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTestDeployment.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTestSourceHost.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTraceListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTraceListenerManager.cs" />
   </ItemGroup>
 </Project>

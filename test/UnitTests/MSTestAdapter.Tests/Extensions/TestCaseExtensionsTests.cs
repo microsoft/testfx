@@ -2,11 +2,16 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 {
+    extern alias FrameworkV1;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+
     using System;
     using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
     using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
     [TestClass]

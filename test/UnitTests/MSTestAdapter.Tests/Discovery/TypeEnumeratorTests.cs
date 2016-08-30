@@ -2,6 +2,15 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -13,11 +22,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
     using Moq;
 
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class TypeEnumeratorTests
@@ -192,9 +200,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             // Setup mocks
             this.mockReflectHelper.Setup(
-                rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(IgnoreAttribute), false)).Returns(false);
+                rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), false)).Returns(false);
             this.mockReflectHelper.Setup(
-                rh => rh.IsAttributeDefined(methodInfo, typeof(IgnoreAttribute), false)).Returns(false);
+                rh => rh.IsAttributeDefined(methodInfo, typeof(UTF.IgnoreAttribute), false)).Returns(false);
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
 

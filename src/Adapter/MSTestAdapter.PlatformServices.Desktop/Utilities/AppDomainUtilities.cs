@@ -37,7 +37,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             string assemblyVersionString = GetTargetFrameworkVersionString(testSource);
             if (GetTargetFrameworkVersionFromVersionString(assemblyVersionString).CompareTo(version45) > 0)
             {
-                PropertyInfo pInfo = typeof(AppDomainSetup).GetProperty(Constants.TargetFrameworkName);
+                PropertyInfo pInfo = typeof(AppDomainSetup).GetProperty(PlatformServices.Constants.TargetFrameworkName);
                 if (pInfo != null)
                 {
                     pInfo.SetValue(setup, assemblyVersionString, null);
@@ -121,9 +121,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <returns>Framework Version</returns>
         internal static Version GetTargetFrameworkVersionFromVersionString(string version)
         {
-            if (version.Length > Constants.DotNetFrameWorkStringPrefix.Length + 1)
+            if (version.Length > PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1)
             {
-                string versionPart = version.Substring(Constants.DotNetFrameWorkStringPrefix.Length + 1);
+                string versionPart = version.Substring(PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1);
                 return new Version(versionPart);
             }
 

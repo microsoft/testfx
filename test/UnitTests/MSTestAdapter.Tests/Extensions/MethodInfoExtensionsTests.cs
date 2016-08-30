@@ -2,15 +2,24 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    extern alias FrameworkV2CoreExtension;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+
     using System;
     using System.Reflection;
     using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
     
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
+
     [TestClass]
     public class MethodInfoExtensionsTests
     {
@@ -400,20 +409,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             {
             }
 
-            public static int PublicStaticMethodWithTCReturningInt(UTF.TestContext tc)
+            public static int PublicStaticMethodWithTCReturningInt(UTFExtension.TestContext tc)
             {
                 return 0;
             }
 
-            public static void PublicStaticMethodWithTC(UTF.TestContext tc)
+            public static void PublicStaticMethodWithTC(UTFExtension.TestContext tc)
             {
             }
 
-            public async static Task PublicStaticAsyncTaskMethodWithTC(UTF.TestContext tc)
+            public async static Task PublicStaticAsyncTaskMethodWithTC(UTFExtension.TestContext tc)
             {
             }
 
-            public async static void PublicStaticAsyncVoidMethodWithTC(UTF.TestContext tc)
+            public async static void PublicStaticAsyncVoidMethodWithTC(UTFExtension.TestContext tc)
             {
             }
 

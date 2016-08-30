@@ -18,11 +18,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// Reader that can be used to read current node and all its descendants,
         /// to load the settings from.</param>
         void Load(XmlReader reader);
-        
+
         /// <summary>
         /// The set of properties/settings specific to the platform, that will be surfaced to the user through the test context.
         /// </summary>
+        /// <param name="source">
+        /// source is used to find application base directory used for setting test context properties.
+        /// </param>
         /// <returns></returns>
-        IDictionary<string, object> GetProperties();
+        IDictionary<string, object> GetProperties(string source);
     }
 }

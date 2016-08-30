@@ -2,6 +2,19 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    extern alias FrameworkV2CoreExtension;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    using Ignore = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute;
+
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -14,12 +27,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
     using Moq;
 
     using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
     using MSTest.TestAdapter;
 
     [TestClass]
@@ -59,7 +73,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region RunTests on a list of tests
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForTestWithFilterErrorShouldSendZeroResults()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -77,7 +91,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(0, this.frameworkHandle.TestCaseEndList.Count);
         }
         
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForTestWithFilterShouldSendResultsForFilteredTests()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -98,7 +112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             CollectionAssert.AreEqual(expectedResultList, this.frameworkHandle.ResultsList);
         }
         
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "IgnoredTest", ignore: true);
@@ -111,7 +125,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual("IgnoredTest  Skipped", this.frameworkHandle.ResultsList[0]);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForASingleTestShouldSendSingleResult()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -129,7 +143,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             CollectionAssert.AreEqual(expectedResultList, this.frameworkHandle.ResultsList);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForMultipleTestShouldSendMultipleResults()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -150,7 +164,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 "FailingTest  Failed\r\n  Message: Assert.Fail failed. \r\n  StackTrace:\r\n   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestExecutionManagerTests.DummyTestClass.FailingTest()");
         }
         
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForCancellationTokenCancelledSetToTrueShouldSendZeroResults()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -167,7 +181,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(0, this.frameworkHandle.TestCaseEndList.Count);
         }
         
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsShouldLogResultCleanupWarnings()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClassWithCleanupMethods), "TestMethod");
@@ -180,7 +194,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsTrue(this.frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForTestShouldDeployBeforeExecution()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -201,7 +215,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual("LoadAssembly", this.callers[1], "Deploy should be called before execution.");
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForTestShouldCleanupAfterExecution()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -218,7 +232,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual("Cleanup", this.callers[1], "Cleanup should be called after execution.");
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForTestShouldNotCleanupOnTestFailure()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -231,7 +245,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             testablePlatformService.MockTestDeployment.Verify(td => td.Cleanup(), Times.Never);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForTestShouldLoadSourceFromDeploymentDirectoryIfDeployed()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -253,7 +267,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 Times.Once);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForTestShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -274,7 +288,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 new KeyValuePair<string, object>("webAppUrl", "http://localhost"));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForTestShouldPassInDeploymentInformationAsPropertiesToTheTest()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -285,14 +299,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
 
-            testablePlatformService.MockSettingsProvider.Verify(sp => sp.GetProperties(), Times.Once);
+            testablePlatformService.MockSettingsProvider.Verify(sp => sp.GetProperties(It.IsAny<string>()), Times.Once);
         }
 
         #endregion
 
         #region Run Tests on Sources
 
-        [TestMethod]
+        // Todo: This tests needs to be mocked.
+        [Ignore]
+        [TestMethodV1]
         public void RunTestsForSourceShouldRunTestsInASource()
         {
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
@@ -304,7 +320,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             CollectionAssert.Contains(this.frameworkHandle.ResultsList, "PassingTest  Passed");
         }
 
-        [TestMethod]
+        // Todo: This tests needs to be mocked.
+        [Ignore]
+        [TestMethodV1]
         public void RunTestsForSourceShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
         {
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
@@ -324,17 +342,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 new KeyValuePair<string, object>("webAppUrl", "http://localhost"));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestsForSourceShouldPassInDeploymentInformationAsPropertiesToTheTest()
         {
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-            // Setup mocks.
-            var testablePlatformService = this.SetupTestablePlatformService();
-
             this.TestExecutionManager.RunTests(sources, this.runContext, this.frameworkHandle, this.cancellationToken);
 
-            testablePlatformService.MockSettingsProvider.Verify(sp => sp.GetProperties(), Times.Once);
+            Assert.IsNotNull(DummyTestClass.TestContextProperties);
         }
 
         #endregion
@@ -376,7 +391,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                             return Activator.CreateInstance(type, args);
                         });
 
-            testablePlatformService.MockSettingsProvider.Setup(sp => sp.GetProperties())
+            testablePlatformService.MockSettingsProvider.Setup(sp => sp.GetProperties(It.IsAny<string>()))
                 .Returns(new Dictionary<string, object>());
 
             return testablePlatformService;
@@ -397,9 +412,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         #region Dummy implementation
 
         [UTF.TestClass]
-        public class DummyTestClass
+        internal class DummyTestClass
         {
-            public UTF.TestContext TestContext { get; set; }
+            public UTFExtension.TestContext TestContext { get; set; }
 
             [UTF.TestMethod]
             [UTF.TestCategory("Foo")]

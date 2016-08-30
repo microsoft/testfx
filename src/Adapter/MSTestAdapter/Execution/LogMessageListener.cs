@@ -15,8 +15,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Globalization;
     using System.IO;
 
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 
     /// <summary>
     /// Listens for log messages and Debug.WriteLine
@@ -27,14 +29,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private static LogMessageListener activeRedirector;
         private readonly LogMessageListener previousRedirector;
         private readonly TextWriter redirectLoggerOut;
+        private readonly TextWriter redirectStdErr;
         private readonly bool captureDebugTraces;
 
         /// <summary>
         /// Trace listener to capture Trace.WriteLines in the test cases
         /// </summary>
-#if !TODO
-        private TextWriterTraceListener m_traceListener;
-#endif
+        private ITraceListener traceListener;
+
+        /// <summary>
+        /// Trace listener Manager to perform operation on tracelistener objects.
+        /// </summary>
+        private ITraceListenerManager traceListenerManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LogMessageListener"/> class.
@@ -48,35 +54,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.redirectLoggerOut = new ThreadSafeStringWriter(CultureInfo.InvariantCulture);
             Logger.OnLogMessage += this.redirectLoggerOut.WriteLine;
 
+            this.redirectStdErr = new ThreadSafeStringWriter(CultureInfo.InvariantCulture);
+            Logger.OnLogMessage += this.redirectStdErr.WriteLine;
+
             // Cache the previous redirector if any and replace the trace listener.
             this.previousRedirector = activeRedirector;
 
             if (this.captureDebugTraces)
             {
-#if !TODO
-                m_traceListener = new TextWriterTraceListener(new ThreadSafeStringWriter(CultureInfo.InvariantCulture));
+                traceListener = PlatformServiceProvider.Instance.GetTraceListener(new ThreadSafeStringWriter(CultureInfo.InvariantCulture));
+                traceListenerManager = PlatformServiceProvider.Instance.GetTraceListenerManager(this.redirectLoggerOut, this.redirectStdErr);
 
-                try
+                // If there was a previous LogMessageListener active, remove its
+                // TraceListener (it will be restored when this one is disposed).
+                if (previousRedirector != null && previousRedirector.traceListener != null)
                 {
-                    // If there was a previous ConsoleOutputRedirector active, remove its
-                    // TraceListener (it will be restored when this one is disposed).
-                    if (previousRedirector != null && previousRedirector.m_traceListener != null)
-                    {
-                        Trace.Listeners.Remove(previousRedirector.m_traceListener);
-                    }
-
-                    Trace.Listeners.Add(m_traceListener);
+                    traceListenerManager.Remove(previousRedirector.traceListener);
                 }
-                catch (Exception ex)
-                {
-                    // Catch exceptions if the configuration file is invalid and allow a stack
-                    // trace to show the error on the test method instead of here.
-                    if (!(ex.InnerException is System.Configuration.ConfigurationErrorsException))
-                    {
-                        throw;
-                    }
-                }
-#endif
+                traceListenerManager.Add(traceListener);
             }
 
             activeRedirector = this;
@@ -85,7 +80,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Logger output
         /// </summary>
-        public string LoggerOut => this.redirectLoggerOut.ToString();
+        public string StandardOutput => this.redirectLoggerOut.ToString();
+       
+        /// <summary>
+        /// 'Error' Output from the redirected stream
+        /// </summary>
+        public string StandardError => this.redirectStdErr.ToString();
 
         /// <summary>
         /// 'Trace' Output from the redirected stream
@@ -94,12 +94,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             get
             {
-#if !TODO
-                return (m_traceListener == null || m_traceListener.Writer == null)? 
-                    string.Empty : m_traceListener.Writer.ToString();
-#else
-                return null;
-#endif
+                return (traceListener == null || traceListener.GetWriter() == null)? 
+                    string.Empty : traceListener.GetWriter().ToString();
             }
         }
 
@@ -120,40 +116,38 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             if (disposing)
             {
                 Logger.OnLogMessage -= this.redirectLoggerOut.WriteLine;
+                Logger.OnLogMessage -= this.redirectStdErr.WriteLine;
 
                 this.redirectLoggerOut.Dispose();
+                this.redirectStdErr.Dispose();
 
                 if (this.captureDebugTraces)
                 {
                     try
                     {
-#if !TODO
-                        Trace.Listeners.Remove(m_traceListener);
+                        traceListenerManager.Remove(traceListener);
 
-                        // Restore the previous ConsoleOutputRedirector's TraceListener (if there was one)
-                        if (previousRedirector != null && previousRedirector.m_traceListener != null)
+                        // Restore the previous LogMessageListener's TraceListener (if there was one)
+                        if (previousRedirector != null && previousRedirector.traceListener != null)
                         {
-                            Trace.Listeners.Add(previousRedirector.m_traceListener);
+                            traceListenerManager.Add(previousRedirector.traceListener);
                         }
-#endif
                     }
                     catch (Exception e)
                     {
                         // Catch all exceptions since Dispose should not throw.
-                        if (EqtTrace.IsErrorEnabled)
-                        {
-                            EqtTrace.Error("ConsoleOutputRedirector.Dispose threw exception: {0}", e);
-                        }
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
+                            "ConsoleOutputRedirector.Dispose threw exception: {0}",
+                            e);
                     }
 
-#if !TODO
-                    if (m_traceListener != null)
+                    if (traceListener != null)
                     {
-                        m_traceListener.Close();
-                        m_traceListener.Dispose();
-                        m_traceListener = null;
+                        traceListenerManager.Close(traceListener);
+                        traceListenerManager.Dispose(traceListener);
+                        traceListenerManager = null;
+                        traceListener = null;
                     }
-#endif
                 }
 
                 activeRedirector = this.previousRedirector;

@@ -3,9 +3,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface
 {
     using System.Reflection;
-
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Navigation;
-
+    
     /// <summary>
     /// This service is responsible for any file based operations.
     /// </summary>

@@ -2,15 +2,21 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 {
+    extern alias FrameworkV1;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
     using Moq;
     using System;
     using System.IO;
     using System.Xml;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
 
     [TestClass]
     public class MSTestv1SettingsTests

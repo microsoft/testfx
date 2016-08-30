@@ -66,12 +66,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             }
             catch(Exception ex)
             {
-                if (EqtTrace.IsErrorEnabled)
-                {
-                    EqtTrace.Error(
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
                         "UnitTestExecuter.GetExceptionStackTrace: Exception while getting stack trace for exception type '{0}'",
                         ex.GetType().FullName);
-                }
             }
 
             return null;

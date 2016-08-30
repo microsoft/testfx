@@ -6,12 +6,17 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 {
+    extern alias FrameworkV1;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+
     using System;
     using System.Globalization;
     using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
     [TestClass]
     public class ThreadSafeStringWriterTests

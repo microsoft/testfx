@@ -110,26 +110,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             var result = new RunCleanupResult { Warnings = new List<string>() };
 
-#if Todo
             using (var redirector = new LogMessageListener(this.captureDebugTraces))
             {
                 try
                 {
-#endif
                     this.RunClassCleanupMethods(classInfoCache, result.Warnings);
                     this.RunAssemblyCleanup(assemblyInfoCache, result.Warnings);
-#if Todo
                 }
                 finally
                 {
                     // Replacing the null character with a string.replace should work.
                     // If this does not work for a specific dotnet version a custom function doing the same needs to be put in place.
-                    result.StandardOut = redirector.LoggerOut?.Replace("\0","\\0");
+                    result.StandardOut = redirector.StandardOutput?.Replace("\0","\\0");
+                    result.StandardError = redirector.StandardError?.Replace("\0","\\0");
                     result.DebugTrace = redirector.DebugTrace?.Replace("\0", "\\0");
-
                 }
             }
-#endif
 
             return result;
         }
@@ -184,6 +180,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Gets or sets the standard out of the cleanup methods
         /// </summary>
         internal string StandardOut { get; set; }
+
+        /// <summary>
+        /// Gets or sets the standard error of the cleanup methods
+        /// </summary>
+        public string StandardError { get; internal set; }
 
         /// <summary>
         /// Gets or sets the Debug trace of the cleanup methods.

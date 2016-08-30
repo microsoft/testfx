@@ -1,22 +1,25 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="MSTestExecutorTests.cs" company="">
-//   
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft. All rights reserved.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 {
+    extern alias FrameworkV1;
+
     using Moq;
     using MSTest.TestAdapter;
     using MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+    //using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using TestPlatform.ObjectModel.Adapter;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
 
     [TestClass]
     public class MSTestExecutorTests

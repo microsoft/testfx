@@ -8,7 +8,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Navigation;
 
     /// <summary>
     /// This service is responsible for any file based operations.
@@ -46,7 +45,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public object CreateNavigationSession(string source)
         {
             var messageFormatOnException =
-                string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{1}");
+                string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
             return SafeInvoke<DiaSession>(() => new DiaSession(source), messageFormatOnException) as DiaSession;
         }
 

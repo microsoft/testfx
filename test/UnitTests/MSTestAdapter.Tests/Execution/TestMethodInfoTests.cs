@@ -5,6 +5,16 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    extern alias FrameworkV2CoreExtension;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+
     using System;
     using System.Collections.Generic;
     using System.Globalization;
@@ -17,9 +27,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// The test method info tests.
@@ -79,7 +88,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region TestMethod invoke scenarios
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldWaitForAsyncTestMethodsToComplete()
         {
             var methodCalled = false;
@@ -95,14 +104,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var result = method.Invoke(null);
 
             Assert.IsTrue(methodCalled);
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
         #endregion
 
         #region TestClass constructor setup
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCreateNewInstanceOfTestClassOnEveryCall()
         {
             var ctorCallCount = 0;
@@ -111,21 +120,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var result = this.testMethodInfo.Invoke(null);
             this.testMethodInfo.Invoke(null);
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
             Assert.AreEqual(2, ctorCallCount);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldMarkOutcomeFailedIfTestClassConstructorThrows()
         {
             DummyTestClass.TestConstructorMethodBody = () => { throw new NotImplementedException(); };
 
             var result = this.testMethodInfo.Invoke(null);
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Failed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetErrorMessageIfTestClassConstructorThrows()
         {
             DummyTestClass.TestConstructorMethodBody = () => { throw new NotImplementedException("dummyExceptionMessage"); };
@@ -139,7 +148,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(errorMessage, result.TestFailureException.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetErrorMessageIfTestClassConstructorThrowsWithoutInnerException()
         {
             var ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
@@ -152,11 +161,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 typeof(DummyTestClassWithParameterizedCtor).FullName, 
                 "System.Reflection.TargetParameterCountException: Parameter count mismatch.");
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Failed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
             Assert.AreEqual(errorMessage, result.TestFailureException.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows()
         {
             DummyTestClass.TestConstructorMethodBody = () => { throw new NotImplementedException("dummyExceptionMessage"); };
@@ -169,7 +178,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows>b__");
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrowsWithoutInnerException()
         {
             var ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
@@ -186,7 +195,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         #endregion
 
         #region TestClass.TestContext property setup
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldNotThrowIfTestContextIsNotPresent()
         {
             var testClass = new TestClassInfo(typeof(DummyTestClass), this.constructorInfo, null, this.classAttribute, this.testAssemblyInfo);
@@ -196,10 +205,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Action runMethod = () => result = method.Invoke(null);
 
             runMethod();
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldNotThrowIfTestContextDoesNotHaveASetter()
         {
             var testContext = typeof(DummyTestClassWithTestContextWithoutSetter).GetProperties().Single();
@@ -210,31 +219,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Action runMethod = () => result = method.Invoke(null);
 
             runMethod();
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetTestContextForTestClassInstance()
         {
-            UTF.TestContext testContext = null;
-            DummyTestClass.TestContextSetterBody = context => testContext = context as UTF.TestContext;
+            UTFExtension.TestContext testContext = null;
+            DummyTestClass.TestContextSetterBody = context => testContext = context as UTFExtension.TestContext;
 
             this.testMethodInfo.Invoke(null);
 
             Assert.AreSame(this.testContextImplementation, testContext);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldMarkOutcomeFailedIfSetTestContextThrows()
         {
             DummyTestClass.TestContextSetterBody = value => { throw new NotImplementedException(); };
 
             var result = this.testMethodInfo.Invoke(null);
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Failed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetErrorMessageIfSetTestContextThrows()
         {
             DummyTestClass.TestContextSetterBody = value => { throw new NotImplementedException("dummyExceptionMessage"); };
@@ -249,7 +258,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(errorMessage, exception?.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows()
         {
             DummyTestClass.TestConstructorMethodBody = () => { throw new NotImplementedException("dummyExceptionMessage"); };
@@ -265,7 +274,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region TestInitialize method setup
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCallTestInitialize()
         {
             var testInitializeCalled = false;
@@ -275,10 +284,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var result = this.testMethodInfo.Invoke(null);
 
             Assert.IsTrue(testInitializeCalled);
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCallAsyncTestInitializeAndWaitForCompletion()
         {
             var testInitializeCalled = false;
@@ -288,10 +297,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var result = this.testMethodInfo.Invoke(null);
 
             Assert.IsTrue(testInitializeCalled);
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCallTestInitializeOfAllBaseClasses()
         {
             var callOrder = new List<string>();
@@ -310,31 +319,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                                             "baseTestInitializeCalled2", 
                                             "classTestInitializeCalled"
                                         };
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
             CollectionAssert.AreEqual(expectedCallOrder, callOrder);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldNotThrowIfTestInitializeIsNull()
         {
             this.testClassInfo.TestInitializeMethod = null;
 
             var result = this.testMethodInfo.Invoke(null);
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldNotThrowIfTestInitializeForBaseClassIsNull()
         {
             this.testClassInfo.BaseTestInitializeMethodsQueue.Enqueue(null);
 
             var result = this.testMethodInfo.Invoke(null);
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldMarkOutcomeAsFailIfTestInitializeThrows()
         {
             DummyTestClass.TestInitializeMethodBody = classInstance => { throw new NotImplementedException(); };
@@ -342,10 +351,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var result = this.testMethodInfo.Invoke(null);
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Failed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetErrorMessageIfTestInitializeThrows()
         {
             DummyTestClass.TestInitializeMethodBody = classInstance => { throw new NotImplementedException("dummyErrorMessage"); };
@@ -362,7 +371,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(errorMessage, exception?.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestInitializeThrows()
         {
             DummyTestClass.TestInitializeMethodBody = classInstance => { throw new NotImplementedException("dummyErrorMessage"); };
@@ -376,7 +385,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestInitializeThrows>b__");
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetErrorMessageIfTestInitializeThrowsUnitTestAssertException()
         {
             DummyTestClass.TestInitializeMethodBody = classInstance => { UTF.Assert.Fail("dummyFailMessage"); };
@@ -389,7 +398,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(ErrorMessage, exception?.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestInitializeThrowsUnitTestAssertException()
         {
             DummyTestClass.TestInitializeMethodBody = classInstance => { UTF.Assert.Fail("dummyFailMessage"); };
@@ -407,7 +416,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region TestCleanup method setup
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCallTestCleanup()
         {
             var cleanupMethodCalled = false;
@@ -416,11 +425,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var result = this.testMethodInfo.Invoke(null);
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
             Assert.IsTrue(cleanupMethodCalled);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCallAsyncTestCleanup()
         {
             var cleanupMethodCalled = false;
@@ -429,31 +438,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var result = this.testMethodInfo.Invoke(null);
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
             Assert.IsTrue(cleanupMethodCalled);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldNotThrowIfTestCleanupMethodIsNull()
         {
             this.testClassInfo.TestCleanupMethod = null;
 
             var result = this.testMethodInfo.Invoke(null);
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldNotThrowIfTestCleanupMethodForBaseClassIsNull()
         {
             this.testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(null);
 
             var result = this.testMethodInfo.Invoke(null);
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCallTestCleanupForBaseTestClasses()
         {
             var callOrder = new List<string>();
@@ -471,11 +480,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                                             "baseTestCleanupCalled1", 
                                             "baseTestCleanupCalled2"
                                         };
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
             CollectionAssert.AreEqual(expectedCallOrder, callOrder);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldMarkOutcomeAsFailedIfTestCleanupThrows()
         {
             DummyTestClass.TestCleanupMethodBody = classInstance => { throw new NotImplementedException(); };
@@ -483,10 +492,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var result = this.testMethodInfo.Invoke(null);
 
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Failed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetErrorMessageIfTestCleanupThrows()
         {
             DummyTestClass.TestCleanupMethodBody = classInstance => { throw new NotImplementedException("dummyErrorMessage"); };
@@ -504,7 +513,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(errorMessage, exception?.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestCleanupThrows()
         {
             DummyTestClass.TestCleanupMethodBody = classInstance => { throw new NotImplementedException(); };
@@ -518,7 +527,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestCleanupThrows>b__");
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCallDiposeForDisposableTestClass()
         {
             var disposeCalled = false;
@@ -532,7 +541,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsTrue(disposeCalled);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCallDiposeForDisposableTestClassIfTestCleanupThrows()
         {
             var disposeCalled = false;
@@ -548,7 +557,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsTrue(disposeCalled);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCallTestCleanupEvenIfTestMethodThrows()
         {
             var testCleanupMethodCalled = false;
@@ -559,10 +568,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var result = this.testMethodInfo.Invoke(null);
 
             Assert.IsTrue(testCleanupMethodCalled);
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Failed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCallTestCleanupEvenIfTestInitializeMethodThrows()
         {
             var testCleanupMethodCalled = false;
@@ -574,10 +583,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var result = this.testMethodInfo.Invoke(null);
 
             Assert.IsTrue(testCleanupMethodCalled);
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Failed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldCallTestCleanupIfTestClassInstanceIsNotNull()
         {
             var testCleanupMethodCalled = false;
@@ -589,10 +598,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var result = this.testMethodInfo.Invoke(null);
 
             Assert.IsFalse(testCleanupMethodCalled);
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Failed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldNotCallTestCleanupIfClassSetContextThrows()
         {
             var testCleanupCalled = false;
@@ -610,7 +619,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region TestMethod invoke setup order
 
-        [TestMethod]
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldInitializeClassInstanceTestInitializeAndTestCleanupInOrder()
         {
             var callOrder = new List<string>();
@@ -634,7 +643,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                                             "testCleanup"
                                         };
             CollectionAssert.AreEqual(expectedCallOrder, callOrder);
-            Assert.AreEqual(TestTools.UnitTesting.UnitTestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
         #endregion
@@ -669,7 +678,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             public static Func<Task> DummyAsyncTestMethodBody { get; set; }
 
-            public UTF.TestContext TestContext
+            public UTFExtension.TestContext TestContext
             {
                 get
                 {
@@ -713,7 +722,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         public class DummyTestClassWithTestContextWithoutSetter
         {
-            public UTF.TestContext TestContext { get; }
+            public UTFExtension.TestContext TestContext { get; }
         }
 
         public class DummyTestClassWithDisposable : IDisposable

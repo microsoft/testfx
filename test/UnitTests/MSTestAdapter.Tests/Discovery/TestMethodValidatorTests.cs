@@ -6,6 +6,15 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+
     using System;
     using System.Collections.Generic;
     using System.Globalization;
@@ -15,11 +24,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
     using Moq;
 
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class TestMethodValidatorTests
@@ -45,7 +53,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         public void IsValidTestMethodShouldReturnFalseForMethodsWithoutATestMethodAttributeOrItsDerivedAttributes()
         {
             this.mockReflectHelper.Setup(
-                rh => rh.IsAttributeDefined(It.IsAny<MemberInfo>(), typeof(TestMethodAttribute), false)).Returns(false);
+                rh => rh.IsAttributeDefined(It.IsAny<MemberInfo>(), typeof(UTF.TestMethodAttribute), false)).Returns(false);
             Assert.IsFalse(this.testMethodValidator.IsValidTestMethod(this.mockMethodInfo.Object, this.type, this.warnings));
         }
 
