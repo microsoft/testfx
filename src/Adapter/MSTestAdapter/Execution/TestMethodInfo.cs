@@ -161,7 +161,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     {
                         result.Duration = watch.Elapsed;
                         result.DebugTrace = listener.DebugTrace;
-                        result.LogOutput = listener.LoggerOut;
+                        result.LogOutput = listener.StandardOutput;
+                        result.LogError = listener.StandardError;
                     }
                 }
             }

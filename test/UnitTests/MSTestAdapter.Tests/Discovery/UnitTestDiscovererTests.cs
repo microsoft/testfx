@@ -6,6 +6,14 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    extern alias FrameworkV2CoreExtension;
+    
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+
     using System;
     using System.Collections.Generic;
     using System.Reflection;
@@ -17,16 +25,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Navigation;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
     using Moq;
 
     [TestClass]
     public class UnitTestDiscovererTests
     {
-        private static readonly AssemblyName UnitTestFrameworkAssemblyName = typeof(TestMethodAttribute).GetTypeInfo().Assembly.GetName();
-
         private UnitTestDiscoverer unitTestDiscoverer;
 
         private TestablePlatformServiceProvider testablePlatformServiceProvider;
@@ -48,7 +52,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void DiscoverTestsShouldDiscoverForAllSources()
         {
             var sources = new string[] { "DummyAssembly1.dll", "DummyAssembly2.dll" };
@@ -68,7 +72,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(2));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void DiscoverTestsInSourceShouldSendBackAllWarnings()
         {
             var source = "DummyAssembly.dll";
@@ -85,7 +89,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Once);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void DiscoverTestsInSourceShouldSendBackTestCasesDiscovered()
         {
             var source = Assembly.GetExecutingAssembly().FullName;
@@ -100,7 +104,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(source))
                 .Returns(Assembly.GetExecutingAssembly());
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
-                .Returns((INavigationSession)null);
+                .Returns((object)null);
             this.testablePlatformServiceProvider.MockTestSourceHost.Setup(
                 ih => ih.CreateInstanceForType(It.IsAny<Type>(), null, It.IsAny<string>(), It.IsAny<IRunSettings>()))
                 .Returns(new AssemblyEnumerator());
@@ -111,14 +115,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.AtLeastOnce);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void SendTestCasesShouldNotSendAnyTestCasesIfThereAreNoTestElements()
         {
             var source = "DummyAssembly.dll";
 
             // Setup mocks.
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
-                .Returns((INavigationSession)null);
+                .Returns((object)null);
 
             // There is a null check for testElements in the code flow before this function call. So not adding a unit test for that.
             this.unitTestDiscoverer.SendTestCases(source, new List<UnitTestElement> { }, this.mockTestCaseDiscoverySink.Object);
@@ -127,14 +131,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void SendTestCasesShouldSendAllTestCaseData()
         {
             var source = "DummyAssembly.dll";
 
             // Setup mocks.
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
-                .Returns((INavigationSession)null);
+                .Returns((object)null);
 
             var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", false));
             var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));
@@ -147,14 +151,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Once);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void SendTestCasesShouldSendTestCasesWithNaigationData()
         {
             var source = "DummyAssembly.dll";
 
             // Setup mocks.
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
-                .Returns((INavigationSession)null);
+                .Returns((object)null);
 
             var test = new UnitTestElement(new TestMethod("M", "C", "A", false));
             var testElements = new List<UnitTestElement> { test };
@@ -168,14 +172,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M")), Times.Once);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void SendTestCasesShouldSendTestCasesWithNaigationDataWhenDeclaredClassFullNameIsNonNull()
         {
             var source = "DummyAssembly.dll";
 
             // Setup mocks.
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
-                .Returns((INavigationSession)null);
+                .Returns((object)null);
 
             var test = new UnitTestElement(new TestMethod("M", "C", "A", false));
             test.TestMethod.DeclaringClassFullName = "DC";
@@ -190,14 +194,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M")), Times.Once);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void SendTestCasesShouldSendTestCasesWithNaigationDataForAsyncMethods()
         {
             var source = "DummyAssembly.dll";
 
             // Setup mocks.
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
-                .Returns((INavigationSession)null);
+                .Returns((object)null);
 
             var test = new UnitTestElement(new TestMethod("M", "C", "A", false));
             test.AsyncTypeName = "ATN";
@@ -215,15 +219,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         private void SetupNavigation(string source, UnitTestElement test, string className, string methodName)
         {
             var testNavigationData = new DummyNavigationData("DummyFileName.cs", 1, 10);
-
-            Mock<INavigationSession> mockNavigationSession = new Mock<INavigationSession>();
-
-            mockNavigationSession.Setup(
-                ns => ns.GetNavigationDataForMethod(className, methodName))
-                .Returns(testNavigationData);
-
+            
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
-                .Returns(mockNavigationSession.Object);
+                .Returns(testNavigationData);
+            int minLineNumber = testNavigationData.MinLineNumber;
+            string fileName = testNavigationData.FileName;
+
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(
+                fo =>
+                fo.GetNavigationData(
+                    testNavigationData,
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    out minLineNumber,
+                    out fileName));
+
             var testCase1 = test.ToTestCase();
 
             this.SetTestCaseNavigationData(testCase1, testNavigationData.FileName, testNavigationData.MinLineNumber);
@@ -236,7 +246,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
     }
 
-    internal class DummyNavigationData : INavigationData
+    internal class DummyNavigationData
     {
         public DummyNavigationData(string fileName, int minLineNumber, int maxLineNumber)
         {

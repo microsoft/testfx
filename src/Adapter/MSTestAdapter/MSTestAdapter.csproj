@@ -18,6 +18,8 @@
     <Compile Include="Discovery\AssemblyEnumerator.cs" />
     <Compile Include="Discovery\AssemblyEnumeratorWrapper.cs" />
     <Compile Include="Discovery\TestMethodValidator.cs" />
+    <Compile Include="Helpers\RunSettingsUtilities.cs" />
+    <Compile Include="Helpers\TestRunParameters.cs" />
     <Compile Include="MSTestDiscoverer.cs" />
     <Compile Include="Discovery\TypeEnumerator.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />

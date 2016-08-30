@@ -6,6 +6,16 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    extern alias FrameworkV2CoreExtension;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+
     using System;
     using System.Collections.Generic;
     using System.Globalization;
@@ -17,11 +27,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
     using Moq;
 
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class AssemblyEnumeratorWrapperTests
@@ -31,9 +40,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         private ICollection<string> warnings;
 
         private TestablePlatformServiceProvider testablePlatformServiceProvider;
-
-        private static readonly AssemblyName UnitTestFrameworkAssemblyName =
-            typeof(TestMethodAttribute).GetTypeInfo().Assembly.GetName();
 
         [TestInitialize]
         public void TestInit()

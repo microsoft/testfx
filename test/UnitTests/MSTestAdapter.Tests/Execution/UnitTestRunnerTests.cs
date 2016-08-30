@@ -2,22 +2,36 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    extern alias FrameworkV2CoreExtension;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.IO;
+    using System.Text;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
     using Moq;
 
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+    using global::MSTestAdapter.TestUtilities;
+
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class UnitTestRunnerTests
@@ -38,24 +52,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
         }
 
+        [TestCleanup]
+        public void Testcleanup()
+        {
+            PlatformServiceProvider.Instance = null;
+        }
+
         #region RunSingleTest tests
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunSingleTestShouldThrowIfTestMethodIsNull()
         {
             Action a = () => this.unitTestRunner.RunSingleTest(null, null);
-            Assert.ThrowsException<ArgumentNullException>(a);
+            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunSingleTestShouldThrowIfTestRunParamtersIsNull()
         {
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
             Action a = () => this.unitTestRunner.RunSingleTest(testMethod, null);
-            Assert.ThrowsException<ArgumentNullException>(a);
+            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()
         {
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
@@ -71,7 +91,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual("Test method M was not found.", results[0].ErrorMessage);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunSingleTestShouldReturnTestResultIndicatingNotRunnableTestIfTestMethodCannotBeRun()
         {
             var type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
@@ -94,7 +114,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, results[0].ErrorMessage);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunSingleTestShouldReturnTestResultIndicatingFailureIfThereIsAnyTypeInspectionExceptionWhenInspectingTestMethod()
         {
             var type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
@@ -116,7 +136,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, results[0].ErrorMessage);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunSingleTestShouldReturnTestResultsForAPassingTestMethod()
         {
             var type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
@@ -134,7 +154,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNull(results[0].ErrorMessage);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunSingleTestShouldSetTestsAsInProgressInTestContext()
         {
             var type = typeof(DummyTestClass);
@@ -152,7 +172,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(UnitTestOutcome.Passed, results[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
         {
             var mockReflectHelper = new Mock<ReflectHelper>();
@@ -184,13 +204,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region RunCleanup Tests
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunCleanupShouldReturnNullOnNoCleanUpMethods()
         {   
             Assert.IsNull(this.unitTestRunner.RunCleanup());
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunCleanupShouldReturnCleanupResultsForAssemblyAndClassCleanupMethods()
         {
             var type = typeof(DummyTestClassWithCleanupMethods);
@@ -225,12 +245,51 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsTrue(cleanupresult.Warnings.All(w => w.Contains("NotImplemented")));
         }
 
+        [TestMethodV1]
+        public void RunCleanupShouldReturnCleanupResultsWithDebugTraceLogsSetIfDebugTraceEnabled()
+        {
+            unitTestRunner = new UnitTestRunner(true);
+            var type = typeof(DummyTestClassWithCleanupMethods);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
+            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
+
+            this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+
+            var cleanupresult = this.unitTestRunner.RunCleanup();
+            Assert.AreEqual(cleanupresult.DebugTrace, "DummyTrace");
+        }
+
+        [TestMethodV1]
+        public void RunCleanupShouldReturnCleanupResultsWithNoDebugAndTraceLogsSetIfDebugTraceDisabled()
+        {
+            var type = typeof(DummyTestClassWithCleanupMethods);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
+            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
+
+            this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+
+            var cleanupresult = this.unitTestRunner.RunCleanup();
+            Assert.AreEqual(cleanupresult.DebugTrace, string.Empty);
+        }
+
         #endregion
 
         [UTF.TestClass]
         private class DummyTestClass
         {
-            public UTF.TestContext TestContext { get; set; }
+            public UTFExtension.TestContext TestContext { get; set; }
 
             [UTF.TestMethod]
             public void TestMethodToTestInProgress()
@@ -248,13 +307,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             // The reflectHelper instance would set the AssemblyInitialize attribute here before running any tests.
             // Setting an attribute causes conflicts with other tests.
-            public static void AssemblyInitialize(UTF.TestContext tc)
+            public static void AssemblyInitialize(UTFExtension.TestContext tc)
             {
                 AssemblyInitializeMethodBody.Invoke();
             }
 
             [UTF.ClassInitialize]
-            public static void ClassInitialize(UTF.TestContext tc)
+            public static void ClassInitialize(UTFExtension.TestContext tc)
             {
                 ClassInitializeMethodBody.Invoke();
             }

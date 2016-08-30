@@ -55,6 +55,8 @@
     <Compile Include="Services\DesktopTestDeploymentTests.cs" />
     <Compile Include="Services\DesktopTestSourceHostTests.cs" />
     <Compile Include="Services\DesktopTestSourceTests.cs" />
+    <Compile Include="Services\DesktopTraceListenerManagerTests.cs" />
+    <Compile Include="Services\DesktopTraceListenerTests.cs" />
     <Compile Include="Utilities\DeploymentItemUtilityTests.cs" />
     <Compile Include="Services\DesktopFileOperationsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -97,6 +99,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />

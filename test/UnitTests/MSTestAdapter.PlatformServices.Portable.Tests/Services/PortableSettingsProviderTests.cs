@@ -1,10 +1,11 @@
+// Copyright (c) Microsoft. All rights reserved.
 
 namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
 {
     extern alias FrameworkV1;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
+    using Moq;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
@@ -17,7 +18,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
         {
             MSTestSettingsProvider settings = new MSTestSettingsProvider();
 
-            Assert.AreEqual(0, settings.GetProperties().Count);
+            Assert.AreEqual(0, settings.GetProperties(It.IsAny<string>()).Count);
         }
     }
 }

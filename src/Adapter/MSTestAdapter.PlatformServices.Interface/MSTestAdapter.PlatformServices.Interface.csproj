@@ -23,6 +23,8 @@
     <Compile Include="ITestSource.cs" />
     <Compile Include="IAdapterTraceLogger.cs" />
     <Compile Include="ITestContext.cs" />
+    <Compile Include="ITraceListener.cs" />
+    <Compile Include="ITraceListenerManager.cs" />
     <Compile Include="ObjectModel\ITestMethod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

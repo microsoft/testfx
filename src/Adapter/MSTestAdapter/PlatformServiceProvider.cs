@@ -112,6 +112,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             return new TestContextImplementation(testMethod, writer, properties);
         }
 
+        public ITraceListener GetTraceListener(TextWriter textWriter)
+        {
+           return new TraceListenerWrapper(textWriter);   
+        }
+
+        public ITraceListenerManager GetTraceListenerManager(TextWriter outputWriter, TextWriter errorWriter)
+        {
+            return new TraceListenerManager(outputWriter, errorWriter);
+        }
+
         /// <summary>
         /// The instance for the platform service.
         /// </summary>

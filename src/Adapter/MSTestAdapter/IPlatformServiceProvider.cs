@@ -47,6 +47,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </summary>
         ISettingsProvider SettingsProvider { get; }
 
+        /// <summary>
+        /// Gets an instance to the platform service listener who monitors trace and debug output
+        /// on provided text writer.
+        /// </summary>
+        ITraceListener GetTraceListener(TextWriter textWriter);
+
+        /// <summary>
+        /// Gets an instance to the platform service tracelistener manager which updates the output/error streams 
+        /// with redirected streams and performs operations on the listener provided as arguement.
+        /// <param name="outputWriter"> The redirected output stream writer. </param>
+        /// <param name="errorWriter"> The redirected error stream writer. </param>
+        /// </summary>
+        ITraceListenerManager GetTraceListenerManager(TextWriter outputWriter, TextWriter errorWriter);
+
         ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties);
+
     }
 }

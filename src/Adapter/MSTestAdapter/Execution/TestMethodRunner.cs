@@ -11,11 +11,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;   
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using MSTestAdapter.PlatformServices;
 
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-    
+
     /// <summary>
     /// This class is responsible to running tests and converting framework TestResults to adapter TestResults.
     /// </summary>
@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// TestMethod referred by the above test element
         /// </summary>
         private readonly TestMethodInfo testMethodInfo;
-        
+
         /// <summary>
         /// Specifies whether debug traces should be captured or not
         /// </summary>
@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             Debug.Assert(testMethodInfo != null);
             Debug.Assert(testMethod != null);
             Debug.Assert(testContext != null);
-            
+
             this.testMethodInfo = testMethodInfo;
             this.test = testMethod;
             this.testContext = testContext;
@@ -80,35 +80,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             Justification = "Catching all exceptions that will be thrown by user code.")]
         internal UnitTestResult[] Execute()
         {
-#if TODO
             string initLogs = string.Empty;
             string initTrace = string.Empty;
-#endif
+            string errorLogs = string.Empty;
+
             UnitTestResult[] result = null;
             try
             {
-#if TODO
+
                 using (LogMessageListener logListener = new LogMessageListener(this.captureDebugTraces))
                 {
                     try
                     {
-#endif
+                        // Run the assembly and class Initialize methods if required.
+                        // Assembly or class initialize can throw exceptions in which case we need to ensure that we fail the test.
+                        this.testMethodInfo.Parent.Parent.RunAssemblyInitialize(this.testContext.Context);
+                        this.testMethodInfo.Parent.RunClassInitialize(this.testContext.Context);
 
-                // Run the assembly and class Initialize methods if required.
-                // Assembly or class initialize can throw exceptions in which case we need to ensure that we fail the test.
-                this.testMethodInfo.Parent.Parent.RunAssemblyInitialize(this.testContext.Context);
-                this.testMethodInfo.Parent.RunClassInitialize(this.testContext.Context);
-
-                result = this.RunTestMethod();
-#if TODO
+                        result = this.RunTestMethod();
                     }
             finally
                     {
-                        initLogs = logListener.LoggerOut;
+                        initLogs = logListener.StandardOutput;
                         initTrace = logListener.DebugTrace;
+                        errorLogs = logListener.StandardError;
                     }
                 }
-#endif
             }
             catch (TestFailedException ex)
             {
@@ -124,18 +121,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 var newResult =
                     new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()));
                 newResult.StandardOut = result[result.Length - 1].StandardOut;
+                newResult.StandardError = result[result.Length - 1].StandardError;
                 newResult.DebugTrace = result[result.Length - 1].DebugTrace;
                 newResult.Duration = result[result.Length - 1].Duration;
                 result[result.Length - 1] = newResult;
             }
-#if TODO
             finally
             {
                 var firstResult = result[0];
                 firstResult.StandardOut = initLogs + firstResult.StandardOut;
+                firstResult.StandardError = errorLogs + firstResult.StandardError;
                 firstResult.DebugTrace = initTrace + firstResult.DebugTrace;
             }
-#endif
             return result;
         }
 
@@ -172,13 +169,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             else
             {
-                if (EqtTrace.IsErrorEnabled)
-                {
-                    EqtTrace.Error(
-                        "Not able to get executor for method {0}.{1}",
-                        this.testMethodInfo.TestClassName,
-                        this.testMethodInfo.TestMethodName);
-                }
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
+                    "Not able to get executor for method {0}.{1}",
+                    this.testMethodInfo.TestClassName,
+                    this.testMethodInfo.TestMethodName);
             }
 
             if (results != null && results.Length > 0)
@@ -277,6 +271,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 unitTestResult.StandardOut = results[i].LogOutput;
+                unitTestResult.StandardError = results[i].LogError;
                 unitTestResult.DebugTrace = results[i].DebugTrace;
                 unitTestResult.Duration = results[i].Duration;
                 unitTestResult.DisplayName = results[i].DisplayName;

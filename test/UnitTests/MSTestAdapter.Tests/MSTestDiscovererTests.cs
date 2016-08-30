@@ -1,11 +1,9 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright company="" file="MSTestDiscovererTests.cs">
-//   
-// </copyright>
-// 
-// --------------------------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft. All rights reserved.
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 {
+    extern alias FrameworkV1;
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -17,10 +15,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Navigation;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
 
     using Moq;
+    using global::MSTestAdapter.TestUtilities;
 
     [TestClass]
     public class MSTestDiscovererTests
@@ -92,21 +94,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         public void DiscoverTestsShouldThrowIfSourcesIsNull()
         {
             Action a = () => this.discoverer.DiscoverTests(null, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
-            Assert.ThrowsException<ArgumentNullException>(a);
+            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
         [TestMethod]
         public void DiscoverTestsShouldThrowIfDiscoverySinkIsNull()
         {
             Action a = () => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, null);
-            Assert.ThrowsException<ArgumentNullException>(a);
+            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
         [TestMethod]
         public void DiscoverTestsShouldThrowIfLoggerIsNull()
         {
             Action a = () => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, null, this.mockTestCaseDiscoverySink.Object);
-            Assert.ThrowsException<ArgumentNullException>(a);
+            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
+            
         }
 
         [TestMethod]
@@ -117,7 +120,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                 .Returns(new List<string> { });
 
             Action a = () => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
-            Assert.ThrowsException<NotSupportedException>(a);
+            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(NotSupportedException));
         }
 
         [TestMethod]
@@ -153,7 +156,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(source))
                 .Returns(Assembly.GetExecutingAssembly());
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
-                .Returns((INavigationSession)null);
+                .Returns((object)null);
             this.testablePlatformServiceProvider.MockTestSourceHost.Setup(
                 ih => ih.CreateInstanceForType(It.IsAny<Type>(), null, It.IsAny<string>(), It.IsAny<IRunSettings>()))
                 .Returns(new AssemblyEnumerator());
@@ -168,7 +171,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         public void DiscoveryShouldNotHappenIfTestSettingsIsGiven()
         {
             string runSettingxml =
-	        @"<RunSettings>   
+            @"<RunSettings>   
 			        <MSTest>   
 				        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
 				        <ForcedLegacyMode>true</ForcedLegacyMode>    
@@ -192,7 +195,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestDiscoverer discoverer = new MSTestDiscoverer();
 
             Action a = () => discoverer.AreValidSources(new List<string> { "dummy" });
-            Assert.ThrowsException<ArgumentNullException>(a);
+            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
         [TestMethod]

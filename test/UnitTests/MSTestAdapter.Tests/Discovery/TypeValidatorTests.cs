@@ -6,17 +6,27 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    extern alias FrameworkV2CoreExtension;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+
     using System;
     using System.Collections.Generic;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
     
     using Moq;
 
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class TypeValidatorTests
@@ -251,27 +261,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
     public class ClassWithTestContextGetterOnly
     {
-        public UTF.TestContext TestContext { get; }
+        public UTFExtension.TestContext TestContext { get; }
     }
 
     public class ClassWithTestContextPrivateSetter
     {
-        public UTF.TestContext TestContext { get; private set; }
+        public UTFExtension.TestContext TestContext { get; private set; }
     }
 
     public class ClassWithStaticTestContext
     {
-        public static UTF.TestContext TestContext { get; set; }
+        public static UTFExtension.TestContext TestContext { get; set; }
     }
 
     public abstract class ClassWithAbstractTestContext
     {
-        public abstract UTF.TestContext TestContext { get; set; }
+        public abstract UTFExtension.TestContext TestContext { get; set; }
     }
 
     public class ClassWithTestContext
     {
-        public UTF.TestContext TestContext { get; set; }
+        public UTFExtension.TestContext TestContext { get; set; }
     }
 
     public class PublicTestClass

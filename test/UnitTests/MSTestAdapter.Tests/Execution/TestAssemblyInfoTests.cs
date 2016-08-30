@@ -2,6 +2,15 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    extern alias FrameworkV2CoreExtension;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+
     using System;
     using System.Linq;
     using System.Reflection;
@@ -9,14 +18,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using global::MSTestAdapter.TestUtilities;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-    //using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
     using Moq;
 
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
     using MSTest.TestAdapter.ObjectModel;
+
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
+
     [TestClass]
     public class TestAssemblyInfoTests
     {
@@ -24,13 +34,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private readonly MethodInfo dummyMethodInfo;
 
-        private UTF.TestContext testContext;
+        private UTFExtension.TestContext testContext;
 
         public TestAssemblyInfoTests()
         {
             this.testAssemblyInfo = new TestAssemblyInfo();
             this.dummyMethodInfo = typeof(TestAssemblyInfoTests).GetMethods().First();
-            this.testContext = new Mock<UTF.TestContext>().Object;
+            this.testContext = new Mock<UTFExtension.TestContext>().Object;
         }
 
         [TestMethod]
@@ -42,7 +52,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     this.testAssemblyInfo.AssemblyInitializeMethod = this.dummyMethodInfo;
                 };
 
-            Assert.ThrowsException<TypeInspectionException>(action);
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TypeInspectionException));
         }
 
         [TestMethod]
@@ -54,7 +64,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     this.testAssemblyInfo.AssemblyCleanupMethod = this.dummyMethodInfo;
                 };
 
-            Assert.ThrowsException<TypeInspectionException>(action);
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TypeInspectionException));
         }
 
         [TestMethod]
@@ -103,7 +113,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Action action = () => this.testAssemblyInfo.RunAssemblyInitialize(null);
 
-            Assert.ThrowsException<NullReferenceException>(action);
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(NullReferenceException));
         }
 
         [TestMethod]
@@ -294,13 +304,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         public class DummyTestClass
         {
-            public UTF.TestContext TestContext { get; set; }
+            public UTFExtension.TestContext TestContext { get; set; }
 
             public static Action<object> AssemblyInitializeMethodBody { get; set; }
 
             public static Action AssemblyCleanupMethodBody { get; set; }
 
-            public static void AssemblyInitializeMethod(UTF.TestContext testContext)
+            public static void AssemblyInitializeMethod(UTFExtension.TestContext testContext)
             {
                 AssemblyInitializeMethodBody.Invoke(testContext);
             }

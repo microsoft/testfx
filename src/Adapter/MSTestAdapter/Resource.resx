@@ -268,4 +268,10 @@
   <data name="AttachmentSetDisplayName" xml:space="preserve">
     <value>MSTestAdapterV2</value>
   </data>
+  <data name="InvalidSettingsXmlAttribute" xml:space="preserve">
+    <value>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</value>
+  </data>
+  <data name="InvalidSettingsXmlElement" xml:space="preserve">
+    <value>Invalid settings '{0}'. Unexpected XmlElement: '{1}'.</value>
+  </data>
 </root>

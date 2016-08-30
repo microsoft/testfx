@@ -26,6 +26,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
             this.MockTestDeployment = new Mock<ITestDeployment>();
             this.MockSettingsProvider = new Mock<ISettingsProvider>();
             this.MockTestDataSource = new Mock<ITestDataSource>();
+            this.MockTraceListener = new Mock<ITraceListener>();
+            this.MockTraceListenerManager = new Mock<ITraceListenerManager>();
+            
         }
 
         #region Mock Implementations
@@ -71,6 +74,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
             get;
             set;
         }
+
+        public Mock<ITraceListener> MockTraceListener
+        {
+            get;
+            set;
+        }
+
+        public Mock<ITraceListenerManager> MockTraceListenerManager
+        {
+            get;
+            set;
+        }
         #endregion
 
         public ITestSource TestSource => this.MockTestSourceValidator.Object;
@@ -90,6 +105,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
         public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties)
         {
             return new TestContextImplementation(testMethod, writer, properties);
+        }
+
+        public ITraceListener GetTraceListener(TextWriter textWriter)
+        {
+            return this.MockTraceListener.Object;
+        }
+
+        public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter)
+        {
+            return this.MockTraceListenerManager.Object;
         }
     }
 }

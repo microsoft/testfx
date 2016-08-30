@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+// Copyright (c) Microsoft. All rights reserved.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 {
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+    extern alias FrameworkV1;
+    
     using Moq;
     using MSTest.TestAdapter;
     using System.IO;
@@ -14,6 +11,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
     using TestableImplementations;
     using TestPlatform.ObjectModel.Adapter;
     using TestPlatform.ObjectModel.Utilities;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
 
     [TestClass]
     public class MSTestAdapterSettingsProvidersTests

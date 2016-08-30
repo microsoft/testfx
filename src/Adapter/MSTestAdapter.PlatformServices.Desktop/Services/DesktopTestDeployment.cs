@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
 
@@ -113,16 +114,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             Debug.Assert(tests != null, "tests");
 
+            //Reset runDirectories before doing deployment, so that older values of runDirectories is not picked
+            //even if test host is kept alive.
+            RunDirectories = null;
+
             this.adapterSettings = MSTestSettingsProvider.Settings;
             bool canDeploy = this.CanDeploy();
             var hasDeploymentItems = tests.Any(test => this.deploymentItemUtility.HasDeploymentItems(test));
 
-            if (!canDeploy || (canDeploy && !hasDeploymentItems))
+            // deployment directories should not be created in this case,simply return
+            if (!canDeploy && hasDeploymentItems)
             {
                 return false;
             }
 
             RunDirectories = this.deploymentUtility.CreateDeploymentDirectories(runContext);
+
+            //Deployment directories are created but deployment will not happen.
+            //This is added just to keep consistency with MSTestv1 behaviour.
+            if (!hasDeploymentItems)
+            {
+                return false;
+            }
+
             var isDeploymentDone = false;
 
             using (new SuspendCodeCoverage())
@@ -146,16 +160,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return true;
         }
 
-        internal static IDictionary<string, object> GetDeploymentInformation()
+        internal static IDictionary<string, object> GetDeploymentInformation(string source)
         {
             var properties = new Dictionary<string, object>();
 
             var applicationBaseDirectory = string.Empty;
             
             // Run directories can be null in win8. 
-            if (RunDirectories == null)
+            if (RunDirectories == null && !string.IsNullOrEmpty(source))
             {
-                applicationBaseDirectory = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
+                // applicationBaseDirectory is set at source level
+                applicationBaseDirectory = Path.GetDirectoryName(source);
             }
 
             properties[TestContextPropertyStrings.TestRunDirectory] = RunDirectories != null

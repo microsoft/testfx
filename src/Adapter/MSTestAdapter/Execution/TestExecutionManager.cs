@@ -9,6 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Linq;
     
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -39,6 +40,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public TestExecutionManager()
         {
             this.TestMethodFilter = new TestMethodFilter();
+            this.sessionParameters = new Dictionary<string, object>();
         }
 
         /// <summary>
@@ -226,7 +228,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     }
                     else
                     {
-                        unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, this.sessionParameters);
+                        //this is done so that appropriate values of testcontext properties are set at source level
+                        // and are merged with session level parameters
+                        var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
+
+                        if (this.sessionParameters != null && this.sessionParameters.Count > 0)
+                        {
+                            sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
+                        }
+                        
+                        unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
                     }
 
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
@@ -253,6 +264,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     {
                         var lastResult = unitTestResult[unitTestResult.Length - 1];
                         lastResult.StandardOut += cleanupResult.StandardOut;
+                        lastResult.StandardError += cleanupResult.StandardError;
                         lastResult.DebugTrace += cleanupResult.DebugTrace;
                     }
                 }
@@ -267,13 +279,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         private void CacheSessionParameters(IRunContext runContext, ITestExecutionRecorder testExecutionRecorder)
         {
-            this.sessionParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties();
-
             if (!string.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))
             {
                 try
                 {
-                    var testRunParameters = XmlRunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
+                    var testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
                     if (testRunParameters != null)
                     {
                         foreach (var kvp in testRunParameters)

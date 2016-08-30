@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             // if we have to read any thing from runsettings special for this platform service then we have to implement it.
         }
 
-        public IDictionary<string, object> GetProperties()
+        public IDictionary<string, object> GetProperties(string source)
         {
             return new Dictionary<string, object>();
         }

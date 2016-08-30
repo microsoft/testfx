@@ -1,10 +1,18 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="TestMethodRunnerTests.cs" company="Microsoft">
-//   Copyright (c) Microsoft Corporation.  All rights reserved.
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+//   Copyright (c) Microsoft Corporation. All rights reserved.
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    extern alias FrameworkV2CoreExtension;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -14,15 +22,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
     using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
     using TestableImplementations;
     using MSTest.TestAdapter;
     using Moq;
     using PlatformServices.Interface;
+    using System.IO;
+    using System.Text;
 
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
+    
     [TestClass]
     public class TestMethodRunnerTests
     {
@@ -81,7 +93,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
         }
 
-        [TestMethod]
+        [TestCleanup]
+        public void Testcleanup()
+        {
+            PlatformServiceProvider.Instance = null;
+        }
+
+        [TestMethodV1]
         public void ExecuteForAssemblyInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             // Arrange.
@@ -111,7 +129,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             StringAssert.Contains(results[0].ErrorMessage, "System.ArgumentException: Value does not fall within the expected range.. Aborting test execution.");
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ExecuteForClassInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             // Arrange.
@@ -143,7 +161,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             StringAssert.Contains(results[0].ErrorMessage, "System.ArgumentException: Value does not fall within the expected range.");
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ExecuteForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => { throw new Exception("DummyException"); });
@@ -154,7 +172,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             StringAssert.Contains(results[0].ErrorMessage, "Exception thrown while executing test");
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ExecuteForPassingTestShouldReturnUnitTestResultWithPassedOutcome()
         {
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
@@ -164,7 +182,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
+        public void ExecuteShouldFillInDebugAndTraceLogsIfDebugTraceEnabled()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, true);
+
+            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
+            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual(results[0].DebugTrace,"DummyTrace");
+        }
+
+        [TestMethodV1]
+        public void ExecuteShouldNotFillInDebugAndTraceLogsIfDebugTraceDisabled()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
+
+            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
+            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual(results[0].DebugTrace, string.Empty);
+        }
+
+        [TestMethodV1]
         public void RunTestMethodForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => { throw new Exception("Dummy Exception"); });
@@ -175,7 +219,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             StringAssert.Contains(results[0].ErrorMessage, "Exception thrown while executing test");
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestMethodForPassingTestThrowingExceptionShouldReturnUnitTestResultWithPassedOutcome()
         {
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
@@ -185,7 +229,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestMethodForFailingTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
@@ -195,7 +239,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestMethodChecksIfTestsAreDataDriven()
         {
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
@@ -209,7 +253,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void RunTestMethodRunsDataDrivenTestsWhenDataIsProvided()
         {
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult());
@@ -221,7 +265,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             //setup mocks
             this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.HasDataDrivenTests(It.IsAny<TestMethodInfo>())).Returns(true);
-            this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.RunDataDrivenTest(It.IsAny<UTF.TestContext>(), It.IsAny<TestMethodInfo>(),It.IsAny<TestMethod>(),It.IsAny<UTF.TestMethodAttribute>()))
+            this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.RunDataDrivenTest(It.IsAny<UTFExtension.TestContext>(), It.IsAny<TestMethodInfo>(),It.IsAny<TestMethod>(),It.IsAny<UTF.TestMethodAttribute>()))
                 .Returns(new UTF.TestResult[] { result });
 
             var results = testMethodRunner.Execute();
@@ -230,7 +274,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ConvertTestResultToUnitTestResultForPassedTestResultsConvertsToPassedUnitTestResults()
         {
            var results = new[] { new UTF.TestResult() {Outcome = UTF.UnitTestOutcome.Passed} };
@@ -239,7 +283,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Passed, convertedResults[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ConvertTestResultToUnitTestResultForFailedTestResultsConvertsToFailedUnitTestResults()
         {
             var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed } };
@@ -248,7 +292,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Failed, convertedResults[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ConvertTestResultToUnitTestResultForInProgressTestResultsConvertsToInProgressUnitTestResults()
         {
             var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.InProgress } };
@@ -256,7 +300,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.AreEqual(AdapterTestOutcome.InProgress, convertedResults[0].Outcome);
         }
-        [TestMethod]
+        [TestMethodV1]
         public void ConvertTestResultToUnitTestResultForInconclusiveTestResultsConvertsToInconclusiveUnitTestResults()
         {
             var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Inconclusive } };
@@ -265,7 +309,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Inconclusive, convertedResults[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ConvertTestResultToUnitTestResultForTimeoutTestResultsConvertsToTimeoutUnitTestResults()
         {
             var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Timeout } };
@@ -274,7 +318,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Timeout, convertedResults[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ConvertTestResultToUnitTestResultForUnknownTestResultsConvertsToErrorUnitTestResults()
         {
             var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Unknown } };
@@ -283,7 +327,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Error, convertedResults[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ConvertTestResultToUnitTestResultForTestResultWithExceptionConvertsToUnitTestResultsWithFailureOutcome()
         {
             var results = new[] { new UTF.TestResult() { TestFailureException = new Exception() } };
@@ -292,7 +336,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Failed, convertedResults[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ConvertTestResultToUnitTestResultForTestResultWithExceptionConvertsToUnitTestResultsWithInconclusiveOutcome()
         {
             var results = new[] { new UTF.TestResult() { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive } };
@@ -301,20 +345,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(AdapterTestOutcome.Inconclusive, convertedResults[0].Outcome);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ConvertTestResultToUnitTestResultForTestResultShouldSetLoggingDatatForConvertedUnitTestResults()
         {
             var timespan = new TimeSpan();
-            var results = new[] { new UTF.TestResult() { DebugTrace = "debugTrace", DisplayName = "displayName", Duration = timespan, LogOutput = "logOutput" } };
+            var results = new[] { new UTF.TestResult() { DebugTrace = "debugTrace", DisplayName = "displayName", Duration = timespan, LogOutput = "logOutput", LogError = "logError"} };
             var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
 
             Assert.AreEqual("logOutput", convertedResults[0].StandardOut);
+            Assert.AreEqual("logError", convertedResults[0].StandardError);
             Assert.AreEqual("displayName", convertedResults[0].DisplayName);
             Assert.AreEqual("debugTrace", convertedResults[0].DebugTrace);
             Assert.AreEqual(timespan, convertedResults[0].Duration);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ConvertTestResultToUnitTestResultShouldHaveResultsFileProvidedToTestContext()
         {
             Mock<ITestContext> testContext = new Mock<ITestContext>();
@@ -331,7 +376,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region Test data
 
-        private static void InitMethodThrowingException(UTF.TestContext tc)
+        private static void InitMethodThrowingException(UTFExtension.TestContext tc)
         {
             throw new ArgumentException();
         }
@@ -382,7 +427,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             public static Func<Task> DummyAsyncTestMethodBody { get; set; }
 
-            public TestTools.UnitTesting.TestContext TestContext
+            public UTFExtension.TestContext TestContext
             {
                 get
                 {
@@ -426,7 +471,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         public class DummyTestClassWithTestContextWithoutSetter
         {
-            public TestTools.UnitTesting.TestContext TestContext { get; }
+            public UTFExtension.TestContext TestContext { get; }
         }
         
         #endregion

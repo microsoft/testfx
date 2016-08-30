@@ -2,6 +2,16 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    extern alias FrameworkV2CoreExtension;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
@@ -15,13 +25,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-    //using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-
+    
     using Moq;
 
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class TypeCacheTests
@@ -46,7 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region GetTestMethodInfo tests
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfTestMethodIsNull()
         {
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
@@ -54,20 +63,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 null,
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
 
-
-            Assert.ThrowsException<ArgumentNullException>(a);
+            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfTestContextIsNull()
         {
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
             Action a = () => this.typeCache.GetTestMethodInfo(testMethod, null);
-            
-            Assert.ThrowsException<ArgumentNullException>(a);
+
+            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldReturnNullIfClassInfoForTheMethodIsNull()
         {
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
@@ -78,7 +86,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>())));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldReturnNullIfLoadingTypeThrowsTypeLoadException()
         {
             var testMethod = new TestMethod("M", "System.TypedReference[]", "A", isAsync: false);
@@ -89,7 +97,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>())));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfLoadingTypeThrowsException()
         {
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
@@ -109,7 +117,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             StringAssert.StartsWith(exception.Message, "Unable to get type C. Error: System.Exception: Load failure");
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfTypeDoesNotHaveADefaultConstructor()
         {
             string className = typeof(DummyTestClassWithNoDefaultConstructor).FullName;
@@ -127,7 +135,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             StringAssert.StartsWith(exception.Message, "Unable to get default constructor for class " + className);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfTestContextHasATypeMismatch()
         {
             string className = typeof(DummyTestClassWithIncorrectTestContextType).FullName;
@@ -145,7 +153,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             StringAssert.StartsWith(exception.Message, string.Format("The {0}.TestContext has incorrect type.", className));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfTestContextHasMultipleAmbiguousTestContextProperties()
         {
             string className = typeof(DummyTestClassWithMultipleTestContextProperties).FullName;
@@ -163,7 +171,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             StringAssert.StartsWith(exception.Message, string.Format("Unable to find property {0}.TestContext. Error:{1}.", className, "Ambiguous match found."));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldSetTestContextIfPresent()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -181,7 +189,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNotNull(testMethodInfo.Parent.TestContextProperty);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldSetTestContextToNullIfNotPresent()
         {
             var type = typeof(DummyTestClassWithInitializeMethods);
@@ -201,7 +209,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region Assembly Info Creation tests.
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldAddAssemblyInfoToTheCache()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -218,7 +226,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(1, this.typeCache.AssemblyInfoCache.Count());
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldNotThrowIfWeFailToDiscoverTypeFromAnAssembly()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -238,7 +246,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(1, this.typeCache.AssemblyInfoCache.Count());
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheAssemblyInitializeAttribute()
         {
             var type = typeof(DummyTestClassWithInitializeMethods);
@@ -258,7 +266,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(type.GetMethod("AssemblyInit"), this.typeCache.AssemblyInfoCache.ToArray()[0].AssemblyInitializeMethod);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheAssemblyCleanupAttribute()
         {
             var type = typeof(DummyTestClassWithCleanupMethods);
@@ -278,7 +286,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(type.GetMethod("AssemblyCleanup"), this.typeCache.AssemblyInfoCache.ToArray()[0].AssemblyCleanupMethod);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheAssemblyInitAndCleanupAttribute()
         {
             var type = typeof(DummyTestClassWithInitAndCleanupMethods);
@@ -301,7 +309,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(type.GetMethod("AssemblyInit"), this.typeCache.AssemblyInfoCache.ToArray()[0].AssemblyInitializeMethod);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfAssemblyInitHasIncorrectSignature()
         {
             var type = typeof(DummyTestClassWithIncorrectInitializeMethods);
@@ -333,7 +341,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, exception.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfAssemblyCleanupHasIncorrectSignature()
         {
             var type = typeof(DummyTestClassWithIncorrectCleanupMethods);
@@ -365,7 +373,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, exception.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheAssemblyInfoInstanceAndReuseTheCache()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -391,7 +399,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region ClassInfo Creation tests.
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldAddClassInfoToTheCache()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -410,7 +418,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNull(this.typeCache.ClassInfoCache.ToArray()[0].TestCleanupMethod);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheClassInitializeAttribute()
         {
             var type = typeof(DummyTestClassWithInitializeMethods);
@@ -430,7 +438,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(type.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheClassCleanupAttribute()
         {
             var type = typeof(DummyTestClassWithCleanupMethods);
@@ -450,7 +458,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(type.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheClassInitAndCleanupAttribute()
         {
             var type = typeof(DummyTestClassWithInitAndCleanupMethods);
@@ -473,7 +481,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(type.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfClassInitHasIncorrectSignature()
         {
             var type = typeof(DummyTestClassWithIncorrectInitializeMethods);
@@ -505,7 +513,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, exception.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfClassCleanupHasIncorrectSignature()
         {
             var type = typeof(DummyTestClassWithIncorrectCleanupMethods);
@@ -537,7 +545,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, exception.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheTestInitializeAttribute()
         {
             var type = typeof(DummyTestClassWithInitializeMethods);
@@ -557,7 +565,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(type.GetMethod("TestInit"), this.typeCache.ClassInfoCache.ToArray()[0].TestInitializeMethod);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheTestCleanupAttribute()
         {
             var type = typeof(DummyTestClassWithCleanupMethods);
@@ -577,7 +585,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(type.GetMethod("TestCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].TestCleanupMethod);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfTestInitOrCleanupHasIncorrectSignature()
         {
             var type = typeof(DummyTestClassWithIncorrectInitializeMethods);
@@ -610,7 +618,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, exception.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheTestInitializeAttributeDefinedInBaseClass()
         {
             var type = typeof(DummyDerivedTestClassWithInitializeMethods);
@@ -631,7 +639,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(baseType.GetMethod("TestInit"), this.typeCache.ClassInfoCache.ToArray()[0].BaseTestInitializeMethodsQueue.Peek());
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheTestCleanupAttributeDefinedInBaseClass()
         {
             var type = typeof(DummyDerivedTestClassWithCleanupMethods);
@@ -652,7 +660,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(baseType.GetMethod("TestCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].BaseTestCleanupMethodsQueue.Peek());
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheClassInfoInstanceAndReuseFromCache()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -678,7 +686,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region Method resolution tests
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowIfTestMethodHasIncorrectSignatureOrCannotBeFound()
         {
             var type = typeof(DummyTestClassWithIncorrectTestMethodSignatures);
@@ -704,7 +712,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, exception.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldReturnTestMethodInfo()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -721,7 +729,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNotNull(testMethodInfo.Executor);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldReturnTestMethodInfoWithTimeout()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -741,7 +749,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNotNull(testMethodInfo.Executor);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldThrowWhenTimeoutIsIncorrect()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -769,7 +777,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, exception.Message);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldReturnTestMethodInfoForMethodsAdornedWithADerivedTestMethodAttribute()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -787,7 +795,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNotNull(testMethodInfo.Executor is DerivedTestMethodAttribute);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldSetTestContextWithCustomProperty()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -805,7 +813,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual("Me", customProperty.Value);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldReportWarningIfCustomPropertyHasSameNameAsPredefinedProperties()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -827,7 +835,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, testMethodInfo.NotRunnableReason);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldReportWarningIfCustomPropertyNameIsEmpty()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -848,7 +856,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, testMethodInfo.NotRunnableReason);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldReportWarningIfCustomPropertyNameIsNull()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -869,7 +877,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, testMethodInfo.NotRunnableReason);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldReportWarningIfCustomPropertyIsdefinedMultipleTimes()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -890,7 +898,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedMessage, testMethodInfo.NotRunnableReason);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedTestClasses()
         {
             var type = typeof(DerivedTestClass);
@@ -913,7 +921,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region ClassInfoListWithExecutableCleanupMethods tests
 
-        [TestMethod]
+        [TestMethodV1]
         public void ClassInfoListWithExecutableCleanupMethodsShouldReturnEmptyListWhenClassInfoCacheIsEmpty()
         {
             var cleanupMethods = this.typeCache.ClassInfoListWithExecutableCleanupMethods;
@@ -922,7 +930,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(0, cleanupMethods.Count());
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ClassInfoListWithExecutableCleanupMethodsShouldReturnEmptyListWhenClassInfoCacheDoesNotHaveTestCleanupMethods()
         {
             var type = typeof(DummyTestClassWithCleanupMethods);
@@ -945,7 +953,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(0, cleanupMethods.Count());
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ClassInfoListWithExecutableCleanupMethodsShouldReturnClassInfosWithExecutableCleanupMethods()
         {
             var type = typeof(DummyTestClassWithCleanupMethods);
@@ -973,7 +981,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region AssemblyInfoListWithExecutableCleanupMethods tests
 
-        [TestMethod]
+        [TestMethodV1]
         public void AssemblyInfoListWithExecutableCleanupMethodsShouldReturnEmptyListWhenAssemblyInfoCacheIsEmpty()
         {
             var cleanupMethods = this.typeCache.AssemblyInfoListWithExecutableCleanupMethods;
@@ -982,7 +990,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(0, cleanupMethods.Count());
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void AssemblyInfoListWithExecutableCleanupMethodsShouldReturnEmptyListWhenAssemblyInfoCacheDoesNotHaveTestCleanupMethods()
         {
             var type = typeof(DummyTestClassWithCleanupMethods);
@@ -1005,7 +1013,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(0, cleanupMethods.Count());
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void AssemblyInfoListWithExecutableCleanupMethodsShouldReturnAssemblyInfosWithExecutableCleanupMethods()
         {
             var type = typeof(DummyTestClassWithCleanupMethods);
@@ -1049,7 +1057,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         private class DummyTestClassWithIncorrectTestContextType
         {
             // This is TP.TF type.
-            public virtual TestContext TestContext { get; set; }
+            public virtual int TestContext { get; set; }
         }
 
         private class DummyTestClassWithTestContextProperty : DummyTestClassWithIncorrectTestContextType
@@ -1064,7 +1072,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         private class DummyTestClassWithInitializeMethods
         {
-            public static void AssemblyInit(UTF.TestContext tc)
+            public static void AssemblyInit(UTFExtension.TestContext tc)
             {
             }
 
@@ -1104,7 +1112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         private class DummyTestClassWithInitAndCleanupMethods
         {
-            public static void AssemblyInit(UTF.TestContext tc)
+            public static void AssemblyInit(UTFExtension.TestContext tc)
             {
             }
             
@@ -1120,7 +1128,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         private class DummyTestClassWithIncorrectInitializeMethods
         {
-            public void AssemblyInit(UTF.TestContext tc)
+            public void AssemblyInit(UTFExtension.TestContext tc)
             {
             }
 
@@ -1144,7 +1152,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         internal class DummyTestClassWithTestMethods
         {
-            public UTF.TestContext TestContext { get; set; }
+            public UTFExtension.TestContext TestContext { get; set; }
 
             [UTF.TestMethod]
             public void TestMethod()

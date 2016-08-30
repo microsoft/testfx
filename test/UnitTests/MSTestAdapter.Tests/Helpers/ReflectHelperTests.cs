@@ -2,16 +2,22 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 {
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+    
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+
     using System.Linq;
     using System.Reflection;
-
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-
+    
     using Moq;
 
     using TestableImplementations;
 
-    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class ReflectHelperTests

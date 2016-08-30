@@ -27,6 +27,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     using TestFrameworkV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using Ignore = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute;
 
     [TestClass]
     public class DesktopTestDeploymentTests
@@ -198,6 +199,58 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         #region Deploy tests
 
         [TestMethod]
+        public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseButHasDeploymentItems()
+        {
+            var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
+            testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, new[]
+                    {
+                        new KeyValuePair<string, string>(
+                            DefaultDeploymentItemPath,
+                            DefaultDeploymentItemOutputDirectory)
+                    });
+
+            var testDeployment = new TestDeployment(
+                new DeploymentItemUtility(this.mockReflectionUtility.Object),
+                new DeploymentUtility(),
+                this.mockFileUtility.Object);
+
+            string runSettingxml =
+                 @"<DeploymentEnabled>False</DeploymentEnabled>";
+            StringReader stringReader = new StringReader(runSettingxml);
+            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
+            mstestSettingsProvider.Load(reader);
+
+            //Deployment should not happen
+            Assert.IsFalse(testDeployment.Deploy(new List<TestCase> { testCase }, null, null));
+            //Deplyment directories should not be created
+            Assert.IsNull(testDeployment.GetDeploymentDirectory());
+        }
+
+        [TestMethod]
+        public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseAndHasNoDeploymentItems()
+        {
+            var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
+            testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
+            var testDeployment = new TestDeployment(
+                new DeploymentItemUtility(this.mockReflectionUtility.Object),
+                new DeploymentUtility(),
+                this.mockFileUtility.Object);
+
+            string runSettingxml =
+                @"<DeploymentEnabled>False</DeploymentEnabled>";
+            StringReader stringReader = new StringReader(runSettingxml);
+            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
+            mstestSettingsProvider.Load(reader);
+
+            //Deployment should not happen
+            Assert.IsFalse(testDeployment.Deploy(new List<TestCase> { testCase }, null, null));
+            //Deployment directories should get created
+            Assert.IsNotNull(testDeployment.GetDeploymentDirectory());
+        }
+
+        [TestMethod]
         public void DeployShouldReturnFalseWhenDeploymentEnabledSetToTrueButHasNoDeploymentItems()
         {
             var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
@@ -208,37 +261,46 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
                 this.mockFileUtility.Object);
 
             string runSettingxml =
-                 @"<MSTestV2>
-                        <DeploymentEnabled>True</DeploymentEnabled>
-                  </MSTestV2>";
+                @"<DeploymentEnabled>True</DeploymentEnabled>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
             mstestSettingsProvider.Load(reader);
 
+            //Deployment should not happen
             Assert.IsFalse(testDeployment.Deploy(new List<TestCase> { testCase }, null, null));
+            //Deployment directories should get created
+            Assert.IsNotNull(testDeployment.GetDeploymentDirectory());
         }
 
+        //[Todo] This test has to have mocks. It actually deploys stuff and we cannot assume that all the dependencies get copied over to bin\debug.
         [TestMethod]
-        public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalse()
+        [Ignore]
+        public void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()
         {
-            var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
-            testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
+            var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
+            testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, new[]
+                    {
+                        new KeyValuePair<string, string>(
+                            DefaultDeploymentItemPath,
+                            DefaultDeploymentItemOutputDirectory)
+                    });
             var testDeployment = new TestDeployment(
                 new DeploymentItemUtility(this.mockReflectionUtility.Object),
                 new DeploymentUtility(),
                 this.mockFileUtility.Object);
 
             string runSettingxml =
-                @"<MSTestV2>
-                        <DeploymentEnabled>False</DeploymentEnabled>
-                  </MSTestV2>";
+                @"<DeploymentEnabled>True</DeploymentEnabled>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
             mstestSettingsProvider.Load(reader);
 
-            Assert.IsFalse(testDeployment.Deploy(new List<TestCase> { testCase }, null, null));
+            //Deployment should happen
+            Assert.IsTrue(testDeployment.Deploy(new List<TestCase> { testCase }, null, new Mock<IFrameworkHandle>().Object));
+            //Deployment directories should get created
+            Assert.IsNotNull(testDeployment.GetDeploymentDirectory());
         }
 
         [TestMethod]
@@ -326,9 +388,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         public void GetDeploymentInformationShouldReturnAppBaseDirectoryIfRunDirectoryIsNull()
         {
             TestDeployment.Reset();
-            var properties = TestDeployment.GetDeploymentInformation();
+            var properties = TestDeployment.GetDeploymentInformation(Assembly.GetExecutingAssembly().Location);
             
-            var applicationBaseDirectory = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
+            var applicationBaseDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var expectedProperties = new Dictionary<string, object>
                                          {
                                              {
@@ -371,7 +433,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         }
 
         [TestMethod]
-        public void GetDeploymentInformationShouldReturnRunDirecotryInformation()
+        public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNull()
         {
             // Arrange.
             TestRunDirectories testRunDirectories;
@@ -386,7 +448,68 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             Assert.IsTrue(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
             // Act.
-            var properties = TestDeployment.GetDeploymentInformation();
+            var properties = TestDeployment.GetDeploymentInformation(null);
+
+            // Assert.
+            var expectedProperties = new Dictionary<string, object>
+                                         {
+                                             {
+                                                 TestContextPropertyStrings.TestRunDirectory,
+                                                 testRunDirectories.RootDeploymentDirectory
+                                             },
+                                             {
+                                                 TestContextPropertyStrings.DeploymentDirectory,
+                                                 testRunDirectories.OutDirectory
+                                             },
+                                             {
+                                                 TestContextPropertyStrings.ResultsDirectory,
+                                                 testRunDirectories.InDirectory
+                                             },
+                                             {
+                                                 TestContextPropertyStrings
+                                                 .TestRunResultsDirectory,
+                                                 testRunDirectories.InMachineNameDirectory
+                                             },
+                                             {
+                                                 TestContextPropertyStrings
+                                                 .TestResultsDirectory,
+                                                 testRunDirectories.InDirectory
+                                             },
+                                             {
+                                                 TestContextPropertyStrings.TestDir,
+                                                 testRunDirectories.RootDeploymentDirectory
+                                             },
+                                             {
+                                                 TestContextPropertyStrings.TestDeploymentDir,
+                                                 testRunDirectories.OutDirectory
+                                             },
+                                             {
+                                                 TestContextPropertyStrings.TestLogsDir,
+                                                 testRunDirectories.InMachineNameDirectory
+                                             }
+                                         };
+
+            Assert.IsNotNull(properties);
+            CollectionAssert.AreEqual(expectedProperties.ToList(), properties.ToList());
+        }
+
+        [TestMethod]
+        public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNotNull()
+        {
+            // Arrange.
+            TestRunDirectories testRunDirectories;
+            var testCase = this.GetTestCase(Assembly.GetExecutingAssembly().Location);
+
+            // Setup mocks.
+            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out testRunDirectories);
+
+            var mockRunContext = new Mock<IRunContext>();
+            mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
+
+            Assert.IsTrue(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+
+            // Act.
+            var properties = TestDeployment.GetDeploymentInformation(Assembly.GetExecutingAssembly().Location);
 
             // Assert.
             var expectedProperties = new Dictionary<string, object>

@@ -2,14 +2,21 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel
 {
+    extern alias FrameworkV1;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
 
-    using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
-
     using MSTest.TestAdapter;
     using MSTest.TestAdapter.ObjectModel;
+    using global::MSTestAdapter.TestUtilities;
 
     [TestClass]
     public class UnitTestElementTests
@@ -26,17 +33,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
 
         #region Ctor tests
 
-        [TestMethod]
+        [TestMethodV1]
         public void UnitTestElementConstructorShouldThrowIfTestMethodIsNull()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => new UnitTestElement(null));
+            ActionUtility.ActionShouldThrowExceptionOfType(
+                () => new UnitTestElement(null),
+                typeof(ArgumentNullException));
         }
 
         #endregion
 
         #region ToTestCase tests
 
-        [TestMethod]
+        [TestMethodV1]
         public void ToTestCaseShouldSetFullyQualifiedName()
         {
             var testCase = this.unitTestElement.ToTestCase();
@@ -44,7 +53,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             Assert.AreEqual("C.M", testCase.FullyQualifiedName);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ToTestCaseShouldSetExecutorUri()
         {
             var testCase = this.unitTestElement.ToTestCase();
@@ -52,7 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             Assert.AreEqual(Constants.ExecutorUri, testCase.ExecutorUri);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ToTestCaseShouldSetAssemblyName()
         {
             var testCase = this.unitTestElement.ToTestCase();
@@ -60,7 +69,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             Assert.AreEqual("A", testCase.Source);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ToTestCaseShouldSetDisplayName()
         {
             var testCase = this.unitTestElement.ToTestCase();
@@ -68,7 +77,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             Assert.AreEqual("M", testCase.DisplayName);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ToTestCaseShouldSetTestEnabledProperty()
         {
             this.unitTestElement.Ignored = false;
@@ -82,7 +91,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             Assert.AreEqual(false, testCase.GetPropertyValue(Constants.TestEnabledProperty));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ToTestCaseShouldSetTestClassNameProperty()
         {
             var testCase = this.unitTestElement.ToTestCase();
@@ -90,7 +99,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             Assert.AreEqual("C", testCase.GetPropertyValue(Constants.TestClassNameProperty));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ToTestCaseShouldSetIsAsyncProperty()
         {
             this.unitTestElement.IsAsync = true;
@@ -104,7 +113,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             Assert.AreEqual(false, testCase.GetPropertyValue(Constants.AsyncTestProperty));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ToTestCaseShouldSetTestCategoryIfPresent()
         {
             this.unitTestElement.TestCategory = null;
@@ -123,7 +132,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             CollectionAssert.AreEqual(new string[] { "TC" }, (testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[]));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ToTestCaseShouldSetPriorityIfPresent()
         {
             this.unitTestElement.Priority = null;
@@ -137,7 +146,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             Assert.AreEqual(1, testCase.GetPropertyValue(Constants.PriorityProperty));
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ToTestCaseShouldSetTraitsIfPresent()
         {
             this.unitTestElement.Traits = null;
@@ -154,7 +163,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             Assert.AreEqual("value", testCase.Traits.ToArray()[0].Value);
         }
 
-        [TestMethod]
+        [TestMethodV1]
         public void ToTestCaseShouldSetDeploymentItemPropertyIfPresent()
         {
             this.unitTestElement.DeploymentItems = null;
