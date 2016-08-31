@@ -1,7 +1,7 @@
 ## Issue type
 Please specify the type of issue:
 - [ ] Specification
-- [ ] Code defect
+- [x] Code defect
 - [ ] Question
 
 ## Steps to reproduce
