@@ -23,6 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -580,7 +581,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             internal override void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext,
                 IFrameworkHandle frameworkHandle, bool isDeploymentDone)
             {
-                Assert.AreEqual(tests.Count(), 2);
+                //There are two sources and each source has 2 tests
+                Assert.AreEqual(tests.Count(), 4);
+            }
+
+            internal override UnitTestDiscoverer GetUnitTestDiscoverer()
+            {
+                return new TestableUnitTestDiscoverer();
             }
         }
         #endregion

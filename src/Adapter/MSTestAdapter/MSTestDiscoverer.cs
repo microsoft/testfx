@@ -117,7 +117,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <param name="logger"> The logger. </param>
         /// <param name="discoverySink"> The discovery Sink. </param>
         /// <param name="runSettings"> The run settings. </param>
-        internal void DiscoverTestsInSource(
+        internal virtual void DiscoverTestsInSource(
             string source,
             IMessageLogger logger,
             ITestCaseDiscoverySink discoverySink,

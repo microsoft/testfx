@@ -102,7 +102,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 var logger = (IMessageLogger)frameworkHandle;
                 
                 // discover the tests
-                (new UnitTestDiscoverer()).DiscoverTestsInSource(source, logger, discoverySink, runContext?.RunSettings);
+                this.GetUnitTestDiscoverer().DiscoverTestsInSource(source, logger, discoverySink, runContext?.RunSettings);
                 tests.AddRange(discoverySink.Tests);
 
                 //Clear discoverSinksTests so that it just stores test for one source at one point of time
@@ -279,6 +279,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             this.LogWarnings(testExecutionRecorder, warnings);
         }
+
+        internal virtual UnitTestDiscoverer GetUnitTestDiscoverer()
+        {
+            return new UnitTestDiscoverer();
+        } 
 
         private void CacheSessionParameters(IRunContext runContext, ITestExecutionRecorder testExecutionRecorder)
         {
