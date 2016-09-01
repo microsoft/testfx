@@ -125,7 +125,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void GetFilterExpressionForValidRunContextReturnsValidTestCaseFilterExpression()
         {
             TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
-            var dummyFilterExpression = new TestableTestCaseFilterExpression();
+            var dummyFilterExpression = new TestableTestCaseFilterExpressionForTestMethodFilterTests();
             TestableRunContext runContext = new TestableRunContext(() => dummyFilterExpression);
             bool filterHasError;
             var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, recorder, out filterHasError);
@@ -159,54 +159,58 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             {
             }
         }
+    }
 
-        private class TestableTestExecutionRecorder : IMessageLogger
+    #region Testable implementations
+
+    internal class TestableTestExecutionRecorder : IMessageLogger
+    {
+        public TestMessageLevel TestMessageLevel { get; set; }
+
+        public string Message { get; set; }
+
+        public void SendMessage(TestMessageLevel testMessageLevel, string message)
         {
-            public TestMessageLevel TestMessageLevel { get; set; }
-
-            public string Message { get; set; }
-
-            public void SendMessage(TestMessageLevel testMessageLevel, string message)
-            {
-                this.TestMessageLevel = testMessageLevel;
-                this.Message = message;
-            }
-        }
-
-        private class TestableRunContext : IRunContext
-        {
-            private readonly Func<ITestCaseFilterExpression> GetFilter;
-
-            public TestableRunContext(Func<ITestCaseFilterExpression> getFilter)
-            {
-                this.GetFilter = getFilter;
-            }
-                    
-            public IRunSettings RunSettings { get; }
-
-            public ITestCaseFilterExpression GetTestCaseFilter(
-                IEnumerable<string> supportedProperties,
-                Func<string, TestProperty> propertyProvider)
-            {
-                return this.GetFilter();
-            }
-            
-            public bool KeepAlive { get; }
-            public bool InIsolation { get; }
-            public bool IsDataCollectionEnabled { get; }
-            public bool IsBeingDebugged { get; }
-            public string TestRunDirectory { get; }
-            public string SolutionDirectory { get; }
-        }
-
-        private class TestableTestCaseFilterExpression : ITestCaseFilterExpression
-        {
-            public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string TestCaseFilterValue { get; }
+            this.TestMessageLevel = testMessageLevel;
+            this.Message = message;
         }
     }
+
+    internal class TestableRunContext : IRunContext
+    {
+        private readonly Func<ITestCaseFilterExpression> GetFilter;
+
+        public TestableRunContext(Func<ITestCaseFilterExpression> getFilter)
+        {
+            this.GetFilter = getFilter;
+        }
+
+        public IRunSettings RunSettings { get; }
+
+        public ITestCaseFilterExpression GetTestCaseFilter(
+            IEnumerable<string> supportedProperties,
+            Func<string, TestProperty> propertyProvider)
+        {
+            return this.GetFilter();
+        }
+
+        public bool KeepAlive { get; }
+        public bool InIsolation { get; }
+        public bool IsDataCollectionEnabled { get; }
+        public bool IsBeingDebugged { get; }
+        public string TestRunDirectory { get; }
+        public string SolutionDirectory { get; }
+    }
+
+    internal class TestableTestCaseFilterExpressionForTestMethodFilterTests : ITestCaseFilterExpression
+    {
+        public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string TestCaseFilterValue { get; }
+    }
+
+    #endregion
 }
