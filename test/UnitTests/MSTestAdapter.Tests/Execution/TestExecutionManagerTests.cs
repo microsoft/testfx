@@ -23,6 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -352,6 +353,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNotNull(DummyTestClass.TestContextProperties);
         }
 
+        [TestMethodV1]
+        public void RunTestsForMultipleSourcesShouldRunEachTestJustOnce()
+        {
+            int testsCount = 0;
+            var sources = new List<string> { Assembly.GetExecutingAssembly().Location, Assembly.GetExecutingAssembly().Location };
+            TestableTestExecutionManager testableTestExecutionmanager = new TestableTestExecutionManager();
+
+            testableTestExecutionmanager.ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) =>
+            {
+                testsCount += tests.Count();
+            };
+
+            testableTestExecutionmanager.RunTests(sources, this.runContext, this.frameworkHandle, this.cancellationToken);
+            Assert.AreEqual(testsCount, 4);
+        }
+
         #endregion
 
         #region private methods
@@ -566,6 +583,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             return this.matchTest(testCase);
         }
+    }
+
+    internal class TestableTestExecutionManager : TestExecutionManager
+    {
+         internal override void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext,
+         IFrameworkHandle frameworkHandle, bool isDeploymentDone)
+         {
+            if (this.ExecuteTestsWrapper != null)
+            {
+                this.ExecuteTestsWrapper.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
+            }
+         }
+
+         internal override UnitTestDiscoverer GetUnitTestDiscoverer()
+         {
+             return new TestableUnitTestDiscoverer();
+         }
+
+         internal Action<IEnumerable<TestCase>, IRunContext, IFrameworkHandle, bool> ExecuteTestsWrapper;
     }
 
     #endregion
