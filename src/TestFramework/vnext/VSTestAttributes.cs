@@ -313,6 +313,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// </summary>
     public class TestResult
     {
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestResult"/> class.
+        /// </summary>
+        public TestResult()
+        {
+            DatarowIndex = -1;
+        }
+
         /// <summary>
         /// Gets or sets the display name of the result. Useful when returning multiple results.
         /// If null then Method name is used as DisplayName.
@@ -348,6 +357,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Gets or sets the duration of test execution.
         /// </summary>
         public TimeSpan Duration { get; set; }
+
+        /// <summary>
+        /// Data row index in data source. Set only for results of individual 
+        /// run of data row of a data driven test.
+        /// </summary>
+        public int DatarowIndex { get; set; }
 
         /// <summary>
         /// Gets or sets the return value of the test method. (Currently null always).

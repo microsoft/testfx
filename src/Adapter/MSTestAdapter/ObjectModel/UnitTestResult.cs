@@ -27,6 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         internal UnitTestResult()
         {
+            DatarowIndex = -1;
         }
 
         /// <summary>
@@ -37,6 +38,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         {
             this.Outcome = testFailedException.Outcome;
             this.ErrorMessage = testFailedException.Message;
+            DatarowIndex = -1;
 
             if (testFailedException.StackTraceInformation != null)
             {
@@ -56,6 +58,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         {
             this.Outcome = outcome;
             this.ErrorMessage = errorMessage;
+            DatarowIndex = -1;
         }
 
         /// <summary>
@@ -114,6 +117,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public int ErrorColumnNumber { get; private set; }
 
         /// <summary>
+        /// Data row index in data source. Set only for results of individual 
+        /// run of data row of a data driven test.
+        /// </summary>
+        public int DatarowIndex { get; internal set; }
+
+        /// <summary>
         /// Gets the result files attached by the test. 
         /// </summary>
         public IList<string> ResultFiles { get; internal set; }
@@ -137,8 +146,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                                             ErrorStackTrace = this.ErrorStackTrace,
                                             Outcome = UnitTestOutcomeHelper.ToTestOutcome(this.Outcome, mapInconclusiveToFailed),
                                             StartTime = startTime,
-                                            EndTime = endTime
-                                        };
+                                            EndTime = endTime                                   
+            };
 
             if (!string.IsNullOrEmpty(this.StandardOut))
             {

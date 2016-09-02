@@ -107,6 +107,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} (Data Row {1}).
+        /// </summary>
+        internal static string DataDrivenResultDisplayName {
+            get {
+                return ResourceManager.GetString("DataDrivenResultDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Debug Trace:.
         /// </summary>
         internal static string DebugTraceBanner {

@@ -274,4 +274,7 @@
   <data name="InvalidSettingsXmlElement" xml:space="preserve">
     <value>Invalid settings '{0}'. Unexpected XmlElement: '{1}'.</value>
   </data>
+  <data name="DataDrivenResultDisplayName" xml:space="preserve">
+    <value>{0} (Data Row {1})</value>
+  </data>
 </root>

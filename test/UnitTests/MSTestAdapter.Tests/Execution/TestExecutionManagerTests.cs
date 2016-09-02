@@ -371,6 +371,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #endregion
 
+        [TestMethodV1]
+        public void SendTestResultsShouldFillInDataRowIndexIfTestIsDataDriven()
+        {
+            var testCase = new TestCase("DummyTest", new System.Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
+            UnitTestResult unitTestResult1 = new UnitTestResult() { DatarowIndex = 0, DisplayName = "DummyTest"};
+            UnitTestResult unitTestResult2 = new UnitTestResult() { DatarowIndex = 1, DisplayName = "DummyTest" };
+            this.TestExecutionManager.SendTestResults(testCase,new UnitTestResult[] {unitTestResult1,unitTestResult2},new DateTimeOffset(), new DateTimeOffset(), this.frameworkHandle);
+            Assert.AreEqual(frameworkHandle.TestDisplayNameList[0],"DummyTest (Data Row 0)");
+            Assert.AreEqual(frameworkHandle.TestDisplayNameList[1],"DummyTest (Data Row 1)");
+        }
+
         #region private methods
 
         private TestCase GetTestCase(Type typeOfClass, string testName, bool ignore = false)
@@ -486,13 +497,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public readonly List<string> ResultsList;
             public readonly List<string> TestCaseStartList;
             public readonly List<string> TestCaseEndList;
-            
+            public readonly List<string> TestDisplayNameList;
             public TestableFrameworkHandle()
             {
                 this.MessageList = new List<string>();
                 this.ResultsList = new List<string>();
                 this.TestCaseStartList = new List<string>();
                 this.TestCaseEndList = new List<string>();
+                this.TestDisplayNameList = new List<string>();
             }
 
             public bool EnableShutdownAfterTestRun { get; set; }
@@ -505,6 +517,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public void RecordResult(TestResult testResult)
             {
                this.ResultsList.Add(testResult.ToString());
+               this.TestDisplayNameList.Add(testResult.DisplayName);
             }
 
             public void RecordStart(TestCase testCase)

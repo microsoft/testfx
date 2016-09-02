@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     
@@ -41,6 +42,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             this.TestMethodFilter = new TestMethodFilter();
             this.sessionParameters = new Dictionary<string, object>();
+            this.adapterSettings = new MSTestSettings();
         }
 
         /// <summary>
@@ -326,7 +328,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
         }
 
-        private void SendTestResults(TestCase test, UnitTestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime, ITestExecutionRecorder testExecutionRecorder)
+        internal void SendTestResults(TestCase test, UnitTestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime, ITestExecutionRecorder testExecutionRecorder)
         {
             if (!(unitTestResults?.Length > 0))
             {
@@ -342,6 +344,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 var testResult = unitTestResult.ToTestResult(test, startTime, endTime, adapterSettings.MapInconclusiveToFailed);
+
+                if (unitTestResult.DatarowIndex >= 0)
+                {
+                    testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, unitTestResult.DatarowIndex);
+                }
                 testExecutionRecorder.RecordEnd(test, testResult.Outcome);
 
                 if (testResult.Outcome == TestOutcome.Failed)
