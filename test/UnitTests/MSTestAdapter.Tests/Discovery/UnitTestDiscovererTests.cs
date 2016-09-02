@@ -261,4 +261,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
         public int MaxLineNumber { get; set; }
     }
+
+    internal class TestableUnitTestDiscoverer : UnitTestDiscoverer
+    {
+        internal override void DiscoverTestsInSource(string source,
+            IMessageLogger logger,
+            ITestCaseDiscoverySink discoverySink,
+            IRunSettings runSettings)
+        {
+            var testCase1 = new TestCase("A", new System.Uri("executor://testExecutor"), source);
+            var testCase2 = new TestCase("B", new System.Uri("executor://testExecutor"), source);
+            discoverySink.SendTestCase(testCase1);
+            discoverySink.SendTestCase(testCase2);
+        }
+    }
 }
