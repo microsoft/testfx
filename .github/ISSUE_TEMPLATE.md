@@ -1,8 +1,5 @@
-## Issue type
-Please specify the type of issue:
-- [ ] Specification
-- [x] Code defect
-- [ ] Question
+## Description
+> Describe the issue you've observed
 
 ## Steps to reproduce
 > What steps can reproduce the defect?
