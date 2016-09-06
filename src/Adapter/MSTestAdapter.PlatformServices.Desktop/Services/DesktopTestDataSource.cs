@@ -113,6 +113,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
                             }
 
+                            currentResult[0].DatarowIndex = rowIndex;
+
                             watch.Stop();
                             currentResult[0].Duration = watch.Elapsed;
 

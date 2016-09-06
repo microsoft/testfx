@@ -27,13 +27,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         internal UnitTestResult()
         {
+            DatarowIndex = -1;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UnitTestResult"/> class.
         /// </summary>
         /// <param name="testFailedException"> The test failed exception. </param>
-        internal UnitTestResult(TestFailedException testFailedException)
+        internal UnitTestResult(TestFailedException testFailedException):this()
         {
             this.Outcome = testFailedException.Outcome;
             this.ErrorMessage = testFailedException.Message;
@@ -52,7 +53,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         /// <param name="outcome"> The outcome. </param>
         /// <param name="errorMessage"> The error message. </param>
-        internal UnitTestResult(UnitTestOutcome outcome, string errorMessage)
+        internal UnitTestResult(UnitTestOutcome outcome, string errorMessage):this()
         {
             this.Outcome = outcome;
             this.ErrorMessage = errorMessage;
@@ -114,6 +115,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public int ErrorColumnNumber { get; private set; }
 
         /// <summary>
+        /// Data row index in data source. Set only for results of individual 
+        /// run of data row of a data driven test.
+        /// </summary>
+        public int DatarowIndex { get; internal set; }
+
+        /// <summary>
         /// Gets the result files attached by the test. 
         /// </summary>
         public IList<string> ResultFiles { get; internal set; }
@@ -137,8 +144,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                                             ErrorStackTrace = this.ErrorStackTrace,
                                             Outcome = UnitTestOutcomeHelper.ToTestOutcome(this.Outcome, mapInconclusiveToFailed),
                                             StartTime = startTime,
-                                            EndTime = endTime
-                                        };
+                                            EndTime = endTime                                   
+            };
 
             if (!string.IsNullOrEmpty(this.StandardOut))
             {

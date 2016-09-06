@@ -349,7 +349,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void ConvertTestResultToUnitTestResultForTestResultShouldSetLoggingDatatForConvertedUnitTestResults()
         {
             var timespan = new TimeSpan();
-            var results = new[] { new UTF.TestResult() { DebugTrace = "debugTrace", DisplayName = "displayName", Duration = timespan, LogOutput = "logOutput", LogError = "logError"} };
+            var results = new[] { new UTF.TestResult() { DebugTrace = "debugTrace", DisplayName = "displayName", Duration = timespan, LogOutput = "logOutput",
+                                                         LogError = "logError", DatarowIndex = 1} };
             var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
 
             Assert.AreEqual("logOutput", convertedResults[0].StandardOut);
@@ -357,6 +358,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual("displayName", convertedResults[0].DisplayName);
             Assert.AreEqual("debugTrace", convertedResults[0].DebugTrace);
             Assert.AreEqual(timespan, convertedResults[0].Duration);
+            Assert.AreEqual(1,convertedResults[0].DatarowIndex);
         }
 
         [TestMethodV1]

@@ -275,6 +275,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 unitTestResult.DebugTrace = results[i].DebugTrace;
                 unitTestResult.Duration = results[i].Duration;
                 unitTestResult.DisplayName = results[i].DisplayName;
+                unitTestResult.DatarowIndex = results[i].DatarowIndex;
                 unitTestResult.ResultFiles = testContext.GetResultFiles();
                 unitTestResults[i] = unitTestResult;
             }
