@@ -32,9 +32,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="$(TestFxRoot)sdk\TestPlatform.ObjectModel.Core\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\TestFramework\UnitTestFramework.Core\UnitTestFramework.Extension.Core.csproj">
       <Project>{6c9fe494-8315-4667-b3f6-75dc62a62319}</Project>
       <Name>UnitTestFramework.Extension.Core</Name>
@@ -43,6 +40,12 @@
       <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
       <Name>UnitTestFramework</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.11.0.0\lib\portable-net45+win8+wpa81+wp8\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

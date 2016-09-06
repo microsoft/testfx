@@ -19,10 +19,7 @@
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="$(TestFxRoot)sdk\TestPlatform.ObjectModel.Core\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.UnitTestFramework">
-      <HintPath>$(TestFxRoot)sdk\Microsoft.VisualStudio.TestPlatform.UnitTestFramework\Microsoft.VisualStudio.TestPlatform.UnitTestFramework.dll</HintPath>
-    </Reference>
+    <Reference Include="$(TestFxRoot)sdk\TestPlatform.ObjectModel.UWP\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Services\UniversalFileOperationsTests.cs" />
@@ -42,6 +39,9 @@
       <Project>{f81c7549-e3a3-4770-ac3f-3bc7356e61e8}</Project>
       <Name>MSTestAdapter.TestUtilities</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

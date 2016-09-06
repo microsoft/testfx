@@ -40,22 +40,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     [TestClass]
     public class TestExecutionManagerTests
     {
-        private TestableRunContext runContext;
+        private TestableRunContextTestExecutionTests runContext;
 
         private TestableFrameworkHandle frameworkHandle;
 
         private TestRunCancellationToken cancellationToken;
-        
+
         private List<string> callers;
 
         private IPlatformServiceProvider originalPlatformService;
 
         private TestExecutionManager TestExecutionManager { get; set; }
-        
+
         [TestInitialize]
         public void TestInit()
         {
-            this.runContext = new TestableRunContext(() => new TestableTestCaseFilterExpression((p) => true));
+            this.runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => true));
             this.frameworkHandle = new TestableFrameworkHandle();
             this.cancellationToken = new TestRunCancellationToken();
 
@@ -82,7 +82,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             TestCase[] tests = new[] { testCase };
 
             // Causing the FilterExpressionError
-            this.runContext = new TestableRunContext(() => { throw new TestPlatformFormatException(); });
+            this.runContext = new TestableRunContextTestExecutionTests(() => { throw new TestPlatformFormatException(); });
 
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, this.cancellationToken);
 
@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(0, this.frameworkHandle.ResultsList.Count);
             Assert.AreEqual(0, this.frameworkHandle.TestCaseEndList.Count);
         }
-        
+
         [TestMethodV1]
         public void RunTestsForTestWithFilterShouldSendResultsForFilteredTests()
         {
@@ -99,20 +99,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var failingTestCase = this.GetTestCase(typeof(DummyTestClass), "FailingTest");
             TestCase[] tests = new[] { testCase, failingTestCase };
 
-            this.runContext = new TestableRunContext(() => new TestableTestCaseFilterExpression((p) => (p.DisplayName == "PassingTest")));
+            this.runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => (p.DisplayName == "PassingTest")));
 
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, this.cancellationToken);
 
             // FailingTest should be skipped because it does not match the filter criteria.
             List<string> expectedTestCaseStartList = new List<string>() { "PassingTest" };
-            List<string> expectedTestCaseEndList = new List<string>() { "PassingTest:Passed"};
+            List<string> expectedTestCaseEndList = new List<string>() { "PassingTest:Passed" };
             List<string> expectedResultList = new List<string>() { "PassingTest  Passed" };
 
             CollectionAssert.AreEqual(expectedTestCaseStartList, this.frameworkHandle.TestCaseStartList);
             CollectionAssert.AreEqual(expectedTestCaseEndList, this.frameworkHandle.TestCaseEndList);
             CollectionAssert.AreEqual(expectedResultList, this.frameworkHandle.ResultsList);
         }
-        
+
         [TestMethodV1]
         public void RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
         {
@@ -150,7 +150,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
             var failingTestCase = this.GetTestCase(typeof(DummyTestClass), "FailingTest");
             TestCase[] tests = new[] { testCase, failingTestCase };
-            
+
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, this.cancellationToken);
 
             List<string> expectedTestCaseStartList = new List<string>() { "PassingTest", "FailingTest" };
@@ -164,14 +164,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 this.frameworkHandle.ResultsList[1],
                 "FailingTest  Failed\r\n  Message: Assert.Fail failed. \r\n  StackTrace:\r\n   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestExecutionManagerTests.DummyTestClass.FailingTest()");
         }
-        
+
         [TestMethodV1]
         public void RunTestsForCancellationTokenCancelledSetToTrueShouldSendZeroResults()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
 
             TestCase[] tests = new[] { testCase };
-            
+
             // Cancel the test run
             this.cancellationToken.Cancel();
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, this.cancellationToken);
@@ -181,7 +181,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(0, this.frameworkHandle.ResultsList.Count);
             Assert.AreEqual(0, this.frameworkHandle.TestCaseEndList.Count);
         }
-        
+
         [TestMethodV1]
         public void RunTestsShouldLogResultCleanupWarnings()
         {
@@ -189,7 +189,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             TestCase[] tests = new[] { testCase };
 
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
-            
+
             // Warnings should get logged.
             Assert.AreEqual(1, this.frameworkHandle.MessageList.Count);
             Assert.IsTrue(this.frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
@@ -228,7 +228,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 td => td.Cleanup()).Callback(() => this.SetCaller("Cleanup"));
 
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
-            
+
             Assert.AreEqual("LoadAssembly", this.callers[0], "Cleanup should be called after execution.");
             Assert.AreEqual("Cleanup", this.callers[1], "Cleanup should be called after execution.");
         }
@@ -242,7 +242,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var testablePlatformService = this.SetupTestablePlatformService();
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
-            
+
             testablePlatformService.MockTestDeployment.Verify(td => td.Cleanup(), Times.Never);
         }
 
@@ -254,7 +254,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             TestCase[] tests = new[] { testCase, failingTestCase };
 
             var testablePlatformService = this.SetupTestablePlatformService();
-            
+
             // Setup mocks.
             testablePlatformService.MockTestDeployment.Setup(
                 td => td.Deploy(tests, this.runContext, this.frameworkHandle)).Returns(true);
@@ -297,7 +297,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             // Setup mocks.
             var testablePlatformService = this.SetupTestablePlatformService();
-            
+
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
 
             testablePlatformService.MockSettingsProvider.Verify(sp => sp.GetProperties(It.IsAny<string>()), Times.Once);
@@ -327,7 +327,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunTestsForSourceShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
         {
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
-            
+
             this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                          @"<RunSettings> 
                                             <TestRunParameters>
@@ -375,11 +375,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void SendTestResultsShouldFillInDataRowIndexIfTestIsDataDriven()
         {
             var testCase = new TestCase("DummyTest", new System.Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
-            UnitTestResult unitTestResult1 = new UnitTestResult() { DatarowIndex = 0, DisplayName = "DummyTest"};
+            UnitTestResult unitTestResult1 = new UnitTestResult() { DatarowIndex = 0, DisplayName = "DummyTest" };
             UnitTestResult unitTestResult2 = new UnitTestResult() { DatarowIndex = 1, DisplayName = "DummyTest" };
-            this.TestExecutionManager.SendTestResults(testCase,new UnitTestResult[] {unitTestResult1,unitTestResult2},new DateTimeOffset(), new DateTimeOffset(), this.frameworkHandle);
-            Assert.AreEqual(frameworkHandle.TestDisplayNameList[0],"DummyTest (Data Row 0)");
-            Assert.AreEqual(frameworkHandle.TestDisplayNameList[1],"DummyTest (Data Row 1)");
+            this.TestExecutionManager.SendTestResults(testCase, new UnitTestResult[] { unitTestResult1, unitTestResult2 }, new DateTimeOffset(), new DateTimeOffset(), this.frameworkHandle);
+            Assert.AreEqual(frameworkHandle.TestDisplayNameList[0], "DummyTest (Data Row 0)");
+            Assert.AreEqual(frameworkHandle.TestDisplayNameList[1], "DummyTest (Data Row 1)");
         }
 
         #region private methods
@@ -397,7 +397,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var testablePlatformService = new TestablePlatformServiceProvider();
             PlatformServiceProvider.Instance = testablePlatformService;
-            
+
             testablePlatformService.MockFileOperations.Setup(td => td.LoadAssembly(It.IsAny<string>()))
                 .Returns(
                     (string assemblyName) =>
@@ -450,7 +450,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             {
                 TestContextProperties = this.TestContext.Properties;
             }
-            
+
             [UTF.TestMethod]
             [UTF.TestCategory("Bar")]
             public void FailingTest()
@@ -465,7 +465,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 UTF.Assert.Fail();
             }
 
-            public static IDictionary<string,object> TestContextProperties
+            public static IDictionary<string, object> TestContextProperties
             {
                 get;
                 set;
@@ -488,112 +488,125 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         #endregion
+    }
 
-        #region Testable implementations
+    #region Testable implementations
 
-        private class TestableFrameworkHandle : IFrameworkHandle
+    internal class TestableFrameworkHandle : IFrameworkHandle
+    {
+        public readonly List<string> MessageList;
+        public readonly List<string> ResultsList;
+        public readonly List<string> TestCaseStartList;
+        public readonly List<string> TestCaseEndList;
+        public readonly List<string> TestDisplayNameList;
+        public TestableFrameworkHandle()
         {
-            public readonly List<string> MessageList;
-            public readonly List<string> ResultsList;
-            public readonly List<string> TestCaseStartList;
-            public readonly List<string> TestCaseEndList;
-            public readonly List<string> TestDisplayNameList;
-            public TestableFrameworkHandle()
-            {
-                this.MessageList = new List<string>();
-                this.ResultsList = new List<string>();
-                this.TestCaseStartList = new List<string>();
-                this.TestCaseEndList = new List<string>();
-                this.TestDisplayNameList = new List<string>();
-            }
+            this.MessageList = new List<string>();
+            this.ResultsList = new List<string>();
+            this.TestCaseStartList = new List<string>();
+            this.TestCaseEndList = new List<string>();
+            this.TestDisplayNameList = new List<string>();
+        }
 
-            public bool EnableShutdownAfterTestRun { get; set; }
 
-            public void SendMessage(TestMessageLevel testMessageLevel, string message)
-            {
-               this.MessageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
-            }
+        public bool EnableShutdownAfterTestRun { get; set; }
 
-            public void RecordResult(TestResult testResult)
-            {
-               this.ResultsList.Add(testResult.ToString());
-               this.TestDisplayNameList.Add(testResult.DisplayName);
-            }
+        public void RecordResult(TestResult testResult)
+        {
+            this.ResultsList.Add(testResult.ToString());
+            this.TestDisplayNameList.Add(testResult.DisplayName);
+        }
 
-            public void RecordStart(TestCase testCase)
-            {
-                this.TestCaseStartList.Add(testCase.DisplayName);
-            }
+        public void SendMessage(TestMessageLevel testMessageLevel, string message)
+        {
+            this.MessageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
+        }
 
-            public void RecordEnd(TestCase testCase, TestOutcome outcome)
-            {
-               this.TestCaseEndList.Add(string.Format("{0}:{1}", testCase.DisplayName, outcome));
-            }
+        public void RecordStart(TestCase testCase)
+        {
+            this.TestCaseStartList.Add(testCase.DisplayName);
+        }
 
-            public void RecordAttachments(IList<AttachmentSet> attachmentSets)
-            {
-               throw new NotImplementedException();
-            }
+        public void RecordEnd(TestCase testCase, TestOutcome outcome)
+        {
+            this.TestCaseEndList.Add(string.Format("{0}:{1}", testCase.DisplayName, outcome));
+        }
 
-            public int LaunchProcessWithDebuggerAttached(
-                string filePath,
-                string workingDirectory,
-                string arguments,
-                IDictionary<string, string> environmentVariables)
+        public void RecordAttachments(IList<AttachmentSet> attachmentSets)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int LaunchProcessWithDebuggerAttached(
+            string filePath,
+            string workingDirectory,
+            string arguments,
+            IDictionary<string, string> environmentVariables)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    internal class TestableRunContextTestExecutionTests : IRunContext
+    {
+        private readonly Func<ITestCaseFilterExpression> GetFilter;
+
+        public TestableRunContextTestExecutionTests(Func<ITestCaseFilterExpression> getFilter)
+        {
+            this.GetFilter = getFilter;
+            this.MockRunSettings = new Mock<IRunSettings>();
+        }
+
+        public Mock<IRunSettings> MockRunSettings { get; set; }
+
+        public IRunSettings RunSettings
+        {
+            get
             {
-                throw new NotImplementedException();
+                return this.MockRunSettings.Object;
             }
         }
 
-        private class TestableRunContext : IRunContext
+        public ITestCaseFilterExpression GetTestCaseFilter(
+            IEnumerable<string> supportedProperties,
+            Func<string, TestProperty> propertyProvider)
         {
-            private readonly Func<ITestCaseFilterExpression> GetFilter;
-
-            public TestableRunContext(Func<ITestCaseFilterExpression> getFilter)
-            {
-                this.GetFilter = getFilter;
-                this.MockRunSettings = new Mock<IRunSettings>();
-            }
-
-            public Mock<IRunSettings> MockRunSettings { get; set; }
-
-            public IRunSettings RunSettings
-            {
-                get
-                {
-                    return this.MockRunSettings.Object;
-                }
-            }
-
-            public ITestCaseFilterExpression GetTestCaseFilter(
-                IEnumerable<string> supportedProperties,
-                Func<string, TestProperty> propertyProvider)
-            {
-                return this.GetFilter();
-            }
-
-            public bool KeepAlive { get; }
-            public bool InIsolation { get; }
-            public bool IsDataCollectionEnabled { get; }
-            public bool IsBeingDebugged { get; }
-            public string TestRunDirectory { get; }
-            public string SolutionDirectory { get; }
+            return this.GetFilter();
         }
 
-        private class TestableTestCaseFilterExpression : ITestCaseFilterExpression
+        public bool KeepAlive { get; }
+        public bool InIsolation { get; }
+        public bool IsDataCollectionEnabled { get; }
+        public bool IsBeingDebugged { get; }
+        public string TestRunDirectory { get; }
+        public string SolutionDirectory { get; }
+    }
+
+    internal class TestableTestCaseFilterExpression : ITestCaseFilterExpression
+    {
+        private readonly Func<TestCase, bool> matchTest;
+
+        public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase)
         {
-            private readonly Func<TestCase, bool> matchTest;
-            
-            public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase)
-            {
-                this.matchTest = matchTestCase;
-            }
+            this.matchTest = matchTestCase;
+        }
 
-            public string TestCaseFilterValue { get; }
+        public string TestCaseFilterValue { get; }
 
-            public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
+        public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
+        {
+            return this.matchTest(testCase);
+        }
+    }
+
+    internal class TestableTestExecutionManager : TestExecutionManager
+    {
+        internal override void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext,
+        IFrameworkHandle frameworkHandle, bool isDeploymentDone)
+        {
+            if (this.ExecuteTestsWrapper != null)
             {
-                return this.matchTest(testCase);
+                this.ExecuteTestsWrapper.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
             }
         }
 
@@ -616,5 +629,4 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             internal Action<IEnumerable<TestCase>, IRunContext, IFrameworkHandle, bool> ExecuteTestsWrapper;
         }
         #endregion
-    }
 }

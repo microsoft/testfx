@@ -25,6 +25,10 @@
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Fakes">
       <HintPath>FakesAssemblies\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Fakes.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.11.0.0\lib\net35\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Moq, Version=4.5.21.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\Moq.4.5.21\lib\net45\Moq.dll</HintPath>
       <Private>True</Private>
@@ -41,7 +45,6 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.XML" />
-    <Reference Include="$(TestFxRoot)sdk\TestPlatform.ObjectModel.Desktop\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyResolverTests.cs" />
