@@ -34,11 +34,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// Initializes a new instance of the <see cref="UnitTestResult"/> class.
         /// </summary>
         /// <param name="testFailedException"> The test failed exception. </param>
-        internal UnitTestResult(TestFailedException testFailedException)
+        internal UnitTestResult(TestFailedException testFailedException):this()
         {
             this.Outcome = testFailedException.Outcome;
             this.ErrorMessage = testFailedException.Message;
-            DatarowIndex = -1;
 
             if (testFailedException.StackTraceInformation != null)
             {
@@ -54,11 +53,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         /// <param name="outcome"> The outcome. </param>
         /// <param name="errorMessage"> The error message. </param>
-        internal UnitTestResult(UnitTestOutcome outcome, string errorMessage)
+        internal UnitTestResult(UnitTestOutcome outcome, string errorMessage):this()
         {
             this.Outcome = outcome;
             this.ErrorMessage = errorMessage;
-            DatarowIndex = -1;
         }
 
         /// <summary>
