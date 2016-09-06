@@ -610,23 +610,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        internal class TestableTestExecutionManager : TestExecutionManager
+        internal override UnitTestDiscoverer GetUnitTestDiscoverer()
         {
-            internal override void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext,
-                IFrameworkHandle frameworkHandle, bool isDeploymentDone)
-            {
-                if (this.ExecuteTestsWrapper != null)
-                {
-                    this.ExecuteTestsWrapper.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
-                }
-            }
-
-            internal override UnitTestDiscoverer GetUnitTestDiscoverer()
-            {
-                return new TestableUnitTestDiscoverer();
-            }
-
-            internal Action<IEnumerable<TestCase>, IRunContext, IFrameworkHandle, bool> ExecuteTestsWrapper;
+            return new TestableUnitTestDiscoverer();
         }
-        #endregion
+
+        internal Action<IEnumerable<TestCase>, IRunContext, IFrameworkHandle, bool> ExecuteTestsWrapper;
+    }
+    #endregion
 }
