@@ -4,6 +4,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
 
     #region DataRow
 
@@ -51,6 +52,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 if (!string.IsNullOrEmpty(dataRow.DisplayName))
                 {
                     result.DisplayName = dataRow.DisplayName;
+                }
+                else
+                {
+                    result.DisplayName = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, testMethod.TestMethodName, string.Join(",", dataRow.Data));
                 }
 
                 results.Add(result);
