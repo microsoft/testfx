@@ -26,7 +26,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
+    using Moq;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -190,6 +192,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNotNull(exception);
             StringAssert.StartsWith(exception?.StackTraceInformation.ErrorStackTrace, 
                 "    at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)");
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldSetResultFilesIfTestContextHasAttachments()
+        {
+            Mock<ITestContext> testContext = new Mock<ITestContext>();
+            testContext.Setup(tc => tc.GetResultFiles()).Returns(new List<string>() {"C:\\temp.txt"});
+
+            var method = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute, testClassInfo, testContext.Object);
+
+            var result = method.Invoke(null);
+            CollectionAssert.Contains(result.ResultFiles.ToList(), "C:\\temp.txt");
         }
 
         #endregion

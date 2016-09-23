@@ -73,10 +73,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             var result = new TestRunDirectories(rootDeploymentDirectory);
             var inDirectory = result.InDirectory;
             var outDirectory = result.OutDirectory;
+            var inMachineDirectory = result.InMachineNameDirectory;
 
             this.fileUtility.CreateDirectoryIfNotExists(rootDeploymentDirectory);
             this.fileUtility.CreateDirectoryIfNotExists(inDirectory);
             this.fileUtility.CreateDirectoryIfNotExists(outDirectory);
+            this.fileUtility.CreateDirectoryIfNotExists(inMachineDirectory);
 
             return result;
         }

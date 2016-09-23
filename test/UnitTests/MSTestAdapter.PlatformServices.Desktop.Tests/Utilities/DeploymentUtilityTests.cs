@@ -4,6 +4,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
 {
     extern alias FrameworkV1;
     extern alias FrameworkV2;
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
@@ -76,6 +77,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
             this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix)), Times.Once);
             this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentOutDirectorySuffix)), Times.Once);
+            this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
         }
 
         [TestMethod]
@@ -93,6 +95,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
             this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix)), Times.Once);
             this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentOutDirectorySuffix)), Times.Once);
+            this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
         }
 
         [TestMethod]
@@ -109,6 +112,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
             this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix)), Times.Once);
             this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentOutDirectorySuffix)), Times.Once);
+            this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
         }
 
         #endregion

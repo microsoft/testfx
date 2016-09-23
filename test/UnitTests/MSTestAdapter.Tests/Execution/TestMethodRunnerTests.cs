@@ -362,16 +362,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
-        public void ConvertTestResultToUnitTestResultShouldHaveResultsFileProvidedToTestContext()
+        public void ConvertTestResultToUnitTestResultShouldHaveResultsFileProvidedToTestResult()
         {
-            Mock<ITestContext> testContext = new Mock<ITestContext>();
-            testContext.Setup(tc => tc.GetResultFiles()).Returns(new List<string>() { "DummyFile.txt" });
-
-            var results = new[] { new UTF.TestResult() { } };
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, testContext.Object as TestContextImplementation, () => new UTF.TestResult());
-            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, testContext.Object, false);
-
-            var convertedResults = testMethodRunner.ConvertTestResultToUnitTestResult(results);
+            var results = new[] { new UTF.TestResult() { ResultFiles = new List<string>() { "DummyFile.txt" } } };
+            var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
             Assert.AreEqual("DummyFile.txt", convertedResults[0].ResultFiles[0]);
         }
 

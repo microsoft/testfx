@@ -6,4 +6,22 @@
     <targetPlatform>x86</targetPlatform>
     <adapter>v1</adapter>
   </settings>
+  <settings>
+    <debugTarget>Local</debugTarget>
+    <configuration>Debug</configuration>
+    <targetPlatform>x64</targetPlatform>
+    <adapter>v1</adapter>
+  </settings>
+  <settings>
+    <debugTarget>Local</debugTarget>
+    <configuration>Release</configuration>
+    <targetPlatform>x86</targetPlatform>
+    <adapter>v1</adapter>
+  </settings>
+  <settings>
+    <debugTarget>Emulator</debugTarget>
+    <configuration>Debug</configuration>
+    <targetPlatform>x86</targetPlatform>
+    <adapter>v1</adapter>
+  </settings>
 </tests>
