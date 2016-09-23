@@ -3,6 +3,7 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Reflection;
 
@@ -368,6 +369,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Gets or sets the return value of the test method. (Currently null always).
         /// </summary>
         public object ReturnValue { get; set; }
+
+        /// <summary>
+        /// Result files attached by the test. 
+        /// </summary>
+        public IList<string> ResultFiles { get; set; }
     }
 
     /// <summary>

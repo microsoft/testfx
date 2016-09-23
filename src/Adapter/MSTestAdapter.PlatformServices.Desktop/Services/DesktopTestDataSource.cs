@@ -114,6 +114,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                             }
 
                             currentResult[0].DatarowIndex = rowIndex;
+                            currentResult[0].ResultFiles = testContextImpl.GetResultFiles();
 
                             watch.Stop();
                             currentResult[0].Duration = watch.Elapsed;

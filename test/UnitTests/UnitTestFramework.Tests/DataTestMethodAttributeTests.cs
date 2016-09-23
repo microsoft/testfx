@@ -1,7 +1,5 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
-using System.Collections.Generic;
-
 namespace UnitTestFramework.Tests
 {
     extern alias FrameworkV1;
@@ -9,6 +7,8 @@ namespace UnitTestFramework.Tests
 
     using Moq;
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     using TestFrameworkV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -45,7 +45,7 @@ namespace UnitTestFramework.Tests
             //Act.
             TestFrameworkV2.TestResult[] results =
                 TestFrameworkV2.DataTestMethodAttribute.RunDataDrivenTest(this.testMethod.Object,
-                    new TestFrameworkV2.DataRowAttribute[] {dataRowAttribute});
+                    new TestFrameworkV2.DataRowAttribute[] { dataRowAttribute });
 
             TestFrameworkV2.Assert.AreEqual(results[0].DisplayName, "DataRowTestDisplayName");
         }
@@ -67,9 +67,32 @@ namespace UnitTestFramework.Tests
             //Act.
             TestFrameworkV2.TestResult[] results =
                 TestFrameworkV2.DataTestMethodAttribute.RunDataDrivenTest(this.testMethod.Object,
-                    new TestFrameworkV2.DataRowAttribute[] {dataRowAttribute});
+                    new TestFrameworkV2.DataRowAttribute[] { dataRowAttribute });
 
             TestFrameworkV2.Assert.AreEqual(results[0].DisplayName, "DummyTestMethod (2,DummyString)");
+        }
+
+        [TestFrameworkV1.TestMethod]
+        public void RunDataDrivenTestShouldSetResultFilesIfPresent()
+        {
+            int dummyIntData1 = 1;
+            int dummyIntData2 = 2;
+            TestFrameworkV2.DataRowAttribute dataRowAttribute1 = new TestFrameworkV2.DataRowAttribute(dummyIntData1);
+            TestFrameworkV2.DataRowAttribute dataRowAttribute2 = new TestFrameworkV2.DataRowAttribute(dummyIntData2);
+
+            TestFrameworkV2.TestResult testResult = new TestFrameworkV2.TestResult();
+            testResult.ResultFiles = new List<string>() {"C:\\temp.txt"};
+
+            //Setup mocks.
+            this.testMethod.Setup(tm => tm.Invoke(It.IsAny<object[]>())).Returns(testResult);
+
+            //Act.
+            TestFrameworkV2.TestResult[] results =
+                TestFrameworkV2.DataTestMethodAttribute.RunDataDrivenTest(this.testMethod.Object,
+                    new TestFrameworkV2.DataRowAttribute[] { dataRowAttribute1, dataRowAttribute2 });
+
+            TestFrameworkV1.CollectionAssert.Contains(results[0].ResultFiles.ToList(), "C:\\temp.txt");
+            TestFrameworkV1.CollectionAssert.Contains(results[1].ResultFiles.ToList(), "C:\\temp.txt");
         }
     }
 }
