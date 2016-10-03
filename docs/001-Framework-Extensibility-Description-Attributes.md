@@ -4,7 +4,7 @@
 This details the MSTest V2 framework extensibility for attributes that describe a test.  
 
 ## Motivation
-It is much more convenient to have strongly typed description attributes over a test method as opposed to just a KeyvaluePair<string,string>. Users can also filter tests based on the values of these attributes.    
+It is a requirement for teams to have description attributes which are strongly typed over a test method as opposed to just a KeyvaluePair<string,string>. This allows teams to have a standard across the team which is less error prone and more natural to specify. Users can also filter tests based on the values of these attributes.
 
 ## Detailed Design
 
@@ -12,6 +12,7 @@ It is much more convenient to have strongly typed description attributes over a 
 1. One should be able to have a strongly typed desciption attribute on a test method.
 2. One should be able to filter in VS IDE based on this description attribute.
 3. One should be able to see this information in Test Reporting.
+4. This extensibility should also guarantee that attributes in MSTest V1 which are brought into MSTest V2 with this extensibility model should be source compatible.
 
 ### Proposed solution
 The test framework currently has a TestProperty attribute which can be used to define custom traits as a KeyValuePair<string,string>. The definition of this attribute is as below:
