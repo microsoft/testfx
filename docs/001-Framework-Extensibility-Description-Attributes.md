@@ -87,6 +87,10 @@ And test methods would be decorated in a much more convenient form as below:
 ```
 This would provide extension writers with the same level of functionality that TestProperty already has with filtering and reporting plus the added ease of having a strongly typed description.  
 
+### Requirements from Test Platform
+1. The attributes that were already part of MSTest V1(Description, WorkItem, CssIteration and CssProjectStructure) should be part of the trx logger output. Currently only owner and priority are part of the trx log.
+2. Custom attributes should also show up in the trx logger. This is a bigger change since it might require changes in the trx schema.
+
 ## Open Questions
 1. Should this attribute be opened up to be at a class and assembly level like TestCategory Attribute?
 2. Is filtering needed at the console level for these extension attributes? Currently the TestCaseFilter switch at the console level only supports - TestCategory, Priority, FullyQualifiedName, Name, ClassName. This is a finite list. In order to support filtering for extended attributes this list needs to be made dynamic.   
