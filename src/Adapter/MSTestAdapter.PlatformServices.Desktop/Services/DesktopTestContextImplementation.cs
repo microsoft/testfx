@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Linq;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
-    
+
     /// <summary>
     /// Internal implementation of TestContext exposed to the user.
     /// The virtual string properties of the TestContext are retreived from the property dictionary
@@ -267,6 +267,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public override void EndTimer(string timerName)
         {
             throw new NotSupportedException();
+        }
+
+        //
+        // Summary:
+        //     When overridden in a derived class, used to write trace messages while the
+        //     test is running.
+        //
+        // Parameters:
+        //   message:
+        //     The formatted string that contains the trace message.
+        public override void WriteLine(string message)
+        {
+            if (this.stringWriterDisposed)
+            {
+                return;
+            }
+
+            try
+            {
+                var msg = message?.Replace("\0", "\\0");
+                stringWriter.WriteLine(msg);
+            }
+            catch (ObjectDisposedException)
+            {
+                this.stringWriterDisposed = true;
+            }
         }
 
         //
