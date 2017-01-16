@@ -105,7 +105,7 @@ function Locate-VsInstallPath {
 
 function Locate-LocateVsApi {
   $packagesPath = Locate-PackagesPath
-  $locateVsApi = Join-Path -path $packagesPath -ChildPath "RoslynTools.Microsoft.LocateVS\$locateVsApiVersion\tools\LocateVS.dll"
+  $locateVsApi = Join-Path -path $packagesPath -ChildPath "RoslynTools.Microsoft.LocateVS.$locateVsApiVersion\tools\LocateVS.dll"
 
   if (!(Test-Path -path $locateVsApi)) {
     throw "The specified LocateVS API version ($locateVsApiVersion) could not be located."
@@ -115,12 +115,9 @@ function Locate-LocateVsApi {
 }
 
 function Locate-PackagesPath {
-  if ($env:NUGET_PACKAGES -eq $null) {
-    $env:NUGET_PACKAGES =  Join-Path -path $env:UserProfile -childPath ".nuget\packages\"
-  }
+  $rootPath = Locate-RootPath
+  $packagesPath = Join-Path -path $rootPath -childPath "packages"
   
-  $packagesPath = $env:NUGET_PACKAGES
-
   Create-Directory -path $packagesPath
   return Resolve-Path -path $packagesPath
 }
@@ -196,7 +193,6 @@ function Perform-Restore {
 
   $nuget = Locate-NuGet
   $nugetConfig = Locate-NuGetConfig
-  $packagesPath = Locate-PackagesPath
   $toolset = Locate-Toolset
   $solution = Locate-Solution
   
@@ -206,7 +202,7 @@ function Perform-Restore {
   }
 
   Write-Host -object "Starting toolset restore..."
-  & $nuget restore -packagesDirectory $packagesPath -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset
+  & $nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset
 
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
@@ -216,7 +212,7 @@ function Perform-Restore {
   $msbuildPath = Locate-MSBuildPath
 
   Write-Host -object "Starting solution restore..."
-  & $nuget restore -packagesDirectory $packagesPath -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solution
+  & $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solution
 
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
@@ -267,4 +263,3 @@ function Print-Help {
 
 Perform-Restore
 Perform-Build
-
