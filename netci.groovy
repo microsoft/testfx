@@ -17,8 +17,6 @@ def branch = GithubBranchName
 
         // Define your build/test strings here
         def buildString = """call build.cmd -c ${configuration}"""
-        def testString = """call test.cmd -c ${configuration}"""
-        def smoketestString = """call test.cmd -c ${configuration} -p smoke"""
 
         // Create a new job for windows build
         def newJob = job(newJobName) {
