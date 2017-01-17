@@ -1,8 +1,13 @@
 ﻿[CmdletBinding(PositionalBinding=$false)]
 Param(
   [switch] $help,
+  
   [string] $target = "Build",
+  
+  [ValidateSet("Debug", "Release")]
+  [Alias("c")]
   [string] $configuration = "Debug",
+  
   [switch] $clearPackageCache
 )
 
@@ -42,7 +47,7 @@ function Perform-Restore {
 
   Write-Host -object "Starting toolset restore..."
   & $nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset
-
+  
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
   }
