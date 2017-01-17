@@ -130,7 +130,7 @@ function Locate-LocateVsApi {
 
 function Locate-Solution {
   $rootPath = Locate-RootPath
-  $solution = Join-Path -path $rootPath -childPath "TestFx.sln"
+  $solution = Join-Path -path $rootPath -childPath "ClassLibrary1\ClassLibrary1.sln"
   return Resolve-Path -path $solution
 }
 
