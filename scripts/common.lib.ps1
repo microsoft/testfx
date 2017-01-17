@@ -6,6 +6,7 @@
 $global:msbuildVersion = "15.0"
 $global:nugetVersion = "3.6.0-beta1"
 $global:locateVsApiVersion = "0.2.4-beta"
+$global:nugetUrl = "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/NuGet.exe"
 
 function Create-Directory([string[]] $path) {
   if (!(Test-Path -path $path)) {
@@ -59,7 +60,7 @@ function Locate-NuGet {
     Remove-Item -path $nuget | Out-Null
   }
 
-  Download-File -address "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/NuGet.exe" -fileName $nuget
+  Download-File -address $nugetUrl -fileName $nuget
 
   if (!(Test-Path -path $nuget)) {
     throw "The specified NuGet version ($nugetVersion) could not be downloaded."

@@ -3,7 +3,6 @@ Param(
   [switch] $help,
   [string] $target = "Build",
   [string] $configuration = "Debug",
-  [switch] $skipRestore,
   [switch] $clearPackageCache
 )
 
@@ -30,11 +29,6 @@ function Perform-Build {
 
 function Perform-Restore {
   Write-Host -object ""
-
-  if ($skipRestore) {
-    Write-Host -object "Skipping restore..."
-    return
-  }
 
   $nuget = Locate-NuGet
   $nugetConfig = Locate-NuGetConfig
@@ -75,12 +69,10 @@ function Print-Help {
   Write-Host -object "MSTest Adapter Build Script"
   Write-Host -object ""
   Write-Host -object "  Help                          - [Switch] - Prints this help message."
+  Write-Host -object "  ClearPackageCache             - [Switch] - Indicates local package cache should be cleared before restore."
   Write-Host -object ""
   Write-Host -object "  Configuration                 - [String] - Specifies the build configuration. Defaults to 'Debug'."
   Write-Host -object "  Target                        - [String] - Specifies the build target. Defaults to 'Build'."
-  Write-Host -object ""
-  Write-Host -object "  ClearPackageCache             - [Switch] - Indicates local package cache should be cleared before restore."
-  Write-Host -object "  SkipRestore                   - [Switch] - Indicates the restore step should be skipped."
   Write-Host -object ""
   Exit 0
 }
