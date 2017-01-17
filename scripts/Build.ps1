@@ -5,7 +5,7 @@ Param(
   [string] $target = "Build",
   
   [ValidateSet("Debug", "Release")]
-#  [Alias("c")]
+  [Alias("c")]
   [string] $configuration = "Debug",
   
   [switch] $clearPackageCache
