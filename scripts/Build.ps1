@@ -48,6 +48,11 @@ function Perform-Restore {
   Write-Host -object "Starting toolset restore..."
   & $nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset
 
+  Write-Host -object "Restoring Nuget for UWP seperately ...."
+  $rootPath = Locate-RootPath
+  $uwpProject = Join-Path -path $rootPath "src\Adapter\MSTestAdapter.PlatformServices.Universal\project.json"
+  & $nuget restore $uwpProject -PackagesDirectory "..\packages"
+  
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
   }
