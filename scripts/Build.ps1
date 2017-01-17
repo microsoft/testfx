@@ -85,5 +85,3 @@ function Print-Help {
 Print-Help
 Perform-Restore
 Perform-Build
-
-if ($Script:ScriptFailed) { Exit 1 } else { Exit 0 }
