@@ -1,8 +1,13 @@
 ﻿[CmdletBinding(PositionalBinding=$false)]
 Param(
   [switch] $help,
+  
   [string] $target = "Build",
+  
+  [ValidateSet("Debug", "Release")]
+#  [Alias("c")]
   [string] $configuration = "Debug",
+  
   [switch] $clearPackageCache
 )
 
@@ -80,3 +85,5 @@ function Print-Help {
 Print-Help
 Perform-Restore
 Perform-Build
+
+if ($Script:ScriptFailed) { Exit 1 } else { Exit 0 }
