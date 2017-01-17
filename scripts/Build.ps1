@@ -5,7 +5,7 @@ Param(
   [string] $target = "Build",
   
   [ValidateSet("Debug", "Release")]
-#  [Alias("c")]
+  [Alias("c")]
   [string] $configuration = "Debug",
   
   [switch] $clearPackageCache
@@ -86,4 +86,4 @@ Print-Help
 Perform-Restore
 Perform-Build
 
-if ($Script:ScriptFailed) { Exit $lastExitCode } else { Exit 0 }
+if ($Script:ScriptFailed) { Exit 1 } else { Exit 0 }
