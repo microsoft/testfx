@@ -161,6 +161,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Warning : A testsettings file or a runsettings with a ForcedLegacyMode set to true is not supported with the MSTest V2 Adapter..
+        /// </summary>
+        internal static string LegacyScenariosNotSupportedWarning {
+            get {
+                return ResourceManager.GetString("LegacyScenariosNotSupportedWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Running tests in any of the provided sources is not supported for the selected platform.
         /// </summary>
         internal static string SourcesNotSupported {
@@ -413,6 +422,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The ExpectedException attribute defined on test method {0}.{1} threw an exception during construction.
+        ///{2}.
+        /// </summary>
+        internal static string UTA_ExpectedExceptionAttributeConstructionException {
+            get {
+                return ResourceManager.GetString("UTA_ExpectedExceptionAttributeConstructionException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to obtain the exception thrown by test method {0}.{1}..
         /// </summary>
         internal static string UTA_FailedToGetTestMethodException {
@@ -445,6 +464,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string UTA_MethodDoesNotExists {
             get {
                 return ResourceManager.GetString("UTA_MethodDoesNotExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The test method {0}.{1} has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed..
+        /// </summary>
+        internal static string UTA_MultipleExpectedExceptionsOnTestMethod {
+            get {
+                return ResourceManager.GetString("UTA_MultipleExpectedExceptionsOnTestMethod", resourceCulture);
             }
         }
         

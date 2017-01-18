@@ -1,0 +1,47 @@
+﻿// Copyright (c) Microsoft. All rights reserved.
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
+{
+    using System;
+    using System.Threading.Tasks;
+
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
+    /// <summary>
+    /// This service is responsible for any Async operations specific to a platform.
+    /// </summary>
+    public class ThreadOperations : IThreadOperations
+    {
+        /// <summary>
+        /// Execute the given action synchronously on a background thread in the given timeout.
+        /// </summary>
+        /// <param name="action">The action to execute.</param>
+        /// <param name="timeout">Timeout for the specified action.</param>
+        /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
+        public bool Execute(Action action, int timeout)
+        {
+            var executionTask = Task.Factory.StartNew(action);
+
+            if (executionTask.Wait(timeout))
+            {
+                return true;
+            }
+            else
+            {
+                // Timed out.
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Execute an action with handling for Thread Aborts (if possible) so the main thread of the adapter does not die.
+        /// </summary>
+        /// <param name="action"> The action to execute. </param>
+        public void ExecuteWithAbortSafety(Action action)
+        {
+            // There is no Thread abort scenraios yet in .Net Core. Once we move the core platform service to support Thread abort related API's
+            // then this logic would be similar to the desktop platform service. UWP would then be the only diverging platform service since it does not have Thread APIs exposed.
+            action.Invoke();
+        }
+    }
+}

@@ -1,11 +1,10 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using System.IO;
-using System;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
+    using System.IO;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+    
     /// <summary>
     /// Internal implementation of TraceListener exposed to the user.
     /// </summary>

@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="message">formatted message string</param>
         public abstract void WriteLine(string message);
-        
+
         /// <summary>
         /// Used to write trace messages while the test is running
         /// </summary>
@@ -127,6 +127,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         public virtual string TestName => this.GetProperty<string>("TestName");
 
+        /// <summary>
+        /// Gets the current test outcome.
+        /// </summary>
         public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
 
         private T GetProperty<T>(string name)

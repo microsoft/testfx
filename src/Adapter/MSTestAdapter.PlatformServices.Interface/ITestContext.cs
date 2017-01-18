@@ -39,7 +39,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// <summary>
         /// Gets the attached Result files 
         /// </summary>
-        /// <param name="outcome"> The outcome. </param>
+        /// <returns>
+        /// The list of result files.
+        /// </returns>
         IList<string> GetResultFiles();
     }
 }

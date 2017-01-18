@@ -13,6 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     using System.Text;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Enumerates through all types in the assembly in search of valid test methods.
@@ -25,6 +26,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <param name="assemblyFileName"> The assembly file name. </param>
         /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
         /// <returns> A collection of Test Elements. </returns>
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
+            Justification = "Catching a generic exception since it is a requirement to not abort discovery in case of any errors.")]
         internal ICollection<UnitTestElement> EnumerateAssembly(string assemblyFileName, out ICollection<string> warnings)
         {
             Debug.Assert(!string.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
@@ -32,13 +35,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var warningMessages = new List<string>();
             var tests = new List<UnitTestElement>();
 
-            // Let the platform services figure out how to load the assembly.
-            var assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName);
+            Assembly assembly;
+            if (assemblyFileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            {
+                // We only want to load the source assembly in reflection only context in UWP scenarios where it is always an exe.
+                // For normal test assemblies continue loading it in the default context since:
+                // 1. There isnt much benefit in terms of Performance loading the assembly in a Reflection Only context during discovery.
+                // 2. Loading it in Reflection only context entails a bunch of custom logic to identify custom attributes which is over-kill for normal desktop users.
+                assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(
+                    assemblyFileName,
+                    isReflectionOnly: true);
+            }
+            else
+            {
+                assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
+            }
             
             var types = this.GetTypes(assembly, assemblyFileName, warningMessages);
 
             foreach (var type in types)
             {
+                if (type == null)
+                {
+                    continue;
+                }
+
                 string typeFullName = null;
 
                 try

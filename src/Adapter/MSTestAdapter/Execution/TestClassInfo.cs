@@ -215,6 +215,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="testContext"> The test context. </param>
         /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
+            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public void RunClassInitialize(TestContext testContext)
         {
             // If no class initialize return

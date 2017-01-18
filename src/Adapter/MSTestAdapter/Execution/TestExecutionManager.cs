@@ -8,25 +8,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Globalization;
     using System.IO;
     using System.Linq;
-    
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
-    
+    using System.Diagnostics.CodeAnalysis;
+
     /// <summary>
     /// Class responsible for execution of tests at assembly level and sending tests via framework handle
     /// </summary>
     public class TestExecutionManager
     {
-        /// <summary>
-        /// MSTestAdapter Settings
-        /// </summary>
-        private MSTestSettings adapterSettings;
-
         /// <summary>
         /// Specifies whether the test run is canceled or not
         /// </summary>
@@ -42,7 +37,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             this.TestMethodFilter = new TestMethodFilter();
             this.sessionParameters = new Dictionary<string, object>();
-            this.adapterSettings = new MSTestSettings();
         }
 
         /// <summary>
@@ -151,23 +145,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                          bool isDeploymentDone)
         {
             Debug.Assert(!string.IsNullOrEmpty(source), "Source cannot be empty");
-
-            adapterSettings = MSTestSettings.GetSettings(runContext);
-
+            
             source = isDeploymentDone
                          ? Path.Combine(
                              PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory(),
                              Path.GetFileName(source)) : source;
 
-            PlatformServiceProvider.Instance.TestDataSource.SetContext(source);
-
-            using (var isolationHost = PlatformServiceProvider.Instance.TestSourceHost)
+            using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings))
             {
                 var testRunner = isolationHost.CreateInstanceForType(
                     typeof(UnitTestRunner),
-                    new object[] { adapterSettings.CaptureDebugTraces },
-                    source,
-                    runContext?.RunSettings) as UnitTestRunner;
+                    new object[] { MSTestSettings.CurrentSettings.CaptureDebugTraces }) as UnitTestRunner;
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
                 this.ExecuteTestsWithTestRunner(tests, runContext, testExecutionRecorder, source, testRunner);
@@ -175,8 +163,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}",
                     source);
             }
-          
-            PlatformServiceProvider.Instance.TestDataSource.ResetContext();
         }
 
         private void ExecuteTestsWithTestRunner(
@@ -287,6 +273,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             return new UnitTestDiscoverer();
         } 
 
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
+            Justification = "Requirement is to handle errors in user specified run parameters")]
         private void CacheSessionParameters(IRunContext runContext, ITestExecutionRecorder testExecutionRecorder)
         {
             if (!string.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))
@@ -343,7 +331,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     continue;
                 }
 
-                var testResult = unitTestResult.ToTestResult(test, startTime, endTime, adapterSettings.MapInconclusiveToFailed);
+                var testResult = unitTestResult.ToTestResult(test, startTime, endTime, MSTestSettings.CurrentSettings.MapInconclusiveToFailed);
 
                 if (unitTestResult.DatarowIndex >= 0)
                 {

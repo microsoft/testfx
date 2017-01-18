@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)MarshalByRefObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)SerializableAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CoreReflectionOperations.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CoreSettingsProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTestContextImplementation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTestDataSource.cs" />
@@ -18,5 +19,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTestSourceHost.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTraceListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CoreTraceListenerManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CoreThreadOperations.cs" />
   </ItemGroup>
 </Project>

@@ -1,12 +1,7 @@
-
 // Copyright (c) Microsoft. All rights reserved.
-
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
-    using Data;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
     using System;
     using System.Collections.Generic;
     using System.Configuration;
@@ -14,15 +9,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    using UTF = TestTools.UnitTesting;
+
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
-    using ObjectModel;
+
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+    /// <summary>
+    /// The platform service that provides values from data source when data driven tests are run. 
+    /// </summary>
+    /// <remarks>
+    /// NOTE NOTE NOTE: This platform service refers to the inbox UTF extension assembly for UTF.TestContext which can only be loadable inside of the app domain that discovers/runs
+    /// the tests since it can only be found at the test output directory. DO NOT call into this platform service outside of the appdomain context if you do not want to hit
+    /// a ReflectionTypeLoadException.
+    /// </remarks>
     public class TestDataSource : ITestDataSource
     {
-
+        /// <summary>
+        /// Gets a value indicating whether testMethod has data driven tests.
+        /// </summary>
+        /// <param name="testMethodInfo">
+        /// The test Method Info.
+        /// </param>
+        /// <returns>
+        /// True of it is a data driven test method. False otherwise.
+        /// </returns>
         public bool HasDataDrivenTests(UTF.ITestMethod testMethodInfo)
         {
             UTF.DataSourceAttribute[] dataSourceAttribute = testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
@@ -31,6 +46,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return false;
         }
 
+        /// <summary>
+        /// Run a data driven test. Test case is executed once for each data row.
+        /// </summary>
+        /// <param name="testContext">
+        /// The test Context.
+        /// </param>
+        /// <param name="testMethodInfo">
+        /// The test Method Info.
+        /// </param>
+        /// <param name="testMethod">
+        /// The test Method.
+        /// </param>
+        /// <param name="executor">
+        /// The default test method executor.
+        /// </param>
+        /// <returns>
+        /// The results after running all the data driven tests.
+        /// </returns>
         public UTF.TestResult[] RunDataDrivenTest(UTF.TestContext testContext, UTF.ITestMethod testMethodInfo, ITestMethod testMethod, UTF.TestMethodAttribute executor)
         {
             Stopwatch watch = new Stopwatch();
@@ -114,7 +147,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                             }
 
                             currentResult[0].DatarowIndex = rowIndex;
-                            currentResult[0].ResultFiles = testContextImpl.GetResultFiles();
 
                             watch.Stop();
                             currentResult[0].Duration = watch.Elapsed;
@@ -191,45 +223,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 dataAccessMethod = dataSourceAttribute.DataAccessMethod;
             }
         }
-
-        public bool SetContext(string source)
-        {
-            if (string.IsNullOrEmpty(source))
-                return false;
-
-            Exception setWorkingDirectoryException = null;
-            currentDirectory = Environment.CurrentDirectory;
-
-            try
-            {
-                Environment.CurrentDirectory = Path.GetDirectoryName(source);
-                EqtTrace.InfoIf(EqtTrace.IsInfoEnabled,"MSTestExecutor: Changed the working directory to {0}", Environment.CurrentDirectory);
-                return true;
-            }
-            catch (IOException ex)
-            {
-                setWorkingDirectoryException = ex;
-            }
-            catch (System.Security.SecurityException ex)
-            {
-                setWorkingDirectoryException = ex;
-            }
-
-            if (setWorkingDirectoryException != null)
-            {
-                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, "MSTestExecutor.SetWorkingDirectory: Failed to set the working directory to '{0}'. {1}", Path.GetDirectoryName(source), setWorkingDirectoryException);
-            }
-            return false;
-        }
-
-        public void ResetContext()
-        {
-            if (!string.IsNullOrEmpty(this.currentDirectory))
-            {
-                Environment.CurrentDirectory = this.currentDirectory;
-            }
-        }
-
-        private string currentDirectory = null;
     }
 }

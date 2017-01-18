@@ -5,7 +5,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Reflection;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -30,6 +29,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         private List<string> cachedResolutionPaths;
 
+        private string sourceFileName;
+        private IRunSettings runSettings;
+        
+        private string currentDirectory = null;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestSourceHost"/> class.
+        /// </summary>
+        /// <param name="sourceFileName"> The source file name. </param>
+        /// <param name="runSettings"> The run-settings provided for this session. </param>
+        public TestSourceHost(string sourceFileName, IRunSettings runSettings)
+        {
+            this.sourceFileName = sourceFileName;
+            this.runSettings = runSettings;
+
+            // Set the environment context.
+            this.SetContext(sourceFileName);
+        }
+
         /// <summary>
         /// Creates an instance of a given type in the test source host.
         /// </summary>
@@ -38,13 +56,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// This array of arguments must match in number, order, and type the parameters of the constructor to invoke. 
         /// Pass in null for a constructor with no arguments.
         /// </param>
-        /// <param name="sourceFileName"> The source. </param>
-        /// <param name="runSettings"> The run-settings provided for this session. </param>
         /// <returns> An instance of the type created in the host. </returns>
         /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
-        public object CreateInstanceForType(Type type, object[] args, string sourceFileName, IRunSettings runSettings)
+        public object CreateInstanceForType(Type type, object[] args)
         {
-            List<string> resolutionPaths = this.GetResolutionPaths(sourceFileName, VSInstallationUtilities.CheckIfTestProcessIsRunningInXcopyableMode());
+            List<string> resolutionPaths = this.GetResolutionPaths(this.sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
 
             // Check if user specified any runsettings
             MSTestAdapterSettings adapterSettings = MSTestSettingsProvider.Settings;
@@ -70,7 +86,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             //Honour DisableAppDomain setting if it is present in runsettings
-            if (runSettings!=null && MSTestAdapterSettings.IsAppDomainCreationDisabled(runSettings.SettingsXml))
+            if (this.runSettings!=null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
             {
                 if (adapterSettings != null)
                 {
@@ -79,23 +95,46 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         this.assemblyResolver = new AssemblyResolver(resolutionPaths);
                         this.assemblyResolver.AddSearchDirectoriesFromRunSetting(adapterSettings.GetDirectoryListWithRecursiveProperty(null));
                     }
-                    catch (Exception e)
+                    catch (Exception exception)
                     {
-                        Console.WriteLine(e.Message);
+                        if(EqtTrace.IsErrorEnabled)
+                        {
+                            EqtTrace.Error(exception);
+                        }
                     }
                 }
                 return Activator.CreateInstance(type, args);
             }
 
             var appDomainSetup = new AppDomainSetup();
+
+            // The below logic of preferential setting the appdomains appbase is needed because:
+            // 1. We set this to the location of the test source if it is built for Full CLR  -> Ideally this needs to be done in all situations.
+            // 2. We set this to the location where the current adapter is being picked up from for UWP and .Net Core scenarios -> This needs to be 
+            //    different especially for UWP because we use the desktop adapter(from %temp%\VisualStudioTestExplorerExtensions) itself for test discovery
+            //    in IDE scenarios. If the app base is set to the test source location, discovery will not work because we drop the 
+            //    UWP platform service assembly at the test source location and since CLR starts looking for assemblies from the app base location,
+            //    there would be a mismatch of platform service assemblies during discovery. 
+            var frameworkVersionString = this.GetTargetFrameworkVersionString(this.sourceFileName);
+            if (frameworkVersionString.Contains(PlatformServices.Constants.DotNetFrameWorkStringPrefix))
+            {
+                appDomainSetup.ApplicationBase = Path.GetDirectoryName(this.sourceFileName)
+                                                 ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
+            }
+            else
+            {
+                appDomainSetup.ApplicationBase = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
+            }
+            
             if (EqtTrace.IsInfoEnabled)
             {
-                EqtTrace.Info("TestSourceHost: Creating app-domain for source {0} with application base path {1}.", sourceFileName, appDomainSetup.ApplicationBase);
+                EqtTrace.Info("TestSourceHost: Creating app-domain for source {0} with application base path {1}.", this.sourceFileName, appDomainSetup.ApplicationBase);
             }
-           
-            AppDomainUtilities.SetAppDomainFrameworkVersionBasedOnTestSource(appDomainSetup, sourceFileName);
 
-            AppDomainUtilities.SetConfigurationFile(appDomainSetup, sourceFileName);
+            AppDomainUtilities.SetAppDomainFrameworkVersionBasedOnTestSource(appDomainSetup, frameworkVersionString);
+            
+            var configFile = this.GetConfigFileForTestSource(this.sourceFileName);
+            AppDomainUtilities.SetConfigurationFile(appDomainSetup, configFile);
 
             this.appDomain = AppDomain.CreateDomain("TestSourceHost: Enumering assembly", null, appDomainSetup);
 
@@ -111,15 +150,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 EqtTrace.Info("TestSourceHost: assemblyenumerator location: {0} , fullname: {1} ", assemblyResolverType.Assembly.Location, assemblyResolverType.FullName);
             }
 
-            var resolver = this.appDomain.CreateInstanceFromAndUnwrap(
-                    assemblyResolverType.Assembly.Location,
-                    assemblyResolverType.FullName,
-                    false,
-                    BindingFlags.Default,
-                    null,
-                    new object[] { resolutionPaths },
-                    null,
-                    null);
+            var resolver = AppDomainUtilities.CreateInstance(
+                this.appDomain,
+                assemblyResolverType,
+                new object[] { resolutionPaths });
 
             if (EqtTrace.IsInfoEnabled)
             {
@@ -135,30 +169,52 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 try
                 {
-                    this.assemblyResolver.AddSearchDirectoriesFromRunSetting(adapterSettings.GetDirectoryListWithRecursiveProperty(appDomainSetup.ApplicationBase));
+                    var additionalSearchDirectories =
+                        adapterSettings.GetDirectoryListWithRecursiveProperty(appDomainSetup.ApplicationBase);
+                    if (additionalSearchDirectories?.Count > 0)
+                    {
+                        this.assemblyResolver.AddSearchDirectoriesFromRunSetting(
+                            adapterSettings.GetDirectoryListWithRecursiveProperty(appDomainSetup.ApplicationBase));
+                    }
                 }
-                catch (Exception e)
+                catch (Exception exception)
                 {
-                    Console.WriteLine(e.Message);
+                    if (EqtTrace.IsErrorEnabled)
+                    {
+                        EqtTrace.Error(exception);
+                    }
                 }
             }
-
-            // This has to be LoadFrom, otherwise we will have to use AssemblyResolver to find self.
-            var enumerator = this.appDomain.CreateInstanceFromAndUnwrap(
-                type.Assembly.Location,
-                type.FullName,
-                false,
-                BindingFlags.Default,
-                null,
-                args,
-                null,
-                null);
-
-            EqtTrace.SetupRemoteEqtTraceListeners(this.appDomain);
+            
+            var enumerator = AppDomainUtilities.CreateInstance(
+                this.appDomain,
+                type,
+                args);
 
             return enumerator;
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            if (this.assemblyResolver != null)
+            {
+                this.assemblyResolver.Dispose();
+                this.assemblyResolver = null;
+            }
+
+            if (this.appDomain != null)
+            {
+                AppDomain.Unload(this.appDomain);
+                this.appDomain = null;
+            }
+
+            this.ResetContext();
+
+            GC.SuppressFinalize(this);
+        }
 
         /// <summary>
         /// Gets the probing paths to load the test assembly dependencies.
@@ -204,25 +260,65 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             return this.cachedResolutionPaths;
         }
+        
+        internal virtual string GetTargetFrameworkVersionString(string sourceFileName)
+        {
+            return AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
+        }
+
+        private string GetConfigFileForTestSource(string sourceFileName)
+        {
+            return new DeploymentUtility().GetConfigFile(sourceFileName);
+        }
+        
+        /// <summary>
+        /// Sets context required for running tests.
+        /// </summary>
+        /// <param name="source">
+        /// source parameter used for setting context
+        /// </param>
+        /// <returns>
+        /// Returns false if context cannot be set. True otherwise.
+        /// </returns>
+        private void SetContext(string source)
+        {
+            if (string.IsNullOrEmpty(source))
+            {
+                return;
+            }
+
+            Exception setWorkingDirectoryException = null;
+            this.currentDirectory = Environment.CurrentDirectory;
+
+            try
+            {
+                Environment.CurrentDirectory = Path.GetDirectoryName(source);
+                EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: Changed the working directory to {0}", Environment.CurrentDirectory);
+            }
+            catch (IOException ex)
+            {
+                setWorkingDirectoryException = ex;
+            }
+            catch (System.Security.SecurityException ex)
+            {
+                setWorkingDirectoryException = ex;
+            }
+
+            if (setWorkingDirectoryException != null)
+            {
+                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, "MSTestExecutor.SetWorkingDirectory: Failed to set the working directory to '{0}'. {1}", Path.GetDirectoryName(source), setWorkingDirectoryException);
+            }
+        }
 
         /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// Resets the context as it was before calling SetContext()
         /// </summary>
-        public void Dispose()
+        private void ResetContext()
         {
-            if (this.assemblyResolver != null)
+            if (!string.IsNullOrEmpty(this.currentDirectory))
             {
-                this.assemblyResolver.Dispose();
-                this.assemblyResolver = null;
+                Environment.CurrentDirectory = this.currentDirectory;
             }
-
-            if (this.appDomain != null)
-            {
-                AppDomain.Unload(this.appDomain);
-                this.appDomain = null;
-            }
-
-            GC.SuppressFinalize(this);
         }
     }
 }

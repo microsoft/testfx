@@ -3,44 +3,62 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Reflection;
-    using System.Text;
-    using System.Xml;
-    using System.Diagnostics.CodeAnalysis;
+
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
-
-
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-    // TODO:Write Unit Tests
     /// <summary>
     /// Utilities for AppDomain
     /// </summary>
     internal static class AppDomainUtilities
     {
-        private const string XmlNamespace = "urn:schemas-microsoft-com:asm.v1";
+        private const string ObjectModelVersionBuiltAgainst = "11.0.0.0";
+
         private static Version defaultVersion = new Version();
         private static Version version45 = new Version("4.5");
-        private const string ObjectModelVersionBuiltAgainst = "14.0.0.0";
+
+        private static XmlUtilities xmlUtilities = null;
+
+        /// <summary>
+        /// Gets or sets the Xml Utilities instance.
+        /// </summary>
+        internal static XmlUtilities XmlUtilities
+        {
+            get
+            {
+                if (xmlUtilities == null)
+                {
+                    xmlUtilities = new XmlUtilities();
+                }
+                return xmlUtilities;
+            }
+
+            set
+            {
+                xmlUtilities = value;
+            }
+        }
 
         /// <summary>
         /// Set the target framework for app domain setup if target framework of dll is > 4.5
         /// </summary>
         /// <param name="setup">AppdomainSetup for app domain creation</param>
-        /// <param name="testSource">path of test file</param>
+        /// <param name="frameworkVersionString">The target framework version of the test source.</param>
         [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
         [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
-        internal static void SetAppDomainFrameworkVersionBasedOnTestSource(AppDomainSetup setup, string testSource)
+        internal static void SetAppDomainFrameworkVersionBasedOnTestSource(AppDomainSetup setup, string frameworkVersionString)
         {
-            string assemblyVersionString = GetTargetFrameworkVersionString(testSource);
-            if (GetTargetFrameworkVersionFromVersionString(assemblyVersionString).CompareTo(version45) > 0)
+            if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(version45) > 0)
             {
                 PropertyInfo pInfo = typeof(AppDomainSetup).GetProperty(PlatformServices.Constants.TargetFrameworkName);
                 if (pInfo != null)
                 {
-                    pInfo.SetValue(setup, assemblyVersionString, null);
+                    pInfo.SetValue(setup, frameworkVersionString, null);
                 }
             }
         }
@@ -48,21 +66,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <summary>
         /// Get target framework version string from the given dll
         /// </summary>
-        /// <param name="path">
+        /// <param name="testSourcePath">
         /// The path of the dll
         /// </param>
         /// <returns>
         /// Framework string
+        /// Todo: Need to add components/E2E tests to cover these scenarios.
         /// </returns>
         [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly",
             Justification = "Reviewed. Suppression is OK here.")]
-        internal static string GetTargetFrameworkVersionString(string path)
+        internal static string GetTargetFrameworkVersionString(string testSourcePath)
         {
             AppDomainSetup appDomainSetup = new AppDomainSetup();
-            appDomainSetup.ApplicationBase = Path.GetDirectoryName(Path.GetFullPath(path));
+
             appDomainSetup.LoaderOptimization = LoaderOptimization.MultiDomainHost;
 
-            if (File.Exists(path))
+            AppDomainUtilities.SetConfigurationFile(appDomainSetup, new DeploymentUtility().GetConfigFile(testSourcePath));
+
+            if (File.Exists(testSourcePath))
             {
                 AppDomain appDomain = null;
 
@@ -70,37 +91,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 {
                     appDomain = AppDomain.CreateDomain("Framework Version String Domain", null, appDomainSetup);
 
-                    // This is done so that ObjectModel is loaded first in the new AppDomain before any other adapter assembly is used
-                    Type typeOfSettingsException = typeof(SettingsException);
-                    appDomain.CreateInstanceFromAndUnwrap(
-                            typeOfSettingsException.Assembly.Location,
-                            typeOfSettingsException.FullName,
-                            false,
-                            BindingFlags.Default,
-                            null,
-                            null,
-                            null,
-                            null);
+                    // Wire the eqttrace logs in this domain to the current domain.
+                    EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
 
-                    Type typeOfAssemblyLoadWorker = typeof(AssemblyLoadWorker);
+                    // Add an assembly resolver to resolve ObjectModel or any Test Platform dependencies. 
+                    // Not moving to IMetaDataImport APIs because the time taken for this operation is <20 ms and 
+                    // IMetaDataImport needs COM registration which is not a guarantee in Dev15.
+                    var assemblyResolverType = typeof(AssemblyResolver);
+
+                    var resolutionPaths = new List<string> { Path.GetDirectoryName(typeof(TestCase).Assembly.Location) };
+                    resolutionPaths.Add(Path.GetDirectoryName(testSourcePath));
+
+                    AppDomainUtilities.CreateInstance(
+                        appDomain,
+                        assemblyResolverType,
+                        new object[] { resolutionPaths });
 
                     var assemblyLoadWorker =
-                        (AssemblyLoadWorker)
-                        appDomain.CreateInstanceFromAndUnwrap(
-                            typeOfAssemblyLoadWorker.Assembly.Location,
-                            typeOfAssemblyLoadWorker.FullName,
-                            false,
-                            BindingFlags.Default,
-                            null,
-                            null,
-                            null,
-                            null);
+                        (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(
+                        appDomain,
+                        typeof(AssemblyLoadWorker),
+                        null);
 
-                    return assemblyLoadWorker.GetTargetFrameworkVersionStringFromPath(path);
+                    return assemblyLoadWorker.GetTargetFrameworkVersionStringFromPath(testSourcePath);
                 }
-                catch (Exception e)
+                catch (Exception exception)
                 {
-                    Console.WriteLine(e.Message);
+                    if(EqtTrace.IsErrorEnabled)
+                    {
+                        EqtTrace.Error(exception);
+                    }
                 }
                 finally
                 {
@@ -115,44 +135,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         }
 
         /// <summary>
-        /// Get the Version for the target framework version string
-        /// </summary>
-        /// <param name="version">Target framework string</param>
-        /// <returns>Framework Version</returns>
-        internal static Version GetTargetFrameworkVersionFromVersionString(string version)
-        {
-            if (version.Length > PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1)
-            {
-                string versionPart = version.Substring(PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1);
-                return new Version(versionPart);
-            }
-
-            return defaultVersion;
-        }
-
-        /// <summary>
         /// Set configuration file on the parameter appDomain.
         /// </summary>
+        /// <param name="appDomainSetup"> The app Domain Setup. </param>
+        /// <param name="testSourceConfigFile"> The test Source Config File. </param>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        internal static void SetConfigurationFile(AppDomainSetup appDomainSetup, string testSource)
-        {
-            var configFile = new DeploymentUtility().GetConfigFile(testSource);
-            
-            if (!string.IsNullOrEmpty(configFile))
+        internal static void SetConfigurationFile(AppDomainSetup appDomainSetup, string testSourceConfigFile)
+        {            
+            if (!string.IsNullOrEmpty(testSourceConfigFile))
             {
                 if (EqtTrace.IsInfoEnabled)
                 {
-                    EqtTrace.Info("UnitTestAdapter: Using configuration file {0} for testSource {1}.", configFile, testSource);
+                    EqtTrace.Info("UnitTestAdapter: Using configuration file {0} to setup appdomain for test source {1}.", testSourceConfigFile, Path.GetFileNameWithoutExtension(testSourceConfigFile));
                 }
-                appDomainSetup.ConfigurationFile = Path.GetFullPath(configFile);
+
+                appDomainSetup.ConfigurationFile = Path.GetFullPath(testSourceConfigFile);
 
                 try
                 {
-                    // Add redirection of the built 14.0 Object Model assembly to the current version if that is not 14.0
+                    // Add redirection of the built 11.0 Object Model assembly to the current version if that is not 11.0
                     var currentVersionOfObjectModel = typeof(TestCase).Assembly.GetName().Version.ToString();
                     if (!string.Equals(currentVersionOfObjectModel, ObjectModelVersionBuiltAgainst))
                     {
-                        var configurationBytes = AddObjectModelRedirectAndConvertToByteArray(configFile);
+                        var assemblyName = typeof(TestCase).Assembly.GetName();
+                        var configurationBytes =
+                            XmlUtilities.AddAssemblyRedirection(
+                                testSourceConfigFile,
+                                assemblyName,
+                                ObjectModelVersionBuiltAgainst,
+                                assemblyName.Version.ToString());
                         appDomainSetup.SetConfigurationBytes(configurationBytes);
                     }
                 }
@@ -171,130 +182,62 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
         }
 
-
-        /// <summary>
-        /// Adds UTF assembly redirect and convert it to a byte array
-        /// </summary>
-        /// <param name="configFile"> The config File. </param>
-        /// <returns> The <see cref="byte"/> array. </returns>
-        private static byte[] AddObjectModelRedirectAndConvertToByteArray(string configFile)
+        internal static object CreateInstance(AppDomain appDomain, Type type, object[] arguments)
         {
-            XmlDocument doc = new XmlDocument();
-            if (!string.IsNullOrEmpty(configFile?.Trim()))
+            Debug.Assert(appDomain != null, "appDomain is null");
+            Debug.Assert(type != null, "type is null");
+
+            var typeAssemblyLocation = type.Assembly.Location;
+            var fullFilePath = typeAssemblyLocation == null ? null : Path.Combine(appDomain.SetupInformation.ApplicationBase, Path.GetFileName(typeAssemblyLocation));
+
+            if (fullFilePath == null || File.Exists(fullFilePath))
             {
-                using (var xmlReader = new XmlTextReader(configFile))
-                {
-                    xmlReader.DtdProcessing = DtdProcessing.Prohibit;
-                    xmlReader.XmlResolver = null;
-                    doc.Load(xmlReader);
-                }
+                // If the assembly exists in the app base directory, load it from there itself.
+                // Even if it does not exist, Create the type in the default Load Context and let the CLR resolve the assembly path.
+                // This would load the assembly in the Default Load context.
+                return appDomain.CreateInstanceAndUnwrap(
+                    type.Assembly.FullName,
+                    type.FullName,
+                    false,
+                    BindingFlags.Default,
+                    null,
+                    arguments,
+                    null,
+                    null);
             }
-            var configurationElement = FindOrCreateElement(doc, doc, "configuration");
-            var assemblyBindingSection = FindOrCreateAssemblyBindingSection(doc, configurationElement);
-            var assemblyName = Assembly.GetExecutingAssembly().GetName();
-            assemblyName.Name = "Microsoft.VisualStudio.TestPlatform.ObjectModel";
-            var currentVersion = typeof(TestCase).Assembly.GetName().Version.ToString();
-            AddAssemblyBindingRedirect(doc, assemblyBindingSection, assemblyName, ObjectModelVersionBuiltAgainst, currentVersion);
-            using (var ms = new MemoryStream())
+            else
             {
-                doc.Save(ms);
-                return ms.ToArray();
+                // This means that the file is not present in the app base directory. Load it from Path instead.
+                // NOTE: We expect that all types that we are creating from here are types we know the location for.
+                // This would load the assembly in the Load-From context.
+                // While the above if condition is satisfied for most common cases, there could be a case where the adapter dlls
+                // do not get copied over to where the test assembly is, in which case we load them from where the parent AppDomain is picking them up from.
+                return appDomain.CreateInstanceFromAndUnwrap(
+                    typeAssemblyLocation,
+                    type.FullName,
+                    false,
+                    BindingFlags.Default,
+                    null,
+                    arguments,
+                    null,
+                    null);
             }
-        }
-
-        private static XmlElement FindOrCreateElement(XmlDocument doc, XmlNode parent, string name)
-        {
-            var ret = parent[name];
-
-            if (ret != null)
-            {
-                return ret;
-            }
-
-            ret = doc.CreateElement(name, parent.NamespaceURI);
-            parent.AppendChild(ret);
-            return ret;
-        }
-
-        private static XmlElement FindOrCreateAssemblyBindingSection(XmlDocument doc, XmlElement configurationElement)
-        {
-            // Each section must be created with the xmlns specified so that
-            // we don't end up with xmlns="" on each element.
-
-            // Find or create the runtime section (this one should not have an xmlns on it).
-            var runtimeSection = FindOrCreateElement(doc, configurationElement, "runtime");
-
-            // Use the assemblyBinding section if it exists; otherwise, create one.
-            var assemblyBindingSection = runtimeSection["assemblyBinding"];
-            if (assemblyBindingSection != null)
-            {
-                return assemblyBindingSection;
-            }
-            assemblyBindingSection = doc.CreateElement("assemblyBinding", XmlNamespace);
-            runtimeSection.AppendChild(assemblyBindingSection);
-            return assemblyBindingSection;
         }
 
         /// <summary>
-        /// Add an assembly binding redirect entry to the config file.
+        /// Get the Version for the target framework version string
         /// </summary>
-        /// <param name="doc"> The doc. </param>
-        /// <param name="assemblyBindingSection"> The assembly Binding Section. </param>
-        /// <param name="assemblyName"> The assembly Name. </param>
-        /// <param name="fromVersion"> The from Version. </param>
-        /// <param name="toVersion"> The to Version. </param>
-        private static void AddAssemblyBindingRedirect(XmlDocument doc, XmlElement assemblyBindingSection,
-            AssemblyName assemblyName,
-            string fromVersion,
-            string toVersion)
+        /// <param name="version">Target framework string</param>
+        /// <returns>Framework Version</returns>
+        private static Version GetTargetFrameworkVersionFromVersionString(string version)
         {
-            Debug.Assert(assemblyName != null);
-            if (assemblyName == null)
+            if (version.Length > PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1)
             {
-                throw new ArgumentNullException("assemblyName");
+                string versionPart = version.Substring(PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1);
+                return new Version(versionPart);
             }
 
-
-            // Convert the public key token into a string.
-            StringBuilder publicKeyTokenString = null;
-            var publicKeyToken = assemblyName.GetPublicKeyToken();
-            if (null != publicKeyToken)
-            {
-                publicKeyTokenString = new StringBuilder(publicKeyToken.GetLength(0) * 2);
-                for (var i = 0; i < publicKeyToken.GetLength(0); i++)
-                {
-                    publicKeyTokenString.AppendFormat(
-                        System.Globalization.CultureInfo.InvariantCulture,
-                        "{0:x2}",
-                        new object[] { publicKeyToken[i] });
-                }
-            }
-
-            // Get the culture as a string.
-            var cultureString = assemblyName.CultureInfo.ToString();
-            if (string.IsNullOrEmpty(cultureString))
-            {
-                cultureString = "neutral";
-            }
-
-            // Add the dependentAssembly section.
-            var dependentAssemblySection = doc.CreateElement("dependentAssembly", XmlNamespace);
-            assemblyBindingSection.AppendChild(dependentAssemblySection);
-
-            // Add the assemblyIdentity element.
-            var assemblyIdentityElement = doc.CreateElement("assemblyIdentity", XmlNamespace);
-            assemblyIdentityElement.SetAttribute("name", assemblyName.Name);
-            if (null != publicKeyTokenString)
-            {
-                assemblyIdentityElement.SetAttribute("publicKeyToken", publicKeyTokenString.ToString());
-            }
-            assemblyIdentityElement.SetAttribute("culture", cultureString);
-            dependentAssemblySection.AppendChild(assemblyIdentityElement);
-
-            var bindingRedirectElement = doc.CreateElement("bindingRedirect", XmlNamespace);
-            bindingRedirectElement.SetAttribute("oldVersion", fromVersion);
-            bindingRedirectElement.SetAttribute("newVersion", toVersion);
-            dependentAssemblySection.AppendChild(bindingRedirectElement);
+            return defaultVersion;
         }
     }
 }

@@ -7,7 +7,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.IO;
     using System.Linq;
     using System.Reflection;
+
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
     /// <summary>
     /// This platform service is responsible for any data or operations to validate
     /// the test sources provided to the adapter.
@@ -102,7 +104,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return sources;
         }
 
-        //Checks if given list of sources contains any ".appx" source.
+        /// <summary>
+        /// Checks if given list of sources contains any ".appx" source.
+        /// </summary>
+        /// <param name="sources"></param>
+        /// <returns></returns>
         private bool ContainsAppxSource(IEnumerable<string> sources)
         {
             foreach (string source in sources)

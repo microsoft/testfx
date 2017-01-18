@@ -7,8 +7,6 @@
 // </summary>
 // ---------------------------------------------------------------------------
 
-#define TODO
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
     using System;
@@ -16,8 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.IO;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
 
     /// <summary>
@@ -143,6 +140,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                     if (traceListener != null)
                     {
+                        // Dispose trace manager and listeners
                         traceListenerManager.Close(traceListener);
                         traceListenerManager.Dispose(traceListener);
                         traceListenerManager = null;

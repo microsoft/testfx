@@ -3,7 +3,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface
 {
     using System.Reflection;
-    
+
     /// <summary>
     /// This service is responsible for any file based operations.
     /// </summary>
@@ -12,10 +12,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// <summary>
         /// Loads an assembly into the current context.
         /// </summary>
-        /// <param name="assemblyName">The name of the assembly.</param>
-        /// <returns>A handle to the loaded assembly.</returns>
-        /// <remarks>A platform can choose how it wants the assembly loaded. (ReflectionOnlyLoad/Load etc).</remarks>
-        Assembly LoadAssembly(string assemblyName);
+        /// <param name="assemblyName">
+        /// The name of the assembly.
+        /// </param>
+        /// <param name="isReflectionOnly">
+        /// Indicates whether this should be a reflection only load.
+        /// </param>
+        /// <returns>
+        /// A handle to the loaded assembly.
+        /// </returns>
+        /// <remarks>
+        /// A platform can choose how it wants the assembly loaded. (ReflectionOnlyLoad/Load etc).
+        /// </remarks>
+        Assembly LoadAssembly(string assemblyName, bool isReflectionOnly);
 
         /// <summary>
         /// Verify if a file exists in the current context.

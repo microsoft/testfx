@@ -10,11 +10,10 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
-    using System.Collections.Generic;
-
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+    
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
     using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
@@ -27,14 +26,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         internal UnitTestResult()
         {
-            DatarowIndex = -1;
+            this.DatarowIndex = -1;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UnitTestResult"/> class.
         /// </summary>
         /// <param name="testFailedException"> The test failed exception. </param>
-        internal UnitTestResult(TestFailedException testFailedException):this()
+        internal UnitTestResult(TestFailedException testFailedException) 
+            : this()
         {
             this.Outcome = testFailedException.Outcome;
             this.ErrorMessage = testFailedException.Message;
@@ -53,7 +53,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         /// <param name="outcome"> The outcome. </param>
         /// <param name="errorMessage"> The error message. </param>
-        internal UnitTestResult(UnitTestOutcome outcome, string errorMessage):this()
+        internal UnitTestResult(UnitTestOutcome outcome, string errorMessage) 
+            : this()
         {
             this.Outcome = outcome;
             this.ErrorMessage = errorMessage;

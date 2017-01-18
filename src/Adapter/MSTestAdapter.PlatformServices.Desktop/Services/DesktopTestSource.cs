@@ -6,8 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Reflection;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-
-    using ObjectModel.Utilities;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
     /// <summary>
     /// This platform service is responsible for any data or operations to validate
@@ -58,7 +57,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="sources"> Sources given to the adapter.  </param>
         /// <returns> Sources that contains tests. <see cref="IEnumerable"/>. </returns>
-        /// </returns>
         public IEnumerable<string> GetTestSources(IEnumerable<string> sources)
         {
             return sources;

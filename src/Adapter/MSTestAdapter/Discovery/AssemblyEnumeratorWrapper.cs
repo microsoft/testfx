@@ -4,13 +4,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.Reflection;
-
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+    
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -32,8 +31,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <param name="runSettings"> The run Settings. </param>
         /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller.  </param>
         /// <returns> A collection of test elements. </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters",
-            MessageId = "3#")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
+            Justification = "Catching a generic exception since it is a requirement to not abort discovery in case of any errors.")]
+        [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "3#")]
         internal ICollection<UnitTestElement> GetTests(
             string assemblyFileName,
             IRunSettings runSettings,
@@ -136,10 +136,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
         private ICollection<UnitTestElement> GetTestsInIsolation(string fullFilePath, IRunSettings runSettings, out ICollection<string> warnings)
         {
-            using (var isolationHost = PlatformServiceProvider.Instance.TestSourceHost)
+            using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings))
             {
-               var assemblyEnumerator = isolationHost.CreateInstanceForType(
-                    typeof(AssemblyEnumerator), null, fullFilePath, runSettings) as AssemblyEnumerator;
+                var assemblyEnumerator =
+                    isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), null) as AssemblyEnumerator;
                 return assemblyEnumerator.EnumerateAssembly(fullFilePath, out warnings);
             }
         }

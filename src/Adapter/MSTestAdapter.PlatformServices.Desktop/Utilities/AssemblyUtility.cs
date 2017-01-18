@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     /// <summary>
     /// Utility for assembly specific functionality.
     /// </summary>
-    internal class AssemblyUtility
+    internal class AssemblyUtility : IAssemblyUtility
     {
         private static Dictionary<string, object> cultures;
         private readonly string[] assemblyExtensions = new string[] { ".dll", ".exe" };
@@ -35,8 +35,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                         cultures.Add(info.Name, null);
                     }
                 }
+
                 return cultures;
             }
+        }
+
+        /// <summary>
+        /// Loads an assembly into the reflection-only context, given its path.
+        /// </summary>
+        /// <param name="assemblyPath">The path of the file that contains the manifest of the assembly.</param>
+        /// <returns>The loaded assembly.</returns>
+        public Assembly ReflectionOnlyLoadFrom(string assemblyPath)
+        {
+            return Assembly.ReflectionOnlyLoadFrom(assemblyPath);
+        }
+
+        /// <summary>
+        /// Loads an assembly into the reflection-only context, given its display name.
+        /// </summary>
+        /// <param name="assemblyString">The display name of the assembly, as returned by the System.Reflection.AssemblyName.FullName property.</param>
+        /// <returns>The loaded assembly.</returns>
+        public Assembly ReflectionOnlyLoad(string assemblyString)
+        {
+            return Assembly.ReflectionOnlyLoad(assemblyString);
         }
 
         /// <summary>
@@ -170,61 +191,38 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             setupInfo.ApplicationBase = Path.GetDirectoryName(Path.GetFullPath(assemblyPath));
 
             Debug.Assert(string.IsNullOrEmpty(configFile) || File.Exists(configFile), "Config file is specified but does not exist: {0}", configFile);
-            if (!string.IsNullOrEmpty(configFile))
-            {
-                setupInfo.ConfigurationFile = Path.GetFullPath(configFile);
-            }
-            else
-            {
-                // We have to clear config file, otherwise it will be inherited from current app domain!
-                setupInfo.ConfigurationFile = string.Empty;
-            }
+
+            AppDomainUtilities.SetConfigurationFile(setupInfo, configFile);
 
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: Using config file: '{0}'.", setupInfo.ConfigurationFile);
             
             setupInfo.LoaderOptimization = LoaderOptimization.MultiDomainHost;
 
-            AppDomain ad = null;
+            AppDomain appDomain = null;
             try
             {
-                ad = AppDomain.CreateDomain("Dependency finder domain", null, setupInfo);
+                appDomain = AppDomain.CreateDomain("Dependency finder domain", null, setupInfo);
                 if (EqtTrace.IsInfoEnabled)
                 {
                     EqtTrace.Info("AssemblyDependencyFinder.GetDependentAssemblies: Created AppDomain.");
                 }
 
                 var assemblyResolverType = typeof(AssemblyResolver);
-                 
-                EqtTrace.SetupRemoteEqtTraceListeners(ad);
-
+                
+                EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
 
                 // This has to be LoadFrom, otherwise we will have to use AssemblyResolver to find self.
                 using (
                     AssemblyResolver resolver =
-                        (AssemblyResolver)
-                        ad.CreateInstanceFromAndUnwrap(
-                            assemblyResolverType.Assembly.Location,
-                            assemblyResolverType.FullName,
-                            false,
-                            BindingFlags.Default,
-                            null,
-                            new object[] { this.GetResolutionPaths() },
-                            null,
-                            null))
+                        (AssemblyResolver)AppDomainUtilities.CreateInstance(
+                                                    appDomain,
+                                                    assemblyResolverType,
+                                                    new object[] { this.GetResolutionPaths() }))
                 {
-
                     // This has to be Load, otherwise Serialization of argument types will not work correctly.
                     AssemblyLoadWorker worker =
                         (AssemblyLoadWorker)
-                        ad.CreateInstanceAndUnwrap(
-                            typeof(AssemblyLoadWorker).Assembly.FullName,
-                            typeof(AssemblyLoadWorker).FullName,
-                            false,
-                            BindingFlags.Default,
-                            null,
-                            null,
-                            null,
-                            null);
+                        AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
 
                     EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
 
@@ -233,10 +231,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
             finally
             {
-                if (ad != null)
+                if (appDomain != null)
                 {
                     EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: unloading AppDomain...");
-                    AppDomain.Unload(ad);
+                    AppDomain.Unload(appDomain);
                     EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: unloading AppDomain succeeded.");
                 }
             }

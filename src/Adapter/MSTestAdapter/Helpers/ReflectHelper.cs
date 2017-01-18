@@ -7,16 +7,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
-    using System.Reflection;    
+    using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
 
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+
     internal class ReflectHelper : MarshalByRefObject
     {
+        /// <summary>
+        /// Contains the memberInfo Vs the name/type of the attributes defined on that member. (FYI: - MemberInfo denotes properties, fields, methods, events)
+        /// </summary>
+        private Dictionary<MemberInfo, Dictionary<string, object>> attributeCache = new Dictionary<MemberInfo, Dictionary<string, object>>();
+
         /// <summary>
         /// Checks to see if the parameter memberInfo contains the parameter attribute or not.
         /// </summary>
@@ -79,7 +87,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             Debug.Assert(attributeType != null);
 
             // Get attributes defined on the member from the cache. 
-            var attributes = type.GetTypeInfo().GetCustomAttributes(attributeType, inherit);
+            var attributes = GetCustomAttributes(type.GetTypeInfo(), attributeType, inherit);
 
             if (attributes == null)
             {
@@ -123,7 +131,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             object targetAttribute = null;
 
             // Get all attributes on the member.
-            var attributes = type.GetTypeInfo().GetCustomAttributes(inherit);
+            var attributes = GetCustomAttributes(type.GetTypeInfo(), inherit);
             if (attributes == null)
             {
                 // TODO: mkolt: important: consider beter way. When running ObjectModel\Common tests I get this.
@@ -218,14 +226,51 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
-        /// Remove cache storage
+        /// Resolves the expected exception attribute. The function will try to
+        /// get all the expected exception attributes defined for a testMethod.\
         /// </summary>
-        public void ClearCache()
+        /// <returns>
+        /// The expected exception attribute found for this test. Null if not found.
+        /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "testContext")]
+        public virtual ExpectedExceptionBaseAttribute ResolveExpectedExceptionHelper(MethodInfo methodInfo, TestMethod testMethod)
         {
-            lock (this.m_attributeCache)
+            Debug.Assert(methodInfo != null, "MethodInfo should be non-null");
+
+            // Get the expected exception attribute
+            ExpectedExceptionBaseAttribute[] expectedExceptions;
+            try
             {
-                this.m_attributeCache.Clear();
+                expectedExceptions = GetCustomAttributes(methodInfo, typeof(ExpectedExceptionBaseAttribute), true).OfType<ExpectedExceptionBaseAttribute>().ToArray();
             }
+            catch (Exception ex)
+            {
+                // If construction of the attribute throws an exception, indicate that there was an
+                // error when trying to run the test
+                string errorMessage = string.Format(CultureInfo.CurrentCulture,
+                                                    Resource.UTA_ExpectedExceptionAttributeConstructionException,
+                                                    testMethod.FullClassName, testMethod.Name, StackTraceHelper.GetExceptionMessage(ex));
+                throw new TypeInspectionException(errorMessage);
+            }
+
+            if (expectedExceptions == null || expectedExceptions.Length == 0)
+            {
+                return null;
+            }
+
+            // Verify that there is only one attribute (multiple attributes derived from
+            // ExpectedExceptionBaseAttribute are not allowed on a test method)
+            if (expectedExceptions.Length > 1)
+            {
+                string errorMessage = string.Format(CultureInfo.CurrentCulture,
+                                                    Resource.UTA_MultipleExpectedExceptionsOnTestMethod, testMethod.FullClassName, testMethod.Name);
+                throw new TypeInspectionException(errorMessage);
+            }
+
+            // Set the expected exception attribute to use for this test
+            ExpectedExceptionBaseAttribute expectedException = expectedExceptions[0];
+
+            return expectedException;
         }
 
         /// <summary>
@@ -301,17 +346,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// Gets custom attributes at the class and assembly for a method.
         /// </summary>
         /// <param name="attributeProvider">Method Info or Member Info or a Type</param>
-        /// <param name="type"> What type of CustomAttribute you need Eg: TestCategory, Owner etc.,</param>
-        /// <param name="inherit">Boolean value for inhertiting from base class attributes also</param>
-        /// <returns></returns>
-        internal IEnumerable<object> GetCustomAttributesRecursively(MemberInfo attributeProvider,
-            Type type)
+        /// <param name="type"> What type of CustomAttribute you need. For instance: TestCategory, Owner etc.,</param>
+        /// <returns>The categories of the specified type on the method. </returns>
+        internal IEnumerable<object> GetCustomAttributesRecursively(MemberInfo attributeProvider, Type type)
         {            
-            var categories = GetCustomAttributes(attributeProvider, typeof(TestCategoryBaseAttribute));
+            var categories = this.GetCustomAttributes(attributeProvider, typeof(TestCategoryBaseAttribute));
             if(categories != null)
-                categories = categories.Concat(GetCustomAttributes(attributeProvider.DeclaringType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
+                categories = categories.Concat(this.GetCustomAttributes(attributeProvider.DeclaringType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
             if (categories != null)
-                categories = categories.Concat(GetCustomAttributeForAssembly(attributeProvider, typeof(TestCategoryBaseAttribute))).ToArray();
+                categories = categories.Concat(this.GetCustomAttributeForAssembly(attributeProvider, typeof(TestCategoryBaseAttribute))).ToArray();
 
             if (categories != null)
                 return categories;
@@ -325,9 +368,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// </summary>
         /// <param name="memberInfo"></param>
         /// <returns></returns>
-        public virtual object[] GetCustomAttributeForAssembly(MemberInfo memberInfo,Type type)
+        public virtual Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo,Type type)
         {
-            return memberInfo.DeclaringType.GetTypeInfo().Assembly.GetCustomAttributes(type).ToArray();
+            return
+                PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
+                    memberInfo.DeclaringType.GetTypeInfo().Assembly,
+                    type).OfType<Attribute>().ToArray();
         }
         
         /// <summary>
@@ -336,7 +382,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <param name="attributeProvider"> The member to reflect on. </param>
         /// <param name="type"> The attribute type. </param>
         /// <returns></returns>
-        public virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
+        public virtual Attribute[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
         {
             return GetCustomAttributes(attributeProvider, type, true);
         }
@@ -399,7 +445,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// </summary>
         internal virtual int? GetPriority(MemberInfo priorityAttributeProvider)
         {
-            object[] priorityAttribute = GetCustomAttributes(priorityAttributeProvider, typeof(PriorityAttribute), true);
+            var priorityAttribute = GetCustomAttributes(priorityAttributeProvider, typeof(PriorityAttribute), true);
 
             if (priorityAttribute == null || priorityAttribute.Length != 1)
             {
@@ -412,7 +458,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <summary>
         /// Will return TestProperties attributes applied to TestMethod
         /// </summary>
-        private static IEnumerable<object> GetTestPropertyAttributes(MemberInfo propertyAttributeProvider)
+        private static IEnumerable<Attribute> GetTestPropertyAttributes(MemberInfo propertyAttributeProvider)
         {
             return GetCustomAttributes(propertyAttributeProvider, typeof(TestPropertyAttribute), true);
         }
@@ -449,83 +495,40 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <param name="type">Type of attribute to retrieve.</param>
         /// <param name="inherit">If inheritied type of attribute.</param>
         /// <returns>All attributes of give type on member.</returns>
-        internal static object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
+        internal static Attribute[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
         {
             if (memberInfo == null)
             {
                 return null;
             }
 
-            if (IsReflectionOnlyLoad(memberInfo) == false)
-            {
-#if TODO
-                return (memberInfo.GetCustomAttributes(type, inherit) == null) ? Enumerable.Empty<Object>().ToArray() : memberInfo.GetCustomAttributes(type, inherit).ToArray();
-#else
-                return memberInfo.GetCustomAttributes(type, inherit);
-#endif
-            }
-            else
-            {
-#if !TODO
-                IList<CustomAttributeData> customAttributes = CustomAttributeData.GetCustomAttributes(memberInfo);
-                List<object> attributesArray = new List<object>();
-                foreach (var attribute in customAttributes)
-                {
-                    // Retrieve attribute of given type only. Since normal loaded and reflection only type can't be equated
-                    // match qualified names.
-                    if ((inherit && IsTypeInheriting(attribute.Constructor.DeclaringType, type)) ||
-                        (!inherit && attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(type.AssemblyQualifiedName)))
-                    {
-                        Attribute attributeInstance = CreateAttributeInstance(attribute);
-                        if (attributeInstance != null)
-                        {
-                            attributesArray.Add(attributeInstance);
-                        }
-                    }
-                }
-#else
-                IEnumerable<Attribute> attributesArray = CustomAttributeExtensions.GetCustomAttributes(memberInfo, inherit);
-#endif
+            var attributesArray = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
+                memberInfo,
+                type,
+                inherit);
 
-                return attributesArray.ToArray();
-            }
+            return attributesArray.OfType<Attribute>().ToArray();
         }
 
         /// <summary>
-        /// Check if type1 is inheriting from type2
+        /// Get custom attributes on a member for both normal and reflection only load.
         /// </summary>
-        private static bool IsTypeInheriting(Type type1, Type type2)
+        /// <param name="memberInfo">Memeber for which attributes needs to be retrieved.</param>
+        /// <param name="type">Type of attribute to retrieve.</param>
+        /// <param name="inherit">If inheritied type of attribute.</param>
+        /// <returns>All attributes of give type on member.</returns>
+        internal static object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
         {
-            while (type1 != null)
+            if (memberInfo == null)
             {
-                if (type1.AssemblyQualifiedName.Equals(type2.AssemblyQualifiedName))
-                {
-                    return true;
-                }
-
-                type1 = type1.GetTypeInfo().BaseType;
+                return null;
             }
 
-            return false;
-        }
+            var attributesArray = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
+                memberInfo,
+                inherit);
 
-        /// <summary>
-        /// Check wether member belongs to addembly loaded as refelction only.
-        /// </summary>
-        private static bool IsReflectionOnlyLoad(MemberInfo memberInfo)
-        {
-            if (memberInfo != null)
-            {
-#if !TODO
-                return memberInfo.Module.Assembly.ReflectionOnly;
-#else
-                //An assembly cannot be loaded using the ReflectionOnlyLoadFrom() method on the device side
-                //IsReflectionOnlyLoad will always return false
-                return false;
-#endif
-            }
-
-            return false;
+            return attributesArray.ToArray();
         }
 
         /// <summary>
@@ -535,13 +538,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         private Dictionary<string, object> GetAttributes(MemberInfo memberInfo, bool inherit)
         {
             // If the information is cached, then use it otherwise populate the cache using
-            // the reflection APIs. 
-            //
-
+            // the reflection APIs.
             Dictionary<string, object> attributes;
-            lock (this.m_attributeCache)
+            lock (this.attributeCache)
             {
-                if (!this.m_attributeCache.TryGetValue(memberInfo, out attributes))
+                if (!this.attributeCache.TryGetValue(memberInfo, out attributes))
                 {
                     // Populate the cache
                     attributes = new Dictionary<string, object>();
@@ -549,36 +550,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                     object[] customAttributesArray = null;
                     try
                     {
-                        if (IsReflectionOnlyLoad(memberInfo) == false)
-                        {
-                            // GetCustomAttributes instantiates all attributes and throws System.Exception
-                            // when there is an attribute with constructor that throws.
-#if TODO
-                            customAttributesArray = memberInfo.GetCustomAttributes(inherit).ToArray<object>();
-#else
-                            customAttributesArray = memberInfo.GetCustomAttributes(inherit);
-#endif
-                        }
-                        else
-                        {
-#if !TODO
-                            IList<CustomAttributeData> customAttributes = CustomAttributeData.GetCustomAttributes(memberInfo);
-
-                            List<object> attributesArray = new List<object>();
-                            foreach (var attribute in customAttributes)
-                            {
-                                Attribute attributeInstance = CreateAttributeInstance(attribute);
-                                if (attributeInstance != null)
-                                {
-                                    attributesArray.Add(attributeInstance);
-                                }
-                            }
-
-                            customAttributesArray = attributesArray.ToArray();
-#else
-                            customAttributesArray = CustomAttributeExtensions.GetCustomAttributes(memberInfo).ToArray();
-#endif
-                        }
+                        customAttributesArray = GetCustomAttributes(memberInfo, inherit);
                     }
                     catch (Exception ex)
                     {
@@ -596,6 +568,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                                 ": (Failed to get exception description due to an exception of type " +
                                     ex2.GetType().FullName + ')';
                         }
+
                         PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
                             "Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}",
                             memberInfo.GetType().FullName,
@@ -606,6 +579,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                         // Note 2: we cannot cache this because we don't know if there are other attributes defined.
                         return null;
                     }
+
                     Debug.Assert(customAttributesArray != null);
 
                     foreach (object customAttribute in customAttributesArray)
@@ -616,96 +590,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                         attributes[attrType.FullName] = customAttribute;
                     }
 
-                    this.m_attributeCache.Add(memberInfo, attributes);
+                    this.attributeCache.Add(memberInfo, attributes);
                 }
             }
 
             return attributes;
         }
-
-        /// <summary>
-        /// Create instance of the attribute for reflection only load.
-        /// </summary>
-        /// <param name="attributeData"></param>
-        /// <returns></returns>
-#if !TODO
-        private static Attribute CreateAttributeInstance(CustomAttributeData attributeData)
-        {
-            object attribute = null;
-            try
-            {
-                // Create instance of attribute. For some case, constructor param is returned as ReadOnlyCollection
-                // instead of array. So convert it to array else constructor invoke will fail.
-                Type attributeType = Type.GetType(attributeData.Constructor.DeclaringType.AssemblyQualifiedName);
-                if (null == attributeType)
-                {
-                   // In case, the assembly is not found in output folder doesn't gets loaded as part of Type.GetType, we will search in additional locations and load.
-                   attributeType = Type.GetType(attributeData.Constructor.DeclaringType.AssemblyQualifiedName, AssemblyResolver.LoadAssembly, null);
-                }
-
-                List<Type> constructorParameters = new List<Type>();
-                List<object> constructorArguments = new List<object>();
-                foreach (var parameter in attributeData.ConstructorArguments)
-                {
-                    Type parameterType = Type.GetType(parameter.ArgumentType.AssemblyQualifiedName);
-                    constructorParameters.Add(parameterType);
-                    if (parameterType.IsArray) 
-                    {
-                        IEnumerable enumerable = parameter.Value as IEnumerable;
-                        if (enumerable != null)
-                        {
-                            ArrayList list = new ArrayList();
-                            foreach (var item in enumerable)
-                            {
-                                if (item is CustomAttributeTypedArgument)
-                                {
-                                    list.Add(((CustomAttributeTypedArgument)item).Value);
-                                }
-                                else
-                                {
-                                    list.Add(item);
-                                }
-                            }
-                            
-                            constructorArguments.Add(list.ToArray(parameterType.GetElementType()));
-                        }
-                        else
-                        {
-                            constructorArguments.Add(parameter.Value);
-                        }
-                    }
-                    else 
-                    {
-                        constructorArguments.Add(parameter.Value);
-                    }
-                }
-
-                ConstructorInfo constructor = attributeType.GetConstructor(constructorParameters.ToArray());
-                attribute = constructor.Invoke(constructorArguments.ToArray());
-
-                foreach (var namedArgument in attributeData.NamedArguments)
-                {
-                    attributeType.GetProperty(namedArgument.MemberInfo.Name).SetValue(attribute, namedArgument.TypedValue.Value, null);
-                }
-            }
-            // If not able to create instance of attribute ignore attribute. (May happen for custom user defined attributes).
-            catch (BadImageFormatException) { }
-            catch (FileLoadException) { }
-            catch (TypeLoadException) { }
-
-            return attribute as Attribute;
-        }
-#endif
-
-        /// <summary>
-        /// Test context property name
-        /// </summary>
-        public const string TestContextPropertyName = "TestContext";
-
-        /// <summary>
-        /// Contains the memberInfo Vs the name/type of the attributes defined on that member. (FYI: - MemberInfo denotes properties, fields, methods, events)
-        /// </summary>
-        private Dictionary<MemberInfo, Dictionary<string, object>> m_attributeCache = new Dictionary<MemberInfo, Dictionary<string, object>>();
 
         /// <summary>
         /// Get attribute defined on a method which is of given type of subtype of given type.
@@ -738,7 +628,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// </summary>
         internal AttributeType GetDerivedAttribute<AttributeType>(Type type, bool inherit) where AttributeType : Attribute
         {
-            var attributes = type.GetTypeInfo().GetCustomAttributes(inherit);
+            var attributes = GetCustomAttributes(type.GetTypeInfo(), inherit);
             if (attributes == null)
             {
                 return null;

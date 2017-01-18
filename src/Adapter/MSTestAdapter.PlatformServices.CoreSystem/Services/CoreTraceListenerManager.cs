@@ -2,9 +2,9 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
-    using System;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using System.IO;
+
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
     /// <summary>
     /// Internal implementation of TraceListenerManager exposed to the user.

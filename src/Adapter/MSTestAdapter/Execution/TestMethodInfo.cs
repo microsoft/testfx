@@ -7,18 +7,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Diagnostics;
     using System.Globalization;
     using System.Reflection;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
-    using Extensions;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-
-    using ObjectModel;
+    
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Defines the TestMethod Info object
@@ -29,6 +28,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             MethodInfo testMethod,
             int timeout,
             TestMethodAttribute executor,
+            ExpectedExceptionBaseAttribute expectedException,
             TestClassInfo parent,
             ITestContext testContext)
         {
@@ -38,6 +38,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.TestMethod = testMethod;
             this.Timeout = timeout;
             this.Parent = parent;
+            this.ExpectedException = expectedException;
             this.Executor = executor;
             this.testContext = testContext;
         }
@@ -48,6 +49,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// TestMethod referred by this object
         /// </summary>
         public MethodInfo TestMethod { get; private set; }
+
+        /// <summary>
+        // Attribute that validates whether an exception qualifies as the expected exception
+        /// </summary>
+        public ExpectedExceptionBaseAttribute ExpectedException { get; private set; }
 
         /// <summary>
         /// Timeout defined on the test method. 
@@ -100,13 +106,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <inheritdoc/>
         public Attribute[] GetAllAttributes(bool inherit)
         {
-            return ReflectHelper.GetCustomAttributes(this.TestMethod, null, inherit) as Attribute[];
+            return ReflectHelper.GetCustomAttributes(this.TestMethod, inherit) as Attribute[];
         }
 
         /// <inheritdoc/>
         public TAttributeType[] GetAttributes<TAttributeType>(bool inherit) where TAttributeType : Attribute
         {
-            Attribute[] attributeArray =  ReflectHelper.GetCustomAttributes(this.TestMethod, typeof(TAttributeType), inherit) as Attribute[];
+            Attribute[] attributeArray =  ReflectHelper.GetCustomAttributes(this.TestMethod, typeof(TAttributeType), inherit);
 
             TAttributeType[] tAttributeArray = attributeArray as TAttributeType[];
             if (tAttributeArray != null)
@@ -123,7 +129,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     if (tAttribute != null)
                     {
                         tAttributeList.Add(tAttribute);
-                    }                   
+                    }
                 }
             }
 
@@ -163,7 +169,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         result.DebugTrace = listener.DebugTrace;
                         result.LogOutput = listener.StandardOutput;
                         result.LogError = listener.StandardError;
-                        result.ResultFiles = testContext.GetResultFiles();
+                        result.ResultFiles = this.testContext.GetResultFiles();
                     }
                 }
             }
@@ -175,6 +181,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Execute test without timeout.
         /// </summary>
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
+            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private TestResult ExecuteInternal(object[] arguments)
         {
             Debug.Assert(this.TestMethod != null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
@@ -184,67 +192,151 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             // TODO armahapa remove dry violation with TestMethodRunner
             var classInstance = this.CreateTestClassInstance(result);
             var testContextSetup = false;
+            bool isExceptionThrown = false;
+            Exception testRunnerException = null;
 
             try
             {
-                if (classInstance != null && this.SetTestContext(classInstance, result))
+                try
                 {
-                    // For any failure after this point, we must run TestCleanup
-                    testContextSetup = true;
-
-                    if (this.RunTestInitializeMethod(classInstance, result))
+                    if (classInstance != null && this.SetTestContext(classInstance, result))
                     {
-                        this.TestMethod.InvokeAsSynchronousTask(classInstance, arguments);
-                        result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed;
+                        // For any failure after this point, we must run TestCleanup
+                        testContextSetup = true;
+
+                        if (this.RunTestInitializeMethod(classInstance, result))
+                        {
+                            PlatformServiceProvider.Instance.ThreadOperations.ExecuteWithAbortSafety(
+                                () => this.TestMethod.InvokeAsSynchronousTask(classInstance, arguments));
+                            result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed;
+                        }
                     }
                 }
-            }
-#if TODO
-            catch (ThreadAbortException ex)
-            {
-                // Cancel the Abort caused by the test method. This abort is caused by the user code 
-                // and will allow Adapter gracefuly finish the test method call.
-                //
-                // Ideally we probably we should do it all the time because we want to abort just the user code
-                // not our but currently the code is tuned such it will cause unexpected behaviour (like different
-                // outcome)
-
-                // Also we may consider doing something similar for StackOverflow exception
-                // (it has similar behaviour as ThreadAbortException as being automatically rethrown after
-                // in the catch () block.
-                Thread.ResetAbort();
-
-                result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Unknown;
-                result.TestFailureException = ex;
-            }
-#endif
-            catch (Exception ex)
-            {
-                // This block should not throw. If it needs to throw, then handling of
-                // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
-                result.TestFailureException = this.HandleMethodException(
-                    ex,
-                    this.TestClassName,
-                    this.TestMethodName);
-
-                if (ex.InnerException != null && ex.InnerException is AssertInconclusiveException)
+                catch (Exception ex)
                 {
-                    result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Inconclusive;
+                    isExceptionThrown = true;
+
+                    if (this.IsExpectedException(ex, result))
+                    {
+                        //Expected Exception was thrown, so Pass the test
+                        result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed;
+                    }
+                    else if (result.TestFailureException == null)
+                    {
+                        // This block should not throw. If it needs to throw, then handling of
+                        // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
+                        result.TestFailureException = this.HandleMethodException(
+                            ex,
+                            this.TestClassName,
+                            this.TestMethodName);
+                    }
+
+                    if (result.Outcome != TestTools.UnitTesting.UnitTestOutcome.Passed)
+                    {
+                        if (ex.InnerException != null && ex.InnerException is AssertInconclusiveException)
+                        {
+                            result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Inconclusive;
+                        }
+                        else
+                        {
+                            result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
+                        }
+                    }
                 }
-                else
+                // if we get here, the test method did not throw the exception
+                // if the user specified that the test was going to throw an exception, and
+                // it did not, we should fail the test
+                if (!isExceptionThrown && this.ExpectedException != null)
                 {
+                    result.TestFailureException = new TestFailedException(
+                        UnitTestOutcome.Failed,
+                        this.ExpectedException.NoExceptionMessage);
                     result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
                 }
             }
-            finally
+            catch (Exception exception)
             {
-                if (classInstance != null && testContextSetup)
-                {
-                    this.RunTestCleanupMethod(classInstance, result);
-                }
+                testRunnerException = exception;
+            }
+
+            // TestCleanup can potentially be a long running operation which should'nt ideally be in a finally block.
+            // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block
+            // does not allow a threadabort exception to be raised within the block but throws one after finally is executed
+            // crashing the process. This was blocking writing an extension for Dynamic Timeout in VSO.
+            if (classInstance != null && testContextSetup)
+            {
+                this.RunTestCleanupMethod(classInstance, result);
+            }
+
+            if (testRunnerException != null)
+            {
+                throw testRunnerException;
             }
 
             return result;
+        }
+
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
+            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        private bool IsExpectedException(Exception ex, TestResult result)
+        {
+            Exception realException = this.GetRealException(ex);
+             
+            // if the user specified an expected exception, we need to check if this
+            // exception was thrown. If it was thrown, we should pass the test. In 
+            // case a different exception was thrown, the test is seen as failure
+            if (this.ExpectedException != null)
+            {
+                Exception exceptionFromVerify;
+                try
+                {
+                    // If the expected exception attribute's Verify method returns, then it
+                    // considers this exception as expected, so the test passed
+                    this.ExpectedException.Verify(realException);
+                    return true;
+                }
+                catch (Exception verifyEx)
+                {
+                    var isTargetInvocationError = verifyEx is TargetInvocationException;
+                    if (isTargetInvocationError && verifyEx.InnerException != null)
+                    {
+                        exceptionFromVerify = verifyEx.InnerException;
+                    }
+                    else
+                    {
+                        // Verify threw an exception, so the expected exception attribute does not
+                        // consider this exception to be expected. Include the exception message in
+                        // the test result.
+                        exceptionFromVerify = verifyEx;
+                    }
+                }
+
+                // See if the verification exception (thrown by the expected exception
+                // attribute's Verify method) is an AssertInconclusiveException. If so, set
+                // the test outcome to Inconclusive.
+                result.TestFailureException = new TestFailedException(exceptionFromVerify is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed,
+                                              exceptionFromVerify.TryGetMessage(),
+                                              realException.TryGetStackTraceInformation());
+                return false;
+            }
+            else
+                return false;
+        }
+
+        private Exception GetRealException(Exception ex)
+        {
+            if (ex is TargetInvocationException)
+            {
+                Debug.Assert(ex.InnerException != null, "Inner exception of TargetInvocationException is null. This should occur because we should have caught this case above.");
+
+                // Our reflected call will typically always get back a TargetInvocationException
+                // containing the real exception thrown by the test method as its inner exception
+                return ex.InnerException;
+            }
+            else
+            {
+                return ex;
+            }
         }
 
         /// <summary>
@@ -266,20 +358,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             // Get the real exception thrown by the test method
-            Exception realException;
-            if (isTargetInvocationException)
-            {
-                Debug.Assert(ex.InnerException != null, "Inner exception of TargetInvocationException is null. This should occur because we should have caught this case above.");
+            Exception realException = this.GetRealException(ex);
 
-                // Our reflected call will typically always get back a TargetInvocationException
-                // containing the real exception thrown by the test method as its inner exception
-                realException = ex.InnerException;
-            }
-            else
-            {
-                realException = ex;
-            }
-            
             if (realException is UnitTestAssertException)
             {
                 return new TestFailedException(realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed,
@@ -289,7 +369,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             else
             {
-                var errorMessage = string.Empty;
+                string errorMessage;
 
                 // Handle special case of UI objects in TestMethod to suggest UITestMethod
                 if (realException.HResult == -2147417842)
@@ -314,7 +394,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     stackTrace = StackTraceHelper.GetStackTraceInformation(realException);
                 }
 
-
                 return new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTrace, realException);
             }
         }
@@ -324,6 +403,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="classInstance">Instance of TestClass.</param>
         /// <param name="result">Instance of TestResult.</param>
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
+            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private void RunTestCleanupMethod(object classInstance, TestResult result)
         {
             Debug.Assert(classInstance != null, "classInstance != null");
@@ -337,10 +418,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     // Test cleanups are called in the order of discovery
                     // Current TestClass -> Parent -> Grandparent
                     testCleanupMethod?.InvokeAsSynchronousTask(classInstance, null);
-
-                    while (this.Parent.BaseTestCleanupMethodsQueue.Count > 0)
+                    var baseTestCleanupQueue = new Queue<MethodInfo>(this.Parent.BaseTestCleanupMethodsQueue);
+                    while (baseTestCleanupQueue.Count > 0)
                     {
-                        testCleanupMethod = this.Parent.BaseTestCleanupMethodsQueue.Dequeue();
+                        testCleanupMethod = baseTestCleanupQueue.Dequeue();
                         testCleanupMethod?.InvokeAsSynchronousTask(classInstance, null);
                     }
                 }
@@ -370,6 +451,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="classInstance">Instance of TestClass.</param>
         /// <param name="result">Instance of TestResult.</param>
         /// <returns>True if the TestInitialize method(s) did not throw an exception.</returns>
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
+            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private bool RunTestInitializeMethod(object classInstance, TestResult result)
         {
             Debug.Assert(classInstance != null, "classInstance != null");
@@ -436,6 +519,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>
         /// True if there no exceptions during set context operation.
         /// </returns>
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
+            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private bool SetTestContext(object classInstance, TestResult result)
         {
             Debug.Assert(classInstance != null, "classInstance != null");
@@ -476,6 +561,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>
         /// An instance of the TestClass. Returns null if there are errors during class instantiation.
         /// </returns>
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
+            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private object CreateTestClassInstance(TestResult result)
         {
             object classInstance = null;
@@ -486,7 +573,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             catch (Exception ex)
             {
                 // In most cases, exception will be TargetInvocationException with real exception wrapped
-                // in the InnerException.
+                // in the InnerException; or user code throws an exception
                 var actualException = ex.InnerException ?? ex;
                 var exceptionMessage = StackTraceHelper.GetExceptionMessage(actualException);
                 var stackTraceInfo = StackTraceHelper.GetStackTraceInformation(actualException);
@@ -506,33 +593,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Execute test which has a timeout
         /// </summary>        
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
+            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private TestResult ExecuteInternalWithTimeout(object[] arguments)
         {
             Debug.Assert(this.IsTimeoutSet, "Timeout should be set");
-
-            // Using our own thread to control the apartment state as otherwise the apartment state of a threadpool thread is always MTA. 
-            // bug: 321922
+            
             TestResult result = null;
             Exception failure = null;
 
-#if TODO
-            Thread executionThread = new Thread(new ThreadStart(() =>
-            {
-                try
+            Action executeAsyncAction = () =>
                 {
-                    result = this.ExecuteInternal(arguments);
-                }
-                catch (Exception ex)
-                {
-                    failure = ex;
-                }
-            }));
-            executionThread.IsBackground = true;
-            executionThread.Name = "MSAppContainerTest Thread";
+                    try
+                    {
+                        result = this.ExecuteInternal(arguments);
+                    }
+                    catch (Exception ex)
+                    {
+                        failure = ex;
+                    }
+                };
 
-            executionThread.SetApartmentState(Thread.CurrentThread.GetApartmentState());
-            executionThread.Start();
-            if (executionThread.Join(this.Timeout))
+            if (PlatformServiceProvider.Instance.ThreadOperations.Execute(executeAsyncAction, this.Timeout))
             {
                 if (failure != null)
                 {
@@ -545,18 +627,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             else
             {
                 // Timed out
-                try
-                {
-                    // Abort test thread after timeout.
-                    executionThread.Abort();
-                }
-                catch (ThreadStateException)
-                {
-                    // Catch and discard ThreadStateException. If Abort is called on a thread that has been suspended, 
-                    // a ThreadStateException is thrown in the thread that called Abort, 
-                    // and AbortRequested is added to the ThreadState property of the thread being aborted. 
-                    // A ThreadAbortException is not thrown in the suspended thread until Resume is called.
-                }
 
                 // If the method times out, then 
                 //
@@ -568,66 +638,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 //
                 string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, this.TestMethodName);
                 TestResult timeoutResult = new TestResult() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };
-                timeoutResult.Duration = TimeSpan.FromMilliseconds(this.Timeout);
                 return timeoutResult;
             }
-#else
-#if WINDOWS
-            IAsyncAction asyncAction;
-            asyncAction = ThreadPool.RunAsync(new WorkItemHandler((IAsyncAction) => result = ExecuteInternal(arguments)), WorkItemPriority.Normal, WorkItemOptions.TimeSliced);
-            Task executionTask = asyncAction.AsTask();
-#else
-            var tokenSource = new CancellationTokenSource();
-            Task executionTask = Task.Factory.StartNew(() => result = this.ExecuteInternal(arguments), tokenSource.Token);
-#endif
-
-            if (executionTask.Wait(this.Timeout))
-            {
-                if (failure != null)
-                {
-                    throw failure;
-                }
-
-                Debug.Assert(result != null, "no timeout, no failure result should not be null");
-                return result;
-            }
-            else
-            {
-                // Timed out
-                try
-                {
-                    // Abort test thread after timeout.
-#if WINDOWS
-                    asyncAction.Cancel();
-#else
-                    tokenSource.Cancel();
-#endif
-                }
-                catch (Exception)
-                {
-                }
-                finally
-                {
-#if !WINDOWS
-                    tokenSource.Dispose();
-#endif
-                }
-
-                // If the method times out, then 
-                //
-                // 1. If the test is stuck, then we can get CannotUnloadAppDomain exception. 
-                //
-                // Which are handled as follows: - 
-                //
-                // For #1, we are now restarting the execution process if adapter fails to unload app-domain.
-                //
-                string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, this.TestMethodName);
-                TestResult timeoutResult = new TestResult() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };
-                timeoutResult.Duration = TimeSpan.FromMilliseconds(this.Timeout);
-                return timeoutResult;
-            }
-#endif
         }
-
     }
 }

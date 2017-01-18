@@ -6,16 +6,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    using TestPlatform.ObjectModel.Logging;
-    using Discovery;
-    using System.Diagnostics;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+
     /// <summary>
     /// Contains the discovery logic for this adapter.
     /// </summary>
@@ -45,15 +43,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             ValidateArg.NotNull(sources, "sources");
             ValidateArg.NotNull(logger, "logger");
             ValidateArg.NotNull(discoverySink, "discoverySink");
-
-            // Scenarios that goes via TMI adapter are currently not supported in MSTestAdapter
-            if (MSTestv1Settings.isTestSettingsGiven(discoveryContext, logger))
-                return;
-
+            
             if (!this.AreValidSources(sources))
             {
                 throw new NotSupportedException(Resource.SourcesNotSupported);
             }
+
+            // Populate the runsettings.
+            MSTestSettings.PopulateSettings(discoveryContext);
+
+            // Scenarios that include testsettings or forcing a run via the legacy adapter are currently not supported in MSTestAdapter.
+            if (MSTestSettings.IsLegacyScenario(logger))
+                return;
 
             new UnitTestDiscoverer().DiscoverTests(sources, logger, discoverySink, discoveryContext?.RunSettings);
         }
@@ -78,12 +79,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
     internal class UnitTestDiscoverer
     {
-        /// <summary>
-        /// Assembly name for UTF
-        /// </summary>
-        private static readonly AssemblyName UnitTestFrameworkAssemblyName =
-            typeof(TestMethodAttribute).GetTypeInfo().Assembly.GetName();
-
         private readonly AssemblyEnumeratorWrapper assemblyEnumeratorWrapper;
 
         internal UnitTestDiscoverer()

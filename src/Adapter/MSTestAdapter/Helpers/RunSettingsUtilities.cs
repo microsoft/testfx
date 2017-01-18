@@ -13,6 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
     using TestAdapter;
 
     using TestPlatform.ObjectModel;
+    using System.Diagnostics.CodeAnalysis;
 
     internal class RunSettingsUtilities
     {
@@ -66,6 +67,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             }
         }
 
+        [SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver",
+            Justification = "XmlReaderSettings.XmlResolver is not available in portable code.")]
         private static T GetNodeValue<T>(string settingsXml, string nodeName, Func<XmlReader, T> nodeParser)
         {
             // use XmlReader to avoid loading of the plugins in client code (mainly from VS).

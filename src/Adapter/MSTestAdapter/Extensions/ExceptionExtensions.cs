@@ -5,7 +5,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
     using System;
     using System.Globalization;
 
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Execution;
     using ObjectModel;
 
@@ -37,17 +36,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
                 return string.Format(CultureInfo.CurrentCulture, Resource.UTF_FailedToGetExceptionMessage, "null");
             }
 
-            try
-            {
-                return exception.Message ?? string.Empty;
-            }
-            catch (Exception ex)
-            {
-                return string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTF_FailedToGetExceptionMessage,
-                    ex.GetType().FullName);
-            }
+            // It is safe to retrieve an exception message, it should not throw in any case.
+            return exception.Message ?? string.Empty;
         }
 
         /// <summary>
@@ -57,18 +47,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <returns>StackTraceInformation for the exception</returns>
         internal static StackTraceInformation TryGetStackTraceInformation(this Exception exception)
         {
-            try
+            if (!string.IsNullOrEmpty(exception?.StackTrace))
             {
-                if (!string.IsNullOrEmpty(exception?.StackTrace))
-                {
-                    return StackTraceHelper.CreateStackTraceInformation(exception, false, exception.StackTrace);
-                }
-            }
-            catch(Exception ex)
-            {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
-                        "UnitTestExecuter.GetExceptionStackTrace: Exception while getting stack trace for exception type '{0}'",
-                        ex.GetType().FullName);
+                return StackTraceHelper.CreateStackTraceInformation(exception, false, exception.StackTrace);
             }
 
             return null;

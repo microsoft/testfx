@@ -10,8 +10,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using Execution;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+
     /// <summary>
     /// Contains the execution logic for this adapter.
     /// </summary>
@@ -37,14 +37,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
             ValidateArg.NotNullOrEmpty(tests, "tests");
 
-            // Scenarios that goes via TMI adapter are currently not supported in MSTestAdapter
-            if (MSTestv1Settings.isTestSettingsGiven(runContext, frameworkHandle))
-                return;
-
             if (!this.MSTestDiscoverer.AreValidSources(from test in tests select test.Source))
             {
                 throw new NotSupportedException();
             }
+
+            // Populate the runsettings.
+            MSTestSettings.PopulateSettings(runContext);
+
+            // Scenarios that include testsettings or forcing a run via the legacy adapter are currently not supported in MSTestAdapter.
+            if (MSTestSettings.IsLegacyScenario(frameworkHandle))
+                return;
 
             this.cancellationToken = new TestRunCancellationToken();
             this.TestExecutionManager.RunTests(tests, runContext, frameworkHandle, this.cancellationToken);
@@ -56,8 +59,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
             ValidateArg.NotNullOrEmpty(sources, "sources");
 
-            // Scenarios that goes via TMI adapter are currently not supported in MSTestAdapter
-            if (MSTestv1Settings.isTestSettingsGiven(runContext, frameworkHandle))
+            if (!this.MSTestDiscoverer.AreValidSources(sources))
+            {
+                throw new NotSupportedException();
+            }
+
+            // Populate the runsettings.
+            MSTestSettings.PopulateSettings(runContext);
+
+            // Scenarios that include testsettings or forcing a run via the legacy adapter are currently not supported in MSTestAdapter.
+            if (MSTestSettings.IsLegacyScenario(frameworkHandle))
                 return;
 
             sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);

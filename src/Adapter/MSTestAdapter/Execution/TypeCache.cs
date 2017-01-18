@@ -22,6 +22,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     internal class TypeCache : MarshalByRefObject
     {
         /// <summary>
+        /// Test context property name
+        /// </summary>
+        private const string TestContextPropertyName = "TestContext";
+
+        /// <summary>
         /// Predefined test Attribute names.
         /// </summary>
         private static readonly string[] PredefinedNames = new string[] { "Priority", "TestCategory", "Owner" };
@@ -192,7 +197,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 if (t == null)
                 {
-                    var assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyName);
+                    var assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyName, isReflectionOnly: false);
 
                     // Attempt to load the type from the test assembly.
                     // Allow this call to throw if the type can't be loaded.
@@ -292,7 +297,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             try
             {
-                var testContextProperty = classType.GetRuntimeProperty(ReflectHelper.TestContextPropertyName);
+                var testContextProperty = classType.GetRuntimeProperty(TestContextPropertyName);
                 if (testContextProperty == null)
                 {
                     // that's okay may be the property was not defined
@@ -526,9 +531,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return null;
             }
 
+            var expectedExceptionAttribute = this.reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
             var timeout = this.GetTestTimeout(methodInfo, testMethod);
 
-            var testMethodInfo = new TestMethodInfo(methodInfo, timeout, this.GetTestMethodAttribute(methodInfo, testClassInfo), testClassInfo, testContext);
+            var testMethodInfo = new TestMethodInfo(methodInfo, timeout, this.GetTestMethodAttribute(methodInfo, testClassInfo), expectedExceptionAttribute, testClassInfo, testContext);
 
             this.SetCustomProperties(testMethodInfo, testContext);
 
@@ -665,18 +671,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             object existingValue;
             if (testContext.TryGetPropertyValue(propertyName, out existingValue))
             {
-                testMethodInfo.NotRunnableReason = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_ErrorTestPropertyAlreadyDefined,
-                    testMethodInfo.TestMethod.DeclaringType.FullName,
-                    testMethodInfo.TestMethod.Name,
-                    propertyName,
-                    existingValue);
-
-                return false;
+                // Do not add to the test context because it would conflict with an already existing value.
+                // We were at one point reporting a warning here. However with extensibility centered around TestProperty where 
+                // users can have multiple WorkItemAttributes(say) we cannot throw a warning here. Users would have multiple of these attributes
+                // so that it shows up in reporting rather than seeing them in TestContext properties.
+            }
+            else
+            {
+                testContext.AddProperty(propertyName, propertyValue);
             }
 
-            testContext.AddProperty(propertyName, propertyValue);
             return true;
         }
     }

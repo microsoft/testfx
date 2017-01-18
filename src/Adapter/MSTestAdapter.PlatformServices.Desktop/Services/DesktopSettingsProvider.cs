@@ -10,11 +10,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Xml;
 
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
     using ISettingsProvider = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ISettingsProvider;
-    using ObjectModel.Utilities;
-
+    
     /// <summary>
     /// Class to read settings from the runsettings xml for the desktop.
     /// </summary>
@@ -24,8 +23,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Member variable for Adapter settings
         /// </summary>
         private static MSTestAdapterSettings settings;
+
         /// <summary>
-        /// Property to get loaded settings 
+        /// Gets settings provided to the adapter. 
         /// </summary>
         public static MSTestAdapterSettings Settings
         {
@@ -35,17 +35,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 {
                     settings = new MSTestAdapterSettings();
                 }
+
                 return settings;
             }
-        }
-
-        /// <summary>
-        /// Reset the settings to its default.
-        /// Used for testing purposes.
-        /// </summary>
-        internal static void Reset()
-        {
-            settings = null;
         }
 
         /// <summary>
@@ -64,7 +56,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return TestDeployment.GetDeploymentInformation(source);
         }
 
-        public const string SettingsName = "MSTestV2";
+        /// <summary>
+        /// Reset the settings to its default.
+        /// Used for testing purposes.
+        /// </summary>
+        internal static void Reset()
+        {
+            settings = null;
+        }
     }
 
     /// <summary>
@@ -78,24 +77,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private List<RecursiveDirectoryPath> searchDirectories;
 
         /// <summary>
-        ///  Specifies whether deployment is enable or not.
-        /// </summary>
-        public bool DeploymentEnabled { get; private set; }
-
-        /// <summary>
-        /// Speccifies whether deployment directory has to be deleted after test run.
-        /// </summary>
-        public bool DeleteDeploymentDirectoryAfterTestRunIsComplete { get; private set; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="MSTestAdapterSettings"/> class.
         /// </summary>
         public MSTestAdapterSettings()
         {
-            DeleteDeploymentDirectoryAfterTestRunIsComplete = true;
-            DeploymentEnabled = true;
+            this.DeleteDeploymentDirectoryAfterTestRunIsComplete = true;
+            this.DeploymentEnabled = true;
             this.searchDirectories = new List<RecursiveDirectoryPath>();
         }
+
+        /// <summary>
+        ///  Gets a value indicating whether deployment is enable or not.
+        /// </summary>
+        public bool DeploymentEnabled { get; private set; }
+
+        /// <summary>
+        /// Gets a value indicating whether deployment directory has to be deleted after test run.
+        /// </summary>
+        public bool DeleteDeploymentDirectoryAfterTestRunIsComplete { get; private set; }
 
         /// <summary>
         /// Convert the parameter xml to TestSettings
@@ -120,11 +119,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             // </MSTestV2>
             
             MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
-            bool empty = reader.IsEmptyElement;
-            reader.Read();
-
-            if (!empty)
+            
+            if (!reader.IsEmptyElement)
             {
+                reader.Read();
+
                 while (reader.NodeType == XmlNodeType.Element)
                 {
                     bool result;
@@ -136,21 +135,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                                 settings.ReadAssemblyResolutionPath(reader);
                                 break;
                             }
+
                         case "DEPLOYMENTENABLED":
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
-                                settings.DeploymentEnabled = result;
+                                if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                {
+                                    settings.DeploymentEnabled = result;
+                                }
+
+                                break;
                             }
-                            break;
+
                         case "DELETEDEPLOYMENTDIRECTORYAFTERTESTRUNISCOMPLETE":
-                            if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
-                                settings.DeleteDeploymentDirectoryAfterTestRunIsComplete = result;
+                                if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                {
+                                    settings.DeleteDeploymentDirectoryAfterTestRunIsComplete = result;
+                                }
+
+                                break;
                             }
-                            break;
+
                         default:
-                            reader.Skip();
-                            break;
+                            {
+                                reader.Skip();
+                                break;
+                            }
                     }
                 }
             }

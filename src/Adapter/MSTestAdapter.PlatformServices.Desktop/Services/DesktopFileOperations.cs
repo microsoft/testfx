@@ -8,6 +8,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+    using System.Collections.Generic;
+    using System.Collections;
 
     /// <summary>
     /// This service is responsible for any file based operations.
@@ -19,11 +21,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="assemblyFileName">The name of the assembly.</param>
         /// <returns>A handle to the loaded assembly.</returns>
-        public Assembly LoadAssembly(string assemblyFileName)
+        public Assembly LoadAssembly(string assemblyFileName, bool isReflectionOnly)
         {
-            // .NetCore currently does not understand ReflectionOnlyLoadFrom. So adding that for desktop would need changes in the core adapter to offload
-            // some reflection logic to the platform service apart from assembly resolution logic for dependant dlls where we search for test methods as well.
-            return Assembly.LoadFrom(assemblyFileName);
+            if (isReflectionOnly)
+            {
+                return Assembly.ReflectionOnlyLoadFrom(assemblyFileName);
+            }
+            else
+            {
+                return Assembly.LoadFrom(assemblyFileName);
+            }
         }
 
         /// <summary>

@@ -14,6 +14,21 @@
     <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>TRACE;DEBUG;CODE_ANALYSIS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Discovery\AssemblyEnumerator.cs" />
     <Compile Include="Discovery\AssemblyEnumeratorWrapper.cs" />
@@ -30,7 +45,6 @@
     <Compile Include="Execution\StackTraceHelper.cs" />
     <Compile Include="Execution\TestAssemblyInfo.cs" />
     <Compile Include="Execution\TestClassInfo.cs" />
-    <Compile Include="MSTestv1Settings.cs" />
     <Compile Include="ObjectModel\TestFailedException.cs" />
     <Compile Include="Execution\TestMethodFilter.cs" />
     <Compile Include="Execution\TestMethodRunner.cs" />
@@ -89,6 +103,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

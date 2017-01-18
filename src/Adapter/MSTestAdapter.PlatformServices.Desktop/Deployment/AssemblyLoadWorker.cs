@@ -10,6 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
     using System.Reflection;
     using System.Text.RegularExpressions;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
     /// <summary>
     /// Utility function for Assembly related info 
@@ -17,12 +18,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
     /// </summary>
     internal class AssemblyLoadWorker : MarshalByRefObject
     {
-        /// <summary>
-        /// Assemblies which are well known and can be ignored. 
-        /// </summary>
-        public const string DefaultIgnoredPattern = @"(?i:^Microsoft\.VisualStudio\.QualityTools\.|^Microsoft\.VisualStudio\.SmartDevice\.|^Microsoft\.VisualStudio\.TestTools\.|^Microsoft\.VisualStudio\.TeamSystem\.)";
+        private IAssemblyUtility assemblyUtility;
 
-        private static readonly Regex DefaultIgnoreExpression = new Regex(DefaultIgnoredPattern);
+        public AssemblyLoadWorker()
+            : this(new AssemblyUtility())
+        {
+        }
+
+        internal AssemblyLoadWorker(IAssemblyUtility assemblyUtility)
+        {
+            this.assemblyUtility = assemblyUtility;
+        }
 
         /// <summary>
         /// Get the target dotNet framework string for the assembly
@@ -35,7 +41,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             {
                 try
                 {
-                    Assembly a = Assembly.ReflectionOnlyLoadFrom(path);
+                    Assembly a = this.assemblyUtility.ReflectionOnlyLoadFrom(path);
                     return GetTargetFrameworkStringFromAssembly(a);
                 }
                 catch (BadImageFormatException)
@@ -73,7 +79,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
                     if (declaringType != null)
                     {
                         string attributeName = declaringType.FullName;
-                        if (string.Equals(attributeName, PlatformServices.Constants.TargetFrameworkAttributeFullName, StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(
+                            attributeName,
+                            PlatformServices.Constants.TargetFrameworkAttributeFullName,
+                            StringComparison.OrdinalIgnoreCase))
                         {
                             dotNetVersion = data.ConstructorArguments[0].Value.ToString();
                             break;
@@ -81,6 +90,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
                     }
                 }
             }
+
 
             return dotNetVersion;
         }
@@ -102,7 +112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             try
             {
                 // First time we load in LoadFromContext to avoid issues.
-                assembly = Assembly.ReflectionOnlyLoadFrom(assemblyPath);
+                assembly = this.assemblyUtility.ReflectionOnlyLoadFrom(assemblyPath);
             }
             catch (Exception ex)
             {
@@ -114,8 +124,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 
             List<string> result = new List<string>();
             List<string> visitedAssemblies = new List<string>();
-
-
+            
             visitedAssemblies.Add(assembly.FullName);
 
             this.ProcessChildren(assembly, result, visitedAssemblies, warnings);
@@ -191,11 +200,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 
                     visitedAssemblies.Add(m.Name);
 
-                    if (this.NeedToBeFilteredOut(m.Name))
-                    {
-                        continue;
-                    }
-
                     if (!File.Exists(m.FullyQualifiedName))
                     {
                         string warning = string.Format(CultureInfo.CurrentCulture, Resource.MissingDeploymentDependencyWithoutReason, m.FullyQualifiedName);
@@ -227,19 +231,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 
             visitedAssemblies.Add(assemblyString);
 
-            // Optimization: here we can already check for filtered assemblies, don't have to load those.
-            if (this.NeedToBeFilteredOut(assemblyString))
-            {
-                return;
-            }
-
             Assembly assembly = null;
             try
             {
                 string postPolicyAssembly = AppDomain.CurrentDomain.ApplyPolicy(assemblyString);
                 Debug.Assert(!string.IsNullOrEmpty(postPolicyAssembly), "postPolicyAssembly");
 
-                assembly = Assembly.ReflectionOnlyLoad(postPolicyAssembly);
+                assembly = this.assemblyUtility.ReflectionOnlyLoad(postPolicyAssembly);
                 visitedAssemblies.Add(assembly.FullName);   // Just in case.
             }
             catch (Exception ex)
@@ -255,24 +253,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
                 return;
             }
 
-            if (this.NeedToBeFilteredOut(assembly.FullName))
-            {
-                return;
-            }
-
             result.Add(assembly.Location);
 
             this.ProcessChildren(assembly, result, visitedAssemblies, warnings);
-        }
-
-        /// <summary>
-        /// Returns true if specified assembly needs to be filtered out.
-        /// </summary>
-        /// <param name="assemblyName"> The assembly Name. </param>
-        /// <returns> True if an assembly needs to be filtered out. </returns>
-        private bool NeedToBeFilteredOut(string assemblyName)
-        {
-            return DefaultIgnoreExpression.Match(assemblyName).Success;
         }
     }
 }

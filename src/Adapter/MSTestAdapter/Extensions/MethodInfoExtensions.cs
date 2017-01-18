@@ -3,6 +3,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 {
     using System.Diagnostics;
+    using System.Linq;
     using System.Reflection;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -108,7 +109,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// </summary>
         internal static string GetAsyncTypeName(this MethodInfo method)
         {
-            var asyncStateMachineAttribute = method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) as AsyncStateMachineAttribute;
+            var asyncStateMachineAttribute = ReflectHelper.GetCustomAttributes(method, typeof(AsyncStateMachineAttribute), false).FirstOrDefault() as AsyncStateMachineAttribute;
 
             return asyncStateMachineAttribute?.StateMachineType?.FullName;
         }

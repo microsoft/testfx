@@ -14,7 +14,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// </summary>
     public class PrivateType
     {
-
         #region data
 
         /// <summary>
@@ -250,7 +249,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Gets the element in static array
         /// </summary>
         /// <param name="name">Name of the array</param>
-        /// <param name="indices">Array of subscripts for acessessing a[10][11] the array would be {10,11}</param>
+        /// <param name="indices">
+        /// A one-dimensional array of 32-bit integers that represent the indexes specifying
+        /// the position of the element to get. For instance, to access a[10][11] the indices would be {10,11}
+        /// </param>
         /// <returns>element at the specified location</returns>
         public object GetStaticArrayElement(string name, params int[] indices)
         {
@@ -263,7 +265,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="name">Name of the array</param>
         /// <param name="value">value to set</param>
-        /// <param name="indices">Array of subscripts for acessessing a[10][11] the array would be {10,11}</param>
+        /// <param name="indices">
+        /// A one-dimensional array of 32-bit integers that represent the indexes specifying
+        /// the position of the element to set. For instance, to access a[10][11] the array would be {10,11}
+        /// </param>
         public void SetStaticArrayElement(string name, object value, params int[] indices)
         {
             Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -275,7 +280,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="name">Name of the array</param>
         /// <param name="bindingFlags">Additional InvokeHelper attributes</param>
-        /// <param name="indices">Array of subscripts for acessessing a[10][11] the array would be {10,11}</param>
+        /// <param name="indices">
+        /// A one-dimensional array of 32-bit integers that represent the indexes specifying
+        /// the position of the element to get. For instance, to access a[10][11] the array would be {10,11}
+        /// </param>
         /// <returns>element at the spcified location</returns>
         public object GetStaticArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
         {
@@ -289,7 +297,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="name">Name of the array</param>
         /// <param name="value">value to set</param>
         /// <param name="bindingFlags">Additional InvokeHelper attributes</param>
-        /// <param name="indices">Array of subscripts for acessessing a[10][11] the array would be {10,11}</param>
+        /// <param name="indices">
+        /// A one-dimensional array of 32-bit integers that represent the indexes specifying
+        /// the position of the element to set. For instance, to access a[10][11] the array would be {10,11}
+        /// </param>
         public void SetStaticArrayElement(string name, BindingFlags bindingFlags, object value, params int[] indices)
         {
             Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -833,7 +844,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             if (this != obj)
             {
                 Debug.Assert(null != this.target);
-                if (typeof(PrivateObject) == obj.GetType())
+                if (typeof(PrivateObject) == obj?.GetType())
                 {
                     return this.target.Equals(((PrivateObject)obj).target);
                 }

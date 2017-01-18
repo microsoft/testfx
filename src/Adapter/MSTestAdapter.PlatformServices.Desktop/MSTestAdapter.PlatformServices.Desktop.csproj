@@ -10,7 +10,23 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>TRACE;DEBUG;CODE_ANALYSIS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -51,6 +67,8 @@
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
     <Compile Include="Services\DesktopAdapterTraceLogger.cs" />
+    <Compile Include="Services\DesktopReflectionOperations.cs" />
+    <Compile Include="Services\DesktopThreadOperations.cs" />
     <Compile Include="Services\DesktopFileOperations.cs" />
     <Compile Include="Services\DesktopSettingsProvider.cs" />
     <Compile Include="Services\DesktopTestDataSource.cs" />
@@ -67,8 +85,10 @@
     <Compile Include="Utilities\DeploymentItemUtility.cs" />
     <Compile Include="Utilities\DeploymentUtility.cs" />
     <Compile Include="Utilities\FileUtility.cs" />
+    <Compile Include="Utilities\IAssemblyUtility.cs" />
     <Compile Include="Utilities\ReflectionUtility.cs" />
     <Compile Include="Utilities\VSInstallationUtilities.cs" />
+    <Compile Include="Utilities\XmlUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\TestFramework\UnitTestFramework.Extension.Desktop\UnitTestFramework.Extension.Desktop.csproj">
@@ -85,6 +105,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

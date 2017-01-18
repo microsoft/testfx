@@ -18,6 +18,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     {
         private readonly ReflectHelper reflectHelper;
 
+        private static readonly string TestContextFullName = typeof(TestContext).FullName;
+
         /// <summary>
         /// TypeValidator constructor.
         /// </summary>
@@ -101,7 +103,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
             foreach (var pinfo in propertyInfoEnumerable)
             {
-                if (pinfo.PropertyType.FullName.Equals(typeof(TestContext).FullName, StringComparison.Ordinal))
+                // PropertyType.FullName can be null if the property is a generic type.
+                if (TestContextFullName.Equals(pinfo.PropertyType.FullName, StringComparison.Ordinal))
                 {
                     propertyInfo.Add(pinfo);
                 }

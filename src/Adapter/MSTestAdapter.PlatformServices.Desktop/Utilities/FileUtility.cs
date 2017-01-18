@@ -123,21 +123,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
         }
 
-        internal virtual bool DoesDirectoryExist(string deploymentDirectory)
-        {
-            return Directory.Exists(deploymentDirectory);
-        }
-
-        internal virtual bool DoesFileExist(string testSource)
-        {
-            return File.Exists(testSource);
-        }
-
-        internal virtual void SetAttributes(string path, FileAttributes fileAttributes)
-        {
-            File.SetAttributes(path, fileAttributes);
-        }
-
         /// <summary>
         /// For given file checks if it is a binary, then finds and deploys PDB for line number info in call stack.
         /// </summary>
@@ -209,10 +194,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
         internal virtual List<string> AddFilesFromDirectory(string directoryPath, bool ignoreIOExceptions)
         {
+            var fileContents = new List<string>();
+
             try
             {
-                string[] files = Directory.GetFiles(directoryPath);
-                return files?.ToList() ;
+                var files = this.GetFilesInADirectory(directoryPath);
+                fileContents.AddRange(files);
             }
             catch (IOException)
             {
@@ -222,9 +209,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 }
             }
 
-            var fileContents = new List<string>();
-
-            foreach (string subDirectoryPath in Directory.GetDirectories(directoryPath))
+            foreach (var subDirectoryPath in this.GetDirectoriesInADirectory(directoryPath))
             {
                 var subDirectoryContents = this.AddFilesFromDirectory(subDirectoryPath, true);
                 if (subDirectoryContents?.Count > 0)
@@ -232,6 +217,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     fileContents.AddRange(subDirectoryContents);
                 }
             }
+
             return fileContents;
         }
 
@@ -266,6 +252,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             {
                 EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, "DeploymentManager.DeleteDirectories failed for the directory '{0}': {1}", filePath, ex);
             }
+        }
+
+        internal virtual bool DoesDirectoryExist(string deploymentDirectory)
+        {
+            return Directory.Exists(deploymentDirectory);
+        }
+
+        internal virtual bool DoesFileExist(string testSource)
+        {
+            return File.Exists(testSource);
+        }
+
+        internal virtual void SetAttributes(string path, FileAttributes fileAttributes)
+        {
+            File.SetAttributes(path, fileAttributes);
+        }
+
+        internal virtual string[] GetFilesInADirectory(string directoryPath)
+        {
+            return Directory.GetFiles(directoryPath);
+        }
+
+        internal virtual string[] GetDirectoriesInADirectory(string directoryPath)
+        {
+            return Directory.GetDirectories(directoryPath);
         }
 
         /// <summary>

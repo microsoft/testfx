@@ -87,7 +87,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             return methWithDeepestHierarchy;
         }
 
-
         /// <summary>
         /// Given a set of methods that match the base criteria, select a method based
         /// upon an array of types. This method should return null if no method matches
@@ -282,6 +281,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 return 2;
             }
+
             if (paramArrayType2 != null && paramArrayType1 == null)
             {
                 return 1;
@@ -332,7 +332,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     continue;
                 }
 
-                if ((c1.ContainsGenericParameters) || (c2.ContainsGenericParameters))
+                if (c1.ContainsGenericParameters || c2.ContainsGenericParameters)
                 {
                     continue;
                 }
@@ -425,7 +425,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     c2 = c2.GetElementType();
                 }
             }
-
 
             if (c1.IsPrimitive && c2.IsPrimitive)
             {

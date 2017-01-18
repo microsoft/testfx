@@ -7,7 +7,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Reflection;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Navigation;
 
     /// <summary>
     /// The file operations.
@@ -19,7 +18,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="assemblyName"> The assembly name. </param>
         /// <returns> The <see cref="Assembly"/>. </returns>
-        public Assembly LoadAssembly(string assemblyName)
+        public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly)
         {
             string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
             return Assembly.Load(new AssemblyName(fileNameWithoutExtension));
@@ -97,6 +96,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             return assemblyFileName;
         }
-
     }
 }

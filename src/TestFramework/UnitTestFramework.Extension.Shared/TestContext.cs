@@ -7,7 +7,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Diagnostics;
     using System.Globalization;
 
-
     /// <summary>
     /// TestContext class. This class should be fully abstract and not contain any 
     /// members. The adapter will implement the members. Users in the framework should

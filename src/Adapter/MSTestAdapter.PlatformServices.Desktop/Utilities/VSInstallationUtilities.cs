@@ -9,9 +9,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using Microsoft.Win32;
 
     using static System.String;
+    using System.Runtime.InteropServices;
 
     public static class VSInstallationUtilities
     {
+        private static string vsInstallPath = null;
+
+        private static bool vsInstallPathEvaluated = false;
+
         /// <summary>
         /// Gets the visual studio installation path on the local machine.
         /// </summary>
@@ -22,94 +27,62 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
             get
             {
-                // Try custom Vs install path if available. This is done for rascal pro. 
-                var vsInstallPathFromCustomRoot = GetVsInstallPathFromCustomRoot();
-                if (!IsNullOrEmpty(vsInstallPathFromCustomRoot))
-                {
-                    return vsInstallPathFromCustomRoot;
-                }
-
-                using (var hklmKey = Registry.LocalMachine)
+                if (!vsInstallPathEvaluated)
                 {
                     try
                     {
-                        var subKey = Constants.VisualStudioRootRegKey32ForDev14;
-                        if (Is64BitProcess())
+                        vsInstallPath = null;
+                        // Use the Setup API to find the installation folder for currently running VS instance.
+                        var setupConfiguration = new SetupConfiguration() as ISetupConfiguration;
+                        if (setupConfiguration != null)
                         {
-                            subKey = Constants.VisualStudioRootRegKey64ForDev14;
-                        }
-                        using (var visualstudioSubKey = hklmKey.OpenSubKey(subKey))
-                        {
-
-                            var registryValue = visualstudioSubKey.GetValue("InstallDir").ToString();
-                            if (Directory.Exists(registryValue))
-                            {
-                                return registryValue;
-                            }
+                            var currentConfiguration = setupConfiguration.GetInstanceForCurrentProcess();
+                            var currentInstallationPath = currentConfiguration.GetInstallationPath();
+                            vsInstallPath = Path.Combine(currentInstallationPath, @"Common7\IDE");
                         }
                     }
-                    catch (Exception)
+                    catch
                     {
-                        //ignore the exception.
+                        // SetupConfiguration won't work if VS is not installed or VS is pre-vs2017 version.
+                        // So ignore all exception from it.
                     }
-
-                    // If VS is not installed, check for team build.
-                    try
+                    finally
                     {
-                        using (RegistryKey vsKey = hklmKey.OpenSubKey(SideBySideKeyOnTeamBuildMachine, false))
-                        {
-                            var visualStudioInstallDir = (String)vsKey?.GetValue(Constants.VisualStudioVersion);
-                            if (!string.IsNullOrEmpty(visualStudioInstallDir))
-                            {
-                                visualStudioInstallDir = Path.Combine(visualStudioInstallDir, @"Common7\IDE");
-                                return visualStudioInstallDir;
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        //ignore the exception.
+                        vsInstallPathEvaluated = true;
                     }
                 }
-
-
-                return null;
+                return vsInstallPath;
             }
         }
-
 
         /// <summary>
         /// Get path to public assemblies.
         /// 
         /// Returns null if VS is not installed on this machine.
         /// </summary>
-        public static string PathToPublicAssemblies
-        {
-            get
-            {
-                return GetFullPath(PublicAssembliesDirectoryName);
-            }
-        }
+        public static string PathToPublicAssemblies => GetFullPath(PublicAssembliesDirectoryName);
 
         /// <summary>
         /// Get path to private assemblies.
         /// 
         /// Returns null if VS is not installed on this machine.
         /// </summary>
-        public static string PathToPrivateAssemblies
+        public static string PathToPrivateAssemblies => GetFullPath(PrivateAssembliesFolderName);
+
+        /// <summary>
+        /// Is Current process running in Portable Mode 
+        /// </summary>
+        /// <returns>True, if portable mode; false, otherwise</returns>
+        public static bool IsCurrentProcessRunningInPortableMode()
         {
-            get
-            {
-                return GetFullPath(PrivateAssembliesFolderName);
-            }
+            return IsProcessRunningInPortableMode(Process.GetCurrentProcess().MainModule.FileName);
         }
 
-        public static bool CheckIfTestProcessIsRunningInXcopyableMode()
-        {
-            return CheckIfTestProcessIsRunningInXcopyableMode(Process.GetCurrentProcess().MainModule.FileName);
-        }
-
-        public static bool CheckIfTestProcessIsRunningInXcopyableMode(string exeName)
+        /// <summary>
+        /// Is the EXE specified running in Portable Mode 
+        /// </summary>
+        /// <returns>True, if portable mode; false, otherwise</returns>
+        public static bool IsProcessRunningInPortableMode(string exeName)
         {
             // Get the directory of the exe 
             var exeDir = Path.GetDirectoryName(exeName);
@@ -121,88 +94,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return false;
         }
 
-        /// <summary>
-        ///     Returns true if the current process is run as 64 bit process.
-        /// </summary>
-        /// <returns></returns>
-        private static bool Is64BitProcess()
-        {
-            return IntPtr.Size == 8;
-        }
-
         private static string GetFullPath(string folderName)
         {
             var vsInstallDir = VSInstallPath;
             return IsNullOrWhiteSpace(vsInstallDir?.Trim()) ? null : Path.Combine(vsInstallDir, folderName);
         }
-
-        /// <summary>
-        /// Get Vs install path from custom root
-        /// </summary>
-        /// <returns></returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Need to ignore failures to read the registry settings")]
-        private static string GetVsInstallPathFromCustomRoot()
-        {
-            try
-            {
-                var registryKeyWhichContainsVsInstallPath = GetEnvironmentVariable(RegistryRootEnvironmentVariableName);
-                if (IsNullOrEmpty(registryKeyWhichContainsVsInstallPath))
-                {
-                    return null;
-                }
-
-                // For rascal, hive is always current user
-                using (var hiveKey = RegistryKey.OpenRemoteBaseKey(RegistryHive.CurrentUser, Empty))
-                {
-                    var visualstudioSubKey = hiveKey.OpenSubKey(registryKeyWhichContainsVsInstallPath);
-                    var registryValue = visualstudioSubKey.GetValue("InstallDir").ToString();
-                    if (Directory.Exists(registryValue))
-                    {
-                        return registryValue;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                //ignore the exception.
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Returns the value of specified environment name, or null, if not found.
-        /// </summary>
-        private static string GetEnvironmentVariable(string keyName)
-        {
-            var value = Environment.GetEnvironmentVariable(keyName);
-            if (!IsNullOrEmpty(value))
-            {
-                return value;
-            }
-
-            using (var key = Registry.CurrentUser.OpenSubKey("Environment", false))
-            {
-                return key?.GetValue(keyName) as string;
-            }
-        }
-
-        /// <summary>
-        /// VS root registry key on 64 bit machine.
-        /// </summary>
-        public const string VSRegistryRootOn64BitMachine = @"SOFTWARE\Wow6432Node\Microsoft\VisualStudio\" + Constants.VisualStudioVersion;
-
-        /// <summary>
-        /// Key on the team build machine
-        /// </summary>
-        public const string SideBySideKeyOnTeamBuildMachine = @"SOFTWARE\Microsoft\VisualStudio\SxS\VS7";
-
-        /// <summary>
-        /// Environment variable key which specifies the registry root
-        /// 
-        /// (This key will be primarily used in rascalPro)
-        /// </summary>
-        private const string RegistryRootEnvironmentVariableName = @"VisualStudio_RootRegistryKey";
 
         /// <summary>
         /// Public assemblies directory name
@@ -220,8 +116,146 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         private const string PortableVsTestManifestFilename = "Portable.VsTest.Manifest";
 
         /// <summary>
-        /// Name of the directory in which the datacollectors resider under Common7\Ide\PrivateAssemblies
+        /// Information about an instance of a product.
         /// </summary>
-        public const string DataCollectorsDirectory = "DataCollectors";
+        [Guid("B41463C3-8866-43B5-BC33-2B0676F7F42E")]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        public interface ISetupInstance
+        {
+            /// <summary>
+            /// Gets the instance identifier (should match the name of the parent instance directory).
+            /// </summary>
+            /// <returns>The instance identifier.</returns>
+            [return: MarshalAs(UnmanagedType.BStr)]
+            string GetInstanceId();
+
+            /// <summary>
+            /// Gets the local date and time when the installation was originally installed.
+            /// </summary>
+            /// <returns>The local date and time when the installation was originally installed.</returns>
+            [return: MarshalAs(UnmanagedType.Struct)]
+            System.Runtime.InteropServices.ComTypes.FILETIME GetInstallDate();
+
+            /// <summary>
+            /// Gets the unique name of the installation, often indicating the branch and other information used for telemetry.
+            /// </summary>
+            /// <returns>The unique name of the installation, often indicating the branch and other information used for telemetry.</returns>
+            [return: MarshalAs(UnmanagedType.BStr)]
+            string GetInstallationName();
+
+            /// <summary>
+            /// Gets the path to the installation root of the product.
+            /// </summary>
+            /// <returns>The path to the installation root of the product.</returns>
+            [return: MarshalAs(UnmanagedType.BStr)]
+            string GetInstallationPath();
+
+            /// <summary>
+            /// Gets the version of the product installed in this instance.
+            /// </summary>
+            /// <returns>The version of the product installed in this instance.</returns>
+            [return: MarshalAs(UnmanagedType.BStr)]
+            string GetInstallationVersion();
+
+            /// <summary>
+            /// Gets the display name (title) of the product installed in this instance.
+            /// </summary>
+            /// <param name="lcid">The LCID for the display name.</param>
+            /// <returns>The display name (title) of the product installed in this instance.</returns>
+            [return: MarshalAs(UnmanagedType.BStr)]
+            string GetDisplayName([In, MarshalAs(UnmanagedType.U4)] int lcid);
+
+            /// <summary>
+            /// Gets the description of the product installed in this instance.
+            /// </summary>
+            /// <param name="lcid">The LCID for the description.</param>
+            /// <returns>The description of the product installed in this instance.</returns>
+            [return: MarshalAs(UnmanagedType.BStr)]
+            string GetDescription([In, MarshalAs(UnmanagedType.U4)] int lcid);
+
+            /// <summary>
+            /// Resolves the optional relative path to the root path of the instance.
+            /// </summary>
+            /// <param name="pwszRelativePath">A relative path within the instance to resolve, or NULL to get the root path.</param>
+            /// <returns>The full path to the optional relative path within the instance. If the relative path is NULL, the root path will always terminate in a backslash.</returns>
+            [return: MarshalAs(UnmanagedType.BStr)]
+            string ResolvePath([In, MarshalAs(UnmanagedType.LPWStr)] string relativePath);
+        }
+
+        /// <summary>
+        /// A enumerator of installed <see cref="ISetupInstance"/> objects.
+        /// </summary>
+        [Guid("6380BCFF-41D3-4B2E-8B2E-BF8A6810C848")]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        public interface IEnumSetupInstances
+        {
+            /// <summary>
+            /// Retrieves the next set of product instances in the enumeration sequence.
+            /// </summary>
+            /// <param name="celt">The number of product instances to retrieve.</param>
+            /// <param name="rgelt">A pointer to an array of <see cref="ISetupInstance"/>.</param>
+            /// <param name="pceltFetched">A pointer to the number of product instances retrieved. If celt is 1 this parameter may be NULL.</param>
+            void Next(
+                [In] int celt,
+                [Out, MarshalAs(UnmanagedType.Interface)] out ISetupInstance rgelt,
+                [Out] out int pceltFetched);
+
+            /// <summary>
+            /// Skips the next set of product instances in the enumeration sequence.
+            /// </summary>
+            /// <param name="celt">The number of product instances to skip.</param>
+            void Skip([In, MarshalAs(UnmanagedType.U4)] int celt);
+
+            /// <summary>
+            /// Resets the enumeration sequence to the beginning.
+            /// </summary>
+            void Reset();
+
+            /// <summary>
+            /// Creates a new enumeration object in the same state as the current enumeration object: the new object points to the same place in the enumeration sequence.
+            /// </summary>
+            /// <returns>A pointer to a pointer to a new <see cref="IEnumSetupInstances"/> interface. If the method fails, this parameter is undefined.</returns>
+            [return: MarshalAs(UnmanagedType.Interface)]
+            IEnumSetupInstances Clone();
+        }
+
+        /// <summary>
+        /// Gets information about product instances set up on the machine.
+        /// </summary>
+        [Guid("42843719-DB4C-46C2-8E7C-64F1816EFD5B")]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        public interface ISetupConfiguration
+        {
+            /// <summary>
+            /// Enumerates all product instances installed.
+            /// </summary>
+            /// <returns>An enumeration of installed product instances.</returns>
+            [return: MarshalAs(UnmanagedType.Interface)]
+            IEnumSetupInstances EnumInstances();
+
+            /// <summary>
+            /// Gets the instance for the current process path.
+            /// </summary>
+            /// <returns>The instance for the current process path.</returns>
+            [return: MarshalAs(UnmanagedType.Interface)]
+            ISetupInstance GetInstanceForCurrentProcess();
+
+            /// <summary>
+            /// Gets the instance for the given path.
+            /// </summary>
+            /// <param name="wzPath">Path used to determine instance</param>
+            /// <returns>The instance for the given path.</returns>
+            [return: MarshalAs(UnmanagedType.Interface)]
+            ISetupInstance GetInstanceForPath([In, MarshalAs(UnmanagedType.LPWStr)] string wzPath);
+        }
+
+        /// <summary>
+        /// CoClass that implements <see cref="ISetupConfiguration"/>.
+        /// </summary>
+        [ComImport]
+        [Guid("177F0C4A-1CD3-4DE7-A32C-71DBBB9FA36D")]
+        public class SetupConfiguration
+        {
+        }
     }
 }

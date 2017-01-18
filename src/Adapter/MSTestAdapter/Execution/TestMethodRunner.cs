@@ -11,8 +11,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using MSTestAdapter.PlatformServices;
 
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -87,7 +85,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             UnitTestResult[] result = null;
             try
             {
-
                 using (LogMessageListener logListener = new LogMessageListener(this.captureDebugTraces))
                 {
                     try
@@ -99,7 +96,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                         result = this.RunTestMethod();
                     }
-            finally
+                    finally
                     {
                         initLogs = logListener.StandardOutput;
                         initTrace = logListener.DebugTrace;

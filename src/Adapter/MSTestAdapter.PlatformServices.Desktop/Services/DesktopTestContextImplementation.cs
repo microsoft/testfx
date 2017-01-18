@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Linq;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
-
+    
     /// <summary>
     /// Internal implementation of TestContext exposed to the user.
     /// The virtual string properties of the TestContext are retreived from the property dictionary
