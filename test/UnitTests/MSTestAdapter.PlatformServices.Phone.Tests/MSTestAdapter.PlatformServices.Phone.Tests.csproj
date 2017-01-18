@@ -28,9 +28,9 @@
       <Project>{65D42F0B-9B5F-425B-8B8D-EC157F01D779}</Project>
       <Name>MSTestAdapter.PlatformServices.Phone</Name>
     </ProjectReference>
-    <ProjectReference Include="$(TestFxRoot)src\Adapter\MSTestAdapter.PlatformServices.Interface\MSTestAdapter.PlatformServices.Interface.csproj">
+    <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
-      <Name>MSTestAdapter.PlatformServices.Interface</Name>
+      <Name>PlatformServices.Interface</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />

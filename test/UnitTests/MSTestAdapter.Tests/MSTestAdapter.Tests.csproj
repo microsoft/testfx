@@ -73,26 +73,26 @@
     <Compile Include="TestableImplementations\TestablePlatformServiceProvider.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Adapter\MSTestAdapter.PlatformServices.Interface\MSTestAdapter.PlatformServices.Interface.csproj">
+    <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
-      <Name>MSTestAdapter.PlatformServices.Interface</Name>
+      <Name>PlatformServices.Interface</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\src\Adapter\MSTestAdapter.PlatformServices.Portable\MSTestAdapter.PlatformServices.Portable.csproj">
+    <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj">
       <Project>{58bdd63d-5e58-4d23-bdf5-592e5e03d29d}</Project>
-      <Name>MSTestAdapter.PlatformServices.Portable</Name>
+      <Name>PlatformServices.Portable</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\src\Adapter\MSTestAdapter\MSTestAdapter.csproj">
+    <ProjectReference Include="..\..\..\src\Adapter\CoreAdapter\CoreAdapter.csproj">
       <Project>{98ba6d2c-1f3d-4636-8e1d-d4932b7a253d}</Project>
-      <Name>MSTestAdapter</Name>
+      <Name>CoreAdapter</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\src\TestFramework\vnext\UnitTestFramework.csproj">
+    <ProjectReference Include="..\..\..\src\TestFramework\Core\Core.csproj">
       <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
-      <Name>UnitTestFramework</Name>
+      <Name>Core</Name>
       <Aliases>FrameworkV2</Aliases>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\src\TestFramework\UnitTestFramework.Core\UnitTestFramework.Extension.Core.csproj">
+    <ProjectReference Include="..\..\..\src\TestFramework\Extension.Core\Extension.Core.csproj">
       <Project>{6C9FE494-8315-4667-B3F6-75DC62A62319}</Project>
-      <Name>UnitTestFramework.Extension.Core</Name>
+      <Name>Extension.Core</Name>
       <Aliases>FrameworkV2CoreExtension</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\MSTestAdapter.TestUtilities\MSTestAdapter.TestUtilities.csproj">

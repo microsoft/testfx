@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+  </PropertyGroup>
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <PropertyGroup>
+    <ProjectGuid>{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface</RootNamespace>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface</AssemblyName>
+    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>TRACE;DEBUG;CODE_ANALYSIS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="IReflectionOperations.cs" />
+    <Compile Include="IThreadOperations.cs" />
+    <Compile Include="ISettingsProvider.cs" />
+    <Compile Include="ITestDataSource.cs" />
+    <Compile Include="ITestDeployment.cs" />
+    <Compile Include="ITestSourceHost.cs" />
+    <Compile Include="IFileOperations.cs" />
+    <Compile Include="ITestSource.cs" />
+    <Compile Include="IAdapterTraceLogger.cs" />
+    <Compile Include="ITestContext.cs" />
+    <Compile Include="ITraceListener.cs" />
+    <Compile Include="ITraceListenerManager.cs" />
+    <Compile Include="ObjectModel\ITestMethod.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(TestFxRoot)scripts\build\key.snk" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj">
+      <Project>{6c9fe494-8315-4667-b3f6-75dc62a62319}</Project>
+      <Name>Extension.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\TestFramework\Core\Core.csproj">
+      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
+      <Name>Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.11.0.0\lib\portable-net45+win8+wpa81+wp8\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+</Project>

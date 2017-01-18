@@ -26,9 +26,9 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\TestFramework\vnext\UnitTestFramework.csproj">
+    <ProjectReference Include="..\..\..\src\TestFramework\Core\Core.csproj">
       <Project>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</Project>
-      <Name>UnitTestFramework</Name>
+      <Name>Core</Name>
       <Aliases>FrameworkV2</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\MSTestAdapter.TestUtilities\MSTestAdapter.TestUtilities.csproj">

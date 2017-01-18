@@ -78,22 +78,22 @@
     <Fakes Include="Fakes\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.fakes" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Adapter\MSTestAdapter.PlatformServices.Desktop\MSTestAdapter.PlatformServices.Desktop.csproj">
+    <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj">
       <Project>{b0fce474-14bc-449a-91ea-a433342c0d63}</Project>
-      <Name>MSTestAdapter.PlatformServices.Desktop</Name>
+      <Name>PlatformServices.Desktop</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\src\Adapter\MSTestAdapter.PlatformServices.Interface\MSTestAdapter.PlatformServices.Interface.csproj">
+    <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
-      <Name>MSTestAdapter.PlatformServices.Interface</Name>
+      <Name>PlatformServices.Interface</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\src\TestFramework\UnitTestFramework.Extension.Desktop\UnitTestFramework.Extension.Desktop.csproj">
+    <ProjectReference Include="..\..\..\src\TestFramework\Extension.Desktop\Extension.Desktop.csproj">
       <Project>{a7ea583b-a2b0-47da-a058-458f247c7575}</Project>
-      <Name>UnitTestFramework.Extension.Desktop</Name>
+      <Name>Extension.Desktop</Name>
       <Aliases>FrameworkV2DesktopExtension</Aliases>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\src\TestFramework\vnext\UnitTestFramework.csproj">
+    <ProjectReference Include="..\..\..\src\TestFramework\Core\Core.csproj">
       <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
-      <Name>UnitTestFramework</Name>
+      <Name>Core</Name>
       <Aliases>FrameworkV2</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\MSTestAdapter.TestUtilities\MSTestAdapter.TestUtilities.csproj">

@@ -27,13 +27,13 @@
     <Compile Include="Services\UniversalTestSourceTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Adapter\MSTestAdapter.PlatformServices.Interface\MSTestAdapter.PlatformServices.Interface.csproj">
+    <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
-      <Name>MSTestAdapter.PlatformServices.Interface</Name>
+      <Name>PlatformServices.Interface</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\src\Adapter\MSTestAdapter.PlatformServices.Universal\MSTestAdapter.PlatformServices.Universal.csproj">
+    <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Universal\PlatformServices.Universal.csproj">
       <Project>{5D153CAA-80C2-4551-9549-6C406FCEEFB1}</Project>
-      <Name>MSTestAdapter.PlatformServices.Universal</Name>
+      <Name>PlatformServices.Universal</Name>
     </ProjectReference>
     <ProjectReference Include="..\MSTestAdapter.TestUtilities\MSTestAdapter.TestUtilities.csproj">
       <Project>{f81c7549-e3a3-4770-ac3f-3bc7356e61e8}</Project>
