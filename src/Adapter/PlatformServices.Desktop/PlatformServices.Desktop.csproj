@@ -95,9 +95,9 @@
       <Project>{a7ea583b-a2b0-47da-a058-458f247c7575}</Project>
       <Name>Extension.Desktop</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\TestFramework\Core\Core.csproj">
+    <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj">
       <Project>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</Project>
-      <Name>Core</Name>
+      <Name>MSTest.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>

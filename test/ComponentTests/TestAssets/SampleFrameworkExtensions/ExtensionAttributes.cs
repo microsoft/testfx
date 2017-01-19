@@ -1,0 +1,29 @@
+﻿// Copyright (c) Microsoft. All rights reserved.
+
+namespace SampleFrameworkExtensions
+{
+    using System;
+
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+    public sealed class DurationAttribute : TestPropertyAttribute
+    {
+        public DurationAttribute(string duration) : base("Duration", duration)
+        {
+            this.Duration = duration;
+        }
+
+        public string Duration { get; private set; }
+    }
+
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class CategoryArrayAttribute : Attribute
+    {
+        public CategoryArrayAttribute(params string[] value)
+        {
+            this.Value = value;
+        }
+
+        public string[] Value { get; private set; }
+    }
+}

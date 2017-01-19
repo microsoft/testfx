@@ -37,9 +37,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.csproj">
+    <ProjectReference Include="..\MSTest.Core\MSTest.Core.csproj">
       <Project>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</Project>
-      <Name>Core</Name>
+      <Name>MSTest.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
