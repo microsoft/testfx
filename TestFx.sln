@@ -94,8 +94,8 @@ Global
 		src\Adapter\PlatformServices.Shared\PlatformServices.Shared.projitems*{58bdd63d-5e58-4d23-bdf5-592e5e03d29d}*SharedItemsImports = 4
 		src\Adapter\PlatformServices.Shared\PlatformServices.Shared.projitems*{5d153caa-80c2-4551-9549-6c406fceefb1}*SharedItemsImports = 4
 		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{6c9fe494-8315-4667-b3f6-75dc62a62319}*SharedItemsImports = 4
-		src\Adapter\PlatformServices.Shared\PlatformServices.CoreSystem.projitems*{93f6db7b-1636-4aba-ba64-1ae9980f48a9}*SharedItemsImports = 13
-		test\UnitTests\PlatformServices.Shared.Tests\PlatformServices.CoreSystem.Tests.projitems*{bcb1cb25-c70e-4b40-b50c-9da2fefe48d8}*SharedItemsImports = 13
+		src\Adapter\PlatformServices.Shared\PlatformServices.Shared.projitems*{93f6db7b-1636-4aba-ba64-1ae9980f48a9}*SharedItemsImports = 13
+		test\UnitTests\PlatformServices.Shared.Tests\PlatformServices.Shared.Tests.projitems*{bcb1cb25-c70e-4b40-b50c-9da2fefe48d8}*SharedItemsImports = 13
 		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{df131865-84ee-4540-8112-e88acebdea09}*SharedItemsImports = 4
 		test\UnitTests\PlatformServices.Shared.Tests\PlatformServices.Shared.Tests.projitems*{e3c630fe-af89-4c95-b1b9-2409b1107208}*SharedItemsImports = 4
 		test\UnitTests\PlatformServices.Shared.Tests\PlatformServices.Shared.Tests.projitems*{fa7c719f-a400-45af-8091-7c23435617a8}*SharedItemsImports = 4
