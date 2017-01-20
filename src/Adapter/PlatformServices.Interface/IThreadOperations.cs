@@ -1,0 +1,26 @@
+﻿// Copyright (c) Microsoft. All rights reserved.
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface
+{
+    using System;
+
+    /// <summary>
+    /// This service is responsible for any thread operations specific to a platform.
+    /// </summary>
+    public interface IThreadOperations
+    {
+        /// <summary>
+        /// Execute the given action synchronously on a background thread in the given timeout.
+        /// </summary>
+        /// <param name="action">The action to execute.</param>
+        /// <param name="timeout">Timeout for the specified action.</param>
+        /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
+        bool Execute(Action action, int timeout);
+
+        /// <summary>
+        /// Execute an action with handling for Thread Aborts (if possible) so the main thread of the adapter does not die.
+        /// </summary>
+        /// <param name="action"> The action to execute. </param>
+        void ExecuteWithAbortSafety(Action action);
+    }
+}

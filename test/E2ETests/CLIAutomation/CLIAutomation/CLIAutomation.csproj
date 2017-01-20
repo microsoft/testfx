@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9C1219E0-E775-47F9-9236-63F03F774801}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CLIAutomation</RootNamespace>
+    <AssemblyName>CLIAutomation</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.TestPlatform.CommunicationUtilities, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\Microsoft.TestPlatform.TranslationLayer.15.0.0-preview-20161110-01\lib\net46\Microsoft.TestPlatform.CommunicationUtilities.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.TestPlatform.CoreUtilities, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\Microsoft.TestPlatform.TranslationLayer.15.0.0-preview-20161110-01\lib\net46\Microsoft.TestPlatform.CoreUtilities.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.TestPlatform.VsTestConsole.TranslationLayer, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\Microsoft.TestPlatform.TranslationLayer.15.0.0-preview-20161110-01\lib\net46\Microsoft.TestPlatform.VsTestConsole.TranslationLayer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.Common, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\Microsoft.TestPlatform.TranslationLayer.15.0.0-preview-20161110-01\lib\net46\Microsoft.VisualStudio.TestPlatform.Common.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\Microsoft.TestPlatform.TranslationLayer.15.0.0-preview-20161110-01\lib\net46\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\..\..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\TestFramework\MSTest.Core\MSTest.Core.csproj">
+      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
+      <Name>MSTest.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DiscoveryEventsHandler.cs" />
+    <Compile Include="RunConfiguration.cs" />
+    <Compile Include="RunEventsHandler.cs" />
+    <Compile Include="CLITestBase.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XmlRunSettingsUtilities.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(TestFxRoot)scripts\build\key.snk" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+	<SourcePath>$(ProjectDir)..\..\..\..\artifacts\</SourcePath>
+    <DestinationPath>$(ProjectDir)..\..\TestAssets\artifacts\</DestinationPath>
+    <PostBuildEvent>
+      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Interface\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Interface\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)MSTest.Core\$(OutputPath)Microsoft.VisualStudio.TestPlatform.TestFramework.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)MSTest.Core\$(OutputPath)Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)Extension.Desktop\$(OutputPath)Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)Extension.Desktop\$(OutputPath)Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" "$(DestinationPath)"
+    </PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
