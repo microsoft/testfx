@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26115.0
+VisualStudioVersion = 15.0.26009.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FF8B1B72-55A1-4FFE-809E-7B79323ED8D0}"
 	ProjectSection(SolutionItems) = preProject
@@ -28,7 +28,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension.Desktop", "src\Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension.Core", "src\TestFramework\Extension.Core\Extension.Core.csproj", "{6C9FE494-8315-4667-B3F6-75DC62A62319}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PlatformServices.CoreSystem", "src\Adapter\PlatformServices.CoreSystem\PlatformServices.CoreSystem.shproj", "{93F6DB7B-1636-4ABA-BA64-1AE9980F48A9}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PlatformServices.Shared", "src\Adapter\PlatformServices.Shared\PlatformServices.Shared.shproj", "{93F6DB7B-1636-4ABA-BA64-1AE9980F48A9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A9596292-7E67-4566-9096-143DDAA4E8D8}"
 EndProject
@@ -46,7 +46,7 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Extension.Shared", "src\Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension.UWP", "src\TestFramework\Extension.UWP\Extension.UWP.csproj", "{DF131865-84EE-4540-8112-E88ACEBDEA09}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PlatformServices.CoreSystem.Tests", "test\UnitTests\PlatformServices.CoreSystem.Tests\PlatformServices.CoreSystem.Tests.shproj", "{BCB1CB25-C70E-4B40-B50C-9DA2FEFE48D8}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PlatformServices.Shared.Tests", "test\UnitTests\PlatformServices.Shared.Tests\PlatformServices.Shared.Tests.shproj", "{BCB1CB25-C70E-4B40-B50C-9DA2FEFE48D8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "E2ETests", "E2ETests", "{F1A27537-78D1-4BBD-8E76-ADB31BC0C2B4}"
 EndProject
@@ -91,14 +91,14 @@ EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{272ca5e1-8e81-4825-9e47-86cce02f700d}*SharedItemsImports = 13
-		src\Adapter\PlatformServices.CoreSystem\PlatformServices.CoreSystem.projitems*{58bdd63d-5e58-4d23-bdf5-592e5e03d29d}*SharedItemsImports = 4
-		src\Adapter\PlatformServices.CoreSystem\PlatformServices.CoreSystem.projitems*{5d153caa-80c2-4551-9549-6c406fceefb1}*SharedItemsImports = 4
+		src\Adapter\PlatformServices.Shared\PlatformServices.Shared.projitems*{58bdd63d-5e58-4d23-bdf5-592e5e03d29d}*SharedItemsImports = 4
+		src\Adapter\PlatformServices.Shared\PlatformServices.Shared.projitems*{5d153caa-80c2-4551-9549-6c406fceefb1}*SharedItemsImports = 4
 		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{6c9fe494-8315-4667-b3f6-75dc62a62319}*SharedItemsImports = 4
-		src\Adapter\PlatformServices.CoreSystem\PlatformServices.CoreSystem.projitems*{93f6db7b-1636-4aba-ba64-1ae9980f48a9}*SharedItemsImports = 13
-		test\UnitTests\PlatformServices.CoreSystem.Tests\PlatformServices.CoreSystem.Tests.projitems*{bcb1cb25-c70e-4b40-b50c-9da2fefe48d8}*SharedItemsImports = 13
+		src\Adapter\PlatformServices.Shared\PlatformServices.CoreSystem.projitems*{93f6db7b-1636-4aba-ba64-1ae9980f48a9}*SharedItemsImports = 13
+		test\UnitTests\PlatformServices.Shared.Tests\PlatformServices.CoreSystem.Tests.projitems*{bcb1cb25-c70e-4b40-b50c-9da2fefe48d8}*SharedItemsImports = 13
 		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{df131865-84ee-4540-8112-e88acebdea09}*SharedItemsImports = 4
-		test\UnitTests\PlatformServices.CoreSystem.Tests\PlatformServices.CoreSystem.Tests.projitems*{e3c630fe-af89-4c95-b1b9-2409b1107208}*SharedItemsImports = 4
-		test\UnitTests\PlatformServices.CoreSystem.Tests\PlatformServices.CoreSystem.Tests.projitems*{fa7c719f-a400-45af-8091-7c23435617a8}*SharedItemsImports = 4
+		test\UnitTests\PlatformServices.Shared.Tests\PlatformServices.Shared.Tests.projitems*{e3c630fe-af89-4c95-b1b9-2409b1107208}*SharedItemsImports = 4
+		test\UnitTests\PlatformServices.Shared.Tests\PlatformServices.Shared.Tests.projitems*{fa7c719f-a400-45af-8091-7c23435617a8}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Code Analysis Debug|Any CPU = Code Analysis Debug|Any CPU

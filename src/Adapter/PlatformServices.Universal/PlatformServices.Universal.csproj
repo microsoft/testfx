@@ -113,7 +113,7 @@
     <Compile Include="Services\UniversalFileOperations.cs" />
     <Compile Include="Services\UniversalTestSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Content Include="Properties\MSTestAdapter.ProviderService.UAP.rd.xml" />
+    <Content Include="Properties\ProviderService.UAP.rd.xml" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="$(TestFxRoot)sdk\TestPlatform.ObjectModel.UWP\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
@@ -132,7 +132,7 @@
       <Name>PlatformServices.Interface</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\PlatformServices.CoreSystem\PlatformServices.CoreSystem.projitems" Label="Shared" />
+  <Import Project="..\PlatformServices.Shared\PlatformServices.Shared.projitems" Label="Shared" />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
     <VisualStudioVersion>15.0</VisualStudioVersion>
   </PropertyGroup>

@@ -85,7 +85,7 @@
       <Name>MSTest.CoreAdapter.TestUtilities</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\PlatformServices.CoreSystem.Tests\PlatformServices.CoreSystem.Tests.projitems" Label="Shared" />
+  <Import Project="..\PlatformServices.Shared.Tests\PlatformServices.Shared.Tests.projitems" Label="Shared" />
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

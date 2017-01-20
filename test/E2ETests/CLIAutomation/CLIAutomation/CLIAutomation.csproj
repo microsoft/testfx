@@ -83,6 +83,7 @@
     <Compile Include="XmlRunSettingsUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -62,6 +62,6 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
-  <Import Project="..\PlatformServices.CoreSystem\PlatformServices.CoreSystem.projitems" Label="Shared" />
+  <Import Project="..\PlatformServices.Shared\PlatformServices.Shared.projitems" Label="Shared" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>
