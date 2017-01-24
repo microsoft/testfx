@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="E:\A\_work\14\s\src\managed\Templates\Desktop\bin\Release\ProjectTemplates\CSharp\Test\AssemblyInfo.cs" PsrId="22" FileType="1" SrcCul="en-US" TgtCul="tr-TR" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+  <OwnedComments>
+    <Cmt Name="Dev" />
+    <Cmt Name="LcxAdmin" />
+    <Cmt Name="Rccx" />
+  </OwnedComments>
+  <Item ItemId=";HTML Comments" ItemType="0" PsrId="22" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;043cea0476578a661ace95ba5829c53c" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[ Setting ComVisible to false makes the types in this assembly not visible ]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[ ComVisible özniteliğinin false olarak ayarlanması bu bütünleştirilmiş koddaki türleri ]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;0a1e4fe23f645578a65b7d7dee5a2471" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[      Revision]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[      Düzeltme]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;4a5518b3cb92c08eb268e8c983b5905a" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[ by using the '*' as shown below:]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[ aşağıda gösterildiği gibi '*' karakterini kullanabilirsiniz:]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;5792823ccedc229d6fee291720d111bd" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[ You can specify all the values or you can default the Build and Revision Numbers ]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[ Tüm değerleri belirtebilir veya varsayılan Derleme ve Düzeltme Numaralarını kullanmak için ]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;84c4aa9f38bedb1b395ab4a0d9fa6f14" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[ Version information for an assembly consists of the following four values:]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[ Bir bütünleştirilmiş kodun sürüm bilgileri aşağıdaki dört değerden oluşur:]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;9f50e815b9dc17543422bb37c957a6a4" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[ associated with an assembly.]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[ bu öznitelik değerlerini değiştirin.]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;aab87e98193c4ef5ab9d8b421d9c9dbc" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[ COM, set the ComVisible attribute to true on that type.]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[ COM'dan erişmeniz gerekirse, ilgili türdeki ComVisible özniteliğini true olarak ayarlayın.]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;bcfcd08e17e58a99bda97b0f734247f4" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[ General Information about an assembly is controlled through the following ]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[ Bir bütünleştirilmiş koda ilişkin Genel Bilgiler aşağıdaki ]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;c3b37f47890ec87c829fd06f67ad355c" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[      Minor Version ]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[      Alt Sürüm ]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;cdaf2cc7e32ed669ffcc4537cba85886" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[      Build Number]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[      Derleme Numarası]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;d1e4ba368ca946d0c19f8f3ebc876589" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[ The following GUID is for the ID of the typelib if this project is exposed to COM]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[ Eğer bu proje COM'a maruz kaldıysa aşağıdaki GUID, typelib kimliğine yöneliktir]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;d41d8cd98f00b204e9800998ecf8427e" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[]]></Val>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;d7d81c53e768beecbe896f2f796147ff" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[ set of attributes. Change these attribute values to modify the information]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[ öznitelikler kümesi aracılığıyla denetlenir. Bütünleştirilmiş kodla ilişkili bilgileri değiştirmek için]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;dc455573a9c00133f7003de939c3bdf2" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[ [assembly: AssemblyVersion("1.0.*")]5D;]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[ [assembly: AssemblyVersion("1.0.*")]5D;]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;e85504582824189883f64acbcbea2395" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[ to COM components.  If you need to access a type in this assembly from ]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[ COM bileşenleri için görünmez yapar. Bu bütünleştirilmiş koddaki bir türe ]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;ee0df79ea6eb7251f1c88ac030863121" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[      Major Version]]></Val>
+        <Tgt Cat="Comment" Stat="Loc" Orig="New">
+          <Val><![CDATA[      Ana Sürüm]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="1;d41d8cd98f00b204e9800998ecf8427e" ItemType="24;Comment" PsrId="22" Leaf="true">
+      <Str Cat="Comment">
+        <Val><![CDATA[]]></Val>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+  </Item>
+</LCX>
