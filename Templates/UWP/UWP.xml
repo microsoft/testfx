@@ -12,7 +12,7 @@
   <File TargetFileName="Properties\UnitTestApp.rd.xml">ProjectTemplates\CSharp\Windows UAP\Properties\UnitTestApp.rd.xml</File>
 
   <File TargetFileName="__PreviewImage.png">ProjectTemplates\CSharp\Windows UAP\__PreviewImage.png</File>
-  <File TargetFileName="MyTemplate.vstemplate">ProjectTemplates\CSharp\Windows UAP\MyTemplate.vstemplate</File>
+  <File TargetFileName="MSTestV2UWP.vstemplate">ProjectTemplates\CSharp\Windows UAP\MSTestV2UWP.vstemplate</File>
   <File TargetFileName="Package.appxmanifest">ProjectTemplates\CSharp\Windows UAP\Package.appxmanifest</File>
   <File TargetFileName="project.json">ProjectTemplates\CSharp\Windows UAP\project.json</File>
   <File TargetFileName="UnitTest.cs">ProjectTemplates\CSharp\Windows UAP\UnitTest.cs</File>

@@ -93,8 +93,8 @@
   <PropertyGroup>
     <PreBuildEvent>
       IF EXIST "$(ProjectDir)ProjectTemplates\CSharp\Test\DesktopUnitTestTemplate.zip" DEL /q /s "$(ProjectDir)ProjectTemplates\CSharp\Test\DesktopUnitTestTemplate.zip"
-      "$(ProjectDir)..\..\tools\ZipItems\ZipItems.exe" "$(ProjectDir)Desktop.xml" "$(ProjectDir)\" "$(ProjectDir)ProjectTemplates\CSharp\Test\DesktopUnitTestTemplate.zip"
-	  </PreBuildEvent>
+      "$(ProjectDir)$(TestFxRoot)tools\ZipItems\ZipItems.exe" "$(ProjectDir)Desktop.xml" "$(ProjectDir)\" "$(ProjectDir)ProjectTemplates\CSharp\Test\DesktopUnitTestTemplate.zip"
+    </PreBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -107,11 +107,4 @@
   <PropertyGroup>
     <RunCodeAnalysisOnThisProject>false</RunCodeAnalysisOnThisProject>
   </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

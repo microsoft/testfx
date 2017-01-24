@@ -93,7 +93,7 @@
   <PropertyGroup>
     <PreBuildEvent>
       IF EXIST "$(ProjectDir)ProjectTemplates\CSharp\Windows UAP\UWP.zip" DEL /q /s "$(ProjectDir)ProjectTemplates\CSharp\Windows UAP\UWP.zip"
-      "$(ProjectDir)..\..\tools\ZipItems\ZipItems.exe" "$(ProjectDir)UWP.xml" "$(ProjectDir)\" "$(ProjectDir)ProjectTemplates\CSharp\Windows UAP\UWP.zip"
+      "$(ProjectDir)$(TestFxRoot)tools\ZipItems\ZipItems.exe" "$(ProjectDir)UWP.xml" "$(ProjectDir)\" "$(ProjectDir)ProjectTemplates\CSharp\Windows UAP\UWP.zip"
     </PreBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
