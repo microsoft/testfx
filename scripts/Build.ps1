@@ -15,26 +15,23 @@ $ErrorActionPreference = "Stop"
 
 . $PSScriptRoot\common.lib.ps1
 
+$solutions = @("TestFx.sln","Templates\MSTestTemplates.sln","WizardExtensions\WizardExtensions.sln")
+
 function Perform-Build {
   Write-Host -object ""
 
   $msbuild = Locate-MSBuild 
-
-  $solution = Locate-Solution -relativePath "TestFx.sln"
-  $templates = Locate-Solution -relativePath "Templates\MSTestTemplates.sln"
-  $wizards = Locate-Solution -relativePath "WizardExtensions\WizardExtensions.sln"
-
-  Write-Host -object "Starting solution build..."
-  & $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m $solution
   
-  Write-Host -object "Starting Templates build..."
-  & $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m $templates
-  
-  Write-Host -object "Starting Wizard Extensions build..."
-  & $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m $wizards
+  foreach($solution in $solutions)
+  {
+	$solutionPath = Locate-Solution -relativePath $solution
 
-  if ($lastExitCode -ne 0) {
-    throw "The build failed with an exit code of '$lastExitCode'."
+	Write-Host -object "Starting $solution build..."
+	& $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m $solutionPath
+  
+	if ($lastExitCode -ne 0) {
+		throw "Solution build failed with an exit code of '$lastExitCode'."
+	}
   }
 
   Write-Host -object "The build completed successfully." -foregroundColor Green
@@ -46,9 +43,6 @@ function Perform-Restore {
   $nuget = Locate-NuGet
   $nugetConfig = Locate-NuGetConfig
   $toolset = Locate-Toolset
-  $solution = Locate-Solution -relativePath "TestFx.sln"
-  $templates = Locate-Solution -relativePath "Templates\MSTestTemplates.sln"
-  $wizards = Locate-Solution -relativePath "WizardExtensions\WizardExtensions.sln"
   
   if ($clearPackageCache) {
     Write-Host -object "Clearing local package cache..."
@@ -66,9 +60,12 @@ function Perform-Restore {
   $msbuildPath = Locate-MSBuildPath 
 
   Write-Host -object "Starting solution restore..."
-  & $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solution
-  & $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $templates
-  & $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $wizards
+  foreach($solution in $solutions)
+  {
+	$solutionPath = Locate-Solution -relativePath $solution
+
+	& $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath
+  }
 
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
