@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LCX SchemaVersion="6.0" Name="E:\A\_work\14\s\src\managed\TestFramework\UnitTestFramework.Core\bin\Release\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML" PsrId="210" FileType="1" SrcCul="en-US" TgtCul="ko-KR" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
+  <OwnedComments>
+    <Cmt Name="Dev" />
+    <Cmt Name="LcxAdmin" />
+    <Cmt Name="Rccx" />
+  </OwnedComments>
+  <Item ItemId=";&lt;name&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;a554ea1fe7e85147ef2cefe893ed21e2" ItemType="42;XML:Text" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;remarks&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;78a7394e6178068733a8e752be1862b2" ItemType="42;XML:Text" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[]D;]A;            This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.]D;]A;            Those attributes have access to the test context, and provide messages that are included]D;]A;            in the test results. Users can benefit from messages that include the fully-qualified]D;]A;            class name in addition to the name of the test method currently being executed.]D;]A;            ]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[]D;]A;            ExpectedExceptionBaseAttribute에서 파생된 특성에서 이 속성이 유용할 수 있습니다.]D;]A;            이러한 특성은 테스트 컨텍스트에 액세스할 수 있으며, 테스트 결과에 포함된 메시지를]D;]A;            제공합니다. 현재 실행 중인 테스트 메서드의 이름뿐 아니라 정규화된 클래스 이름을]D;]A;            포함하는 메시지도 사용자에게 도움이 될 수 있습니다.]D;]A;            ]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+  </Item>
+  <Item ItemId=";&lt;summary&gt;" ItemType="0" PsrId="210" Leaf="false">
+    <Disp Icon="Str" Disp="true" LocTbl="false" />
+    <Item ItemId="0;4da76c78c8a5c34b926e2d22717dc4ea" ItemType="42;XML:Text" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[]D;]A;            Gets the Name of the test method currently being executed]D;]A;            ]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[]D;]A;            현재 실행 중인 테스트 메서드의 이름을 가져옵니다.]D;]A;            ]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;5095cb9b53c3bcd40de3c635218905e6" ItemType="42;XML:Text" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[]D;]A;            Gets the current test outcome.]D;]A;            ]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[]D;]A;            현재 테스트 결과를 가져옵니다.]D;]A;            ]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;745ef6793b22f2f38e5b2871cc733dfd" ItemType="42;XML:Text" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[]D;]A;            TestContext class. This class should be fully abstract and not contain any ]D;]A;            members. The adapter will implement the members. Users in the framework should]D;]A;            only access this via a well-defined interface.]D;]A;            ]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[]D;]A;            TestContext 클래스. 이 클래스는 완전히 추상 클래스여야 하며 멤버를 포함할 ]D;]A;            수 없습니다. 어댑터는 멤버를 구현합니다. 프레임워크의 사용자는]D;]A;            잘 정의된 인터페이스를 통해서만 여기에 액세스할 수 있습니다.]D;]A;            ]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;d236459ba89c2e29d2198883baa205db" ItemType="42;XML:Text" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[]D;]A;            Gets Fully-qualified name of the class containing the test method currently being executed]D;]A;            ]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[]D;]A;            현재 실행 중인 테스트 메서드를 포함하는 클래스의 정규화된 이름을 가져옵니다.]D;]A;            ]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+    <Item ItemId="0;dae615835533dcdeca30bfd552f8b756" ItemType="42;XML:Text" PsrId="210" Leaf="true">
+      <Str Cat="AppData">
+        <Val><![CDATA[]D;]A;            Gets test properties for a test.]D;]A;            ]]></Val>
+        <Tgt Cat="AppData" Stat="Loc" Orig="New">
+          <Val><![CDATA[]D;]A;            테스트에 대한 테스트 속성을 가져옵니다.]D;]A;            ]]></Val>
+        </Tgt>
+      </Str>
+      <Disp Icon="Str" />
+    </Item>
+  </Item>
+</LCX>
