@@ -122,14 +122,17 @@
     <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj">
       <Project>{6c9fe494-8315-4667-b3f6-75dc62a62319}</Project>
       <Name>Extension.Core</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj">
       <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
       <Name>MSTest.Core</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
       <Name>PlatformServices.Interface</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\PlatformServices.Shared\PlatformServices.Shared.projitems" Label="Shared" />

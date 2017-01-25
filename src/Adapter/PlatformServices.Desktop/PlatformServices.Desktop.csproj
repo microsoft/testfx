@@ -31,7 +31,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.11.0.0\lib\net35\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
-      <Private>True</Private>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
@@ -94,14 +94,17 @@
     <ProjectReference Include="..\..\TestFramework\Extension.Desktop\Extension.Desktop.csproj">
       <Project>{a7ea583b-a2b0-47da-a058-458f247c7575}</Project>
       <Name>Extension.Desktop</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj">
       <Project>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</Project>
       <Name>MSTest.Core</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
       <Name>PlatformServices.Interface</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
