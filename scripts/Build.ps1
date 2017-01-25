@@ -18,12 +18,20 @@ $ErrorActionPreference = "Stop"
 function Perform-Build {
   Write-Host -object ""
 
-  $msbuild = Locate-MSBuild
+  $msbuild = Locate-MSBuild 
 
-  $solution = Locate-Solution
+  $solution = Locate-Solution -relativePath "TestFx.sln"
+  $templates = Locate-Solution -relativePath "Templates\MSTestTemplates.sln"
+  $wizards = Locate-Solution -relativePath "WizardExtensions\WizardExtensions.sln"
 
   Write-Host -object "Starting solution build..."
   & $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m $solution
+  
+  Write-Host -object "Starting Templates build..."
+  & $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m $templates
+  
+  Write-Host -object "Starting Wizard Extensions build..."
+  & $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m $wizards
 
   if ($lastExitCode -ne 0) {
     throw "The build failed with an exit code of '$lastExitCode'."
@@ -38,7 +46,9 @@ function Perform-Restore {
   $nuget = Locate-NuGet
   $nugetConfig = Locate-NuGetConfig
   $toolset = Locate-Toolset
-  $solution = Locate-Solution
+  $solution = Locate-Solution -relativePath "TestFx.sln"
+  $templates = Locate-Solution -relativePath "Templates\MSTestTemplates.sln"
+  $wizards = Locate-Solution -relativePath "WizardExtensions\WizardExtensions.sln"
   
   if ($clearPackageCache) {
     Write-Host -object "Clearing local package cache..."
@@ -53,10 +63,12 @@ function Perform-Restore {
   }
 
   Write-Host -object "Locating MSBuild install path..."
-  $msbuildPath = Locate-MSBuildPath
+  $msbuildPath = Locate-MSBuildPath 
 
   Write-Host -object "Starting solution restore..."
   & $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solution
+  & $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $templates
+  & $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $wizards
 
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
