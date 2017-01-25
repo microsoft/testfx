@@ -116,7 +116,7 @@
     <Content Include="Properties\ProviderService.UAP.rd.xml" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="..\..\..\sdk\TestPlatform.ObjectModel.UWP\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
+    <Reference Include="$(TestFxRoot)sdk\TestPlatform.ObjectModel.UWP\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj">
