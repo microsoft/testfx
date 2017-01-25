@@ -128,10 +128,8 @@ function Locate-LocateVsApi {
   return Resolve-Path -path $locateVsApi
 }
 
-function Locate-Solution {
+function Locate-Solution([string] $relativePath) {
   $rootPath = Locate-RootPath
-  $solution = Join-Path -path $rootPath -childPath "TestFx.sln"
+  $solution = Join-Path -path $rootPath -childPath $relativePath
   return Resolve-Path -path $solution
 }
-
-
