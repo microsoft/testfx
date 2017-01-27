@@ -43,14 +43,13 @@ function Invoke-Build([string] $solution)
 function Build-vsmanprojs
 {
   $msbuild = Locate-MSBuild
-  $packagesPath = Locate-PackagesPath
   
   foreach($vsmanproj in $vsmanprojs)
   {
 	$vsmanprojPath = Locate-Solution -relativePath $vsmanproj
 	
 	Write-Host -object "Starting $vsmanproj build..."
-	& $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m /p:TargetExt=.vsman /p:MicroBuildOverridePluginDirectory="$packagesPath" $vsmanprojPath
+	& $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m /p:TargetExt=.vsman $vsmanprojPath
 	
 	if ($lastExitCode -ne 0) {
 		throw "VSManProj build failed with an exit code of '$lastExitCode'."
