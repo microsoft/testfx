@@ -33,6 +33,7 @@ function Invoke-Build([string] $solution)
 	$solutionPath = Locate-Solution -relativePath $solution
 
 	Write-Host -object "Starting $solution build..."
+	Write-Host -object "$msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m $solutionPath"
 	& $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m $solutionPath
   
 	if ($lastExitCode -ne 0) {
@@ -49,6 +50,7 @@ function Build-vsmanprojs
 	$vsmanprojPath = Locate-Solution -relativePath $vsmanproj
 	
 	Write-Host -object "Starting $vsmanproj build..."
+	Write-Host -object "$msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m /p:TargetExt=.vsman $vsmanprojPath"
 	& $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m /p:TargetExt=.vsman $vsmanprojPath
 	
 	if ($lastExitCode -ne 0) {
@@ -93,6 +95,7 @@ function Perform-Restore {
   }
 
   Write-Host -object "Starting toolset restore..."
+  Write-Host -object "$nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset"
   & $nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset
   
   if ($lastExitCode -ne 0) {
@@ -107,6 +110,7 @@ function Perform-Restore {
   {
 	$solutionPath = Locate-Solution -relativePath $solution
 
+	Write-Host -object "$nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath"
 	& $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath
   }
 
