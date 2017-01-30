@@ -21,8 +21,8 @@
   <Import Project="$(TestFxRoot)\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" />
   <Import Project="$(TestFxRoot)\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" />
   <ItemGroup>
-    <VsixFileToCopy Include="$(TestFxRoot)\Templates\UWP\bin\$(Configuration)\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.json" />
-    <VsixFileToCopy Include="$(TestFxRoot)\Templates\UWP\bin\$(Configuration)\MSTestUWPVSIX.vsix" />
+    <VsixFileToCopy Include="$(OutputPath)MSTestUWPVSIX\bin\$(Configuration)\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.json" />
+    <VsixFileToCopy Include="$(OutputPath)MSTestUWPVSIX\bin\$(Configuration)\MSTestUWPVSIX.vsix" />
   </ItemGroup>
   <Target Name="BeforeBuild"> 
     <Copy SourceFiles="@(VsixFileToCopy)" DestinationFolder="$(OutputPath)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
