@@ -30,20 +30,11 @@
   </PropertyGroup>
   <PropertyGroup>
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
+    <DocumentationLclSubPath>TestFramework\Extensions\Desktop</DocumentationLclSubPath>
   </PropertyGroup>
   <ItemGroup>
     <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <FilesToLocalize Include="$(OutDir)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML">
-      <Languages>$(VS)</Languages>
-      <ProjectFile>$(MSBuildThisFileFullPath)</ProjectFile>
-      <Parser>210</Parser>
-      <SettingsFile>$(LSBuildRoot)\locxml_teamarch.lss</SettingsFile>
-      <LciCommentFile>$(TestFxRoot)loc\lci\TestFramework\Extensions\Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML.lci</LciCommentFile>
-      <TranslationFile>$(TestFxRoot)loc\lcl\{Lang}\TestFramework\Extensions\Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.XML.Extensions.lcl</TranslationFile>
-    </FilesToLocalize>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

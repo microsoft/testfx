@@ -3,17 +3,33 @@
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" Condition="$(TargetFrameworkProfile) == 'Profile259'" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="$(TargetFrameworkProfile) == '' or $(TargetFrameworkProfile) != 'Profile259'"/>
 
-  <Import Project="$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
+  <!-- Import props/targets with $(RepoRoot) since msbuild takes the relative path based on settings.targets and not with respect to the project. -->
+  <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
 
-  <ItemGroup>
+  <ItemGroup Condition="$(IsTest) == '' or $(IsTest) == 'false'">
     <FilesToSign Include="$(OutDir)\$(AssemblyName).dll">
       <Authenticode>Microsoft</Authenticode>
       <StrongName>StrongName</StrongName>
     </FilesToSign>
-    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning">
+
+    <FilesToLocalize Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(AssemblyLclSubPath)' != ''">
+      <TranslationFile>$(LclRoot)\{Lang}\$(AssemblyLclSubPath)\$(AssemblyName).dll.lcl</TranslationFile>
+      <HasLceComments>false</HasLceComments>
+    </FilesToLocalize>
+    
+    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning" Condition="'$(AssemblyLclSubPath)' != ''">
       <!-- Do not have this show up in Solution Explorer in VS -->
       <InProject>false</InProject>
     </SignFilesDependsOn>
+
+	  <FilesToLocalize Include="$(OutDir)\$(AssemblyName).XML" Condition="'$(DocumentationLclSubPath)' != ''">
+      <Languages>$(VS)</Languages>
+      <ProjectFile>$(MSBuildThisFileFullPath)</ProjectFile>
+      <Parser>210</Parser>
+      <SettingsFile>$(LSBuildRoot)\locxml_teamarch.lss</SettingsFile>
+      <LciCommentFile>$(LciRoot)\$(DocumentationLclSubPath)\$(AssemblyName).XML.lci</LciCommentFile>
+      <TranslationFile>$(LclRoot)\{Lang}\$(DocumentationLclSubPath)\$(AssemblyName).XML.lcl</TranslationFile>
+    </FilesToLocalize>
   </ItemGroup>
 
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
@@ -24,7 +40,7 @@
     <Error Condition="!Exists('$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
   </Target>
 
-  <Target Name="GatherLocalizedOutputsForSigning" Condition="'$(LocalizationEnabled)' == 'true'">
+  <Target Name="GatherLocalizedOutputsForSigning">
     <ItemGroup>
       <FilesToSign Include="$(OutDir)\localize\**\$(AssemblyName).resources.dll">
         <Authenticode>Microsoft</Authenticode>

@@ -97,6 +97,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
+    <DocumentationLclSubPath>TestFramework\Extensions\UWP</DocumentationLclSubPath>
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
@@ -114,16 +115,6 @@
       <Name>MSTest.Core</Name>
       <Private>False</Private>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <FilesToLocalize Include="$(OutDir)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML">
-      <Languages>$(VS)</Languages>
-      <ProjectFile>$(MSBuildThisFileFullPath)</ProjectFile>
-      <Parser>210</Parser>
-      <SettingsFile>$(LSBuildRoot)\locxml_teamarch.lss</SettingsFile>
-      <LciCommentFile>$(TestFxRoot)loc\lci\TestFramework\Extensions\UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML.lci</LciCommentFile>
-      <TranslationFile>$(TestFxRoot)loc\lcl\{Lang}\TestFramework\Extensions\UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.XML.Extensions.lcl</TranslationFile>
-    </FilesToLocalize>
   </ItemGroup>
   <Import Project="..\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
