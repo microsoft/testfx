@@ -74,7 +74,7 @@ function Perform-Build {
 	Invoke-Build -solution "WizardExtensions\WizardExtensions.sln"	
   }
   
-  if($vsmanprojects -or $full)
+  if($vsmanprojects)
   {
 	Build-vsmanprojs
   }
