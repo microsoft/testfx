@@ -1,5 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+extern alias FrameworkV2;
+using FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 {
     extern alias FrameworkV1;
@@ -12,13 +15,11 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
     using System.Reflection;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
-    [TestClass]
+    [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute]
     public class VSInstallationUtilitiesTests
     {
-        [TestMethod]
+        [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
         public void CheckPortableModeRunningTest()
         {
             string path = Environment.GetEnvironmentVariable(Constants.PortableVsTestLocation);
@@ -32,7 +33,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             }
         }
 
-        [TestMethod]
+        [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
         public void CheckResolutionPathsDoNotContainPrivateAssembliesPathTest()
         {
             TestSourceHost isolatedHost = new TestSourceHost(null, null);

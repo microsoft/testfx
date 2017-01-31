@@ -44,8 +44,7 @@ namespace PlatformServices.Desktop.ComponentTests
             var testAssetPath =
                 Path.Combine(
                     Directory.GetParent(Directory.GetParent(Directory.GetParent(currentAssemblyPath).FullName).FullName).FullName,
-                    "TestAssets",
-                    "artifacts");
+                    "TestAssets");
             this.testAsset = Assembly.ReflectionOnlyLoadFrom(Path.Combine(testAssetPath, "TestProjectForDiscovery.dll"));
 
             // Also preload the Test Framework assembly.
