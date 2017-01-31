@@ -16,10 +16,10 @@ namespace Microsoft.MSTestV2.CLIAutomation
         private static VsTestConsoleWrapper vsTestConsoleWrapper;
         private DiscoveryEventsHandler discoveryEventsHandler;
         private RunEventsHandler runEventsHandler;
-        private const string vstestConsoleRelativePath = @"..\..\..\..\..\..\packages\Microsoft.TestPlatform.15.0.0-preview-20161125-02\tools\net46";
+        private const string vstestConsoleRelativePath = @"..\..\..\..\packages\Microsoft.TestPlatform.15.0.0-preview-20170130-01\tools\net46";
         private const string TestAssets = "TestAssets";
         private const string artifacts = "artifacts";
-        private const string E2ETestsRelativePath = @"..\..\..\..\";
+        private const string E2ETestsRelativePath = @"..\..\..\";
 
         public CLITestBase()
         {
@@ -85,7 +85,6 @@ namespace Microsoft.MSTestV2.CLIAutomation
                 Environment.CurrentDirectory,
                 E2ETestsRelativePath,
                 TestAssets,
-                artifacts,
                 assetName);
 
             Assert.IsTrue(File.Exists(assetPath), "GetTestAsset: Path not found: {0}.", assetPath);
@@ -98,8 +97,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
             var testAdapterPath = Path.Combine(
                 Environment.CurrentDirectory,
                 E2ETestsRelativePath,
-                TestAssets,
-                artifacts);
+                TestAssets);
 
             return testAdapterPath;
         }

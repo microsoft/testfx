@@ -101,6 +101,12 @@ function Locate-PackagesPath {
   return Resolve-Path -path $packagesPath
 }
 
+function Locate-Artifacts {
+  $rootPath = Locate-RootPath
+  $artifactsPath = Join-Path -path $rootPath -childPath "artifacts"
+  return Resolve-Path -path $artifactsPath
+}
+
 function Locate-VsInstallPath {
    $locateVsApi = Locate-LocateVsApi
    $requiredPackageIds = @()

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
   </PropertyGroup>
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -20,7 +20,6 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -28,7 +27,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -86,23 +84,23 @@
     <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="packages.config" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-	<SourcePath>$(ProjectDir)..\..\..\..\artifacts\</SourcePath>
-    <DestinationPath>$(ProjectDir)..\..\TestAssets\artifacts\</DestinationPath>
+	<SourcePath>$(TestFxRoot)artifacts\</SourcePath>
+    <DestinationPath>$(TestFxRoot)artifacts\TestAssets\</DestinationPath>
     <PostBuildEvent>
-      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)PlatformServices.Interface\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)PlatformServices.Interface\$(OutputPath)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)MSTest.Core\$(OutputPath)Microsoft.VisualStudio.TestPlatform.TestFramework.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)MSTest.Core\$(OutputPath)Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)Extension.Desktop\$(OutputPath)Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)Extension.Desktop\$(OutputPath)Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\bin\$(Configuration)\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\bin\$(Configuration)\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\bin\$(Configuration)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\bin\$(Configuration)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Interface\bin\$(Configuration)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Interface\bin\$(Configuration)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)MSTest.Core\bin\$(Configuration)\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)MSTest.Core\bin\$(Configuration)\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)Extension.Desktop\bin\$(Configuration)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)Extension.Desktop\bin\$(Configuration)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" "$(DestinationPath)"
     </PostBuildEvent>
   </PropertyGroup>
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
