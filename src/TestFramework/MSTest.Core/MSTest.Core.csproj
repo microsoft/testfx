@@ -13,6 +13,7 @@
     <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <AssemblyLclSubPath>\</AssemblyLclSubPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,6 +33,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.XML</DocumentationFile>
+    <DocumentationLclSubPath>TestFramework</DocumentationLclSubPath>
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="FrameworkMessages.resx">
@@ -64,20 +66,6 @@
   <ItemGroup>
     <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <FilesToLocalize Include="$(OutDir)\Microsoft.VisualStudio.TestPlatform.TestFramework.dll">
-      <TranslationFile>$(TestFxRoot)\loc\lcl\{Lang}\Microsoft.VisualStudio.TestPlatform.TestFramework.dll.lcl</TranslationFile>
-      <HasLceComments>false</HasLceComments>
-    </FilesToLocalize>
-	<FilesToLocalize Include="$(OutDir)\Microsoft.VisualStudio.TestPlatform.TestFramework.XML">
-      <Languages>$(VS)</Languages>
-      <ProjectFile>$(MSBuildThisFileFullPath)</ProjectFile>
-      <Parser>210</Parser>
-      <SettingsFile>$(LSBuildRoot)\locxml_teamarch.lss</SettingsFile>
-      <LciCommentFile>$(TestFxRoot)\loc\lci\TestFramework\Microsoft.VisualStudio.TestPlatform.TestFramework.XML.lci</LciCommentFile>
-      <TranslationFile>$(TestFxRoot)\loc\lcl\{Lang}\TestFramework\Microsoft.VisualStudio.TestPlatform.TestFramework.XML.lcl</TranslationFile>
-    </FilesToLocalize>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
