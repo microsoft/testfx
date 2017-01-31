@@ -45,15 +45,6 @@
     <DelaySign>true</DelaySign>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.ExtendedReflection">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.ExtendedReflection.Reasoning">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Microsoft.Pex.Framework">
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -62,6 +53,18 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.ExtendedReflection">
+      <HintPath>$(TestFxRoot)packages\Microsoft.Internal.IntelliTest.15.0.0\lib\net45\Microsoft.ExtendedReflection.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.ExtendedReflection.Reasoning">
+      <HintPath>$(TestFxRoot)packages\Microsoft.Internal.IntelliTest.15.0.0\lib\net45\Microsoft.ExtendedReflection.Reasoning.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.Pex.Framework">
+      <HintPath>$(TestFxRoot)packages\Microsoft.Internal.IntelliTest.15.0.0\lib\net45\Microsoft.Pex.Framework.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MSTestv2AssertMethodFilter.cs" />
