@@ -11,6 +11,7 @@
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <AssemblyLclSubPath>MSTestAdapter\Desktop</AssemblyLclSubPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -110,11 +111,6 @@
   <ItemGroup>
     <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <FilesToLocalize Include="$(OutDir)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll">
-      <TranslationFile>$(SrcRoot)\loc\lcl\{Lang}\MSTestAdapter\Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll.lcl</TranslationFile>
-    </FilesToLocalize>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx">

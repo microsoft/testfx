@@ -89,7 +89,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
-  <Import Project="$(TestFxRoot)MSTestV2.Loc.targets" />
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Loc.targets" />
   <PropertyGroup>
     <PreBuildEvent>
       IF EXIST "$(ProjectDir)ProjectTemplates\CSharp\Test\DesktopUnitTestTemplate.zip" DEL /q /s "$(ProjectDir)ProjectTemplates\CSharp\Test\DesktopUnitTestTemplate.zip"
