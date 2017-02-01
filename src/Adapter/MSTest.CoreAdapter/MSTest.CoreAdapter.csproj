@@ -114,4 +114,10 @@
     </Reference>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+  <PropertyGroup>
+	    <SourcePath>$(ProjectDir)..\Build</SourcePath>
+      <PostBuildEvent>
+        xcopy /Y /I /S /E "$(SourcePath)" "$(OutDir)..\Build"
+      </PostBuildEvent>
+  </PropertyGroup>
 </Project>
