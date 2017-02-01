@@ -8,9 +8,13 @@
   <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
 
   <ItemGroup Condition="$(IsTest) == '' or $(IsTest) == 'false'">
-    <FilesToSign Include="$(OutDir)\$(AssemblyName).dll">
+    <FilesToSign Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(IsVsixProj)' == '' or '$(IsVsixProj)' != 'true'">
       <Authenticode>Microsoft</Authenticode>
       <StrongName>StrongName</StrongName>
+    </FilesToSign>
+
+    <FilesToSign Include="$(OutDir)\$(AssemblyName).vsix" Condition="'$(IsVsixProj)' == 'true'">
+      <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
 
     <FilesToLocalize Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(AssemblyLclSubPath)' != ''">
@@ -30,6 +34,15 @@
       <SettingsFile>$(LSBuildRoot)\locxml_teamarch.lss</SettingsFile>
       <LciCommentFile>$(LciRoot)\$(DocumentationLclSubPath)\$(AssemblyName).XML.lci</LciCommentFile>
       <TranslationFile>$(LclRoot)\{Lang}\$(DocumentationLclSubPath)\$(AssemblyName).XML.lcl</TranslationFile>
+    </FilesToLocalize>
+
+    <FilesToLocalize Include="$(OutDir)\extension.vsixlangpack" Condition="'$(VsixLclSubPath)' != ''">
+      <Languages>$(VS)</Languages>
+      <ProjectFile>$(MSBuildThisFileFullPath)</ProjectFile>
+      <Parser>210</Parser>
+      <SettingsFile>$(LSBuildRoot)\locxml_teamarch.lss</SettingsFile>
+      <LciCommentFile>$(LciRoot)\$(VsixLclSubPath)\extension.vsixlangpack.lci </LciCommentFile>
+      <TranslationFile>$(LclRoot)\{Lang}\$(VsixLclSubPath)\extension.vsixlangpack.lcl</TranslationFile>
     </FilesToLocalize>
   </ItemGroup>
 

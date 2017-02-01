@@ -19,8 +19,8 @@
   <Import Project="$(TestFxRoot)\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" />
   <Import Project="$(TestFxRoot)\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" />
   <ItemGroup>
-    <VsixFileToCopy Include="$(OutputPath)MSTestv2IntelliTestExtensionPackage\bin\$(Configuration)\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.IntelliTest.json" />
-    <VsixFileToCopy Include="$(OutputPath)MSTestv2IntelliTestExtensionPackage\bin\$(Configuration)\MSTestv2IntelliTestExtensionPackage.vsix" />
+    <VsixFileToCopy Include="$(TestFxRoot)\artifacts\$(Configuration)\MSTestv2IntelliTestExtensionPackage\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.IntelliTest.json" />
+    <VsixFileToCopy Include="$(TestFxRoot)\artifacts\$(Configuration)\MSTestv2IntelliTestExtensionPackage\\MSTestv2IntelliTestExtensionPackage.vsix" />
   </ItemGroup>
   <Target Name="BeforeBuild"> 
     <Copy SourceFiles="@(VsixFileToCopy)" DestinationFolder="$(OutputPath)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />

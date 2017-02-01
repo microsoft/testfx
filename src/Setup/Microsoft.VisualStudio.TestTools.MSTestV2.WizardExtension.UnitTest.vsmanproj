@@ -19,13 +19,13 @@
   <Import Project="$(TestFxRoot)\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" />
   <Import Project="$(TestFxRoot)\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" />
   <ItemGroup>
-    <VsixFileToCopy Include="$(OutputPath)MSTestDesktopVSIX\bin\$(Configuration)\Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest.json" />
-    <VsixFileToCopy Include="$(OutputPath)MSTestDesktopVSIX\bin\$(Configuration)\MSTestDesktopVSIX.vsix" />
+    <VsixFileToCopy Include="$(TestFxRoot)\artifacts\$(Configuration)\MSTestv2UnitTestExtensionPackage\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.UnitTest.json" />
+    <VsixFileToCopy Include="$(TestFxRoot)\artifacts\$(Configuration)\MSTestv2UnitTestExtensionPackage\MSTestv2UnitTestExtensionPackage.vsix" />
   </ItemGroup>
   <Target Name="BeforeBuild"> 
     <Copy SourceFiles="@(VsixFileToCopy)" DestinationFolder="$(OutputPath)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
   </Target>
   <ItemGroup>
-    <MergeManifest Include="$(OutputPath)Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest.json" />
+    <MergeManifest Include="$(OutputPath)Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.UnitTest.json" />
   </ItemGroup>
 </Project>
