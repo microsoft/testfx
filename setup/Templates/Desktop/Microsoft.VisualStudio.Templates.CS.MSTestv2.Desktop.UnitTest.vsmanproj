@@ -3,14 +3,12 @@
   <!-- Copyright (c)  Microsoft.  All Rights Reserved. -->
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..</TestFxRoot>
-  </PropertyGroup>
-  <PropertyGroup>
     <FinalizeManifest>true</FinalizeManifest>
     <FinalizeSkipLayout>true</FinalizeSkipLayout>
     <IsPackage>true</IsPackage>
-    <OutputPath>$(TestFxRoot)\artifacts</OutputPath>
+    <OutputPath>$(TestFxRoot)\artifacts\$(Configuration)\v3vsix</OutputPath>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
-	<UseVisualStudioVersion>true</UseVisualStudioVersion>
+    <UseVisualStudioVersion>true</UseVisualStudioVersion>
     <ValidateManifest>false</ValidateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(RunningInMicroBuild)' != 'true'"> 
