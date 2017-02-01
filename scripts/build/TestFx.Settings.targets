@@ -20,6 +20,7 @@
     <AssemblyOriginatorKeyFile>$(TestFxRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
     <OutputPath Condition="$(OutputPath) == ''">$(TestFxRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\</OutputPath>
     <IntermediatePath Condition="$(IntermediatePath) == ''">$(TestFxRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\obj\</IntermediatePath>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>

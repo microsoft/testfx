@@ -420,10 +420,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             public async static Task PublicStaticAsyncTaskMethodWithTC(UTFExtension.TestContext tc)
             {
+                await Task.FromResult(true);
             }
 
             public async static void PublicStaticAsyncVoidMethodWithTC(UTFExtension.TestContext tc)
             {
+                await Task.FromResult(true);
             }
 
             public static int PublicStaticMethodReturningInt()
@@ -433,10 +435,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             public async static Task PublicStaticAsyncTaskMethod()
             {
+                await Task.FromResult(true);
             }
 
             public async static void PublicStaticAsyncVoidMethod()
             {
+                await Task.FromResult(true);
             }
 
             public int PublicMethodReturningInt()
@@ -446,10 +450,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             public async Task PublicAsyncTaskMethod()
             {
+                await Task.FromResult(true);
             }
 
             public async void PublicAsyncVoidMethod()
             {
+                await Task.FromResult(true);
             }
 
             [UTF.Timeout(-11)]
