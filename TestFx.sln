@@ -107,6 +107,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Universal", "Universal", "{
 		src\Adapter\Build\Universal\MSTest.TestAdapter.targets = src\Adapter\Build\Universal\MSTest.TestAdapter.targets
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{929A3EDE-893B-4801-82BA-01FD947291CB}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\build\TestFx.Loc.targets = scripts\build\TestFx.Loc.targets
+		scripts\build\TestFx.Settings.targets = scripts\build\TestFx.Settings.targets
+		scripts\build\TestFx.targets = scripts\build\TestFx.targets
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Package", "Package", "{E374A3A6-C364-4890-B315-D60F5C682B6E}"
+	ProjectSection(SolutionItems) = preProject
+		src\Package\MSTest.TestAdapter.Dotnet.nuspec = src\Package\MSTest.TestAdapter.Dotnet.nuspec
+		src\Package\MSTest.TestAdapter.Enu.nuspec = src\Package\MSTest.TestAdapter.Enu.nuspec
+		src\Package\MSTest.TestAdapter.nuspec = src\Package\MSTest.TestAdapter.nuspec
+		src\Package\MSTest.TestAdapter.symbols.nuspec = src\Package\MSTest.TestAdapter.symbols.nuspec
+		src\Package\MSTest.TestFramework.enu.nuspec = src\Package\MSTest.TestFramework.enu.nuspec
+		src\Package\MSTest.TestFramework.nuspec = src\Package\MSTest.TestFramework.nuspec
+		src\Package\MSTest.TestFramework.symbols.nuspec = src\Package\MSTest.TestFramework.symbols.nuspec
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{272ca5e1-8e81-4825-9e47-86cce02f700d}*SharedItemsImports = 13
@@ -755,5 +773,6 @@ Global
 		{3B88BD67-C767-466D-8C9C-C14681544B84} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 		{DEDA0A36-BC06-403A-BE01-EB04CA7C662C} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 		{89314305-F815-4969-9B1B-8AEDE109DEC4} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
+		{E374A3A6-C364-4890-B315-D60F5C682B6E} = {FF8B1B72-55A1-4FFE-809E-7B79323ED8D0}
 	EndGlobalSection
 EndGlobal
