@@ -1,12 +1,21 @@
 # Common utilities for building solution and running tests
 
 #
-# Global variables
+# Global Variables
 #
 $global:msbuildVersion = "15.0"
 $global:nugetVersion = "3.6.0-beta1"
 $global:locateVsApiVersion = "0.2.4-beta"
 $global:nugetUrl = "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/NuGet.exe"
+
+#
+# Global Environment Variables
+#
+$env:TF_ROOT_DIR = (Get-Item (Split-Path $MyInvocation.MyCommand.Path)).Parent.FullName
+$env:TF_OUT_DIR = Join-Path $env:TF_ROOT_DIR "artifacts"
+$env:TF_SRC_DIR = Join-Path $env:TF_ROOT_DIR "src"
+$env:TF_PACKAGES_DIR = Join-Path $env:TF_ROOT_DIR "packages"
+
 
 function Create-Directory([string[]] $path) {
   if (!(Test-Path -path $path)) {
@@ -46,7 +55,7 @@ function Locate-MSBuildPath {
 }
 
 function Locate-NuGet {
-  $rootPath = Locate-RootPath
+  $rootPath = $env:TF_ROOT_DIR
   $nuget = Join-Path -path $rootPath -childPath "nuget.exe"
 
   if (Test-Path -path $nuget) {
@@ -70,31 +79,19 @@ function Locate-NuGet {
 }
 
 function Locate-NuGetConfig {
-  $rootPath = Locate-RootPath
+  $rootPath = $env:TF_ROOT_DIR
   $nugetConfig = Join-Path -path $rootPath -childPath "Nuget.config"
   return Resolve-Path -path $nugetConfig
 }
 
 function Locate-Toolset {
-  $rootPath = Locate-RootPath
+  $rootPath = $env:TF_ROOT_DIR
   $toolset = Join-Path -path $rootPath -childPath "scripts\Toolset\packages.config"
   return Resolve-Path -path $toolset
 }
 
-function Locate-RootPath {
-  $scriptPath = Locate-ScriptPath
-  $rootPath = Join-Path -path $scriptPath -childPath "..\"
-  return Resolve-Path -path $rootPath
-}
-
-function Locate-ScriptPath {
-  $myInvocation = Get-Variable -name "MyInvocation" -scope "Script"
-  $scriptPath = Split-Path -path $myInvocation.Value.MyCommand.Definition -parent
-  return Resolve-Path -path $scriptPath
-}
-
 function Locate-PackagesPath {
-  $rootPath = Locate-RootPath
+  $rootPath = $env:TF_ROOT_DIR
   $packagesPath = Join-Path -path $rootPath -childPath "packages"
   
   Create-Directory -path $packagesPath
@@ -129,7 +126,7 @@ function Locate-LocateVsApi {
 }
 
 function Locate-Solution([string] $relativePath) {
-  $rootPath = Locate-RootPath
+  $rootPath = $env:TF_ROOT_DIR
   $solution = Join-Path -path $rootPath -childPath $relativePath
   return Resolve-Path -path $solution
 }
