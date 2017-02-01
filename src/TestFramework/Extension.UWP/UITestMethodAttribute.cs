@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
         /// The test method.
         /// </param>
         /// <returns>
-        /// The <see cref="TestResult[]"/>.
+        /// An array of <see cref="TestResult"/> instances.
         /// </returns>
         /// Throws <exception cref="NotSupportedException"> when run on an async test method.
         /// </exception>

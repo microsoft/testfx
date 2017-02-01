@@ -1134,7 +1134,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private class DummyTestClassWithTestContextProperty : DummyTestClassWithIncorrectTestContextType
         {
-            public string TestContext { get; set; }
+            public new string TestContext { get; set; }
         }
 
         private class DummyTestClassWithMultipleTestContextProperties : DummyTestClassWithTestContextProperty

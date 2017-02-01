@@ -61,7 +61,7 @@ namespace UnitTestFramework.Tests
                     });
 
             // Should not throw an exception.
-            t.Wait();
+            await t;
         }
         
         [TestMethod]
@@ -160,7 +160,7 @@ namespace UnitTestFramework.Tests
         {
             Action a = () =>
             {
-                Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(async () => { }, null, null);
+                Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(async () => { await Task.FromResult(true); }, null, null);
                 t.Wait();
             }; 
             ActionUtility.ActionShouldThrowInnerExceptionOfType(a, typeof(ArgumentNullException));

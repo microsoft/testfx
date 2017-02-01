@@ -67,6 +67,5 @@
     <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="packages.config" />
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

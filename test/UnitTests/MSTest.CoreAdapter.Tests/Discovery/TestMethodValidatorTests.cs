@@ -47,6 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.warnings = new List<string>();
 
             this.mockMethodInfo = new Mock<MethodInfo>();
+            this.type = typeof(TestMethodValidatorTests);
         }
 
         [TestMethod]
@@ -191,6 +192,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
         public async void AsyncMethodWithVoidReturnType()
         {
+            await Task.FromResult(true);
         }
 
         public async Task AsyncMethodWithTaskReturnType()

@@ -17,6 +17,7 @@
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion</VSToolsPath>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
+    <NoWarn>1685</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -62,7 +63,6 @@
     <Compile Include="Discovery\TypeValidatorTests.cs" />
     <Compile Include="Discovery\UnitTestDiscovererTests.cs" />
     <Compile Include="Execution\LogMessageListenerTests.cs" />
-    <Compile Include="Execution\MethodInfoExtensionsTests.cs" />
     <Compile Include="Execution\TestAssemblyInfoTests.cs" />
     <Compile Include="Execution\TestCaseDiscoverySinkTests.cs" />
     <Compile Include="Execution\TestClassInfoTests.cs" />

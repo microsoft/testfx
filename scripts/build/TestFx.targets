@@ -1,8 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" Condition="$(TargetFrameworkProfile) == 'Profile259'" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="$(TargetFrameworkProfile) == '' or $(TargetFrameworkProfile) != 'Profile259'"/>
-
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" Condition="$(TargetPlatformIdentifier) == 'UAP'" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="($(TargetFrameworkProfile) == '' or $(TargetFrameworkProfile) != 'Profile259') and $(TargetPlatformIdentifier) != 'UAP'"/>
+  
   <!-- Import props/targets with $(RepoRoot) since msbuild takes the relative path based on settings.targets and not with respect to the project. -->
   <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
 

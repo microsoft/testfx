@@ -35,8 +35,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         
         internal static TestProperty AsyncTestProperty = TestProperty.Register("MSTestDiscovererv2.IsAsync", IsAsyncLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
 
+#pragma warning disable CS0618 // Type or member is obsolete
         internal static TestProperty TestCategoryProperty = TestProperty.Register("MSTestDiscovererv2.TestCategory", TestCategoryLabel, typeof(string[]), TestPropertyAttributes.Hidden | TestPropertyAttributes.Trait, typeof(TestCase));
-        
+#pragma warning restore CS0618 // Type or member is obsolete
+
         internal static TestProperty PriorityProperty = TestProperty.Register("MSTestDiscovererv2.Priority", PriorityLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
         
         internal static TestProperty DeploymentItemsProperty = TestProperty.Register("MSTestDiscoverer2.DeploymentItems", DeploymentItemsLabel, typeof(KeyValuePair<string, string>[]), TestPropertyAttributes.Hidden, typeof(TestCase));
