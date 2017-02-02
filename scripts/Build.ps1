@@ -167,9 +167,14 @@ function Perform-Build {
 
   if($TFB_Clean)
   {
-    $outDir = Join-Path $env:TF_OUT_DIR -ChildPath $TFB_Configuration
-    Write-Log "Clean build requested. Deleting $outDir."
-    Remove-Item -Recurse -Force $outDir
+    $foldersToDel = @( $TFB_Configuration, "TestAssets" )
+    Write-Log "    Clean build requested."
+    foreach($folder in $foldersToDel)
+    {
+      $outDir = Join-Path $env:TF_OUT_DIR -ChildPath $folder
+      Write-Output "    Deleting $outDir"
+      Remove-Item -Recurse -Force $outDir
+    }
   }
 
   Invoke-Build -solution "TestFx.sln"
