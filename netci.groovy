@@ -16,12 +16,19 @@ def branch = GithubBranchName
         def newJobName = InternalUtilities.getFullJobName(project, configuration, isPR)    
 
         // Define your build/test strings here
-        def buildString = """call build.cmd -c ${configuration}"""
-
+        def buildString = """call build.cmd -c ${configuration} -full"""
+        if(isPR) {
+                def testString = """call test.cmd -c ${configuration}"""
+        }
+        else{
+            def testString = """call test.cmd -c ${configuration} -all"""
+        }
+        
         // Create a new job for windows build
         def newJob = job(newJobName) {
             steps {
                 batchFile(buildString)
+                batchFile(testString)
             }
         }
 
