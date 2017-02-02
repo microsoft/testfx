@@ -66,6 +66,7 @@ $TFB_AdapterVersion = $AdapterVersion
 $TFB_VersionSuffix = $VersionSuffix
 $TFB_SkipRestore = $SkipRestore
 $TFB_Clean = $Clean
+$TFB_ClearPackageCache = $ClearPackageCache
 $TFB_Solutions = @("TestFx.sln","Templates\MSTestTemplates.sln","WizardExtensions\WizardExtensions.sln")
 $TFB_VSmanprojs =@("src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest.vsmanproj",
                    "src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.vsmanproj", 
@@ -125,7 +126,7 @@ function Perform-Restore {
   $nugetConfig = Locate-NuGetConfig
   $toolset = Locate-Toolset
   
-  if ($ClearPackageCache) {
+  if ($TFB_ClearPackageCache) {
     Write-Log "    Clearing local package cache..."
     & $nuget locals all -clear
   }

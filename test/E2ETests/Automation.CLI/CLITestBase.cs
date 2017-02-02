@@ -21,7 +21,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         private const string TestAssetsFolder = "TestAssets";
         private const string ArtifactsFolder = "artifacts";
         private const string PackagesFolder = "packages";
-        private const string TestPlatformCLIPackagePattern = @"Microsoft.TestPlatform.15.0.0*";
+        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.15.0.0-preview-20170130-01";
         private const string VstestConsoleRelativePath = @"tools\net46\vstest.console.exe";
 
         public CLITestBase()
@@ -152,8 +152,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         public string GetConsoleRunnerPath()
         {
             var packagesFolder = Path.Combine(Environment.CurrentDirectory, E2ETestsRelativePath, PackagesFolder);
-            var testplatformPackage = Directory.GetDirectories(packagesFolder, TestPlatformCLIPackagePattern).FirstOrDefault();
-            var vstestConsolePath = Path.Combine(Environment.CurrentDirectory, testplatformPackage, VstestConsoleRelativePath);
+            var vstestConsolePath = Path.Combine(packagesFolder, TestPlatformCLIPackage, VstestConsoleRelativePath);
 
             Assert.IsTrue(File.Exists(vstestConsolePath), "GetConsoleRunnerPath: Path not found: {0}", vstestConsolePath);
 
