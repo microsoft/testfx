@@ -2,15 +2,11 @@
 # Build script for MSTest Test Framework.
 
 [CmdletBinding(PositionalBinding=$false)]
-Param(
-  [switch] $help,
-  
-  [string] $target = "Build",
-
+Param(  
   [Parameter(Mandatory=$false)]
   [ValidateSet("Debug", "Release")]
   [Alias("c")]
-  [string] $Configuration = "Debug",
+  [System.String] $Configuration = "Debug",
 
   [Parameter(Mandatory=$false)]
   [Alias("fv")]
@@ -24,11 +20,38 @@ Param(
   [Alias("vs")]
   [System.String] $VersionSuffix = "dev",
   
-  [switch] $clearPackageCache,
-  [switch] $templates,
-  [switch] $wizards,
-  [switch] $official,
-  [switch] $full
+  [Parameter(Mandatory=$false)]
+  [System.String] $Target = "Build",
+  
+  [Parameter(Mandatory=$false)]
+  [Alias("h")]
+  [Switch] $Help = $false,
+
+  [Parameter(Mandatory=$false)]
+  [Alias("cl")]
+  [Switch] $Clean = $false,
+
+  [Parameter(Mandatory=$false)]
+  [Alias("sr")]
+  [Switch] $SkipRestore = $false,
+
+  [Parameter(Mandatory=$false)]
+  [Alias("cache")]
+  [Switch] $ClearPackageCache = $false,
+
+  [Parameter(Mandatory=$false)]
+  [Alias("tmpl")]
+  [Switch] $Templates = $false,
+
+  [Parameter(Mandatory=$false)]
+  [Alias("wiz")]
+  [Switch] $Wizards = $false,
+
+  [Parameter(Mandatory=$false)]
+  [Switch] $Official = $false,
+
+  [Parameter(Mandatory=$false)]
+  [Switch] $Full = $false
 )
 
 . $PSScriptRoot\common.lib.ps1
@@ -41,13 +64,14 @@ $TFB_Configuration = $Configuration
 $TFB_FrameworkVersion = $FrameworkVersion
 $TFB_AdapterVersion = $AdapterVersion
 $TFB_VersionSuffix = $VersionSuffix
+$TFB_SkipRestore = $SkipRestore
+$TFB_Clean = $Clean
+$TFB_ClearPackageCache = $ClearPackageCache
 $TFB_Solutions = @("TestFx.sln","Templates\MSTestTemplates.sln","WizardExtensions\WizardExtensions.sln")
-$TFB_VSmanprojs =@(
-"src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest.vsmanproj",
-"src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.vsmanproj",
-"src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.IntelliTest.vsmanproj",
-"src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.UnitTest.vsmanproj"
-)
+$TFB_VSmanprojs =@("src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest.vsmanproj",
+                   "src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.vsmanproj", 
+                   "src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.IntelliTest.vsmanproj", 
+                   "src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.UnitTest.vsmanproj")
 
 #
 # Script Preferences
@@ -58,24 +82,26 @@ $ErrorActionPreference = "Stop"
 # Prints help text for the switches this script supports.
 #
 function Print-Help {
-  if (-not $help) {
+  if (-not $Help) {
     return
   }
 
   Write-Host -object ""
-  Write-Host -object "MSTest Adapter Build Script"
+  Write-Host -object "********* MSTest Adapter Build Script *********"
   Write-Host -object ""
-  Write-Host -object "  Help                          - [Switch] - Prints this help message."
-  Write-Host -object "  ClearPackageCache             - [Switch] - Indicates local package cache should be cleared before restore."
-  Write-Host -object "  Templates                     - [Switch] - Indicates Templates should also be build."
-  Write-Host -object "  Wizards                       - [Switch] - Indicates WizardExtensions should also be build."
-  Write-Host -object "  Official                      - [Switch] - Indicates that this is an official build."
+  Write-Host -object "  Help (-h)                     - [Switch] - Prints this help message."
+  Write-Host -object "  Clean (-cl)                   - [Switch] - Indicates that this should be a clean build."
+  Write-Host -object "  SkipRestore (-sr)             - [Switch] - Indicates nuget package restoration should be skipped."
+  Write-Host -object "  ClearPackageCache (-cache)    - [Switch] - Indicates local package cache should be cleared before restore."
+  Write-Host -object "  Templates (-tmpl)             - [Switch] - Indicates Templates should also be built."
+  Write-Host -object "  Wizards (-wiz)                - [Switch] - Indicates WizardExtensions should also be built."
+  Write-Host -object "  Official                      - [Switch] - Indicates that this is an official build. Only used in CI builds."
   Write-Host -object "  Full                          - [Switch] - Indicates to perform a full build which includes Adapter,Framework,Templates,Wizards, and vsmanprojs."
   Write-Host -object ""
-  Write-Host -object "  Configuration                 - [String] - Specifies the build configuration. Defaults to 'Debug'."
-  Write-Host -object "  FrameworkVersion              - [String] - Specifies the version of the Test Framework nuget package."
-  Write-Host -object "  AdapterVersion                - [String] - Specifies the version of the Test Adapter nuget package."
-  Write-Host -object "  VersionSuffix                 - [String] - Specifies the version suffix for the nuget packages."
+  Write-Host -object "  Configuration (-c)            - [String] - Specifies the build configuration. Defaults to 'Debug'."
+  Write-Host -object "  FrameworkVersion (-fv)        - [String] - Specifies the version of the Test Framework nuget package."
+  Write-Host -object "  AdapterVersion (-av)          - [String] - Specifies the version of the Test Adapter nuget package."
+  Write-Host -object "  VersionSuffix (-vs)           - [String] - Specifies the version suffix for the nuget packages."
   Write-Host -object "  Target                        - [String] - Specifies the build target. Defaults to 'Build'."
 
   Write-Host -object ""
@@ -90,32 +116,38 @@ function Perform-Restore {
 
   Write-Log "Perform-Restore: Started."
   
+  if($TFB_SkipRestore)
+  {
+    Write-Log "Perform-Restore: Skipped."
+    return;
+  }
+
   $nuget = Locate-NuGet
   $nugetConfig = Locate-NuGetConfig
   $toolset = Locate-Toolset
   
-  if ($clearPackageCache) {
-    Write-Host -object "Clearing local package cache..."
+  if ($TFB_ClearPackageCache) {
+    Write-Log "    Clearing local package cache..."
     & $nuget locals all -clear
   }
 
-  Write-Host -object "Starting toolset restore..."
-  Write-Host -object "$nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset"
+  Write-Log "    Starting toolset restore..."
+  Write-Verbose "$nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset"
   & $nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset
   
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
   }
 
-  Write-Host -object "Locating MSBuild install path..."
+  Write-Verbose "Locating MSBuild install path..."
   $msbuildPath = Locate-MSBuildPath 
 
-  Write-Host -object "Starting solution restore..."
+  Write-Verbose "Starting solution restore..."
   foreach($solution in $TFB_Solutions)
   {
 	$solutionPath = Locate-Solution -relativePath $solution
 
-	Write-Host -object "$nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath"
+	Write-Verbose "$nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath"
 	& $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath
   }
 
@@ -134,19 +166,31 @@ function Perform-Build {
 
   Write-Log "Perform-Build: Started."
 
+  if($TFB_Clean)
+  {
+    $foldersToDel = @( $TFB_Configuration, "TestAssets" )
+    Write-Log "    Clean build requested."
+    foreach($folder in $foldersToDel)
+    {
+      $outDir = Join-Path $env:TF_OUT_DIR -ChildPath $folder
+      Write-Output "    Deleting $outDir"
+      Remove-Item -Recurse -Force $outDir
+    }
+  }
+
   Invoke-Build -solution "TestFx.sln"
   
-  if($templates -or $full)
+  if($Templates -or $Full)
   {
 	Invoke-Build -solution "Templates\MSTestTemplates.sln"
   }
   
-  if($wizards -or $full)
+  if($Wizards -or $Full)
   {
 	Invoke-Build -solution "WizardExtensions\WizardExtensions.sln"	
   }
   
-  if($official)
+  if($Official)
   {
 	Build-vsmanprojs
   }
@@ -158,10 +202,14 @@ function Invoke-Build([string] $solution)
 {
     $msbuild = Locate-MSBuild
 	$solutionPath = Locate-Solution -relativePath $solution
+    $solutionDir = [System.IO.Path]::GetDirectoryName($solutionPath)
+    $solutionSummaryLog = Join-Path -path $solutionDir -childPath "msbuild.log"
+    $solutionWarningLog = Join-Path -path $solutionDir -childPath "msbuild.wrn"
+    $solutionFailureLog = Join-Path -path $solutionDir -childPath "msbuild.err"
 
-	Write-Host -object "Starting $solution build..."
-	Write-Host -object "$msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /v:q /m $solutionPath"
-	& $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /v:q /m $solutionPath
+	Write-Log "    Building $solution..."
+	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog $solutionPath"
+	& $msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog $solutionPath
   
 	if ($lastExitCode -ne 0) {
 		throw "Build failed with an exit code of '$lastExitCode'."
@@ -176,9 +224,9 @@ function Build-vsmanprojs
   {
 	$vsmanprojPath = Locate-Solution -relativePath $vsmanproj
 	
-	Write-Host -object "Starting $vsmanproj build..."
-	Write-Host -object "$msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m /p:TargetExt=.vsman $vsmanprojPath"
-	& $msbuild /t:$target /p:Configuration=$configuration /tv:$msbuildVersion /m /p:TargetExt=.vsman $vsmanprojPath
+	Write-Log "    Building $vsmanproj..."
+	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /m /p:TargetExt=.vsman $vsmanprojPath"
+	& $msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /m /p:TargetExt=.vsman $vsmanprojPath
 	
 	if ($lastExitCode -ne 0) {
 		throw "VSManProj build failed with an exit code of '$lastExitCode'."
@@ -200,7 +248,7 @@ function Create-NugetPackages
     $tfSrcPackageDir = Join-Path $env:TF_SRC_DIR "Package"
 
     # Copy over the nuspecs to the staging directory
-    if($official)
+    if($Official)
     {
         $nuspecFiles = @("MSTest.TestAdapter.Dotnet.nuspec", "MSTest.TestAdapter.nuspec", "MSTest.TestAdapter.symbols.nuspec", "MSTest.TestFramework.nuspec", "MSTest.TestFramework.symbols.nuspec")
     }
@@ -229,28 +277,6 @@ function Create-NugetPackages
     }
 
     Write-Log "Create-NugetPackages: Complete. {$(Get-ElapsedTime($timer))}"
-}
-
-function Start-Timer
-{
-    return [System.Diagnostics.Stopwatch]::StartNew()
-}
-
-function Get-ElapsedTime([System.Diagnostics.Stopwatch] $timer)
-{
-    $timer.Stop()
-    return $timer.Elapsed
-}
-
-function Write-Log ([string] $message)
-{
-    $currentColor = $Host.UI.RawUI.ForegroundColor
-    $Host.UI.RawUI.ForegroundColor = "Green"
-    if ($message)
-    {
-        Write-Output "... $message"
-    }
-    $Host.UI.RawUI.ForegroundColor = $currentColor
 }
 
 Print-Help

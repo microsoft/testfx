@@ -14,6 +14,7 @@ $global:nugetUrl = "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/Nu
 $env:TF_ROOT_DIR = (Get-Item (Split-Path $MyInvocation.MyCommand.Path)).Parent.FullName
 $env:TF_OUT_DIR = Join-Path $env:TF_ROOT_DIR "artifacts"
 $env:TF_SRC_DIR = Join-Path $env:TF_ROOT_DIR "src"
+$env:TF_TEST_DIR = Join-Path $env:TF_ROOT_DIR "test"
 $env:TF_PACKAGES_DIR = Join-Path $env:TF_ROOT_DIR "packages"
 
 
@@ -110,7 +111,7 @@ function Locate-VsInstallPath {
    Add-Type -path $locateVsApi
    $vsInstallPath = [LocateVS.Instance]::GetInstallPath($msbuildVersion, $requiredPackageIds)
 
-   Write-Host -object "VSInstallPath is : $vsInstallPath" 
+   Write-Verbose "VSInstallPath is : $vsInstallPath"
    return Resolve-Path -path $vsInstallPath
 }
 
@@ -129,4 +130,26 @@ function Locate-Solution([string] $relativePath) {
   $rootPath = $env:TF_ROOT_DIR
   $solution = Join-Path -path $rootPath -childPath $relativePath
   return Resolve-Path -path $solution
+}
+
+function Start-Timer
+{
+    return [System.Diagnostics.Stopwatch]::StartNew()
+}
+
+function Get-ElapsedTime([System.Diagnostics.Stopwatch] $timer)
+{
+    $timer.Stop()
+    return $timer.Elapsed
+}
+
+function Write-Log ([string] $message, $messageColor = "Green")
+{
+    $currentColor = $Host.UI.RawUI.ForegroundColor
+    $Host.UI.RawUI.ForegroundColor = $messageColor
+    if ($message)
+    {
+        Write-Output "... $message"
+    }
+    $Host.UI.RawUI.ForegroundColor = $currentColor
 }
