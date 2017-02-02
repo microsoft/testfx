@@ -2,7 +2,7 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- Copyright (c)  Microsoft.  All Rights Reserved. -->
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..</TestFxRoot>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..</TestFxRoot>
     <FinalizeManifest>true</FinalizeManifest>
     <FinalizeSkipLayout>true</FinalizeSkipLayout>
     <IsPackage>true</IsPackage>
@@ -19,8 +19,8 @@
   <Import Project="$(TestFxRoot)\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" />
   <Import Project="$(TestFxRoot)\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" />
   <ItemGroup>
-    <VsixFileToCopy Include="$(OutputPath)MSTestUWPVSIX\bin\$(Configuration)\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.json" />
-    <VsixFileToCopy Include="$(OutputPath)MSTestUWPVSIX\bin\$(Configuration)\MSTestUWPVSIX.vsix" />
+    <VsixFileToCopy Include="$(TestFxRoot)\artifacts\$(Configuration)\MSTestUWPVSIX\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.json" />
+    <VsixFileToCopy Include="$(TestFxRoot)\artifacts\$(Configuration)\MSTestUWPVSIX\MSTestUWPVSIX.vsix" />
   </ItemGroup>
   <Target Name="BeforeBuild"> 
     <Copy SourceFiles="@(VsixFileToCopy)" DestinationFolder="$(OutputPath)" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />

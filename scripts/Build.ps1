@@ -43,10 +43,10 @@ $TFB_AdapterVersion = $AdapterVersion
 $TFB_VersionSuffix = $VersionSuffix
 $TFB_Solutions = @("TestFx.sln","Templates\MSTestTemplates.sln","WizardExtensions\WizardExtensions.sln")
 $TFB_VSmanprojs =@(
-"setup\Templates\Desktop\Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest.vsmanproj",
-"setup\Templates\UWP\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.vsmanproj",
-"setup\WizardExtensions\MSTestv2IntelliTestExtension\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.IntelliTest.vsmanproj",
-"setup\WizardExtensions\MSTestv2UnitTestExtension\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.UnitTest.vsmanproj"
+"src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest.vsmanproj",
+"src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.vsmanproj",
+"src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.IntelliTest.vsmanproj",
+"src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.UnitTest.vsmanproj"
 )
 
 #
