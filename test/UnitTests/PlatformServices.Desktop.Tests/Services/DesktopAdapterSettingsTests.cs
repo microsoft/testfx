@@ -21,6 +21,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using System.Fakes;
 
     [TestClass]
     public class MSTestAdapterSettingsTests
@@ -45,14 +46,15 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         }
 
         [TestMethod]
-        public void ResolveEnvironmentVariableShouldResolvePathWhenPassedPathHavingEnvironmentvariable()
+        public void ResolveEnvironmentVariableShouldResolvePathWithAnEnvironmentVariable()
         {
             string path = @"%temp%\unitTesting\MsTest\Adapter";
             string baseDirectory = null;
-            string expectedResult = Environment.ExpandEnvironmentVariables(path);
-
+            string expectedResult = @"C:\foo\unitTesting\MsTest\Adapter";
+            
             using (ShimsContext.Create())
             {
+                ShimEnvironment.ExpandEnvironmentVariablesString = ((str) => { return str.Replace("%temp%", "C:\\foo"); });
                 ShimDirectory.ExistsString = (str) => { return true; };
 
                 string result = new MSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
@@ -171,10 +173,11 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
             List<RecursiveDirectoryPath> expectedResult = new List<RecursiveDirectoryPath>();
             expectedResult.Add(new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true));
-            expectedResult.Add(new RecursiveDirectoryPath(Environment.ExpandEnvironmentVariables(@"%temp%\unitTesting\MsTest\Adapter"), false));
+            expectedResult.Add(new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false));
 
             using (ShimsContext.Create())
             {
+                ShimEnvironment.ExpandEnvironmentVariablesString = ((str) => { return str.Replace("%temp%", "C:\\foo"); });
                 ShimDirectory.ExistsString = (str) => { return true; };
 
                 StringReader stringReader = new StringReader(runSettingxml);
