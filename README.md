@@ -1,4 +1,4 @@
-### Microsoft Test Framework
+# Microsoft Test Framework
 Home for the Microsoft Test Framework and Adapter.
 
 ### Build status
@@ -17,6 +17,11 @@ There are many ways to contribute to testfx
 testfx can be built from within Visual Studio or from the command line.
 - [Building with Visual Studio](https://github.com/Microsoft/testfx-docs/blob/master/docs/contribute.md#building-with-visual-studio)
 - [Building with command line](https://github.com/Microsoft/testfx-docs/blob/master/docs/contribute.md#building-with-command-line)
+
+### Latest Builds
+|            | Framework | Adapter |
+|:----------:|:----------------:|:------------------:|
+|**nuget** <br> (official)  |[![#](https://img.shields.io/nuget/v/mstest.testframework.svg?style=flat)](http://www.nuget.org/packages/MSTest.TestFramework/)|[![#](https://img.shields.io/nuget/v/mstest.testadapter.svg?style=flat)](http://www.nuget.org/packages/MSTest.TestAdapter/)|
 
 ### Microsoft Open Source Code of Conduct
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
