@@ -15,9 +15,10 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <GenerateLCE>true</GenerateLCE>
-    <DelaySign>true</DelaySign>
-    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(TestFxRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign>true</PublicSign>
+    <!--<DelaySign Condition="'$(CIBuild)' == 'true'">true</DelaySign>-->
     <OutputPath Condition="$(OutputPath) == ''">$(TestFxRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\</OutputPath>
     <IntermediatePath Condition="$(IntermediatePath) == ''">$(TestFxRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\obj\</IntermediatePath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

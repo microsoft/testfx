@@ -1,20 +1,15 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
-using MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities;
-
-// Custom attributes for tests.
-[assembly: ReflectionUtilityTests.DummyAAttribute("a1")]
-[assembly: ReflectionUtilityTests.DummyAAttribute("a2")]
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("PlatformServices.Desktop.Tests")]
+[assembly: AssemblyTitle("PlatformServices.Portable.Unit.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("PlatformServices.Desktop.Tests")]
+[assembly: AssemblyProduct("PlatformServices.Portable.Unit.Tests")]
 [assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -25,7 +20,7 @@ using MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("599833dc-ec5a-40ca-b5cf-def719548eef")]
+[assembly: Guid("e3c630fe-af89-4c95-b1b9-2409b1107208")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -37,7 +32,5 @@ using MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-
-// This is set by GlobalAssemblyInfo which is auto-generated due to import of TestPlatform.NonRazzle.targets
-// [assembly: AssemblyVersion("1.0.0.0")]
-// [assembly: AssemblyFileVersion("1.0.0.0")]
+//[assembly: AssemblyVersion("1.0.0.0")]
+//[assembly: AssemblyFileVersion("1.0.0.0")]
