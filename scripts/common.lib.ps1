@@ -38,8 +38,8 @@ function Get-ProductVersion([string[]] $path) {
   return $item.VersionInfo.ProductVersion
 }
 
-function Locate-MSBuild {
-  $msbuildPath = Locate-MSBuildPath
+function Locate-MSBuild($hasVsixExtension = "false") {
+  $msbuildPath = Locate-MSBuildPath -hasVsixExtension $hasVsixExtension
   $msbuild = Join-Path -path $msbuildPath -childPath "MSBuild.exe"
 
   if (!(Test-Path -path $msbuild)) {
@@ -49,8 +49,8 @@ function Locate-MSBuild {
   return Resolve-Path -path $msbuild
 }
 
-function Locate-MSBuildPath {
-  $vsInstallPath = Locate-VsInstallPath
+function Locate-MSBuildPath($hasVsixExtension = "false") {
+  $vsInstallPath = Locate-VsInstallPath -hasVsixExtension $hasVsixExtension
   $msbuildPath = Join-Path -path $vsInstallPath -childPath "MSBuild\$msbuildVersion\Bin"
   return Resolve-Path -path $msbuildPath
 }
@@ -99,17 +99,31 @@ function Locate-PackagesPath {
   return Resolve-Path -path $packagesPath
 }
 
-function Locate-VsInstallPath {
+function Locate-VsInstallPath($hasVsixExtension = "false") {
    $locateVsApi = Locate-LocateVsApi
    $requiredPackageIds = @()
 
    $requiredPackageIds += "Microsoft.Component.MSBuild"
    $requiredPackageIds += "Microsoft.Net.Component.4.6.TargetingPack"
    $requiredPackageIds += "Microsoft.VisualStudio.Component.Roslyn.Compiler"
-   $requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK"
+   
+   if($hasVsixExtension -eq 'true')
+   {
+     $requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK"
+   }
+   
+   Write-Verbose "VSInstallation requirements : $requiredPackageIds"
 
    Add-Type -path $locateVsApi
-   $vsInstallPath = [LocateVS.Instance]::GetInstallPath($msbuildVersion, $requiredPackageIds)
+
+   Try
+   {
+     $vsInstallPath = [LocateVS.Instance]::GetInstallPath($msbuildVersion, $requiredPackageIds)
+   }
+   Catch [System.Management.Automation.MethodInvocationException]
+   {
+      Write-Error "Failed to find VS installation with requirements : $requiredPackageIds"
+   }
 
    Write-Verbose "VSInstallPath is : $vsInstallPath"
    return Resolve-Path -path $vsInstallPath

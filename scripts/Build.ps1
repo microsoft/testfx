@@ -67,6 +67,10 @@ $TFB_VersionSuffix = $VersionSuffix
 $TFB_SkipRestore = $SkipRestore
 $TFB_Clean = $Clean
 $TFB_ClearPackageCache = $ClearPackageCache
+$TFB_Templates = $Templates
+$TFB_Wizards = $Wizards
+$TFB_Full = $Full
+$TFB_Official = $Official
 $TFB_Solutions = @("TestFx.sln","Templates\MSTestTemplates.sln","WizardExtensions\WizardExtensions.sln")
 $TFB_VSmanprojs =@("src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest.vsmanproj",
                    "src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.vsmanproj", 
@@ -180,27 +184,27 @@ function Perform-Build {
 
   Invoke-Build -solution "TestFx.sln"
   
-  if($Templates -or $Full)
+  if($TFB_Templates -or $TFB_Full)
   {
-	Invoke-Build -solution "Templates\MSTestTemplates.sln"
+	Invoke-Build -solution "Templates\MSTestTemplates.sln" -hasVsixExtension true
   }
   
-  if($Wizards -or $Full)
+  if($TFB_Wizards -or $TFB_Full)
   {
-	Invoke-Build -solution "WizardExtensions\WizardExtensions.sln"	
+	Invoke-Build -solution "WizardExtensions\WizardExtensions.sln" -hasVsixExtension true
   }
   
-  if($Official)
+  if($TFB_Official)
   {
-	Build-vsmanprojs
+	Build-vsmanprojs -hasVsixExtension true
   }
   
   Write-Log "Perform-Build: Completed. {$(Get-ElapsedTime($timer))}"
 }
 
-function Invoke-Build([string] $solution)
+function Invoke-Build([string] $solution, $hasVsixExtension = "false")
 {
-    $msbuild = Locate-MSBuild
+    $msbuild = Locate-MSBuild -hasVsixExtension $hasVsixExtension
 	$solutionPath = Locate-Solution -relativePath $solution
     $solutionDir = [System.IO.Path]::GetDirectoryName($solutionPath)
     $solutionSummaryLog = Join-Path -path $solutionDir -childPath "msbuild.log"
@@ -248,7 +252,7 @@ function Create-NugetPackages
     $tfSrcPackageDir = Join-Path $env:TF_SRC_DIR "Package"
 
     # Copy over the nuspecs to the staging directory
-    if($Official)
+    if($TFB_Official)
     {
         $nuspecFiles = @("MSTest.TestAdapter.Dotnet.nuspec", "MSTest.TestAdapter.nuspec", "MSTest.TestAdapter.symbols.nuspec", "MSTest.TestFramework.nuspec", "MSTest.TestFramework.symbols.nuspec")
     }
