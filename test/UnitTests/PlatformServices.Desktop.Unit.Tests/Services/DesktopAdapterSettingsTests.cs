@@ -4,14 +4,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 {
     extern alias FrameworkV1;
     extern alias FrameworkV2;
+
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.IO.Fakes;
     using System.Linq;
     using System.Xml;
-
-    using Microsoft.QualityTools.Testing.Fakes;
+    
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -19,13 +18,21 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
     using TestUtilities;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using System.Fakes;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
 
     [TestClass]
     public class MSTestAdapterSettingsTests
     {
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            MSTestSettingsProvider.Reset();
+        }
+
         #region ResolveEnvironmentVariableAndReturnFullPathIfExist tests.
 
         [TestMethod]
@@ -35,14 +42,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string baseDirectory = null;
             string expectedResult = @"C:\MsTest\Adapter";
 
-            using (ShimsContext.Create())
-            {
-                ShimDirectory.ExistsString = (str) => { return true; };
-                string result = new MSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+            var adapterSettings = new TestableMSTestAdapterSettings();
+            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
 
-                Assert.IsNotNull(result);
-                Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
-            }
+            string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -51,17 +57,15 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string path = @"%temp%\unitTesting\MsTest\Adapter";
             string baseDirectory = null;
             string expectedResult = @"C:\foo\unitTesting\MsTest\Adapter";
-            
-            using (ShimsContext.Create())
-            {
-                ShimEnvironment.ExpandEnvironmentVariablesString = ((str) => { return str.Replace("%temp%", "C:\\foo"); });
-                ShimDirectory.ExistsString = (str) => { return true; };
 
-                string result = new MSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+            var adapterSettings = new TestableMSTestAdapterSettings();
+            adapterSettings.ExpandEnvironmentVariablesSetter = ((str) => { return str.Replace("%temp%", "C:\\foo"); });
+            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
 
-                Assert.IsNotNull(result);
-                Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
-            }
+            string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -71,15 +75,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string baseDirectory = @"C:\unitTesting";
             string expectedResult = @"C:\unitTesting\MsTest\Adapter";
 
-            using (ShimsContext.Create())
-            {
-                ShimDirectory.ExistsString = (str) => { return true; };
+            var adapterSettings = new TestableMSTestAdapterSettings();
+            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
 
-                string result = new MSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+            string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
-                Assert.IsNotNull(result);
-                Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
-            }
+            Assert.IsNotNull(result);
+            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -89,15 +91,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string baseDirectory = @"C:\unitTesting";
             string expectedResult = @"C:\unitTesting\MsTest\Adapter";
 
-            using (ShimsContext.Create())
-            {
-                ShimDirectory.ExistsString = (str) => { return true; };
+            var adapterSettings = new TestableMSTestAdapterSettings();
+            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
 
-                string result = new MSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+            string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
-                Assert.IsNotNull(result);
-                Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
-            }
+            Assert.IsNotNull(result);
+            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -113,15 +113,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string currentDrive = currentDirectory.Split('\\').First() + "\\";
             string expectedResult = Path.Combine(currentDrive, @"MsTest\Adapter");
 
-            using (ShimsContext.Create())
-            {
-                ShimDirectory.ExistsString = (str) => { return true; };
+            var adapterSettings = new TestableMSTestAdapterSettings();
+            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
 
-                string result = new MSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+            string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
-                Assert.IsNotNull(result);
-                Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
-            }
+            Assert.IsNotNull(result);
+            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -132,15 +130,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
             string expectedResult = path;
 
-            using (ShimsContext.Create())
-            {
-                ShimDirectory.ExistsString = (str) => { return true; };
+            var adapterSettings = new TestableMSTestAdapterSettings();
+            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
 
-                string result = new MSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+            string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
-                Assert.IsNotNull(result);
-                Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
-            }
+            Assert.IsNotNull(result);
+            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -149,7 +145,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string path = @"Z:\Program Files (x86)\MsTest\Adapter";
             string baseDirectory = @"C:\unitTesting";
 
-            string result = new MSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
+            string result = new TestableMSTestAdapterSettings().ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNull(result);
         }
@@ -162,38 +158,23 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void GetDirectoryListWithRecursivePropertyShouldReadRunSettingCorrectly()
         {
             string baseDirectory = @"C:\unitTesting";
-            string runSettingxml =
-                @"<MSTestV2>
-                    <AssemblyResolution>
-                        <Directory path=""C:\\MsTest\\Adapter"" includeSubDirectories =""true"" />
-                        <Directory path=""%temp%\\unitTesting\\MsTest\\Adapter"" includeSubDirectories = ""false"" />
-                        <Directory path=""*MsTest\Adapter"" />
-                    </AssemblyResolution>
-                  </MSTestV2>";
-
+            
             List<RecursiveDirectoryPath> expectedResult = new List<RecursiveDirectoryPath>();
             expectedResult.Add(new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true));
             expectedResult.Add(new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false));
 
-            using (ShimsContext.Create())
+            var adapterSettings = new TestableMSTestAdapterSettings(expectedResult);
+            adapterSettings.ExpandEnvironmentVariablesSetter = ((str) => { return str.Replace("%temp%", "C:\\foo"); });
+            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+
+            IList<RecursiveDirectoryPath> result = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
+            Assert.IsNotNull(result);
+            Assert.AreEqual(result.Count, 2);
+            
+            for (int i = 0; i < 2; i++)
             {
-                ShimEnvironment.ExpandEnvironmentVariablesString = ((str) => { return str.Replace("%temp%", "C:\\foo"); });
-                ShimDirectory.ExistsString = (str) => { return true; };
-
-                StringReader stringReader = new StringReader(runSettingxml);
-                XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-                reader.Read();
-                MSTestAdapterSettings sut = MSTestAdapterSettings.ToSettings(reader);
-
-                IList<RecursiveDirectoryPath> result = sut.GetDirectoryListWithRecursiveProperty(baseDirectory);
-                Assert.IsNotNull(result);
-                Assert.AreEqual(result.Count, 2);
-
-                for (int i = 0; i < 2; i++)
-                {
-                    Assert.AreEqual(String.Compare(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase), 0);
-                    Assert.AreEqual(result[i].IncludeSubDirectories, expectedResult[i].IncludeSubDirectories);
-                }
+                Assert.AreEqual(String.Compare(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase), 0);
+                Assert.AreEqual(result[i].IncludeSubDirectories, expectedResult[i].IncludeSubDirectories);
             }
         }
 
@@ -258,7 +239,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(adapterSettings.DeploymentEnabled, true);
+            Assert.AreEqual(true, adapterSettings.DeploymentEnabled);
 
         }
 
@@ -273,10 +254,46 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(adapterSettings.DeploymentEnabled, false);
+            Assert.AreEqual(false, adapterSettings.DeploymentEnabled);
 
         }
 
         #endregion
+    }
+
+    public class TestableMSTestAdapterSettings : MSTestAdapterSettings
+    {
+        public TestableMSTestAdapterSettings()
+        {
+        }
+
+        public TestableMSTestAdapterSettings(List<RecursiveDirectoryPath> expectedResult)
+        {
+            this.SearchDirectories.AddRange(expectedResult);
+        }
+
+        public Func<string, bool> DoesDirectoryExistSetter { get; set; }
+
+        public Func<string, string> ExpandEnvironmentVariablesSetter { get; set; }
+
+        protected override bool DoesDirectoryExist(string path)
+        {
+            if (this.DoesDirectoryExistSetter == null)
+            {
+                return base.DoesDirectoryExist(path);
+            }
+
+            return this.DoesDirectoryExistSetter(path);
+        }
+
+        protected override string ExpandEnvironmentVariables(string path)
+        {
+            if (this.ExpandEnvironmentVariablesSetter == null)
+            {
+                return base.ExpandEnvironmentVariables(path);
+            }
+
+            return this.ExpandEnvironmentVariablesSetter(path);
+        }
     }
 }

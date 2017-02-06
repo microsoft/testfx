@@ -72,18 +72,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     public class MSTestAdapterSettings
     {
         /// <summary>
-        ///  It contains a list of path with property recursive or non recursive.
-        /// </summary>
-        private List<RecursiveDirectoryPath> searchDirectories;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="MSTestAdapterSettings"/> class.
         /// </summary>
         public MSTestAdapterSettings()
         {
             this.DeleteDeploymentDirectoryAfterTestRunIsComplete = true;
             this.DeploymentEnabled = true;
-            this.searchDirectories = new List<RecursiveDirectoryPath>();
+            this.SearchDirectories = new List<RecursiveDirectoryPath>();
         }
 
         /// <summary>
@@ -95,6 +90,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Gets a value indicating whether deployment directory has to be deleted after test run.
         /// </summary>
         public bool DeleteDeploymentDirectoryAfterTestRunIsComplete { get; private set; }
+        
+        /// <summary>
+        ///  It contains a list of path with property recursive or non recursive.
+        /// </summary>
+        protected List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
 
         /// <summary>
         /// Convert the parameter xml to TestSettings
@@ -198,7 +198,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         {
                             // Do we have to look in sub directory for dependent dll.
                             var includeSubDirectories = String.Compare(recursiveAttribute, "true", StringComparison.OrdinalIgnoreCase) == 0;
-                            this.searchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
+                            this.SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
                         }
                     }
                     else
@@ -226,7 +226,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             List<RecursiveDirectoryPath> directoriesList = new List<RecursiveDirectoryPath>();
 
-            foreach (RecursiveDirectoryPath recPath in this.searchDirectories)
+            foreach (RecursiveDirectoryPath recPath in this.SearchDirectories)
             {
                 // If path has environment variable, then resolve it
                 string directorypath = ResolveEnvironmentVariableAndReturnFullPathIfExist(recPath.DirectoryPath, baseDirectory);
@@ -256,7 +256,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 string warningMessage = null;
 
                 // Expand any environment variables in the path.
-                path = Environment.ExpandEnvironmentVariables(path);
+                path = this.ExpandEnvironmentVariables(path);
 
                 // If the path is a relative path, expand it relative to the base directory
                 if (!Path.IsPathRooted(path))
@@ -301,7 +301,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     return null;
                 }
 
-                if (Directory.Exists(path))
+                if (this.DoesDirectoryExist(path))
                 {
                     return path;
                 }
@@ -327,6 +327,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 }
             }
             return disableAppDomain;
+        }
+
+        /// <summary>
+        /// Verifies if a directory exists.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        /// <remarks>Only present for unit testing scenarios.</remarks>
+        protected virtual bool DoesDirectoryExist(string path)
+        {
+            return Directory.Exists(path);
+        }
+
+        /// <summary>
+        /// Expands any environment variables in the path provided.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        /// <remarks>Only present for unit testing scenarios.</remarks>
+        protected virtual string ExpandEnvironmentVariables(string path)
+        {
+            return Environment.ExpandEnvironmentVariables(path);
         }
     }
 }
