@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// If the resolver is called for the assembly containing the logger APIs, we do not log so as to prevent a stack overflow.
         /// </remarks>
         private const string LoggerAssemblyName = "Microsoft.VisualStudio.TestPlatform.ObjectModel";
-
+        
         /// <summary>
         /// Constructor which takes a list of directories for resolution path
         /// If you have some more path where you want to search recursively
@@ -184,7 +184,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
                         List<string> increamentalSearchDirectory = new List<String>();
 
-                        if (Directory.Exists(currentNode.DirectoryPath))
+                        if (this.DoesDirectoryExist(currentNode.DirectoryPath))
                         {
                             increamentalSearchDirectory.Add(currentNode.DirectoryPath);
 
@@ -292,10 +292,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             Debug.Assert(searchDirectories != null, "'searchDirectories' cannot be null.");
 
             // If the directory exists, get it's subdirectories
-            if (Directory.Exists(path))
+            if (this.DoesDirectoryExist(path))
             {
                 // Get the directories in the path provided.
-                var directories = Directory.GetDirectories(path);
+                var directories = this.GetDirectories(path);
 
                 // Add each directory and its subdirectories to the collection.
                 foreach (var directory in directories)
@@ -306,7 +306,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 }
             }
         }
+        
+        /// <summary>
+        /// Verifies if a directory exists.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        /// <remarks>Only present for unit testing scenarios.</remarks>
+        protected virtual bool DoesDirectoryExist(string path)
+        {
+            return Directory.Exists(path);
+        }
 
+        /// <summary>
+        /// Gets the directories from a path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        /// <remarks>Only present for unit testing scenarios.</remarks>
+        protected virtual string[] GetDirectories(string path)
+        {
+            return Directory.GetDirectories(path);
+        }
 
         /// <summary>
         /// It will search for a particular assembly in the given list of directory.
@@ -315,7 +336,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="name"> The name. </param>
         /// <param name="isReflectionOnly"> Indicates whether this is called under a Reflection Only Load context. </param>
         /// <returns> The <see cref="Assembly"/>. </returns>
-        private Assembly SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
+        protected virtual Assembly SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
         {
             if (searchDirectorypaths == null || searchDirectorypaths.Count == 0)
             {
