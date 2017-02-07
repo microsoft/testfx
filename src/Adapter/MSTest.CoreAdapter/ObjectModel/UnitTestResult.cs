@@ -161,9 +161,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
             if (!string.IsNullOrEmpty(this.DebugTrace))
             {
-                // Adding to standard info category as part of bugfix for beta only 
-                // TODO : Revert the change appropriately after opening a bug on TestWindow to incorporate extra sections in Output Windows
-                // Cleanup the banner resource as well and change the category aptly in TestResultMessage.
                 string debugTraceMessagesinStdOut = String.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.DebugTraceBanner, this.DebugTrace);
                 TestResultMessage debugTraceMessage = new TestResultMessage(TestResultMessage.StandardOutCategory, debugTraceMessagesinStdOut);
                 testResult.Messages.Add(debugTraceMessage);

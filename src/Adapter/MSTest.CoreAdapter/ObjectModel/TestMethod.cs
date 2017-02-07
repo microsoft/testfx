@@ -7,8 +7,6 @@
 // </summary>
 // ---------------------------------------------------------------------------
 
-#define TODO
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 {
     using System;
@@ -51,8 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <summary>
         /// Specifice the declaring class full name. This will be used while getting navigation data.
         /// This will be null if FullClassName is same as DeclaringClassFullName.
-        /// Reason to set to null in the above case is to minimise the transfer of data across appdomains and not have a perf hit
-        /// This is being added as a fix to bug# 658100
+        /// Reason to set to null in the above case is to minimise the transfer of data across appdomains and not have a perf hit.
         /// </summary>
         public string DeclaringClassFullName 
         {

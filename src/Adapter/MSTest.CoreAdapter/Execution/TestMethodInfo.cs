@@ -189,7 +189,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             var result = new TestResult();
 
-            // TODO armahapa remove dry violation with TestMethodRunner
+            // TODO remove dry violation with TestMethodRunner
             var classInstance = this.CreateTestClassInstance(result);
             var testContextSetup = false;
             bool isExceptionThrown = false;

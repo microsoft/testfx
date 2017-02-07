@@ -1,4 +1,3 @@
-#define TODO
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 {
@@ -8,11 +7,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
-    using System.Runtime.CompilerServices;
-    using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -134,7 +130,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             var attributes = GetCustomAttributes(type.GetTypeInfo(), inherit);
             if (attributes == null)
             {
-                // TODO: mkolt: important: consider beter way. When running ObjectModel\Common tests I get this.
+                // TODO: important: consider beter way. When running ObjectModel\Common tests I get this.
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("ReflectHelper.DefinesAttributeDerivedFrom: this does not really work when we failed to get attribute cache. Lose attribute inheritance and fall into 'type defines Attribute model', so that at least do something, not the best...");
 
                 // If we could not obtain attrs in a fast (with cache) way, use slow reflection directly.
@@ -202,7 +198,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
             if (attributes == null)
             {
-                // TODO: mkolt: important: consider beter way. When running ObjectModel\Common tests I get this.
+                // TODO: important: consider beter way. When running ObjectModel\Common tests I get this.
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("ReflectHelper.DefinesAttributeDerivedFrom: this does not really work when we failed to get attribute cache. Lose attribute inheritance and fall into 'type defines Attribute model', so that at least do something, not the best...");
 
                 // If we could not obtain attrs in a fast (with cache) way, use slow reflection directly.
@@ -586,7 +582,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                     {
                         Type attrType = customAttribute.GetType();
 
-                        // TODO: mkolt: make sure setting values to Type works across versioning.
+                        // TODO: make sure setting values to Type works across versioning.
                         attributes[attrType.FullName] = customAttribute;
                     }
 
