@@ -523,7 +523,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// Specifies connection string, table name and row access method for data driven testing.
     /// </summary>
     /// <example>
-    /// [DataSource("Provider=SQLOLEDB.1;Data Source=mkolt;Integrated Security=SSPI;Initial Catalog=EqtCoverage;Persist Security Info=False", "MyTable")]
+    /// [DataSource("Provider=SQLOLEDB.1;Data Source=source;Integrated Security=SSPI;Initial Catalog=EqtCoverage;Persist Security Info=False", "MyTable")]
     /// [DataSource("dataSourceNameFromConfigFile")]
     /// </example>
     [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments")]

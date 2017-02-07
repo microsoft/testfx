@@ -45,7 +45,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
             discoveryEventsHandler = new DiscoveryEventsHandler();
             string runSettingXml = this.GetRunSettingXml(runSettings, GetTestAdapterPath());
-            //this step of Initializing extensions should not be required after Bug 294247 is fixed
+
+            //this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
             vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(GetTestAdapterPath(), "*TestAdapter.dll"));
             vsTestConsoleWrapper.DiscoverTests(sources, runSettingXml, discoveryEventsHandler);
         }
@@ -65,7 +66,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
             runEventsHandler = new RunEventsHandler();
             string runSettingXml = this.GetRunSettingXml(runSettings, GetTestAdapterPath());
-            //this step of Initializing extensions should not be required after Bug 294247 is fixed
+
+            //this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
             vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(GetTestAdapterPath(), "*TestAdapter.dll"));
             vsTestConsoleWrapper.RunTests(sources, runSettingXml, runEventsHandler);
         }
@@ -213,7 +215,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
                            f.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
                 Assert.IsNotNull(testFound, "Test {0} does not appear in failed tests list.", test);
 
-                //Skipping this check for x64 as of now. Bug #299488 should fix this.
+                //Skipping this check for x64 as of now. https://github.com/Microsoft/testfx/issues/60 should fix this.
                 if (source.IndexOf("x64") == -1)
                 {
                     // Verify stack information as well.               

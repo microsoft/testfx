@@ -369,7 +369,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         /// <summary>
         /// Result files attached
-        /// Todo: aajohn Need to wire this in to engine.
         /// </summary>
         public IList<string> GetResultFiles()
         {
@@ -384,7 +383,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.testResultFiles.Clear();
 
             return results;
-
         }
 
         #endregion
