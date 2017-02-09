@@ -177,8 +177,12 @@ function Perform-Build {
     foreach($folder in $foldersToDel)
     {
       $outDir = Join-Path $env:TF_OUT_DIR -ChildPath $folder
-      Write-Output "    Deleting $outDir"
-      Remove-Item -Recurse -Force $outDir
+	  
+	  if(Test-Path $outDir)
+	  {
+		Write-Output "    Deleting $outDir"
+		Remove-Item -Recurse -Force $outDir
+	  }
     }
   }
 
