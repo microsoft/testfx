@@ -1,10 +1,4 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="AssemblyInfo.cs" company="">
-//   
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
-
-
+// Copyright (c) Microsoft. All rights reserved.
 
 using System.Reflection;
 using System.Runtime.InteropServices;

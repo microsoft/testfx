@@ -1,9 +1,5 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright company="" file="TestMethodValidatorTests.cs">
-//   
-// </copyright>
-// 
-// --------------------------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft. All rights reserved.
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 {
     extern alias FrameworkV1;

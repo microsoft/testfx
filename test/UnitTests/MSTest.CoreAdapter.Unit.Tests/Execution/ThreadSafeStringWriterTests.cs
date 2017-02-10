@@ -1,8 +1,4 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ThreadSafeStringWriterTests.cs" company="">
-//   
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft. All rights reserved.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 {

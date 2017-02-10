@@ -69,8 +69,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 }
 
                 // Abstract test classes can be base classes for derived test classes.
-                //   In VS IDE (using TMI) abstract test classes are ignored. 
-                //   For consistency, also ignore these in command line (Tip.Load) scenario.
                 //   There is no way to see if there are derived test classes. 
                 //   Thus if a test class is abstract, just ignore all test methods from it 
                 //   (they will be visible in derived classes). No warnings (such as test method, deployment item, 

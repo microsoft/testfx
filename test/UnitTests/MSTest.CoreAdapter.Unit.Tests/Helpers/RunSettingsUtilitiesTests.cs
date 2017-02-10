@@ -17,8 +17,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using global::MSTestAdapter.TestUtilities;
 
-    //using Assert = FrameworkV2::Microsoft.VisualStudio.TestPlatform.UnitTestFramework.Assert;
-
     [TestClass]
     public class RunSettingsUtilitiesTests
     {

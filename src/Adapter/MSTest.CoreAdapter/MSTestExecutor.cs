@@ -95,7 +95,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     }
     
     /// <summary>
-    /// Cancellation token supporting cancellation of a tmi test run.
+    /// Cancellation token supporting cancellation of a test run.
     /// </summary>
     public class TestRunCancellationToken
     {

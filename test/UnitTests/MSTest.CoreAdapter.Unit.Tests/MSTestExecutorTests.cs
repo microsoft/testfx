@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
     using MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    //using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
