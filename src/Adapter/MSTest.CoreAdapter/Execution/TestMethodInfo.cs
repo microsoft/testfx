@@ -432,7 +432,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             catch (Exception ex)
             {
-                // FIXME case where TestMethod throws and TestCleanup throws as well, merge the stack traces!
                 var stackTraceInformation = StackTraceHelper.GetStackTraceInformation(ex.GetInnerExceptionOrDefault());
                 var errorMessage = string.Format(
                     CultureInfo.CurrentCulture,

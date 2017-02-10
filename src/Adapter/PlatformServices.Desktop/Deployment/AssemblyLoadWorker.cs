@@ -90,8 +90,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
                     }
                 }
             }
-
-
+            
             return dotNetVersion;
         }
 
@@ -124,7 +123,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 
             List<string> result = new List<string>();
             List<string> visitedAssemblies = new List<string>();
-            
+
             visitedAssemblies.Add(assembly.FullName);
 
             this.ProcessChildren(assembly, result, visitedAssemblies, warnings);
@@ -139,7 +138,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         public override object InitializeLifetimeService()
         {
             // Infinite.
-            return null;    
+            return null;
         }
 
         /// <summary>
@@ -172,7 +171,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             }
 
             // Assembly.GetModules() returns all modules including main one.
-            if (modules.Length > 1) 
+            if (modules.Length > 1)
             {
                 // The modules must be in the same directory as assembly that references them.
                 foreach (Module m in modules)
@@ -190,7 +189,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
                     if (string.Equals(shortName, assembly.GetName().Name, StringComparison.OrdinalIgnoreCase))
                     {
                         // This is main assembly module.
-                        continue;   
+                        continue;
                     }
 
                     if (visitedAssemblies.Contains(m.Name))

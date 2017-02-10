@@ -1,11 +1,4 @@
-// ---------------------------------------------------------------------------
-// <copyright file="UnitTestResult.cs" company="Microsoft"> 
-//     Copyright (c) Microsoft Corporation. All rights reserved. 
-// </copyright> 
-// <summary>
-//      Defines the test result.
-// </summary>
-// ---------------------------------------------------------------------------
+// Copyright (c) Microsoft. All rights reserved.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 {

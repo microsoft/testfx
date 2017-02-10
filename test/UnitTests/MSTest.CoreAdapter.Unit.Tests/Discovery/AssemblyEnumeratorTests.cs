@@ -1,8 +1,4 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright company="" file="AssemblyEnumeratorTests.cs">
-//   
-// </copyright>
-// --------------------------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft. All rights reserved.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 {

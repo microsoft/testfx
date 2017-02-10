@@ -1,11 +1,4 @@
-// ---------------------------------------------------------------------------
-// <copyright file="LogMessageListner.cs" company="Microsoft"> 
-//     Copyright (c) Microsoft Corporation. All rights reserved. 
-// </copyright> 
-// <summary>
-//      Log message listener class.
-// </summary>
-// ---------------------------------------------------------------------------
+// Copyright (c) Microsoft. All rights reserved.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {

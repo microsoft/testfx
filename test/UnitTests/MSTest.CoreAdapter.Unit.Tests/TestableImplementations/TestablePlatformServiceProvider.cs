@@ -1,9 +1,5 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright company="" file="TestablePlatformServiceProvider.cs">
-//   
-// </copyright>
-// 
-// --------------------------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft. All rights reserved.
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations
 {
     using System;
