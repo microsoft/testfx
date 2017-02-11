@@ -1,4 +1,9 @@
-﻿[CmdletBinding(PositionalBinding=$false)]
+﻿# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+# Script to run tests for testfx.
+
+[CmdletBinding(PositionalBinding=$false)]
 Param(
   [Parameter(Mandatory=$false)]
   [ValidateSet("Debug", "Release")]
