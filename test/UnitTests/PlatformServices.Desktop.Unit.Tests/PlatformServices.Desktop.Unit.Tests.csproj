@@ -88,7 +88,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>

@@ -33,7 +33,6 @@
     <DocumentationLclSubPath>TestFramework\Extensions\Desktop</DocumentationLclSubPath>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
