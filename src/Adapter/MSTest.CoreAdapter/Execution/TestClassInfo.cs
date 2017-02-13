@@ -6,15 +6,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Reflection;
-
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using System.Diagnostics.CodeAnalysis;
-
-    using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using Extensions;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
     using ObjectModel;
+    using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
     /// <summary>
     /// Defines the TestClassInfo object
@@ -147,7 +145,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     return false;
                 }
 
-                // If class initialization was successful, then only call class cleanup. 
+                // If class initialization was successful, then only call class cleanup.
                 if (this.ClassInitializationException != null)
                 {
                     return false;
@@ -248,7 +246,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
 
-            // If classInitialization was successful, then dont do anything 
+            // If classInitialization was successful, then dont do anything
             if (this.ClassInitializationException == null)
             {
                 return;

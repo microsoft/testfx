@@ -17,6 +17,94 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public abstract class TestContext
     {
         /// <summary>
+        /// Gets per test properties
+        /// </summary>
+        public abstract IDictionary Properties { get; }
+
+        /// <summary>
+        /// Gets the current data row when test is used for data driven testing.
+        /// </summary>
+        public abstract DataRow DataRow { get; }
+
+        /// <summary>
+        /// Gets current data connection row when test is used for data driven testing.
+        /// </summary>
+        public abstract DbConnection DataConnection { get; }
+
+        #region Test run deployment directories
+
+        /// <summary>
+        /// Gets base directory for the test run, under which deployed files and result files are stored.
+        /// </summary>
+        public virtual string TestRunDirectory => this.GetProperty<string>("TestRunDirectory");
+
+        /// <summary>
+        /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
+        /// </summary>
+        public virtual string DeploymentDirectory => this.GetProperty<string>("DeploymentDirectory");
+
+        /// <summary>
+        /// Gets base directory for results from the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
+        /// </summary>
+        public virtual string ResultsDirectory => this.GetProperty<string>("ResultsDirectory");
+
+        /// <summary>
+        /// Gets directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
+        /// </summary>
+        public virtual string TestRunResultsDirectory => this.GetProperty<string>("TestRunResultsDirectory");
+
+        /// <summary>
+        /// Gets directory for test result files.
+        /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", Justification = "Compat")]
+        public virtual string TestResultsDirectory => this.GetProperty<string>("TestResultsDirectory");
+
+        #region Old names, for backwards compatibility
+
+        /// <summary>
+        /// Gets base directory for the test run, under which deployed files and result files are stored.
+        /// Same as <see cref="TestRunDirectory"/>. Use that property instead.
+        /// </summary>
+        public virtual string TestDir => this.GetProperty<string>("TestDir");
+
+        /// <summary>
+        /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
+        /// Same as <see cref="DeploymentDirectory"/>. Use that property instead.
+        /// </summary>
+        public virtual string TestDeploymentDir => this.GetProperty<string>("TestDeploymentDir");
+
+        /// <summary>
+        /// Gets directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
+        /// Same as <see cref="TestRunResultsDirectory"/>. Use that property for test run result files, or
+        /// <see cref="TestResultsDirectory"/> for test-specific result files instead.
+        /// </summary>
+        public virtual string TestLogsDir => this.GetProperty<string>("TestLogsDir");
+
+        #endregion
+
+        #endregion
+
+        // This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.
+        // Those attributes have access to the test context, and provide messages that are included
+        // in the test results. Users can benefit from messages that include the fully-qualified
+        // class name in addition to the name of the test method currently being executed.
+
+        /// <summary>
+        /// Gets the Fully-qualified name of the class containing the test method currently being executed
+        /// </summary>
+        public virtual string FullyQualifiedTestClassName => this.GetProperty<string>("FullyQualifiedTestClassName");
+
+        /// <summary>
+        /// Gets the name of the test method currently being executed
+        /// </summary>
+        public virtual string TestName => this.GetProperty<string>("TestName");
+
+        /// <summary>
+        /// Gets the current test outcome.
+        /// </summary>
+        public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
+
+        /// <summary>
         /// Used to write trace messages while the test is running
         /// </summary>
         /// <param name="message">formatted message string</param>
@@ -40,98 +128,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Begins a timer with the specified name
         /// </summary>
+        /// <param name="timerName"> Name of the timer.</param>
         public abstract void BeginTimer(string timerName);
 
         /// <summary>
         /// Ends a timer with the specified name
         /// </summary>
+        /// <param name="timerName"> Name of the timer.</param>
         public abstract void EndTimer(string timerName);
-
-        /// <summary>
-        /// Per test properties
-        /// </summary>
-        /// <value></value>
-        public abstract IDictionary Properties { get; }
-
-        /// <summary>
-        /// Current data row when test is used for data driven testing.
-        /// </summary>
-        public abstract DataRow DataRow { get; }
-
-        /// <summary>
-        /// Current data connection row when test is used for data driven testing.
-        /// </summary>
-        public abstract DbConnection DataConnection { get; }
-
-        #region Test run deployment directories
-
-        /// <summary>
-        /// Base directory for the test run, under which deployed files and result files are stored.
-        /// </summary>
-        public virtual string TestRunDirectory => this.GetProperty<string>("TestRunDirectory");
-
-        /// <summary>
-        /// Directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
-        /// </summary>
-        public virtual string DeploymentDirectory => this.GetProperty<string>("DeploymentDirectory");
-
-        /// <summary>
-        /// Base directory for results from the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
-        /// </summary>
-        public virtual string ResultsDirectory => this.GetProperty<string>("ResultsDirectory");
-
-        /// <summary>
-        /// Directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
-        /// </summary>
-        public virtual string TestRunResultsDirectory => this.GetProperty<string>("TestRunResultsDirectory");
-
-        /// <summary>
-        /// Directory for test result files.
-        /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly")]
-        public virtual string TestResultsDirectory => this.GetProperty<string>("TestResultsDirectory");
-
-        #region Old names, for backwards compatibility
-
-        /// <summary>
-        /// Same as <see cref="TestRunDirectory"/>. Use that property instead.
-        /// </summary>
-        public virtual string TestDir => this.GetProperty<string>("TestDir");
-
-        /// <summary>
-        /// Same as <see cref="DeploymentDirectory"/>. Use that property instead.
-        /// </summary>
-        public virtual string TestDeploymentDir => this.GetProperty<string>("TestDeploymentDir");
-
-        /// <summary>
-        /// Same as <see cref="TestRunResultsDirectory"/>. Use that property for test run result files, or
-        /// <see cref="TestResultsDirectory"/> for test-specific result files instead.
-        /// </summary>
-        public virtual string TestLogsDir => this.GetProperty<string>("TestLogsDir");
-
-        #endregion
-
-        #endregion
-
-        // This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.
-        // Those attributes have access to the test context, and provide messages that are included
-        // in the test results. Users can benefit from messages that include the fully-qualified
-        // class name in addition to the name of the test method currently being executed.
-
-        /// <summary>
-        /// Fully-qualified name of the class containing the test method currently being executed
-        /// </summary>
-        public virtual string FullyQualifiedTestClassName => this.GetProperty<string>("FullyQualifiedTestClassName");
-
-        /// <summary>
-        /// Name of the test method currently being executed
-        /// </summary>
-        public virtual string TestName => this.GetProperty<string>("TestName");
-
-        /// <summary>
-        /// Gets the current test outcome.
-        /// </summary>
-        public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
 
         private T GetProperty<T>(string name)
             where T : class

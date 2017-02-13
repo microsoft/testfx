@@ -3,15 +3,13 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
-    using System.Diagnostics;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
-
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-
     using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
     internal class TestMethodFilter
@@ -52,6 +50,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testExecutionRecorder.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
             }
+
             return filter;
         }
 
@@ -84,6 +83,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     }
                 }
             }
+
             return null;
         }
     }

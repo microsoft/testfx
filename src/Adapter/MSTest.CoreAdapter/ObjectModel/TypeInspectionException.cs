@@ -16,6 +16,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public TypeInspectionException(string message)
             : base(message)
         { }
-
     }
 }

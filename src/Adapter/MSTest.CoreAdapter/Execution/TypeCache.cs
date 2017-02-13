@@ -33,7 +33,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private static readonly string[] PredefinedNames = new string[] { "Priority", "TestCategory", "Owner" };
 
         /// <summary>
-        /// Helper for reflection API's. 
+        /// Helper for reflection API's.
         /// </summary>
         private ReflectHelper reflectionHelper;
 
@@ -48,7 +48,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private Dictionary<string, TestClassInfo> classInfoCache;
 
         /// <summary>
-        /// The constructor
+        /// Initializes a new instance of the <see cref="TypeCache"/> class.
         /// </summary>
         internal TypeCache()
             : this(new ReflectHelper())
@@ -56,7 +56,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// The constructor
+        /// Initializes a new instance of the <see cref="TypeCache"/> class.
         /// </summary>
         /// <param name="reflectionHelper"> An instance to the <see cref="ReflectHelper"/> object. </param>
         internal TypeCache(ReflectHelper reflectionHelper)
@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.testAssemblyInfoCache = new Dictionary<Assembly, TestAssemblyInfo>();
             this.classInfoCache = new Dictionary<string, TestClassInfo>(StringComparer.Ordinal);
         }
-        
+
         /// <summary>
         /// Gets Class Info cache which has cleanup methods to execute
         /// </summary>
@@ -133,19 +133,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             if (testClassInfo == null)
             {
-                // This means the class containing the test method could not be found. 
+                // This means the class containing the test method could not be found.
                 // Return null so we return a not found result.
                 return null;
             }
 
-            // Get the testMethod 
+            // Get the testMethod
             return this.ResolveTestMethod(testMethod, testClassInfo, testContext);
         }
 
         #region ClassInfo creation and cache logic.
 
         /// <summary>
-        /// Gets the classInfo corresponding to the unit test. 
+        /// Gets the classInfo corresponding to the unit test.
         /// </summary>
         /// <param name="testMethod"> The test Method.  </param>
         /// <returns> The <see cref="TestClassInfo"/>. </returns>
@@ -163,7 +163,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 if (type == null)
                 {
-                    // This means the class containing the test method could not be found. 
+                    // This means the class containing the test method could not be found.
                     // Return null so we return a not found result.
                     return null;
                 }
@@ -209,7 +209,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             catch (TypeLoadException)
             {
-                // This means the class containing the test method could not be found. 
+                // This means the class containing the test method could not be found.
                 // Return null so we return a not found result.
                 return null;
             }
@@ -221,7 +221,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Create the class Info 
+        /// Create the class Info
         /// </summary>
         /// <param name="classType"> The class Type. </param>
         /// <param name="testMethod"> The test Method. </param>
@@ -250,15 +250,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             // List of instance methods present in the type as well its base type
             // which is used to decide whether TestInitialize/TestCleanup methods
-            // present in the base type should be used or not. They are not used if 
-            // the method is overridden in the derived type. 
+            // present in the base type should be used or not. They are not used if
+            // the method is overridden in the derived type.
             var instanceMethods = new Dictionary<string, string>();
 
             foreach (var methodInfo in classType.GetTypeInfo().DeclaredMethods)
             {
                 // Update test initialize/cleanup method
                 this.UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, isBase: false, instanceMethods: instanceMethods,  testInitializeAttributeType: testInitializeAttributeType, testCleanupAttributeType: testCleanupAttributeType);
-                
+
                 if (this.IsAssemblyOrClassInitializeMethod(methodInfo, classInitializeAttributeType))
                 {
                     // update class initialize method
@@ -288,7 +288,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             return classInfo;
         }
-        
+
         /// <summary>
         /// Resolves the test context property
         /// </summary>
@@ -365,7 +365,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
                 catch (Exception ex)
                 {
-                    // If we fail to discover type from an assembly, then do not abort. Pick the next type. 
+                    // If we fail to discover type from an assembly, then do not abort. Pick the next type.
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
                         "TypeCache: Exception occured while checking whether type {0} is a test class or not. {1}",
                         t.FullName,
@@ -510,7 +510,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         /// <summary>
         /// Resolve the test method. The function will try to
-        /// find a function that has the method name with 0 parameters. If the function 
+        /// find a function that has the method name with 0 parameters. If the function
         /// cannot be found, or a function is found that returns non-void, the result is
         /// set to error.
         /// </summary>
@@ -574,7 +574,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 methodsInClass.Where(method => method.Name.Equals(testMethod.Name))
                     .FirstOrDefault(method => method.HasCorrectTestMethodSignature(true));
 
-            // if correct method is not found, throw appropriate 
+            // if correct method is not found, throw appropriate
             // exception about what is wrong.
             if (testMethodInfo == null)
             {
@@ -584,7 +584,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             return testMethodInfo;
         }
-        
+
         /// <summary>
         /// Gets the test timeout for the parameter test method
         /// </summary>
@@ -611,7 +611,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Set custom properties 
+        /// Set custom properties
         /// </summary>
         /// <param name="testMethodInfo"> The test Method Info. </param>
         /// <param name="testContext"> The test Context. </param>
@@ -673,7 +673,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             if (testContext.TryGetPropertyValue(propertyName, out existingValue))
             {
                 // Do not add to the test context because it would conflict with an already existing value.
-                // We were at one point reporting a warning here. However with extensibility centered around TestProperty where 
+                // We were at one point reporting a warning here. However with extensibility centered around TestProperty where
                 // users can have multiple WorkItemAttributes(say) we cannot throw a warning here. Users would have multiple of these attributes
                 // so that it shows up in reporting rather than seeing them in TestContext properties.
             }

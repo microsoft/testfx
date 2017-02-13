@@ -12,17 +12,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
     {
         /// <summary>
         /// Gets the text writer that receives the tracing or debugging output.
-        /// </summary>   
+        /// </summary>
+        /// <returns>The writer instance.</returns>
         TextWriter GetWriter();
 
         /// <summary>
         /// Closes the TextWriter so that it no longer receives tracing or debugging output.
-        /// </summary>    
+        /// </summary>
         void Close();
 
         /// <summary>
         ///  Disposes this TraceListener object.
-        /// </summary>  
+        /// </summary>
         void Dispose();
     }
 }

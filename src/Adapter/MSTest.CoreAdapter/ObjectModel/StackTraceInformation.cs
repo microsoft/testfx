@@ -5,7 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 {
     using System;
     using System.Diagnostics;
-    
+
     [Serializable]
     internal class StackTraceInformation
     {

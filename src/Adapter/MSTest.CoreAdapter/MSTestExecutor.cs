@@ -7,11 +7,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
     /// <summary>
     /// Contains the execution logic for this adapter.
@@ -32,7 +31,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             this.TestExecutionManager = new TestExecutionManager();
             this.MSTestDiscoverer = new MSTestDiscoverer();
         }
-        
+
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
             ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
@@ -48,7 +47,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
             // Scenarios that include testsettings or forcing a run via the legacy adapter are currently not supported in MSTestAdapter.
             if (MSTestSettings.IsLegacyScenario(frameworkHandle))
+            {
                 return;
+            }
 
             this.cancellationToken = new TestRunCancellationToken();
             this.TestExecutionManager.RunTests(tests, runContext, frameworkHandle, this.cancellationToken);
@@ -70,7 +71,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
             // Scenarios that include testsettings or forcing a run via the legacy adapter are currently not supported in MSTestAdapter.
             if (MSTestSettings.IsLegacyScenario(frameworkHandle))
+            {
                 return;
+            }
 
             sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);
             this.cancellationToken = new TestRunCancellationToken();
@@ -94,7 +97,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </summary>
         private MSTestDiscoverer MSTestDiscoverer { get; }
     }
-    
+
     /// <summary>
     /// Cancellation token supporting cancellation of a test run.
     /// </summary>
@@ -119,6 +122,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             {
                 return this.cancelled;
             }
+
             private set
             {
                 this.cancelled = value;

@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     using System.Globalization;
     using System.IO;
     using System.Reflection;
-    
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -39,9 +39,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             string assemblyFileName,
             IRunSettings runSettings,
             out ICollection<string> warnings)
-        {   
+        {
             warnings = new List<string>();
-            
+
             if (string.IsNullOrEmpty(assemblyFileName))
             {
                 return null;
@@ -77,7 +77,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     fullFilePath,
                     ex);
 
-                // Loading a WinPRT dll on the phone produces a 
+                // Loading a WinPRT dll on the phone produces a
                 // FileNotFoundException. We check if we get FileNotFoundException
                 // in spite of the dll existing and try and load the dll from the full path in this case.
                 try

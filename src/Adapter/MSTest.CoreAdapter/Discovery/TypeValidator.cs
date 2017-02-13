@@ -38,20 +38,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <returns>Return true if it is a valid test class.</returns>
         internal virtual bool IsValidTestClass(Type type, ICollection<string> warnings)
         {
-            if (type.GetTypeInfo().IsClass && 
+            if (type.GetTypeInfo().IsClass &&
                     (this.reflectHelper.IsAttributeDefined(type, typeof(TestClassAttribute), false) ||
                     this.reflectHelper.HasAttributeDerivedFrom(type, typeof(TestClassAttribute), false)))
             {
                 var isPublic = type.GetTypeInfo().IsPublic || (type.GetTypeInfo().IsNested && type.GetTypeInfo().IsNestedPublic);
 
-                // non-public class 
+                // non-public class
                 if (!isPublic)
                 {
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
                     warnings.Add(warning);
                     return false;
                 }
-                
+
                 // Generic class
                 if (type.GetTypeInfo().IsGenericTypeDefinition && !type.GetTypeInfo().IsAbstract)
                 {
@@ -70,9 +70,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 }
 
                 // Abstract test classes can be base classes for derived test classes.
-                //   There is no way to see if there are derived test classes. 
-                //   Thus if a test class is abstract, just ignore all test methods from it 
-                //   (they will be visible in derived classes). No warnings (such as test method, deployment item, 
+                //   There is no way to see if there are derived test classes.
+                //   Thus if a test class is abstract, just ignore all test methods from it
+                //   (they will be visible in derived classes). No warnings (such as test method, deployment item,
                 //   etc attribute is defined on the class) will be generated for this class:
                 // What we do is:
                 //   - report the class as "not valid" test class. This will cause to skip enumerating tests from it.
@@ -96,7 +96,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         internal bool HasCorrectTestContextSignature(Type type)
         {
             Debug.Assert(type != null, "HasCorrectTestContextSignature type is null");
-            
+
             var propertyInfoEnumerable = type.GetTypeInfo().DeclaredProperties;
             var propertyInfo = new List<PropertyInfo>();
 
@@ -113,7 +113,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             {
                 return true;
             }
-            
+
             foreach (var pinfo in propertyInfo)
             {
                 var setInfo = pinfo.SetMethod;

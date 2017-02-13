@@ -6,19 +6,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Reflection;
-
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-    using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-    using System.Diagnostics.CodeAnalysis;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
     /// <summary>
     /// Defines the TestMethod Info object
@@ -57,7 +53,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public ExpectedExceptionBaseAttribute ExpectedException { get; private set; }
 
         /// <summary>
-        /// Timeout defined on the test method. 
+        /// Timeout defined on the test method.
         /// </summary>
         public int Timeout { get; private set; }
 
@@ -244,6 +240,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         }
                     }
                 }
+
                 // if we get here, the test method did not throw the exception
                 // if the user specified that the test was going to throw an exception, and
                 // it did not, we should fail the test
@@ -282,9 +279,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private bool IsExpectedException(Exception ex, TestResult result)
         {
             Exception realException = this.GetRealException(ex);
-             
+
             // if the user specified an expected exception, we need to check if this
-            // exception was thrown. If it was thrown, we should pass the test. In 
+            // exception was thrown. If it was thrown, we should pass the test. In
             // case a different exception was thrown, the test is seen as failure
             if (this.ExpectedException != null)
             {
@@ -315,7 +312,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // See if the verification exception (thrown by the expected exception
                 // attribute's Verify method) is an AssertInconclusiveException. If so, set
                 // the test outcome to Inconclusive.
-                result.TestFailureException = new TestFailedException(exceptionFromVerify is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed,
+                result.TestFailureException = new TestFailedException(
+                    exceptionFromVerify is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed,
                                               exceptionFromVerify.TryGetMessage(),
                                               realException.TryGetStackTraceInformation());
                 return false;
@@ -363,7 +361,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             if (realException is UnitTestAssertException)
             {
-                return new TestFailedException(realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed,
+                return new TestFailedException(
+                    realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed,
                                               realException.TryGetMessage(),
                                               realException.TryGetStackTraceInformation(),
                                               realException);
@@ -387,8 +386,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 StackTraceInformation stackTrace = null;
 
                 // For ThreadAbortException (that can be thrown only by aborting a thread as there's no public constructor)
-                // there's no inner exception and exception itself contains reflection-related stack trace 
-                // (_RuntimeMethodHandle.InvokeMethodFast <- _RuntimeMethodHandle.Invoke <- UnitTestExecuter.RunTestMethod) 
+                // there's no inner exception and exception itself contains reflection-related stack trace
+                // (_RuntimeMethodHandle.InvokeMethodFast <- _RuntimeMethodHandle.Invoke <- UnitTestExecuter.RunTestMethod)
                 // which has no meaningful info for the user. Thus, we do not show call stack for ThreadAbortException.
                 if (realException.GetType().Name != "ThreadAbortException")
                 {
@@ -592,13 +591,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         /// <summary>
         /// Execute test which has a timeout
-        /// </summary>        
+        /// </summary>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
             Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private TestResult ExecuteInternalWithTimeout(object[] arguments)
         {
             Debug.Assert(this.IsTimeoutSet, "Timeout should be set");
-            
+
             TestResult result = null;
             Exception failure = null;
 
@@ -628,11 +627,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 // Timed out
 
-                // If the method times out, then 
+                // If the method times out, then
                 //
-                // 1. If the test is stuck, then we can get CannotUnloadAppDomain exception. 
+                // 1. If the test is stuck, then we can get CannotUnloadAppDomain exception.
                 //
-                // Which are handled as follows: - 
+                // Which are handled as follows: -
                 //
                 // For #1, we are now restarting the execution process if adapter fails to unload app-domain.
                 //

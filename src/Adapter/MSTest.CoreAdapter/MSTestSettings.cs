@@ -70,13 +70,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public bool CaptureDebugTraces { get; set; }
 
         /// <summary>
-        /// Gets a value indicating whether user wants the adapter to run in legacy mode or not. 
+        /// Gets a value indicating whether user wants the adapter to run in legacy mode or not.
         /// Default is False.
         /// </summary>
         public bool ForcedLegacyMode { get; private set; }
 
         /// <summary>
-        /// Gets the path to settings file. 
+        /// Gets the path to settings file.
         /// </summary>
         public string TestSettingsFile { get; private set; }
 
@@ -92,23 +92,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// The discovery context that contains the runsettings.
         /// </param>
         public static void PopulateSettings(IDiscoveryContext context)
-        {        
+        {
             if (context == null || context.RunSettings == null || string.IsNullOrEmpty(context.RunSettings.SettingsXml))
             {
                 // This will contain default adapter settings
                 CurrentSettings = new MSTestSettings();
                 return;
             }
-            
+
             var aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias);
-            
+
             // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
             if (aliasSettings != null)
             {
                 CurrentSettings = aliasSettings;
                 return;
             }
-            else 
+            else
             {
                 var settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
 
@@ -121,7 +121,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 CurrentSettings = new MSTestSettings();
             }
         }
-        
+
         /// <summary>
         /// Get the MSTestV1 adapter settings from the context
         /// </summary>
@@ -188,8 +188,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         private static MSTestSettings ToSettings(XmlReader reader)
         {
             ValidateArg.NotNull<XmlReader>(reader, "reader");
-            
-            // Expected format of the xml is: - 
+
+            // Expected format of the xml is: -
             //
             // <MSTestV2>
             //     <CaptureTraceOutput>true</CaptureTraceOutput>

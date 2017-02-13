@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
-    /// Interface that provides values from data source when data driven tests are run. 
+    /// Interface that provides values from data source when data driven tests are run.
     /// </summary>
     public interface ITestDataSource
     {

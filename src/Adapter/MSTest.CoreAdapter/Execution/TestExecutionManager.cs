@@ -6,17 +6,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.Linq;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Class responsible for execution of tests at assembly level and sending tests via framework handle
@@ -32,7 +31,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Dictionary for test run parameters
         /// </summary>
         private IDictionary<string, object> sessionParameters;
-        
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Justification = "Need to over-write the keys in dictionary.")]
         public TestExecutionManager()
         {
@@ -65,7 +64,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             Debug.Assert(runCancellationToken != null, "runCancellationToken");
 
             this.cancellationToken = runCancellationToken;
-            
+
             var isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
 
             // Placing this after deployment since we need information post deployment that we pass in as properties.
@@ -83,7 +82,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
         {
             this.cancellationToken = cancellationToken;
-            
+
             var discoverySink = new TestCaseDiscoverySink();
 
             var tests = new List<TestCase>();
@@ -95,9 +94,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 {
                     break;
                 }
-                
+
                 var logger = (IMessageLogger)frameworkHandle;
-                
+
                 // discover the tests
                 this.GetUnitTestDiscoverer().DiscoverTestsInSource(source, logger, discoverySink, runContext?.RunSettings);
                 tests.AddRange(discoverySink.Tests);
@@ -129,7 +128,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                  group test by test.Source into testGroup
                                  select new { Source = testGroup.Key, Tests = testGroup });
 
-
             foreach (var group in testsBySource)
             {
                 this.ExecuteTestsInSource(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone);
@@ -139,14 +137,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Execute the parameter tests present in parameter source
         /// </summary>
-        private void ExecuteTestsInSource(IEnumerable<TestCase> tests,
+        private void ExecuteTestsInSource(
+            IEnumerable<TestCase> tests,
                                          IRunContext runContext,
                                          ITestExecutionRecorder testExecutionRecorder,
                                          string source,
                                          bool isDeploymentDone)
         {
             Debug.Assert(!string.IsNullOrEmpty(source), "Source cannot be empty");
-            
+
             source = isDeploymentDone
                          ? Path.Combine(
                              PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory(),
@@ -161,7 +160,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 this.ExecuteTestsWithTestRunner(tests, runContext, testExecutionRecorder, source, testRunner);
 
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}",
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                    "Executed tests belonging to source {0}",
                     source);
             }
         }
@@ -228,7 +228,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         {
                             sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
                         }
-                        
+
                         unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
                     }
 
@@ -266,13 +266,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Send last test result
                 this.SendTestResults(test, unitTestResult, startTime, endTime, testExecutionRecorder);
             }
+
             this.LogWarnings(testExecutionRecorder, warnings);
         }
 
         internal virtual UnitTestDiscoverer GetUnitTestDiscoverer()
         {
             return new UnitTestDiscoverer();
-        } 
+        }
 
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
             Justification = "Requirement is to handle errors in user specified run parameters")]
@@ -297,7 +298,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
         }
-        
+
         /// <summary>
         /// Log the parameter warnings on the parameter logger
         /// </summary>
@@ -324,7 +325,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return;
             }
 
-
             foreach (var unitTestResult in unitTestResults)
             {
                 if (test == null)
@@ -338,6 +338,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 {
                     testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, unitTestResult.DatarowIndex);
                 }
+
                 testExecutionRecorder.RecordEnd(test, testResult.Outcome);
 
                 if (testResult.Outcome == TestOutcome.Failed)

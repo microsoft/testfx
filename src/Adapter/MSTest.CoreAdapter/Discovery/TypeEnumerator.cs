@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         private readonly TypeValidator typeValidator;
         private readonly TestMethodValidator testMethodValidator;
         private readonly ReflectHelper reflectHelper;
-        
+
         /// <summary>
         /// Whether test class has [Ignore] attribute on it. Nullable so that we can cache the value.
         /// </summary>

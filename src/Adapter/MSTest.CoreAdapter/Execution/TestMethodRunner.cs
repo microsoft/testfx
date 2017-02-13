@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private readonly ITestContext testContext;
 
         /// <summary>
-        /// TestMethod that needs to be executed. 
+        /// TestMethod that needs to be executed.
         /// </summary>
         private readonly TestMethod test;
 
@@ -61,9 +61,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             ITestContext testContext,
             bool captureDebugTraces)
         {
-            Debug.Assert(testMethodInfo != null);
-            Debug.Assert(testMethod != null);
-            Debug.Assert(testContext != null);
+            Debug.Assert(testMethodInfo != null, "testMethodInfo should not be null");
+            Debug.Assert(testMethod != null, "testMethod should not be null");
+            Debug.Assert(testContext != null, "testContext should not be null");
 
             this.testMethodInfo = testMethodInfo;
             this.test = testMethod;
@@ -71,12 +71,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.captureDebugTraces = captureDebugTraces;
         }
 
-
         /// <summary>
         /// Executes a test
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Catching all exceptions that will be thrown by user code.")]
+        /// <returns>The test results.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Catching all exceptions that will be thrown by user code.")]
         internal UnitTestResult[] Execute()
         {
             string initLogs = string.Empty;
@@ -131,19 +130,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 firstResult.StandardError = errorLogs + firstResult.StandardError;
                 firstResult.DebugTrace = initTrace + firstResult.DebugTrace;
             }
+
             return result;
         }
 
         /// <summary>
         /// Runs the test method
         /// </summary>
+        /// <returns>The test results.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2201:DoNotRaiseReservedExceptionTypes")]
         [SuppressMessage("Microsoft.Design", "CA1031")]
         internal UnitTestResult[] RunTestMethod()
         {
-            Debug.Assert(this.test != null);
-            Debug.Assert(this.testMethodInfo.TestMethod != null);
-            
+            Debug.Assert(this.test != null, "Test should not be null.");
+            Debug.Assert(this.testMethodInfo.TestMethod != null, "Test method should not be null.");
+
             UTF.TestResult[] results = null;
 
             if (this.testMethodInfo.Executor != null)
@@ -162,7 +163,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
                 catch (Exception ex)
                 {
-                    results = new[] { new UTF.TestResult() { TestFailureException = new Exception(string.Format( CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message),ex)} };
+                    results = new[] { new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) } };
                 }
             }
             else
@@ -198,7 +199,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             else
             {
                 this.testContext.SetOutcome(UTF.UnitTestOutcome.Unknown);
-                results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Unknown, TestFailureException = new TestFailedException( UnitTestOutcome.Error, Resource.UTA_NoTestResult) } };
+                results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Unknown, TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult) } };
             }
 
             return this.ConvertTestResultToUnitTestResult(results);
@@ -259,9 +260,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                             new TestFailedException(
                                 outcome,
                                 results[i].TestFailureException.TryGetMessage(),
-                                testException != null
-                                    ? testException.StackTraceInformation
-                                    : results[i].TestFailureException.TryGetStackTraceInformation()));
+                                testException != null ? testException.StackTraceInformation : results[i].TestFailureException.TryGetStackTraceInformation()));
                 }
                 else
                 {

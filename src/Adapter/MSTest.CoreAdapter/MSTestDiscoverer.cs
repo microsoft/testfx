@@ -7,13 +7,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 
     /// <summary>
     /// Contains the discovery logic for this adapter.
@@ -33,7 +31,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <param name="logger">Logger used to log messages.</param>
         /// <param name="discoverySink">Used to send testcases and discovery related events back to Discoverer manager.</param>
         [System.Security.SecurityCritical]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design",
+        [System.Diagnostics.CodeAnalysis.SuppressMessage(
+            "Microsoft.Design",
             "CA1062:Validate arguments of public methods", MessageId = "0")]
         public void DiscoverTests(
             IEnumerable<string> sources,
@@ -44,7 +43,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             ValidateArg.NotNull(sources, "sources");
             ValidateArg.NotNull(logger, "logger");
             ValidateArg.NotNull(discoverySink, "discoverySink");
-            
+
             if (!this.AreValidSources(sources))
             {
                 throw new NotSupportedException(Resource.SourcesNotSupported);
@@ -55,7 +54,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
             // Scenarios that include testsettings or forcing a run via the legacy adapter are currently not supported in MSTestAdapter.
             if (MSTestSettings.IsLegacyScenario(logger))
+            {
                 return;
+            }
 
             new UnitTestDiscoverer().DiscoverTests(sources, logger, discoverySink, discoveryContext?.RunSettings);
         }

@@ -32,8 +32,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         {
         }
 
-        public TestFailedException(UnitTestOutcome outcome, string errorMessage, StackTraceInformation stackTraceInformation, Exception realException) 
-            : base (errorMessage, realException)
+        public TestFailedException(UnitTestOutcome outcome, string errorMessage, StackTraceInformation stackTraceInformation, Exception realException)
+            : base(errorMessage, realException)
         {
             Debug.Assert(!string.IsNullOrEmpty(errorMessage), "ErrorMessage should not be empty");
 
@@ -41,12 +41,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             this.StackTraceInformation = stackTraceInformation;
         }
 
-
         /// <summary>
         /// Stack Trace information associated with the test failure
         /// </summary>
         public StackTraceInformation StackTraceInformation { get; private set; }
-
 
         /// <summary>
         /// Outcome of the test case

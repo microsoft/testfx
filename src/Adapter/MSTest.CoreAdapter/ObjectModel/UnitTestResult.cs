@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
-    
+
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
     using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
@@ -27,7 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// Initializes a new instance of the <see cref="UnitTestResult"/> class.
         /// </summary>
         /// <param name="testFailedException"> The test failed exception. </param>
-        internal UnitTestResult(TestFailedException testFailedException) 
+        internal UnitTestResult(TestFailedException testFailedException)
             : this()
         {
             this.Outcome = testFailedException.Outcome;
@@ -38,7 +38,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 this.ErrorStackTrace = testFailedException.StackTraceInformation.ErrorStackTrace;
                 this.ErrorLineNumber = testFailedException.StackTraceInformation.ErrorLineNumber;
                 this.ErrorFilePath = testFailedException.StackTraceInformation.ErrorFilePath;
-                this.ErrorColumnNumber = testFailedException.StackTraceInformation.ErrorColumnNumber; 
+                this.ErrorColumnNumber = testFailedException.StackTraceInformation.ErrorColumnNumber;
             }
         }
 
@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         /// <param name="outcome"> The outcome. </param>
         /// <param name="errorMessage"> The error message. </param>
-        internal UnitTestResult(UnitTestOutcome outcome, string errorMessage) 
+        internal UnitTestResult(UnitTestOutcome outcome, string errorMessage)
             : this()
         {
             this.Outcome = outcome;
@@ -90,7 +90,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public string StandardError { get; internal set; }
 
         /// <summary>
-        /// Gets the debug trace of the result 
+        /// Gets the debug trace of the result
         /// </summary>
         public string DebugTrace { get; internal set; }
 
@@ -110,13 +110,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public int ErrorColumnNumber { get; private set; }
 
         /// <summary>
-        /// Data row index in data source. Set only for results of individual 
+        /// Gets data row index in data source. Set only for results of individual
         /// run of data row of a data driven test.
         /// </summary>
         public int DatarowIndex { get; internal set; }
 
         /// <summary>
-        /// Gets the result files attached by the test. 
+        /// Gets the result files attached by the test.
         /// </summary>
         public IList<string> ResultFiles { get; internal set; }
 
@@ -126,6 +126,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <param name="testCase"> The test Case.  </param>
         /// <param name="startTime"> The start Time.  </param>
         /// <param name="endTime"> The end Time.  </param>
+        /// <param name="mapInconclusiveToFailed">Indication to map inconclusive tests to failed.</param>
         /// <returns> The <see cref="TestResult"/>. </returns>
         internal TestResult ToTestResult(TestCase testCase, DateTimeOffset startTime, DateTimeOffset endTime, bool mapInconclusiveToFailed)
         {
@@ -139,7 +140,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                                             ErrorStackTrace = this.ErrorStackTrace,
                                             Outcome = UnitTestOutcomeHelper.ToTestOutcome(this.Outcome, mapInconclusiveToFailed),
                                             StartTime = startTime,
-                                            EndTime = endTime                                   
+                                            EndTime = endTime
             };
 
             if (!string.IsNullOrEmpty(this.StandardOut))
@@ -147,6 +148,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 TestResultMessage message = new TestResultMessage(TestResultMessage.StandardOutCategory, this.StandardOut);
                 testResult.Messages.Add(message);
             }
+
             if (!string.IsNullOrEmpty(this.StandardError))
             {
                 TestResultMessage message = new TestResultMessage(TestResultMessage.StandardErrorCategory, this.StandardError);
@@ -155,7 +157,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
             if (!string.IsNullOrEmpty(this.DebugTrace))
             {
-                string debugTraceMessagesinStdOut = String.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.DebugTraceBanner, this.DebugTrace);
+                string debugTraceMessagesinStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.DebugTraceBanner, this.DebugTrace);
                 TestResultMessage debugTraceMessage = new TestResultMessage(TestResultMessage.StandardOutCategory, debugTraceMessagesinStdOut);
                 testResult.Messages.Add(debugTraceMessage);
             }
@@ -176,9 +178,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             return testResult;
         }
     }
-    
+
     /// <summary>
-    /// Outcome of a test 
+    /// Outcome of a test
     /// </summary>
     public enum UnitTestOutcome : int
     {
@@ -210,7 +212,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         Ignored,
 
         /// <summary>
-        /// Test cannot be executed. 
+        /// Test cannot be executed.
         /// </summary>
         NotRunnable,
 
@@ -225,7 +227,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         NotFound,
 
         /// <summary>
-        /// When test is handed over to runner for execution, it goes into progress state. 
+        /// When test is handed over to runner for execution, it goes into progress state.
         /// It is added so that the right status can be set in TestContext.
         /// </summary>
         InProgress,
@@ -255,7 +257,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 case UnitTestOutcome.Inconclusive:
                     {
                         if (mapInconclusiveToFailed)
+                        {
                             return TestOutcome.Failed;
+                        }
+
                         return TestOutcome.Skipped;
                     }
 

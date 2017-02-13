@@ -83,14 +83,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         ITraceListener GetTraceListener(TextWriter textWriter);
 
         /// <summary>
-        /// Gets an instance to the platform service trace-listener manager which updates the output/error streams 
+        /// Gets an instance to the platform service trace-listener manager which updates the output/error streams
         /// with redirected streams and performs operations on the listener provided as argument.
         /// </summary>
         /// <param name="outputWriter">
-        /// The redirected output stream writer. 
+        /// The redirected output stream writer.
         /// </param>
         /// <param name="errorWriter">
-        /// The redirected error stream writer. 
+        /// The redirected error stream writer.
         /// </param>
         /// <returns>
         /// The manager for trace listeners.

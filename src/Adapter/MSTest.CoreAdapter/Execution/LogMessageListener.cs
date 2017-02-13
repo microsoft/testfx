@@ -10,10 +10,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
-
     /// <summary>
     /// Listens for log messages and Debug.WriteLine
-    /// Note that this class is not thread-safe and thus should only be used when unit tests are being run serially.    
+    /// Note that this class is not thread-safe and thus should only be used when unit tests are being run serially.
     /// </summary>
     public class LogMessageListener : IDisposable
     {
@@ -41,7 +40,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             this.captureDebugTraces = captureDebugTraces;
 
-            // Cache the original output/error streams and replace it with the own stream. 
+            // Cache the original output/error streams and replace it with the own stream.
             this.redirectLoggerOut = new ThreadSafeStringWriter(CultureInfo.InvariantCulture);
             Logger.OnLogMessage += this.redirectLoggerOut.WriteLine;
 
@@ -53,16 +52,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             if (this.captureDebugTraces)
             {
-                traceListener = PlatformServiceProvider.Instance.GetTraceListener(new ThreadSafeStringWriter(CultureInfo.InvariantCulture));
-                traceListenerManager = PlatformServiceProvider.Instance.GetTraceListenerManager(this.redirectLoggerOut, this.redirectStdErr);
+                this.traceListener = PlatformServiceProvider.Instance.GetTraceListener(new ThreadSafeStringWriter(CultureInfo.InvariantCulture));
+                this.traceListenerManager = PlatformServiceProvider.Instance.GetTraceListenerManager(this.redirectLoggerOut, this.redirectStdErr);
 
                 // If there was a previous LogMessageListener active, remove its
                 // TraceListener (it will be restored when this one is disposed).
-                if (previousRedirector != null && previousRedirector.traceListener != null)
+                if (this.previousRedirector != null && this.previousRedirector.traceListener != null)
                 {
-                    traceListenerManager.Remove(previousRedirector.traceListener);
+                    this.traceListenerManager.Remove(this.previousRedirector.traceListener);
                 }
-                traceListenerManager.Add(traceListener);
+
+                this.traceListenerManager.Add(this.traceListener);
             }
 
             activeRedirector = this;
@@ -72,7 +72,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Logger output
         /// </summary>
         public string StandardOutput => this.redirectLoggerOut.ToString();
-       
+
         /// <summary>
         /// 'Error' Output from the redirected stream
         /// </summary>
@@ -85,8 +85,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             get
             {
-                return (traceListener == null || traceListener.GetWriter() == null)? 
-                    string.Empty : traceListener.GetWriter().ToString();
+                return (this.traceListener == null || this.traceListener.GetWriter() == null)?
+                    string.Empty : this.traceListener.GetWriter().ToString();
             }
         }
 
@@ -94,7 +94,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             this.Dispose(false);
         }
-
 
         public void Dispose()
         {
@@ -116,12 +115,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 {
                     try
                     {
-                        traceListenerManager.Remove(traceListener);
+                        this.traceListenerManager.Remove(this.traceListener);
 
                         // Restore the previous LogMessageListener's TraceListener (if there was one)
-                        if (previousRedirector != null && previousRedirector.traceListener != null)
+                        if (this.previousRedirector != null && this.previousRedirector.traceListener != null)
                         {
-                            traceListenerManager.Add(previousRedirector.traceListener);
+                            this.traceListenerManager.Add(this.previousRedirector.traceListener);
                         }
                     }
                     catch (Exception e)
@@ -132,13 +131,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                             e);
                     }
 
-                    if (traceListener != null)
+                    if (this.traceListener != null)
                     {
                         // Dispose trace manager and listeners
-                        traceListenerManager.Close(traceListener);
-                        traceListenerManager.Dispose(traceListener);
-                        traceListenerManager = null;
-                        traceListener = null;
+                        this.traceListenerManager.Close(this.traceListener);
+                        this.traceListenerManager.Dispose(this.traceListener);
+                        this.traceListenerManager = null;
+                        this.traceListener = null;
                     }
                 }
 

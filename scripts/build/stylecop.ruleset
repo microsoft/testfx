@@ -3,6 +3,9 @@
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
     <!-- Allow use of regions -->
     <Rule Id="SA1124" Action="None" />
+
+    <!-- Do not require XML documentation -->
+    <Rule Id="SA1652" Action="None" />
   </Rules>
 </RuleSet>
 

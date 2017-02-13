@@ -5,16 +5,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.Xml;
-
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
-
     using TestAdapter;
-
     using TestPlatform.ObjectModel;
-    using System.Diagnostics.CodeAnalysis;
 
     internal class RunSettingsUtilities
     {
@@ -46,6 +43,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 //Return default.
                 nodeValue = new Dictionary<string, object>();
             }
+
             return nodeValue;
         }
 

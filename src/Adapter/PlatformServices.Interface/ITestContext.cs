@@ -3,13 +3,13 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface
 {
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
     using System.Collections.Generic;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// Operations on the TestContext object that is implemented differently for each platform.
     /// </summary>
-    public interface ITestContext 
+    public interface ITestContext
     {
         /// <summary>
         /// Gets the inner test context object.
@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// <param name="propertyValue"> The property Value. </param>
         /// <returns> True if the property is present. </returns>
         bool TryGetPropertyValue(string propertyName, out object propertyValue);
-        
+
         /// <summary>
         /// Adds the parameter name/value pair to property bag.
         /// </summary>
@@ -38,7 +38,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         void SetOutcome(UnitTestOutcome outcome);
 
         /// <summary>
-        /// Gets the attached Result files 
+        /// Gets the attached Result files
         /// </summary>
         /// <returns>
         /// The list of result files.

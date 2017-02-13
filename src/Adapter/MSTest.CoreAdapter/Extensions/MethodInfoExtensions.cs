@@ -6,20 +6,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
-
+    using System.Runtime.CompilerServices;
+    using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using System.Threading.Tasks;
-    using System.Runtime.CompilerServices;
 
     internal static class MethodInfoExtensions
     {
         /// <summary>
         /// Verifies that the class initialize has the correct signature
         /// </summary>
+        /// <param name="method">The method to verify.</param>
+        /// <returns>True if the method has the right Assembly/Class initialize signature.</returns>
         internal static bool HasCorrectClassOrAssemblyInitializeSignature(this MethodInfo method)
         {
-            Debug.Assert(method != null);
+            Debug.Assert(method != null, "method should not be null.");
 
             ParameterInfo[] parameters = method.GetParameters();
 
@@ -34,9 +35,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <summary>
         /// Verifies that the class cleanup has the correct signature
         /// </summary>
+        /// <param name="method">The method to verify.</param>
+        /// <returns>True if the method has the right Assembly/Class cleanup signature.</returns>
         internal static bool HasCorrectClassOrAssemblyCleanupSignature(this MethodInfo method)
         {
-            Debug.Assert(method != null);
+            Debug.Assert(method != null, "method should not be null.");
 
             return
                 method.IsStatic &&
@@ -48,9 +51,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <summary>
         /// Verifies that the test Initiailize/cleanup has the correct signature
         /// </summary>
+        /// <param name="method">The method to verify.</param>
+        /// <returns>True if the method has the right test init/cleanup signature.</returns>
         internal static bool HasCorrectTestInitializeOrCleanupSignature(this MethodInfo method)
         {
-            Debug.Assert(method != null);
+            Debug.Assert(method != null, "method should not be null.");
 
             return
                 !method.IsStatic &&
@@ -62,9 +67,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <summary>
         /// Verifies that the test method has the correct signature
         /// </summary>
+        /// <param name="method">The method to verify.</param>
+        /// <param name="ignoreParameterLength">Indicates whether parameter lenght is to be ignored.</param>
+        /// <returns>True if the method has the right test method signature.</returns>
         internal static bool HasCorrectTestMethodSignature(this MethodInfo method, bool ignoreParameterLength)
         {
-            Debug.Assert(method != null);
+            Debug.Assert(method != null, "method should not be null.");
 
             return
                 !method.IsAbstract &&
@@ -78,9 +86,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <summary>
         /// Checks whether test method has correct Timeout attribute.
         /// </summary>
+        /// <param name="method">The method to verify.</param>
+        /// <returns>True if the method has the right test timeout signature.</returns>
         internal static bool HasCorrectTimeout(this MethodInfo method)
         {
-            Debug.Assert(method != null);
+            Debug.Assert(method != null, "method should not be null.");
 
             // There should be one and only one TimeoutAttribute.
             var attributes = ReflectHelper.GetCustomAttributes(method, typeof(TimeoutAttribute), false);
@@ -98,6 +108,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <summary>
         /// Check is return type is void for non async and Task for async methods.
         /// </summary>
+        /// <param name="method">The method to verify.</param>
+        /// <returns>True if the method has a void/task return type..</returns>
         internal static bool IsVoidOrTaskReturnType(this MethodInfo method)
         {
             return method.GetAsyncTypeName() == null ? ReflectHelper.MatchReturnType(method, typeof(void))
@@ -106,8 +118,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 
         /// <summary>
         /// For async methods compiler generates different type and method.
-        /// Return compiler generated type name for given async test method.
+        /// Gets the compiler generated type name for given async test method.
         /// </summary>
+        /// <param name="method">The method to verify.</param>
+        /// <returns>Compiler generated type name for given async test method..</returns>
         internal static string GetAsyncTypeName(this MethodInfo method)
         {
             var asyncStateMachineAttribute = ReflectHelper.GetCustomAttributes(method, typeof(AsyncStateMachineAttribute), false).FirstOrDefault() as AsyncStateMachineAttribute;

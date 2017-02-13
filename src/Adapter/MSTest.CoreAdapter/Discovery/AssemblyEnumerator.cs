@@ -6,15 +6,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Reflection;
-
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Linq;
+    using System.Reflection;
     using System.Text;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-    using System.Diagnostics.CodeAnalysis;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
     /// <summary>
     /// Enumerates through all types in the assembly in search of valid test methods.
@@ -51,7 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             {
                 assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
             }
-            
+
             var types = this.GetTypes(assembly, assemblyFileName, warningMessages);
 
             foreach (var type in types)
@@ -83,7 +81,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 catch (Exception exception)
                 {
                     // If we fail to discover type from a class, then dont abort the discovery
-                    // Move to the next type. 
+                    // Move to the next type.
                     string message = string.Format(
                         CultureInfo.CurrentCulture,
                         Resource.CouldNotInspectTypeDuringDiscovery,
@@ -91,7 +89,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                         assemblyFileName,
                         exception.Message);
                     warningMessages.Add(message);
-
 
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                         "AssemblyEnumerator: Exception occured while enumerating type {0}. {1}",

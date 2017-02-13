@@ -11,6 +11,7 @@
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <ShouldEnableStyleCop>true</ShouldEnableStyleCop>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -54,11 +55,21 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigurationSettings.cs" />
-    <Compile Include="PrivateAccessor.cs" />
+    <Compile Include="ConfigurationSettings\ConfigurationNames.cs" />
+    <Compile Include="ConfigurationSettings\DataSourceElement.cs" />
+    <Compile Include="ConfigurationSettings\DataSourceElementCollection.cs" />
+    <Compile Include="ConfigurationSettings\TestConfiguration.cs" />
+    <Compile Include="ConfigurationSettings\TestConfigurationSection.cs" />
+    <Compile Include="PrivateObject.cs" />
+    <Compile Include="PrivateType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RuntimeTypeHelper.cs" />
     <Compile Include="TestContext.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="$(TestFxRoot)scripts\build\stylecop.json">
+      <Link>stylecop.json</Link>
+    </AdditionalFiles>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

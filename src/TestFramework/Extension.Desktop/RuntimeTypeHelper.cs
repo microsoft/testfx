@@ -13,6 +13,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// </summary>
     internal class RuntimeTypeHelper
     {
+        /// <summary>
+        /// Compares the method signatures of these two methods.
+        /// </summary>
+        /// <param name="m1">Method1</param>
+        /// <param name="m2">Method2</param>
+        /// <returns>True if they are similiar.</returns>
         internal static bool CompareMethodSigAndName(MethodBase m1, MethodBase m2)
         {
             ParameterInfo[] params1 = m1.GetParameters();
@@ -35,6 +41,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             return true;
         }
 
+        /// <summary>
+        /// Gets the hierarchy depty from the base type of the provided type.
+        /// </summary>
+        /// <param name="t">The type.</param>
+        /// <returns>The depth.</returns>
         internal static int GetHierarchyDepth(Type t)
         {
             int depth = 0;
@@ -50,6 +61,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             return depth;
         }
 
+        /// <summary>
+        /// Finds most dervied type with the provided information.
+        /// </summary>
+        /// <param name="match">Candidate matches.</param>
+        /// <param name="cMatches">Number of matches.</param>
+        /// <returns>The most derived method.</returns>
         internal static MethodBase FindMostDerivedNewSlotMeth(MethodBase[] match, int cMatches)
         {
             int deepestHierarchy = 0;
@@ -93,6 +110,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// upon an array of types. This method should return null if no method matches
         /// the criteria.
         /// </summary>
+        /// <param name="bindingAttr">Binding specification.</param>
+        /// <param name="match">Candidate matches</param>
+        /// <param name="types">Types</param>
+        /// <param name="modifiers">Parameter modifiers.</param>
+        /// <returns>Matching method. Null if none matches.</returns>
         [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
         internal static MethodBase SelectMethod(BindingFlags bindingAttr, MethodBase[] match, Type[] types, ParameterModifier[] modifiers)
         {
@@ -119,7 +141,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 return null;
             }
 
-            // Find all the methods that can be described by the types parameter. 
+            // Find all the methods that can be described by the types parameter.
             // Remove all of them that cannot.
             int curIdx = 0;
             for (i = 0; i < match.Length; i++)
@@ -148,7 +170,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                             continue;
                         }
 
-                        if (pCls == typeof(Object))
+                        if (pCls == typeof(object))
                         {
                             continue;
                         }
@@ -213,6 +235,18 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             return match[currentMin];
         }
 
+        /// <summary>
+        /// Finds the most specific method in the two methods provided.
+        /// </summary>
+        /// <param name="m1">Method 1</param>
+        /// <param name="paramOrder1">Parameter order for Method 1</param>
+        /// <param name="paramArrayType1">Paramter array type.</param>
+        /// <param name="m2">Method 2</param>
+        /// <param name="paramOrder2">Parameter order for Method 2</param>
+        /// <param name="paramArrayType2">>Paramter array type.</param>
+        /// <param name="types">Types to search in.</param>
+        /// <param name="args">Args.</param>
+        /// <returns>An int representing the match.</returns>
         internal static int FindMostSpecificMethod(
             MethodBase m1,
             int[] paramOrder1,
@@ -221,7 +255,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             int[] paramOrder2,
             Type paramArrayType2,
             Type[] types,
-            Object[] args)
+            object[] args)
         {
             // Find the most specific method based on the parameters.
             int res = FindMostSpecific(
@@ -234,7 +268,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 types,
                 args);
 
-            // If the match was not ambigous then return the result.
+            // If the match was not ambiguous then return the result.
             if (res != 0)
             {
                 return res;
@@ -262,10 +296,22 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 }
             }
 
-            // The match is ambigous.
+            // The match is ambiguous.
             return 0;
         }
 
+        /// <summary>
+        /// Finds the most specific method in the two methods provided.
+        /// </summary>
+        /// <param name="p1">Method 1</param>
+        /// <param name="paramOrder1">Parameter order for Method 1</param>
+        /// <param name="paramArrayType1">Paramter array type.</param>
+        /// <param name="p2">Method 2</param>
+        /// <param name="paramOrder2">Parameter order for Method 2</param>
+        /// <param name="paramArrayType2">>Paramter array type.</param>
+        /// <param name="types">Types to search in.</param>
+        /// <param name="args">Args.</param>
+        /// <returns>An int representing the match.</returns>
         [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
         internal static int FindMostSpecific(
             ParameterInfo[] p1,
@@ -275,7 +321,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             int[] paramOrder2,
             Type paramArrayType2,
             Type[] types,
-            Object[] args)
+            object[] args)
         {
             // A method using params is always less specific than one not using params
             if (paramArrayType1 != null && paramArrayType2 == null)
@@ -378,6 +424,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
         }
 
+        /// <summary>
+        /// Finds the most specific type in the two provided.
+        /// </summary>
+        /// <param name="c1">Type 1</param>
+        /// <param name="c2">Type 2</param>
+        /// <param name="t">The defining type</param>
+        /// <returns>An int representing the match.</returns>
         [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
         internal static int FindMostSpecificType(Type c1, Type c2, Type t)
         {

@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// Gets the declaring class full name. This will be used while getting navigation data.
         /// </summary>
         string DeclaringClassFullName { get; }
-        
+
         /// <summary>
         /// Gets the name of the test assembly
         /// </summary>

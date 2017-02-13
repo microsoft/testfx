@@ -15,7 +15,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-
     internal class ReflectHelper : MarshalByRefObject
     {
         /// <summary>
@@ -29,6 +28,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <param name="memberInfo">Member/Type to test</param>
         /// <param name="attributeType">Attribute to search for</param>
         /// <param name="inherit">Look throug inheritence or not</param>
+        /// <returns>True if the attribute of the specified type is defined.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "1")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public virtual bool IsAttributeDefined(MemberInfo memberInfo, Type attributeType, bool inherit)
@@ -43,9 +43,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 throw new ArgumentNullException(nameof(attributeType));
             }
 
-            Debug.Assert(attributeType != null);
+            Debug.Assert(attributeType != null, "attrbiuteType should not be null.");
 
-            // Get attributes defined on the member from the cache. 
+            // Get attributes defined on the member from the cache.
             Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
             if (attributes == null)
             {
@@ -61,13 +61,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
             return false;
         }
-        
+
         /// <summary>
         /// Checks to see if the parameter memberInfo contains the parameter attribute or not.
         /// </summary>
-        /// <param name="memberInfo">Member/Type to test</param>
+        /// <param name="type">Member/Type to test</param>
         /// <param name="attributeType">Attribute to search for</param>
         /// <param name="inherit">Look throug inheritence or not</param>
+        /// <returns>True if the specified attribute is defined on the type.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "1")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         public virtual bool IsAttributeDefined(Type type, Type attributeType, bool inherit)
@@ -82,9 +83,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 throw new ArgumentNullException(nameof(attributeType));
             }
 
-            Debug.Assert(attributeType != null);
+            Debug.Assert(attributeType != null, "attributeType should not e null.");
 
-            // Get attributes defined on the member from the cache. 
+            // Get attributes defined on the member from the cache.
             var attributes = GetCustomAttributes(type.GetTypeInfo(), attributeType, inherit);
 
             if (attributes == null)
@@ -177,6 +178,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <summary>
         /// Returns true when specified class/member has attribute derived from specific attribute.
         /// </summary>
+        /// <param name="memberInfo">The member.</param>
+        /// <param name="baseAttributeType">Base attribute type.</param>
+        /// <param name="inherit">Whether inheritance hierarchy should be considered.</param>
+        /// <param name="targetAttribute">Target attribute. </param>
         /// <returns>An object derived from Attribute that corresponds to the instance of found attribute.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1007:UseGenericsWhereAppropriate")]
@@ -243,9 +248,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             {
                 // If construction of the attribute throws an exception, indicate that there was an
                 // error when trying to run the test
-                string errorMessage = string.Format(CultureInfo.CurrentCulture,
+                string errorMessage = string.Format(
+                                                    CultureInfo.CurrentCulture,
                                                     Resource.UTA_ExpectedExceptionAttributeConstructionException,
-                                                    testMethod.FullClassName, testMethod.Name, StackTraceHelper.GetExceptionMessage(ex));
+                                                    testMethod.FullClassName,
+                                                    testMethod.Name,
+                                                    StackTraceHelper.GetExceptionMessage(ex));
                 throw new TypeInspectionException(errorMessage);
             }
 
@@ -258,8 +266,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             // ExpectedExceptionBaseAttribute are not allowed on a test method)
             if (expectedExceptions.Length > 1)
             {
-                string errorMessage = string.Format(CultureInfo.CurrentCulture,
-                                                    Resource.UTA_MultipleExpectedExceptionsOnTestMethod, testMethod.FullClassName, testMethod.Name);
+                string errorMessage = string.Format(
+                                                    CultureInfo.CurrentCulture,
+                                                    Resource.UTA_MultipleExpectedExceptionsOnTestMethod,
+                                                    testMethod.FullClassName,
+                                                    testMethod.Name);
                 throw new TypeInspectionException(errorMessage);
             }
 
@@ -284,6 +295,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 Debug.Assert(attributes.Length == 1);
                 return attributes[0] as AttributeType;
             }
+
             return null;
         }
 
@@ -298,6 +310,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 Debug.Assert(attributes.Length == 1);
                 return attributes[0] as Attribute;
             }
+
             return null;
         }
 
@@ -310,6 +323,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             {
                 throw new ArgumentNullException(nameof(method));
             }
+
             if (returnType == null)
             {
                 throw new ArgumentNullException(nameof(returnType));
@@ -323,7 +337,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// </summary>
         internal virtual string[] GetCategories(MemberInfo categoryAttributeProvider)
         {
-            var categories = GetCustomAttributesRecursively(categoryAttributeProvider, typeof(TestCategoryBaseAttribute));
+            var categories = this.GetCustomAttributesRecursively(categoryAttributeProvider, typeof(TestCategoryBaseAttribute));
             List<string> testCategories = new List<string>();
 
             if (categories != null)
@@ -337,7 +351,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             return testCategories.ToArray();
         }
 
-
         /// <summary>
         /// Gets custom attributes at the class and assembly for a method.
         /// </summary>
@@ -345,15 +358,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <param name="type"> What type of CustomAttribute you need. For instance: TestCategory, Owner etc.,</param>
         /// <returns>The categories of the specified type on the method. </returns>
         internal IEnumerable<object> GetCustomAttributesRecursively(MemberInfo attributeProvider, Type type)
-        {            
+        {
             var categories = this.GetCustomAttributes(attributeProvider, typeof(TestCategoryBaseAttribute));
-            if(categories != null)
-                categories = categories.Concat(this.GetCustomAttributes(attributeProvider.DeclaringType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
             if (categories != null)
-                categories = categories.Concat(this.GetCustomAttributeForAssembly(attributeProvider, typeof(TestCategoryBaseAttribute))).ToArray();
+            {
+                categories = categories.Concat(this.GetCustomAttributes(attributeProvider.DeclaringType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
+            }
 
             if (categories != null)
+            {
+                categories = categories.Concat(this.GetCustomAttributeForAssembly(attributeProvider, typeof(TestCategoryBaseAttribute))).ToArray();
+            }
+
+            if (categories != null)
+            {
                 return categories;
+            }
 
             return Enumerable.Empty<object>();
         }
@@ -364,14 +384,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// </summary>
         /// <param name="memberInfo"></param>
         /// <returns></returns>
-        public virtual Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo,Type type)
+        public virtual Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo, Type type)
         {
             return
                 PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
                     memberInfo.DeclaringType.GetTypeInfo().Assembly,
                     type).OfType<Attribute>().ToArray();
         }
-        
+
         /// <summary>
         /// Gets the custom attributes of the provided type on a memberInfo
         /// </summary>
@@ -385,7 +405,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
         /// <summary>
         /// Returns owner if attribute is applied to TestMethod, else null;
-        /// </summary>       
+        /// </summary>
         private string GetOwner(MemberInfo ownerAttributeProvider)
         {
             var ownerAttribute = GetCustomAttributes(ownerAttributeProvider, typeof(OwnerAttribute), true).ToArray();
@@ -407,7 +427,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         {
             string Owner = this.GetOwner(ownerAttributeProvider);
 
-            if (String.IsNullOrEmpty(Owner))
+            if (string.IsNullOrEmpty(Owner))
             {
                 return null;
             }
@@ -472,7 +492,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 Trait testPropertyPair;
                 if (testProperty.Name == null)
                 {
-                    testPropertyPair = new Trait(String.Empty, testProperty.Value);
+                    testPropertyPair = new Trait(string.Empty, testProperty.Value);
                 }
                 else
                 {
@@ -527,7 +547,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
-        /// Get the Attributes (TypeName/TypeObject) for a given member.  
+        /// Get the Attributes (TypeName/TypeObject) for a given member.
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         private Dictionary<string, object> GetAttributes(MemberInfo memberInfo, bool inherit)
@@ -617,7 +637,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
             return null;
         }
-        
+
         /// <summary>
         /// Get attribute defined on a method which is of given type of subtype of given type.
         /// </summary>
