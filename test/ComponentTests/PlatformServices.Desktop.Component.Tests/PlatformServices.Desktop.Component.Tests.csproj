@@ -48,7 +48,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(TestFxRoot)scripts\build\key.snk" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj">

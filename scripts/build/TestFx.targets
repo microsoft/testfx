@@ -7,6 +7,14 @@
   <!-- Import props/targets with $(RepoRoot) since msbuild takes the relative path based on settings.targets and not with respect to the project. -->
   <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
 
+  <ItemGroup>
+    <None Include="$(TestFxRoot)scripts\build\key.snk">
+      <!-- Do not have this show up in Solution Explorer in VS -->
+      <InProject>false</InProject>
+    </None>
+  </ItemGroup>
+  
+  <!-- Including dependencies for StyleCop. -->
   <ItemGroup Condition="$(ShouldEnableStyleCop) == 'true'">
     <Analyzer Include="$(TestFxRoot)packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
     <Analyzer Include="$(TestFxRoot)packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />

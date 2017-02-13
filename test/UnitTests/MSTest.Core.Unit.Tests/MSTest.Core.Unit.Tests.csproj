@@ -62,7 +62,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(TestFxRoot)scripts\build\key.snk" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assertions\AssertTests.cs" />

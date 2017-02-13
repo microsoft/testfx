@@ -41,10 +41,9 @@
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="$(TestFxRoot)sdk\TestPlatform.ObjectModel.UWP\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
+    <Reference Include="$(TestFxRoot)packages\Microsoft.Internal.TestPlatform.ObjectModel\14.0.0\lib\uap10.0\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(TestFxRoot)scripts\build\key.snk" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Services\UniversalFileOperationsTests.cs" />

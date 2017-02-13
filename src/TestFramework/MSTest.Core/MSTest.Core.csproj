@@ -73,7 +73,6 @@
     <Compile Include="Attributes\DataTestMethodAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

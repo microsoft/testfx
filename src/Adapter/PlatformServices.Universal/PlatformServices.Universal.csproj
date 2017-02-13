@@ -104,7 +104,6 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
@@ -114,9 +113,6 @@
     <Compile Include="Services\UniversalTestSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="Properties\ProviderService.UAP.rd.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="$(TestFxRoot)sdk\TestPlatform.ObjectModel.UWP\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj">

@@ -45,7 +45,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(TestFxRoot)scripts\build\key.snk" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="..\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
