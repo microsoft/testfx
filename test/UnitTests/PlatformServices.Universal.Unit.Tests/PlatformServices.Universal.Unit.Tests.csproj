@@ -44,7 +44,6 @@
     <Reference Include="$(TestFxRoot)packages\Microsoft.Internal.TestPlatform.ObjectModel\14.0.0\lib\uap10.0\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(TestFxRoot)scripts\build\key.snk" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Services\UniversalFileOperationsTests.cs" />

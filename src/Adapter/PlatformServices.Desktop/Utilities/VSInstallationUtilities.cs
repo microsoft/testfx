@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities
 {
@@ -20,7 +21,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <summary>
         /// Gets the visual studio installation path on the local machine.
         /// </summary>
-        /// <remarks>It is a good idea to get the VS Install path from registry, as it would work well with the Dev10, Dev11 compat.</remarks>
         /// <returns>VS install path</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Need to ignore failures to read the registry settings")]
         public static string VSInstallPath

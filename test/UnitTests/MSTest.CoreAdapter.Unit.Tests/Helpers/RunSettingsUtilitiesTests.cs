@@ -1,4 +1,5 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
 {
@@ -16,8 +17,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using global::MSTestAdapter.TestUtilities;
-
-    //using Assert = FrameworkV2::Microsoft.VisualStudio.TestPlatform.UnitTestFramework.Assert;
 
     [TestClass]
     public class RunSettingsUtilitiesTests

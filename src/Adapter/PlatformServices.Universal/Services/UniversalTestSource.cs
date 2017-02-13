@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
@@ -19,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private static IEnumerable<string> executableExtensions = new HashSet<string>()
         {
              Constants.ExeExtension,
-             //**Required only for store. In future if store support is needed, uncomment this. **//
+             //**Required only for store 8.1. In future if that support is needed, uncomment this. **//
              // Constants.DllExtension
         };
 
@@ -90,7 +91,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                             && !platformAssemblies.Contains(fileName.ToUpperInvariant())
                             && !SYSTEM_ASSEMBLIES.Contains(fileName.ToUpperInvariant()))
                     {
-                        //** Required only for store **//
+                        //** Required only for store 8.1 **//
                         //If a source package(appx) has both dll and exe files that contains tests, then add any one of them and not both. 
                         //if((fileName.EndsWith(Constants.ExeExtension) && !newSources.Contains(Path.GetFileNameWithoutExtension(fileName) + Constants.DllExtension))
                         //    || (fileName.EndsWith(Constants.DllExtension) && !newSources.Contains(Path.GetFileNameWithoutExtension(fileName) + Constants.ExeExtension)))

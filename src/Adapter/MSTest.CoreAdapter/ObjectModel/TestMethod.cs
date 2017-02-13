@@ -1,11 +1,5 @@
-// ---------------------------------------------------------------------------
-// <copyright file="TestMethod.cs" company="Microsoft"> 
-//     Copyright (c) Microsoft Corporation. All rights reserved. 
-// </copyright> 
-// <summary>
-//      Defines the test method.
-// </summary>
-// ---------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 {

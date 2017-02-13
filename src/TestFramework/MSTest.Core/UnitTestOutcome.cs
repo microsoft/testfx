@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
@@ -15,12 +16,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Test has completed, but we can't say if it passed or failed.
-        /// May be used for aborted tests...
+        /// May be used for aborted tests.
         /// </summary>
         Inconclusive,
 
         /// <summary>
-        /// Test was executed w/o any issues.
+        /// Test was executed without any issues.
         /// </summary>
         Passed,
 

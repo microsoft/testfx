@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
@@ -432,7 +433,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             catch (Exception ex)
             {
-                // FIXME case where TestMethod throws and TestCleanup throws as well, merge the stack traces!
                 var stackTraceInformation = StackTraceHelper.GetStackTraceInformation(ex.GetInnerExceptionOrDefault());
                 var errorMessage = string.Format(
                     CultureInfo.CurrentCulture,

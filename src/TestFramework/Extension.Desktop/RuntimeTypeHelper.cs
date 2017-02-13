@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
@@ -306,7 +307,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 //          or the argument to the param array is a single element
                 //              in which case paramOrder[i] == p1.Length - 1 for that element
                 //      or the user did not re-order the parameters in which case
-                //          the paramOrder array could contain indexes larger than p.Length - 1 (see VSW 577286)
+                //          the paramOrder array could contain indexes larger than p.Length - 1
                 ////          so any index >= p.Length - 1 is being put in the param array
 
                 if (paramArrayType1 != null && paramOrder1[i] >= p1.Length - 1)

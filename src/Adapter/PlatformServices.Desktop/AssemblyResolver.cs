@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
@@ -514,7 +515,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Verifies that found assembly name matches requested to avoid security issues.
         /// Looks only at PublicKeyToken and Version, empty matches anything.
-        /// VSWhidbey 415774.
         /// </summary>
         /// <param name="requestedName"> The requested Name. </param>
         /// <param name="foundName"> The found Name. </param>

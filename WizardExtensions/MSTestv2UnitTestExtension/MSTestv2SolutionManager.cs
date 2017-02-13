@@ -1,15 +1,14 @@
-﻿//   Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace MSTestv2UnitTestExtension
 {
     using EnvDTE;
     using EnvDTE80;
-    using Microsoft.VisualStudio.ComponentModelHost;
     using Microsoft.VisualStudio.TestPlatform.TestGeneration;
     using Microsoft.VisualStudio.TestPlatform.TestGeneration.Data;
     using Microsoft.VisualStudio.TestPlatform.TestGeneration.Logging;
     using Microsoft.VisualStudio.TestPlatform.TestGeneration.Model;
-    using NuGet.VisualStudio;
     using System;
     using VSLangProj80;
     using VSLangProj;

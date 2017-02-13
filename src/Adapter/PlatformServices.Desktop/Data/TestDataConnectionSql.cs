@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data
 {
@@ -350,9 +351,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         {
             // These routine assumes prefixes and suffixes
             // are single characters
-            //
-            // When you show me a data base that doesn't
-            // use a single character, I'll change this!
 
             string prefix = QuotePrefix;
             Debug.Assert(prefix.Length == 1);

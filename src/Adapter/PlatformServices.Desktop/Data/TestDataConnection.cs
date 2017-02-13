@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data
 {
@@ -48,11 +49,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         {
             if (PathNeedsFixup(path))
             {
-                // WARNING: If you change this code, make sure you also take a look at
-                // QTools\LoadTest\WebTestFramework\DataSource.cs because we have duplicated code
-                // To remove this duplication, we need a Common.dll in the GAC, or better yet
-                // we stop using the GAC!
-
                 string relPath = GetRelativePart(path);
 
                 // First bet, relative to the current directory
@@ -61,7 +57,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 {
                     return fullPath;
                 }
-
 
                 // Second bet, any on our folders foldersToCheck list
                 if (foldersToCheck != null)
@@ -76,9 +71,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     }
                 }
 
-
-                // Finally assume the file ended up directly in the current directory
-                // (this is Whidbey-like)
+                // Finally assume the file ended up directly in the current directory.
                 return Path.GetFullPath(Path.GetFileName(relPath));
             }
             return null;

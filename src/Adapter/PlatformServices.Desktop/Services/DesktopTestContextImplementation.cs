@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
@@ -162,7 +163,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             get
             {
-                // In MSTest, it is actually "In\697105f7-004f-42e8-bccf-eb024870d3e9\ASEEMB1", but 
+                // In MSTest, it is actually "In\697105f7-004f-42e8-bccf-eb024870d3e9\User1", but 
                 // we are setting it to "In" only because MSTest does not create this directory. 
                 return this.GetStringPropertyValue(TestContextPropertyStrings.TestResultsDirectory);
             }

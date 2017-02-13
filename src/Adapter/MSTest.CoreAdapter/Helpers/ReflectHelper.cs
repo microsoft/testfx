@@ -1,3 +1,5 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 {
@@ -130,8 +132,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             var attributes = GetCustomAttributes(type.GetTypeInfo(), inherit);
             if (attributes == null)
             {
-                // TODO: important: consider beter way. When running ObjectModel\Common tests I get this.
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("ReflectHelper.DefinesAttributeDerivedFrom: this does not really work when we failed to get attribute cache. Lose attribute inheritance and fall into 'type defines Attribute model', so that at least do something, not the best...");
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("ReflectHelper.HasAttributeDerivedFrom: Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.");
 
                 // If we could not obtain attrs in a fast (with cache) way, use slow reflection directly.
                 return type.GetTypeInfo().IsDefined(baseAttributeType, inherit);
@@ -198,8 +199,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
             if (attributes == null)
             {
-                // TODO: important: consider beter way. When running ObjectModel\Common tests I get this.
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("ReflectHelper.DefinesAttributeDerivedFrom: this does not really work when we failed to get attribute cache. Lose attribute inheritance and fall into 'type defines Attribute model', so that at least do something, not the best...");
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("ReflectHelper.HasAttributeDerivedFrom: Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.");
 
                 // If we could not obtain attrs in a fast (with cache) way, use slow reflection directly.
                 return memberInfo.IsDefined(baseAttributeType, inherit);
@@ -360,7 +360,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
         /// <summary>
         /// Gets the custom attributes on the assembly of a member info
-        /// NOTE: having it as separate virtual method, so that we can extendt it for testing.
+        /// NOTE: having it as separate virtual method, so that we can extend it for testing.
         /// </summary>
         /// <param name="memberInfo"></param>
         /// <returns></returns>
@@ -384,8 +384,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
-        /// Owner if any set for test method. Will return owner if attribute is applied to TestMethod
-        /// else null;
+        /// Returns owner if attribute is applied to TestMethod, else null;
         /// </summary>       
         private string GetOwner(MemberInfo ownerAttributeProvider)
         {

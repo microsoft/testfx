@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities
 {
@@ -105,7 +106,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: Using deployment directory {0} for source {1}.", runDirectories.OutDirectory, source);
 
             this.Deploy(new List<DeploymentItem>(deploymentItems), source, runDirectories.OutDirectory, out warnings);
-            
+
             // Log warnings
             LogWarnings(testExecutionRecorder, warnings);
 
@@ -184,8 +185,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     foreach (var fileToDeploy in filesToDeploy)
                     {
                         Debug.Assert(Path.IsPathRooted(fileToDeploy), "File " + fileToDeploy + " is not rooted");
-
-
+                        
                         // Ignore the test platform files. 
                         var tempFile = Path.GetFileName(fileToDeploy);
                         var assemblyName = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
@@ -290,7 +290,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             Debug.Assert(Path.IsPathRooted(testSource));
 
             // Note: if this is not an assembly we simply return empty array, also:
-            //       we filter out GAC and MS.VS.QT, do recursive search and report missing.
+            //       we do recursive search and report missing.
             IList<string> warningList;
             string[] references = this.assemblyUtility.GetFullPathToDependentAssemblies(testSource, configFile, out warningList);
             if (warningList != null && warningList.Count > 0)
@@ -351,7 +351,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     }
                 }
 
-                return new [] { fileName };
+                return new[] { fileName };
             }
             catch (Exception e)
             {
@@ -507,9 +507,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             {
                 outputDir = Path.GetFullPath(Path.Combine(deploymentDirectory, deploymentItem.RelativeOutputDirectory));
 
-                // convert the short path to full length path (like aseemb~1.Far to aseemb.Fareast) and the comparison
+                // convert the short path to full length path (like joe~1.dom to joe.domain) and the comparison
                 // startsWith in the next loop will work for the matching paths. 
-                //
                 deploymentDirectory = Path.GetFullPath(deploymentDirectory);
             }
             catch (Exception e)
@@ -570,7 +569,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 }
             }
         }
-        
+
         /// <summary>
         /// Get the parent test results directory where deployment will be done. 
         /// </summary>
