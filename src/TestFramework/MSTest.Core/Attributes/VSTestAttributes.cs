@@ -7,88 +7,21 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
-    using System.Reflection;
+
+#pragma warning disable SA1402 // FileMayOnlyContainASingleType
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     /// <summary>
     /// Enumeration for timeouts, that can be used with the <see cref="TimeoutAttribute"/> class.
     /// The type of the enumeration must match
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue")]
+    [SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification ="Compat reasons")]
     public enum TestTimeout
     {
         /// <summary>
         /// The infinite.
         /// </summary>
         Infinite = int.MaxValue
-    }
-
-    /// <summary>
-    /// TestMethod for execution.
-    /// </summary>
-    public interface ITestMethod
-    {
-        /// <summary>
-        /// Gets the name of test method.
-        /// </summary>
-        string TestMethodName { get; }
-
-        /// <summary>
-        /// Gets the name of test class.
-        /// </summary>
-        string TestClassName { get; }
-
-        /// <summary>
-        /// Gets the return type of test method.
-        /// </summary>
-        Type ReturnType { get; }
-
-        /// <summary>
-        /// Gets the parameters of test method.
-        /// </summary>
-        ParameterInfo[] ParameterTypes { get; }
-
-        /// <summary>
-        /// Gets the methodInfo for test method. Should not be used to invoke test method.
-        /// Its just for any other info may needed by extension.
-        /// </summary>
-        MethodInfo MethodInfo { get; }
-
-        /// <summary>
-        /// Invokes the test method.
-        /// </summary>
-        /// <param name="arguments">
-        /// Arguments to pass to test method. (E.g. For data driven)
-        /// </param>
-        /// <returns>
-        /// Result of test method invocation.
-        /// </returns>
-        /// <remarks>
-        /// This call handles asynchronous test methods as well.
-        /// </remarks>
-        TestResult Invoke(object[] arguments);
-
-        /// <summary>
-        /// Get all attributes of the test method.
-        /// </summary>
-        /// <param name="inherit">
-        /// Whether attribute defined in parent class is valid.
-        /// </param>
-        /// <returns>
-        /// All attributes.
-        /// </returns>
-        Attribute[] GetAllAttributes(bool inherit);
-
-        /// <summary>
-        /// Get attribute of specific type.
-        /// </summary>
-        /// <typeparam name="AttributeType"> System.Attribute type. </typeparam>
-        /// <param name="inherit">
-        /// Whether attribute defined in parent class is valid.
-        /// </param>
-        /// <returns>
-        /// The attributes of the specified type.
-        /// </returns>
-        AttributeType[] GetAttributes<AttributeType>(bool inherit) where AttributeType : Attribute;
     }
 
     /// <summary>
@@ -281,7 +214,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public sealed class DescriptionAttribute : TestPropertyAttribute
     {
         /// <summary>
-        /// Constructor to describe a test.
+        /// Initializes a new instance of the <see cref="DescriptionAttribute"/> class to describe a test.
         /// </summary>
         /// <param name="description">The description.</param>
         public DescriptionAttribute(string description)
@@ -303,7 +236,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public sealed class CssProjectStructureAttribute : TestPropertyAttribute
     {
         /// <summary>
-        /// Constructor for CSS Project Structure URI.
+        /// Initializes a new instance of the <see cref="CssProjectStructureAttribute"/> class for CSS Project Structure URI.
         /// </summary>
         /// <param name="cssProjectStructure">The CSS Project Structure URI.</param>
         public CssProjectStructureAttribute(string cssProjectStructure)
@@ -318,7 +251,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public string CssProjectStructure { get; private set; }
     }
 
-
     /// <summary>
     /// CSS Iteration URI
     /// </summary>
@@ -326,7 +258,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public sealed class CssIterationAttribute : TestPropertyAttribute
     {
         /// <summary>
-        /// Constructor for CSS Iteration URI.
+        /// Initializes a new instance of the <see cref="CssIterationAttribute"/> class for CSS Iteration URI.
         /// </summary>
         /// <param name="cssIteration">The CSS Iteration URI.</param>
         public CssIterationAttribute(string cssIteration)
@@ -348,7 +280,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public sealed class WorkItemAttribute : TestPropertyAttribute
     {
         /// <summary>
-        /// Constructor for the WorkItem Attribute.
+        /// Initializes a new instance of the <see cref="WorkItemAttribute"/> class for the WorkItem Attribute.
         /// </summary>
         /// <param name="id">The Id to a work item.</param>
         public WorkItemAttribute(int id)
@@ -385,7 +317,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Initializes the instance with a preset timeout
+        /// Initializes a new instance of the <see cref="TimeoutAttribute"/> class with a preset timeout
         /// </summary>
         /// <param name="timeout">
         /// The timeout
@@ -412,7 +344,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// </summary>
     public class TestResult
     {
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TestResult"/> class.
         /// </summary>
@@ -458,7 +389,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public TimeSpan Duration { get; set; }
 
         /// <summary>
-        /// Data row index in data source. Set only for results of individual 
+        /// Gets or sets the data row index in data source. Set only for results of individual
         /// run of data row of a data driven test.
         /// </summary>
         public int DatarowIndex { get; set; }
@@ -469,7 +400,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public object ReturnValue { get; set; }
 
         /// <summary>
-        /// Result files attached by the test. 
+        /// Gets or sets the result files attached by the test.
         /// </summary>
         public IList<string> ResultFiles { get; set; }
     }
@@ -489,7 +420,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public sealed class DeploymentItemAttribute : Attribute
     {
         /// <summary>
-        /// Initializes a new instance of <see cref="DeploymentItemAttribute"/> class
+        /// Initializes a new instance of the <see cref="DeploymentItemAttribute"/> class.
         /// </summary>
         /// <param name="path">The file or directory to deploy. The path is relative to the build output directory. The item will be copied to the same directory as the deployed test assemblies.</param>
         public DeploymentItemAttribute(string path)
@@ -499,7 +430,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Initializes a new instance of <see cref="DeploymentItemAttribute"/> class
+        /// Initializes a new instance of the <see cref="DeploymentItemAttribute"/> class
         /// </summary>
         /// <param name="path">The relative or absolute path to the file or directory to deploy. The path is relative to the build output directory. The item will be copied to the same directory as the deployed test assemblies.</param>
         /// <param name="outputDirectory">The path of the directory to which the items are to be copied. It can be either absolute or relative to the deployment directory. All files and directories identified by <paramref name="path"/> will be copied to this directory.</param>
@@ -527,17 +458,19 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// [DataSource("Provider=SQLOLEDB.1;Data Source=source;Integrated Security=SSPI;Initial Catalog=EqtCoverage;Persist Security Info=False", "MyTable")]
     /// [DataSource("dataSourceNameFromConfigFile")]
     /// </example>
-    [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments")]
+    [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments", Justification ="Compat")]
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class DataSourceAttribute : Attribute
     {
         // DefaultProviderName needs not to be constant so that clients do not need
         // to recompile if the value changes.
+
         /// <summary>
         /// The default provider name for DataSource.
         /// </summary>
-        [SuppressMessage("Microsoft.Performance", "CA1802:UseLiteralsWhereAppropriate")]
+        [SuppressMessage("Microsoft.Performance", "CA1802:UseLiteralsWhereAppropriate", Justification ="Compat")]
         public static readonly string DefaultProviderName = "System.Data.OleDb";
+
         /// <summary>
         /// The default data access method.
         /// </summary>
@@ -548,9 +481,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="providerInvariantName">Invariant data provider name, such as System.Data.SqlClient</param>
         /// <param name="connectionString">
-        /// Data provider specific connection string. 
+        /// Data provider specific connection string.
         /// WARNING: The connection string can contain sensitive data (for example, a password).
-        /// The connection string is stored in plain text in source code and in the compiled assembly. 
+        /// The connection string is stored in plain text in source code and in the compiled assembly.
         /// Restrict access to the source code and assembly to protect this sensitive information.
         /// </param>
         /// <param name="tableName">The name of the data table.</param>
@@ -568,9 +501,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Specify connection string and data table to access OLEDB data source.
         /// </summary>
         /// <param name="connectionString">
-        /// Data provider specific connection string. 
+        /// Data provider specific connection string.
         /// WARNING: The connection string can contain sensitive data (for example, a password).
-        /// The connection string is stored in plain text in source code and in the compiled assembly. 
+        /// The connection string is stored in plain text in source code and in the compiled assembly.
         /// Restrict access to the source code and assembly to protect this sensitive information.
         /// </param>
         /// <param name="tableName">The name of the data table.</param>
@@ -588,12 +521,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             this.DataSourceSettingName = dataSourceSettingName;
         }
 
-
         // Different providers use dfferent connection strings and provider itself is a part of connection string.
+
         /// <summary>
         /// Gets a value representing the data provider of the data source.
         /// </summary>
-        /// 
         /// <returns>
         /// The data provider name. If a data provider was not designated at object initialization, the default provider of System.Data.OleDb will be returned.
         /// </returns>
@@ -612,15 +544,18 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Gets the method used to access the data source.
         /// </summary>
-        /// 
+        ///
         /// <returns>
         /// One of the <see cref="T:Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod"/> values. If the <see cref="DataSourceAttribute"/> is not initialized, this will return the default value <see cref="F:Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod.Random"/>.
         /// </returns>
         public DataAccessMethod DataAccessMethod { get; }
 
         /// <summary>
-        /// The name of a data source found in the &lt;microsoft.visualstudio.qualitytools&gt; section in the app.config file.
+        /// Gets the name of a data source found in the &lt;microsoft.visualstudio.qualitytools&gt; section in the app.config file.
         /// </summary>
         public string DataSourceSettingName { get; }
     }
+
+#pragma warning restore SA1402 // FileMayOnlyContainASingleType
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

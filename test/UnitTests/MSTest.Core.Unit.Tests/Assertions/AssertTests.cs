@@ -8,18 +8,16 @@ namespace UnitTestFramework.Tests
 
     using System;
     using System.Threading.Tasks;
-
     using MSTestAdapter.TestUtilities;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    
     using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
-    public class AssertionTests
+    public class AssertTests
     {
         #region ThrowsException tests
 
@@ -64,7 +62,7 @@ namespace UnitTestFramework.Tests
             // Should not throw an exception.
             await t;
         }
-        
+
         [TestMethod]
         public void ThrowsExceptionAsyncShouldThrowAssertionOnNoException()
         {
@@ -163,7 +161,7 @@ namespace UnitTestFramework.Tests
             {
                 Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(async () => { await Task.FromResult(true); }, null, null);
                 t.Wait();
-            }; 
+            };
             ActionUtility.ActionShouldThrowInnerExceptionOfType(a, typeof(ArgumentNullException));
         }
 
@@ -175,7 +173,10 @@ namespace UnitTestFramework.Tests
                 {
                     await Task.Delay(5);
                 },
-                "The world is not on fire {0}.{1}-{2}.", "ta" , "da", 123);
+                "The world is not on fire {0}.{1}-{2}.",
+                "ta",
+                "da",
+                123);
             var ex = ActionUtility.PerformActionAndReturnException(() => t.Wait());
 
             Assert.IsNotNull(ex);
@@ -196,7 +197,9 @@ namespace UnitTestFramework.Tests
                     await Task.Delay(5);
                     throw new FormatException();
                 },
-                "Happily ever after. {0} {1}.", "The", "End");
+                "Happily ever after. {0} {1}.",
+                "The",
+                "End");
             var ex = ActionUtility.PerformActionAndReturnException(() => t.Wait());
 
             Assert.IsNotNull(ex);

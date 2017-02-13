@@ -7,10 +7,10 @@ namespace UnitTestFramework.Tests
     extern alias FrameworkV2;
 
     using System;
+    using MSTestAdapter.TestUtilities;
 
     using TestFrameworkV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
-    using MSTestAdapter.TestUtilities;
 
     /// <summary>
     /// Tests for class ExpectedExceptionAttribute
@@ -62,7 +62,7 @@ namespace UnitTestFramework.Tests
         public void GetExceptionMsgShouldReturnInnerExceptionMessageAsWellIfPresent()
         {
             Exception innerException = new DivideByZeroException();
-            Exception ex = new Exception("Dummy Exception",innerException);
+            Exception ex = new Exception("Dummy Exception", innerException);
             var actualMessage = TestFrameworkV2.UtfHelper.GetExceptionMsg(ex);
             var expectedMessage = "System.Exception: Dummy Exception ---> System.DivideByZeroException: Attempted to divide by zero.";
             TestFrameworkV2.Assert.AreEqual(expectedMessage, actualMessage);

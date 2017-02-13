@@ -16,9 +16,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// met, an exception is thrown.
     /// </summary>
     public static class CollectionAssert
-    { 
+    {
         #region Membership
-        
+
         /// <summary>
         /// Tests whether the specified collection contains the specified element
         /// and throws an exception if the element is not in the collection.
@@ -233,7 +233,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreNotNull", "collection", string.Empty);
             foreach (object current in collection)
             {
-                if (null == current)
+                if (current == null)
                 {
                     Assert.HandleFail("CollectionAssert.AllItemsAreNotNull", message, parameters);
                 }
@@ -306,7 +306,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Dictionary<object, bool> table = new Dictionary<object, bool>();
             foreach (object current in collection)
             {
-                if (null == current)
+                if (current == null)
                 {
                     if (foundNull == false)
                     {
@@ -318,9 +318,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                         var finalMessage = string.Format(
                             CultureInfo.CurrentCulture,
                             FrameworkMessages.AllItemsAreUniqueFailMsg,
-                            message == null ? String.Empty : message,
+                            message == null ? string.Empty : message,
                             FrameworkMessages.Common_NullInMessages);
-                        
+
                         Assert.HandleFail("CollectionAssert.AllItemsAreUnique", finalMessage, parameters);
                     }
                 }
@@ -331,20 +331,20 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                         string finalMessage = string.Format(
                             CultureInfo.CurrentCulture,
                             FrameworkMessages.AllItemsAreUniqueFailMsg,
-                            message == null ? String.Empty : message,
+                            message == null ? string.Empty : message,
                             Assert.ReplaceNulls(current));
 
                         Assert.HandleFail("CollectionAssert.AllItemsAreUnique", finalMessage, parameters);
                     }
                     else
-                    { 
+                    {
                         table.Add(current, true);
                     }
                 }
             }
         }
-        
-        #endregion 
+
+        #endregion
 
         #region Subset
 
@@ -504,7 +504,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
         }
 
-        #endregion 
+        #endregion
 
         #region Equivalence
 
@@ -527,7 +527,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void AreEquivalent(ICollection expected, ICollection actual)
         {
-            AreEquivalent(expected, actual, String.Empty, null);
+            AreEquivalent(expected, actual, string.Empty, null);
         }
 
         /// <summary>
@@ -603,8 +603,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.ElementNumbersDontMatch,
-                    message == null ? String.Empty : Assert.ReplaceNulls(message),
-                    expected.Count, 
+                    message == null ? string.Empty : Assert.ReplaceNulls(message),
+                    expected.Count,
                     actual.Count);
                 Assert.HandleFail("CollectionAssert.AreEquivalent", finalMessage, parameters);
             }
@@ -625,8 +625,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.ActualHasMismatchedElements,
                     message == null ? string.Empty : Assert.ReplaceNulls(message),
-                    expectedCount.ToString(CultureInfo.CurrentCulture.NumberFormat), 
-                    Assert.ReplaceNulls(mismatchedElement), 
+                    expectedCount.ToString(CultureInfo.CurrentCulture.NumberFormat),
+                    Assert.ReplaceNulls(mismatchedElement),
                     actualCount.ToString(CultureInfo.CurrentCulture.NumberFormat));
                 Assert.HandleFail("CollectionAssert.AreEquivalent", finalMessage, parameters);
             }
@@ -723,7 +723,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 var finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.BothCollectionsSameReference,
-                    message == null ? String.Empty : Assert.ReplaceNulls(message));
+                    message == null ? string.Empty : Assert.ReplaceNulls(message));
                 Assert.HandleFail("CollectionAssert.AreNotEquivalent", finalMessage, parameters);
             }
 
@@ -739,7 +739,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.BothCollectionsEmpty,
-                    message == null ? String.Empty : Assert.ReplaceNulls(message));
+                    message == null ? string.Empty : Assert.ReplaceNulls(message));
                 Assert.HandleFail("CollectionAssert.AreNotEquivalent", finalMessage, parameters);
             }
 
@@ -756,8 +756,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 Assert.HandleFail("CollectionAssert.AreNotEquivalent", finalMessage, parameters);
             }
         }
-        
-        #endregion 
+
+        #endregion
 
         #region Type
 
@@ -849,9 +849,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     var finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.ElementTypesAtIndexDontMatch,
-                        message == null ? String.Empty : Assert.ReplaceNulls(message),
-                        i, 
-                        expectedType.ToString(), 
+                        message == null ? string.Empty : Assert.ReplaceNulls(message),
+                        i,
+                        expectedType.ToString(),
                         element.GetType().ToString());
 
                     Assert.HandleFail("CollectionAssert.AllItemsAreInstancesOfType", finalMessage, parameters);
@@ -860,7 +860,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 i++;
             }
         }
-        
+
 #endregion
 
         #region AreEqual
@@ -879,12 +879,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// code under test.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
+        /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(ICollection expected, ICollection actual)
         {
-            AreEqual(expected, actual, String.Empty, null);
+            AreEqual(expected, actual, string.Empty, null);
         }
 
         /// <summary>
@@ -906,7 +906,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
+        /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(ICollection expected, ICollection actual, string message)
@@ -936,7 +936,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// An array of parameters to use when formatting <paramref name="message"/>.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
+        /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(ICollection expected, ICollection actual, string message, params object[] parameters)
@@ -1048,12 +1048,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The compare implementation to use when comparing elements of the collection.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
+        /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(ICollection expected, ICollection actual, IComparer comparer)
         {
-            AreEqual(expected, actual, comparer, String.Empty, null);
+            AreEqual(expected, actual, comparer, string.Empty, null);
         }
 
         /// <summary>
@@ -1078,7 +1078,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
+        /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(ICollection expected, ICollection actual, IComparer comparer, string message)
@@ -1111,7 +1111,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// An array of parameters to use when formatting <paramref name="message"/>.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
+        /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(ICollection expected, ICollection actual, IComparer comparer, string message, params object[] parameters)
@@ -1218,7 +1218,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         #endregion
 
         #region Helpers
-        
+
         /// <summary>
         /// Determines whether the first collection is a subset of the second
         /// collection. If either set contains duplicate elements, the number
@@ -1245,9 +1245,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
             // Count the occurrences of each object in both collections.
             int subsetNulls;
-            Dictionary<Object, int> subsetElements = GetElementCounts(subset, out subsetNulls);
+            Dictionary<object, int> subsetElements = GetElementCounts(subset, out subsetNulls);
             int supersetNulls;
-            Dictionary<Object, int> supersetElements = GetElementCounts(superset, out supersetNulls);
+            Dictionary<object, int> supersetElements = GetElementCounts(superset, out supersetNulls);
 
             if (subsetNulls > supersetNulls)
             {
@@ -1272,7 +1272,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             // All the elements counts were OK.
             return true;
         }
-        
+
         /// <summary>
         /// Constructs a dictionary containing the number of occurrences of each
         /// element in the specified collection.
@@ -1291,7 +1291,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             Debug.Assert(collection != null, "Collection is Null.");
 
-            Dictionary<Object, int> elementCounts = new Dictionary<Object, int>();
+            Dictionary<object, int> elementCounts = new Dictionary<object, int>();
             nullCount = 0;
 
             foreach (object element in collection)
@@ -1353,9 +1353,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
             // Count the occurrences of each object in the both collections
             int expectedNulls;
-            Dictionary<Object, int> expectedElements = GetElementCounts(expected, out expectedNulls);
+            Dictionary<object, int> expectedElements = GetElementCounts(expected, out expectedNulls);
             int actualNulls;
-            Dictionary<Object, int> actualElements = GetElementCounts(actual, out actualNulls);
+            Dictionary<object, int> actualElements = GetElementCounts(actual, out actualNulls);
 
             if (actualNulls != expectedNulls)
             {
@@ -1392,7 +1392,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
             if (!ReferenceEquals(expected, actual))
             {
-                if ((null == expected) || (null == actual))
+                if ((expected == null) || (actual == null))
                 {
                     return false;
                 }
@@ -1408,12 +1408,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 int i = 0;
                 while (expectedEnum.MoveNext() && actualEnum.MoveNext())
                 {
-                    bool areEqual = 0 == comparer.Compare(expectedEnum.Current, actualEnum.Current);
+                    bool areEqual = comparer.Compare(expectedEnum.Current, actualEnum.Current) == 0;
                     if (!areEqual)
                     {
                         reason = string.Format(
-                            CultureInfo.CurrentCulture, 
-                            FrameworkMessages.ElementsAtIndexDontMatch, 
+                            CultureInfo.CurrentCulture,
+                            FrameworkMessages.ElementsAtIndexDontMatch,
                             i);
                         return false;
                     }

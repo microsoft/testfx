@@ -16,7 +16,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         #region Constructors
 
         /// <summary>
-        /// Initializes with a default no-exception message
+        /// Initializes a new instance of the <see cref="ExpectedExceptionBaseAttribute"/> class with a default no-exception message
         /// </summary>
         protected ExpectedExceptionBaseAttribute()
             : this(string.Empty)
@@ -25,7 +25,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Initializes the no-exception message
+        /// Initializes a new instance of the <see cref="ExpectedExceptionBaseAttribute"/> class with a no-exception message
         /// </summary>
         /// <param name="noExceptionMessage">
         /// Message to include in the test result if the test fails due to not throwing an
@@ -44,12 +44,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         #region Properties
 
         // Todo: Test Context needs to be put in here for source compat.
-
-
-        /// <summary>
-        /// Gets the message to include in the test result if the test fails due to not throwing an exception
-        /// </summary>
-        protected string SpecifiedNoExceptionMessage { get; private set; }
 
         /// <summary>
         /// Gets the message to include in the test result if the test fails due to not throwing an exception
@@ -70,20 +64,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
         }
 
+        /// <summary>
+        /// Gets the message to include in the test result if the test fails due to not throwing an exception
+        /// </summary>
+        protected string SpecifiedNoExceptionMessage { get; private set; }
+
         #endregion
 
         #region Methods
-
-        /// <summary>
-        /// Determines whether the exception is expected. If the method returns, then it is
-        /// understood that the exception was expected. If the method throws an exception, then it
-        /// is understood that the exception was not expected, and the thrown exception's message
-        /// is included in the test result. The <see cref="Assert"/> class can be used for
-        /// convenience. If <see cref="Assert.Inconclusive()"/> is used and the assertion fails,
-        /// then the test outcome is set to Inconclusive.
-        /// </summary>
-        /// <param name="exception">The exception thrown by the unit test</param>
-        protected internal abstract void Verify(Exception exception);
 
         /// <summary>
         /// Gets the default no-exception message
@@ -97,6 +85,17 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 FrameworkMessages.UTF_TestMethodNoExceptionDefault,
                 expectedExceptionAttributeTypeName);
         }
+
+        /// <summary>
+        /// Determines whether the exception is expected. If the method returns, then it is
+        /// understood that the exception was expected. If the method throws an exception, then it
+        /// is understood that the exception was not expected, and the thrown exception's message
+        /// is included in the test result. The <see cref="Assert"/> class can be used for
+        /// convenience. If <see cref="Assert.Inconclusive()"/> is used and the assertion fails,
+        /// then the test outcome is set to Inconclusive.
+        /// </summary>
+        /// <param name="exception">The exception thrown by the unit test</param>
+        protected internal abstract void Verify(Exception exception);
 
         /// <summary>
         /// Rethrow the exception if it is an AssertFailedException or an AssertInconclusiveException

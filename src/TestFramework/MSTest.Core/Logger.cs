@@ -30,10 +30,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Logging
         /// </summary>
         /// <param name="format">String format with placeholders.</param>
         /// <param name="args">Parameters for placeholders.</param>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public static void LogMessage(string format, params object[] args)
-        {            
+        {
             if (OnLogMessage != null)
             {
                 if (format == null)

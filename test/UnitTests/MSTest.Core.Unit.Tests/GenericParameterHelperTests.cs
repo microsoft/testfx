@@ -7,10 +7,10 @@ namespace UnitTestFramework.Tests
     extern alias FrameworkV2;
 
     using System;
+    using MSTestAdapter.TestUtilities;
 
     using TestFrameworkV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
-    using MSTestAdapter.TestUtilities;
 
     /// <summary>
     /// Tests for class GenericParameterHelper
@@ -68,7 +68,7 @@ namespace UnitTestFramework.Tests
         {
             this.sut = new TestFrameworkV2.GenericParameterHelper(15);
 
-            int expectedLenghtOfList = 5;  //(15%10)
+            int expectedLenghtOfList = 5;  // (15%10)
             int result = 0;
 
             foreach (var x in this.sut)
