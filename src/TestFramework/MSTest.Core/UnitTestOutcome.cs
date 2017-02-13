@@ -41,7 +41,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         Timeout,
 
         /// <summary>
-        /// Test was aborted by the user. 
+        /// Test was aborted by the user.
         /// </summary>
         Aborted,
 

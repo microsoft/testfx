@@ -344,7 +344,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                         finalMessage = string.Format(
                             CultureInfo.CurrentCulture,
                             FrameworkMessages.AreSameGivenValues,
-                            message == null ? String.Empty : ReplaceNulls(message));
+                            message == null ? string.Empty : ReplaceNulls(message));
                     }
                 }
 
@@ -447,8 +447,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second value to compare. This is the value produced by the code under test.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
-        /// <paramref name="actual"/>.
+        /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual<T>(T expected, T actual)
         {
@@ -506,12 +505,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// An array of parameters to use when formatting <paramref name="message"/>.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
+        /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual<T>(T expected, T actual, string message, params object[] parameters)
         {
-            if (!Object.Equals(expected, actual))
+            if (!object.Equals(expected, actual))
             {
                 string finalMessage;
                 if (actual != null && expected != null && !actual.GetType().Equals(expected.GetType()))
@@ -520,7 +519,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.AreEqualDifferentTypesFailMsg,
-                        message == null ? String.Empty : ReplaceNulls(message),
+                        message == null ? string.Empty : ReplaceNulls(message),
                         ReplaceNulls(expected),
                         expected.GetType().FullName,
                         ReplaceNulls(actual),
@@ -531,7 +530,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.AreEqualFailMsg,
-                        message == null ? String.Empty : ReplaceNulls(message),
+                        message == null ? string.Empty : ReplaceNulls(message),
                         ReplaceNulls(expected),
                         ReplaceNulls(actual));
                 }
@@ -619,12 +618,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void AreNotEqual<T>(T notExpected, T actual, string message, params object[] parameters)
         {
-            if (Object.Equals(notExpected, actual))
+            if (object.Equals(notExpected, actual))
             {
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreNotEqualFailMsg,
-                    message == null ? String.Empty : ReplaceNulls(message),
+                    message == null ? string.Empty : ReplaceNulls(message),
                     ReplaceNulls(notExpected),
                     ReplaceNulls(actual));
                 HandleFail("Assert.AreNotEqual", finalMessage, parameters);
@@ -648,7 +647,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void AreEqual(object expected, object actual)
         {
-            AreEqual(expected, actual, String.Empty, null);
+            AreEqual(expected, actual, string.Empty, null);
         }
 
         /// <summary>
@@ -864,7 +863,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreEqualDeltaFailMsg,
-                    message == null ? String.Empty : ReplaceNulls(message),
+                    message == null ? string.Empty : ReplaceNulls(message),
                     expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
@@ -876,7 +875,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreEqualDeltaFailMsg,
-                    message == null ? String.Empty : ReplaceNulls(message),
+                    message == null ? string.Empty : ReplaceNulls(message),
                     expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
@@ -971,7 +970,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 var finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreNotEqualDeltaFailMsg,
-                    message == null ? String.Empty : ReplaceNulls(message),
+                    message == null ? string.Empty : ReplaceNulls(message),
                     notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
@@ -1024,8 +1023,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
-        /// <paramref name="actual"/>.
+        /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(double expected, double actual, double delta, string message)
         {
@@ -1056,8 +1054,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// An array of parameters to use when formatting <paramref name="message"/>.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
-        /// <paramref name="actual"/>.
+        /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(double expected, double actual, double delta, string message, params object[] parameters)
         {
@@ -1066,7 +1063,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreEqualDeltaFailMsg,
-                    message == null ? String.Empty : ReplaceNulls(message),
+                    message == null ? string.Empty : ReplaceNulls(message),
                     expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
@@ -1078,7 +1075,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreEqualDeltaFailMsg,
-                    message == null ? String.Empty : ReplaceNulls(message),
+                    message == null ? string.Empty : ReplaceNulls(message),
                     expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
@@ -1173,7 +1170,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreNotEqualDeltaFailMsg,
-                    message == null ? String.Empty : ReplaceNulls(message),
+                    message == null ? string.Empty : ReplaceNulls(message),
                     notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
@@ -1196,8 +1193,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// indicates a case-insensitive comparison.)
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
-        /// <paramref name="actual"/>.
+        /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(string expected, string actual, bool ignoreCase)
         {
@@ -1224,8 +1220,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
-        /// <paramref name="actual"/>.
+        /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(string expected, string actual, bool ignoreCase, string message)
         {
@@ -1255,8 +1250,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// An array of parameters to use when formatting <paramref name="message"/>.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
-        /// <paramref name="actual"/>.
+        /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(string expected, string actual, bool ignoreCase, string message, params object[] parameters)
         {
@@ -1281,8 +1275,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// A CultureInfo object that supplies culture-specific comparison information.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
-        /// <paramref name="actual"/>.
+        /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(string expected, string actual, bool ignoreCase, CultureInfo culture)
         {
@@ -1312,8 +1305,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
-        /// <paramref name="actual"/>.
+        /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(string expected, string actual, bool ignoreCase, CultureInfo culture, string message)
         {
@@ -1346,24 +1338,23 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// An array of parameters to use when formatting <paramref name="message"/>.
         /// </param>
         /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="expected"/> is not equal to 
-        /// <paramref name="actual"/>.
+        /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
         public static void AreEqual(string expected, string actual, bool ignoreCase, CultureInfo culture, string message, params object[] parameters)
         {
             CheckParameterNotNull(culture, "Assert.AreEqual", "culture", string.Empty);
-            if (0 != CompareInternal(expected, actual, ignoreCase, culture))
+            if (CompareInternal(expected, actual, ignoreCase, culture) != 0)
             {
                 string finalMessage;
 
                 // Comparison failed. Check if it was a case-only failure.
                 if (!ignoreCase &&
-                    0 == CompareInternal(expected, actual, ignoreCase, culture))
+                    CompareInternal(expected, actual, ignoreCase, culture) == 0)
                 {
                     finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.AreEqualCaseFailMsg,
-                        message == null ? String.Empty : ReplaceNulls(message),
+                        message == null ? string.Empty : ReplaceNulls(message),
                         ReplaceNulls(expected),
                         ReplaceNulls(actual));
                 }
@@ -1372,7 +1363,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.AreEqualFailMsg,
-                        message == null ? String.Empty : ReplaceNulls(message),
+                        message == null ? string.Empty : ReplaceNulls(message),
                         ReplaceNulls(expected),
                         ReplaceNulls(actual));
                 }
@@ -1552,12 +1543,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, CultureInfo culture, string message, params object[] parameters)
         {
             CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture", string.Empty);
-            if (0 == CompareInternal(notExpected, actual, ignoreCase, culture))
+            if (CompareInternal(notExpected, actual, ignoreCase, culture) == 0)
             {
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreNotEqualFailMsg,
-                    message == null ? String.Empty : ReplaceNulls(message),
+                    message == null ? string.Empty : ReplaceNulls(message),
                     ReplaceNulls(notExpected),
                     ReplaceNulls(actual));
                 HandleFail("Assert.AreNotEqual", finalMessage, parameters);
@@ -1653,7 +1644,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.IsInstanceOfFailMsg,
-                    message == null ? String.Empty : ReplaceNulls(message),
+                    message == null ? string.Empty : ReplaceNulls(message),
                     expectedType.ToString(),
                     value.GetType().ToString());
                 HandleFail("Assert.IsInstanceOfType", finalMessage, parameters);
@@ -1745,7 +1736,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.IsNotInstanceOfFailMsg,
-                    message == null ? String.Empty : ReplaceNulls(message),
+                    message == null ? string.Empty : ReplaceNulls(message),
                     wrongType.ToString(),
                     value.GetType().ToString());
                 HandleFail("Assert.IsNotInstanceOfType", finalMessage, parameters);
@@ -1887,7 +1878,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws 
+        /// and throws
         /// <code>
         /// AssertFailedException
         /// </code>
@@ -1905,14 +1896,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The type of exception expected to be thrown.
         /// </returns>
-        public static T ThrowsException<T>(Action action) where T : Exception
+        public static T ThrowsException<T>(Action action)
+            where T : Exception
         {
             return ThrowsException<T>(action, string.Empty, null);
         }
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws 
+        /// and throws
         /// <code>
         /// AssertFailedException
         /// </code>
@@ -1934,14 +1926,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The type of exception expected to be thrown.
         /// </returns>
-        public static T ThrowsException<T>(Action action, string message) where T : Exception
+        public static T ThrowsException<T>(Action action, string message)
+            where T : Exception
         {
             return ThrowsException<T>(action, message, null);
         }
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws 
+        /// and throws
         /// <code>
         /// AssertFailedException
         /// </code>
@@ -1959,14 +1952,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The type of exception expected to be thrown.
         /// </returns>
-        public static T ThrowsException<T>(Func<object> action) where T : Exception
+        public static T ThrowsException<T>(Func<object> action)
+            where T : Exception
         {
             return ThrowsException<T>(action, string.Empty, null);
         }
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws 
+        /// and throws
         /// <code>
         /// AssertFailedException
         /// </code>
@@ -1988,14 +1982,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The type of exception expected to be thrown.
         /// </returns>
-        public static T ThrowsException<T>(Func<object> action, string message) where T : Exception
+        public static T ThrowsException<T>(Func<object> action, string message)
+            where T : Exception
         {
             return ThrowsException<T>(action, message, null);
         }
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws 
+        /// and throws
         /// <code>
         /// AssertFailedException
         /// </code>
@@ -2020,14 +2015,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The type of exception expected to be thrown.
         /// </returns>
-        public static T ThrowsException<T>(Func<object> action, string message, params object[] parameters) where T : Exception
+        public static T ThrowsException<T>(Func<object> action, string message, params object[] parameters)
+            where T : Exception
         {
             return ThrowsException<T>(() => { action(); }, message, parameters);
         }
-        
+
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws 
+        /// and throws
         /// <code>
         /// AssertFailedException
         /// </code>
@@ -2052,9 +2048,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The type of exception expected to be thrown.
         /// </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        public static T ThrowsException<T>(Action action, string message, params object[] parameters) where T : Exception
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        public static T ThrowsException<T>(Action action, string message, params object[] parameters)
+            where T : Exception
         {
             var finalMessage = string.Empty;
 
@@ -2103,7 +2099,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws 
+        /// and throws
         /// <code>
         /// AssertFailedException
         /// </code>
@@ -2121,7 +2117,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The <see cref="Task"/> executing the delegate.
         /// </returns>
-        public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action) where T : Exception
+        public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
+            where T : Exception
         {
             return await ThrowsExceptionAsync<T>(action, string.Empty, null);
         }
@@ -2142,7 +2139,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The <see cref="Task"/> executing the delegate.
         /// </returns>
-        public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message) where T : Exception
+        public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
+            where T : Exception
         {
             return await ThrowsExceptionAsync<T>(action, message, null);
         }
@@ -2166,7 +2164,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The <see cref="Task"/> executing the delegate.
         /// </returns>
-        public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message, params object[] parameters) where T : Exception
+        public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message, params object[] parameters)
+            where T : Exception
         {
             var finalMessage = string.Empty;
 
@@ -2212,7 +2211,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             // This will not hit, but need it for compiler.
             return null;
         }
-
 
         #endregion
 
@@ -2309,7 +2307,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         internal static string ReplaceNulls(object input)
         {
             // Use the localized "(null)" string for null values.
-            if (null == input)
+            if (input == null)
             {
                 return FrameworkMessages.Common_NullInMessages.ToString();
             }
@@ -2334,53 +2332,5 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// The helper.
-    /// </summary>
-    internal static class Helper
-    {
-        /// <summary>
-        /// The check parameter not null.
-        /// </summary>
-        /// <param name="param">
-        /// The parameter.
-        /// </param>
-        /// <param name="parameterName">
-        /// The parameter name.
-        /// </param>
-        /// <param name="message">
-        /// The message.
-        /// </param>
-        /// <exception cref="ArgumentNullException"> Throws argument null exception when parameter is null. </exception>
-        internal static void CheckParameterNotNull(object param, string parameterName, string message)
-        {
-            if (param == null)
-            {
-                throw new ArgumentNullException(parameterName, message);
-            }
-        }
-
-        /// <summary>
-        /// The check parameter not null or empty.
-        /// </summary>
-        /// <param name="param">
-        /// The parameter.
-        /// </param>
-        /// <param name="parameterName">
-        /// The parameter name.
-        /// </param>
-        /// <param name="message">
-        /// The message.
-        /// </param>
-        /// <exception cref="ArgumentException"> Throws ArgumentException when parameter is null. </exception>
-        internal static void CheckParameterNotNullOrEmpty(string param, string parameterName, string message)
-        {
-            if (string.IsNullOrEmpty(param))
-            {
-                throw new ArgumentException(parameterName, message);
-            }
-        }
     }
 }

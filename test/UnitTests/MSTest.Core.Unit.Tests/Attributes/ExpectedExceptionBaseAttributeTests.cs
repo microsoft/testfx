@@ -7,10 +7,10 @@ namespace UnitTestFramework.Tests
     extern alias FrameworkV2;
 
     using System;
+    using MSTestAdapter.TestUtilities;
 
     using TestFrameworkV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
-    using MSTestAdapter.TestUtilities;
 
     /// <summary>
     /// Tests for class ExpectedExceptionBaseAttribute
@@ -69,7 +69,7 @@ namespace UnitTestFramework.Tests
 
             string result = this.sut.GetNoExceptionMessage();
 
-            TestFrameworkV1.Assert.IsTrue(String.IsNullOrEmpty(result));
+            TestFrameworkV1.Assert.IsTrue(string.IsNullOrEmpty(result));
         }
     }
 
@@ -78,11 +78,13 @@ namespace UnitTestFramework.Tests
     /// </summary>
     public class TestableExpectedExceptionBaseAttributeClass : TestFrameworkV2.ExpectedExceptionBaseAttribute
     {
-        public TestableExpectedExceptionBaseAttributeClass() : base()
+        public TestableExpectedExceptionBaseAttributeClass()
+            : base()
         {
         }
 
-        public TestableExpectedExceptionBaseAttributeClass(string noExceptionMessage) : base(noExceptionMessage)
+        public TestableExpectedExceptionBaseAttributeClass(string noExceptionMessage)
+            : base(noExceptionMessage)
         {
         }
 

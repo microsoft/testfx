@@ -86,7 +86,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             Assert.CheckParameterNotNull(value, "StringAssert.Contains", "value", string.Empty);
             Assert.CheckParameterNotNull(substring, "StringAssert.Contains", "substring", string.Empty);
-            if (0 > value.IndexOf(substring, StringComparison.Ordinal))
+            if (value.IndexOf(substring, StringComparison.Ordinal) < 0)
             {
                 string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, message);
                 Assert.HandleFail("StringAssert.Contains", finalMessage, parameters);

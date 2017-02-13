@@ -1,11 +1,11 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace UnitTestFramework.Tests
 {
     extern alias FrameworkV1;
     extern alias FrameworkV2;
-    
+
     using System.Collections.Generic;
     using System.Linq;
 
@@ -33,19 +33,21 @@ namespace UnitTestFramework.Tests
         {
             int dummyIntData = 2;
             string dummyStringData = "DummyString";
-            TestFrameworkV2.DataRowAttribute dataRowAttribute = new TestFrameworkV2.DataRowAttribute(dummyIntData,
+            TestFrameworkV2.DataRowAttribute dataRowAttribute = new TestFrameworkV2.DataRowAttribute(
+                dummyIntData,
                 dummyStringData);
             dataRowAttribute.DisplayName = "DataRowTestDisplayName";
 
             TestFrameworkV2.TestResult testResult = new TestFrameworkV2.TestResult();
 
-            //Setup mocks.
+            // Setup mocks.
             this.testMethod.Setup(tm => tm.TestMethodName).Returns("DummyTestMethod");
             this.testMethod.Setup(tm => tm.Invoke(It.IsAny<object[]>())).Returns(testResult);
 
-            //Act.
+            // Act.
             TestFrameworkV2.TestResult[] results =
-                TestFrameworkV2.DataTestMethodAttribute.RunDataDrivenTest(this.testMethod.Object,
+                TestFrameworkV2.DataTestMethodAttribute.RunDataDrivenTest(
+                    this.testMethod.Object,
                     new TestFrameworkV2.DataRowAttribute[] { dataRowAttribute });
 
             TestFrameworkV2.Assert.AreEqual(results[0].DisplayName, "DataRowTestDisplayName");
@@ -56,18 +58,20 @@ namespace UnitTestFramework.Tests
         {
             int dummyIntData = 2;
             string dummyStringData = "DummyString";
-            TestFrameworkV2.DataRowAttribute dataRowAttribute = new TestFrameworkV2.DataRowAttribute(dummyIntData,
+            TestFrameworkV2.DataRowAttribute dataRowAttribute = new TestFrameworkV2.DataRowAttribute(
+                dummyIntData,
                 dummyStringData);
 
             TestFrameworkV2.TestResult testResult = new TestFrameworkV2.TestResult();
 
-            //Setup mocks.
+            // Setup mocks.
             this.testMethod.Setup(tm => tm.TestMethodName).Returns("DummyTestMethod");
             this.testMethod.Setup(tm => tm.Invoke(It.IsAny<object[]>())).Returns(testResult);
 
-            //Act.
+            // Act.
             TestFrameworkV2.TestResult[] results =
-                TestFrameworkV2.DataTestMethodAttribute.RunDataDrivenTest(this.testMethod.Object,
+                TestFrameworkV2.DataTestMethodAttribute.RunDataDrivenTest(
+                    this.testMethod.Object,
                     new TestFrameworkV2.DataRowAttribute[] { dataRowAttribute });
 
             TestFrameworkV2.Assert.AreEqual(results[0].DisplayName, "DummyTestMethod (2,DummyString)");
@@ -82,14 +86,15 @@ namespace UnitTestFramework.Tests
             TestFrameworkV2.DataRowAttribute dataRowAttribute2 = new TestFrameworkV2.DataRowAttribute(dummyIntData2);
 
             TestFrameworkV2.TestResult testResult = new TestFrameworkV2.TestResult();
-            testResult.ResultFiles = new List<string>() {"C:\\temp.txt"};
+            testResult.ResultFiles = new List<string>() { "C:\\temp.txt" };
 
-            //Setup mocks.
+            // Setup mocks.
             this.testMethod.Setup(tm => tm.Invoke(It.IsAny<object[]>())).Returns(testResult);
 
-            //Act.
+            // Act.
             TestFrameworkV2.TestResult[] results =
-                TestFrameworkV2.DataTestMethodAttribute.RunDataDrivenTest(this.testMethod.Object,
+                TestFrameworkV2.DataTestMethodAttribute.RunDataDrivenTest(
+                    this.testMethod.Object,
                     new TestFrameworkV2.DataRowAttribute[] { dataRowAttribute1, dataRowAttribute2 });
 
             TestFrameworkV1.CollectionAssert.Contains(results[0].ResultFiles.ToList(), "C:\\temp.txt");

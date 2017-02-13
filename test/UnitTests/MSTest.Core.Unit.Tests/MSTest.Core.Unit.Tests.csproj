@@ -17,6 +17,7 @@
     <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
+    <ShouldEnableStyleCop>true</ShouldEnableStyleCop>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -63,15 +64,20 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssertionTests.cs" />
-    <Compile Include="DataTestMethodAttributeTests.cs" />
-    <Compile Include="ExpectedExceptionAttributeTests.cs" />
-    <Compile Include="ExpectedExceptionBaseAttributeTests.cs" />
+    <Compile Include="Assertions\AssertTests.cs" />
+    <Compile Include="Attributes\DataTestMethodAttributeTests.cs" />
+    <Compile Include="Attributes\ExpectedExceptionAttributeTests.cs" />
+    <Compile Include="Attributes\ExpectedExceptionBaseAttributeTests.cs" />
     <Compile Include="GenericParameterHelperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="$(TestFxRoot)scripts\build\stylecop.json">
+      <Link>stylecop.json</Link>
+    </AdditionalFiles>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />

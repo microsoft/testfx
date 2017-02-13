@@ -29,4 +29,11 @@
     <LciRoot>$(TestFxRoot)\loc\lci</LciRoot>
     <IsTest Condition="$(MSBuildProjectDirectory.Contains('\test\'))">true</IsTest>
   </PropertyGroup>
+
+  <!-- Code analysis settings -->
+  <PropertyGroup>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>$(TestFxRoot)scripts/build/stylecop.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="$(IsTest) == 'true'">$(TestFxRoot)scripts/build/stylecop.test.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
 </Project>

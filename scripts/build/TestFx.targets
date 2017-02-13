@@ -14,6 +14,13 @@
     </None>
   </ItemGroup>
   
+  <!-- Including dependencies for StyleCop. -->
+  <ItemGroup Condition="$(ShouldEnableStyleCop) == 'true'">
+    <Analyzer Include="$(TestFxRoot)packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
+    <Analyzer Include="$(TestFxRoot)packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
+    <Analyzer Include="$(TestFxRoot)packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
+  </ItemGroup>
+
   <ItemGroup Condition="$(IsTest) == '' or $(IsTest) == 'false'">
     <FilesToSign Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(IsVsixProj)' == '' or '$(IsVsixProj)' != 'true'">
       <Authenticode>Microsoft</Authenticode>

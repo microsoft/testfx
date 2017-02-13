@@ -85,6 +85,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Universal", "Universal", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{929A3EDE-893B-4801-82BA-01FD947291CB}"
 	ProjectSection(SolutionItems) = preProject
+		scripts\build\stylecop.json = scripts\build\stylecop.json
+		scripts\build\stylecop.ruleset = scripts\build\stylecop.ruleset
+		scripts\build\stylecop.test.ruleset = scripts\build\stylecop.test.ruleset
 		Nuget.config = Nuget.config
 		scripts\build\TestFx.Loc.targets = scripts\build\TestFx.Loc.targets
 		scripts\build\TestFx.Settings.targets = scripts\build\TestFx.Settings.targets
