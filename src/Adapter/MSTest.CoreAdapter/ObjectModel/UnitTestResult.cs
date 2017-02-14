@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     using System.Diagnostics;
     using System.Globalization;
 
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
     using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
