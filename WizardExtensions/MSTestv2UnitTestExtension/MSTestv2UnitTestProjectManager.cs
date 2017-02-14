@@ -3,9 +3,9 @@
 
 namespace MSTestv2UnitTestExtension
 {
+    using System;
     using EnvDTE;
     using Microsoft.VisualStudio.TestPlatform.TestGeneration.Model;
-    using System;
 
     /// <summary>
     /// A unit test project for MSTest unit tests.
@@ -34,7 +34,7 @@ namespace MSTestv2UnitTestExtension
         /// <param name="sourceProject">The source project.</param>
         /// <returns>The full namespace that contains the test framework code elements.</returns>
         public override string FrameworkNamespace(Project sourceProject)
-        {      
+        {
             return "Microsoft.VisualStudio.TestTools.UnitTesting";
         }
     }

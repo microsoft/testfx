@@ -12,9 +12,19 @@ namespace MSTestv2IntelliTestExtension
     /// </summary>
     internal sealed class MSTestv2AssertMethodFilter : IAssertMethodFilter
     {
-        private MSTestv2AssertMethodFilter() { }
+        private static MSTestv2AssertMethodFilter instance = new MSTestv2AssertMethodFilter();
+
+        private MSTestv2AssertMethodFilter()
+        {
+        }
+
         public static MSTestv2AssertMethodFilter Instance
-            = new MSTestv2AssertMethodFilter();
+        {
+            get
+            {
+                return instance;
+            }
+        }
 
         public bool IsAssertMethod(MethodDefinition method, out int usefulParameters)
         {
@@ -30,8 +40,8 @@ namespace MSTestv2IntelliTestExtension
                         case "IsTrue":
                         case "IsNull":
                         case "IsNotNull":
-                        case "IsInstanceOfType":    
-                        case "IsNotInstanceOfType": 
+                        case "IsInstanceOfType":
+                        case "IsNotInstanceOfType":
                             usefulParameters = 1;
                             return true;
                         case "AreEqual":
@@ -43,6 +53,7 @@ namespace MSTestv2IntelliTestExtension
                     }
                 }
             }
+
             usefulParameters = -1;
             return false;
         }

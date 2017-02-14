@@ -59,10 +59,16 @@
     <Compile Include="MSTestv2TestFramework.cs" />
     <Compile Include="MSTestv2TestFrameworkMetadata.cs" />
     <Compile Include="MSTestv2TestFrameworkPackage.cs" />
+    <Compile Include="MSTestv2TestFrameworkPackageAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="$(TestFxRoot)scripts\build\stylecop.json">
+      <Link>stylecop.json</Link>
+    </AdditionalFiles>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

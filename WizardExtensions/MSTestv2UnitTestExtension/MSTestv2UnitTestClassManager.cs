@@ -3,7 +3,6 @@
 
 namespace MSTestv2UnitTestExtension
 {
-
     using Microsoft.VisualStudio.TestPlatform.TestGeneration.Data;
     using Microsoft.VisualStudio.TestPlatform.TestGeneration.Model;
 
@@ -13,7 +12,7 @@ namespace MSTestv2UnitTestExtension
     public class MSTestv2UnitTestClassManager : UnitTestClassManagerBase
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="MSTestUnitTestClassManager"/> class.
+        /// Initializes a new instance of the <see cref="MSTestv2UnitTestClassManager"/> class.
         /// </summary>
         /// <param name="configurationSettings">The configuration settings object to be used to determine how the test method is generated.</param>
         /// <param name="naming">The object to be used to give names to test projects.</param>
@@ -23,21 +22,23 @@ namespace MSTestv2UnitTestExtension
         }
 
         /// <summary>
-        /// The attribute name for marking a class as a test class.
+        /// Gets the attribute name for marking a class as a test class.
         /// </summary>
         public override string TestClassAttribute
         {
             get { return "TestClass"; }
         }
+
         /// <summary>
-        /// The attribute name for marking a method as a test.
+        /// Gets the attribute name for marking a method as a test.
         /// </summary>
         public override string TestMethodAttribute
         {
             get { return "TestMethod"; }
         }
+
         /// <summary>
-        /// The code to force a test failure.
+        /// Gets the code to force a test failure.
         /// </summary>
         public override string AssertionFailure
         {

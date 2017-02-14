@@ -3,15 +3,15 @@
 
 namespace MSTestv2UnitTestExtension
 {
+    using System;
     using EnvDTE;
     using EnvDTE80;
     using Microsoft.VisualStudio.TestPlatform.TestGeneration;
     using Microsoft.VisualStudio.TestPlatform.TestGeneration.Data;
     using Microsoft.VisualStudio.TestPlatform.TestGeneration.Logging;
     using Microsoft.VisualStudio.TestPlatform.TestGeneration.Model;
-    using System;
-    using VSLangProj80;
     using VSLangProj;
+    using VSLangProj80;
 
     /// <summary>
     /// A solution manager for MSTestv2 unit tests.
@@ -29,7 +29,8 @@ namespace MSTestv2UnitTestExtension
         /// <param name="serviceProvider">The service provider to use to get the interfaces required.</param>
         /// <param name="naming">The naming object used to decide how projects, classes and methods are named and created.</param>
         /// <param name="directory">The directory object to use for directory operations.</param>
-        public MSTestv2SolutionManager(IServiceProvider serviceProvider, INaming naming, IDirectory directory) : base(serviceProvider, naming, directory)
+        public MSTestv2SolutionManager(IServiceProvider serviceProvider, INaming naming, IDirectory directory)
+            : base(serviceProvider, naming, directory)
         {
             this.serviceProvider = serviceProvider;
         }
