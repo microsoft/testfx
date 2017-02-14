@@ -65,11 +65,6 @@
       <Name>MSTest.CoreAdapter.TestUtilities</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <AdditionalFiles Include="$(TestFxRoot)scripts\build\stylecop.json">
-      <Link>stylecop.json</Link>
-    </AdditionalFiles>
-  </ItemGroup>
   <Import Project="..\PlatformServices.Shared.Unit.Tests\PlatformServices.Shared.Unit.Tests.projitems" Label="Shared" />
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />

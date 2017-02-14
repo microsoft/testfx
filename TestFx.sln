@@ -1,12 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26208.0
+VisualStudioVersion = 15.0.26206.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FF8B1B72-55A1-4FFE-809E-7B79323ED8D0}"
-	ProjectSection(SolutionItems) = preProject
-		Settings.Stylecop = Settings.Stylecop
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Adapter", "Adapter", "{24088844-2107-4DB2-8F3F-CBCA94FC4B28}"
 EndProject
@@ -85,10 +82,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Universal", "Universal", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{929A3EDE-893B-4801-82BA-01FD947291CB}"
 	ProjectSection(SolutionItems) = preProject
+		Nuget.config = Nuget.config
 		scripts\build\stylecop.json = scripts\build\stylecop.json
 		scripts\build\stylecop.ruleset = scripts\build\stylecop.ruleset
 		scripts\build\stylecop.test.ruleset = scripts\build\stylecop.test.ruleset
-		Nuget.config = Nuget.config
 		scripts\build\TestFx.Loc.targets = scripts\build\TestFx.Loc.targets
 		scripts\build\TestFx.Settings.targets = scripts\build\TestFx.Settings.targets
 		scripts\build\TestFx.targets = scripts\build\TestFx.targets
