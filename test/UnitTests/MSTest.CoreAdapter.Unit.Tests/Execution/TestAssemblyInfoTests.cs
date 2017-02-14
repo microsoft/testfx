@@ -7,24 +7,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     extern alias FrameworkV2;
     extern alias FrameworkV2CoreExtension;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-
     using System;
     using System.Linq;
     using System.Reflection;
-
     using global::MSTestAdapter.TestUtilities;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-
     using Moq;
-
-    using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using MSTest.TestAdapter.ObjectModel;
-
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -146,6 +140,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void RunAssemblyInitializeShouldSetAssemblyInitializeExecutedFlag()
         {
+            DummyTestClass.AssemblyInitializeMethodBody = (tc) => { };
+
             this.testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
             this.testAssemblyInfo.RunAssemblyInitialize(this.testContext);
@@ -305,11 +301,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         public class DummyTestClass
         {
-            public UTFExtension.TestContext TestContext { get; set; }
-
             public static Action<object> AssemblyInitializeMethodBody { get; set; }
 
             public static Action AssemblyCleanupMethodBody { get; set; }
+
+            public UTFExtension.TestContext TestContext { get; set; }
 
             public static void AssemblyInitializeMethod(UTFExtension.TestContext testContext)
             {

@@ -18,6 +18,7 @@
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
     <NoWarn>1685</NoWarn>
+    <ShouldEnableStyleCop>true</ShouldEnableStyleCop>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -79,6 +80,7 @@
     <Compile Include="Extensions\TestCaseExtensionsTests.cs" />
     <Compile Include="Helpers\ReflectHelperTests.cs" />
     <Compile Include="Helpers\RunSettingsUtilitiesTests.cs" />
+    <Compile Include="Helpers\UnitTestOutcomeHelperTests.cs" />
     <Compile Include="MSTestDiscovererTests.cs" />
     <Compile Include="MSTestExecutorTests.cs" />
     <Compile Include="MSTestSettingsTests.cs" />
@@ -86,7 +88,7 @@
     <Compile Include="ObjectModel\UnitTestResultTests.cs" />
     <Compile Include="PlatformServiceProviderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestableImplementations\TestabaleReflectHelper.cs" />
+    <Compile Include="TestableImplementations\TestableReflectHelper.cs" />
     <Compile Include="TestableImplementations\TestablePlatformServiceProvider.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -126,6 +128,11 @@
       <Name>MSTest.CoreAdapter.TestUtilities</Name>
       <Private>True</Private>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="$(TestFxRoot)scripts\build\stylecop.json">
+      <Link>stylecop.json</Link>
+    </AdditionalFiles>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />

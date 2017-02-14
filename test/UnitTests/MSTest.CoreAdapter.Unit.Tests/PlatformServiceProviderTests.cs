@@ -8,21 +8,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-    
+    using Moq;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-
-    using Moq;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
-    public class PlatformServiceProviderTests 
+    public class PlatformServiceProviderTests
     {
         [TestCleanup]
         public void Cleanup()
@@ -39,7 +36,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         [TestMethod]
         public void ProviderServiceInstanceShouldReturnTheInstanceSet()
         {
-            // If this test fails most other tests would too since this 
+            // If this test fails most other tests would too since this
             // defines our mocking for the Service provider.
             PlatformServiceProvider.Instance = new TestablePlatformServiceProvider();
             Assert.IsInstanceOfType(PlatformServiceProvider.Instance, typeof(TestablePlatformServiceProvider));
@@ -93,7 +90,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             // Act.
             var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, writer, properties);
-            
+
             // Assert.
             Assert.AreEqual("A.C.M", testContext.Context.FullyQualifiedTestClassName);
             Assert.AreEqual("M", testContext.Context.TestName);

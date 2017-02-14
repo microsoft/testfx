@@ -17,6 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <summary>
         /// Get the InnerException if available, else return the current Exception.
         /// </summary>
+        /// <param name="exception">The exception.</param>
         /// <returns>
         /// An <see cref="Exception"/> instance.
         /// </returns>

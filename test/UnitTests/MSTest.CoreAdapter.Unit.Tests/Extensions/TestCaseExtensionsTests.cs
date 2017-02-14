@@ -5,15 +5,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 {
     extern alias FrameworkV1;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-
     using System;
     using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
     public class TestCaseExtensionsTests
@@ -49,7 +48,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             testCase.SetPropertyValue(Constants.TestClassNameProperty, "DummyClassName");
 
             var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
-            
+
             // These are set for testCase by default by ObjectModel.
             Assert.AreEqual(false, resultUnitTestElement.IsAsync);
             Assert.AreEqual(true, resultUnitTestElement.Ignored);

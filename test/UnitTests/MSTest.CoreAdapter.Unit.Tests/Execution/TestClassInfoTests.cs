@@ -7,24 +7,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     extern alias FrameworkV2;
     extern alias FrameworkV2CoreExtension;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-
     using System;
     using System.Linq;
     using System.Reflection;
-
     using global::MSTestAdapter.TestUtilities;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-    using MSTest.TestAdapter.ObjectModel;
-
     using Moq;
-
+    using MSTest.TestAdapter.ObjectModel;
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
-
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -48,16 +42,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public TestClassInfoTests()
         {
             this.testClassType = typeof(DummyTestClass);
-            this.testClassConstructor = testClassType.GetConstructors().First();
-            this.testContextProperty = testClassType.GetProperties().First();
-            this.testClassAttribute = (UTF.TestClassAttribute)testClassType.GetCustomAttributes().First();
+            this.testClassConstructor = this.testClassType.GetConstructors().First();
+            this.testContextProperty = this.testClassType.GetProperties().First();
+            this.testClassAttribute = (UTF.TestClassAttribute)this.testClassType.GetCustomAttributes().First();
             this.testAssemblyInfo = new TestAssemblyInfo();
 
             this.testClassInfo = new TestClassInfo(
-                this.testClassType, 
-                this.testClassConstructor, 
-                this.testContextProperty, 
-                this.testClassAttribute, 
+                this.testClassType,
+                this.testClassConstructor,
+                this.testContextProperty,
+                this.testClassAttribute,
                 this.testAssemblyInfo);
 
             this.testContext = new Mock<UTFExtension.TestContext>().Object;
@@ -187,7 +181,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var classInitCallCount = 0;
             DummyTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
-            
+
             this.testClassInfo.RunClassInitialize(this.testContext);
 
             Assert.AreEqual(1, classInitCallCount);
@@ -271,7 +265,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClass.ClassInitializeMethodBody = (tc) => { };
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
             this.testClassInfo.ClassInitializationException = new TestFailedException(UnitTestOutcome.Failed, "Cached Test failure");
-            
+
             var exception = ActionUtility.PerformActionAndReturnException(() => this.testClassInfo.RunClassInitialize(this.testContext)) as TestFailedException;
 
             Assert.IsNotNull(exception);
@@ -356,10 +350,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         public class DummyTestClass
         {
-            public UTFExtension.TestContext TestContext { get; set; }
-            
             public static Action<object> ClassInitializeMethodBody { get; set; }
+
             public static Action ClassCleanupMethodBody { get; set; }
+
+            public UTFExtension.TestContext TestContext { get; set; }
 
             public static void ClassInitializeMethod(UTFExtension.TestContext testContext)
             {

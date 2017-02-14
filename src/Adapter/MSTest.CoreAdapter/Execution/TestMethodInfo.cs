@@ -21,6 +21,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     /// </summary>
     public class TestMethodInfo : ITestMethod
     {
+        /// <summary>
+        /// Specifies the timeout when it is not set in a test case
+        /// </summary>
+        public const int TimeoutWhenNotSet = 0;
+        private readonly ITestContext testContext;
+
         internal TestMethodInfo(
             MethodInfo testMethod,
             int timeout,
@@ -40,48 +46,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.testContext = testContext;
         }
 
-        public TestMethodAttribute Executor { set; get; }
+        public TestMethodAttribute Executor { get; set; }
 
         /// <summary>
-        /// TestMethod referred by this object
+        /// Gets testMethod referred by this object
         /// </summary>
         public MethodInfo TestMethod { get; private set; }
 
         /// <summary>
-        // Attribute that validates whether an exception qualifies as the expected exception
+        /// Gets attribute that validates whether an exception qualifies as the expected exception
         /// </summary>
         public ExpectedExceptionBaseAttribute ExpectedException { get; private set; }
 
         /// <summary>
-        /// Timeout defined on the test method.
+        /// Gets the timeout defined on the test method.
         /// </summary>
         public int Timeout { get; private set; }
 
         /// <summary>
-        /// Parent class Info object
+        /// Gets the parent class Info object
         /// </summary>
         public TestClassInfo Parent { get; internal set; }
 
         /// <summary>
-        /// Specifies whether timeout is set or not
+        /// Gets a value indicating whether timeout is set.
         /// </summary>
-        public bool IsTimeoutSet => (this.Timeout != TimeoutWhenNotSet);
+        public bool IsTimeoutSet => this.Timeout != TimeoutWhenNotSet;
 
         /// <summary>
-        /// Reason why test is not runnable
+        /// Gets the reason why the test is not runnable
         /// </summary>
         public string NotRunnableReason { get; internal set; }
 
         /// <summary>
-        /// Specifies whether test is runnnable
+        /// Gets a value indicating whether test is runnnable
         /// </summary>
         public bool IsRunnable => string.IsNullOrEmpty(this.NotRunnableReason);
-
-        /// <summary>
-        /// Specifies the timeout when it is not set in a test case
-        /// </summary>
-        public const int TimeoutWhenNotSet = 0;
-        private readonly ITestContext testContext;
 
         #region ITestMethod implementation
 
@@ -107,9 +107,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <inheritdoc/>
-        public TAttributeType[] GetAttributes<TAttributeType>(bool inherit) where TAttributeType : Attribute
+        public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
+            where TAttributeType : Attribute
         {
-            Attribute[] attributeArray =  ReflectHelper.GetCustomAttributes(this.TestMethod, typeof(TAttributeType), inherit);
+            Attribute[] attributeArray = ReflectHelper.GetCustomAttributes(this.TestMethod, typeof(TAttributeType), inherit);
 
             TAttributeType[] tAttributeArray = attributeArray as TAttributeType[];
             if (tAttributeArray != null)
@@ -178,8 +179,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Execute test without timeout.
         /// </summary>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        /// <param name="arguments">Arguments to be passed to the method.</param>
+        /// <returns>The result of the execution.</returns>
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private TestResult ExecuteInternal(object[] arguments)
         {
             Debug.Assert(this.TestMethod != null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
@@ -215,7 +217,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                     if (this.IsExpectedException(ex, result))
                     {
-                        //Expected Exception was thrown, so Pass the test
+                        // Expected Exception was thrown, so Pass the test
                         result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed;
                     }
                     else if (result.TestFailureException == null)
@@ -274,8 +276,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             return result;
         }
 
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private bool IsExpectedException(Exception ex, TestResult result)
         {
             Exception realException = this.GetRealException(ex);
@@ -319,7 +320,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return false;
             }
             else
+            {
                 return false;
+            }
         }
 
         private Exception GetRealException(Exception ex)
@@ -345,9 +348,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="ex">Exception that was thrown</param>
         /// <param name="className">The class name.</param>
         /// <param name="methodName">The method name.</param>
+        /// <returns>Test framework exception with details.</returns>
         private Exception HandleMethodException(Exception ex, string className, string methodName)
         {
-            Debug.Assert(ex != null);
+            Debug.Assert(ex != null, "exception should not be null.");
 
             var isTargetInvocationException = ex is TargetInvocationException;
             if (isTargetInvocationException && ex.InnerException == null)
@@ -374,13 +378,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Handle special case of UI objects in TestMethod to suggest UITestMethod
                 if (realException.HResult == -2147417842)
                 {
-                    errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_WrongThread, string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestMethodThrows,
-                        className, methodName, StackTraceHelper.GetExceptionMessage(realException)));
+                    errorMessage = string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.UTA_WrongThread,
+                        string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestMethodThrows, className, methodName, StackTraceHelper.GetExceptionMessage(realException)));
                 }
                 else
                 {
-                    errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestMethodThrows,
-                        className, methodName, StackTraceHelper.GetExceptionMessage(realException));
+                    errorMessage = string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.UTA_TestMethodThrows,
+                        className,
+                        methodName,
+                        StackTraceHelper.GetExceptionMessage(realException));
                 }
 
                 StackTraceInformation stackTrace = null;
@@ -403,8 +413,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="classInstance">Instance of TestClass.</param>
         /// <param name="result">Instance of TestResult.</param>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private void RunTestCleanupMethod(object classInstance, TestResult result)
         {
             Debug.Assert(classInstance != null, "classInstance != null");
@@ -450,8 +459,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="classInstance">Instance of TestClass.</param>
         /// <param name="result">Instance of TestResult.</param>
         /// <returns>True if the TestInitialize method(s) did not throw an exception.</returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private bool RunTestInitializeMethod(object classInstance, TestResult result)
         {
             Debug.Assert(classInstance != null, "classInstance != null");
@@ -518,8 +526,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>
         /// True if there no exceptions during set context operation.
         /// </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private bool SetTestContext(object classInstance, TestResult result)
         {
             Debug.Assert(classInstance != null, "classInstance != null");
@@ -560,8 +567,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>
         /// An instance of the TestClass. Returns null if there are errors during class instantiation.
         /// </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private object CreateTestClassInstance(TestResult result)
         {
             object classInstance = null;
@@ -590,10 +596,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Execute test which has a timeout
+        /// Execute test with a timeout
         /// </summary>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        /// <param name="arguments">The arguments to be passed.</param>
+        /// <returns>The result of execution.</returns>
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private TestResult ExecuteInternalWithTimeout(object[] arguments)
         {
             Debug.Assert(this.IsTimeoutSet, "Timeout should be set");
@@ -634,7 +641,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Which are handled as follows: -
                 //
                 // For #1, we are now restarting the execution process if adapter fails to unload app-domain.
-                //
                 string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, this.TestMethodName);
                 TestResult timeoutResult = new TestResult() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };
                 return timeoutResult;

@@ -13,21 +13,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using System.IO;
     using System.Linq;
     using System.Reflection;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-
     using Moq;
-    
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -81,12 +77,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             Assert.IsNull(this.testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out this.warnings));
 
             // Also validate that we give a warning when this happens.
-            Assert.IsNotNull(warnings);
+            Assert.IsNotNull(this.warnings);
             var message = string.Format(
-                CultureInfo.CurrentCulture, 
-                Resource.TestAssembly_FileDoesNotExist, 
+                CultureInfo.CurrentCulture,
+                Resource.TestAssembly_FileDoesNotExist,
                 assemblyName);
-            CollectionAssert.Contains(warnings.ToList(), message);
+            CollectionAssert.Contains(this.warnings.ToList(), message);
         }
 
         [TestMethod]
@@ -111,7 +107,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             var tests = this.testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out this.warnings);
 
             Assert.IsNotNull(tests);
-            
+
             // Validate if the current test is enumerated in this list.
             Assert.IsTrue(tests.Any(t => t.TestMethod.Name == "ValidTestMethod"));
         }
@@ -123,25 +119,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             // Setup mocks.
             this.SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);
-            
+
             this.testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out this.warnings);
 
             this.testablePlatformServiceProvider.MockTestSourceHost.Verify(ih => ih.CreateInstanceForType(typeof(AssemblyEnumerator), null), Times.Once);
-        }
-
-        private void SetupMocks(string assemblyName, bool doesFileExist, bool isAssemblyReferenced)
-        {
-            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(assemblyName))
-                .Returns(assemblyName);
-            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
-                .Returns(doesFileExist);
-            this.testablePlatformServiceProvider.MockTestSourceValidator.Setup(
-                tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), assemblyName)).Returns(isAssemblyReferenced);
-            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName, It.IsAny<bool>()))
-                .Returns(Assembly.GetExecutingAssembly());
-            this.testablePlatformServiceProvider.MockTestSourceHost.Setup(
-                ih => ih.CreateInstanceForType(typeof(AssemblyEnumerator), null))
-                .Returns(new AssemblyEnumerator());
         }
 
         #region Exception handling tests.
@@ -199,6 +180,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
         #endregion
 
+        #region private helpers
+
+        private void SetupMocks(string assemblyName, bool doesFileExist, bool isAssemblyReferenced)
+        {
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(assemblyName))
+                .Returns(assemblyName);
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
+                .Returns(doesFileExist);
+            this.testablePlatformServiceProvider.MockTestSourceValidator.Setup(
+                tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), assemblyName)).Returns(isAssemblyReferenced);
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName, It.IsAny<bool>()))
+                .Returns(Assembly.GetExecutingAssembly());
+            this.testablePlatformServiceProvider.MockTestSourceHost.Setup(
+                ih => ih.CreateInstanceForType(typeof(AssemblyEnumerator), null))
+                .Returns(new AssemblyEnumerator());
+        }
+
+        #endregion
+
         #region dummy implementations.
 
         [UTF.TestClass]
@@ -207,7 +207,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             // This is just a dummy method for test validation.
             [UTF.TestMethod]
             public void ValidTestMethod()
-            { 
+            {
             }
         }
 

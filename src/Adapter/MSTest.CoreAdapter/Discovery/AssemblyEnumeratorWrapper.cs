@@ -32,9 +32,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <param name="runSettings"> The run Settings. </param>
         /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller.  </param>
         /// <returns> A collection of test elements. </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Catching a generic exception since it is a requirement to not abort discovery in case of any errors.")]
-        [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "3#")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Catching a generic exception since it is a requirement to not abort discovery in case of any errors.")]
+        [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "3#", Justification = "This is only for internal use.")]
         internal ICollection<UnitTestElement> GetTests(
             string assemblyFileName,
             IRunSettings runSettings,
@@ -146,4 +145,3 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         }
     }
 }
-

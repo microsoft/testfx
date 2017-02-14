@@ -27,22 +27,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         }
 
         /// <summary>
-        /// Stack Trace associated with the test failure
+        /// Gets stack Trace associated with the test failure
         /// </summary>
         public string ErrorStackTrace { get; private set; }
 
         /// <summary>
-        /// Source code FilePath where the error occured
+        /// Gets source code FilePath where the error occured
         /// </summary>
         public string ErrorFilePath { get; private set; }
 
         /// <summary>
-        /// Line number in the source code file where the error occured.
+        /// Gets line number in the source code file where the error occured.
         /// </summary>
         public int ErrorLineNumber { get; private set; }
 
         /// <summary>
-        /// Column number in the source code file where the error occured.
+        /// Gets column number in the source code file where the error occured.
         /// </summary>
         public int ErrorColumnNumber { get; private set; }
     }

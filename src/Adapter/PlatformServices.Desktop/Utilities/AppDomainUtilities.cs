@@ -140,7 +140,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// </summary>
         /// <param name="appDomainSetup"> The app Domain Setup. </param>
         /// <param name="testSourceConfigFile"> The test Source Config File. </param>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         internal static void SetConfigurationFile(AppDomainSetup appDomainSetup, string testSourceConfigFile)
         {            
             if (!string.IsNullOrEmpty(testSourceConfigFile))

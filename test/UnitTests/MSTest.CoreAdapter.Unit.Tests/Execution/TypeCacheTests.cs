@@ -6,33 +6,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     extern alias FrameworkV1;
     extern alias FrameworkV2;
     extern alias FrameworkV2CoreExtension;
-    
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-
     using global::MSTestAdapter.TestUtilities;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-
     using Moq;
-
+    using static TestMethodInfoTests;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
-    using static TestMethodInfoTests;
 
     [TestClass]
     public class TypeCacheTests
@@ -40,14 +35,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         private TypeCache typeCache;
 
         private Mock<ReflectHelper> mockReflectHelper;
-        
+
         private TestablePlatformServiceProvider testablePlatformServiceProvider;
 
         [TestInitialize]
         public void TestInit()
         {
             this.mockReflectHelper = new Mock<ReflectHelper>();
-            this.typeCache = new TypeCache(this.mockReflectHelper.Object);   
+            this.typeCache = new TypeCache(this.mockReflectHelper.Object);
 
             this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
             PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
@@ -87,7 +82,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void GetTestMethodInfoShouldReturnNullIfClassInfoForTheMethodIsNull()
         {
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-            
+
             Assert.IsNull(
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
@@ -130,7 +125,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             string className = typeof(DummyTestClassWithNoDefaultConstructor).FullName;
             var testMethod = new TestMethod("M", className, "A", isAsync: false);
-            
+
             Action action = () =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
@@ -192,7 +187,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
-            
+
             Assert.IsNotNull(testMethodInfo);
             Assert.IsNotNull(testMethodInfo.Parent.TestContextProperty);
         }
@@ -259,7 +254,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var type = typeof(DummyTestClassWithInitializeMethods);
             var testMethod = new TestMethod("TestInit", type.FullName, "A", isAsync: false);
-            
+
             this.mockReflectHelper.Setup(
                 rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
 
@@ -390,7 +385,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             this.mockReflectHelper.Setup(
                 rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
-            
+
             this.typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
@@ -730,7 +725,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
-            
+
             Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
             Assert.AreEqual(0, testMethodInfo.Timeout);
             Assert.AreEqual(this.typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
@@ -791,7 +786,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var type = typeof(DummyTestClassWithTestMethods);
             var methodInfo = type.GetMethod("TestMethodWithDerivedTestMethodAttribute");
             var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
-            
+
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
@@ -833,7 +828,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 new Dictionary<string, object>());
 
             var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext);
-            
+
             Assert.IsNotNull(testMethodInfo);
             var expectedMessage = string.Format(
                 "UTA023: {0}: Cannot define predefined property {2} on method {1}.",
@@ -899,6 +894,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext);
 
             Assert.IsNotNull(testMethodInfo);
+
             // Verify that the first value gets set.
             object value;
             Assert.IsTrue(testContext.Properties.TryGetValue("WhoAmI", out value));
@@ -909,7 +905,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedTestClasses()
         {
             var type = typeof(DerivedTestClass);
-            var methodInfo = type.GetRuntimeMethod("DummyTestMethod", new Type[] {});
+            var methodInfo = type.GetRuntimeMethod("DummyTestMethod", new Type[] { });
             var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
@@ -1102,7 +1098,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 var message = "The test method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TypeCacheTests+DummyTestClassWithTestMethods.TestMethodWithMultipleExpectedException "
                     + "has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.";
@@ -1119,6 +1115,91 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         #region dummy implementations
+
+        [UTF.TestClass]
+        internal class DummyTestClassWithTestMethods
+        {
+            public UTFExtension.TestContext TestContext { get; set; }
+
+            [UTF.TestMethod]
+            public void TestMethod()
+            {
+            }
+
+            [DerivedTestMethod]
+            public void TestMethodWithDerivedTestMethodAttribute()
+            {
+            }
+
+            [UTF.TestMethod]
+            [UTF.Timeout(10)]
+            public void TestMethodWithTimeout()
+            {
+            }
+
+            [UTF.TestMethod]
+            [UTF.Timeout(-10)]
+            public void TestMethodWithIncorrectTimeout()
+            {
+            }
+
+            [UTF.TestMethod]
+            [UTF.TestProperty("WhoAmI", "Me")]
+            public void TestMethodWithCustomProperty()
+            {
+            }
+
+            [UTF.TestMethod]
+            [UTF.TestProperty("Owner", "You")]
+            public void TestMethodWithOwnerAsCustomProperty()
+            {
+            }
+
+            [UTF.TestMethod]
+            [UTF.TestProperty("", "You")]
+            public void TestMethodWithEmptyCustomPropertyName()
+            {
+            }
+
+            [UTF.TestMethod]
+            [UTF.TestProperty(null, "You")]
+            public void TestMethodWithNullCustomPropertyName()
+            {
+            }
+
+            [UTF.TestMethod]
+            [UTF.TestProperty("WhoAmI", "Me")]
+            [UTF.TestProperty("WhoAmI", "Me2")]
+            public void TestMethodWithDuplicateCustomPropertyNames()
+            {
+            }
+
+            [UTF.TestMethod]
+            [UTF.ExpectedException(typeof(DivideByZeroException))]
+            public void TestMethodWithExpectedException()
+            {
+            }
+
+            [UTF.TestMethod]
+            [UTF.ExpectedException(typeof(DivideByZeroException))]
+            [CustomExpectedException(typeof(ArgumentNullException), "Custom Exception")]
+            public void TestMethodWithMultipleExpectedException()
+            {
+            }
+        }
+
+        [UTF.TestClass]
+        internal class DerivedTestClass : BaseTestClass
+        {
+        }
+
+        internal class BaseTestClass
+        {
+            [UTF.TestMethod]
+            public void DummyTestMethod()
+            {
+            }
+        }
 
         private class DummyTestClassWithNoDefaultConstructor
         {
@@ -1188,7 +1269,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public static void AssemblyInit(UTFExtension.TestContext tc)
             {
             }
-            
+
             public static void AssemblyCleanup()
             {
             }
@@ -1201,11 +1282,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         private class DummyTestClassWithIncorrectInitializeMethods
         {
-            public void AssemblyInit(UTFExtension.TestContext tc)
+            public static void TestInit(int i)
             {
             }
 
-            public static void TestInit(int i)
+            public void AssemblyInit(UTFExtension.TestContext tc)
             {
             }
         }
@@ -1213,83 +1294,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         private class DummyTestClassWithIncorrectCleanupMethods
         {
-            public void AssemblyCleanup()
-            {
-            }
-
             public static void TestCleanup(int i)
             {
             }
-        }
 
-        [UTF.TestClass]
-        internal class DummyTestClassWithTestMethods
-        {
-            public UTFExtension.TestContext TestContext { get; set; }
-
-            [UTF.TestMethod]
-            public void TestMethod()
-            {
-            }
-
-            [DerivedTestMethod]
-            public void TestMethodWithDerivedTestMethodAttribute()
-            {
-            }
-
-            [UTF.TestMethod]
-            [UTF.Timeout(10)]
-            public void TestMethodWithTimeout()
-            {
-            }
-
-            [UTF.TestMethod]
-            [UTF.Timeout(-10)]
-            public void TestMethodWithIncorrectTimeout()
-            {
-            }
-
-            [UTF.TestMethod]
-            [UTF.TestProperty("WhoAmI", "Me")]
-            public void TestMethodWithCustomProperty()
-            {
-            }
-
-            [UTF.TestMethod]
-            [UTF.TestProperty("Owner", "You")]
-            public void TestMethodWithOwnerAsCustomProperty()
-            {
-            }
-
-            [UTF.TestMethod]
-            [UTF.TestProperty("", "You")]
-            public void TestMethodWithEmptyCustomPropertyName()
-            {
-            }
-
-            [UTF.TestMethod]
-            [UTF.TestProperty(null, "You")]
-            public void TestMethodWithNullCustomPropertyName()
-            {
-            }
-
-            [UTF.TestMethod]
-            [UTF.TestProperty("WhoAmI", "Me")]
-            [UTF.TestProperty("WhoAmI", "Me2")]
-            public void TestMethodWithDuplicateCustomPropertyNames()
-            {
-            }
-
-            [UTF.TestMethod]
-            [UTF.ExpectedException(typeof(DivideByZeroException))]
-            public void TestMethodWithExpectedException()
-            {
-            }
-
-            [UTF.TestMethod]
-            [UTF.ExpectedException(typeof(DivideByZeroException))]
-            [CustomExpectedException(typeof(ArgumentNullException),"Custom Exception")]
-            public void TestMethodWithMultipleExpectedException()
+            public void AssemblyCleanup()
             {
             }
         }
@@ -1304,19 +1313,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private class DerivedTestMethodAttribute : UTF.TestMethodAttribute
         {
-        }
-
-        [UTF.TestClass]
-        internal class DerivedTestClass : BaseTestClass
-        {
-        }
-
-        internal class BaseTestClass
-        {
-            [UTF.TestMethod]
-            public void DummyTestMethod()
-            {
-            }
         }
 
         #endregion

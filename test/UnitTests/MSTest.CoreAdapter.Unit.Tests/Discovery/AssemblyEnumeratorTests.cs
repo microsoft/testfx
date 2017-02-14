@@ -4,7 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 {
     extern alias FrameworkV1;
-    
+
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
@@ -22,11 +22,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using Moq;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
     public class AssemblyEnumeratorTests
@@ -68,9 +68,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         public void GetTypesShouldReturnSetOfDefinedTypes()
         {
             Mock<TestableAssembly> mockAssembly = new Mock<TestableAssembly>();
-            
+
             var expectedTypes = new List<TypeInfo>() { typeof(DummyTestClass).GetTypeInfo(), typeof(DummyTestClass).GetTypeInfo() };
-            
+
             // Setup mocks
             mockAssembly.Setup(a => a.DefinedTypes).Returns(expectedTypes);
 
@@ -82,7 +82,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         public void GetTypesShouldHandleReflectionTypeLoadException()
         {
             Mock<TestableAssembly> mockAssembly = new Mock<TestableAssembly>();
-            
+
             // Setup mocks
             mockAssembly.Setup(a => a.DefinedTypes).Throws(new ReflectionTypeLoadException(null, null));
 
@@ -97,7 +97,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             // Setup mocks
             mockAssembly.Setup(a => a.DefinedTypes).Throws(new ReflectionTypeLoadException(reflectedTypes, null));
-            
+
             var types = this.assemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, this.warnings);
 
             Assert.IsNotNull(types);
@@ -114,10 +114,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             mockAssembly.Setup(a => a.DefinedTypes).Throws(new ReflectionTypeLoadException(null, exceptions));
 
             var types = this.assemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", this.warnings);
-            
+
             Assert.AreEqual(1, this.warnings.Count);
             CollectionAssert.Contains(
-                this.warnings.ToList(), 
+                this.warnings.ToList(),
                 string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, "DummyAssembly", string.Empty));
 
             this.testablePlatformServiceProvider.MockTraceLogger.Verify(tl => tl.LogWarning("{0}", exceptions[0]), Times.Once);
@@ -131,7 +131,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         public void GetLoadExceptionDetailsShouldReturnExceptionMessageIfLoaderExceptionsIsNull()
         {
             Assert.AreEqual(
-                "DummyMessage\r\n", 
+                "DummyMessage\r\n",
                 this.assemblyEnumerator.GetLoadExceptionDetails(
                     new ReflectionTypeLoadException(null, null, "DummyMessage")));
         }
@@ -145,11 +145,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             Assert.AreEqual(
                 string.Concat(
                     string.Format(
-                        CultureInfo.CurrentCulture, 
-                        Resource.EnumeratorLoadTypeErrorFormat, 
-                        loaderException.GetType(), 
-                        loaderException.Message), 
-                    "\r\n"), 
+                        CultureInfo.CurrentCulture,
+                        Resource.EnumeratorLoadTypeErrorFormat,
+                        loaderException.GetType(),
+                        loaderException.Message),
+                    "\r\n"),
                 this.assemblyEnumerator.GetLoadExceptionDetails(exceptions));
         }
 
@@ -159,21 +159,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             var loaderException1 = new ArgumentNullException("DummyLoaderExceptionMessage1", (Exception)null);
             var loaderException2 = new AccessViolationException("DummyLoaderExceptionMessage2");
             var exceptions = new ReflectionTypeLoadException(
-                null, 
+                null,
                 new Exception[] { loaderException1, loaderException2 });
             StringBuilder errorDetails = new StringBuilder();
 
             errorDetails.AppendLine(
                 string.Format(
-                    CultureInfo.CurrentCulture, 
-                    Resource.EnumeratorLoadTypeErrorFormat, 
-                    loaderException1.GetType(), 
+                    CultureInfo.CurrentCulture,
+                    Resource.EnumeratorLoadTypeErrorFormat,
+                    loaderException1.GetType(),
                     loaderException1.Message));
             errorDetails.AppendLine(
                 string.Format(
-                    CultureInfo.CurrentCulture, 
-                    Resource.EnumeratorLoadTypeErrorFormat, 
-                    loaderException2.GetType(), 
+                    CultureInfo.CurrentCulture,
+                    Resource.EnumeratorLoadTypeErrorFormat,
+                    loaderException2.GetType(),
                     loaderException2.Message));
 
             Assert.AreEqual(errorDetails.ToString(), this.assemblyEnumerator.GetLoadExceptionDetails(exceptions));
@@ -188,11 +188,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             Assert.AreEqual(
                 string.Concat(
                     string.Format(
-                        CultureInfo.CurrentCulture, 
-                        Resource.EnumeratorLoadTypeErrorFormat, 
-                        loaderException.GetType(), 
-                        loaderException.Message), 
-                    "\r\n"), 
+                        CultureInfo.CurrentCulture,
+                        Resource.EnumeratorLoadTypeErrorFormat,
+                        loaderException.GetType(),
+                        loaderException.Message),
+                    "\r\n"),
                 this.assemblyEnumerator.GetLoadExceptionDetails(exceptions));
         }
 
@@ -246,8 +246,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
                 .Returns(new Collection<UnitTestElement> { unitTestElement });
 
             var testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out this.warnings);
-            
-            CollectionAssert.AreEqual(new Collection<UnitTestElement> {unitTestElement}, testElements.ToList());
+
+            CollectionAssert.AreEqual(new Collection<UnitTestElement> { unitTestElement }, testElements.ToList());
         }
 
         [TestMethodV1]
@@ -277,7 +277,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
             var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
             var expectedTestElements = new Collection<UnitTestElement> { unitTestElement, unitTestElement };
-            
+
             // Setup mocks
             mockAssembly.Setup(a => a.DefinedTypes)
                 .Returns(new List<TypeInfo>() { typeof(DummyTestClass).GetTypeInfo() });
@@ -338,7 +338,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             var mockAssembly = new Mock<TestableAssembly>();
             var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
             ICollection<string> warningsFromTypeEnumerator = new Collection<string>();
-            
+
             warningsFromTypeEnumerator.Add("DummyWarning");
 
             // Setup mocks
@@ -349,7 +349,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out warningsFromTypeEnumerator));
 
             testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out this.warnings);
-            
+
             CollectionAssert.AreEqual(warningsFromTypeEnumerator.ToList(), this.warnings.ToList());
         }
 
@@ -370,12 +370,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out this.warnings);
 
             CollectionAssert.Contains(
-                this.warnings.ToList(), 
+                this.warnings.ToList(),
                 string.Format(
-                    CultureInfo.CurrentCulture, 
-                    Resource.CouldNotInspectTypeDuringDiscovery, 
-                    typeof(InternalTestClass), 
-                    "DummyAssembly", 
+                    CultureInfo.CurrentCulture,
+                    Resource.CouldNotInspectTypeDuringDiscovery,
+                    typeof(InternalTestClass),
+                    "DummyAssembly",
                     exception.Message));
         }
 
@@ -396,10 +396,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             var typeValidator = new Mock<TypeValidator>(reflectHelper.Object);
             var testMethodValidator = new Mock<TestMethodValidator>(reflectHelper.Object);
             this.MockTypeEnumerator = new Mock<TypeEnumerator>(
-                typeof(DummyTestClass), 
-                "DummyAssembly", 
-                reflectHelper.Object, 
-                typeValidator.Object, 
+                typeof(DummyTestClass),
+                "DummyAssembly",
+                reflectHelper.Object,
+                typeValidator.Object,
                 testMethodValidator.Object);
         }
 

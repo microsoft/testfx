@@ -35,6 +35,7 @@
     <Compile Include="Discovery\AssemblyEnumerator.cs" />
     <Compile Include="Discovery\AssemblyEnumeratorWrapper.cs" />
     <Compile Include="Discovery\TestMethodValidator.cs" />
+    <Compile Include="Execution\RunCleanupResult.cs" />
     <Compile Include="Helpers\RunSettingsUtilities.cs" />
     <Compile Include="Helpers\TestRunParameters.cs" />
     <Compile Include="MSTestDiscoverer.cs" />
@@ -60,6 +61,8 @@
     <Compile Include="Execution\TestMethodInfo.cs" />
     <Compile Include="Execution\ThreadSafeStringWriter.cs" />
     <Compile Include="ObjectModel\TypeInspectionException.cs" />
+    <Compile Include="Helpers\UnitTestOutcomeHelper.cs" />
+    <Compile Include="ObjectModel\UnitTestOutcome.cs" />
     <Compile Include="ObjectModel\UnitTestResult.cs" />
     <Compile Include="Discovery\TypeValidator.cs" />
     <Compile Include="Friends.cs" />
@@ -74,6 +77,8 @@
     <Compile Include="Constants.cs" />
     <Compile Include="PlatformServiceProvider.cs" />
     <Compile Include="Helpers\ReflectHelper.cs" />
+    <Compile Include="Execution\TestRunCancellationToken.cs" />
+    <Compile Include="Discovery\UnitTestDiscoverer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj">

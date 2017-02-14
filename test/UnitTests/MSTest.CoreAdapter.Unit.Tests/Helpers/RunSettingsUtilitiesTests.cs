@@ -6,22 +6,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
     extern alias FrameworkV1;
     extern alias FrameworkV2;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-
     using System.Collections.Generic;
-
+    using global::MSTestAdapter.TestUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using global::MSTestAdapter.TestUtilities;
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
     public class RunSettingsUtilitiesTests
     {
-
         [TestMethod]
         public void GetTestRunParametersReturnsEmptyDictionaryOnNullRunSettings()
         {
@@ -87,6 +84,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
             Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
             Assert.IsNotNull(trp);
             Assert.AreEqual(1, trp.Count);
+
             // Verify Parameter Values.
             Assert.IsTrue(trp.ContainsKey("webAppUrl"));
             Assert.AreEqual(trp["webAppUrl"], "http://localhost");

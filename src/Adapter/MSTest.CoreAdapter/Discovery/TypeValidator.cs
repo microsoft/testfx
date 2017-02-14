@@ -17,12 +17,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     /// </summary>
     internal class TypeValidator
     {
+        private static readonly string TestContextFullName = typeof(TestContext).FullName;
         private readonly ReflectHelper reflectHelper;
 
-        private static readonly string TestContextFullName = typeof(TestContext).FullName;
-
         /// <summary>
-        /// TypeValidator constructor.
+        /// Initializes a new instance of the <see cref="TypeValidator"/> class.
         /// </summary>
         /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
         internal TypeValidator(ReflectHelper reflectHelper)

@@ -214,8 +214,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="testContext"> The test context. </param>
         /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public void RunClassInitialize(TestContext testContext)
         {
             // If no class initialize return
@@ -293,7 +292,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>
         /// Any exception that can be thrown as part of a class cleanup as warning messages.
         /// </returns>
-        [SuppressMessageAttribute("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        [SuppressMessageAttribute("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public string RunClassCleanup()
         {
             if (this.ClassCleanupMethod == null)
@@ -324,11 +323,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     errorMessage = StackTraceHelper.GetExceptionMessage(realException);
                 }
 
-                return string.Format(CultureInfo.CurrentCulture, Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-                                                this.ClassType.Name,
-                                                this.ClassCleanupMethod.Name,
-                                                errorMessage,
-                                                StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                return string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.UTA_ClassCleanupMethodWasUnsuccesful,
+                    this.ClassType.Name,
+                    this.ClassCleanupMethod.Name,
+                    errorMessage,
+                    StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
             }
         }
     }

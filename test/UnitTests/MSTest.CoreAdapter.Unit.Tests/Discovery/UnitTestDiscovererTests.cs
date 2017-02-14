@@ -6,16 +6,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     extern alias FrameworkV1;
     extern alias FrameworkV2;
     extern alias FrameworkV2CoreExtension;
-    
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
 
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -23,8 +17,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-
     using Moq;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
     public class UnitTestDiscovererTests
@@ -147,9 +144,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", false));
             var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));
             var testElements = new List<UnitTestElement> { test1, test2 };
-            
+
             this.unitTestDiscoverer.SendTestCases(source, testElements, this.mockTestCaseDiscoverySink.Object);
-            
+
             // Assert.
             this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
             this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Once);
@@ -166,7 +163,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             var test = new UnitTestElement(new TestMethod("M", "C", "A", false));
             var testElements = new List<UnitTestElement> { test };
-            
+
             this.SetupNavigation(source, test, test.TestMethod.FullClassName, test.TestMethod.Name);
 
             // Act
@@ -223,7 +220,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         private void SetupNavigation(string source, UnitTestElement test, string className, string methodName)
         {
             var testNavigationData = new DummyNavigationData("DummyFileName.cs", 1, 10);
-            
+
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
                 .Returns(testNavigationData);
             int minLineNumber = testNavigationData.MinLineNumber;
@@ -268,7 +265,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
     internal class TestableUnitTestDiscoverer : UnitTestDiscoverer
     {
-        internal override void DiscoverTestsInSource(string source,
+        internal override void DiscoverTestsInSource(
+            string source,
             IMessageLogger logger,
             ITestCaseDiscoverySink discoverySink,
             IRunSettings runSettings)

@@ -7,17 +7,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
     extern alias FrameworkV2;
     extern alias FrameworkV2CoreExtension;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-
     using System;
     using System.Reflection;
     using System.Threading.Tasks;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-    
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -348,7 +345,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             var dummyTestClass = new DummyTestClass2();
             var dummyAsyncMethod = typeof(DummyTestClass2).GetMethod("DummyAsyncMethod");
-            
+
             dummyAsyncMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
 
             Assert.IsTrue(testMethodCalled);
@@ -376,37 +373,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
         #endregion
 
-        #region Dummy Class 
+        #region Dummy Class
+
+        public class DummyTestClass2
+        {
+            public static Func<int, int, Task> DummyAsyncMethodBody { get; set; }
+
+            public static Func<int, int, bool> DummyMethodBody { get; set; }
+
+            public bool DummyMethod(int x, int y)
+            {
+                return DummyMethodBody(x, y);
+            }
+
+            public async Task DummyAsyncMethod(int x, int y)
+            {
+                await DummyAsyncMethodBody(x, y);
+            }
+        }
 
         private abstract class DummyTestClass
         {
-            internal void InternalMethod()
-            {
-            }
-
-            internal static void InternalStaticMethod()
-            {
-            }
-
-            public void PublicMethod()
-            {
-            }
-
-            public abstract void PublicAbstractMethod();
-
-            public void PublicGenericMethod<T>(T i)
-            {
-            }
-
             public static void PublicStaticMethod()
             {
             }
 
             public static void PublicStaticMethodWithInt(int a)
-            {
-            }
-
-            public void PublicMethodWithInt(int a)
             {
             }
 
@@ -419,12 +411,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             {
             }
 
-            public async static Task PublicStaticAsyncTaskMethodWithTC(UTFExtension.TestContext tc)
+            public static async Task PublicStaticAsyncTaskMethodWithTC(UTFExtension.TestContext tc)
             {
                 await Task.FromResult(true);
             }
 
-            public async static void PublicStaticAsyncVoidMethodWithTC(UTFExtension.TestContext tc)
+            public static async void PublicStaticAsyncVoidMethodWithTC(UTFExtension.TestContext tc)
             {
                 await Task.FromResult(true);
             }
@@ -434,14 +426,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
                 return 0;
             }
 
-            public async static Task PublicStaticAsyncTaskMethod()
+            public static async Task PublicStaticAsyncTaskMethod()
             {
                 await Task.FromResult(true);
             }
 
-            public async static void PublicStaticAsyncVoidMethod()
+            public static async void PublicStaticAsyncVoidMethod()
             {
                 await Task.FromResult(true);
+            }
+
+            public void PublicMethod()
+            {
+            }
+
+            public abstract void PublicAbstractMethod();
+
+            public void PublicGenericMethod<T>(T i)
+            {
+            }
+
+            public void PublicMethodWithInt(int a)
+            {
             }
 
             public int PublicMethodReturningInt()
@@ -468,22 +474,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             public void PublicMethodWithTimeout()
             {
             }
-        }
 
-        public class DummyTestClass2
-        {
-            public static Func<int, int, Task> DummyAsyncMethodBody { get; set; }
-
-            public static Func<int, int, bool> DummyMethodBody { get; set; }
-
-            public bool DummyMethod(int x, int y)
+            internal static void InternalStaticMethod()
             {
-                return DummyMethodBody(x, y);
             }
 
-            public async Task DummyAsyncMethod(int x, int y)
+            internal void InternalMethod()
             {
-                await DummyAsyncMethodBody(x, y);
             }
         }
 

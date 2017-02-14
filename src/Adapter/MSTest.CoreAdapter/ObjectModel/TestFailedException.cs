@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
-
 {
     using System;
     using System.Diagnostics;
@@ -12,8 +11,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     /// <summary>
     /// Internal class to indicate Test Execution failure
     /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2240:ImplementISerializableCorrectly")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1032:ImplementStandardExceptionConstructors")]
     [Serializable]
     internal class TestFailedException : Exception
     {
@@ -42,12 +39,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         }
 
         /// <summary>
-        /// Stack Trace information associated with the test failure
+        /// Gets tack Trace information associated with the test failure
         /// </summary>
         public StackTraceInformation StackTraceInformation { get; private set; }
 
         /// <summary>
-        /// Outcome of the test case
+        /// Gets outcome of the test case
         /// </summary>
         public UnitTestOutcome Outcome { get; private set; }
     }

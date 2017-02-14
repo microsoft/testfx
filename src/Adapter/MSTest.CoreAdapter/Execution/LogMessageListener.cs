@@ -68,31 +68,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             activeRedirector = this;
         }
 
+        ~LogMessageListener()
+        {
+            this.Dispose(false);
+        }
+
         /// <summary>
-        /// Logger output
+        /// Gets logger output
         /// </summary>
         public string StandardOutput => this.redirectLoggerOut.ToString();
 
         /// <summary>
-        /// 'Error' Output from the redirected stream
+        /// Gets 'Error' Output from the redirected stream
         /// </summary>
         public string StandardError => this.redirectStdErr.ToString();
 
         /// <summary>
-        /// 'Trace' Output from the redirected stream
+        /// Gets 'Trace' Output from the redirected stream
         /// </summary>
         public string DebugTrace
         {
             get
             {
-                return (this.traceListener == null || this.traceListener.GetWriter() == null)?
+                return (this.traceListener == null || this.traceListener.GetWriter() == null) ?
                     string.Empty : this.traceListener.GetWriter().ToString();
             }
-        }
-
-        ~LogMessageListener()
-        {
-            this.Dispose(false);
         }
 
         public void Dispose()

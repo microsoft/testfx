@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         private readonly ReflectHelper reflectHelper;
 
         /// <summary>
-        /// TestMethodValidator constructor.
+        /// Initializes a new instance of the <see cref="TestMethodValidator"/> class.
         /// </summary>
         /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
         internal TestMethodValidator(ReflectHelper reflectHelper)

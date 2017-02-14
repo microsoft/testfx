@@ -7,21 +7,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     extern alias FrameworkV2;
     extern alias FrameworkV2CoreExtension;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-
     using System;
     using System.Collections.Generic;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-    
     using Moq;
-
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -42,7 +38,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         public void TestInit()
         {
             this.mockReflectHelper = new Mock<ReflectHelper>();
-            this.typeValidator = new TypeValidator(mockReflectHelper.Object);
+            this.typeValidator = new TypeValidator(this.mockReflectHelper.Object);
             this.warnings = new List<string>();
         }
 
@@ -157,7 +153,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         public void IsValidTestClassShouldReportWarningsForTestClassesWithInvalidTestContextSignature()
         {
             this.SetupTestClass();
-            this.typeValidator.IsValidTestClass(typeof (ClassWithTestContextGetterOnly), this.warnings);
+            this.typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), this.warnings);
             Assert.AreEqual(1, this.warnings.Count);
             CollectionAssert.Contains(this.warnings, string.Format(Resource.UTA_ErrorInValidTestContextSignature, typeof(ClassWithTestContextGetterOnly).FullName));
         }
@@ -211,7 +207,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             Assert.IsFalse(this.typeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
         }
-        
+
         [TestMethod]
         public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithPrivateSetter()
         {
@@ -256,7 +252,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
     #region Dummy Types
 
+#pragma warning disable SA1201 // Elements must appear in the correct order
     public interface IDummyInterface
+#pragma warning restore SA1201 // Elements must appear in the correct order
     {
     }
 
@@ -295,18 +293,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
     public class GenericClassWithProperty<T>
     {
-        public T ReturnSomething { get; set; }
-
         public static T ReturnAStableSomething { get; }
+
+        public T ReturnSomething { get; set; }
 
         public bool Something { get; }
     }
 
     public class GenericClassWithTestContext<T>
     {
-        public T ReturnSomething { get; set; }
-
         public static T ReturnAStableSomething { get; }
+
+        public T ReturnSomething { get; set; }
 
         public bool Something { get; }
 

@@ -53,7 +53,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </returns>
         internal static StackTraceInformation GetStackTraceInformation(Exception ex)
         {
-            Debug.Assert(ex != null);
+            Debug.Assert(ex != null, "exception should not be null.");
 
             Stack<string> stackTraces = new Stack<string>();
 
@@ -101,7 +101,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </returns>
         internal static string TrimStackTrace(string stackTrace)
         {
-            Debug.Assert(stackTrace != null && stackTrace.Length > 0);
+            Debug.Assert(stackTrace != null && stackTrace.Length > 0, "stack trace should be non-empty.");
 
             StringBuilder result = new StringBuilder(stackTrace.Length);
             string[] stackFrames = Regex.Split(stackTrace, Environment.NewLine);
@@ -115,7 +115,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 // Add the frame to the result if it does not refer to
                 // the assertion class in the test framework
-                //
                 bool hasReference = HasReferenceToUTF(stackFrame);
                 if (!hasReference)
                 {
@@ -137,10 +136,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>
         /// The aggregated exception message that considers inner exceptions.
         /// </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         internal static string GetExceptionMessage(Exception ex)
         {
-            Debug.Assert(ex != null);
+            Debug.Assert(ex != null, "exception should not be null.");
 
             StringBuilder result = new StringBuilder();
             bool first = true;

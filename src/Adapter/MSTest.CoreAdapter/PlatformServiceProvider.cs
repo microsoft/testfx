@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         private IReflectionOperations reflectionOperations;
 
         /// <summary>
-        /// Singleton class.
+        /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
         /// </summary>
         private PlatformServiceProvider()
         {

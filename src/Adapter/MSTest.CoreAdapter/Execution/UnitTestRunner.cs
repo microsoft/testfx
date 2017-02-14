@@ -8,8 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
-
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+    
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
@@ -168,32 +167,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
         }
-    }
-
-    /// <summary>
-    /// Result of the run cleanup operation
-    /// </summary>
-    [Serializable]
-    internal class RunCleanupResult
-    {
-        /// <summary>
-        /// Gets or sets the standard out of the cleanup methods
-        /// </summary>
-        internal string StandardOut { get; set; }
-
-        /// <summary>
-        /// Gets or sets the standard error of the cleanup methods
-        /// </summary>
-        public string StandardError { get; internal set; }
-
-        /// <summary>
-        /// Gets or sets the Debug trace of the cleanup methods.
-        /// </summary>
-        internal string DebugTrace { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Warnings from the RunCleanup method
-        /// </summary>
-        internal IList<string> Warnings { get; set; }
     }
 }

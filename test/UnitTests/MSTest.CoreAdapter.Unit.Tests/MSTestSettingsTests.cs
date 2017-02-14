@@ -4,13 +4,13 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 {
     extern alias FrameworkV1;
-    
+
     using System.Xml;
 
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
     using Moq;
 
@@ -19,10 +19,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
     using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    
 
     [TestClass]
-    public class MSTestAdapterSettingsProvidersTests
+    public class MSTestSettingsTests
     {
         private TestablePlatformServiceProvider testablePlatformServiceProvider;
         private Mock<IDiscoveryContext> mockDiscoveryContext;
@@ -112,7 +111,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                 @"<RunSettings>
                     <MSTest>
                     </MSTest>
-                  </RunSettings>"; 
+                  </RunSettings>";
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
 
@@ -147,7 +146,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                         <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
                      </MSTest>
                    </RunSettings>";
-            
+
             this.testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
                 .Callback((XmlReader actualReader) =>
                 {
@@ -177,7 +176,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             string observedxml = null;
 
             this.testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
-                .Callback((XmlReader actualReader) => 
+                .Callback((XmlReader actualReader) =>
                 {
                     if (actualReader != null)
                     {
@@ -203,7 +202,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                     </RunSettings>";
 
             bool dummyPlatformSpecificSetting = false;
-            
+
             this.testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
                 .Callback((XmlReader reader) =>
                 {
@@ -235,7 +234,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                 });
 
             var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
-            
+
             // Assert.
             Assert.IsTrue(dummyPlatformSpecificSetting);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
@@ -515,7 +514,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             var adapterSettings = MSTestSettings.CurrentSettings;
 
             Assert.IsNotNull(adapterSettings);
-            
+
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
             Assert.AreEqual(adapterSettings.ForcedLegacyMode, true);
             Assert.IsFalse(string.IsNullOrEmpty(adapterSettings.TestSettingsFile));

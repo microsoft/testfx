@@ -138,8 +138,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Runs the test method
         /// </summary>
         /// <returns>The test results.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2201:DoNotRaiseReservedExceptionTypes")]
-        [SuppressMessage("Microsoft.Design", "CA1031")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         internal UnitTestResult[] RunTestMethod()
         {
             Debug.Assert(this.test != null, "Test should not be null.");
