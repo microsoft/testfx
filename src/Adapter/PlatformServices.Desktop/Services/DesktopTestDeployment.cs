@@ -17,6 +17,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// The test deployment.
     /// </summary>
@@ -30,19 +32,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private MSTestAdapterSettings adapterSettings;
 
         #endregion
-
-        /// <summary>
-        /// The current run directories for this session.
-        /// </summary>
-        /// <remarks> 
-        /// This is intialized at the beginning of a run session when Deploy is called. 
-        /// Leaving this as a static varaible since the testContext needs to be filled in with this information.
-        /// </remarks>
-        internal static TestRunDirectories RunDirectories
-        {
-            get;
-            private set;
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TestDeployment"/> class.
@@ -68,6 +57,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
+        /// Gets the current run directories for this session.
+        /// </summary>
+        /// <remarks>
+        /// This is intialized at the beginning of a run session when Deploy is called.
+        /// Leaving this as a static varaible since the testContext needs to be filled in with this information.
+        /// </remarks>
+        internal static TestRunDirectories RunDirectories
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// The get deployment items.
         /// </summary>
         /// <param name="method"> The method. </param>
@@ -84,8 +86,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         public void Cleanup()
         {
-            // Delete the deployment directory 
-            if (RunDirectories != null && adapterSettings.DeleteDeploymentDirectoryAfterTestRunIsComplete)
+            // Delete the deployment directory
+            if (RunDirectories != null && this.adapterSettings.DeleteDeploymentDirectoryAfterTestRunIsComplete)
             {
                 EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "Deleting deployment directory {0}", RunDirectories.RootDeploymentDirectory);
 
@@ -115,8 +117,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             Debug.Assert(tests != null, "tests");
 
-            //Reset runDirectories before doing deployment, so that older values of runDirectories is not picked
-            //even if test host is kept alive.
+            // Reset runDirectories before doing deployment, so that older values of runDirectories is not picked
+            // even if test host is kept alive.
             RunDirectories = null;
 
             this.adapterSettings = MSTestSettingsProvider.Settings;
@@ -131,8 +133,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             RunDirectories = this.deploymentUtility.CreateDeploymentDirectories(runContext);
 
-            //Deployment directories are created but deployment will not happen.
-            //This is added just to keep consistency with MSTestv1 behaviour.
+            // Deployment directories are created but deployment will not happen.
+            // This is added just to keep consistency with MSTestv1 behaviour.
             if (!hasDeploymentItems)
             {
                 return false;
@@ -166,8 +168,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             var properties = new Dictionary<string, object>();
 
             var applicationBaseDirectory = string.Empty;
-            
-            // Run directories can be null in win8. 
+
+            // Run directories can be null in win8.
             if (RunDirectories == null && !string.IsNullOrEmpty(source))
             {
                 // applicationBaseDirectory is set at source level
@@ -213,6 +215,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Returns whether deployment can happen or not
         /// </summary>
+        /// <returns>True if deployment can be done.</returns>
         private bool CanDeploy()
         {
             if (!this.adapterSettings.DeploymentEnabled)
@@ -220,7 +223,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: CanDeploy is false.");
                 return false;
             }
+
             return true;
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

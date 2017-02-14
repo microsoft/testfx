@@ -22,7 +22,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
     using UnitTestOutcome = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
     [TestClass]
-    public class TestContextImplementationTests
+    public class PortableTestContextImplementationTests
     {
         private Mock<ITestMethod> testMethod;
 
@@ -135,7 +135,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
 
             object propValue;
-            
+
             Assert.IsTrue(this.testContextImplementation.TryGetPropertyValue("TestName", out propValue));
             Assert.AreEqual("M", propValue);
         }

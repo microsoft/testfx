@@ -7,16 +7,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
 
     using System;
     using System.Linq;
-
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-
+    using Moq;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-
-    using Moq;
 
     [TestClass]
     public class FileUtilityTests
@@ -51,7 +48,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         {
             var topLevelFiles = new string[] { "tick.txt", "tock.tick.txt" };
 
-            this.fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns(topLevelFiles); 
+            this.fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns(topLevelFiles);
             this.fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns(new string[] { });
 
             var files = this.fileUtility.Object.AddFilesFromDirectory("C:\\randomclock", false);

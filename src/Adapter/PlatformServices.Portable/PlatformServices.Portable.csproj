@@ -64,6 +64,11 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="$(TestFxRoot)scripts\build\stylecop.json">
+      <Link>stylecop.json</Link>
+    </AdditionalFiles>
+  </ItemGroup>
   <Import Project="..\PlatformServices.Shared\PlatformServices.Shared.projitems" Label="Shared" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

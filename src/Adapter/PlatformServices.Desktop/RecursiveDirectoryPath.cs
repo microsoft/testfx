@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     ///         <Directory path= ".\DirectoryName" />  ...// by default includeSubDirectories is false
     ///     </AssemblyResolution>
     /// </MSTestV2>
-    /// 
+    ///
     /// For each directory we need to have two info 1) path 2) includeSubDirectories
     /// </summary>
     [Serializable]

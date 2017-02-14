@@ -11,29 +11,29 @@ namespace Microsoft.MSTestV2.CLIAutomation
     public class RunConfiguration
     {
         /// <summary>
-        /// Name of RunConfiguration settings node in RunSettings.
+        /// Gets or sets name of RunConfiguration settings node in RunSettings.
         /// </summary>
         public string SettingsName { get; set; }
 
         /// <summary>
-        /// Paths at which enigine should look for test adapters
+        /// Gets or sets paths at which enigine should look for test adapters
         /// </summary>
         public string TestAdaptersPaths { get; set; }
 
         public RunConfiguration(string testAdapterPaths)
         {
-            SettingsName = Constants.RunConfigurationSettingsName;
-            TestAdaptersPaths = testAdapterPaths;
+            this.SettingsName = Constants.RunConfigurationSettingsName;
+            this.TestAdaptersPaths = testAdapterPaths;
         }
 
         /// <summary>
         /// Converts the setting to be an XmlElement.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The XmlElement instance.</returns>
         public XmlElement ToXml()
         {
             XmlDocument doc = new XmlDocument();
-            XmlElement root = doc.CreateElement(SettingsName);
+            XmlElement root = doc.CreateElement(this.SettingsName);
 
             var testAdaptersPaths = doc.CreateElement("TestAdaptersPaths");
             testAdaptersPaths.InnerXml = this.TestAdaptersPaths;
@@ -42,6 +42,4 @@ namespace Microsoft.MSTestV2.CLIAutomation
             return root;
         }
     }
-
-
 }

@@ -43,7 +43,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests
         public void IsAssemblyReferencedShouldReturnTrueIfSourceOrAssemblyNameIsNull()
         {
             Assert.IsTrue(this.testSourceValidator.IsAssemblyReferenced(null, null));
-            Assert.IsTrue(this.testSourceValidator.IsAssemblyReferenced(null, ""));
+            Assert.IsTrue(this.testSourceValidator.IsAssemblyReferenced(null, string.Empty));
             Assert.IsTrue(this.testSourceValidator.IsAssemblyReferenced(new AssemblyName(), null));
         }
 

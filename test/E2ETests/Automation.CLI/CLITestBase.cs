@@ -3,27 +3,27 @@
 
 namespace Microsoft.MSTestV2.CLIAutomation
 {
-    using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
     using System;
-    using System.Configuration;
     using System.Collections.Generic;
+    using System.Configuration;
     using System.IO;
     using System.Linq;
     using System.Xml;
+    using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     public class CLITestBase
     {
-        private static VsTestConsoleWrapper vsTestConsoleWrapper;
-        private DiscoveryEventsHandler discoveryEventsHandler;
-        private RunEventsHandler runEventsHandler;
-
         private const string E2ETestsRelativePath = @"..\..\..\";
         private const string TestAssetsFolder = "TestAssets";
         private const string ArtifactsFolder = "artifacts";
         private const string PackagesFolder = "packages";
         private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.15.0.0-preview-20170130-01";
         private const string VstestConsoleRelativePath = @"tools\net46\vstest.console.exe";
+
+        private static VsTestConsoleWrapper vsTestConsoleWrapper;
+        private DiscoveryEventsHandler discoveryEventsHandler;
+        private RunEventsHandler runEventsHandler;
 
         public CLITestBase()
         {
@@ -36,20 +36,22 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </summary>
         /// <param name="sources">Collection of test containers.</param>
         /// <param name="runSettings">Run settings for execution.</param>
-        public void InvokeVsTestForDiscovery(string []sources,string runSettings = "")
+        public void InvokeVsTestForDiscovery(string[] sources, string runSettings = "")
         {
-            for(var iterator = 0; iterator < sources.Length; iterator++)
+            for (var iterator = 0; iterator < sources.Length; iterator++)
             {
                 if (!Path.IsPathRooted(sources[iterator]))
+                {
                     sources[iterator] = this.GetAssetFullPath(sources[iterator]);
+                }
             }
 
-            discoveryEventsHandler = new DiscoveryEventsHandler();
-            string runSettingXml = this.GetRunSettingXml(runSettings, GetTestAdapterPath());
+            this.discoveryEventsHandler = new DiscoveryEventsHandler();
+            string runSettingXml = this.GetRunSettingXml(runSettings, this.GetTestAdapterPath());
 
-            //this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
-            vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(GetTestAdapterPath(), "*TestAdapter.dll"));
-            vsTestConsoleWrapper.DiscoverTests(sources, runSettingXml, discoveryEventsHandler);
+            // this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
+            vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(this.GetTestAdapterPath(), "*TestAdapter.dll"));
+            vsTestConsoleWrapper.DiscoverTests(sources, runSettingXml, this.discoveryEventsHandler);
         }
 
         /// <summary>
@@ -57,20 +59,118 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </summary>
         /// <param name="sources">List of test assemblies.</param>
         /// <param name="runSettings">Run settings for execution.</param>
-        public void InvokeVsTestForExecution(string []sources, string runSettings = "")
+        public void InvokeVsTestForExecution(string[] sources, string runSettings = "")
         {
             for (var iterator = 0; iterator < sources.Length; iterator++)
             {
                 if (!Path.IsPathRooted(sources[iterator]))
+                {
                     sources[iterator] = this.GetAssetFullPath(sources[iterator]);
+                }
             }
 
-            runEventsHandler = new RunEventsHandler();
-            string runSettingXml = this.GetRunSettingXml(runSettings, GetTestAdapterPath());
+            this.runEventsHandler = new RunEventsHandler();
+            string runSettingXml = this.GetRunSettingXml(runSettings, this.GetTestAdapterPath());
 
-            //this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
-            vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(GetTestAdapterPath(), "*TestAdapter.dll"));
-            vsTestConsoleWrapper.RunTests(sources, runSettingXml, runEventsHandler);
+            // this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
+            vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(this.GetTestAdapterPath(), "*TestAdapter.dll"));
+            vsTestConsoleWrapper.RunTests(sources, runSettingXml, this.runEventsHandler);
+        }
+
+        /// <summary>
+        /// Gets the path to <c>vstest.console.exe</c>.
+        /// </summary>
+        /// <returns>Full path to <c>vstest.console.exe</c></returns>
+        public string GetConsoleRunnerPath()
+        {
+            var packagesFolder = Path.Combine(Environment.CurrentDirectory, E2ETestsRelativePath, PackagesFolder);
+            var vstestConsolePath = Path.Combine(packagesFolder, TestPlatformCLIPackage, VstestConsoleRelativePath);
+
+            Assert.IsTrue(File.Exists(vstestConsolePath), "GetConsoleRunnerPath: Path not found: {0}", vstestConsolePath);
+
+            return vstestConsolePath;
+        }
+
+        /// <summary>
+        /// Validate if the discovered tests list contains provided tests.
+        /// </summary>
+        /// <param name="discoveredTestsList">List of tests expected to be discovered.</param>
+        public void ValidateDiscoveredTests(params string[] discoveredTestsList)
+        {
+            foreach (var test in discoveredTestsList)
+            {
+                var flag = this.discoveryEventsHandler.Tests.Contains(test)
+                           || this.discoveryEventsHandler.Tests.Contains(GetTestMethodName(test));
+                Assert.IsTrue(flag, "Test {0} does not appear in discovered tests list.", test);
+            }
+
+            // Make sure only expected number of tests are discovered and not more.
+            Assert.AreEqual(discoveredTestsList.Length, this.discoveryEventsHandler.Tests.Count);
+        }
+
+        /// <summary>
+        /// Validates if the test results have the specified set of passed tests.
+        /// </summary>
+        /// <param name="passedTests">Set of passed tests.</param>
+        /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodPass.</remarks>
+        public void ValidatePassedTests(params string[] passedTests)
+        {
+            // Make sure only expected number of tests passed and not more.
+            Assert.AreEqual(passedTests.Length, this.runEventsHandler.PassedTests.Count);
+
+            foreach (var test in passedTests)
+            {
+                var testFound = this.runEventsHandler.PassedTests.Where(p => p.TestCase.FullyQualifiedName.Equals(test) ||
+                           p.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
+                Assert.IsNotNull(testFound, "Test {0} does not appear in passed tests list.", test);
+            }
+        }
+
+        /// <summary>
+        /// Validates if the test results have the specified set of failed tests.
+        /// </summary>
+        /// <param name="source">The test container.</param>
+        /// <param name="failedTests">Set of failed tests.</param>
+        /// <remarks>
+        /// Provide the full test name similar to this format SampleTest.TestCode.TestMethodFailed.
+        /// Also validates whether these tests have stack trace info.
+        /// </remarks>
+        public void ValidateFailedTests(string source, params string[] failedTests)
+        {
+            // Make sure only expected number of tests failed and not more.
+            Assert.AreEqual(failedTests.Length, this.runEventsHandler.FailedTests.Count);
+
+            foreach (var test in failedTests)
+            {
+                var testFound = this.runEventsHandler.FailedTests.Where(f => f.TestCase.FullyQualifiedName.Equals(test) ||
+                           f.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
+                Assert.IsNotNull(testFound, "Test {0} does not appear in failed tests list.", test);
+
+                // Skipping this check for x64 as of now. https://github.com/Microsoft/testfx/issues/60 should fix this.
+                if (source.IndexOf("x64") == -1)
+                {
+                    // Verify stack information as well.
+                    Assert.IsTrue(testFound.First().ErrorStackTrace.Contains(GetTestMethodName(test)), "No stack trace for failed test: {0}", test);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Validates if the test results have the specified set of skipped tests.
+        /// </summary>
+        /// <param name="skippedTests">The set of skipped tests.</param>
+        /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodSkipped.</remarks>
+        public void ValidateSkippedTests(params string[] skippedTests)
+        {
+            // Make sure only expected number of tests skipped and not more.
+            Assert.AreEqual(skippedTests.Length, this.runEventsHandler.SkippedTests.Count);
+
+            foreach (var test in skippedTests)
+            {
+                var testFound = this.runEventsHandler.SkippedTests.Where(s => s.TestCase.FullyQualifiedName.Equals(test) ||
+                           s.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
+                Assert.IsNotNull(testFound, "Test {0} does not appear in skipped tests list.", test);
+            }
         }
 
         /// <summary>
@@ -81,7 +181,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <remarks>
         /// Test assets follow several conventions:
         /// (a) They are built for provided build configuration.
-        /// (b) Name of the test asset matches the parent directory name. E.g. <c>TestAssets\SimpleUnitTest\SimpleUnitTest.xproj</c> must 
+        /// (b) Name of the test asset matches the parent directory name. E.g. <c>TestAssets\SimpleUnitTest\SimpleUnitTest.xproj</c> must
         /// produce <c>TestAssets\SimpleUnitTest\bin\Debug\SimpleUnitTest.dll</c>
         /// (c) TestAssets are copied over to a central location i.e. "TestAssets\artifacts\*.*"
         /// </remarks>
@@ -120,7 +220,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <returns>RunSettingXml as string</returns>
         protected string GetRunSettingXml(string settingsXml, string testAdapterPath)
         {
-            if(string.IsNullOrEmpty(settingsXml))
+            if (string.IsNullOrEmpty(settingsXml))
             {
                 settingsXml = XmlRunSettingsUtilities.CreateDefaultRunSettings();
             }
@@ -133,7 +233,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
             XmlElement root = doc.DocumentElement;
             RunConfiguration runConfiguration = new RunConfiguration(testAdapterPath);
-            XmlElement runConfigElement = runConfiguration.ToXml(); ;
+            XmlElement runConfigElement = runConfiguration.ToXml();
             if (root[runConfiguration.SettingsName] == null)
             {
                 XmlNode newNode = doc.ImportNode(runConfigElement, true);
@@ -146,101 +246,6 @@ namespace Microsoft.MSTestV2.CLIAutomation
             }
 
             return doc.OuterXml;
-        }
-
-        /// <summary>
-        /// Gets the path to <c>vstest.console.exe</c>.
-        /// </summary>
-        /// <returns>Full path to <c>vstest.console.exe</c></returns>
-        public string GetConsoleRunnerPath()
-        {
-            var packagesFolder = Path.Combine(Environment.CurrentDirectory, E2ETestsRelativePath, PackagesFolder);
-            var vstestConsolePath = Path.Combine(packagesFolder, TestPlatformCLIPackage, VstestConsoleRelativePath);
-
-            Assert.IsTrue(File.Exists(vstestConsolePath), "GetConsoleRunnerPath: Path not found: {0}", vstestConsolePath);
-
-            return vstestConsolePath;
-        }
-
-        /// <summary>
-        /// Validate if the discovered tests list contains provided tests.
-        /// </summary>
-        /// <param name="discoveredTestsList">List of tests expected to be discovered.</param>
-        public void ValidateDiscoveredTests(params string[] discoveredTestsList)
-        {
-            foreach (var test in discoveredTestsList)
-            {
-                var flag = this.discoveryEventsHandler.Tests.Contains(test)
-                           || this.discoveryEventsHandler.Tests.Contains(GetTestMethodName(test));
-                Assert.IsTrue(flag, "Test {0} does not appear in discovered tests list.", test);
-            }
-
-            //Make sure only expected number of tests are discovered and not more.
-            Assert.AreEqual(discoveredTestsList.Length, this.discoveryEventsHandler.Tests.Count);
-        }
-
-        /// <summary>
-        /// Validates if the test results have the specified set of passed tests.
-        /// </summary>
-        /// <param name="passedTests">Set of passed tests.</param>
-        /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodPass.</remarks>
-        public void ValidatePassedTests(params string[] passedTests)
-        {
-            //Make sure only expected number of tests passed and not more.
-            Assert.AreEqual(passedTests.Length, this.runEventsHandler.PassedTests.Count);
-
-            foreach (var test in passedTests)
-            {
-                var testFound = this.runEventsHandler.PassedTests.Where(p => p.TestCase.FullyQualifiedName.Equals(test) ||
-                           p.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
-                Assert.IsNotNull(testFound, "Test {0} does not appear in passed tests list.", test);
-            }
-        }
-
-        /// <summary>
-        /// Validates if the test results have the specified set of failed tests.
-        /// </summary>
-        /// <param name="failedTests">Set of failed tests.</param>
-        /// <remarks>
-        /// Provide the full test name similar to this format SampleTest.TestCode.TestMethodFailed.
-        /// Also validates whether these tests have stack trace info.
-        /// </remarks>
-        public void ValidateFailedTests(string source,params string[] failedTests)
-        {
-            //Make sure only expected number of tests failed and not more.
-            Assert.AreEqual(failedTests.Length, this.runEventsHandler.FailedTests.Count);
-
-            foreach (var test in failedTests)
-            {
-                var testFound = this.runEventsHandler.FailedTests.Where(f => f.TestCase.FullyQualifiedName.Equals(test) ||
-                           f.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
-                Assert.IsNotNull(testFound, "Test {0} does not appear in failed tests list.", test);
-
-                //Skipping this check for x64 as of now. https://github.com/Microsoft/testfx/issues/60 should fix this.
-                if (source.IndexOf("x64") == -1)
-                {
-                    // Verify stack information as well.               
-                    Assert.IsTrue(testFound.First().ErrorStackTrace.Contains(GetTestMethodName(test)), "No stack trace for failed test: {0}", test);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Validates if the test results have the specified set of skipped tests.
-        /// </summary>
-        /// <param name="skippedTests">The set of skipped tests.</param>
-        /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodSkipped.</remarks>
-        public void ValidateSkippedTests(params string[] skippedTests)
-        {
-            //Make sure only expected number of tests skipped and not more.
-            Assert.AreEqual(skippedTests.Length, this.runEventsHandler.SkippedTests.Count);
-
-            foreach (var test in skippedTests)
-            {
-                var testFound = this.runEventsHandler.SkippedTests.Where(s => s.TestCase.FullyQualifiedName.Equals(test) ||
-                           s.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
-                Assert.IsNotNull(testFound, "Test {0} does not appear in skipped tests list.", test);
-            }
         }
 
         /// <summary>
@@ -262,4 +267,3 @@ namespace Microsoft.MSTestV2.CLIAutomation
         }
     }
 }
-

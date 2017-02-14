@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
-    
+
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -76,7 +76,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="relativeOutputDirectory"> The relative Output Directory. </param>
         /// <param name="warning"> The warning message if it is an invalid deployment item. </param>
         /// <returns> Returns true if it is a valid deployment item. </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#", Justification = "Internal method.")]
         internal bool IsValidDeploymentItem(string sourcePath, string relativeOutputDirectory, out string warning)
         {
             if (string.IsNullOrEmpty(sourcePath))
@@ -112,7 +112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// Returns whether there are any deployment items defined on the test
         /// </summary>
         /// <param name="testCase"> The test Case. </param>
-        /// <returns> </returns>
+        /// <returns> True if has deployment items.</returns>
         internal bool HasDeploymentItems(TestCase testCase)
         {
             var deploymentItems = this.GetDeploymentItems(testCase);
@@ -134,7 +134,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 }
 
                 IList<DeploymentItem> deploymentItemsToBeAdded = this.FromKeyValuePairs(items);
-                
+
                 foreach (var deploymentItemToBeAdded in deploymentItemsToBeAdded)
                 {
                     this.AddDeploymentItem(allDeploymentItems, deploymentItemToBeAdded);
@@ -201,7 +201,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             return result;
         }
-        
+
         /// <summary>
         /// Returns the deployment items defined on the test
         /// </summary>

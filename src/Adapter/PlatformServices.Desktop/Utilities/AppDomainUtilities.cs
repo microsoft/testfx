@@ -36,6 +36,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 {
                     xmlUtilities = new XmlUtilities();
                 }
+
                 return xmlUtilities;
             }
 
@@ -74,8 +75,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// Framework string
         /// Todo: Need to add components/E2E tests to cover these scenarios.
         /// </returns>
-        [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly",
-            Justification = "Reviewed. Suppression is OK here.")]
+        [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
         internal static string GetTargetFrameworkVersionString(string testSourcePath)
         {
             AppDomainSetup appDomainSetup = new AppDomainSetup();
@@ -95,8 +95,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     // Wire the eqttrace logs in this domain to the current domain.
                     EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
 
-                    // Add an assembly resolver to resolve ObjectModel or any Test Platform dependencies. 
-                    // Not moving to IMetaDataImport APIs because the time taken for this operation is <20 ms and 
+                    // Add an assembly resolver to resolve ObjectModel or any Test Platform dependencies.
+                    // Not moving to IMetaDataImport APIs because the time taken for this operation is <20 ms and
                     // IMetaDataImport needs COM registration which is not a guarantee in Dev15.
                     var assemblyResolverType = typeof(AssemblyResolver);
 
@@ -118,7 +118,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 }
                 catch (Exception exception)
                 {
-                    if(EqtTrace.IsErrorEnabled)
+                    if (EqtTrace.IsErrorEnabled)
                     {
                         EqtTrace.Error(exception);
                     }
@@ -142,7 +142,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="testSourceConfigFile"> The test Source Config File. </param>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         internal static void SetConfigurationFile(AppDomainSetup appDomainSetup, string testSourceConfigFile)
-        {            
+        {
             if (!string.IsNullOrEmpty(testSourceConfigFile))
             {
                 if (EqtTrace.IsInfoEnabled)

@@ -3,9 +3,9 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
-    using System;
-
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     /// <summary>
     /// The trace logger for .Net Core.
@@ -45,4 +45,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             // Do Nothing.
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

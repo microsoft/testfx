@@ -4,15 +4,16 @@
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
 {
     extern alias FrameworkV1;
+
     using System.IO;
     using System.Reflection;
     using System.Xml;
-    
+    using static AppDomainUtilitiesTests;
+
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using static AppDomainUtilitiesTests;
 
     [TestClass]
     public class XmlUtilitiesTests
@@ -142,6 +143,5 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
 
             CollectionAssert.AreEqual(expectedConfigBytes, configBytes);
         }
-
     }
 }

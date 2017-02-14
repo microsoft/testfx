@@ -44,6 +44,7 @@
     <Reference Include="$(TestFxRoot)packages\Microsoft.Internal.TestPlatform.ObjectModel\14.0.0\lib\uap10.0\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Services\UniversalFileOperationsTests.cs" />
@@ -63,6 +64,11 @@
       <Project>{f81c7549-e3a3-4770-ac3f-3bc7356e61e8}</Project>
       <Name>MSTest.CoreAdapter.TestUtilities</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="$(TestFxRoot)scripts\build\stylecop.json">
+      <Link>stylecop.json</Link>
+    </AdditionalFiles>
   </ItemGroup>
   <Import Project="..\PlatformServices.Shared.Unit.Tests\PlatformServices.Shared.Unit.Tests.projitems" Label="Shared" />
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

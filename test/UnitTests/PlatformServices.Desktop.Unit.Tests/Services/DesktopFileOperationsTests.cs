@@ -4,6 +4,7 @@
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 {
     extern alias FrameworkV1;
+
     using System;
     using System.IO;
     using System.Reflection;
@@ -89,7 +90,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             }
             catch (NullReferenceException)
             {
-                isExceptionThrown = true;    
+                isExceptionThrown = true;
             }
 
             Assert.IsTrue(isExceptionThrown);

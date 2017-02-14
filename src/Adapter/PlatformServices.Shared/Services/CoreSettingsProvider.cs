@@ -8,6 +8,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// A class to read settings from the runsettings xml for the corresponding platform service.
     /// </summary>
@@ -27,4 +29,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return new Dictionary<string, object>();
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

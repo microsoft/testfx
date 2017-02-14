@@ -20,8 +20,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
-    /// The platform service that provides values from data source when data driven tests are run. 
+    /// The platform service that provides values from data source when data driven tests are run.
     /// </summary>
     /// <remarks>
     /// NOTE NOTE NOTE: This platform service refers to the inbox UTF extension assembly for UTF.TestContext which can only be loadable inside of the app domain that discovers/runs
@@ -43,7 +45,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             UTF.DataSourceAttribute[] dataSourceAttribute = testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
             if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
+            {
                 return true;
+            }
+
             return false;
         }
 
@@ -87,7 +92,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             try
             {
-                GetConnectionProperties((testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false))[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
+                this.GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
             }
             catch (Exception ex)
             {
@@ -101,12 +106,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             try
             {
-
                 using (TestDataConnection connection = factory.Create(providerNameInvariant, connectionString, dataFolders))
                 {
                     DataTable table = connection.ReadTable(tableName, null);
                     DataRow[] rows = table.Select();
-                    Debug.Assert(rows != null);
+                    Debug.Assert(rows != null, "rows should not be null.");
 
                     if (rows.Length == 0)
                     {
@@ -117,7 +121,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         return new UTF.TestResult[] { inconclusiveResult };
                     }
 
-                    IEnumerable<int> permutation = GetPermutation(dataAccessMethod, rows.Length);
+                    IEnumerable<int> permutation = this.GetPermutation(dataAccessMethod, rows.Length);
                     TestContextImplementation testContextImpl = testContext as TestContextImplementation;
 
                     try
@@ -143,8 +147,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                                 currentResult[0].Outcome = UTF.UnitTestOutcome.Failed;
 
                                 // Trace whole exception but do not show call stack to the user, only show message.
-                                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled,"Unit Test Adapter threw exception: {0}", ex);
-
+                                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, "Unit Test Adapter threw exception: {0}", ex);
                             }
 
                             currentResult[0].DatarowIndex = rowIndex;
@@ -152,7 +155,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                             watch.Stop();
                             currentResult[0].Duration = watch.Elapsed;
 
-                            Debug.Assert(currentResult[0] != null);
+                            Debug.Assert(currentResult[0] != null, "current result should not be null.");
                             dataRowResults.Add(currentResult[0]);
 
                             // Clear the testContext's internal string writer to start afresh for the next datarow iteration
@@ -178,10 +181,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return dataRowResults.ToArray();
         }
 
-
         /// <summary>
         /// Get permutations for data row access
         /// </summary>
+        /// <param name="dataAccessMethod">The data access method.</param>
+        /// <param name="length">Number of permutations.</param>
+        /// <returns>Permutations.</returns>
         private IEnumerable<int> GetPermutation(UTF.DataAccessMethod dataAccessMethod, int length)
         {
             switch (dataAccessMethod)
@@ -201,6 +206,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Get connection property based on DataSourceAttribute. If its in config file then read it from config.
         /// </summary>
+        /// <param name="dataSourceAttribute">The dataSourceAttribute.</param>
+        /// <param name="providerNameInvariant">The provider name.</param>
+        /// <param name="connectionString">The connection string.</param>
+        /// <param name="tableName">The table name.</param>
+        /// <param name="dataAccessMethod">The data access method.</param>
         private void GetConnectionProperties(UTF.DataSourceAttribute dataSourceAttribute, out string providerNameInvariant, out string connectionString, out string tableName, out UTF.DataAccessMethod dataAccessMethod)
         {
             if (string.IsNullOrEmpty(dataSourceAttribute.DataSourceSettingName) == false)
@@ -225,4 +235,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

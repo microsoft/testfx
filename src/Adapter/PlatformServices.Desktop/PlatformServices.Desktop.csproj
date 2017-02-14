@@ -47,7 +47,7 @@
   <ItemGroup>
     <Compile Include="AssemblyResolver.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="Data\CvsDataConnection.cs" />
+    <Compile Include="Data\CsvDataConnection.cs" />
     <Compile Include="Data\OdbcDataConnection.cs" />
     <Compile Include="Data\OleDataConnection.cs" />
     <Compile Include="Data\SqlDataConnection.cs" />
@@ -61,7 +61,7 @@
     <Compile Include="Deployment\TestRunDirectories.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Friends.cs" />
-    <Compile Include="Permutation.cs" />
+    <Compile Include="Utilities\SequentialIntPermutation.cs" />
     <Compile Include="Resource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -87,6 +87,7 @@
     <Compile Include="Utilities\DeploymentUtility.cs" />
     <Compile Include="Utilities\FileUtility.cs" />
     <Compile Include="Utilities\IAssemblyUtility.cs" />
+    <Compile Include="Utilities\RandomIntPermutation.cs" />
     <Compile Include="Utilities\ReflectionUtility.cs" />
     <Compile Include="Utilities\VSInstallationUtilities.cs" />
     <Compile Include="Utilities\XmlUtilities.cs" />
@@ -117,6 +118,11 @@
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="$(TestFxRoot)scripts\build\stylecop.json">
+      <Link>stylecop.json</Link>
+    </AdditionalFiles>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

@@ -8,14 +8,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-    
+
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    
 
     [TestClass]
     public class ReflectionUtilityTests
@@ -230,7 +229,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             return attribValuePairs.ToArray();
         }
 
-
         [DummyA("ba")]
         public class DummyBaseTestClass
         {
@@ -265,7 +263,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         {
             public DummyAAttribute(string foo)
             {
-                Value = foo;
+                this.Value = foo;
             }
 
             public string Value { get; set; }
@@ -276,7 +274,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         {
             public DummySingleAAttribute(string foo)
             {
-                Value = foo;
+                this.Value = foo;
             }
 
             public string Value { get; set; }

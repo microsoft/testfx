@@ -9,11 +9,11 @@ namespace Microsoft.MSTestV2.Smoke.E2ETests
     [TestClass]
     public class DesktopCSharpCLITests : CLITestBase
     {
-        private const string x86DebugTestProject = "DesktopTestProjectx86Debug.dll";
-        private const string x64DebugTestProject = "DesktopTestProjectx64Debug.dll";
-        private const string x86ReleaseTestProject = "DesktopTestProjectx86Release.dll";
-        private const string x64ReleaseTestProject = "DesktopTestProjectx64Release.dll";
-        private const string runSetting =
+        private const string X86DebugTestProject = "DesktopTestProjectx86Debug.dll";
+        private const string X64DebugTestProject = "DesktopTestProjectx64Debug.dll";
+        private const string X86ReleaseTestProject = "DesktopTestProjectx86Release.dll";
+        private const string X64ReleaseTestProject = "DesktopTestProjectx64Release.dll";
+        private const string RunSetting =
             @"<RunSettings>   
                 <RunConfiguration>  
                     <TargetPlatform>x64</TargetPlatform>   
@@ -23,57 +23,57 @@ namespace Microsoft.MSTestV2.Smoke.E2ETests
         [TestMethod]
         public void DiscoverTestsx86Debug()
         {
-            string[] sources = { x86DebugTestProject };
+            string[] sources = { X86DebugTestProject };
             this.DoDiscoveryAndValidateDiscoveredTests(sources);
         }
 
         [TestMethod]
         public void DiscoverTestsx64Debug()
         {
-            string[] sources = { x64DebugTestProject };
-            this.DoDiscoveryAndValidateDiscoveredTests(sources,runSetting);
+            string[] sources = { X64DebugTestProject };
+            this.DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
         }
 
         [TestMethod]
         public void DiscoverTestsx86Release()
         {
-            string[] sources = { x86ReleaseTestProject };
+            string[] sources = { X86ReleaseTestProject };
             this.DoDiscoveryAndValidateDiscoveredTests(sources);
         }
 
         [TestMethod]
         public void DiscoverTestsx64Release()
         {
-            string[] sources = { x64ReleaseTestProject };
-            this.DoDiscoveryAndValidateDiscoveredTests(sources,runSetting);
+            string[] sources = { X64ReleaseTestProject };
+            this.DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
         }
 
         [TestMethod]
         public void RunAllTestsx86Debug()
         {
-            string[] sources = { x86DebugTestProject };
+            string[] sources = { X86DebugTestProject };
             this.RunAllTestsAndValidateResults(sources);
         }
 
         [TestMethod]
         public void RunAllTestsx64Debug()
         {
-            string[] sources = { x64DebugTestProject };
-            this.RunAllTestsAndValidateResults(sources,runSetting);
+            string[] sources = { X64DebugTestProject };
+            this.RunAllTestsAndValidateResults(sources, RunSetting);
         }
 
         [TestMethod]
         public void RunAllTestsx86Release()
         {
-            string[] sources = { x86ReleaseTestProject };
+            string[] sources = { X86ReleaseTestProject };
             this.RunAllTestsAndValidateResults(sources);
         }
 
         [TestMethod]
         public void RunAllTestsx64Release()
         {
-            string[] sources = { x64ReleaseTestProject };
-            this.RunAllTestsAndValidateResults(sources,runSetting);
+            string[] sources = { X64ReleaseTestProject };
+            this.RunAllTestsAndValidateResults(sources, RunSetting);
         }
 
         private void DoDiscoveryAndValidateDiscoveredTests(string[] sources, string runSettings = "")
@@ -87,9 +87,8 @@ namespace Microsoft.MSTestV2.Smoke.E2ETests
         {
             this.InvokeVsTestForExecution(sources, runSettings);
             this.ValidatePassedTests("SampleUnitTestProject.UnitTest1.PassingTest");
-            this.ValidateFailedTests(sources[0],"SampleUnitTestProject.UnitTest1.FailingTest");
+            this.ValidateFailedTests(sources[0], "SampleUnitTestProject.UnitTest1.FailingTest");
             this.ValidateSkippedTests("SampleUnitTestProject.UnitTest1.SkippingTest");
         }
-
     }
 }

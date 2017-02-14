@@ -12,6 +12,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// Internal implementation of TestContext exposed to the user.
     /// </summary>
@@ -21,8 +23,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </remarks>
     public class TestContextImplementation : UTF.TestContext, ITestContext
     {
+        private static readonly string FullyQualifiedTestClassNameLabel = "FullyQualifiedTestClassName";
+        private static readonly string TestNameLabel = "TestName";
+
         /// <summary>
-        /// Properties 
+        /// Properties
         /// </summary>
         private IDictionary<string, object> properties;
 
@@ -37,10 +42,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private ITestMethod testMethod;
 
         /// <summary>
-        /// Initializes a new instance of an object that derives from 
-        /// the Microsoft.VisualStudio.TestTools.UnitTesting.TestContext class.
+        /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
         /// </summary>
         /// <param name="testMethod"> The test method. </param>
+        /// <param name="writer"> A writer for logging. </param>
         /// <param name="properties"> The properties. </param>
         public TestContextImplementation(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties)
         {
@@ -70,39 +75,41 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        // This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.
-        // Those attributes have access to the test context, and provide messages that are included
-        // in the test results. Users can benefit from messages that include the fully-qualified
-        // class name in addition to the name of the test method currently being executed.
         /// <summary>
-        /// Fully-qualified name of the class containing the test method currently being executed
+        /// Gets fully-qualified name of the class containing the test method currently being executed
         /// </summary>
+        /// <remarks>
+        /// This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.
+        /// Those attributes have access to the test context, and provide messages that are included
+        /// in the test results. Users can benefit from messages that include the fully-qualified
+        /// class name in addition to the name of the test method currently being executed.
+        /// </remarks>
         public override string FullyQualifiedTestClassName
         {
             get
             {
-                return this.GetPropertyValue(TestContextPropertyStrings.FullyQualifiedTestClassName) as string;
+                return this.GetPropertyValue(FullyQualifiedTestClassNameLabel) as string;
             }
         }
 
         /// <summary>
-        /// Name of the test method currently being executed
+        /// Gets name of the test method currently being executed
         /// </summary>
         public override string TestName
         {
             get
             {
-                return this.GetPropertyValue(TestContextPropertyStrings.TestName) as string;
+                return this.GetPropertyValue(TestNameLabel) as string;
             }
         }
 
-        //
-        // Summary:
-        //     When overridden in a derived class, gets the test properties.
-        //
-        // Returns:
-        //     An System.Collections.IDictionary object that contains key/value pairs that
-        //     represent the test properties.
+        /// <summary>
+        /// Gets the test properties when overridden in a derived class.
+        /// </summary>
+        /// <returns>
+        /// An System.Collections.IDictionary object that contains key/value pairs that
+        ///  represent the test properties.
+        /// </returns>
         public override IDictionary<string, object> Properties
         {
             get
@@ -111,25 +118,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
+        public UTF.TestContext Context
+        {
+            get
+            {
+                return this as UTF.TestContext;
+            }
+        }
+
         /// <summary>
         /// Set the unit-test outcome
         /// </summary>
+        /// <param name="outcome">The test outcome.</param>
         public void SetOutcome(UTF.UnitTestOutcome outcome)
         {
             this.outcome = outcome;
         }
 
-        public UTF.TestContext Context
-        {
-            get
-            {
-                return (this as UTF.TestContext);
-            }
-        }
-
         /// <summary>
         /// Returns whether property with parameter name is present or not
         /// </summary>
+        /// <param name="propertyName">The property name.</param>
+        /// <param name="propertyValue">Property value.</param>
+        /// <returns>True if property with parameter name is present.</returns>
         public bool TryGetPropertyValue(string propertyName, out object propertyValue)
         {
             if (this.properties == null)
@@ -141,10 +152,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return this.properties.TryGetValue(propertyName, out propertyValue);
         }
 
-
         /// <summary>
         /// Adds the parameter name/value pair to property bag
         /// </summary>
+        /// <param name="propertyName">The property name.</param>
+        /// <param name="propertyValue">Property value.</param>
         public void AddProperty(string propertyName, string propertyValue)
         {
             if (this.properties == null)
@@ -153,6 +165,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             this.properties.Add(propertyName, propertyValue);
+        }
+
+        /// <summary>
+        /// Returning null as this feature is not supported in ASP .net and UWP
+        /// </summary>
+        /// <returns>List of result files. Null presently.</returns>
+        public IList<string> GetResultFiles()
+        {
+            return null;
         }
 
         #endregion
@@ -175,25 +196,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         private void InitializeProperties()
         {
-            this.properties[TestContextPropertyStrings.FullyQualifiedTestClassName] = this.testMethod.FullClassName;
-            this.properties[TestContextPropertyStrings.TestName] = this.testMethod.Name;
-        }
-
-        /// <summary>
-        /// Returning null as this feature is not supported in ASP .net and UWP
-        /// </summary>
-        public IList<string> GetResultFiles()
-        {
-            return null;
+            this.properties[FullyQualifiedTestClassNameLabel] = this.testMethod.FullClassName;
+            this.properties[TestNameLabel] = this.testMethod.Name;
         }
     }
 
-    /// <summary>
-    /// Test Context Property Names.
-    /// </summary>
-    internal static class TestContextPropertyStrings
-    {
-        public static readonly string FullyQualifiedTestClassName = "FullyQualifiedTestClassName";
-        public static readonly string TestName = "TestName";
-    }
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

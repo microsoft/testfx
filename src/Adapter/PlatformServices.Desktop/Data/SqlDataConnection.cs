@@ -16,6 +16,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         {
         }
 
+        /// <summary>
+        /// Returns default database schema.
+        /// this.Connection must be alredy opened.
+        /// </summary>
+        /// <returns>The default database schema.</returns>
+        public override string GetDefaultSchema()
+        {
+            return this.GetDefaultSchemaMSSql();
+        }
+
+        protected override SchemaMetaData[] GetSchemaMetaData()
+        {
+            SchemaMetaData data = new SchemaMetaData()
+            {
+                SchemaTable = "Tables",
+                SchemaColumn = "TABLE_SCHEMA",
+                NameColumn = "TABLE_NAME",
+                TableTypeColumn = "TABLE_TYPE",
+                ValidTableTypes = new string[] { "VIEW", "BASE TABLE" },
+                InvalidSchemas = null
+            };
+            return new SchemaMetaData[] { data };
+        }
+
         private static string FixConnectionString(string connectionString, List<string> dataFolders)
         {
             SqlConnectionStringBuilder sqlBuilder = new SqlConnectionStringBuilder(connectionString);
@@ -44,27 +68,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 // Return modified connection string
                 return sqlBuilder.ConnectionString;
             }
-        }
-
-        protected override SchemaMetaData[] GetSchemaMetaData()
-        {
-            SchemaMetaData data = new SchemaMetaData(); ;
-            data.schemaTable = "Tables";
-            data.schemaColumn = "TABLE_SCHEMA";
-            data.nameColumn = "TABLE_NAME";
-            data.tableTypeColumn = "TABLE_TYPE";
-            data.validTableTypes = new string[] { "VIEW", "BASE TABLE" };
-            data.invalidSchemas = null;
-            return new SchemaMetaData[] { data };
-        }
-
-        /// <summary>
-        /// Returns default database schema.
-        /// this.Connection must be alredy opened.
-        /// </summary>
-        public override string GetDefaultSchema()
-        {
-            return GetDefaultSchemaMSSql();
         }
     }
 }

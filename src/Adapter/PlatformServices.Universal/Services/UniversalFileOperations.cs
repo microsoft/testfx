@@ -9,6 +9,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// The file operations.
     /// </summary>
@@ -18,6 +20,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Loads an assembly.
         /// </summary>
         /// <param name="assemblyName"> The assembly name. </param>
+        /// <param name="isReflectionOnly">
+        /// Indicates whether this should be a reflection only load.
+        /// </param>
         /// <returns> The <see cref="Assembly"/>. </returns>
         public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly)
         {
@@ -39,21 +44,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 var fileNameWithoutPath = Path.GetFileName(assemblyFileName);
                 var searchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFileAsync(fileNameWithoutPath).AsTask();
                 searchTask.Wait();
-                fileExists = (searchTask.Result != null);
+                fileExists = searchTask.Result != null;
             }
             catch (Exception)
             {
                 // ignore
             }
+
             return fileExists;
         }
 
         /// <summary>
-        /// Creates a Navigation session for the source file. 
+        /// Creates a Navigation session for the source file.
         /// This is used to get file path and line number information for its components.
         /// </summary>
         /// <param name="source"> The source file. </param>
-        /// <returns> A Navigation session instance for the current platform. 
+        /// <returns> A Navigation session instance for the current platform.
         /// <see cref="INavigationSession"/>.
         /// </returns>
         public object CreateNavigationSession(string source)
@@ -98,4 +104,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return assemblyFileName;
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

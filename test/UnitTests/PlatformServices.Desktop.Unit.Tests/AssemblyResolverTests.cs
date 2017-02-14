@@ -9,17 +9,17 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-    
+
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    
+
     [TestClass]
     public class AssemblyResolverTests
-    {        
+    {
         [TestMethod]
         public void AddSubDirectoriesShouldReturnSubDirectoriesInDfsOrder()
         {
@@ -38,26 +38,26 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             assemblyResolver.DoesDirectoryExistSetter = (str) => true;
             assemblyResolver.GetDirectoriesSetter = (str) =>
             {
-                if (String.Compare(path, str, StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Compare(path, str, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     return new string[] { @"C:\unitTesting\a", @"C:\unitTesting\b" };
                 }
-                else if (String.Compare(@"C:\unitTesting\a", str, StringComparison.OrdinalIgnoreCase) == 0)
+                else if (string.Compare(@"C:\unitTesting\a", str, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     return new string[] { @"C:\unitTesting\a\c" };
                 }
-                else if (String.Compare(@"C:\unitTesting\a\c", str, StringComparison.OrdinalIgnoreCase) == 0)
+                else if (string.Compare(@"C:\unitTesting\a\c", str, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     return new string[] { @"C:\unitTesting\a\c\d" };
                 }
 
                 return new List<string>().ToArray();
             };
-            
-            //Act.
+
+            // Act.
             assemblyResolver.AddSubdirectories(path, searchDirectories);
 
-            //Assert.
+            // Assert.
             Assert.AreEqual(searchDirectories.Count, 4, "searchDirectories should have only 5 elements");
 
             CollectionAssert.AreEqual(resultDirectories, searchDirectories, StringComparer.OrdinalIgnoreCase);
@@ -136,6 +136,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                         Assert.AreEqual(string.Compare(listPath[4], @"C:\FunctionalTesting", true), 0);
                         count++;
                     }
+
                     return null;
                 };
 
@@ -158,6 +159,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public Func<string, bool> DoesDirectoryExistSetter { get; set; }
 
         public Func<string, string[]> GetDirectoriesSetter { get; set; }
+
         public Func<List<string>, string, bool, Assembly> SearchAssemblySetter { get; internal set; }
 
         protected override bool DoesDirectoryExist(string path)

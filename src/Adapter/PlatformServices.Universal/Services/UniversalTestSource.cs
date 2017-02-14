@@ -11,30 +11,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// This platform service is responsible for any data or operations to validate
     /// the test sources provided to the adapter.
     /// </summary>
     public class TestSource : ITestSource
     {
+        private const string SystemAssembliesPrefix = "system.";
+
         private static IEnumerable<string> executableExtensions = new HashSet<string>()
         {
              Constants.ExeExtension,
-             //**Required only for store 8.1. In future if that support is needed, uncomment this. **//
+
+             // Required only for store 8.1. In future if that support is needed, uncomment this.
              // Constants.DllExtension
         };
 
-        private static HashSet<string> SYSTEM_ASSEMBLIES = new HashSet<string>(new string[]
-      {
+        private static HashSet<string> systemAssemblies = new HashSet<string>(new string[]
+        {
             "MICROSOFT.CSHARP.DLL",
             "MICROSOFT.VISUALBASIC.DLL",
             "CLRCOMPRESSION.DLL",
-      });
-
-        private const string SYSTEM_ASSEMBLY_PREFIX = "system.";
+        });
 
         // Well known platform assemblies.
-        private static HashSet<string> platformAssemblies = new HashSet<string>(new string[] {
+        private static HashSet<string> platformAssemblies = new HashSet<string>(new string[]
+        {
             "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.DLL",
             "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.EXTENSIONS.CORE.DLL",
             "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.CORE.DLL",
@@ -45,7 +49,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.OBJECTMODEL.DLL",
             "VSTEST_EXECUTIONENGINE_PLATFORMBRIDGE.DLL",
             "VSTEST_EXECUTIONENGINE_PLATFORMBRIDGE.WINMD",
-            "VSTEST.EXECUTIONENGINE.WINDOWSPHONE.DLL", });
+            "VSTEST.EXECUTIONENGINE.WINDOWSPHONE.DLL",
+        });
 
         /// <summary>
         /// Gets the set of valid extensions for sources targeting this platform.
@@ -65,7 +70,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             // no need to do validation again.
             // Simply return true.
             return true;
-
         }
 
         /// <summary>
@@ -75,10 +79,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns> Sources that contains tests. <see cref="IEnumerable"/>. </returns>
         public IEnumerable<string> GetTestSources(IEnumerable<string> sources)
         {
-            if (ContainsAppxSource(sources))
+            if (this.ContainsAppxSource(sources))
             {
                 List<string> newSources = new List<string>();
-            
+
                 var fileSearchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFilesAsync().AsTask();
                 fileSearchTask.Wait();
                 foreach (var filePath in fileSearchTask.Result)
@@ -86,19 +90,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     var fileName = filePath.Name;
                     var isExtSupported =
                         executableExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
-                    
-                    if (isExtSupported && !fileName.StartsWith(SYSTEM_ASSEMBLY_PREFIX, StringComparison.OrdinalIgnoreCase)
+
+                    if (isExtSupported && !fileName.StartsWith(SystemAssembliesPrefix, StringComparison.OrdinalIgnoreCase)
                             && !platformAssemblies.Contains(fileName.ToUpperInvariant())
-                            && !SYSTEM_ASSEMBLIES.Contains(fileName.ToUpperInvariant()))
+                            && !systemAssemblies.Contains(fileName.ToUpperInvariant()))
                     {
-                        //** Required only for store 8.1 **//
-                        //If a source package(appx) has both dll and exe files that contains tests, then add any one of them and not both. 
-                        //if((fileName.EndsWith(Constants.ExeExtension) && !newSources.Contains(Path.GetFileNameWithoutExtension(fileName) + Constants.DllExtension))
+                        // Required only for store 8.1
+                        // If a source package(appx) has both dll and exe files that contains tests, then add any one of them and not both.
+                        // if((fileName.EndsWith(Constants.ExeExtension) && !newSources.Contains(Path.GetFileNameWithoutExtension(fileName) + Constants.DllExtension))
                         //    || (fileName.EndsWith(Constants.DllExtension) && !newSources.Contains(Path.GetFileNameWithoutExtension(fileName) + Constants.ExeExtension)))
                         newSources.Add(fileName);
-                        
                     }
                 }
+
                 return newSources;
             }
 
@@ -108,13 +112,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Checks if given list of sources contains any ".appx" source.
         /// </summary>
-        /// <param name="sources"></param>
-        /// <returns></returns>
+        /// <param name="sources">The list of sources.</param>
+        /// <returns>True if there is an appx source.</returns>
         private bool ContainsAppxSource(IEnumerable<string> sources)
         {
             foreach (string source in sources)
             {
-                if (string.Compare(Path.GetExtension(source), Constants.AppxPackageExtension , StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Compare(Path.GetExtension(source), Constants.AppxPackageExtension, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     return true;
                 }
@@ -123,4 +127,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return false;
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

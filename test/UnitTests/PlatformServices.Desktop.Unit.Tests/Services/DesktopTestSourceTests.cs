@@ -5,7 +5,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 {
     extern alias FrameworkV1;
     extern alias FrameworkV2;
-    
+
     using System.Linq;
     using System.Reflection;
 

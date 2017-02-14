@@ -4,14 +4,15 @@
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 {
     extern alias FrameworkV1;
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
     using System;
     using System.IO;
     using System.Text;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+    using TestUtilities;
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestUtilities;
 
     [TestClass]
     public class DesktopTraceListenerTests
@@ -19,7 +20,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         [TestMethod]
         public void GetWriterShouldReturnInitialisedWriter()
         {
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace")); 
+            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
             var traceListener = new TraceListenerWrapper(writer);
             var returnedWriter = traceListener.GetWriter();
             Assert.AreEqual(returnedWriter.ToString(), "DummyTrace");
@@ -28,13 +29,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         [TestMethod]
         public void CloseShouldCloseCorrespondingTextWriter()
         {
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace")); 
+            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
             var traceListener = new TraceListenerWrapper(writer);
             traceListener.Close();
 
-            //Tring to write after closing textWriter should throw exception
-            Action ShouldThrowException = () => writer.WriteLine("Try to write something");
-            ActionUtility.ActionShouldThrowExceptionOfType(ShouldThrowException, typeof(ObjectDisposedException));
+            // Tring to write after closing textWriter should throw exception
+            Action shouldThrowException = () => writer.WriteLine("Try to write something");
+            ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
         }
 
         [TestMethod]
@@ -44,9 +45,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             var traceListener = new TraceListenerWrapper(writer);
             traceListener.Dispose();
 
-            //Tring to write after disposing textWriter should throw exception
-            Action ShouldThrowException = () => writer.WriteLine("Try to write something");
-            ActionUtility.ActionShouldThrowExceptionOfType(ShouldThrowException, typeof(ObjectDisposedException));
+            // Tring to write after disposing textWriter should throw exception
+            Action shouldThrowException = () => writer.WriteLine("Try to write something");
+            ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
         }
     }
 }

@@ -8,13 +8,11 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
     using System;
     using System.IO;
     using System.Reflection;
-
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using MSTestAdapter.TestUtilities;
-
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
@@ -48,7 +46,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
         public void LoadAssemblyShouldLoadAssemblyInCurrentContext()
         {
             var filePath = Assembly.GetExecutingAssembly().Location;
-            
+
             // This should not throw.
             this.fileOperations.LoadAssembly(filePath, false);
         }
@@ -68,7 +66,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                 FileOperations.Initialize(typeof(MockDiaSession).AssemblyQualifiedName, typeof(MockDiaNavigationData).AssemblyQualifiedName);
 
                 Assert.IsNull(this.fileOperations.CreateNavigationSession(null));
-                Assert.IsTrue(MockDiaSession.isConstructorInvoked);
+                Assert.IsTrue(MockDiaSession.IsConstructorInvoked);
             }
             finally
             {
@@ -84,7 +82,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                 FileOperations.Initialize(string.Empty, string.Empty);
 
                 Assert.IsNull(this.fileOperations.CreateNavigationSession(null));
-                Assert.IsFalse(MockDiaSession.isConstructorInvoked);
+                Assert.IsFalse(MockDiaSession.IsConstructorInvoked);
             }
             finally
             {
@@ -134,7 +132,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
 
                 Assert.AreEqual(navigationData.MinLineNumber, minLineNumber);
                 Assert.AreEqual(navigationData.FileName, fileName);
-                Assert.IsTrue(MockDiaSession.isGetNavigationDataInvoked);
+                Assert.IsTrue(MockDiaSession.IsGetNavigationDataInvoked);
             }
             finally
             {
@@ -239,7 +237,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                 var diaSession = this.fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
                 this.fileOperations.DisposeNavigationSession(diaSession);
 
-                Assert.IsTrue(MockDiaSession.isDisposeInvoked);
+                Assert.IsTrue(MockDiaSession.IsDisposeInvoked);
             }
             finally
             {
@@ -250,43 +248,56 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
 
     public class MockDiaSession : IDisposable
     {
-        public static bool isConstructorInvoked = false;
-        public static IDiaNavigationData DiaNavigationData { get; set; }
-
-        public static bool isGetNavigationDataInvoked = false;
-        public static bool isDisposeInvoked = false;
+        static MockDiaSession()
+        {
+            IsConstructorInvoked = false;
+            IsGetNavigationDataInvoked = false;
+            IsDisposeInvoked = false;
+        }
 
         public MockDiaSession(string source)
         {
-            isConstructorInvoked = true;
+            IsConstructorInvoked = true;
             if (string.IsNullOrEmpty(source))
             {
                 throw new Exception();
             }
         }
-        public object GetNavigationData(string className, string methodName)
-        {
-            isGetNavigationDataInvoked = true;
-            return DiaNavigationData;
-        }
-        public void Dispose()
-        {
-            isDisposeInvoked = true;
-        }
+
+        public static bool IsConstructorInvoked { get; set; }
+
+        public static IDiaNavigationData DiaNavigationData { get; set; }
+
+        public static bool IsGetNavigationDataInvoked { get; set; }
+
+        public static bool IsDisposeInvoked { get; set; }
 
         public static void Reset()
         {
-            isConstructorInvoked = false;
-            isGetNavigationDataInvoked = false;
+            IsConstructorInvoked = false;
+            IsGetNavigationDataInvoked = false;
+        }
+
+        public object GetNavigationData(string className, string methodName)
+        {
+            IsGetNavigationDataInvoked = true;
+            return DiaNavigationData;
+        }
+
+        public void Dispose()
+        {
+            IsDisposeInvoked = true;
         }
     }
 
     public interface IDiaNavigationData
-    { }
+    {
+    }
 
     public class MockDiaNavigationData : IDiaNavigationData
     {
         public string FileName { get; set; }
+
         public int MinLineNumber { get; set; }
     }
 

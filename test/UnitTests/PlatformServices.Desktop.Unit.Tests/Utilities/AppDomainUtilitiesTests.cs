@@ -8,21 +8,19 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
     using System;
     using System.IO;
     using System.Xml;
-
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
     public class AppDomainUtilitiesTests
     {
         private TestableXmlUtilities testableXmlUtilities;
-        
+
         [TestInitialize]
         public void TestInit()
         {
@@ -41,12 +39,12 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         {
             AppDomainSetup setup = new AppDomainSetup();
             var configFile = @"C:\temp\foo.dll.config";
-            
+
             // Setup mocks.
             this.testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <configuration>
 </configuration>";
-            
+
             AppDomainUtilities.SetConfigurationFile(setup, configFile);
 
             // Assert Config file being set.
@@ -58,7 +56,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             var observedConfigBytes = setup.GetConfigurationBytes();
             var observedXml = System.Text.Encoding.UTF8.GetString(observedConfigBytes);
 
-            Assert.IsTrue(observedXml.Replace("\r\n", "").Replace(" ", "").Contains(expectedRedir.Replace(" ", "")), "Config must have OM redirection");
+            Assert.IsTrue(observedXml.Replace("\r\n", string.Empty).Replace(" ", string.Empty).Contains(expectedRedir.Replace(" ", string.Empty)), "Config must have OM redirection");
         }
 
         [TestMethod]
@@ -90,7 +88,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                         doc.LoadXml(this.ConfigXml);
                     }
                     catch (XmlException)
-                    {   
+                    {
                         // Eating any exceptions while loading. Just return the empty doc in this case.
                         // We need this to simulate an empty config file.
                     }

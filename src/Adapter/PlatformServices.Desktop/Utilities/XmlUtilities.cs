@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System.Reflection;
     using System.Text;
     using System.Xml;
-    
+
     internal class XmlUtilities
     {
         private const string XmlNamespace = "urn:schemas-microsoft-com:asm.v1";
@@ -18,6 +18,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// Adds assembly redirection and converts the resulting config file to a byte array.
         /// </summary>
         /// <param name="configFile"> The config File. </param>
+        /// <param name="assemblyName">The assembly name.</param>
+        /// <param name="oldVersion">The old version.</param>
+        /// <param name="newVersion">The new version.</param>
         /// <returns> A byte array of the config file with the redirections added. </returns>
         internal byte[] AddAssemblyRedirection(string configFile, AssemblyName assemblyName, string oldVersion, string newVersion)
         {
@@ -25,7 +28,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             var configurationElement = FindOrCreateElement(doc, doc, "configuration");
             var assemblyBindingSection = FindOrCreateAssemblyBindingSection(doc, configurationElement);
-            AddAssemblyBindingRedirect(doc, assemblyBindingSection, assemblyName, oldVersion , newVersion);
+            AddAssemblyBindingRedirect(doc, assemblyBindingSection, assemblyName, oldVersion, newVersion);
             using (var ms = new MemoryStream())
             {
                 doc.Save(ms);
@@ -36,8 +39,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <summary>
         ///  Gets the Xml document from the config file. This is virtual for unit testing.
         /// </summary>
-        /// <param name="configFile"></param>
-        /// <returns></returns>
+        /// <param name="configFile">The config file.</param>
+        /// <returns>An XmlDocument.</returns>
         internal virtual XmlDocument GetXmlDocument(string configFile)
         {
             var doc = new XmlDocument();
@@ -82,6 +85,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             {
                 return assemblyBindingSection;
             }
+
             assemblyBindingSection = doc.CreateElement("assemblyBinding", XmlNamespace);
             runtimeSection.AppendChild(assemblyBindingSection);
             return assemblyBindingSection;
@@ -95,21 +99,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="assemblyName"> The assembly Name. </param>
         /// <param name="fromVersion"> The from Version. </param>
         /// <param name="toVersion"> The to Version. </param>
-        private static void AddAssemblyBindingRedirect(XmlDocument doc, XmlElement assemblyBindingSection,
+        private static void AddAssemblyBindingRedirect(
+            XmlDocument doc,
+            XmlElement assemblyBindingSection,
             AssemblyName assemblyName,
             string fromVersion,
             string toVersion)
         {
-            Debug.Assert(assemblyName != null);
+            Debug.Assert(assemblyName != null, "assemblyName should not be null.");
             if (assemblyName == null)
             {
                 throw new ArgumentNullException("assemblyName");
             }
-            
+
             // Convert the public key token into a string.
             StringBuilder publicKeyTokenString = null;
             var publicKeyToken = assemblyName.GetPublicKeyToken();
-            if (null != publicKeyToken)
+            if (publicKeyToken != null)
             {
                 publicKeyTokenString = new StringBuilder(publicKeyToken.GetLength(0) * 2);
                 for (var i = 0; i < publicKeyToken.GetLength(0); i++)
@@ -135,10 +141,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             // Add the assemblyIdentity element.
             var assemblyIdentityElement = doc.CreateElement("assemblyIdentity", XmlNamespace);
             assemblyIdentityElement.SetAttribute("name", assemblyName.Name);
-            if (null != publicKeyTokenString)
+            if (publicKeyTokenString != null)
             {
                 assemblyIdentityElement.SetAttribute("publicKeyToken", publicKeyTokenString.ToString());
             }
+
             assemblyIdentityElement.SetAttribute("culture", cultureString);
             dependentAssemblySection.AppendChild(assemblyIdentityElement);
 

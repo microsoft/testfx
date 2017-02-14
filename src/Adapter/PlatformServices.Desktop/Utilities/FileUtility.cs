@@ -9,11 +9,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System.Globalization;
     using System.IO;
     using System.Linq;
-
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using Extensions;
-
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
     internal class FileUtility
     {
@@ -53,6 +51,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// </summary>
         /// <param name="parentDirectoryName">The directory where to check.</param>
         /// <param name="originalDirectoryName">The original directory (that we would add [1],[2],.. in the end of if needed) name to check.</param>
+        /// <returns>A unique directory name.</returns>
         internal virtual string GetNextIterationDirectoryName(
             string parentDirectoryName,
             string originalDirectoryName)
@@ -74,32 +73,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 }
 
                 string tryMePath = Path.Combine(parentDirectoryName, tryMe);
-                
+
                 if (!File.Exists(tryMePath) && !Directory.Exists(tryMePath))
                 {
                     return tryMePath;
                 }
 
                 ++iteration;
-            } while (iteration != uint.MaxValue);
+            }
+            while (iteration != uint.MaxValue);
 
-            // Return the original path in case file does not exist and let it fail. 
+            // Return the original path in case file does not exist and let it fail.
             return Path.Combine(parentDirectoryName, originalDirectoryName);
         }
 
         /// <summary>
         /// Copies source file to destination file.
-        /// Returns destination on full success, 
-        ///     returns empty string on error when specified to continue the run on error,
-        ///     throw on error when specified to abort the run on error.
         /// </summary>
         /// <param name="source">Path to source file.</param>
         /// <param name="destination">Path to destination file.</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        /// <param name="warning">warnings to be reported.</param>
+        /// <returns>
+        /// Returns destination on full success,
+        /// Returns empty string on error when specified to continue the run on error,
+        /// throw on error when specified to abort the run on error.
+        /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         internal virtual string CopyFileOverwrite(string source, string destination, out string warning)
         {
-            Debug.Assert(!string.IsNullOrEmpty(source));
-            Debug.Assert(!string.IsNullOrEmpty(destination));
+            Debug.Assert(!string.IsNullOrEmpty(source), "source should not be null.");
+            Debug.Assert(!string.IsNullOrEmpty(destination), "destination should not be null.");
 
             try
             {
@@ -136,10 +139,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="destToSource">destToSource map.</param>
         internal string FindAndDeployPdb(string destinationFile, string relativeDestination, string sourceFile, Dictionary<string, string> destToSource)
         {
-            Debug.Assert(!string.IsNullOrEmpty(destinationFile));
-            Debug.Assert(!string.IsNullOrEmpty(relativeDestination));
-            Debug.Assert(!string.IsNullOrEmpty(sourceFile));
-            Debug.Assert(destToSource != null);
+            Debug.Assert(!string.IsNullOrEmpty(destinationFile), "destination should not be null or empty.");
+            Debug.Assert(!string.IsNullOrEmpty(relativeDestination), "relative destination path should not be null or empty.");
+            Debug.Assert(!string.IsNullOrEmpty(sourceFile), "sourceFile should not be null or empty.");
+            Debug.Assert(destToSource != null, "destToSource should not be null.");
 
             if (!this.assemblyUtility.IsAssemblyExtension(Path.GetExtension(destinationFile)))
             {
@@ -224,22 +227,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
         internal string TryConvertPathToRelative(string path, string rootDir)
         {
-            Debug.Assert(!string.IsNullOrEmpty(path));
-            Debug.Assert(!string.IsNullOrEmpty(rootDir));
+            Debug.Assert(!string.IsNullOrEmpty(path), "path should not be null or empty.");
+            Debug.Assert(!string.IsNullOrEmpty(rootDir), "rootDir should not be null or empty.");
 
             if (Path.IsPathRooted(path) && path.StartsWith(rootDir, StringComparison.OrdinalIgnoreCase))
             {
                 return path.Substring(rootDir.Length).TrimStart(Path.DirectorySeparatorChar);
             }
+
             return path;
         }
 
         /// <summary>
         /// The function goes among the subdirectories of the specified one and clears all of
-        /// them. 
+        /// them.
         /// </summary>
         /// <param name="filePath">The root directory to clear.</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         internal virtual void DeleteDirectories(string filePath)
         {
             Debug.Assert(filePath != null, "filePath");
@@ -284,7 +288,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// Returns either PDB file name from inside compiled binary or null if this cannot be done.
         /// Does not throw.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        /// <param name="path">path to symbols file.</param>
+        /// <returns>Pdb file name or null if non-existent.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private string GetSymbolsFileName(string path)
         {
             try

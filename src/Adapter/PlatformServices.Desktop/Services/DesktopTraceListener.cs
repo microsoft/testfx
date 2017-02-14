@@ -1,13 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using System.Diagnostics;
-using System;
-using System.IO;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
+    using System;
+    using System.Diagnostics;
+    using System.IO;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// Internal implementation of TraceListener exposed to the user.
     /// The virtual operations of the TraceListener are implemented here
@@ -16,15 +18,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     public class TraceListenerWrapper : TextWriterTraceListener, ITraceListener
     {
         // Summary:
-        //     Initializes a new instance of an object that derives from System.Diagnostics.TextWriterTraceListener 
-        //     Class and initializes TextWriterTraceListener object using the specified writer as recipient of the 
+        //     Initializes a new instance of an object that derives from System.Diagnostics.TextWriterTraceListener
+        //     Class and initializes TextWriterTraceListener object using the specified writer as recipient of the
         //     tracing or debugging output.
-        public TraceListenerWrapper(TextWriter textWriter):base(textWriter)
+        public TraceListenerWrapper(TextWriter textWriter)
+            : base(textWriter)
         {
         }
 
         // Summary:
-        //     Wrapper over Close() of System.Diagnostics.TextWriterTraceListener.Writer 
+        //     Wrapper over Close() of System.Diagnostics.TextWriterTraceListener.Writer
         public override void Close()
         {
             base.Close();
@@ -38,11 +41,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         // Summary:
-        //     Gets the text writer of System.Diagnostics.TextWriterTraceListener.Writer 
+        //     Gets the text writer of System.Diagnostics.TextWriterTraceListener.Writer
         //     that receives the tracing or debugging output.
         public TextWriter GetWriter()
         {
-            return base.Writer;
+            return this.Writer;
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

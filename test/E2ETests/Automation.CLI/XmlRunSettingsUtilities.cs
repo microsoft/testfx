@@ -10,6 +10,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <summary>
         /// Create a default run settings
         /// </summary>
+        /// <returns>The runsettings xml string.</returns>
         public static string CreateDefaultRunSettings()
         {
             // Create a new default xml doc that looks like this:
@@ -20,9 +21,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
             //     </DataCollectors>
             //   </DataCollectionRunSettings>
             // </RunSettings>
-
             var doc = new XmlDocument();
-            XmlNode xmlDeclaration = doc.CreateNode(XmlNodeType.XmlDeclaration, "", "");
+            XmlNode xmlDeclaration = doc.CreateNode(XmlNodeType.XmlDeclaration, string.Empty, string.Empty);
             doc.AppendChild(xmlDeclaration);
             XmlElement runSettingsNode = doc.CreateElement(Constants.RunSettingsName);
             doc.AppendChild(runSettingsNode);

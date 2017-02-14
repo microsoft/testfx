@@ -3,10 +3,10 @@
 
 namespace Microsoft.MSTestV2.CLIAutomation
 {
+    using System.Collections.Generic;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using System.Collections.Generic;
 
     public class RunEventsHandler : ITestRunEventsHandler
     {
@@ -14,7 +14,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// Gets a list of Tests which passed.
         /// </summary>
         public IList<TestResult> PassedTests { get; private set; }
-        
+
         /// <summary>
         /// Gets a list of Tests which failed.
         /// </summary>
@@ -24,12 +24,12 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// Gets a list of Tests which skipped.
         /// </summary>
         public IList<TestResult> SkippedTests { get; private set; }
-   
+
         public RunEventsHandler()
         {
-            PassedTests = new List<TestResult>();
-            FailedTests = new List<TestResult>();
-            SkippedTests = new List<TestResult>();
+            this.PassedTests = new List<TestResult>();
+            this.FailedTests = new List<TestResult>();
+            this.SkippedTests = new List<TestResult>();
         }
 
         public void HandleLogMessage(TestMessageLevel level, string message)
@@ -53,7 +53,6 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
         public void HandleRawMessage(string rawMessage)
         {
-          
         }
 
         public void HandleTestRunComplete(TestRunCompleteEventArgs testRunCompleteArgs, TestRunChangedEventArgs lastChunkArgs, ICollection<AttachmentSet> runContextAttachments, ICollection<string> executorUris)
@@ -65,15 +64,14 @@ namespace Microsoft.MSTestV2.CLIAutomation
                     switch (testResult.Outcome)
                     {
                         case TestOutcome.Passed:
-                            PassedTests.Add(testResult);
+                            this.PassedTests.Add(testResult);
                             break;
                         case TestOutcome.Failed:
-                            FailedTests.Add(testResult);
+                            this.FailedTests.Add(testResult);
                             break;
                         case TestOutcome.Skipped:
-                            SkippedTests.Add(testResult);
+                            this.SkippedTests.Add(testResult);
                             break;
-                            
                     }
                 }
             }
@@ -85,20 +83,22 @@ namespace Microsoft.MSTestV2.CLIAutomation
             {
                 foreach (TestResult testResult in testRunChangedArgs.NewTestResults)
                 {
-                    switch(testResult.Outcome)
+                    switch (testResult.Outcome)
                     {
                         case TestOutcome.Passed:
-                            PassedTests.Add(testResult);
+                            this.PassedTests.Add(testResult);
                             break;
                         case TestOutcome.Failed:
-                            FailedTests.Add(testResult);
+                            this.FailedTests.Add(testResult);
                             break;
                         case TestOutcome.Skipped:
-                            SkippedTests.Add(testResult);
+                            this.SkippedTests.Add(testResult);
+                            break;
+                        default:
                             break;
                     }
                 }
-            }   
+            }
         }
 
         public int LaunchProcessWithDebuggerAttached(TestProcessStartInfo testProcessStartInfo)

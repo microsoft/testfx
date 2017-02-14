@@ -33,18 +33,18 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
                 {
                     return new AssemblyName[] { v1AssemblyName };
                 };
-     
+
             var mockAssemblyUtility = new Mock<IAssemblyUtility>();
             mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoadFrom(It.IsAny<string>())).Returns(testableAssembly);
             mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoad(It.IsAny<string>()))
                 .Returns(new TestableAssembly(v1AssemblyName.Name));
-            
+
             var worker = new AssemblyLoadWorker(mockAssemblyUtility.Object);
             IList<string> warnings;
-            
+
             // Act.
             var dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out warnings);
-            
+
             // Assert.
             var utfassembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
             CollectionAssert.Contains(dependentAssemblies, utfassembly);
@@ -55,7 +55,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
         {
             // Arrange.
             var v1AssemblyName = new AssemblyName("Microsoft.VisualStudio.QualityTools.UnitTestFramework");
-            
+
             var dependentAssemblyName = new AssemblyName("Common.TestFramework");
             var dependentAssembly = new TestableAssembly(dependentAssemblyName.Name);
             dependentAssembly.GetReferencedAssembliesSetter = () =>
@@ -100,7 +100,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
                     }
 
                     return null;
-                }); 
+                });
 
             var worker = new AssemblyLoadWorker(mockAssemblyUtility.Object);
             IList<string> warnings;

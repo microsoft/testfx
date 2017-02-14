@@ -11,23 +11,20 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
     using System.IO;
     using System.Linq;
     using System.Xml;
-    
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
-
     using TestUtilities;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
     public class MSTestAdapterSettingsTests
     {
-
         [TestCleanup]
         public void Cleanup()
         {
@@ -49,7 +46,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -60,13 +57,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string expectedResult = @"C:\foo\unitTesting\MsTest\Adapter";
 
             var adapterSettings = new TestableMSTestAdapterSettings();
-            adapterSettings.ExpandEnvironmentVariablesSetter = ((str) => { return str.Replace("%temp%", "C:\\foo"); });
+            adapterSettings.ExpandEnvironmentVariablesSetter = (str) => { return str.Replace("%temp%", "C:\\foo"); };
             adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
 
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -82,7 +79,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -98,7 +95,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -120,7 +117,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -137,7 +134,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(String.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -159,22 +156,22 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void GetDirectoryListWithRecursivePropertyShouldReadRunSettingCorrectly()
         {
             string baseDirectory = @"C:\unitTesting";
-            
+
             List<RecursiveDirectoryPath> expectedResult = new List<RecursiveDirectoryPath>();
             expectedResult.Add(new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true));
             expectedResult.Add(new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false));
 
             var adapterSettings = new TestableMSTestAdapterSettings(expectedResult);
-            adapterSettings.ExpandEnvironmentVariablesSetter = ((str) => { return str.Replace("%temp%", "C:\\foo"); });
+            adapterSettings.ExpandEnvironmentVariablesSetter = (str) => { return str.Replace("%temp%", "C:\\foo"); };
             adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
 
             IList<RecursiveDirectoryPath> result = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
             Assert.IsNotNull(result);
             Assert.AreEqual(result.Count, 2);
-            
+
             for (int i = 0; i < 2; i++)
             {
-                Assert.AreEqual(String.Compare(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase), 0);
+                Assert.AreEqual(string.Compare(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase), 0);
                 Assert.AreEqual(result[i].IncludeSubDirectories, expectedResult[i].IncludeSubDirectories);
             }
         }
@@ -221,9 +218,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
 
-            Action ShouldThrowException = () => MSTestAdapterSettings.ToSettings(reader);
+            Action shouldThrowException = () => MSTestAdapterSettings.ToSettings(reader);
 
-            ActionUtility.ActionShouldThrowExceptionOfType(ShouldThrowException, typeof(SettingsException));
+            ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(SettingsException));
         }
 
         #endregion
@@ -241,7 +238,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
             Assert.AreEqual(true, adapterSettings.DeploymentEnabled);
-
         }
 
         [TestMethod]
@@ -256,7 +252,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
             Assert.AreEqual(false, adapterSettings.DeploymentEnabled);
-
         }
 
         #endregion

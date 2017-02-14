@@ -9,12 +9,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
     using System.Globalization;
     using System.IO;
     using System.Reflection;
-    using System.Text.RegularExpressions;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
     /// <summary>
-    /// Utility function for Assembly related info 
+    /// Utility function for Assembly related info
     /// The caller is supposed to create AppDomain and create instance of given class in there.
     /// </summary>
     internal class AssemblyLoadWorker : MarshalByRefObject
@@ -32,6 +31,53 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         }
 
         /// <summary>
+        /// Returns the full path to the dependent assemblies of the parameter managed assembly recursively.
+        /// It does not report GAC assemblies.
+        /// </summary>
+        /// <param name="assemblyPath"> Path to the assembly file to load from. </param>
+        /// <param name="warnings"> The warnings. </param>
+        /// <returns> Full path to dependent assemblies. </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        public string[] GetFullPathToDependentAssemblies(string assemblyPath, out IList<string> warnings)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(assemblyPath), "assemblyPath");
+
+            warnings = new List<string>();
+            Assembly assembly = null;
+            try
+            {
+                // First time we load in LoadFromContext to avoid issues.
+                assembly = this.assemblyUtility.ReflectionOnlyLoadFrom(assemblyPath);
+            }
+            catch (Exception ex)
+            {
+                warnings.Add(ex.Message);
+                return new string[0]; // Otherwise just return no dependencies.
+            }
+
+            Debug.Assert(assembly != null, "assembly");
+
+            List<string> result = new List<string>();
+            List<string> visitedAssemblies = new List<string>();
+
+            visitedAssemblies.Add(assembly.FullName);
+
+            this.ProcessChildren(assembly, result, visitedAssemblies, warnings);
+
+            return result.ToArray();
+        }
+
+        /// <summary>
+        /// initialize the lifetime service.
+        /// </summary>
+        /// <returns> The <see cref="object"/>. </returns>
+        public override object InitializeLifetimeService()
+        {
+            // Infinite.
+            return null;
+        }
+
+        /// <summary>
         /// Get the target dotNet framework string for the assembly
         /// </summary>
         /// <param name="path">Path of the assembly file</param>
@@ -43,7 +89,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
                 try
                 {
                     Assembly a = this.assemblyUtility.ReflectionOnlyLoadFrom(path);
-                    return GetTargetFrameworkStringFromAssembly(a);
+                    return this.GetTargetFrameworkStringFromAssembly(a);
                 }
                 catch (BadImageFormatException)
                 {
@@ -91,55 +137,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
                     }
                 }
             }
-            
+
             return dotNetVersion;
-        }
-
-        /// <summary>
-        /// Returns the full path to the dependent assemblies of the parameter managed assembly recursively. 
-        /// It does not report GAC assemblies.
-        /// </summary>
-        /// <param name="assemblyPath"> Path to the assembly file to load from. </param>
-        /// <param name="warnings"> The warnings. </param>
-        /// <returns> Full path to dependent assemblies. </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        public string[] GetFullPathToDependentAssemblies(string assemblyPath, out IList<string> warnings)
-        {
-            Debug.Assert(!string.IsNullOrEmpty(assemblyPath), "assemblyPath");
-
-            warnings = new List<string>();
-            Assembly assembly = null;
-            try
-            {
-                // First time we load in LoadFromContext to avoid issues.
-                assembly = this.assemblyUtility.ReflectionOnlyLoadFrom(assemblyPath);
-            }
-            catch (Exception ex)
-            {
-                warnings.Add(ex.Message);
-                return new string[0]; // Otherwise just return no dependencies.
-            }
-
-            Debug.Assert(assembly != null, "assembly");
-
-            List<string> result = new List<string>();
-            List<string> visitedAssemblies = new List<string>();
-
-            visitedAssemblies.Add(assembly.FullName);
-
-            this.ProcessChildren(assembly, result, visitedAssemblies, warnings);
-
-            return result.ToArray();
-        }
-
-        /// <summary>
-        /// initialize the lifetime service.
-        /// </summary>
-        /// <returns> The <see cref="object"/>. </returns>
-        public override object InitializeLifetimeService()
-        {
-            // Infinite.
-            return null;
         }
 
         /// <summary>
@@ -219,7 +218,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// <param name="result"> The result. </param>
         /// <param name="visitedAssemblies"> The visited Assemblies. </param>
         /// <param name="warnings"> The warnings. </param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private void GetDependentAssembliesInternal(string assemblyString, IList<string> result, IList<string> visitedAssemblies, IList<string> warnings)
         {
             Debug.Assert(!string.IsNullOrEmpty(assemblyString), "assemblyString");

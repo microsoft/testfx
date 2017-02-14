@@ -5,7 +5,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System.IO;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    
+
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// Internal implementation of TraceListener exposed to the user.
     /// </summary>
@@ -15,11 +17,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </remarks>
     public class TraceListenerWrapper : ITraceListener
     {
-
         /// <summary>
-        ///     Initializes a new instance of an object using the specified writer as recipient of the 
-        ///     tracing or debugging output.
+        /// Initializes a new instance of the <see cref="TraceListenerWrapper"/> class.
         /// </summary>
+        /// <param name="textWriter">Writer instance for tracing or debugging output.</param>
         public TraceListenerWrapper(TextWriter textWriter)
         {
         }
@@ -41,11 +42,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Returning as this feature is not supported in ASP .net and UWP
+        /// Returning null as this feature is not supported in ASP .net and UWP
         /// </summary>
+        /// <returns>A TextWriter instance. Null for now since this is unsupported.</returns>
         public TextWriter GetWriter()
         {
             return null;
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

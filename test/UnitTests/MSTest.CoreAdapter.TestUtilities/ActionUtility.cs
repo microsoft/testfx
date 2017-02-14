@@ -14,7 +14,7 @@ namespace MSTestAdapter.TestUtilities
     public class ActionUtility
     {
         /// <summary>
-        /// Check for a particular exception 
+        /// Check for a particular exception
         /// </summary>
         /// <param name="action"> Action to invoke</param>
         /// <param name="type">Type of expected exception</param>
@@ -32,7 +32,7 @@ namespace MSTestAdapter.TestUtilities
         }
 
         /// <summary>
-        /// Check for a particular inner exception 
+        /// Check for a particular inner exception
         /// </summary>
         /// <param name="action"> Action to invoke</param>
         /// <param name="type">Type of expected inner exception</param>

@@ -4,6 +4,7 @@
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
 {
     extern alias FrameworkV1;
+
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
@@ -91,7 +92,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
             var sourcePath = "e:\\temp\\temp1.dll";
             DeploymentItem item = new DeploymentItem(sourcePath);
 
-            Assert.AreEqual(string.Format(Resource.DeploymentItem, sourcePath) , item.ToString());
+            Assert.AreEqual(string.Format(Resource.DeploymentItem, sourcePath), item.ToString());
         }
 
         [TestMethod]
@@ -101,8 +102,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
             var relativeOutputDirectory = "foo1";
             DeploymentItem item = new DeploymentItem(sourcePath, relativeOutputDirectory);
 
-            Assert.AreEqual(string.Format(Resource.DeploymentItemWithOutputDirectory, sourcePath, relativeOutputDirectory),
-                item.ToString());
+            Assert.AreEqual(string.Format(Resource.DeploymentItemWithOutputDirectory, sourcePath, relativeOutputDirectory), item.ToString());
         }
     }
 }

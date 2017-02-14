@@ -3,7 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data
 {
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using System;
     using System.Collections;
     using System.Collections.Generic;
@@ -14,6 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
     using System.Globalization;
     using System.IO;
     using System.Text;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
     /// <summary>
     ///      Utility classes to access databases, and to handle quoted strings etc for comma separated value files.
@@ -23,19 +23,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         // Template used to map from a filename to a DB connection string
         private const string CsvConnectionTemplate = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Persist Security Info=False;Extended Properties=\"text;HDR=YES;FMT=Delimited\"";
 
-        private string m_fileName;
+        private string fileName;
 
         public CsvDataConnection(string fileName, List<string> dataFolders)
             : base(dataFolders)
         {
             Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
-            m_fileName = fileName;
+            this.fileName = fileName;
+        }
+
+        private string TableName
+        {
+            get
+            {
+                // Only one table based on the name of the file, with dots converted to # signs
+                return Path.GetFileName(this.fileName).Replace('.', '#');
+            }
         }
 
         public override List<string> GetDataTablesAndViews()
         {
             List<string> tableNames = new List<string>(1);
-            tableNames.Add(TableName);
+            tableNames.Add(this.TableName);
             return tableNames;
         }
 
@@ -46,7 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             // read the table in then check the columns...
             try
             {
-                DataTable table = ReadTable(tableName, null);
+                DataTable table = this.ReadTable(tableName, null);
                 if (table != null)
                 {
                     List<string> columnNames = new List<string>();
@@ -54,28 +63,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     {
                         columnNames.Add(column.ColumnName);
                     }
+
                     return columnNames;
                 }
             }
             catch (Exception exception)
             {
-               EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled,exception.Message + " for CSV data source " + m_fileName);
+               EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for CSV data source " + this.fileName);
             }
 
             return null;
         }
 
-        private string TableName
-        {
-            get
-            {
-                // Only one table based on the name of the file, with dots converted to # signs
-                return Path.GetFileName(m_fileName).Replace('.', '#');
-            }
-        }
-
-        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
-        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security ")]
+        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Untested. Leaving as-is.")]
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security", Justification = "Not passed in from user.")]
         public DataTable ReadTable(string tableName, IEnumerable columns, int maxRows)
         {
             // We specifically use OleDb to read a CSV file...
@@ -83,7 +84,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             WriteDiagnostics("Current Directory: {0}", Directory.GetCurrentDirectory());
 
             // We better work with a full path, if nothing else, errors become easier to report
-            string fullPath = FixPath(m_fileName) ?? Path.GetFullPath(m_fileName);
+            string fullPath = this.FixPath(this.fileName) ?? Path.GetFullPath(this.fileName);
 
             // We can map simplified CSVs to an OLEDB/Text connection, then proceed as normal
             using (OleDbConnection connection = new OleDbConnection())
@@ -92,7 +93,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             using (OleDbCommand command = new OleDbCommand())
             {
                 // We have to use the name of the folder which contains the CSV file in the connection string
-                connection.ConnectionString = String.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate, Path.GetDirectoryName(fullPath));
+                connection.ConnectionString = string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate, Path.GetDirectoryName(fullPath));
                 WriteDiagnostics("Connection String: {0}", connection.ConnectionString);
 
                 // We have to open the connection now, before we try to quote
@@ -124,8 +125,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                         {
                             builder.Append(',');
                         }
+
                         builder.Append(commandBuilder.QuoteIdentifier(columnName, connection));
                     }
+
                     columnsClause = builder.ToString();
                     if (columnsClause.Length == 0)
                     {
@@ -151,7 +154,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         public override DataTable ReadTable(string tableName, IEnumerable columns)
         {
-            return ReadTable(tableName, columns, -1);
+            return this.ReadTable(tableName, columns, -1);
         }
     }
 }

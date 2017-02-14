@@ -9,6 +9,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// This service is responsible for any Async operations specific to a platform.
     /// </summary>
@@ -43,9 +45,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 }
                 catch (ThreadStateException)
                 {
-                    // Catch and discard ThreadStateException. If Abort is called on a thread that has been suspended, 
-                    // a ThreadStateException is thrown in the thread that called Abort, 
-                    // and AbortRequested is added to the ThreadState property of the thread being aborted. 
+                    // Catch and discard ThreadStateException. If Abort is called on a thread that has been suspended,
+                    // a ThreadStateException is thrown in the thread that called Abort,
+                    // and AbortRequested is added to the ThreadState property of the thread being aborted.
                     // A ThreadAbortException is not thrown in the suspended thread until Resume is called.
                 }
 
@@ -67,11 +69,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 Thread.ResetAbort();
 
-                // Throwing an exception so that the test is marked as failed. 
+                // Throwing an exception so that the test is marked as failed.
                 // This is a TargetInvocation exception because we want just the ThreadAbort exception to be shown to the user and not something we create here.
                 // TargetInvocation exceptions are stripped off by the test failure handler surfacing the actual exception.
                 throw new TargetInvocationException(exception);
             }
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

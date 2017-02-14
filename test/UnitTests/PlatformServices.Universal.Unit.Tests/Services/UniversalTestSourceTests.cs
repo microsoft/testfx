@@ -4,13 +4,11 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP.UnitTests
 {
     extern alias FrameworkV1;
-    
+
     using System.Linq;
     using System.Reflection;
-
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
     using FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
     /// <summary>
     /// The universal test source validator tests.
