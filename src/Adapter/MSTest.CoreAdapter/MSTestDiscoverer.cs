@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <param name="logger">Logger used to log messages.</param>
         /// <param name="discoverySink">Used to send testcases and discovery related events back to Discoverer manager.</param>
         [System.Security.SecurityCritical]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification ="Passed in from the test platform and trusted to be valid.")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification ="Discovery context can be null.")]
         public void DiscoverTests(
             IEnumerable<string> sources,
             IDiscoveryContext discoveryContext,

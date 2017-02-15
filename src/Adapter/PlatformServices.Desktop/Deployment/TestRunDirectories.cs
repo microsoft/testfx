@@ -63,7 +63,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         }
 
         /// <summary>
-        /// Gets In MachineName directory
+        /// Gets In\MachineName directory
         /// </summary>
         public string InMachineNameDirectory
         {

@@ -39,7 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         }
 
         /// <summary>
-        /// Gets tack Trace information associated with the test failure
+        /// Gets stack trace information associated with the test failure
         /// </summary>
         public StackTraceInformation StackTraceInformation { get; private set; }
 

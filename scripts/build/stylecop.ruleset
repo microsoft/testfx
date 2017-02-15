@@ -4,7 +4,7 @@
     <!-- Allow use of regions -->
     <Rule Id="SA1124" Action="None" />
 
-    <!-- Do not require XML documentation -->
+    <!-- Do not require XML comment analysis -->
     <Rule Id="SA1652" Action="None" />
   </Rules>
 </RuleSet>
