@@ -5,16 +5,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.Xml;
-
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
-
     using TestAdapter;
-
     using TestPlatform.ObjectModel;
-    using System.Diagnostics.CodeAnalysis;
 
     internal class RunSettingsUtilities
     {
@@ -36,16 +33,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// Gets the set of user defined test run parameters from settings xml as key value pairs.
         /// </summary>
         /// <param name="settingsXml">The runsettings xml.</param>
-        /// <returns></returns>
+        /// <returns>The test run parameters.</returns>
         /// <remarks>If there is no test run parameters section defined in the settingsxml a blank dictionary is returned.</remarks>
         internal static Dictionary<string, object> GetTestRunParameters(string settingsXml)
         {
             var nodeValue = GetNodeValue<Dictionary<string, object>>(settingsXml, TestAdapter.Constants.TestRunParametersName, TestRunParameters.FromXml);
             if (nodeValue == default(Dictionary<string, object>))
             {
-                //Return default.
+                // Return default.
                 nodeValue = new Dictionary<string, object>();
             }
+
             return nodeValue;
         }
 
@@ -53,7 +51,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// Throws if the node has an attribute.
         /// </summary>
         /// <param name="reader"> The reader. </param>
-        /// <exception cref="SettingsException"> Throws if the node has an attribute. </exception>
+        /// <exception cref="SettingsException"> Thrown if the node has an attribute. </exception>
         internal static void ThrowOnHasAttributes(XmlReader reader)
         {
             if (reader.HasAttributes)
@@ -68,8 +66,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             }
         }
 
-        [SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver",
-            Justification = "XmlReaderSettings.XmlResolver is not available in portable code.")]
+        [SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver", Justification = "XmlReaderSettings.XmlResolver is not available in portable code.")]
         private static T GetNodeValue<T>(string settingsXml, string nodeName, Func<XmlReader, T> nodeParser)
         {
             // use XmlReader to avoid loading of the plugins in client code (mainly from VS).

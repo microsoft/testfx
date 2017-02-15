@@ -4,10 +4,12 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using System.Diagnostics;
-    using System.IO;
     using System.Globalization;
+    using System.IO;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     /// <summary>
     /// Internal implementation of TraceListenerManager exposed to the user.
@@ -26,13 +28,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private TextWriter origStdErr;
 
         /// <summary>
-        ///     Initializes a new instance of a TraceListenerManager object.
-        ///     Also, updates the output/error streams with redirected outputWriter and errorWriter
+        /// Initializes a new instance of the <see cref="TraceListenerManager"/> class.
         /// </summary>
+        /// <param name="outputWriter">A writer instance to log output messages.</param>
+        /// <param name="errorWriter">A writer instance to log error messages.</param>
         public TraceListenerManager(TextWriter outputWriter, TextWriter errorWriter)
         {
-            origStdOut = Console.Out;
-            origStdErr = Console.Error;
+            this.origStdOut = Console.Out;
+            this.origStdErr = Console.Error;
 
             // Update the output/error streams with redirected streams
             Console.SetOut(outputWriter);
@@ -42,6 +45,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Adds the arguement traceListener object to System.Diagnostics.TraceListenerCollection.
         /// </summary>
+        /// <param name="traceListener">The trace listener instance.</param>
         public void Add(ITraceListener traceListener)
         {
             try
@@ -62,14 +66,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Removes the arguement traceListener object from System.Diagnostics.TraceListenerCollection.
         /// </summary>
-        public void Remove(ITraceListener traceListner)
+        /// <param name="traceListener">The trace listener instance.</param>
+        public void Remove(ITraceListener traceListener)
         {
-            Trace.Listeners.Remove(traceListner as TextWriterTraceListener);
+            Trace.Listeners.Remove(traceListener as TextWriterTraceListener);
         }
 
         /// <summary>
         /// Wrapper over Close() of ITraceListener.
-        /// </summary>        
+        /// </summary>
+        /// <param name="traceListener">The trace listener instance.</param>
         public void Close(ITraceListener traceListener)
         {
             traceListener.Close();
@@ -78,13 +84,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Wrapper over Dispose() of ITraceListener.
         /// Also resets the standard output/error streams.
-        /// </summary> 
+        /// </summary>
+        /// <param name="traceListener">The trace listener instance.</param>
         public void Dispose(ITraceListener traceListener)
         {
             traceListener.Dispose();
-            Console.SetOut(origStdOut);
-            Console.SetError(origStdErr);
-
+            Console.SetOut(this.origStdOut);
+            Console.SetError(this.origStdErr);
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

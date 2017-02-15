@@ -19,7 +19,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    
 
     [TestClass]
     public class DesktopTestSourceHostTests
@@ -78,7 +77,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
         /// <summary>
         /// This test should ideally be choosing a different path for the test source. Currently both the test source and the adapter
-        /// are in the same location. However when we move to run these tests with the V2 itself, then this would be valid. 
+        /// are in the same location. However when we move to run these tests with the V2 itself, then this would be valid.
         /// Leaving the test running till then.
         /// </summary>
         [TestMethod]
@@ -128,7 +127,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             }
             finally
             {
-                sourceHost.Object.Dispose();       
+                sourceHost.Object.Dispose();
             }
         }
     }

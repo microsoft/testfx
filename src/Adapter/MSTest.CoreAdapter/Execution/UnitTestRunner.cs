@@ -9,7 +9,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Globalization;
     using System.Linq;
 
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
@@ -22,14 +21,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Type cache
         /// </summary>
         private readonly TypeCache typeCache;
-        
+
         /// <summary>
         /// Specifies whether debug traces should be captured or not
         /// </summary>
         private readonly bool captureDebugTraces;
 
         /// <summary>
-        /// The Constructor.
+        /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
         /// </summary>
         /// <param name="captureDebugTraces"> Specifies whether debug traces should be captured or not. </param>
         public UnitTestRunner(bool captureDebugTraces)
@@ -38,7 +37,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// The Constructor.
+        /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
         /// </summary>
         /// <param name="captureDebugTraces"> Specifies whether debug traces should be captured or not.  </param>
         /// <param name="reflectHelper"> The reflect Helper. </param>
@@ -66,7 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 using (var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture))
                 {
                     var properties = new Dictionary<string, object>(testRunParameters);
-                    var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties); //new TestContextImplementation(testMethod, properties);
+                    var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
                     testContext.SetOutcome(TestTools.UnitTesting.UnitTestOutcome.InProgress);
 
                     // Get the testMethod
@@ -78,7 +77,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         return new UnitTestResult[] { new UnitTestResult(UnitTestOutcome.NotFound, string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name)) };
                     }
 
-                    // If test cannot be executed, then bail out. 
+                    // If test cannot be executed, then bail out.
                     if (!testMethodInfo.IsRunnable)
                     {
                         return new UnitTestResult[] { new UnitTestResult(UnitTestOutcome.NotRunnable, testMethodInfo.NotRunnableReason) };
@@ -95,7 +94,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Runs the class cleanup method. 
+        /// Runs the class cleanup method.
         /// It returns any error information during the execution of the cleanup method
         /// </summary>
         /// <returns> The <see cref="RunCleanupResult"/>. </returns>
@@ -122,15 +121,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 {
                     // Replacing the null character with a string.replace should work.
                     // If this does not work for a specific dotnet version a custom function doing the same needs to be put in place.
-                    result.StandardOut = redirector.StandardOutput?.Replace("\0","\\0");
-                    result.StandardError = redirector.StandardError?.Replace("\0","\\0");
+                    result.StandardOut = redirector.StandardOutput?.Replace("\0", "\\0");
+                    result.StandardError = redirector.StandardError?.Replace("\0", "\\0");
                     result.DebugTrace = redirector.DebugTrace?.Replace("\0", "\\0");
                 }
             }
 
             return result;
         }
-       
 
         /// <summary>
         /// Run assembly cleanup methods
@@ -169,32 +167,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
         }
-    }
-
-    /// <summary>
-    /// Result of the run cleanup operation
-    /// </summary>
-    [Serializable]
-    internal class RunCleanupResult
-    {
-        /// <summary>
-        /// Gets or sets the standard out of the cleanup methods
-        /// </summary>
-        internal string StandardOut { get; set; }
-
-        /// <summary>
-        /// Gets or sets the standard error of the cleanup methods
-        /// </summary>
-        public string StandardError { get; internal set; }
-
-        /// <summary>
-        /// Gets or sets the Debug trace of the cleanup methods.
-        /// </summary>
-        internal string DebugTrace { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Warnings from the RunCleanup method
-        /// </summary>
-        internal IList<string> Warnings { get; set; }
     }
 }

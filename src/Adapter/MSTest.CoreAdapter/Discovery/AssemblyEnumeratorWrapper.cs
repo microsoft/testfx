@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     using System.Globalization;
     using System.IO;
     using System.Reflection;
-    
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -32,16 +32,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <param name="runSettings"> The run Settings. </param>
         /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller.  </param>
         /// <returns> A collection of test elements. </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Catching a generic exception since it is a requirement to not abort discovery in case of any errors.")]
-        [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "3#")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Catching a generic exception since it is a requirement to not abort discovery in case of any errors.")]
+        [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "3#", Justification = "This is only for internal use.")]
         internal ICollection<UnitTestElement> GetTests(
             string assemblyFileName,
             IRunSettings runSettings,
             out ICollection<string> warnings)
-        {   
+        {
             warnings = new List<string>();
-            
+
             if (string.IsNullOrEmpty(assemblyFileName))
             {
                 return null;
@@ -77,7 +76,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     fullFilePath,
                     ex);
 
-                // Loading a WinPRT dll on the phone produces a 
+                // Loading a WinPRT dll on the phone produces a
                 // FileNotFoundException. We check if we get FileNotFoundException
                 // in spite of the dll existing and try and load the dll from the full path in this case.
                 try
@@ -146,4 +145,3 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         }
     }
 }
-

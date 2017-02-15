@@ -7,8 +7,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System.Collections;
     using System.Collections.Generic;
     using System.IO;
-    using System.Reflection;
     using System.Linq;
+    using System.Reflection;
 
     /// <summary>
     /// Utility for reflection API's
@@ -125,7 +125,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 }
                 else
                 {
-                    // Ideally we should not be reaaching here. We only query for attributes on types/methods currently. 
+                    // Ideally we should not be reaaching here. We only query for attributes on types/methods currently.
                     // Return the attributes that CustomAttributeData returns in this cases not considering inheritance.
                     var firstLevelAttributes =
                     CustomAttributeData.GetCustomAttributes(memberInfo);
@@ -134,45 +134,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
                 nonUniqueAttributes.AddRange(uniqueAttributes.Values);
                 return nonUniqueAttributes.ToArray();
-            }
-        }
-
-        private void AddNewAttributes(
-            IList<CustomAttributeData> customAttributes,
-            bool shouldGetAllAttributes,
-            Type type,
-            Dictionary<string, object> uniqueAttributes,
-            List<object> nonUniqueAttributes)
-        {
-            foreach (var attribute in customAttributes)
-            {
-                if (shouldGetAllAttributes
-                    || (IsTypeInheriting(attribute.Constructor.DeclaringType, type)
-                        || attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
-                            type.AssemblyQualifiedName)))
-                {
-                    Attribute attributeInstance = CreateAttributeInstance(attribute);
-                    if (attributeInstance != null)
-                    {
-                        var attributeUsageAttribute =
-                            this.GetCustomAttributes(
-                                attributeInstance.GetType().GetTypeInfo(),
-                                typeof(AttributeUsageAttribute),
-                                true).FirstOrDefault() as AttributeUsageAttribute;
-
-                        if (attributeUsageAttribute!= null && !attributeUsageAttribute.AllowMultiple)
-                        {
-                            if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))
-                            {
-                                uniqueAttributes.Add(attributeInstance.GetType().FullName, attributeInstance);
-                            }
-                        }
-                        else
-                        {
-                            nonUniqueAttributes.Add(attributeInstance);
-                        }
-                    }
-                }
             }
         }
 
@@ -187,7 +148,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
                 foreach (var attribute in customAttributes)
                 {
-                    if(IsTypeInheriting(attribute.Constructor.DeclaringType, type)
+                    if (this.IsTypeInheriting(attribute.Constructor.DeclaringType, type)
                             || attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
                                 type.AssemblyQualifiedName))
                     {
@@ -208,43 +169,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         }
 
         /// <summary>
-        /// Check whether the member is loaded in a reflection only context.
-        /// </summary>
-        /// <param name="memberInfo"> The member Info. </param>
-        /// <returns> True if the member is loaded in a reflection only context. </returns>
-        private bool IsReflectionOnlyLoad(MemberInfo memberInfo)
-        {
-            if (memberInfo != null)
-            {
-                return memberInfo.Module.Assembly.ReflectionOnly;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Check if type1 is inheriting from type2
-        /// </summary>
-        private bool IsTypeInheriting(Type type1, Type type2)
-        {
-            while (type1 != null)
-            {
-                if (type1.AssemblyQualifiedName.Equals(type2.AssemblyQualifiedName))
-                {
-                    return true;
-                }
-
-                type1 = type1.GetTypeInfo().BaseType;
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Create instance of the attribute for reflection only load.
         /// </summary>
-        /// <param name="attributeData"></param>
-        /// <returns></returns>
+        /// <param name="attributeData">The attribute data.</param>
+        /// <returns>An attribute.</returns>
         private static Attribute CreateAttributeInstance(CustomAttributeData attributeData)
         {
             object attribute = null;
@@ -299,12 +227,88 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     attributeType.GetProperty(namedArgument.MemberInfo.Name).SetValue(attribute, namedArgument.TypedValue.Value, null);
                 }
             }
+
             // If not able to create instance of attribute ignore attribute. (May happen for custom user defined attributes).
-            catch (BadImageFormatException) { }
-            catch (FileLoadException) { }
-            catch (TypeLoadException) { }
+            catch (BadImageFormatException)
+            {
+            }
+            catch (FileLoadException)
+            {
+            }
+            catch (TypeLoadException)
+            {
+            }
 
             return attribute as Attribute;
+        }
+
+        private void AddNewAttributes(
+            IList<CustomAttributeData> customAttributes,
+            bool shouldGetAllAttributes,
+            Type type,
+            Dictionary<string, object> uniqueAttributes,
+            List<object> nonUniqueAttributes)
+        {
+            foreach (var attribute in customAttributes)
+            {
+                if (shouldGetAllAttributes
+                    || (this.IsTypeInheriting(attribute.Constructor.DeclaringType, type)
+                        || attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
+                            type.AssemblyQualifiedName)))
+                {
+                    Attribute attributeInstance = CreateAttributeInstance(attribute);
+                    if (attributeInstance != null)
+                    {
+                        var attributeUsageAttribute =
+                            this.GetCustomAttributes(
+                                attributeInstance.GetType().GetTypeInfo(),
+                                typeof(AttributeUsageAttribute),
+                                true).FirstOrDefault() as AttributeUsageAttribute;
+
+                        if (attributeUsageAttribute != null && !attributeUsageAttribute.AllowMultiple)
+                        {
+                            if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))
+                            {
+                                uniqueAttributes.Add(attributeInstance.GetType().FullName, attributeInstance);
+                            }
+                        }
+                        else
+                        {
+                            nonUniqueAttributes.Add(attributeInstance);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Check whether the member is loaded in a reflection only context.
+        /// </summary>
+        /// <param name="memberInfo"> The member Info. </param>
+        /// <returns> True if the member is loaded in a reflection only context. </returns>
+        private bool IsReflectionOnlyLoad(MemberInfo memberInfo)
+        {
+            if (memberInfo != null)
+            {
+                return memberInfo.Module.Assembly.ReflectionOnly;
+            }
+
+            return false;
+        }
+
+        private bool IsTypeInheriting(Type type1, Type type2)
+        {
+            while (type1 != null)
+            {
+                if (type1.AssemblyQualifiedName.Equals(type2.AssemblyQualifiedName))
+                {
+                    return true;
+                }
+
+                type1 = type1.GetTypeInfo().BaseType;
+            }
+
+            return false;
         }
     }
 }

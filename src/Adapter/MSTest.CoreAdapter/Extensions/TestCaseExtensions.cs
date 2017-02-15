@@ -25,7 +25,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             var testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
 
             TestMethod testMethod = new TestMethod(testCase.DisplayName, testClassName, source, isAsync);
-            
+
             UnitTestElement testElement = new UnitTestElement(testMethod)
                                         {
                                             Ignored = !isEnabled,

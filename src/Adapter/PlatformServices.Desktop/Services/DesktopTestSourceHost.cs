@@ -13,6 +13,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// A host that loads the test source.This can be in isolation for desktop using an AppDomain or just loading the source in the current context.
     /// </summary>
@@ -32,7 +34,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         private string sourceFileName;
         private IRunSettings runSettings;
-        
+
         private string currentDirectory = null;
 
         /// <summary>
@@ -53,8 +55,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Creates an instance of a given type in the test source host.
         /// </summary>
         /// <param name="type"> The type that needs to be created in the host. </param>
-        /// <param name="args">The arguments to pass to the constructor. 
-        /// This array of arguments must match in number, order, and type the parameters of the constructor to invoke. 
+        /// <param name="args">The arguments to pass to the constructor.
+        /// This array of arguments must match in number, order, and type the parameters of the constructor to invoke.
         /// Pass in null for a constructor with no arguments.
         /// </param>
         /// <returns> An instance of the type created in the host. </returns>
@@ -86,8 +88,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 }
             }
 
-            //Honour DisableAppDomain setting if it is present in runsettings
-            if (this.runSettings!=null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
+            // Honour DisableAppDomain setting if it is present in runsettings
+            if (this.runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
             {
                 if (adapterSettings != null)
                 {
@@ -98,12 +100,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     }
                     catch (Exception exception)
                     {
-                        if(EqtTrace.IsErrorEnabled)
+                        if (EqtTrace.IsErrorEnabled)
                         {
                             EqtTrace.Error(exception);
                         }
                     }
                 }
+
                 return Activator.CreateInstance(type, args);
             }
 
@@ -111,11 +114,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             // The below logic of preferential setting the appdomains appbase is needed because:
             // 1. We set this to the location of the test source if it is built for Full CLR  -> Ideally this needs to be done in all situations.
-            // 2. We set this to the location where the current adapter is being picked up from for UWP and .Net Core scenarios -> This needs to be 
+            // 2. We set this to the location where the current adapter is being picked up from for UWP and .Net Core scenarios -> This needs to be
             //    different especially for UWP because we use the desktop adapter(from %temp%\VisualStudioTestExplorerExtensions) itself for test discovery
-            //    in IDE scenarios. If the app base is set to the test source location, discovery will not work because we drop the 
+            //    in IDE scenarios. If the app base is set to the test source location, discovery will not work because we drop the
             //    UWP platform service assembly at the test source location and since CLR starts looking for assemblies from the app base location,
-            //    there would be a mismatch of platform service assemblies during discovery. 
+            //    there would be a mismatch of platform service assemblies during discovery.
             var frameworkVersionString = this.GetTargetFrameworkVersionString(this.sourceFileName);
             if (frameworkVersionString.Contains(PlatformServices.Constants.DotNetFrameWorkStringPrefix))
             {
@@ -126,21 +129,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 appDomainSetup.ApplicationBase = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
             }
-            
+
             if (EqtTrace.IsInfoEnabled)
             {
                 EqtTrace.Info("TestSourceHost: Creating app-domain for source {0} with application base path {1}.", this.sourceFileName, appDomainSetup.ApplicationBase);
             }
 
             AppDomainUtilities.SetAppDomainFrameworkVersionBasedOnTestSource(appDomainSetup, frameworkVersionString);
-            
+
             var configFile = this.GetConfigFileForTestSource(this.sourceFileName);
             AppDomainUtilities.SetConfigurationFile(appDomainSetup, configFile);
 
             this.appDomain = AppDomain.CreateDomain("TestSourceHost: Enumering assembly", null, appDomainSetup);
 
             // #824545 Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recurive assembly resolution
-            // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method. 
+            // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
             EqtTrace.SetupRemoteEqtTraceListeners(this.appDomain);
 
             // Add an assembly resolver...
@@ -186,7 +189,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     }
                 }
             }
-            
+
             var enumerator = AppDomainUtilities.CreateInstance(
                 this.appDomain,
                 type,
@@ -261,7 +264,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             return this.cachedResolutionPaths;
         }
-        
+
         internal virtual string GetTargetFrameworkVersionString(string sourceFileName)
         {
             return AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
@@ -271,16 +274,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             return new DeploymentUtility().GetConfigFile(sourceFileName);
         }
-        
+
         /// <summary>
         /// Sets context required for running tests.
         /// </summary>
         /// <param name="source">
         /// source parameter used for setting context
         /// </param>
-        /// <returns>
-        /// Returns false if context cannot be set. True otherwise.
-        /// </returns>
         private void SetContext(string source)
         {
             if (string.IsNullOrEmpty(source))
@@ -322,4 +322,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

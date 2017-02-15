@@ -4,9 +4,10 @@
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
 {
     extern alias FrameworkV1;
+
     using System;
     using System.IO;
-    
+
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
     using Assert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -23,7 +24,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
         {
             Assert.AreEqual(
                 Path.Combine(@"C:\temp\In", Environment.MachineName),
-                testRunDirectories.InMachineNameDirectory);
+                this.testRunDirectories.InMachineNameDirectory);
         }
     }
 }

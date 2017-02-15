@@ -7,30 +7,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     extern alias FrameworkV2;
     extern alias FrameworkV2CoreExtension;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.IO;
     using System.Text;
-
+    using global::MSTestAdapter.TestUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-
     using Moq;
-
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
-    using global::MSTestAdapter.TestUtilities;
-
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -207,7 +202,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         [TestMethodV1]
         public void RunCleanupShouldReturnNullOnNoCleanUpMethods()
-        {   
+        {
             Assert.IsNull(this.unitTestRunner.RunCleanup());
         }
 
@@ -239,7 +234,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             };
 
             var cleanupresult = this.unitTestRunner.RunCleanup();
-            
+
             Assert.AreEqual(1, assemblyCleanupCount);
             Assert.AreEqual(1, classCleanupCount);
             Assert.AreEqual(2, cleanupresult.Warnings.Count());
@@ -249,7 +244,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunCleanupShouldReturnCleanupResultsWithDebugTraceLogsSetIfDebugTraceEnabled()
         {
-            unitTestRunner = new UnitTestRunner(true);
+            this.unitTestRunner = new UnitTestRunner(true);
             var type = typeof(DummyTestClassWithCleanupMethods);
             var methodInfo = type.GetMethod("TestMethod");
             var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
@@ -329,14 +324,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         private class DummyTestClassWithCleanupMethods
         {
             public static Action AssemblyCleanupMethodBody { get; set; }
-            
+
             public static Action ClassCleanupMethodBody { get; set; }
 
             [UTF.AssemblyCleanup]
             public static void AssemblyCleanup()
             {
-                if(AssemblyCleanupMethodBody != null)
+                if (AssemblyCleanupMethodBody != null)
+                {
                     AssemblyCleanupMethodBody.Invoke();
+                }
             }
 
             [UTF.ClassCleanup]

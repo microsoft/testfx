@@ -7,12 +7,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Reflection;
-
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-    using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using Extensions;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
     using ObjectModel;
+    using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
     /// <summary>
     /// Defines TestAssembly Info object
@@ -97,7 +95,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     return false;
                 }
 
-                // If assembly initialization was successful, then only call assembly cleanup. 
+                // If assembly initialization was successful, then only call assembly cleanup.
                 if (this.AssemblyInitializationException != null)
                 {
                     return false;
@@ -112,11 +110,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="testContext"> The test context. </param>
         /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public void RunAssemblyInitialize(TestContext testContext)
         {
-            // No assembly initialize => nothing to do. 
+            // No assembly initialize => nothing to do.
             if (this.AssemblyInitializeMethod == null)
             {
                 return;
@@ -144,7 +141,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
 
-            // If assemblyInitialization was successful, then dont do anything 
+            // If assemblyInitialization was successful, then dont do anything
             if (this.AssemblyInitializationException == null)
             {
                 return;
@@ -196,7 +193,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>
         /// Any exception that can be thrown as part of a assembly cleanup as warning messages.
         /// </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public string RunAssemblyCleanup()
         {
             if (this.AssemblyCleanupMethod == null)
@@ -227,11 +224,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     errorMessage = StackTraceHelper.GetExceptionMessage(realException);
                 }
 
-                return string.Format(CultureInfo.CurrentCulture, Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
-                                                this.AssemblyCleanupMethod.DeclaringType.Name,
-                                                this.AssemblyCleanupMethod.Name,
-                                                errorMessage,
-                                                StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                return string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
+                    this.AssemblyCleanupMethod.DeclaringType.Name,
+                    this.AssemblyCleanupMethod.Name,
+                    errorMessage,
+                    StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
             }
         }
     }

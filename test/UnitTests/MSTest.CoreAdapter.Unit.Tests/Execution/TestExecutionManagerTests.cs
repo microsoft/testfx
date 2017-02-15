@@ -7,21 +7,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     extern alias FrameworkV2;
     extern alias FrameworkV2CoreExtension;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-    using Ignore = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute;
-
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Reflection;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
@@ -29,14 +19,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-
     using Moq;
-
+    using MSTest.TestAdapter;
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+    using Ignore = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
-
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
-    using MSTest.TestAdapter;
 
     [TestClass]
     public class TestExecutionManagerTests
@@ -374,9 +369,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testCase = new TestCase("DummyTest", new System.Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
             UnitTestResult unitTestResult1 = new UnitTestResult() { DatarowIndex = 0, DisplayName = "DummyTest" };
             UnitTestResult unitTestResult2 = new UnitTestResult() { DatarowIndex = 1, DisplayName = "DummyTest" };
-            this.TestExecutionManager.SendTestResults(testCase, new UnitTestResult[] { unitTestResult1, unitTestResult2 }, new DateTimeOffset(), new DateTimeOffset(), this.frameworkHandle);
-            Assert.AreEqual(frameworkHandle.TestDisplayNameList[0], "DummyTest (Data Row 0)");
-            Assert.AreEqual(frameworkHandle.TestDisplayNameList[1], "DummyTest (Data Row 1)");
+            this.TestExecutionManager.SendTestResults(testCase, new UnitTestResult[] { unitTestResult1, unitTestResult2 }, default(DateTimeOffset), default(DateTimeOffset), this.frameworkHandle);
+            Assert.AreEqual(this.frameworkHandle.TestDisplayNameList[0], "DummyTest (Data Row 0)");
+            Assert.AreEqual(this.frameworkHandle.TestDisplayNameList[1], "DummyTest (Data Row 1)");
         }
 
         #region private methods
@@ -440,6 +435,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         internal class DummyTestClass
         {
+            public static IDictionary<string, object> TestContextProperties
+            {
+                get;
+                set;
+            }
+
             public UTFExtension.TestContext TestContext { get; set; }
 
             [UTF.TestMethod]
@@ -461,12 +462,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public void IgnoredTest()
             {
                 UTF.Assert.Fail();
-            }
-
-            public static IDictionary<string, object> TestContextProperties
-            {
-                get;
-                set;
             }
         }
 
@@ -492,22 +487,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
     internal class TestableFrameworkHandle : IFrameworkHandle
     {
-        public readonly List<string> MessageList;
-        public readonly List<string> ResultsList;
-        public readonly List<string> TestCaseStartList;
-        public readonly List<string> TestCaseEndList;
-        public readonly List<string> TestDisplayNameList;
+        private readonly List<string> messageList;
+        private readonly List<string> resultsList;
+        private readonly List<string> testCaseStartList;
+        private readonly List<string> testCaseEndList;
+        private readonly List<string> testDisplayNameList;
+
         public TestableFrameworkHandle()
         {
-            this.MessageList = new List<string>();
-            this.ResultsList = new List<string>();
-            this.TestCaseStartList = new List<string>();
-            this.TestCaseEndList = new List<string>();
-            this.TestDisplayNameList = new List<string>();
+            this.messageList = new List<string>();
+            this.resultsList = new List<string>();
+            this.testCaseStartList = new List<string>();
+            this.testCaseEndList = new List<string>();
+            this.testDisplayNameList = new List<string>();
         }
 
-
         public bool EnableShutdownAfterTestRun { get; set; }
+
+        public List<string> MessageList => this.messageList;
+
+        public List<string> ResultsList => this.resultsList;
+
+        public List<string> TestCaseStartList => this.testCaseStartList;
+
+        public List<string> TestCaseEndList => this.testCaseEndList;
+
+        public List<string> TestDisplayNameList => this.testDisplayNameList;
 
         public void RecordResult(TestResult testResult)
         {
@@ -547,11 +552,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
     internal class TestableRunContextTestExecutionTests : IRunContext
     {
-        private readonly Func<ITestCaseFilterExpression> GetFilter;
+        private readonly Func<ITestCaseFilterExpression> getFilter;
 
         public TestableRunContextTestExecutionTests(Func<ITestCaseFilterExpression> getFilter)
         {
-            this.GetFilter = getFilter;
+            this.getFilter = getFilter;
             this.MockRunSettings = new Mock<IRunSettings>();
         }
 
@@ -565,19 +570,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
+        public bool KeepAlive { get; }
+
+        public bool InIsolation { get; }
+
+        public bool IsDataCollectionEnabled { get; }
+
+        public bool IsBeingDebugged { get; }
+
+        public string TestRunDirectory { get; }
+
+        public string SolutionDirectory { get; }
+
         public ITestCaseFilterExpression GetTestCaseFilter(
             IEnumerable<string> supportedProperties,
             Func<string, TestProperty> propertyProvider)
         {
-            return this.GetFilter();
+            return this.getFilter();
         }
-
-        public bool KeepAlive { get; }
-        public bool InIsolation { get; }
-        public bool IsDataCollectionEnabled { get; }
-        public bool IsBeingDebugged { get; }
-        public string TestRunDirectory { get; }
-        public string SolutionDirectory { get; }
     }
 
     internal class TestableTestCaseFilterExpression : ITestCaseFilterExpression
@@ -599,8 +609,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
     internal class TestableTestExecutionManager : TestExecutionManager
     {
-        internal override void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext,
-        IFrameworkHandle frameworkHandle, bool isDeploymentDone)
+        internal Action<IEnumerable<TestCase>, IRunContext, IFrameworkHandle, bool> ExecuteTestsWrapper { get; set; }
+
+        internal override void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
         {
             if (this.ExecuteTestsWrapper != null)
             {
@@ -612,8 +623,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             return new TestableUnitTestDiscoverer();
         }
-
-        internal Action<IEnumerable<TestCase>, IRunContext, IFrameworkHandle, bool> ExecuteTestsWrapper;
     }
     #endregion
 }

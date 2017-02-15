@@ -5,6 +5,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 {
     extern alias FrameworkV1;
     extern alias FrameworkV2;
+
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -27,7 +28,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     using UnitTestOutcome = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
     [TestClass]
-    public class TestContextImplementationTests
+    public class DEsktopTestContextImplTests
     {
         private Mock<ITestMethod> testMethod;
 
@@ -186,7 +187,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
 
             var exception =
-                ActionUtility.PerformActionAndReturnException(() => this.testContextImplementation.AddResultFile(""));
+                ActionUtility.PerformActionAndReturnException(() => this.testContextImplementation.AddResultFile(string.Empty));
 
             Assert.AreEqual(typeof(ArgumentException), exception.GetType());
             StringAssert.Contains(exception.Message, Resource.Common_CannotBeNullOrEmpty);
@@ -249,6 +250,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             stringWriter.Dispose();
 
             this.testContextImplementation.WriteLine("{0} Testing write", 1);
+
             // Calling it twice to cover the direct return when we know the object has been disposed.
             this.testContextImplementation.WriteLine("{0} Testing write", 1);
         }
@@ -284,6 +286,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             stringWriter.Dispose();
 
             this.testContextImplementation.WriteLine("1 Testing write");
+
             // Calling it twice to cover the direct return when we know the object has been disposed.
             this.testContextImplementation.WriteLine("1 Testing write");
         }

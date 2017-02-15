@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Globalization;
 
     /// <summary>
-    /// TestContext class. This class should be fully abstract and not contain any 
+    /// TestContext class. This class should be fully abstract and not contain any
     /// members. The adapter will implement the members. Users in the framework should
     /// only access this via a well-defined interface.
     /// </summary>
@@ -18,7 +18,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Gets test properties for a test.
         /// </summary>
-        /// <value></value>
         public abstract IDictionary<string, object> Properties { get; }
 
         /// <summary>

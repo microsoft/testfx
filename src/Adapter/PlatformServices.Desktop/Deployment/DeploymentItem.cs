@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
     using System;
     using System.Diagnostics;
     using System.Globalization;
-    
+
     /// <summary>
     /// Specifies type of deployment item origin, where the item comes from.
     /// </summary>
@@ -41,18 +41,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
     internal class DeploymentItem
     {
         /// <summary>
-        /// Creates a deployment item
+        /// Initializes a new instance of the <see cref="DeploymentItem"/> class.
         /// </summary>
         /// <param name="sourcePath">Absolute or relative to test assembly.</param>
-        internal DeploymentItem(string sourcePath) : this(sourcePath, string.Empty)
+        internal DeploymentItem(string sourcePath)
+            : this(sourcePath, string.Empty)
         {
         }
 
         /// <summary>
-        /// Creates a deployment item
+        /// Initializes a new instance of the <see cref="DeploymentItem"/> class.
         /// </summary>
         /// <param name="sourcePath">Absolute or relative to test assembly.</param>
-        /// <param name="relativeOutputDirectory">Relative to the deployment directory. string.Empty means deploy to 
+        /// <param name="relativeOutputDirectory">Relative to the deployment directory. string.Empty means deploy to
         /// deployment directory itself.
         /// </param>
         internal DeploymentItem(string sourcePath, string relativeOutputDirectory)
@@ -61,7 +62,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         }
 
         /// <summary>
-        /// Creates a deployment item
+        /// Initializes a new instance of the <see cref="DeploymentItem"/> class.
         /// </summary>
         /// <param name="sourcePath">Absolute or relative to test assembly.</param>
         /// <param name="relativeOutputDirectory">Relative to the deployment directory. string.Empty means deploy to deployment directory itself. </param>

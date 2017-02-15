@@ -6,12 +6,11 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
     extern alias FrameworkV1;
     extern alias FrameworkV2;
 
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;

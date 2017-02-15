@@ -20,14 +20,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
     internal class DeploymentUtility
     {
-        #region dependent utilities
-
-        private DeploymentItemUtility deploymentItemUtility;
-        private FileUtility fileUtility;
-        private AssemblyUtility assemblyUtility;
-
-        #endregion 
-
         private const string TestAssemblyConfigFileExtension = ".config";
         private const string NetAppConfigFile = "App.Config";
 
@@ -35,6 +27,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// Prefix for deployment folder to avoid confusions with other folders (like trx attachments).
         /// </summary>
         private const string DeploymentFolderPrefix = "Deploy";
+
+        private DeploymentItemUtility deploymentItemUtility;
+        private FileUtility fileUtility;
+        private AssemblyUtility assemblyUtility;
 
         internal DeploymentUtility()
             : this(new DeploymentItemUtility(new ReflectionUtility()), new AssemblyUtility(), new FileUtility())
@@ -51,7 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             this.fileUtility = fileUtility;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "4#")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "4#", Justification = "Used internally.")]
         internal bool Deploy(IEnumerable<TestCase> tests, string source, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, ref TestRunDirectories testRunDirectories)
         {
             IList<DeploymentItem> deploymentItems = this.deploymentItemUtility.GetDeploymentItems(tests);
@@ -63,9 +59,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <summary>
         /// Create deployment directories
         /// </summary>
-        /// <summary>
-        /// Create the deployment directory
-        /// </summary>        
+        /// <param name="runContext">The run context.</param>
+        /// <returns>TestRunDirectories instance.</returns>
         internal TestRunDirectories CreateDeploymentDirectories(IRunContext runContext)
         {
             var tempDirectory = this.GetTestResultsDirectory(runContext);
@@ -84,7 +79,49 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return result;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "5#")]
+        internal string GetConfigFile(string testSource)
+        {
+            string configFile = null;
+
+            if (this.fileUtility.DoesFileExist(testSource + TestAssemblyConfigFileExtension))
+            {
+                // Path to config file cannot be bad: storage is already checked, and extension is valid.
+                configFile = testSource + TestAssemblyConfigFileExtension;
+            }
+            else
+            {
+                var netAppConfigFile = Path.Combine(Path.GetDirectoryName(testSource), NetAppConfigFile);
+                if (this.fileUtility.DoesFileExist(netAppConfigFile))
+                {
+                    configFile = netAppConfigFile;
+                }
+            }
+
+            return configFile;
+        }
+
+        /// <summary>
+        /// Log the parameter warnings on the parameter logger
+        /// </summary>
+        /// <param name="testExecutionRecorder">Execution recorder.</param>
+        /// <param name="warnings">Warnings.</param>
+        private static void LogWarnings(ITestExecutionRecorder testExecutionRecorder, IEnumerable<string> warnings)
+        {
+            if (warnings == null)
+            {
+                return;
+            }
+
+            Debug.Assert(testExecutionRecorder != null, "Logger should not be null");
+
+            // log the warnings
+            foreach (string warning in warnings)
+            {
+                testExecutionRecorder.SendMessage(TestMessageLevel.Warning, warning);
+            }
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "5#", Justification = "Used internally.")]
         private bool Deploy(string source, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, IList<DeploymentItem> deploymentItems, ref TestRunDirectories testRunDirectories)
         {
             if (EqtTrace.IsInfoEnabled)
@@ -110,14 +147,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             // Log warnings
             LogWarnings(testExecutionRecorder, warnings);
 
-            return (deploymentItems != null && deploymentItems.Count > 0);
+            return deploymentItems != null && deploymentItems.Count > 0;
         }
 
         /// <summary>
         /// Does the deployment of parameter deployment items & the testSource to the parameter directory.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        private void Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, out IEnumerable<String> deploymentWarnings)
+        /// <param name="deploymentItems">The deployment item.</param>
+        /// <param name="testSource">The test source.</param>
+        /// <param name="deploymentDirectory">The deployment directory.</param>
+        /// <param name="deploymentWarnings">Warnings.</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        private void Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, out IEnumerable<string> deploymentWarnings)
         {
             Debug.Assert(!string.IsNullOrEmpty(deploymentDirectory), "Deployment directory is null/empty");
             Debug.Assert(this.fileUtility.DoesDirectoryExist(deploymentDirectory), "Deployment directory " + deploymentDirectory + " does not exist");
@@ -128,7 +169,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             var warnings = new List<string>();
 
-            // Get the referenced assemblies. 
+            // Get the referenced assemblies.
             this.ProcessNewStorage(testSource, deploymentItems, warnings);
 
             // Get the satellite assemblies
@@ -142,19 +183,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             var destToSource = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             // Copy the deployment items. (As deployment item can correspond to directories as well, so each deployment item may map to n files)
-            //
             foreach (var deploymentItem in deploymentItems)
             {
-                Debug.Assert(deploymentItem != null);
+                Debug.Assert(deploymentItem != null, "deploymentItem should not be null.");
 
-                // Validate the output directory. 
+                // Validate the output directory.
                 if (!this.IsOutputDirectoryValid(deploymentItem, deploymentDirectory, warnings))
                 {
                     continue;
                 }
 
                 // Get the files corresponding to this deployment item
-                //
                 bool itemIsDirectory;
                 var deploymentItemFiles = this.GetFullPathToFilesCorrespondingToDeploymentItem(deploymentItem, testSource, warnings, out itemIsDirectory);
                 if (deploymentItemFiles == null)
@@ -164,7 +203,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
                 var fullPathToDeploymentItemSource = this.GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSource);
 
-                foreach (var deploymentItemFile in deploymentItemFiles)    // Note: source is already rooted.
+                // Note: source is already rooted.
+                foreach (var deploymentItemFile in deploymentItemFiles)
                 {
                     Debug.Assert(Path.IsPathRooted(deploymentItemFile), "File " + deploymentItemFile + " is not rooted");
 
@@ -173,7 +213,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     filesToDeploy.Add(deploymentItemFile);
 
                     // Find dependencies of test deployment items and deploy them at the same time as master file.
-                    //
                     if (deploymentItem.OriginType == DeploymentItemOriginType.PerTestDeployment
                            &&
                         this.assemblyUtility.IsAssemblyExtension(Path.GetExtension(deploymentItemFile)))
@@ -181,12 +220,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                         this.AddDependenciesOfDeploymentItem(deploymentItemFile, filesToDeploy, warnings);
                     }
 
-
                     foreach (var fileToDeploy in filesToDeploy)
                     {
                         Debug.Assert(Path.IsPathRooted(fileToDeploy), "File " + fileToDeploy + " is not rooted");
-                        
-                        // Ignore the test platform files. 
+
+                        // Ignore the test platform files.
                         var tempFile = Path.GetFileName(fileToDeploy);
                         var assemblyName = Path.GetFileName(Assembly.GetExecutingAssembly().Location);
                         if (tempFile.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
@@ -232,6 +270,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                             {
                                 warnings.Add(warning);
                             }
+
                             if (string.IsNullOrEmpty(destination))
                             {
                                 continue;
@@ -255,9 +294,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                                 fileToDeploy,
                                 destToSource[relativeDestination]);
                         }
-
                     } // foreach fileToDeploy.
-                }   // foreach itemFile.
+                } // foreach itemFile.
             }
 
             deploymentWarnings = warnings;
@@ -281,13 +319,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <summary>
         /// Process test storage and add dependant assemblies to dependencyDeploymentItems.
         /// </summary>
+        /// <param name="testSource">The test source.</param>
+        /// <param name="configFile">The config file.</param>
+        /// <param name="deploymentItems">Deployment items.</param>
+        /// <param name="warnings">Warnigns.</param>
         private void AddDependencies(string testSource, string configFile, IList<DeploymentItem> deploymentItems, IList<string> warnings)
         {
-            Debug.Assert(!string.IsNullOrEmpty(testSource));
+            Debug.Assert(!string.IsNullOrEmpty(testSource), "testSource should not be null or empty.");
 
             // config file can be null.
-            Debug.Assert(deploymentItems != null);
-            Debug.Assert(Path.IsPathRooted(testSource));
+            Debug.Assert(deploymentItems != null, "deploymentItems should not be null.");
+            Debug.Assert(Path.IsPathRooted(testSource), "path should be rooted.");
 
             // Note: if this is not an assembly we simply return empty array, also:
             //       we do recursive search and report missing.
@@ -302,6 +344,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             {
                 EqtTrace.Info("DeploymentManager: Source:{0} has following references", testSource);
             }
+
             foreach (string reference in references)
             {
                 DeploymentItem deploymentItem = new DeploymentItem(reference, string.Empty, DeploymentItemOriginType.Dependency);
@@ -315,16 +358,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         }
 
         /// <summary>
-        /// Get files corresponding to parameter deployment item. 
+        /// Get files corresponding to parameter deployment item.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        private string[] GetFullPathToFilesCorrespondingToDeploymentItem(DeploymentItem deploymentItem,
-                                                                                string testSource,
-                                                                                IList<string> warnings,
-                                                                                out bool isDirectory)
+        /// <param name="deploymentItem">Deployment Item.</param>
+        /// <param name="testSource">The test source.</param>
+        /// <param name="warnings">Warnings.</param>
+        /// <param name="isDirectory">Is this a directory.</param>
+        /// <returns>Paths to items to deploy.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        private string[] GetFullPathToFilesCorrespondingToDeploymentItem(DeploymentItem deploymentItem, string testSource, IList<string> warnings, out bool isDirectory)
         {
-            Debug.Assert(deploymentItem != null);
-            Debug.Assert(!string.IsNullOrEmpty(testSource));
+            Debug.Assert(deploymentItem != null, "deploymentItem should not be null.");
+            Debug.Assert(!string.IsNullOrEmpty(testSource), "testsource should not be null or empty.");
 
             try
             {
@@ -339,7 +384,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 string fileName;
                 if (!this.IsDeploymentItemSourceAFile(deploymentItem.SourcePath, testSource, out fileName))
                 {
-                    // If file/directory is not found, then try removing the prefix and see if it is present. 
+                    // If file/directory is not found, then try removing the prefix and see if it is present.
                     string fileOrDirNameOnly =
                         Path.GetFileName(
                             deploymentItem.SourcePath.TrimEnd(
@@ -416,8 +461,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 {
                     EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
                 }
-                catch (IOException ex) // This covers PathTooLongException.
+                catch (IOException ex)
                 {
+                    // This covers PathTooLongException.
                     EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
                 }
                 catch (NotSupportedException ex)
@@ -437,7 +483,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     foreach (string satellite in itemSatellites)
                     {
                         Debug.Assert(!string.IsNullOrEmpty(satellite), "DeploymentManager.DoDeployment: got empty satellite!");
-                        Debug.Assert(satellite.IndexOf(itemDir, StringComparison.OrdinalIgnoreCase) == 0,
+                        Debug.Assert(
+                            satellite.IndexOf(itemDir, StringComparison.OrdinalIgnoreCase) == 0,
                             "DeploymentManager.DoDeployment: Got satellite that does not start with original item path");
 
                         string satelliteDir = Path.GetDirectoryName(satellite).TrimEnd(
@@ -468,19 +515,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorGettingSatellite, item, ex.GetType(), ex.GetExceptionMessage());
                     warnings.Add(warning);
                 }
-                catch (IOException ex) // This covers PathTooLongException.
+                catch (IOException ex)
                 {
+                    // This covers PathTooLongException.
                     EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DeploymentManager.GetSatellites: {0}", ex);
                     string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorGettingSatellite, item, ex.GetType(), ex.GetExceptionMessage());
                     warnings.Add(warning);
                 }
             }
+
             return satellites;
         }
 
-        /// <summary>
-        /// Gets the source path 
-        /// </summary>
         private string GetFullPathToDeploymentItemSource(string deploymentItemSourcePath, string testSource)
         {
             if (Path.IsPathRooted(deploymentItemSourcePath))
@@ -494,12 +540,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <summary>
         /// Validate the output directory for the parameter deployment item.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        /// <param name="deploymentItem">The deployment item.</param>
+        /// <param name="deploymentDirectory">The deployment directory.</param>
+        /// <param name="warnings">Warnings.</param>
+        /// <returns>True if valid.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private bool IsOutputDirectoryValid(DeploymentItem deploymentItem, string deploymentDirectory, IList<string> warnings)
         {
-            Debug.Assert(deploymentItem != null);
-            Debug.Assert(!string.IsNullOrEmpty(deploymentDirectory));
-            Debug.Assert(warnings != null);
+            Debug.Assert(deploymentItem != null, "deploymentItem should not be null.");
+            Debug.Assert(!string.IsNullOrEmpty(deploymentDirectory), "deploymentDirectory should not be null or empty.");
+            Debug.Assert(warnings != null, "warnings should not be null.");
 
             // Check that item.output dir does not go outside deployment Out dir, otherwise you can erase any file!
             string outputDir = deploymentDirectory;
@@ -508,13 +558,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 outputDir = Path.GetFullPath(Path.Combine(deploymentDirectory, deploymentItem.RelativeOutputDirectory));
 
                 // convert the short path to full length path (like joe~1.dom to joe.domain) and the comparison
-                // startsWith in the next loop will work for the matching paths. 
+                // startsWith in the next loop will work for the matching paths.
                 deploymentDirectory = Path.GetFullPath(deploymentDirectory);
             }
             catch (Exception e)
             {
-                string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToAccesOutputDirectory,
-                                deploymentItem.SourcePath, outputDir, e.GetType(), e.GetExceptionMessage());
+                string warning = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.DeploymentErrorFailedToAccesOutputDirectory,
+                    deploymentItem.SourcePath,
+                    outputDir,
+                    e.GetType(),
+                    e.GetExceptionMessage());
 
                 warnings.Add(warning);
                 return false;
@@ -522,8 +577,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             if (!outputDir.StartsWith(deploymentDirectory, StringComparison.OrdinalIgnoreCase))
             {
-                string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorBadDeploymentItem,
-                                                deploymentItem.SourcePath, deploymentItem.RelativeOutputDirectory);
+                string warning = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.DeploymentErrorBadDeploymentItem,
+                    deploymentItem.SourcePath,
+                    deploymentItem.RelativeOutputDirectory);
                 warnings.Add(warning);
 
                 return false;
@@ -532,14 +590,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return true;
         }
 
-        /// <summary>
-        /// Process new test source 
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings)
         {
             // Add deployment items and process .config files only for storages we have not processed before.
-
             string errorMessage;
             if (!this.deploymentItemUtility.IsValidDeploymentItem(testSource, string.Empty, out errorMessage))
             {
@@ -550,7 +604,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             this.deploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(testSource, string.Empty, DeploymentItemOriginType.TestStorage));
 
             // Deploy .config file if exists, only for assemlbies, i.e. DLL and EXE.
-            // First check <TestStorage>.config, then if not found check for App.Config 
+            // First check <TestStorage>.config, then if not found check for App.Config
             // and deploy AppConfig to <TestStorage>.config.
             if (this.assemblyUtility.IsAssemblyExtension(Path.GetExtension(testSource)))
             {
@@ -571,8 +625,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         }
 
         /// <summary>
-        /// Get the parent test results directory where deployment will be done. 
+        /// Get the parent test results directory where deployment will be done.
         /// </summary>
+        /// <param name="runContext">The run context.</param>
+        /// <returns>The test results directory.</returns>
         private string GetTestResultsDirectory(IRunContext runContext)
         {
             var tempDirectory = (!string.IsNullOrEmpty(runContext?.TestRunDirectory)) ?
@@ -589,6 +645,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <summary>
         /// Get root deployment directory
         /// </summary>
+        /// <param name="baseDirectory">The base directory.</param>
+        /// <returns>Root deployment directory.</returns>
         private string GetRootDeploymentDirectory(string baseDirectory)
         {
             string dateTimeSufix = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo);
@@ -608,45 +666,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
 
             return configFile;
-        }
-
-        internal string GetConfigFile(string testSource)
-        {
-            string configFile = null;
-
-            if (this.fileUtility.DoesFileExist(testSource + TestAssemblyConfigFileExtension))
-            {
-                // Path to config file cannot be bad: storage is already checked, and extension is valid.
-                configFile = testSource + TestAssemblyConfigFileExtension;
-            }
-            else
-            {
-                var netAppConfigFile = Path.Combine(Path.GetDirectoryName(testSource), NetAppConfigFile);
-                if (this.fileUtility.DoesFileExist(netAppConfigFile))
-                {
-                    configFile = netAppConfigFile;
-                }
-            }
-            return configFile;
-        }
-
-        /// <summary>
-        /// Log the parameter warnings on the parameter logger
-        /// </summary>
-        private static void LogWarnings(ITestExecutionRecorder testExecutionRecorder, IEnumerable<string> warnings)
-        {
-            if (warnings == null)
-            {
-                return;
-            }
-
-            Debug.Assert(testExecutionRecorder != null, "Logger should not be null");
-
-            // log the warnings
-            foreach (string warning in warnings)
-            {
-                testExecutionRecorder.SendMessage(TestMessageLevel.Warning, warning);
-            }
         }
     }
 }

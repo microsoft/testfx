@@ -14,6 +14,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     [Serializable]
     public sealed class TestMethod : ITestMethod
     {
+        #region Fields
+
+        /// <summary>
+        /// Member field for the property 'DeclaringClassFullName'
+        /// </summary>
+        private string declaringClassFullName = null;
+
+        #endregion
+
         public TestMethod(string name, string fullClassName, string assemblyName,  bool isAsync)
         {
             if (string.IsNullOrEmpty(assemblyName))
@@ -41,39 +50,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public string FullClassName { get; private set; }
 
         /// <summary>
-        /// Specifice the declaring class full name. This will be used while getting navigation data.
+        /// Gets or sets the declaring class full name. This will be used while getting navigation data.
         /// This will be null if FullClassName is same as DeclaringClassFullName.
         /// Reason to set to null in the above case is to minimise the transfer of data across appdomains and not have a perf hit.
         /// </summary>
-        public string DeclaringClassFullName 
+        public string DeclaringClassFullName
         {
             get
             {
-                return declaringClassFullName;
+                return this.declaringClassFullName;
             }
+
             set
             {
-                Debug.Assert(value != FullClassName);
-                declaringClassFullName = value;                
+                Debug.Assert(value != this.FullClassName, "FullClassName should not be null.");
+                this.declaringClassFullName = value;
             }
-               
         }
 
         /// <summary>
-        /// Specifies the name of the test assembly
+        /// Gets the name of the test assembly
         /// </summary>
         public string AssemblyName { get; private set; }
 
         /// <summary>
-        /// Specifies test method is async
+        /// Gets a value indicating whether specifies test method is async
         /// </summary>
         public bool IsAsync { get; private set; }
-
-        #region Fields
-        /// <summary>
-        /// Member field for the property 'DeclaringClassFullName'
-        /// </summary>
-        private string declaringClassFullName = null;
-        #endregion
     }
 }

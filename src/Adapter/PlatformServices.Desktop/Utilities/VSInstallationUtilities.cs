@@ -6,14 +6,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System;
     using System.Diagnostics;
     using System.IO;
-
-    using Microsoft.Win32;
-
-    using static System.String;
     using System.Runtime.InteropServices;
+    using Microsoft.Win32;
+    using static System.String;
 
     public static class VSInstallationUtilities
     {
+        /// <summary>
+        /// Public assemblies directory name
+        /// </summary>
+        private const string PublicAssembliesDirectoryName = "PublicAssemblies";
+
+        /// <summary>
+        /// Folder name of private assemblies
+        /// </summary>
+        private const string PrivateAssembliesFolderName = "PrivateAssemblies";
+
+        /// <summary>
+        /// The manifest file name to determine if it is running in portable mode
+        /// </summary>
+        private const string PortableVsTestManifestFilename = "Portable.VsTest.Manifest";
+
         private static string vsInstallPath = null;
 
         private static bool vsInstallPathEvaluated = false;
@@ -32,6 +45,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     try
                     {
                         vsInstallPath = null;
+
                         // Use the Setup API to find the installation folder for currently running VS instance.
                         var setupConfiguration = new SetupConfiguration() as ISetupConfiguration;
                         if (setupConfiguration != null)
@@ -51,26 +65,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                         vsInstallPathEvaluated = true;
                     }
                 }
+
                 return vsInstallPath;
             }
         }
 
         /// <summary>
-        /// Get path to public assemblies.
-        /// 
+        /// Gets path to public assemblies.
+        ///
         /// Returns null if VS is not installed on this machine.
         /// </summary>
         public static string PathToPublicAssemblies => GetFullPath(PublicAssembliesDirectoryName);
 
         /// <summary>
-        /// Get path to private assemblies.
-        /// 
+        /// Gets path to private assemblies.
+        ///
         /// Returns null if VS is not installed on this machine.
         /// </summary>
         public static string PathToPrivateAssemblies => GetFullPath(PrivateAssembliesFolderName);
 
         /// <summary>
-        /// Is Current process running in Portable Mode 
+        /// Is Current process running in Portable Mode
         /// </summary>
         /// <returns>True, if portable mode; false, otherwise</returns>
         public static bool IsCurrentProcessRunningInPortableMode()
@@ -79,12 +94,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         }
 
         /// <summary>
-        /// Is the EXE specified running in Portable Mode 
+        /// Is the EXE specified running in Portable Mode
         /// </summary>
+        /// <param name="exeName">EXE name.</param>
         /// <returns>True, if portable mode; false, otherwise</returns>
         public static bool IsProcessRunningInPortableMode(string exeName)
         {
-            // Get the directory of the exe 
+            // Get the directory of the exe
             var exeDir = Path.GetDirectoryName(exeName);
             if (!string.IsNullOrEmpty(exeDir))
             {
@@ -101,26 +117,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         }
 
         /// <summary>
-        /// Public assemblies directory name
-        /// </summary>
-        private const string PublicAssembliesDirectoryName = "PublicAssemblies";
-
-        /// <summary>
-        /// Folder name of private assemblies
-        /// </summary>
-        private const string PrivateAssembliesFolderName = "PrivateAssemblies";
-
-        /// <summary>
-        /// The manifest file name to determine if it is running in portable mode
-        /// </summary>
-        private const string PortableVsTestManifestFilename = "Portable.VsTest.Manifest";
-
-        /// <summary>
         /// Information about an instance of a product.
         /// </summary>
         [Guid("B41463C3-8866-43B5-BC33-2B0676F7F42E")]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+#pragma warning disable SA1201 // Elements must appear in the correct order
         public interface ISetupInstance
+#pragma warning restore SA1201 // Elements must appear in the correct order
         {
             /// <summary>
             /// Gets the instance identifier (should match the name of the parent instance directory).
@@ -176,7 +179,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             /// <summary>
             /// Resolves the optional relative path to the root path of the instance.
             /// </summary>
-            /// <param name="pwszRelativePath">A relative path within the instance to resolve, or NULL to get the root path.</param>
+            /// <param name="relativePath">A relative path within the instance to resolve, or NULL to get the root path.</param>
             /// <returns>The full path to the optional relative path within the instance. If the relative path is NULL, the root path will always terminate in a backslash.</returns>
             [return: MarshalAs(UnmanagedType.BStr)]
             string ResolvePath([In, MarshalAs(UnmanagedType.LPWStr)] string relativePath);

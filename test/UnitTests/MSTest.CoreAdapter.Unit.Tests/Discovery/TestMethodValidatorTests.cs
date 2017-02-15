@@ -6,24 +6,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     extern alias FrameworkV1;
     extern alias FrameworkV2;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-
     using System;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Reflection;
     using System.Threading.Tasks;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-
     using Moq;
-
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -85,7 +81,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             this.SetupTestMethod();
             var methodInfo = typeof(DummyTestClass).GetMethod(
-                "InternalTestMethod", 
+                "InternalTestMethod",
                 BindingFlags.Instance | BindingFlags.NonPublic);
 
             Assert.IsFalse(this.testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), this.warnings));
@@ -96,7 +92,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             this.SetupTestMethod();
             var methodInfo = typeof(DummyTestClass).GetMethod(
-                "AbstractTestMethod", 
+                "AbstractTestMethod",
                 BindingFlags.Instance | BindingFlags.Public);
 
             Assert.IsFalse(this.testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), this.warnings));
@@ -107,7 +103,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             this.SetupTestMethod();
             var methodInfo = typeof(DummyTestClass).GetMethod(
-                "StaticTestMethod", 
+                "StaticTestMethod",
                 BindingFlags.Static | BindingFlags.Public);
 
             Assert.IsFalse(this.testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), this.warnings));
@@ -127,7 +123,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             this.SetupTestMethod();
             var methodInfo = typeof(DummyTestClass).GetMethod(
-                "AsyncMethodWithVoidReturnType", 
+                "AsyncMethodWithVoidReturnType",
                 BindingFlags.Instance | BindingFlags.Public);
 
             Assert.IsFalse(this.testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), this.warnings));
@@ -138,7 +134,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             this.SetupTestMethod();
             var methodInfo = typeof(DummyTestClass).GetMethod(
-                "MethodWithTaskReturnType", 
+                "MethodWithTaskReturnType",
                 BindingFlags.Instance | BindingFlags.Public);
 
             Assert.IsFalse(this.testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), this.warnings));
@@ -149,7 +145,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             this.SetupTestMethod();
             var methodInfo = typeof(DummyTestClass).GetMethod(
-                "AsyncMethodWithTaskReturnType", 
+                "AsyncMethodWithTaskReturnType",
                 BindingFlags.Instance | BindingFlags.Public);
 
             Assert.IsTrue(this.testMethodValidator.IsValidTestMethod(methodInfo, this.type, this.warnings));
@@ -160,7 +156,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             this.SetupTestMethod();
             var methodInfo = typeof(DummyTestClass).GetMethod(
-                "MethodWithVoidReturnType", 
+                "MethodWithVoidReturnType",
                 BindingFlags.Instance | BindingFlags.Public);
 
             Assert.IsTrue(this.testMethodValidator.IsValidTestMethod(methodInfo, this.type, this.warnings));
@@ -175,17 +171,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
     #region Dummy types
 
+    public class DummyTestClassWithGenericMethods
+    {
+        public void GenericMethod<T>()
+        {
+        }
+    }
+
     internal abstract class DummyTestClass
     {
-        internal void InternalTestMethod()
+        public static void StaticTestMethod()
         {
         }
 
         public abstract void AbstractTestMethod();
-
-        public static void StaticTestMethod()
-        {
-        }
 
         public async void AsyncMethodWithVoidReturnType()
         {
@@ -205,11 +204,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         public void MethodWithVoidReturnType()
         {
         }
-    }
 
-    public class DummyTestClassWithGenericMethods
-    {
-        public void GenericMethod<T>()
+        internal void InternalTestMethod()
         {
         }
     }

@@ -9,8 +9,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    using PlatformServices.Interface.ObjectModel;
     using Moq;
+    using PlatformServices.Interface.ObjectModel;
 
     public class TestablePlatformServiceProvider : IPlatformServiceProvider
     {
@@ -86,7 +86,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
             get;
             set;
         }
-        
+
         public Mock<IThreadOperations> MockThreadOperations
         {
             get;
@@ -109,7 +109,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
 
         public IReflectionOperations ReflectionOperations
             => this.reflectionOperations ?? (this.reflectionOperations = new ReflectionOperations());
-        
+
         public ITestDataSource TestDataSource => this.MockTestDataSource.Object;
 
         public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties)

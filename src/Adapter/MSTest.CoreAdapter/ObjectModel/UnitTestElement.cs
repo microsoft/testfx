@@ -21,7 +21,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         /// <param name="testMethod"> The test method. </param>
         /// <exception cref="ArgumentNullException"> Thrown when method is null. </exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "3")]
         public UnitTestElement(TestMethod testMethod)
         {
             if (testMethod == null)
@@ -51,13 +50,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <summary>
         /// Gets or sets the test categories for test method.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public string[] TestCategory { get; set; }
 
         /// <summary>
         /// Gets or sets the traits for test method.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public Trait[] Traits { get; set; }
 
         /// <summary>
@@ -68,7 +65,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <summary>
         /// Gets or sets the deployment items for the test method.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         public KeyValuePair<string, string>[] DeploymentItems { get; set; }
 
         /// <summary>

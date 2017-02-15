@@ -7,6 +7,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// Internal implementation of TraceListenerManager exposed to the user.
     /// Responsible for performing Add(), Remove(), Close(), Dispose() operations on traceListener object.
@@ -14,15 +16,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     public class TraceListenerManager : ITraceListenerManager
     {
         /// <summary>
-        ///     Initializes a new instance of a TraceListenerManager object.
+        /// Initializes a new instance of the <see cref="TraceListenerManager"/> class.
         /// </summary>
+        /// <param name="outputWriter">A writer instance to log output messages.</param>
+        /// <param name="errorWriter">A writer instance to log error messages.</param>
         public TraceListenerManager(TextWriter outputWriter, TextWriter errorWriter)
-        {           
+        {
         }
 
         /// <summary>
         /// Returning as this feature is not supported in ASP .net and UWP
         /// </summary>
+        /// <param name="traceListener">The trace listener instance.</param>
         public void Add(ITraceListener traceListener)
         {
             return;
@@ -31,6 +36,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Returning as this feature is not supported in ASP .net and UWP
         /// </summary>
+        /// <param name="traceListener">The trace listener instance.</param>
         public void Close(ITraceListener traceListener)
         {
             return;
@@ -39,6 +45,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Returning as this feature is not supported in ASP .net and UWP
         /// </summary>
+        /// <param name="traceListener">The trace listener instance.</param>
         public void Dispose(ITraceListener traceListener)
         {
             return;
@@ -47,9 +54,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Returning as this feature is not supported in ASP .net and UWP
         /// </summary>
-        public void Remove(ITraceListener traceListner)
+        /// <param name="traceListener">The trace listener instance.</param>
+        public void Remove(ITraceListener traceListener)
         {
             return;
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

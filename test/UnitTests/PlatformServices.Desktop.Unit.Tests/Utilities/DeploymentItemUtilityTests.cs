@@ -5,6 +5,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
 {
     extern alias FrameworkV1;
     extern alias FrameworkV2;
+
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -27,19 +28,19 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
     [TestClass]
     public class DeploymentItemUtilityTests
     {
+        internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register(
+            "MSTestDiscoverer2.DeploymentItems",
+            "DeploymentItems",
+            typeof(KeyValuePair<string, string>[]),
+            TestPropertyAttributes.Hidden,
+            typeof(TestCase));
+
         private Mock<ReflectionUtility> mockReflectionUtility;
         private DeploymentItemUtility deploymentItemUtility;
         private ICollection<string> warnings;
 
         private string defaultDeploymentItemPath = @"c:\temp";
         private string defaultDeploymentItemOutputDirectory = "out";
-
-        internal static TestProperty DeploymentItemsProperty = TestProperty.Register(
-            "MSTestDiscoverer2.DeploymentItems",
-            "DeploymentItems",
-            typeof(KeyValuePair<string, string>[]),
-            TestPropertyAttributes.Hidden,
-            typeof(TestCase));
 
         [TestInitialize]
         public void TestInit()
@@ -63,14 +64,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         [TestMethod]
         public void GetClassLevelDeploymentItemsShouldReturnADeploymentItem()
         {
-            this.SetupDeploymentItems(
-                typeof(DeploymentItemUtilityTests),
-                new[]
+            var kvpArray = new[]
                     {
                         new KeyValuePair<string, string>(
                             this.defaultDeploymentItemPath,
                             this.defaultDeploymentItemOutputDirectory)
-                    });
+                    };
+            this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests), kvpArray);
 
             var deploymentItems = this.deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), this.warnings);
             var expectedDeploymentItems = new DeploymentItem[]
@@ -156,7 +156,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                                                        this.defaultDeploymentItemOutputDirectory)
                                                };
             this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests), deploymentItemAttributes);
-            
+
             var deploymentItems = this.deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), this.warnings);
 
             var expectedDeploymentItems = new DeploymentItem[]
@@ -206,7 +206,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                 memberInfo,
                 null,
                 this.warnings);
-            
+
             CollectionAssert.AreEqual(deploymentItemAttributes, deploymentItems.ToArray());
         }
 
@@ -265,7 +265,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                                                         this.defaultDeploymentItemPath + "\\temp2",
                                                         this.defaultDeploymentItemOutputDirectory)
                                                 };
-            
+
             // Act.
             var deploymentItems = this.deploymentItemUtility.GetDeploymentItems(
                 memberInfo,
@@ -313,7 +313,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                                                         this.defaultDeploymentItemPath + "\\temp1",
                                                         this.defaultDeploymentItemOutputDirectory)
                                                 };
-            
+
             // Act.
             var deploymentItems = this.deploymentItemUtility.GetDeploymentItems(
                 memberInfo,
@@ -434,14 +434,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         public void HasDeployItemsShouldReturnTrueWhenDeploymentItemsArePresent()
         {
             TestCase testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
-            testCase.SetPropertyValue(
-                DeploymentItemsProperty,
-                new[]
+            var kvpArray = new[]
                     {
                         new KeyValuePair<string, string>(
                             this.defaultDeploymentItemPath,
                             this.defaultDeploymentItemOutputDirectory)
-                    });
+                    };
+            testCase.SetPropertyValue(DeploymentItemsProperty, kvpArray);
 
             Assert.IsTrue(this.deploymentItemUtility.HasDeploymentItems(testCase));
         }

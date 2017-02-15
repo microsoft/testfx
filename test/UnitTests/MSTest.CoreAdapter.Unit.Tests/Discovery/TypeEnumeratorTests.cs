@@ -5,28 +5,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 {
     extern alias FrameworkV1;
     extern alias FrameworkV2;
-    
+
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
     using Moq;
-
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -75,7 +71,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), string.Empty);
 
             var tests = typeEnumerator.Enumerate(out this.warnings);
-            
+
             Assert.IsNotNull(tests);
             Assert.AreEqual(0, tests.Count);
         }
@@ -175,7 +171,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
                 rh => rh.IsAttributeDefined(methodInfo, typeof(UTF.IgnoreAttribute), false)).Returns(false);
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
-            
+
             Assert.IsNotNull(testElement);
             Assert.IsTrue(testElement.Ignored);
         }
@@ -320,7 +316,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockReflectHelper.Setup(rh => rh.GetCustomAttributes(It.IsAny<MemberInfo>(), typeof(UTF.DeploymentItemAttribute))).Returns(new Attribute[] { });
             this.testablePlatformServiceProvider.MockTestDeployment.Setup(
                 td => td.GetDeploymentItems(It.IsAny<MethodInfo>(), It.IsAny<Type>(), this.warnings))
-                .Returns((KeyValuePair<string, string>[]) null);
+                .Returns((KeyValuePair<string, string>[])null);
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
 
@@ -407,10 +403,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName)
         {
             return new TypeEnumerator(
-                type, 
-                assemblyName, 
-                this.mockReflectHelper.Object, 
-                this.mockTypeValidator.Object, 
+                type,
+                assemblyName,
+                this.mockReflectHelper.Object,
+                this.mockTypeValidator.Object,
                 this.mockTestMethodValidator.Object);
         }
 
@@ -433,5 +429,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
     }
 
-    #endregion 
+    #endregion
 }

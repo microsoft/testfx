@@ -3,12 +3,12 @@
 
 namespace MSTestv2UnitTestExtension
 {
-    using EnvDTE;
-    using Microsoft.VisualStudio.TestPlatform.TestGeneration.Data;
-    using Microsoft.VisualStudio.TestPlatform.TestGeneration.Model;
     using System;
     using System.ComponentModel.Composition;
     using System.Linq;
+    using EnvDTE;
+    using Microsoft.VisualStudio.TestPlatform.TestGeneration.Data;
+    using Microsoft.VisualStudio.TestPlatform.TestGeneration.Model;
     using VSLangProj;
 
     /// <summary>
@@ -55,7 +55,6 @@ namespace MSTestv2UnitTestExtension
         {
             get { return "MSTestv2"; }
         }
-
 
         public override string AssemblyName
         {
@@ -115,6 +114,5 @@ namespace MSTestv2UnitTestExtension
 
             return true;
         }
-
     }
 }

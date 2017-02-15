@@ -15,8 +15,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// Creates an instance of a given type in the test source host.
         /// </summary>
         /// <param name="type"> The type that needs to be created in the host. </param>
-        /// <param name="args">The arguments to pass to the constructor. 
-        /// This array of arguments must match in number, order, and type the parameters of the constructor to invoke. 
+        /// <param name="args">The arguments to pass to the constructor.
+        /// This array of arguments must match in number, order, and type the parameters of the constructor to invoke.
         /// Pass in null for a constructor with no arguments.
         /// </param>
         /// <returns> An instance of the type created in the host. </returns>

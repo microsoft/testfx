@@ -15,7 +15,7 @@ namespace MSTestAdapter.PlatformServices.CoreSystem.Tests
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    
+
     [TestClass]
     public class CoreReflectionOperationsTests
     {
@@ -32,7 +32,7 @@ namespace MSTestAdapter.PlatformServices.CoreSystem.Tests
             var minfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
 
             var attribs = this.reflectionOperations.GetCustomAttributes(minfo, false);
-            
+
             Assert.IsNotNull(attribs);
             Assert.AreEqual(2, attribs.Length);
 
@@ -106,8 +106,8 @@ namespace MSTestAdapter.PlatformServices.CoreSystem.Tests
 
             Assert.IsNotNull(attribs);
             Assert.AreEqual(2, attribs.Length);
-            
-            var expectedAttribs = new string[] { "DummyA : a", "DummyA : ba"};
+
+            var expectedAttribs = new string[] { "DummyA : a", "DummyA : ba" };
             CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
         }
 
@@ -148,7 +148,7 @@ namespace MSTestAdapter.PlatformServices.CoreSystem.Tests
 
             Assert.IsNotNull(attribs);
             Assert.AreEqual(2, attribs.Length);
-            
+
             var expectedAttribs = new string[] { "DummyA : derived", "DummyA : base", };
             CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
         }
@@ -229,6 +229,27 @@ namespace MSTestAdapter.PlatformServices.CoreSystem.Tests
             return attribValuePairs.ToArray();
         }
 
+        [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true)]
+        public class DummyAAttribute : Attribute
+        {
+            public DummyAAttribute(string foo)
+            {
+                this.Value = foo;
+            }
+
+            public string Value { get; set; }
+        }
+
+        [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = false)]
+        public class DummySingleAAttribute : Attribute
+        {
+            public DummySingleAAttribute(string foo)
+            {
+                this.Value = foo;
+            }
+
+            public string Value { get; set; }
+        }
 
         [DummyA("ba")]
         private class DummyBaseTestClass
@@ -257,28 +278,6 @@ namespace MSTestAdapter.PlatformServices.CoreSystem.Tests
             public void DummyTestMethod2()
             {
             }
-        }
-
-        [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true)]
-        public class DummyAAttribute : Attribute
-        {
-            public DummyAAttribute(string foo)
-            {
-                Value = foo;
-            }
-
-            public string Value { get; set; }
-        }
-
-        [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = false)]
-        public class DummySingleAAttribute : Attribute
-        {
-            public DummySingleAAttribute(string foo)
-            {
-                Value = foo;
-            }
-
-            public string Value { get; set; }
         }
     }
 }

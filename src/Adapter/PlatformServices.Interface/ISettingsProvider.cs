@@ -12,7 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
     public interface ISettingsProvider
     {
         /// <summary>
-        /// Load settings from the xml reader instance which are specific 
+        /// Load settings from the xml reader instance which are specific
         /// for the corresponding platform service.
         /// </summary>
         /// <param name="reader">
@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// <param name="source">
         /// source is used to find application base directory used for setting test context properties.
         /// </param>
-        /// <returns></returns>
+        /// <returns>Properties specific to the platform.</returns>
         IDictionary<string, object> GetProperties(string source);
     }
 }

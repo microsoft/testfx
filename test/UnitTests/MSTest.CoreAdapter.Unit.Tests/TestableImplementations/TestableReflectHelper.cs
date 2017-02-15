@@ -4,10 +4,10 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-    using System.Collections.Generic;
 
     /// <summary>
     /// A testable implementation of reflect helper.
@@ -16,18 +16,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
     {
         /// <summary>
         /// A dictionary to hold mock custom attributes. The int represents a hascode of
-        /// the Type of custom attribute and the level its applied at : 
+        /// the Type of custom attribute and the level its applied at :
         /// MemberTypes.All for assembly level
         /// MemberTypes.TypeInfo for class level
         /// MemberTypes.Method for method level
         /// </summary>
         private Dictionary<int, Attribute[]> customAttributes;
-        
+
         public TestableReflectHelper()
         {
             this.customAttributes = new Dictionary<int, Attribute[]>();
         }
-        
+
         public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
         {
             var hashcode = type.FullName.GetHashCode() + memberTypes.GetHashCode();
@@ -41,7 +41,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
             }
         }
 
-        public override Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo, Type type)
+        internal override Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo, Type type)
         {
             var hashcode = MemberTypes.All.GetHashCode() + type.FullName.GetHashCode();
 
@@ -55,7 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
             }
         }
 
-        public override Attribute[] GetCustomAttributes(MemberInfo memberInfo, Type type)
+        internal override Attribute[] GetCustomAttributes(MemberInfo memberInfo, Type type)
         {
             var hashcode = memberInfo.MemberType.GetHashCode() + type.FullName.GetHashCode();
 

@@ -8,91 +8,94 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
     using System.Collections.Generic;
     using System.Data;
     using System.Data.Common;
+    using System.Data.Odbc;
+    using System.Data.OleDb;
+    using System.Data.SqlClient;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
+    using System.Globalization;
     using System.IO;
     using System.Text;
     using ObjectModel;
-    using System.Data.OleDb;
-    using System.Data.Odbc;
-    using System.Data.SqlClient;
-    using System.Globalization;
 
     /// <summary>
     ///  Data connections based on direct DB implementations all derive from this one
     /// </summary>
     internal class TestDataConnectionSql : TestDataConnection
     {
-        #region Types
-        /// <summary>
-        /// Known OLE DB providers for MS SQL and Oracle.
-        /// </summary>
-        /// <remarks>
-        /// How Data Connection dialog maps to different providers:
-        /// SqlOleDb:   Data Source = MS SQL, Provider = OLE DB
-        /// SqlOleDb.1: Data Source = Other,  Provider = Microsoft OLE DB Provider for Sql Server
-        ///     Provider=SQLOLEDB;Data Source=SqlServer;Integrated Security=SSPI;Initial Catalog=DatabaseName
-        /// SQLNCLI.1:  Data Source = Other,  Provider = Sql Native Client
-        ///     Provider=SQLNCLI.1;Data Source=SqlServer;Integrated Security=SSPI;Initial Catalog=DatabaseName
-        /// </remarks>
-        protected static class KnownOleDbProviderNames
+        private string quoteSuffix;
+        private string quotePrefix;
+        private DbCommandBuilder commandBuilder;
+        private DbConnection connection;
+        private DbProviderFactory factory;
+
+        #region Constructor
+
+        internal protected TestDataConnectionSql(string invariantProviderName, string connectionString, List<string> dataFolders)
+            : base(dataFolders)
         {
-            internal const string SqlOleDb = "SQLOLEDB";
-            internal const string MSSqlNative = "SQLNCLI";
-            // Note MSDASQL (OLE DB Provider for ODBC) is not supported by .NET.
+            this.factory = DbProviderFactories.GetFactory(invariantProviderName);
+            WriteDiagnostics("DbProviderFactory {0}", this.factory);
+            Debug.Assert(this.factory != null, "factory should not be null.");
+
+            this.connection = this.factory.CreateConnection();
+            WriteDiagnostics("DbConnection {0}", this.connection);
+            Debug.Assert(this.connection != null, "connection");
+
+            this.commandBuilder = this.factory.CreateCommandBuilder();
+            WriteDiagnostics("DbCommandBuilder {0}", this.commandBuilder);
+            Debug.Assert(this.commandBuilder != null, "builder");
+
+            if (!string.IsNullOrEmpty(connectionString))
+            {
+                this.connection.ConnectionString = connectionString;
+                WriteDiagnostics("Current directory: {0}", Directory.GetCurrentDirectory());
+                WriteDiagnostics("Opening connection {0}: {1}", invariantProviderName, connectionString);
+                this.connection.Open();
+            }
+
+            WriteDiagnostics("Connection state is {0}", this.connection.State);
         }
 
-        /// <summary>
-        /// When querying for tables, metadata varies quite a bit from DB to DB
-        /// This struct encapsulates those variations
-        /// </summary>
-        protected struct SchemaMetaData
+        #endregion
+
+        #region Data Properties
+
+        public override DbConnection Connection
         {
-            // Name of a table containing tables or views
-            public string schemaTable;
-            // Column that contains schema names, if null, unused
-            public string schemaColumn;
-            // Column that contains the table names 
-            public string nameColumn;
-            // Column that contains a table "type", if null, type is unchecked
-            public string tableTypeColumn;
-            // If table type is available, it is checked to be one of the values on this list
-            public string[] validTableTypes;
-            // If schema is available, it is checked to not be one of the values on this list
-            public string[] invalidSchemas;
+            get { return this.connection; }
         }
 
-        protected virtual SchemaMetaData[] GetSchemaMetaData()
+        protected DbCommandBuilder CommandBuilder
         {
-            // A bare minimum set of things that should vaguely work for all databases
-            SchemaMetaData data = new SchemaMetaData();
-            data.schemaTable = "Tables";
-            data.schemaColumn = null;
-            data.nameColumn = "TABLE_NAME";
-            data.tableTypeColumn = null;
-            data.validTableTypes = null;
-            data.invalidSchemas = null;
-            return new SchemaMetaData[] { data };
+            get { return this.commandBuilder; }
         }
+
+        protected DbProviderFactory Factory
+        {
+            get { return this.factory; }
+        }
+
+        #endregion
 
         public static TestDataConnectionSql Create(string invariantProviderName, string connectionString, List<string> dataFolders)
         {
             Debug.Assert(!string.IsNullOrEmpty(invariantProviderName), "invariantProviderName");
+
             // unit tests pass a null for connection string, so let it pass. However, not all
             // providers can handle that, an example being ODBC
-
             WriteDiagnostics("CreateSql {0}, {1}", invariantProviderName, connectionString);
 
             // For invariant providers we recognize, we have specific sub-classes
-            if (String.Equals(invariantProviderName, "System.Data.SqlClient", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(invariantProviderName, "System.Data.SqlClient", StringComparison.OrdinalIgnoreCase))
             {
                 return new SqlDataConnection(invariantProviderName, connectionString, dataFolders);
             }
-            else if (String.Equals(invariantProviderName, "System.Data.OleDb", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(invariantProviderName, "System.Data.OleDb", StringComparison.OrdinalIgnoreCase))
             {
                 return new OleDataConnection(invariantProviderName, connectionString, dataFolders);
             }
-            else if (String.Equals(invariantProviderName, "System.Data.Odbc", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(invariantProviderName, "System.Data.Odbc", StringComparison.OrdinalIgnoreCase))
             {
                 return new OdbcDataConnection(invariantProviderName, connectionString, dataFolders);
             }
@@ -104,64 +107,112 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             }
         }
 
-        /// <summary>
-        /// Known ODBC drivers.
-        /// </summary>
-        /// <remarks>
-        /// sqlsrv32.dll: Driver={SQL Server};Server=SqlServer;Database=DatabaseName;Trusted_Connection=yes
-        /// msorcl32.dll: Driver={Microsoft ODBC for Oracle};Server=OracleServer;Uid=user;Pwd=password
-        /// </remarks>
-        protected static class KnownOdbcDrivers
+        protected virtual SchemaMetaData[] GetSchemaMetaData()
         {
-            internal const string MSSql = "sqlsrv32.dll";
-        }
-        #endregion
-
-        #region Constructor
-        internal protected TestDataConnectionSql(string invariantProviderName, string connectionString, List<string> dataFolders)
-            : base(dataFolders)
-        {
-            m_factory = DbProviderFactories.GetFactory(invariantProviderName);
-            WriteDiagnostics("DbProviderFactory {0}", m_factory);
-            Debug.Assert(m_factory != null);
-
-            m_connection = m_factory.CreateConnection();
-            WriteDiagnostics("DbConnection {0}", m_connection);
-            Debug.Assert(m_connection != null, "connection");
-
-            m_commandBuilder = m_factory.CreateCommandBuilder();
-            WriteDiagnostics("DbCommandBuilder {0}", m_commandBuilder);
-            Debug.Assert(m_commandBuilder != null, "builder");
-
-            if (!String.IsNullOrEmpty(connectionString))
+            // A bare minimum set of things that should vaguely work for all databases
+            SchemaMetaData data = new SchemaMetaData()
             {
-                m_connection.ConnectionString = connectionString;
-                WriteDiagnostics("Current directory: {0}", Directory.GetCurrentDirectory());
-                WriteDiagnostics("Opening connection {0}: {1}", invariantProviderName, connectionString);
-                m_connection.Open();
-            }
-
-            WriteDiagnostics("Connection state is {0}", m_connection.State);
+                SchemaTable = "Tables",
+                SchemaColumn = null,
+                NameColumn = "TABLE_NAME",
+                TableTypeColumn = null,
+                ValidTableTypes = null,
+                InvalidSchemas = null
+            };
+            return new SchemaMetaData[] { data };
         }
-        #endregion
 
         #region Quotes
+
+#pragma warning disable SA1201 // Elements must appear in the correct order
+        public virtual string QuotePrefix
+#pragma warning restore SA1201 // Elements must appear in the correct order
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(this.quotePrefix))
+                {
+                    this.GetQuoteLiterals();
+                }
+
+                return this.quotePrefix;
+            }
+
+            set
+            {
+                this.quotePrefix = value;
+            }
+        }
+
+        public virtual string QuoteSuffix
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(this.quoteSuffix))
+                {
+                    this.GetQuoteLiterals();
+                }
+
+                return this.quoteSuffix;
+            }
+
+            set
+            {
+                this.quoteSuffix = value;
+            }
+        }
+
+        private char CatalogSeperatorChar
+        {
+            get
+            {
+                if (this.CommandBuilder != null)
+                {
+                    string catalogSeperator = this.CommandBuilder.CatalogSeparator;
+                    if (!string.IsNullOrEmpty(catalogSeperator))
+                    {
+                        Debug.Assert(catalogSeperator.Length == 1, "catalogSeperator should have 1 element.");
+                        return catalogSeperator[0];
+                    }
+                }
+
+                return '.';
+            }
+        }
+
+        private char SchemaSeperatorChar
+        {
+            get
+            {
+                if (this.CommandBuilder != null)
+                {
+                    string schemaSeperator = this.CommandBuilder.SchemaSeparator;
+                    if (!string.IsNullOrEmpty(schemaSeperator))
+                    {
+                        Debug.Assert(schemaSeperator.Length == 1, "schemaSeperator should have 1 element.");
+                        return schemaSeperator[0];
+                    }
+                }
+
+                return '.';
+            }
+        }
 
         /// <summary>
         /// Take a possibly qualified name with at least minimal quoting
         /// and return a fully quoted string
         /// Take care to only convert names that are of a recognized form
         /// </summary>
-        /// <param name="tableName"></param>
-        /// <returns></returns>
+        /// <param name="tableName">The table name.</param>
+        /// <returns>A fully quoted string.</returns>
         public string PrepareNameForSql(string tableName)
         {
-            string[] parts = SplitName(tableName);
+            string[] parts = this.SplitName(tableName);
 
             if (parts != null && parts.Length > 0)
             {
                 // Seems to be well formed, so make sure we end up fully quoted
-                return JoinAndQuoteName(parts, true);
+                return this.JoinAndQuoteName(parts, true);
             }
             else
             {
@@ -174,6 +225,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// Take a possibly qualified name and break it down into an
         /// array of identifers unquoting any quoted names
         /// </summary>
+        /// <param name="name">A string.</param>
         /// <returns>An array of unquoted parts, or null if the name fails to conform</returns>
         public string[] SplitName(string name)
         {
@@ -183,12 +235,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             int end = name.Length;
             char firstDelimiter = ' '; // initialize since code analysis is not smart enough
             char currentDelimiter;
-            char catalogSeperatorChar = CatalogSeperatorChar;
-            char schemaSeperatorChar = SchemaSeperatorChar;
+            char catalogSeperatorChar = this.CatalogSeperatorChar;
+            char schemaSeperatorChar = this.SchemaSeperatorChar;
 
             while (here < end)
             {
-                int next = FindIdentifierEnd(name, here);
+                int next = this.FindIdentifierEnd(name, here);
                 string identifier = name.Substring(here, next - here);
 
                 if (string.IsNullOrEmpty(identifier))
@@ -197,9 +249,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     return null;
                 }
 
-                if (identifier.StartsWith(QuotePrefix, StringComparison.Ordinal))
+                if (identifier.StartsWith(this.QuotePrefix, StringComparison.Ordinal))
                 {
-                    identifier = UnquoteIdentifier(identifier);
+                    identifier = this.UnquoteIdentifier(identifier);
                 }
 
                 parts.Add(identifier);
@@ -218,6 +270,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                                 // Not well formed, split failed
                                 return null;
                             }
+
                             break;
 
                         case 2:
@@ -228,6 +281,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                                 // Not well formed, split failed
                                 return null;
                             }
+
                             break;
 
                         default:
@@ -262,81 +316,89 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// to reliably split the name again) or fully quote, therefore made suitable
         /// for a database query
         /// </summary>
-        /// <returns></returns>
+        /// <param name="parts">Name parts.</param>
+        /// <param name="fullyQuote">Should full quote.</param>
+        /// <returns>A qualified name</returns>
         public string JoinAndQuoteName(string[] parts, bool fullyQuote)
         {
             int partCount = parts.Length;
             StringBuilder result = new StringBuilder();
 
-            Debug.Assert(partCount > 0 && partCount < 4);
+            Debug.Assert(partCount > 0 && partCount < 4, "partCount should be 1,2 or 3.");
 
             int currentPart = 0;
             if (partCount > 2)
             {
-                result.Append(MaybeQuote(parts[currentPart++], fullyQuote));
-                result.Append(CommandBuilder.CatalogSeparator);
+                result.Append(this.MaybeQuote(parts[currentPart++], fullyQuote));
+                result.Append(this.CommandBuilder.CatalogSeparator);
             }
+
             if (partCount > 1)
             {
-                result.Append(MaybeQuote(parts[currentPart++], fullyQuote));
-                result.Append(CommandBuilder.SchemaSeparator);
+                result.Append(this.MaybeQuote(parts[currentPart++], fullyQuote));
+                result.Append(this.CommandBuilder.SchemaSeparator);
             }
-            result.Append(MaybeQuote(parts[currentPart], fullyQuote));
+
+            result.Append(this.MaybeQuote(parts[currentPart], fullyQuote));
             return result.ToString();
+        }
+
+        /// <summary>
+        /// Note that for Oledb and Odbc CommandBuilder.QuotePrefix/Suffix is empty.
+        /// So we use GetQuoteLiterals for those. For all others we use CommandBuilder.QuotePrefix/Suffix.
+        /// </summary>
+        public virtual void GetQuoteLiterals()
+        {
+            this.quotePrefix = this.CommandBuilder.QuotePrefix;
+            this.quoteSuffix = this.CommandBuilder.QuoteSuffix;
+        }
+
+        protected virtual string QuoteIdentifier(string identifier)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier should not be null.");
+            return this.CommandBuilder.QuoteIdentifier(identifier);
+        }
+
+        protected virtual string UnquoteIdentifier(string identifier)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier should not be null.");
+            return this.CommandBuilder.UnquoteIdentifier(identifier);
+        }
+
+        protected void GetQuoteLiteralsHelper()
+        {
+            // Try to get quote chars by hand for those providers that for some reason return empty QuotePrefix/Suffix.
+            string s = "abcdefgh";
+            string quoted = this.QuoteIdentifier(s);
+            string[] parts = quoted.Split(new string[] { s }, StringSplitOptions.None);
+
+            Debug.Assert(parts != null && parts.Length == 2, "TestDataConnectionSql.GetQuotesLiteralHelper: Failure when trying to quote an indentifier!");
+            Debug.Assert(!string.IsNullOrEmpty(parts[0]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuotePrefix!");
+            Debug.Assert(!string.IsNullOrEmpty(parts[1]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuoteSuffix!");
+
+            this.QuotePrefix = parts[0];
+            this.QuoteSuffix = parts[1];
         }
 
         private string MaybeQuote(string identifier, bool force)
         {
-            if (force || FindSeperators(identifier, 0) != -1)
+            if (force || this.FindSeperators(identifier, 0) != -1)
             {
-                return QuoteIdentifier(identifier);
+                return this.QuoteIdentifier(identifier);
             }
+
             return identifier;
         }
 
         /// <summary>
         /// Find the first seperator in a string
         /// </summary>
-        /// <param name="identifer"></param>
-        /// <param name="from"></param>
-        /// <returns></returns>
+        /// <param name="text">The string.</param>
+        /// <param name="from">Index.</param>
+        /// <returns>Location of the separator.</returns>
         private int FindSeperators(string text, int from)
         {
-            return text.IndexOfAny(new char[] { SchemaSeperatorChar, CatalogSeperatorChar }, from);
-        }
-
-        private char CatalogSeperatorChar
-        {
-            get
-            {
-                if (CommandBuilder != null)
-                {
-                    string catalogSeperator = CommandBuilder.CatalogSeparator;
-                    if (!String.IsNullOrEmpty(catalogSeperator))
-                    {
-                        Debug.Assert(catalogSeperator.Length == 1);
-                        return catalogSeperator[0];
-                    }
-                }
-                return '.';
-            }
-        }
-
-        private char SchemaSeperatorChar
-        {
-            get
-            {
-                if (CommandBuilder != null)
-                {
-                    string schemaSeperator = CommandBuilder.SchemaSeparator;
-                    if (!String.IsNullOrEmpty(schemaSeperator))
-                    {
-                        Debug.Assert(schemaSeperator.Length == 1);
-                        return schemaSeperator[0];
-                    }
-                }
-                return '.';
-            }
+            return text.IndexOfAny(new char[] { this.SchemaSeperatorChar, this.CatalogSeperatorChar }, from);
         }
 
         /// <summary>
@@ -344,31 +406,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// to be the start of an identifier, find the end of that
         /// identifier. Take into account quoting rules
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="start"></param>
+        /// <param name="text">The string.</param>
+        /// <param name="start">start index.</param>
         /// <returns>Position in string after end of identifier (may be off end of string)</returns>
         private int FindIdentifierEnd(string text, int start)
         {
             // These routine assumes prefixes and suffixes
             // are single characters
-
-            string prefix = QuotePrefix;
-            Debug.Assert(prefix.Length == 1);
+            string prefix = this.QuotePrefix;
+            Debug.Assert(prefix.Length == 1, "prefix lenght should be 1.");
             char prefixChar = prefix[0];
 
             int end = text.Length;
             if (text[start] == prefixChar)
             {
                 // Identifier is quoted. Repeatedly look for
-                // suffix character, until not found, 
+                // suffix character, until not found,
                 // the character after is end of string,
                 // or not another suffix character
 
                 // Skip opening quote
                 int here = start + 1;
 
-                string suffix = QuoteSuffix;
-                Debug.Assert(suffix.Length == 1);
+                string suffix = this.QuoteSuffix;
+                Debug.Assert(suffix.Length == 1, "suffix lenght should be 1.");
                 char suffixChar = suffix[0];
 
                 while (here < end)
@@ -392,8 +453,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     }
 
                     // We have a double quote, skip the second one, then keep looking
-                    here = here + 1; ;
+                    here = here + 1;
                 }
+
                 // If we fall off end of loop,
                 // we didn't find the matching close quote
                 // Best thing to do is to just return the whole string
@@ -404,164 +466,45 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 // In the case of an unquoted strings, the processing is much
                 // simpler... the end is end of string, or the first
                 // of several possible separators.
-                int seperatorPosition = FindSeperators(text, start);
+                int seperatorPosition = this.FindSeperators(text, start);
                 return seperatorPosition == -1 ? end : seperatorPosition;
             }
         }
 
-
-        protected virtual string QuoteIdentifier(string identifier)
-        {
-            Debug.Assert(!string.IsNullOrEmpty(identifier));
-            return CommandBuilder.QuoteIdentifier(identifier);
-        }
-
-        protected virtual string UnquoteIdentifier(string identifier)
-        {
-            Debug.Assert(!string.IsNullOrEmpty(identifier));
-            return CommandBuilder.UnquoteIdentifier(identifier);
-        }
-
-        /// <summary>
-        /// Note that for Oledb and Odbc CommandBuilder.QuotePrefix/Suffix is empty.
-        /// So we use GetQuoteLiterals for those. For all others we use CommandBuilder.QuotePrefix/Suffix.
-        /// </summary>
-        public virtual void GetQuoteLiterals()
-        {
-            m_quotePrefix = CommandBuilder.QuotePrefix;
-            m_quoteSuffix = CommandBuilder.QuoteSuffix;
-        }
-
-        protected void GetQuoteLiteralsHelper()
-        {
-            // Try to get quote chars by hand for those providers that for some reason return empty QuotePrefix/Suffix.
-            string s = "abcdefgh";
-            string quoted = QuoteIdentifier(s);
-            string[] parts = quoted.Split(new string[] { s }, StringSplitOptions.None);
-
-            Debug.Assert(parts != null && parts.Length == 2, "TestDataConnectionSql.GetQuotesLiteralHelper: Failure when trying to quote an indentifier!");
-            Debug.Assert(!string.IsNullOrEmpty(parts[0]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuotePrefix!");
-            Debug.Assert(!string.IsNullOrEmpty(parts[1]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuoteSuffix!");
-
-            QuotePrefix = parts[0];
-            QuoteSuffix = parts[1];
-        }
-
-        public virtual string QuotePrefix
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(m_quotePrefix))
-                {
-                    GetQuoteLiterals();
-                }
-                return m_quotePrefix;
-            }
-
-            set { m_quotePrefix = value; }
-        }
-
-        public virtual string QuoteSuffix
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(m_quoteSuffix))
-                {
-                    GetQuoteLiterals();
-                }
-                return m_quoteSuffix;
-            }
-
-            set { m_quoteSuffix = value; }
-        }
-        #endregion
-
-        #region Data Properties
-        protected DbCommandBuilder CommandBuilder
-        {
-            get { return m_commandBuilder; }
-        }
-
-        public override DbConnection Connection
-        {
-            get { return m_connection; }
-        }
-
-        protected DbProviderFactory Factory
-        {
-            get { return m_factory; }
-        }
         #endregion
 
         #region Schema
+
+#pragma warning disable SA1202 // Elements must be ordered by access
+
         /// <summary>
-        /// Returns default database schema, can be null if there is no default schema like for Excel. 
+        /// Returns default database schema, can be null if there is no default schema like for Excel.
         /// Can throw.
         /// </summary>
+        /// <returns>The default database schema.</returns>
         public virtual string GetDefaultSchema()
         {
             return null;
         }
 
-        /// <summary>
-        /// Returns qualified data table name, formatted for display in Data Table list or use in
-        /// code or test files. Note that this may not return a suitable string for SQL
-        /// </summary>
-        /// <param name="tableSchema">Schema part of qualified table name. Quoted or not quoted.</param>
-        /// <param name="tableName">Table name. Quoted or not quoted.</param>
-        protected string FormatTableNameForDisplay(string tableSchema, string tableName)
-        {
-            // Note: schema can be null/empty, that is OK
-
-            Debug.Assert(!string.IsNullOrEmpty(tableName), "FormatDataTableNameForDisplay should be called only when table name is not empty.");
-
-            if (string.IsNullOrEmpty(tableSchema))
-            {
-                return JoinAndQuoteName(new string[] { tableName }, false); ;
-            }
-            else
-            {
-                return JoinAndQuoteName(new string[] { tableSchema, tableName }, false); ;
-            }
-        }
-
-        /// <summary>
-        /// Just a helper method to see if a string is in a string array
-        /// Note that the array can be null, this is treated as an empty array
-        /// </summary>
-        /// <param name="candidate"></param>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        static bool IsInArray(string candidate, string[] values)
-        {
-            if (values != null)
-            {
-                foreach (string value in values)
-                {
-                    if (string.Equals(value, candidate, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
+#pragma warning restore SA1202 // Elements must be ordered by access
 
         /// <summary>
         /// Returns list of data tables and views. Sorted.
         /// Any errors, return an empty list
         /// </summary>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        /// <returns>List of sorted tables and views.</returns>
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public override List<string> GetDataTablesAndViews()
         {
             WriteDiagnostics("GetDataTablesAndViews");
             List<string> tableNames = new List<string>();
             try
             {
-                string defaultSchema = GetDefaultSchema();
+                string defaultSchema = this.GetDefaultSchema();
                 WriteDiagnostics("Default schema is {0}", defaultSchema);
 
-                SchemaMetaData[] metadatas = GetSchemaMetaData();
+                SchemaMetaData[] metadatas = this.GetSchemaMetaData();
 
                 // TODO: may be find better way to enumerate tables/views.
                 foreach (SchemaMetaData metadata in metadatas)
@@ -569,12 +512,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     DataTable dataTable = null;
                     try
                     {
-                        WriteDiagnostics("Getting schema table {0}", metadata.schemaTable);
-                        dataTable = Connection.GetSchema(metadata.schemaTable);
+                        WriteDiagnostics("Getting schema table {0}", metadata.SchemaTable);
+                        dataTable = this.Connection.GetSchema(metadata.SchemaTable);
                     }
                     catch (Exception ex)
                     {
                         WriteDiagnostics("Failed to get schema table");
+
                         // This can be normal case as some providers do not support views.
                         EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, "DataUtil.GetDataTablesAndViews: exception (can be normal case as some providers do not support views): " + ex);
                         continue;
@@ -589,14 +533,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                         bool isDefaultSchema = false;
 
                         // Check the table type for validity
-                        if (metadata.tableTypeColumn != null)
+                        if (metadata.TableTypeColumn != null)
                         {
-                            if (row[metadata.tableTypeColumn] != DBNull.Value)
+                            if (row[metadata.TableTypeColumn] != DBNull.Value)
                             {
-                                string tableType = row[metadata.tableTypeColumn] as string;
-                                if (!IsInArray(tableType, metadata.validTableTypes))
+                                string tableType = row[metadata.TableTypeColumn] as string;
+                                if (!IsInArray(tableType, metadata.ValidTableTypes))
                                 {
                                     WriteDiagnostics("Table type {0} is not acceptable", tableType);
+
                                     // Not a valid table type, get the next row
                                     continue;
                                 }
@@ -604,13 +549,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                         }
 
                         // Get the schema name, and filter bad schemas
-                        if (row[metadata.schemaColumn] != DBNull.Value)
+                        if (row[metadata.SchemaColumn] != DBNull.Value)
                         {
-                            tableSchema = row[metadata.schemaColumn] as string;
+                            tableSchema = row[metadata.SchemaColumn] as string;
 
-                            if (IsInArray(tableSchema, metadata.invalidSchemas))
+                            if (IsInArray(tableSchema, metadata.InvalidSchemas))
                             {
                                 WriteDiagnostics("Schema {0} is not acceptable", tableSchema);
+
                                 // A table in a schema we do not want to see, get the next row
                                 continue;
                             }
@@ -618,18 +564,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                             isDefaultSchema = string.Equals(tableSchema, defaultSchema, StringComparison.OrdinalIgnoreCase);
                         }
 
-                        string tableName = row[metadata.nameColumn] as string;
-                        WriteDiagnostics("Table {0}{1} found", tableSchema != null ? tableSchema + "." : "", tableName);
+                        string tableName = row[metadata.NameColumn] as string;
+                        WriteDiagnostics("Table {0}{1} found", tableSchema != null ? tableSchema + "." : string.Empty, tableName);
 
                         // If schema is defined and is not equal to default, prepend table schema in front of the table.
                         string qualifiedTableName = tableName;
                         if (isDefaultSchema)
                         {
-                            qualifiedTableName = FormatTableNameForDisplay(null, tableName);
+                            qualifiedTableName = this.FormatTableNameForDisplay(null, tableName);
                         }
                         else
                         {
-                            qualifiedTableName = FormatTableNameForDisplay(tableSchema, tableName);
+                            qualifiedTableName = this.FormatTableNameForDisplay(tableSchema, tableName);
                         }
 
                         WriteDiagnostics("Adding Table {0}", qualifiedTableName);
@@ -641,35 +587,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             }
             catch (Exception e)
             {
-                WriteDiagnostics("Failed to fetch tables for {0}, exception: {1}", Connection.ConnectionString, e);
+                WriteDiagnostics("Failed to fetch tables for {0}, exception: {1}", this.Connection.ConnectionString, e);
+
                 // OK to fall through and return whatever we do have...
             }
 
             return tableNames;
         }
 
-        /// <summary>
-        /// Split a table name into schema and table name, providing default
-        /// schema if available
-        /// </summary>
-        /// <param name="tableName"></param>
-        /// <param name="?"></param>
-        /// <param name="?"></param>
-        protected void SplitTableName(string name, out string schemaName, out string tableName)
-        {
-            // Split the name because we need to separately look for
-            // tableSchema and tableName 
-            string[] parts = SplitName(name);
-
-            Debug.Assert(parts.Length > 0);
-
-            // Right now this processing ignores any three part names (where the catalog is specified)
-            // We use the default schema if the name does not specify one explicitly
-            schemaName = parts.Length > 1 ? parts[parts.Length - 2] : GetDefaultSchema();
-            tableName = parts[parts.Length - 1];
-        }
-
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public override List<string> GetColumns(string tableName)
         {
             WriteDiagnostics("GetColumns for {0}", tableName);
@@ -677,22 +603,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             {
                 string targetSchema;
                 string targetName;
-                SplitTableName(tableName, out targetSchema, out targetName);
+                this.SplitTableName(tableName, out targetSchema, out targetName);
 
                 // This lets us specifically query for columns from the appropriate table name
                 // but assumes all databases have the same restrictions on all the column
                 // schema tables
-                //
-                string[] restrictions = new string[4] {
+                string[] restrictions = new string[4]
+                {
                     null,               // Catalog (don't care)
                     targetSchema,       // Table schema
                     targetName,         // Table name
-                    null };             // Column name (don't care)
+                    null
+                };             // Column name (don't care)
 
                 DataTable columns = null;
                 try
                 {
-                    columns = Connection.GetSchema("Columns", restrictions);
+                    columns = this.Connection.GetSchema("Columns", restrictions);
                 }
                 catch (System.NotSupportedException e)
                 {
@@ -723,56 +650,139 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             {
                 WriteDiagnostics("GetColumns for {0}, failed {1}", tableName, e);
             }
+
             return null; // Some problem occurred
+        }
+
+        /// <summary>
+        /// Split a table name into schema and table name, providing default
+        /// schema if available
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="schemaName">The schema name output.</param>
+        /// <param name="tableName">The table name output.</param>
+        protected void SplitTableName(string name, out string schemaName, out string tableName)
+        {
+            // Split the name because we need to separately look for
+            // tableSchema and tableName
+            string[] parts = this.SplitName(name);
+
+            Debug.Assert(parts.Length > 0, "parts should have more than one element.");
+
+            // Right now this processing ignores any three part names (where the catalog is specified)
+            // We use the default schema if the name does not specify one explicitly
+            schemaName = parts.Length > 1 ? parts[parts.Length - 2] : this.GetDefaultSchema();
+            tableName = parts[parts.Length - 1];
+        }
+
+        /// <summary>
+        /// Returns qualified data table name, formatted for display in Data Table list or use in
+        /// code or test files. Note that this may not return a suitable string for SQL
+        /// </summary>
+        /// <param name="tableSchema">Schema part of qualified table name. Quoted or not quoted.</param>
+        /// <param name="tableName">Table name. Quoted or not quoted.</param>
+        /// <returns>Qualified data table name.</returns>
+        protected string FormatTableNameForDisplay(string tableSchema, string tableName)
+        {
+            // Note: schema can be null/empty, that is OK
+            Debug.Assert(!string.IsNullOrEmpty(tableName), "FormatDataTableNameForDisplay should be called only when table name is not empty.");
+
+            if (string.IsNullOrEmpty(tableSchema))
+            {
+                return this.JoinAndQuoteName(new string[] { tableName }, false);
+            }
+            else
+            {
+                return this.JoinAndQuoteName(new string[] { tableSchema, tableName }, false);
+            }
+        }
+
+        /// <summary>
+        /// Just a helper method to see if a string is in a string array
+        /// Note that the array can be null, this is treated as an empty array
+        /// </summary>
+        /// <param name="candidate">The string.</param>
+        /// <param name="values">An array of values.</param>
+        /// <returns>True if string exists in array.</returns>
+        private static bool IsInArray(string candidate, string[] values)
+        {
+            if (values != null)
+            {
+                foreach (string value in values)
+                {
+                    if (string.Equals(value, candidate, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         #endregion
 
         #region Helpers
 
+#pragma warning disable SA1202 // Elements must be ordered by access
+        public bool IsOpen()
+#pragma warning restore SA1202 // Elements must be ordered by access
+        {
+            return this.connection != null ? this.connection.State == ConnectionState.Open : false;
+        }
+
+        /// <summary>
+        /// Returns true when given provider (OLEDB or ODBC) is for MSSql.
+        /// </summary>
+        /// <param name="providerName">OLEDB or ODBC provider.</param>
+        /// <returns>True if provider is for MSSql.</returns>
+        protected static bool IsMSSql(string providerName)
+        {
+            return (!string.IsNullOrEmpty(providerName) &&
+                (providerName.StartsWith(KnownOleDbProviderNames.SqlOleDb, StringComparison.OrdinalIgnoreCase) ||
+                 providerName.StartsWith(KnownOleDbProviderNames.MSSqlNative, StringComparison.OrdinalIgnoreCase))) ||
+                 string.Equals(providerName, KnownOdbcDrivers.MSSql, StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>
         /// Classify a table schema as being hidden from the user
         /// This helps to hide system tables such as INFORMATION_SCHEMA.COLUMNS
         /// </summary>
         /// <param name="tableSchema">A candidate table schema</param>
-        /// <returns></returns>
+        /// <returns>True always.</returns>
         protected virtual bool IsUserSchema(string tableSchema)
         {
             // Default is to allow all schemas
             return true;
         }
 
-        [SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public bool IsOpen()
-        {
-            return m_connection != null ? m_connection.State == ConnectionState.Open : false;
-        }
-
         /// <summary>
         /// Returns default database schema. Returns null for error
         /// this.Connection must be already opened.
         /// </summary>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        /// <returns>The default db schema.</returns>
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         protected string GetDefaultSchemaMSSql()
         {
-            Debug.Assert(Connection != null);
+            Debug.Assert(this.Connection != null, "Connection should not be null.");
 
             try
             {
-                OleDbConnection oleDbConnection = Connection as OleDbConnection;
-                OdbcConnection odbcConnection = Connection as OdbcConnection;
-                Debug.Assert(Connection is SqlConnection ||
-                    oleDbConnection != null && IsMSSql(oleDbConnection.Provider) ||
-                    odbcConnection != null && IsMSSql(odbcConnection.Driver),
+                OleDbConnection oleDbConnection = this.Connection as OleDbConnection;
+                OdbcConnection odbcConnection = this.Connection as OdbcConnection;
+                Debug.Assert(
+                    this.Connection is SqlConnection ||
+                    (oleDbConnection != null && IsMSSql(oleDbConnection.Provider)) ||
+                    (odbcConnection != null && IsMSSql(odbcConnection.Driver)),
                     "GetDefaultSchemaMSSql should be called only for MS SQL (either native or Ole Db or Odbc).");
 
-                Debug.Assert(IsOpen(), "The connection must aready be open!");
-                Debug.Assert(!string.IsNullOrEmpty(Connection.ServerVersion), "GetDefaultSchema: the ServerVersion is null or empty!");
+                Debug.Assert(this.IsOpen(), "The connection must aready be open!");
+                Debug.Assert(!string.IsNullOrEmpty(this.Connection.ServerVersion), "GetDefaultSchema: the ServerVersion is null or empty!");
 
-                int index = Connection.ServerVersion.IndexOf(".", StringComparison.Ordinal);
+                int index = this.Connection.ServerVersion.IndexOf(".", StringComparison.Ordinal);
                 Debug.Assert(index > 0, "GetDefaultSchema: index should be 0");
 
-                string versionString = Connection.ServerVersion.Substring(0, index);
+                string versionString = this.Connection.ServerVersion.Substring(0, index);
                 Debug.Assert(!string.IsNullOrEmpty(versionString), "GetDefaultSchema: version string is not present!");
 
                 int version = int.Parse(versionString, CultureInfo.InvariantCulture);
@@ -782,7 +792,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     "select default_schema_name from sys.database_principals where name = user_name()" :
                     "select user_name()";
 
-                using (DbCommand cmd = Connection.CreateCommand())
+                using (DbCommand cmd = this.Connection.CreateCommand())
                 {
                     cmd.CommandText = sql;
                     string defaultSchema = cmd.ExecuteScalar() as string;
@@ -794,50 +804,41 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 // Any problems, at least return null, which says there is no default
                 WriteDiagnostics("Got an exception trying to determine default schema: {0}", e);
             }
+
             return null;
         }
 
-        /// <summary>
-        /// Returns true when given provider (OLEDB or ODBC) is for MSSql.
-        /// </summary>
-        /// <param name="providerName">OLEDB or ODBC provider.</param>
-        /// <returns></returns>
-        protected static bool IsMSSql(string providerName)
-        {
-            return !string.IsNullOrEmpty(providerName) &&
-                (providerName.StartsWith(KnownOleDbProviderNames.SqlOleDb, StringComparison.OrdinalIgnoreCase) ||
-                 providerName.StartsWith(KnownOleDbProviderNames.MSSqlNative, StringComparison.OrdinalIgnoreCase)) ||
-                 string.Equals(providerName, KnownOdbcDrivers.MSSql, StringComparison.OrdinalIgnoreCase);
-        }
         #endregion
 
         #region Data
+
         /// <summary>
         /// Read a table from the connection, into a DataTable
         /// Code used to be in UnitTestDataManager
         /// </summary>
-        /// <param name="providerName"></param>
-        /// <param name="connection"></param>
-        /// <param name="tableName"></param>
+        /// <param name="tableName">The table name.</param>
+        /// <param name="columns">Columns.</param>
         /// <returns>new DataTable</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security ")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Un-tested. Leaving behavior as is.")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security", Justification = "Not passed in from the user.")]
+#pragma warning disable SA1202 // Elements must be ordered by access
         public override DataTable ReadTable(string tableName, IEnumerable columns)
+#pragma warning restore SA1202 // Elements must be ordered by access
         {
-            using (DbDataAdapter dataAdapter = Factory.CreateDataAdapter())
-            using (DbCommand command = Factory.CreateCommand())
+            using (DbDataAdapter dataAdapter = this.Factory.CreateDataAdapter())
+            using (DbCommand command = this.Factory.CreateCommand())
             {
                 // We need to escape bad characters in table name like [Sheet1$] in Excel.
                 // But if table name is quoted in terms of provider, don't touch it to avoid e.g. [dbo.tables.etc].
-                string quotedTableName = PrepareNameForSql(tableName);
+                string quotedTableName = this.PrepareNameForSql(tableName);
                 if (EqtTrace.IsInfoEnabled)
                 {
                     EqtTrace.Info("ReadTable: data driven test: got table name from attribute: {0}", tableName);
                     EqtTrace.Info("ReadTable: data driven test: will use table name: {0}", tableName);
                 }
 
-                command.Connection = Connection;
-                command.CommandText = String.Format(CultureInfo.InvariantCulture, "select {0} from {1}", GetColumnsSQL(columns), quotedTableName);
+                command.Connection = this.Connection;
+                command.CommandText = string.Format(CultureInfo.InvariantCulture, "select {0} from {1}", this.GetColumnsSQL(columns), quotedTableName);
 
                 WriteDiagnostics("ReadTable: SQL Query: {0}", command.CommandText);
                 dataAdapter.SelectCommand = command;
@@ -851,7 +852,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             }
         }
 
-        string GetColumnsSQL(IEnumerable columns)
+        private string GetColumnsSQL(IEnumerable columns)
         {
             string result = null;
             if (columns != null)
@@ -863,39 +864,96 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     {
                         builder.Append(',');
                     }
-                    builder.Append(QuoteIdentifier(columnName));
+
+                    builder.Append(this.QuoteIdentifier(columnName));
                 }
+
                 result = builder.ToString();
             }
 
             // Return a valid list of columns, or default to * for all columns
-            return !String.IsNullOrEmpty(result) ? result : "*";
+            return !string.IsNullOrEmpty(result) ? result : "*";
         }
 
         #endregion
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2215:Dispose methods should call base class dispose")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2215:Dispose methods should call base class dispose", Justification = "Un-tested. Just preserving behavior.")]
+#pragma warning disable SA1202 // Elements must be ordered by access
         public override void Dispose()
+#pragma warning restore SA1202 // Elements must be ordered by access
         {
             // Ensure that we Dispose of all disposables...
-
-            if (m_commandBuilder != null)
+            if (this.commandBuilder != null)
             {
-                m_commandBuilder.Dispose();
+                this.commandBuilder.Dispose();
             }
 
-            if (m_connection != null)
+            if (this.connection != null)
             {
-                m_connection.Dispose();
+                this.connection.Dispose();
             }
 
             GC.SuppressFinalize(this);
         }
 
-        private string m_quoteSuffix;
-        private string m_quotePrefix;
-        private DbCommandBuilder m_commandBuilder;
-        private DbConnection m_connection;
-        private DbProviderFactory m_factory;
+        #region Types
+
+        /// <summary>
+        /// When querying for tables, metadata varies quite a bit from DB to DB
+        /// This struct encapsulates those variations
+        /// </summary>
+        protected struct SchemaMetaData
+        {
+            // Name of a table containing tables or views
+            public string SchemaTable;
+
+            // Column that contains schema names, if null, unused
+            public string SchemaColumn;
+
+            // Column that contains the table names
+            public string NameColumn;
+
+            // Column that contains a table "type", if null, type is unchecked
+            public string TableTypeColumn;
+
+            // If table type is available, it is checked to be one of the values on this list
+            public string[] ValidTableTypes;
+
+            // If schema is available, it is checked to not be one of the values on this list
+            public string[] InvalidSchemas;
+        }
+
+        /// <summary>
+        /// Known OLE DB providers for MS SQL and Oracle.
+        /// </summary>
+        /// <remarks>
+        /// How Data Connection dialog maps to different providers:
+        /// SqlOleDb:   Data Source = MS SQL, Provider = OLE DB
+        /// SqlOleDb.1: Data Source = Other,  Provider = Microsoft OLE DB Provider for Sql Server
+        ///     Provider=SQLOLEDB;Data Source=SqlServer;Integrated Security=SSPI;Initial Catalog=DatabaseName
+        /// SQLNCLI.1:  Data Source = Other,  Provider = Sql Native Client
+        ///     Provider=SQLNCLI.1;Data Source=SqlServer;Integrated Security=SSPI;Initial Catalog=DatabaseName
+        /// </remarks>
+        protected static class KnownOleDbProviderNames
+        {
+            internal const string SqlOleDb = "SQLOLEDB";
+            internal const string MSSqlNative = "SQLNCLI";
+
+            // Note MSDASQL (OLE DB Provider for ODBC) is not supported by .NET.
+        }
+
+        /// <summary>
+        /// Known ODBC drivers.
+        /// </summary>
+        /// <remarks>
+        /// sqlsrv32.dll: Driver={SQL Server};Server=SqlServer;Database=DatabaseName;Trusted_Connection=yes
+        /// msorcl32.dll: Driver={Microsoft ODBC for Oracle};Server=OracleServer;Uid=user;Pwd=password
+        /// </remarks>
+        protected static class KnownOdbcDrivers
+        {
+            internal const string MSSql = "sqlsrv32.dll";
+        }
+
+        #endregion
     }
 }

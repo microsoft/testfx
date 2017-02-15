@@ -7,41 +7,38 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     extern alias FrameworkV2;
     extern alias FrameworkV2CoreExtension;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-
     using System;
     using System.Collections.Generic;
     using System.Reflection;
 
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class TestMethodFilterTests
     {
-        private TestMethodFilter TestMethodFilter { get; set; }
-        
         public TestMethodFilterTests()
         {
             this.TestMethodFilter = new TestMethodFilter();
         }
-        
+
+        private TestMethodFilter TestMethodFilter { get; set; }
+
         [TestMethod]
         public void PropertyProviderForFullyQualifiedNamePropertyReturnFullyQualifiedNameTestProperty()
         {
             TestProperty property = this.TestMethodFilter.PropertyProvider("FullyQualifiedName");
             Assert.AreEqual("FullyQualifiedName", property.Label);
         }
-        
+
         [TestMethod]
         public void PropertyProviderForClassNamePropertyReturnClassNameTestProperty()
         {
@@ -104,13 +101,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var type = typeof(DummyTestClassWithTestMethods);
             var fullName = $"{type.FullName}.{"TestMethod"}";
-            
+
             TestCase testCase = new TestCase(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 
             var result = this.TestMethodFilter.PropertyValueProvider(testCase, "FullyQualifiedName");
             Assert.AreEqual(fullName, result);
         }
-        
+
         [TestMethod]
         public void GetFilterExpressionForNullRunContextReturnsNull()
         {
@@ -149,7 +146,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(TestMessageLevel.Error, recorder.TestMessageLevel);
         }
 
-
         [UTF.TestClass]
         internal class DummyTestClassWithTestMethods
         {
@@ -176,38 +172,43 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private class TestableRunContext : IRunContext
         {
-            private readonly Func<ITestCaseFilterExpression> GetFilter;
+            private readonly Func<ITestCaseFilterExpression> getFilter;
 
             public TestableRunContext(Func<ITestCaseFilterExpression> getFilter)
             {
-                this.GetFilter = getFilter;
+                this.getFilter = getFilter;
             }
-                    
+
             public IRunSettings RunSettings { get; }
+
+            public bool KeepAlive { get; }
+
+            public bool InIsolation { get; }
+
+            public bool IsDataCollectionEnabled { get; }
+
+            public bool IsBeingDebugged { get; }
+
+            public string TestRunDirectory { get; }
+
+            public string SolutionDirectory { get; }
 
             public ITestCaseFilterExpression GetTestCaseFilter(
                 IEnumerable<string> supportedProperties,
                 Func<string, TestProperty> propertyProvider)
             {
-                return this.GetFilter();
+                return this.getFilter();
             }
-            
-            public bool KeepAlive { get; }
-            public bool InIsolation { get; }
-            public bool IsDataCollectionEnabled { get; }
-            public bool IsBeingDebugged { get; }
-            public string TestRunDirectory { get; }
-            public string SolutionDirectory { get; }
         }
 
         private class TestableTestCaseFilterExpression : ITestCaseFilterExpression
         {
+            public string TestCaseFilterValue { get; }
+
             public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
             {
                 throw new NotImplementedException();
             }
-
-            public string TestCaseFilterValue { get; }
         }
     }
 }

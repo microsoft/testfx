@@ -60,7 +60,7 @@
     <Compile Include="Deployment\DeploymentItemTests.cs" />
     <Compile Include="Deployment\TestRunDirectoriesTests.cs" />
     <Compile Include="Extensions\ExceptionExtensionsTests.cs" />
-    <Compile Include="Services\DesktopAdapterSettingsTests.cs" />
+    <Compile Include="Services\MSTestAdapterSettingsTests.cs" />
     <Compile Include="Services\DesktopReflectionOperationsTests.cs" />
     <Compile Include="Services\DesktopThreadOperationsTests.cs" />
     <Compile Include="Services\DesktopSettingsProviderTests.cs" />

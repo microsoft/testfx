@@ -55,7 +55,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
                     catch (ThreadAbortException)
                     {
                         isThreadAbortThrown = true;
-                        
+
                         // Resetting abort because there is a warning being thrown in the tests pane.
                         Thread.ResetAbort();
                     }
@@ -63,7 +63,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 
             Assert.IsFalse(this.asyncOperations.Execute(action, 1));
             timeoutMutex.Set();
-            
+
             Assert.IsFalse(hasReachedEnd);
             Assert.IsTrue(isThreadAbortThrown);
         }
@@ -81,9 +81,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
                     apartmentState = Thread.CurrentThread.GetApartmentState();
                     isBackground = Thread.CurrentThread.IsBackground;
                 };
-            
+
             Assert.IsTrue(this.asyncOperations.Execute(action, 100));
-            
+
             Assert.AreEqual("MSTestAdapter Thread", name);
             Assert.AreEqual(Thread.CurrentThread.GetApartmentState(), apartmentState);
             Assert.IsTrue(isBackground);
@@ -93,9 +93,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         public void ExecuteWithAbortSafetyShouldCatchThreadAbortExceptionsAndResetAbort()
         {
             Action action = () => Thread.CurrentThread.Abort();
-            
+
             var exception = ActionUtility.PerformActionAndReturnException(() => this.asyncOperations.ExecuteWithAbortSafety(action));
-            
+
             Assert.IsNotNull(exception);
             Assert.AreEqual(typeof(TargetInvocationException), exception.GetType());
             Assert.AreEqual(typeof(ThreadAbortException), exception.InnerException.GetType());

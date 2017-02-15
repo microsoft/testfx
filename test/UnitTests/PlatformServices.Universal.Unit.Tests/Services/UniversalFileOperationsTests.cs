@@ -8,12 +8,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
     using System;
     using System.IO;
     using System.Reflection;
-
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
-    using global::MSTestAdapter.TestUtilities;
-
     using FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using global::MSTestAdapter.TestUtilities;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
     /// <summary>
     /// The universal file operations tests.

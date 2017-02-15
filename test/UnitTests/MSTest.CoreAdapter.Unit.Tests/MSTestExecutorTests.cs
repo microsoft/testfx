@@ -5,22 +5,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 {
     extern alias FrameworkV1;
 
-    using Moq;
-    using MSTest.TestAdapter;
-    using MSTest.TestAdapter.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+    using Moq;
+    using MSTest.TestAdapter;
+    using MSTest.TestAdapter.ObjectModel;
     using TestPlatform.ObjectModel.Adapter;
-
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
     public class MSTestExecutorTests
@@ -68,7 +66,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
             this.mstestExecutor.RunTests(tests, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
 
-            //Test should not start if TestSettings is given.
+            // Test should not start if TestSettings is given.
             this.mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
         }
 
@@ -88,7 +86,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
             this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
 
-            //Test should not start if TestSettings is given.
+            // Test should not start if TestSettings is given.
             this.mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
         }
     }

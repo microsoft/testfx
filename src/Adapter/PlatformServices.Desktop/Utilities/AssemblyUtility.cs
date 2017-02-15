@@ -77,6 +77,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -104,7 +105,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             {
                 // Happens when file is not a DLL/EXE, etc.
             }
-            
+
             // If file cannot be found we will throw.
             // If there's anything else like SecurityException - we just pass exception through.
             return false;
@@ -125,7 +126,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                         "AssemblyUtilities.GetSatelliteAssemblies: the specified file '{0}' is not managed assembly.",
                         assemblyPath);
                 Debug.Fail("AssemblyUtilities.GetSatelliteAssemblies: the file '" + assemblyPath + "' is not an assembly.");
-                
+
                 // If e.g. this is unmanaged dll, we don't care about the satellites.
                 return new List<string>();
             }
@@ -176,7 +177,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         }
 
         /// <summary>
-        /// Returns the dependent assemblies of the parameter assembly. 
+        /// Returns the dependent assemblies of the parameter assembly.
         /// </summary>
         /// <param name="assemblyPath"> Path to assembly to get dependencies for. </param>
         /// <param name="configFile"> Config file to use while trying to resolve dependencies. </param>
@@ -196,7 +197,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             AppDomainUtilities.SetConfigurationFile(setupInfo, configFile);
 
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: Using config file: '{0}'.", setupInfo.ConfigurationFile);
-            
+
             setupInfo.LoaderOptimization = LoaderOptimization.MultiDomainHost;
 
             AppDomain appDomain = null;
@@ -209,7 +210,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 }
 
                 var assemblyResolverType = typeof(AssemblyResolver);
-                
+
                 EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
 
                 // This has to be LoadFrom, otherwise we will have to use AssemblyResolver to find self.
@@ -222,8 +223,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 {
                     // This has to be Load, otherwise Serialization of argument types will not work correctly.
                     AssemblyLoadWorker worker =
-                        (AssemblyLoadWorker)
-                        AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
+                        (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
 
                     EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
 

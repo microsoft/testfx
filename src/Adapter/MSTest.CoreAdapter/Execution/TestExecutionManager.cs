@@ -6,17 +6,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.Linq;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// Class responsible for execution of tests at assembly level and sending tests via framework handle
@@ -32,7 +31,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Dictionary for test run parameters
         /// </summary>
         private IDictionary<string, object> sessionParameters;
-        
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Justification = "Need to over-write the keys in dictionary.")]
         public TestExecutionManager()
         {
@@ -41,12 +40,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Used for filtering tests
+        /// Gets or sets method filter for filtering tests
         /// </summary>
         private TestMethodFilter TestMethodFilter { get; set; }
 
         /// <summary>
-        /// Returns true if any test executed by this has failed.
+        /// Gets or sets a value indicating whether any test executed has failed.
         /// </summary>
         private bool HasAnyTestFailed { get; set; }
 
@@ -65,7 +64,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             Debug.Assert(runCancellationToken != null, "runCancellationToken");
 
             this.cancellationToken = runCancellationToken;
-            
+
             var isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
 
             // Placing this after deployment since we need information post deployment that we pass in as properties.
@@ -83,26 +82,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
         {
             this.cancellationToken = cancellationToken;
-            
+
             var discoverySink = new TestCaseDiscoverySink();
 
             var tests = new List<TestCase>();
 
-            //deploy everything first.
+            // deploy everything first.
             foreach (var source in sources)
             {
                 if (this.cancellationToken.Canceled)
                 {
                     break;
                 }
-                
+
                 var logger = (IMessageLogger)frameworkHandle;
-                
+
                 // discover the tests
                 this.GetUnitTestDiscoverer().DiscoverTestsInSource(source, logger, discoverySink, runContext?.RunSettings);
                 tests.AddRange(discoverySink.Tests);
 
-                //Clear discoverSinksTests so that it just stores test for one source at one point of time
+                // Clear discoverSinksTests so that it just stores test for one source at one point of time
                 discoverySink.Tests.Clear();
             }
 
@@ -123,12 +122,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Execute the parameter tests
         /// </summary>
+        /// <param name="tests">Tests to execute.</param>
+        /// <param name="runContext">The run context.</param>
+        /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
+        /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
         internal virtual void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
         {
-            var testsBySource = (from test in tests
+            var testsBySource = from test in tests
                                  group test by test.Source into testGroup
-                                 select new { Source = testGroup.Key, Tests = testGroup });
-
+                                 select new { Source = testGroup.Key, Tests = testGroup };
 
             foreach (var group in testsBySource)
             {
@@ -136,17 +138,63 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
         }
 
+        internal virtual UnitTestDiscoverer GetUnitTestDiscoverer()
+        {
+            return new UnitTestDiscoverer();
+        }
+
+        internal void SendTestResults(TestCase test, UnitTestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime, ITestExecutionRecorder testExecutionRecorder)
+        {
+            if (!(unitTestResults?.Length > 0))
+            {
+                return;
+            }
+
+            foreach (var unitTestResult in unitTestResults)
+            {
+                if (test == null)
+                {
+                    continue;
+                }
+
+                var testResult = unitTestResult.ToTestResult(test, startTime, endTime, MSTestSettings.CurrentSettings.MapInconclusiveToFailed);
+
+                if (unitTestResult.DatarowIndex >= 0)
+                {
+                    testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, unitTestResult.DatarowIndex);
+                }
+
+                testExecutionRecorder.RecordEnd(test, testResult.Outcome);
+
+                if (testResult.Outcome == TestOutcome.Failed)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
+                    this.HasAnyTestFailed = true;
+                }
+
+                try
+                {
+                    testExecutionRecorder.RecordResult(testResult);
+                }
+                catch (TestCanceledException)
+                {
+                    // Ignore this exception
+                }
+            }
+        }
+
         /// <summary>
         /// Execute the parameter tests present in parameter source
         /// </summary>
-        private void ExecuteTestsInSource(IEnumerable<TestCase> tests,
-                                         IRunContext runContext,
-                                         ITestExecutionRecorder testExecutionRecorder,
-                                         string source,
-                                         bool isDeploymentDone)
+        /// <param name="tests">Tests to execute.</param>
+        /// <param name="runContext">The run context.</param>
+        /// <param name="testExecutionRecorder">Handle to record test start/end/results.</param>
+        /// <param name="source">The test container for the tests.</param>
+        /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
+        private void ExecuteTestsInSource(IEnumerable<TestCase> tests, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, string source, bool isDeploymentDone)
         {
             Debug.Assert(!string.IsNullOrEmpty(source), "Source cannot be empty");
-            
+
             source = isDeploymentDone
                          ? Path.Combine(
                              PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory(),
@@ -161,7 +209,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 this.ExecuteTestsWithTestRunner(tests, runContext, testExecutionRecorder, source, testRunner);
 
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}",
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                    "Executed tests belonging to source {0}",
                     source);
             }
         }
@@ -220,7 +269,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     }
                     else
                     {
-                        //this is done so that appropriate values of testcontext properties are set at source level
+                        // this is done so that appropriate values of testcontext properties are set at source level
                         // and are merged with session level parameters
                         var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
 
@@ -228,7 +277,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         {
                             sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
                         }
-                        
+
                         unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
                     }
 
@@ -266,16 +315,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Send last test result
                 this.SendTestResults(test, unitTestResult, startTime, endTime, testExecutionRecorder);
             }
+
             this.LogWarnings(testExecutionRecorder, warnings);
         }
 
-        internal virtual UnitTestDiscoverer GetUnitTestDiscoverer()
-        {
-            return new UnitTestDiscoverer();
-        } 
-
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes",
-            Justification = "Requirement is to handle errors in user specified run parameters")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]
         private void CacheSessionParameters(IRunContext runContext, ITestExecutionRecorder testExecutionRecorder)
         {
             if (!string.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))
@@ -297,10 +341,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
         }
-        
+
         /// <summary>
         /// Log the parameter warnings on the parameter logger
         /// </summary>
+        /// <param name="testExecutionRecorder">Handle to record test start/end/results/messages.</param>
+        /// <param name="warnings">Any warnings during run operation.</param>
         private void LogWarnings(ITestExecutionRecorder testExecutionRecorder, IEnumerable<string> warnings)
         {
             if (warnings == null)
@@ -314,46 +360,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             foreach (string warning in warnings)
             {
                 testExecutionRecorder.SendMessage(TestMessageLevel.Warning, warning);
-            }
-        }
-
-        internal void SendTestResults(TestCase test, UnitTestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime, ITestExecutionRecorder testExecutionRecorder)
-        {
-            if (!(unitTestResults?.Length > 0))
-            {
-                return;
-            }
-
-
-            foreach (var unitTestResult in unitTestResults)
-            {
-                if (test == null)
-                {
-                    continue;
-                }
-
-                var testResult = unitTestResult.ToTestResult(test, startTime, endTime, MSTestSettings.CurrentSettings.MapInconclusiveToFailed);
-
-                if (unitTestResult.DatarowIndex >= 0)
-                {
-                    testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, unitTestResult.DatarowIndex);
-                }
-                testExecutionRecorder.RecordEnd(test, testResult.Outcome);
-
-                if (testResult.Outcome == TestOutcome.Failed)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
-                    this.HasAnyTestFailed = true;
-                }
-
-                try
-                {
-                    testExecutionRecorder.RecordResult(testResult);
-                }
-                catch (TestCanceledException)
-                {
-                    // Ignore this exception
-                }
             }
         }
     }

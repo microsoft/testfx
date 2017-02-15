@@ -5,17 +5,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 {
     extern alias FrameworkV1;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-    using ExpectedException = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute;
-    
     using System;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-    
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using ExpectedException = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+
     /// <summary>
     /// Tests for <see cref="ExceptionExtensions"/> class.
     /// </summary>
@@ -101,18 +99,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             exception.TryGetMessage();
         }
 
-        internal class DummyException : Exception
-        {
-            private readonly Func<string> getMessage;
-
-            public DummyException(Func<string> message)
-            {
-                this.getMessage = message;
-            }
-
-            public override string Message => this.getMessage();
-        }
-
         #endregion
 
         #region TryGetStackTraceInformation scenarios
@@ -164,6 +150,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             }
 
             public override string StackTrace => this.getStackTrace();
+        }
+
+        internal class DummyException : Exception
+        {
+            private readonly Func<string> getMessage;
+
+            public DummyException(Func<string> message)
+            {
+                this.getMessage = message;
+            }
+
+            public override string Message => this.getMessage();
         }
 
         #endregion

@@ -14,11 +14,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
     using ISettingsProvider = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ISettingsProvider;
-    
+
+#pragma warning disable SA1649 // File name must match first type name
+
     /// <summary>
     /// Class to read settings from the runsettings xml for the desktop.
     /// </summary>
     public class MSTestSettingsProvider : ISettingsProvider
+#pragma warning restore SA1649 // File name must match first type name
     {
         /// <summary>
         /// Member variable for Adapter settings
@@ -26,7 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private static MSTestAdapterSettings settings;
 
         /// <summary>
-        /// Gets settings provided to the adapter. 
+        /// Gets settings provided to the adapter.
         /// </summary>
         public static MSTestAdapterSettings Settings
         {
@@ -70,7 +73,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// <summary>
     /// Adapter Settings for the run
     /// </summary>
+#pragma warning disable SA1402
     public class MSTestAdapterSettings
+#pragma warning restore SA1402
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MSTestAdapterSettings"/> class.
@@ -91,9 +96,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Gets a value indicating whether deployment directory has to be deleted after test run.
         /// </summary>
         public bool DeleteDeploymentDirectoryAfterTestRunIsComplete { get; private set; }
-        
+
         /// <summary>
-        ///  It contains a list of path with property recursive or non recursive.
+        ///  Gets list of paths recursive or non recursive paths.
         /// </summary>
         protected List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
 
@@ -107,7 +112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             ValidateArg.NotNull<XmlReader>(reader, "reader");
 
-            // Expected format of the xml is: - 
+            // Expected format of the xml is: -
             //
             // <MSTestV2>
             //     <DeploymentEnabled>true</DeploymentEnabled>
@@ -118,9 +123,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             //          <Directory path= ".\DirectoryName" />  ...// by default includeSubDirectories is false
             //     </AssemblyResolution>
             // </MSTestV2>
-            
             MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
-            
+
             if (!reader.IsEmptyElement)
             {
                 reader.Read();
@@ -169,52 +173,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return settings;
         }
 
-        private void ReadAssemblyResolutionPath(XmlReader reader)
+        public static bool IsAppDomainCreationDisabled(string settingsXml)
         {
-            ValidateArg.NotNull<XmlReader>(reader, "reader");
-
-            // Expected format of the xml is: - 
-            //
-            // <AssemblyResolution>
-            //     <Directory path= "% HOMEDRIVE %\direvtory "includeSubDirectories = "true" />
-            //     <Directory path= "C:\windows" includeSubDirectories = "false" />
-            //     <Directory path= ".\DirectoryName" />  ...// by default includeSubDirectories is false
-            // </AssemblyResolution>
-
-            bool empty = reader.IsEmptyElement;
-            reader.Read();
-
-            if (!empty)
+            bool disableAppDomain = false;
+            if (!string.IsNullOrEmpty(settingsXml))
             {
-                while (reader.NodeType == XmlNodeType.Element)
+                StringReader stringReader = new StringReader(settingsXml);
+                XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+
+                if (reader.ReadToFollowing("DisableAppDomain"))
                 {
-                    if (String.Compare("Directory", reader.Name, StringComparison.OrdinalIgnoreCase) == 0)
-                    {
-                        string recursiveAttribute = reader.GetAttribute("includeSubDirectories");
-
-                        // read the path specified 
-                        string path = reader.GetAttribute("path");
-
-                        if (!string.IsNullOrEmpty(path))
-                        {
-                            // Do we have to look in sub directory for dependent dll.
-                            var includeSubDirectories = String.Compare(recursiveAttribute, "true", StringComparison.OrdinalIgnoreCase) == 0;
-                            this.SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
-                        }
-                    }
-                    else
-                    {
-                        string message = String.Format(CultureInfo.CurrentCulture, Resource.InvalidSettingsXmlElement, reader.Name, "AssemblyResolution");
-                        throw new SettingsException(message);
-                    }
-
-                    // Move to the next element under tag AssemblyResolution
-                    reader.Read();
+                    bool.TryParse(reader.ReadInnerXml(), out disableAppDomain);
                 }
             }
 
-            // go to the end of the element. 
-            reader.ReadEndElement();
+            return disableAppDomain;
         }
 
         /// <summary>
@@ -223,6 +196,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// it will return an list {{c:\a\b, true}, {e:\balh\foo, true}, {c:\somedirectory, true}}
         /// </summary>
         /// <param name="baseDirectory">the base directory for relative path.</param>
+        /// <returns>RecursiveDirectoryPath information.</returns>
         public List<RecursiveDirectoryPath> GetDirectoryListWithRecursiveProperty(string baseDirectory)
         {
             List<RecursiveDirectoryPath> directoriesList = new List<RecursiveDirectoryPath>();
@@ -230,7 +204,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             foreach (RecursiveDirectoryPath recPath in this.SearchDirectories)
             {
                 // If path has environment variable, then resolve it
-                string directorypath = ResolveEnvironmentVariableAndReturnFullPathIfExist(recPath.DirectoryPath, baseDirectory);
+                string directorypath = this.ResolveEnvironmentVariableAndReturnFullPathIfExist(recPath.DirectoryPath, baseDirectory);
 
                 if (!string.IsNullOrEmpty(directorypath))
                 {
@@ -262,7 +236,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 // If the path is a relative path, expand it relative to the base directory
                 if (!Path.IsPathRooted(path))
                 {
-                    if (!String.IsNullOrEmpty(baseDirectory))
+                    if (!string.IsNullOrEmpty(baseDirectory))
                     {
                         path = Path.Combine(baseDirectory, path);
                     }
@@ -274,6 +248,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         {
                             EqtTrace.Warning(warningMessage);
                         }
+
                         return null;
                     }
                 }
@@ -281,7 +256,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 try
                 {
                     // Get the full path.
-                    // This will cleanup the path converting any "..\" to the appropariate value 
+                    // This will cleanup the path converting any "..\" to the appropariate value
                     // and convert any alternative directory seperators to "\"
                     path = Path.GetFullPath(path);
                 }
@@ -314,27 +289,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return null;
         }
 
-        public static bool IsAppDomainCreationDisabled(string settingsXml)
-        {
-            bool disableAppDomain = false;
-            if (!string.IsNullOrEmpty(settingsXml))
-            {
-                StringReader stringReader = new StringReader(settingsXml);
-                XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-
-                if (reader.ReadToFollowing("DisableAppDomain"))
-                {
-                    bool.TryParse(reader.ReadInnerXml(), out disableAppDomain);
-                }
-            }
-            return disableAppDomain;
-        }
-
         /// <summary>
         /// Verifies if a directory exists.
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
+        /// <param name="path">path</param>
+        /// <returns>True if directory exists.</returns>
         /// <remarks>Only present for unit testing scenarios.</remarks>
         protected virtual bool DoesDirectoryExist(string path)
         {
@@ -344,12 +303,59 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Expands any environment variables in the path provided.
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
+        /// <param name="path">path</param>
+        /// <returns>expanded string</returns>
         /// <remarks>Only present for unit testing scenarios.</remarks>
         protected virtual string ExpandEnvironmentVariables(string path)
         {
             return Environment.ExpandEnvironmentVariables(path);
+        }
+
+        private void ReadAssemblyResolutionPath(XmlReader reader)
+        {
+            ValidateArg.NotNull<XmlReader>(reader, "reader");
+
+            // Expected format of the xml is: -
+            //
+            // <AssemblyResolution>
+            //     <Directory path= "% HOMEDRIVE %\direvtory "includeSubDirectories = "true" />
+            //     <Directory path= "C:\windows" includeSubDirectories = "false" />
+            //     <Directory path= ".\DirectoryName" />  ...// by default includeSubDirectories is false
+            // </AssemblyResolution>
+            bool empty = reader.IsEmptyElement;
+            reader.Read();
+
+            if (!empty)
+            {
+                while (reader.NodeType == XmlNodeType.Element)
+                {
+                    if (string.Compare("Directory", reader.Name, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        string recursiveAttribute = reader.GetAttribute("includeSubDirectories");
+
+                        // read the path specified
+                        string path = reader.GetAttribute("path");
+
+                        if (!string.IsNullOrEmpty(path))
+                        {
+                            // Do we have to look in sub directory for dependent dll.
+                            var includeSubDirectories = string.Compare(recursiveAttribute, "true", StringComparison.OrdinalIgnoreCase) == 0;
+                            this.SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
+                        }
+                    }
+                    else
+                    {
+                        string message = string.Format(CultureInfo.CurrentCulture, Resource.InvalidSettingsXmlElement, reader.Name, "AssemblyResolution");
+                        throw new SettingsException(message);
+                    }
+
+                    // Move to the next element under tag AssemblyResolution
+                    reader.Read();
+                }
+            }
+
+            // go to the end of the element.
+            reader.ReadEndElement();
         }
     }
 }

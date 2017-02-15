@@ -7,27 +7,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     extern alias FrameworkV2;
     extern alias FrameworkV2CoreExtension;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-
     using System;
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-
     using Moq;
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -56,7 +53,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         private readonly TestClassInfo testClassInfo;
 
         private readonly UTF.ExpectedExceptionAttribute expectedException;
-        
+
         public TestMethodInfoTests()
         {
             this.constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
@@ -69,18 +66,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
             this.testContextImplementation = new TestContextImplementation(testMethod, null, new Dictionary<string, object>());
             this.testClassInfo = new TestClassInfo(
-                type: typeof(DummyTestClass), 
-                constructor: this.constructorInfo, 
-                testContextProperty: this.testContextProperty, 
-                classAttribute: this.classAttribute, 
+                type: typeof(DummyTestClass),
+                constructor: this.constructorInfo,
+                testContextProperty: this.testContextProperty,
+                classAttribute: this.classAttribute,
                 parent: this.testAssemblyInfo);
             this.expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
             this.testMethodInfo = new TestMethodInfo(
-                this.methodInfo, 
-                timeout: 3600 * 1000, 
-                executor: this.testMethodAttribute, 
+                this.methodInfo,
+                timeout: 3600 * 1000,
+                executor: this.testMethodAttribute,
                 expectedException: null,
-                parent: this.testClassInfo, 
+                parent: this.testClassInfo,
                 testContext: this.testContextImplementation);
 
             // Reset test hooks
@@ -100,11 +97,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => { methodCalled = true; });
             var asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod");
             var method = new TestMethodInfo(
-                asyncMethodInfo, 
-                3600 * 1000, 
-                this.testMethodAttribute, 
+                asyncMethodInfo,
+                3600 * 1000,
+                this.testMethodAttribute,
                 null,
-                this.testClassInfo, 
+                this.testClassInfo,
                 this.testContextImplementation);
 
             var result = method.Invoke(null);
@@ -148,8 +145,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var result = this.testMethodInfo.Invoke(null);
 
             var errorMessage = string.Format(
-                Resource.UTA_InstanceCreationError, 
-                typeof(DummyTestClass).FullName, 
+                Resource.UTA_InstanceCreationError,
+                typeof(DummyTestClass).FullName,
                 "System.NotImplementedException: dummyExceptionMessage");
             Assert.AreEqual(errorMessage, result.TestFailureException.Message);
         }
@@ -163,8 +160,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var result = method.Invoke(null);
             var errorMessage = string.Format(
-                Resource.UTA_InstanceCreationError, 
-                typeof(DummyTestClassWithParameterizedCtor).FullName, 
+                Resource.UTA_InstanceCreationError,
+                typeof(DummyTestClassWithParameterizedCtor).FullName,
                 "System.Reflection.TargetParameterCountException: Parameter count mismatch.");
 
             Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
@@ -180,7 +177,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.IsNotNull(exception);
             StringAssert.StartsWith(
-                exception?.StackTraceInformation.ErrorStackTrace, 
+                exception?.StackTraceInformation.ErrorStackTrace,
                 "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows>b__");
         }
 
@@ -194,7 +191,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var exception = method.Invoke(null).TestFailureException as TestFailedException;
 
             Assert.IsNotNull(exception);
-            StringAssert.StartsWith(exception?.StackTraceInformation.ErrorStackTrace, 
+            StringAssert.StartsWith(
+                exception?.StackTraceInformation.ErrorStackTrace,
                 "    at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)");
         }
 
@@ -202,9 +200,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestMethodInfoInvokeShouldSetResultFilesIfTestContextHasAttachments()
         {
             Mock<ITestContext> testContext = new Mock<ITestContext>();
-            testContext.Setup(tc => tc.GetResultFiles()).Returns(new List<string>() {"C:\\temp.txt"});
+            testContext.Setup(tc => tc.GetResultFiles()).Returns(new List<string>() { "C:\\temp.txt" });
 
-            var method = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute, null, testClassInfo, testContext.Object);
+            var method = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute, null, this.testClassInfo, testContext.Object);
 
             var result = method.Invoke(null);
             CollectionAssert.Contains(result.ResultFiles.ToList(), "C:\\temp.txt");
@@ -269,8 +267,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var exception = this.testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
 
             var errorMessage = string.Format(
-                Resource.UTA_TestContextSetError, 
-                typeof(DummyTestClass).FullName, 
+                Resource.UTA_TestContextSetError,
+                typeof(DummyTestClass).FullName,
                 "System.NotImplementedException: dummyExceptionMessage");
             Assert.IsNotNull(exception);
             Assert.AreEqual(errorMessage, exception?.Message);
@@ -284,7 +282,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var exception = this.testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
 
             Assert.IsNotNull(exception);
-            StringAssert.StartsWith(exception?.StackTraceInformation.ErrorStackTrace, 
+            StringAssert.StartsWith(
+                exception?.StackTraceInformation.ErrorStackTrace,
                 "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows>b__");
         }
 
@@ -333,8 +332,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var expectedCallOrder = new List<string>
                                         {
-                                            "baseAsyncTestInitializeCalled1", 
-                                            "baseTestInitializeCalled2", 
+                                            "baseAsyncTestInitializeCalled1",
+                                            "baseTestInitializeCalled2",
                                             "classTestInitializeCalled"
                                         };
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
@@ -378,9 +377,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClass.TestInitializeMethodBody = classInstance => { throw new NotImplementedException("dummyErrorMessage"); };
             this.testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
             var errorMessage = string.Format(
-                Resource.UTA_InitMethodThrows, 
-                typeof(DummyTestClass).FullName, 
-                this.testClassInfo.TestInitializeMethod.Name, 
+                Resource.UTA_InitMethodThrows,
+                typeof(DummyTestClass).FullName,
+                this.testClassInfo.TestInitializeMethod.Name,
                 "System.NotImplementedException: dummyErrorMessage");
 
             var exception = this.testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
@@ -399,7 +398,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.IsNotNull(exception);
             StringAssert.StartsWith(
-                exception?.StackTraceInformation.ErrorStackTrace, 
+                exception?.StackTraceInformation.ErrorStackTrace,
                 "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestInitializeThrows>b__");
         }
 
@@ -426,7 +425,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.IsNotNull(exception);
             StringAssert.StartsWith(
-                exception?.StackTraceInformation.ErrorStackTrace, 
+                exception?.StackTraceInformation.ErrorStackTrace,
                 "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestInitializeThrowsUnitTestAssertException>b__");
         }
 
@@ -494,8 +493,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var expectedCallOrder = new List<string>
                                         {
-                                            "classTestCleanupCalled", 
-                                            "baseTestCleanupCalled1", 
+                                            "classTestCleanupCalled",
+                                            "baseTestCleanupCalled1",
                                             "baseTestCleanupCalled2"
                                         };
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
@@ -548,10 +547,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var exception = this.testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
             var errorMessage = string.Format(
-                CultureInfo.CurrentCulture, 
-                Resource.UTA_CleanupMethodThrows, 
-                typeof(DummyTestClass).FullName, 
-                this.testClassInfo.TestCleanupMethod.Name, 
+                CultureInfo.CurrentCulture,
+                Resource.UTA_CleanupMethodThrows,
+                typeof(DummyTestClass).FullName,
+                this.testClassInfo.TestCleanupMethod.Name,
                 "System.NotImplementedException: dummyErrorMessage");
 
             Assert.IsNotNull(exception);
@@ -568,7 +567,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.IsNotNull(exception);
             StringAssert.StartsWith(
-                exception?.StackTraceInformation.ErrorStackTrace, 
+                exception?.StackTraceInformation.ErrorStackTrace,
                 "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestCleanupThrows>b__");
         }
 
@@ -579,7 +578,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
             var ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructors().Single();
             var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, null, this.classAttribute, this.testAssemblyInfo);
-            var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), 3600*1000, this.testMethodAttribute, null, testClass, this.testContextImplementation);
+            var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), 3600 * 1000, this.testMethodAttribute, null, testClass, this.testContextImplementation);
 
             method.Invoke(null);
 
@@ -594,8 +593,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClassWithDisposable.DummyTestCleanupMethodBody = classInstance => { throw new NotImplementedException(); };
             var ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructors().Single();
             var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, null, this.classAttribute, this.testAssemblyInfo);
-            testClass.TestCleanupMethod = typeof (DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod");
-            var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), 3600*1000, this.testMethodAttribute, null, testClass, this.testContextImplementation);
+            testClass.TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod");
+            var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), 3600 * 1000, this.testMethodAttribute, null, testClass, this.testContextImplementation);
 
             method.Invoke(null);
 
@@ -622,7 +621,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testCleanupMethodCalled = false;
             DummyTestClass.TestInitializeMethodBody = classInstance => { throw new NotImplementedException(); };
             DummyTestClass.TestCleanupMethodBody = classInstance => testCleanupMethodCalled = true;
-            this.testClassInfo.TestInitializeMethod = typeof (DummyTestClass).GetMethod("DummyTestInitializeMethod");
+            this.testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
             this.testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
             var result = this.testMethodInfo.Invoke(null);
@@ -652,7 +651,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testCleanupCalled = false;
             DummyTestClass.TestCleanupMethodBody = classInstance => { testCleanupCalled = true; };
             DummyTestClass.TestContextSetterBody = o => { throw new NotImplementedException(); };
-            this.testClassInfo.TestCleanupMethod = typeof (DummyTestClass).GetMethod("DummyTestCleanupMethod");
+            this.testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
             this.testMethodInfo.Invoke(null);
 
@@ -663,8 +662,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestMethodInfoInvokeShouldSetResultAsPassedIfExpectedExceptionIsThrown()
         {
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
-            var testMethodInfo = new TestMethodInfo(this.methodInfo,3600 * 1000,this.testMethodAttribute,
-            this.expectedException,this.testClassInfo,this.testContextImplementation);
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute, this.expectedException, this.testClassInfo, this.testContextImplementation);
             var result = testMethodInfo.Invoke(null);
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
@@ -673,8 +671,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestMethodInfoInvokeShouldSetResultAsFailedIfExceptionDifferentFromExpectedExceptionIsThrown()
         {
             DummyTestClass.TestMethodBody = o => { throw new IndexOutOfRangeException(); };
-            var testMethodInfo = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute,
-            this.expectedException, this.testClassInfo, this.testContextImplementation);
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute, this.expectedException, this.testClassInfo, this.testContextImplementation);
             var result = testMethodInfo.Invoke(null);
             Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
             var message = "Test method threw exception System.IndexOutOfRangeException, but exception System.DivideByZeroException was expected. " +
@@ -686,8 +683,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestMethodInfoInvokeShouldSetResultAsFailedWhenExceptionIsExpectedButIsNotThrown()
         {
             DummyTestClass.TestMethodBody = o => { return; };
-            var testMethodInfo = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute,
-            this.expectedException, this.testClassInfo, this.testContextImplementation);
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute, this.expectedException, this.testClassInfo, this.testContextImplementation);
             var result = testMethodInfo.Invoke(null);
             Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
             var message = "Test method did not throw expected exception System.DivideByZeroException.";
@@ -698,8 +694,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestMethodInfoInvokeShouldSetResultAsInconclusiveWhenExceptionIsAssertInconclusiveException()
         {
             DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
-            var testMethodInfo = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute,
-            this.expectedException, this.testClassInfo, this.testContextImplementation);
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute, this.expectedException, this.testClassInfo, this.testContextImplementation);
             var result = testMethodInfo.Invoke(null);
             Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, result.Outcome);
             var message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
@@ -709,9 +704,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void HandleMethodExceptionShouldInvokeVerifyOfCustomExpectedException()
         {
-            CustomExpectedExceptionAttribute customExpectedException = new CustomExpectedExceptionAttribute(typeof(DivideByZeroException),"Attempted to divide by zero");
+            CustomExpectedExceptionAttribute customExpectedException = new CustomExpectedExceptionAttribute(typeof(DivideByZeroException), "Attempted to divide by zero");
             var method = new TestMethodInfo(
-                methodInfo,
+                this.methodInfo,
                 0,
                 this.testMethodAttribute,
                 customExpectedException,
@@ -720,7 +715,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
-            Assert.AreEqual(true,customExpectedException.isVerifyInvoked);
+            Assert.AreEqual(true, customExpectedException.IsVerifyInvoked);
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
@@ -729,7 +724,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             CustomExpectedExceptionAttribute customExpectedException = new CustomExpectedExceptionAttribute(typeof(DivideByZeroException), "Custom Exception");
             var method = new TestMethodInfo(
-                methodInfo,
+                this.methodInfo,
                 0,
                 this.testMethodAttribute,
                 customExpectedException,
@@ -747,7 +742,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             CustomExpectedExceptionAttribute customExpectedException = new CustomExpectedExceptionAttribute(typeof(DivideByZeroException), "Custom Exception");
             var method = new TestMethodInfo(
-                methodInfo,
+                this.methodInfo,
                 0,
                 this.testMethodAttribute,
                 customExpectedException,
@@ -766,7 +761,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             DerivedCustomExpectedExceptionAttribute derivedCustomExpectedException = new DerivedCustomExpectedExceptionAttribute(typeof(DivideByZeroException), "Attempted to divide by zero");
             var method = new TestMethodInfo(
-                methodInfo,
+                this.methodInfo,
                 0,
                 this.testMethodAttribute,
                 derivedCustomExpectedException,
@@ -775,7 +770,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
-            Assert.AreEqual(true, derivedCustomExpectedException.isVerifyInvoked);
+            Assert.AreEqual(true, derivedCustomExpectedException.IsVerifyInvoked);
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
@@ -785,7 +780,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(Exception));
             expectedException.AllowDerivedTypes = true;
             var method = new TestMethodInfo(
-                methodInfo,
+                this.methodInfo,
                 0,
                 this.testMethodAttribute,
                 expectedException,
@@ -803,7 +798,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException), "Custom Exception");
             expectedException.AllowDerivedTypes = true;
             var method = new TestMethodInfo(
-                methodInfo,
+                this.methodInfo,
                 0,
                 this.testMethodAttribute,
                 expectedException,
@@ -824,7 +819,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
             expectedException.AllowDerivedTypes = true;
             var method = new TestMethodInfo(
-                methodInfo,
+                this.methodInfo,
                 0,
                 this.testMethodAttribute,
                 expectedException,
@@ -844,7 +839,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
             expectedException.AllowDerivedTypes = true;
             var method = new TestMethodInfo(
-                methodInfo,
+                this.methodInfo,
                 0,
                 this.testMethodAttribute,
                 expectedException,
@@ -863,7 +858,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(Exception));
             var method = new TestMethodInfo(
-                methodInfo,
+                this.methodInfo,
                 0,
                 this.testMethodAttribute,
                 expectedException,
@@ -872,7 +867,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
-            var message = "Test method threw exception System.DivideByZeroException, but exception System.Exception was expected. "+
+            var message = "Test method threw exception System.DivideByZeroException, but exception System.Exception was expected. " +
                 "Exception message: System.DivideByZeroException: Attempted to divide by zero.";
             Assert.AreEqual(result.TestFailureException.Message, message);
             Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
@@ -883,7 +878,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(Exception));
             var method = new TestMethodInfo(
-                methodInfo,
+                this.methodInfo,
                 0,
                 this.testMethodAttribute,
                 expectedException,
@@ -896,7 +891,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(result.TestFailureException.Message, message);
             Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, result.Outcome);
         }
-        
+
         #endregion
 
         #region TestMethod invoke setup order
@@ -905,8 +900,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestMethodInfoInvokeShouldInitializeClassInstanceTestInitializeAndTestCleanupInOrder()
         {
             var callOrder = new List<string>();
-            this.testClassInfo.TestInitializeMethod = typeof (DummyTestClass).GetMethod("DummyTestInitializeMethod");
-            this.testClassInfo.TestCleanupMethod = typeof (DummyTestClass).GetMethod("DummyTestCleanupMethod");
+            this.testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
+            this.testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
             DummyTestClass.TestConstructorMethodBody = () => { callOrder.Add("classCtor"); };
             DummyTestClass.TestContextSetterBody = o => { callOrder.Add("testContext"); };
@@ -918,10 +913,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var expectedCallOrder = new List<string>
                                         {
-                                            "classCtor", 
-                                            "testContext", 
-                                            "testInit", 
-                                            "testMethod", 
+                                            "classCtor",
+                                            "testContext",
+                                            "testInit",
+                                            "testMethod",
                                             "testCleanup"
                                         };
             CollectionAssert.AreEqual(expectedCallOrder, callOrder);
@@ -1054,6 +1049,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public class DummyTestClassWithDisposable : IDisposable
         {
             public static Action DisposeMethodBody { get; set; }
+
             public static Action<DummyTestClassWithDisposable> DummyTestCleanupMethodBody { get; set; }
 
             public void Dispose()
@@ -1078,25 +1074,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         /// </summary>
         public class CustomExpectedExceptionAttribute : UTF.ExpectedExceptionBaseAttribute
         {
-
             public CustomExpectedExceptionAttribute(Type expectionType, string noExceptionMessage)
                 : base(noExceptionMessage)
             {
                 this.ExceptionType = expectionType;
             }
 
-            protected override void Verify(Exception exception)
-            {
-                isVerifyInvoked = true;
-                if (exception is UTF.AssertInconclusiveException)
-                    throw new UTF.AssertInconclusiveException();
-                else if (!exception.Message.Contains(this.NoExceptionMessage))
-                    throw new InvalidOperationException("The exception message doesn't contain the string defined in the exception attribute");
-            }
+            public bool IsVerifyInvoked { get; set; }
 
             public Type ExceptionType { get; private set; }
 
-            public bool isVerifyInvoked;
+            protected override void Verify(Exception exception)
+            {
+                this.IsVerifyInvoked = true;
+                if (exception is UTF.AssertInconclusiveException)
+                {
+                    throw new UTF.AssertInconclusiveException();
+                }
+                else if (!exception.Message.Contains(this.NoExceptionMessage))
+                {
+                    throw new InvalidOperationException("The exception message doesn't contain the string defined in the exception attribute");
+                }
+            }
         }
 
         /// <summary>
@@ -1105,23 +1104,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public class DerivedCustomExpectedExceptionAttribute : CustomExpectedExceptionAttribute
         {
             public DerivedCustomExpectedExceptionAttribute(Type expectionType, string noExceptionMessage)
-                : base(expectionType,noExceptionMessage)
+                : base(expectionType, noExceptionMessage)
             {
                 this.ExceptionType = expectionType;
             }
 
-            protected override void Verify(Exception exception)
-            {
-                this.isVerifyInvoked = true;
-                if (exception is UTF.AssertInconclusiveException)
-                    throw new UTF.AssertInconclusiveException();
-                else if (!exception.Message.Contains(this.NoExceptionMessage))
-                    throw new InvalidOperationException("The exception message doesn't contain the string defined in the exception attribute");
-            }
-
             public new Type ExceptionType { get; private set; }
 
-            public new bool isVerifyInvoked;
+            public new bool IsVerifyInvoked { get; set; }
+
+            protected override void Verify(Exception exception)
+            {
+                this.IsVerifyInvoked = true;
+                if (exception is UTF.AssertInconclusiveException)
+                {
+                    throw new UTF.AssertInconclusiveException();
+                }
+                else if (!exception.Message.Contains(this.NoExceptionMessage))
+                {
+                    throw new InvalidOperationException("The exception message doesn't contain the string defined in the exception attribute");
+                }
+            }
         }
 
         #endregion

@@ -3,7 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data
 {
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using System;
     using System.Collections;
     using System.Collections.Generic;
@@ -14,6 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
     using System.Globalization;
     using System.IO;
     using System.Text;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
     /// <summary>
     ///      Utility classes to access databases, and to handle quoted strings etc for comma separated value files.
@@ -23,46 +23,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         // Template used to map from a filename to a DB connection string
         private const string CsvConnectionTemplate = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Persist Security Info=False;Extended Properties=\"text;HDR=YES;FMT=Delimited\"";
 
-        private string m_fileName;
+        private string fileName;
 
         public CsvDataConnection(string fileName, List<string> dataFolders)
             : base(dataFolders)
         {
             Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
-            m_fileName = fileName;
-        }
-
-        public override List<string> GetDataTablesAndViews()
-        {
-            List<string> tableNames = new List<string>(1);
-            tableNames.Add(TableName);
-            return tableNames;
-        }
-
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        public override List<string> GetColumns(string tableName)
-        {
-            // Somewhat heavy, this could be improved, right now I simply
-            // read the table in then check the columns...
-            try
-            {
-                DataTable table = ReadTable(tableName, null);
-                if (table != null)
-                {
-                    List<string> columnNames = new List<string>();
-                    foreach (DataColumn column in table.Columns)
-                    {
-                        columnNames.Add(column.ColumnName);
-                    }
-                    return columnNames;
-                }
-            }
-            catch (Exception exception)
-            {
-               EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled,exception.Message + " for CSV data source " + m_fileName);
-            }
-
-            return null;
+            this.fileName = fileName;
         }
 
         private string TableName
@@ -70,12 +37,46 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             get
             {
                 // Only one table based on the name of the file, with dots converted to # signs
-                return Path.GetFileName(m_fileName).Replace('.', '#');
+                return Path.GetFileName(this.fileName).Replace('.', '#');
             }
         }
 
-        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
-        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security ")]
+        public override List<string> GetDataTablesAndViews()
+        {
+            List<string> tableNames = new List<string>(1);
+            tableNames.Add(this.TableName);
+            return tableNames;
+        }
+
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        public override List<string> GetColumns(string tableName)
+        {
+            // Somewhat heavy, this could be improved, right now I simply
+            // read the table in then check the columns...
+            try
+            {
+                DataTable table = this.ReadTable(tableName, null);
+                if (table != null)
+                {
+                    List<string> columnNames = new List<string>();
+                    foreach (DataColumn column in table.Columns)
+                    {
+                        columnNames.Add(column.ColumnName);
+                    }
+
+                    return columnNames;
+                }
+            }
+            catch (Exception exception)
+            {
+               EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for CSV data source " + this.fileName);
+            }
+
+            return null;
+        }
+
+        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Untested. Leaving as-is.")]
+        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security", Justification = "Not passed in from user.")]
         public DataTable ReadTable(string tableName, IEnumerable columns, int maxRows)
         {
             // We specifically use OleDb to read a CSV file...
@@ -83,7 +84,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             WriteDiagnostics("Current Directory: {0}", Directory.GetCurrentDirectory());
 
             // We better work with a full path, if nothing else, errors become easier to report
-            string fullPath = FixPath(m_fileName) ?? Path.GetFullPath(m_fileName);
+            string fullPath = this.FixPath(this.fileName) ?? Path.GetFullPath(this.fileName);
 
             // We can map simplified CSVs to an OLEDB/Text connection, then proceed as normal
             using (OleDbConnection connection = new OleDbConnection())
@@ -92,7 +93,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             using (OleDbCommand command = new OleDbCommand())
             {
                 // We have to use the name of the folder which contains the CSV file in the connection string
-                connection.ConnectionString = String.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate, Path.GetDirectoryName(fullPath));
+                connection.ConnectionString = string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate, Path.GetDirectoryName(fullPath));
                 WriteDiagnostics("Connection String: {0}", connection.ConnectionString);
 
                 // We have to open the connection now, before we try to quote
@@ -124,8 +125,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                         {
                             builder.Append(',');
                         }
+
                         builder.Append(commandBuilder.QuoteIdentifier(columnName, connection));
                     }
+
                     columnsClause = builder.ToString();
                     if (columnsClause.Length == 0)
                     {
@@ -151,7 +154,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         public override DataTable ReadTable(string tableName, IEnumerable columns)
         {
-            return ReadTable(tableName, columns, -1);
+            return this.ReadTable(tableName, columns, -1);
         }
     }
 }

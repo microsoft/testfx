@@ -79,6 +79,7 @@
     <Compile Include="Extensions\TestCaseExtensionsTests.cs" />
     <Compile Include="Helpers\ReflectHelperTests.cs" />
     <Compile Include="Helpers\RunSettingsUtilitiesTests.cs" />
+    <Compile Include="Helpers\UnitTestOutcomeHelperTests.cs" />
     <Compile Include="MSTestDiscovererTests.cs" />
     <Compile Include="MSTestExecutorTests.cs" />
     <Compile Include="MSTestSettingsTests.cs" />
@@ -86,7 +87,7 @@
     <Compile Include="ObjectModel\UnitTestResultTests.cs" />
     <Compile Include="PlatformServiceProviderTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestableImplementations\TestabaleReflectHelper.cs" />
+    <Compile Include="TestableImplementations\TestableReflectHelper.cs" />
     <Compile Include="TestableImplementations\TestablePlatformServiceProvider.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         private readonly ReflectHelper reflectHelper;
 
         /// <summary>
-        /// TestMethodValidator constructor.
+        /// Initializes a new instance of the <see cref="TestMethodValidator"/> class.
         /// </summary>
         /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
         internal TestMethodValidator(ReflectHelper reflectHelper)
@@ -43,7 +43,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 return false;
             }
 
-            // Generic method Definitions are not valid. 
+            // Generic method Definitions are not valid.
             if (testMethodInfo.IsGenericMethodDefinition)
             {
                 var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, testMethodInfo.DeclaringType.FullName, testMethodInfo.Name);
@@ -55,7 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             // The isGenericMethod check below id to verify that there are no closed generic methods slipping through.
             // Closed generic methods being GenericMethod<int> and open being GenericMethod<T>.
             var isValidTestMethod = testMethodInfo.IsPublic && !testMethodInfo.IsAbstract && !testMethodInfo.IsStatic
-                                    && !testMethodInfo.IsGenericMethod 
+                                    && !testMethodInfo.IsGenericMethod
                                     && testMethodInfo.IsVoidOrTaskReturnType();
 
             if (!isValidTestMethod)

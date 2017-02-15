@@ -9,6 +9,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// The file operations.
     /// </summary>
@@ -21,8 +23,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private static Type typeDiaNavigationData;
 
         /// <summary>
-        /// Initialize types for DiaSession.
+        /// Initializes static members of the <see cref="FileOperations"/> class.
         /// </summary>
+        /// <remarks>Initializes DiaSession.</remarks>
         static FileOperations()
         {
             const string diaSessionTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaSession, Microsoft.VisualStudio.TestPlatform.ObjectModel";
@@ -32,28 +35,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// 1. Initializes DiaSession.  
-        /// 2. Assists in Unit Testing.
-        /// </summary>
-        /// <param name="diaSession">Type name of  DiaSession class.</param>
-        /// <param name="diaNavigationData">Type name of DiaNavigationData class.</param>
-        internal static void Initialize(string diaSession, string diaNavigationData)
-        {
-            typeDiaSession = Type.GetType(diaSession, false);
-            typeDiaNavigationData = Type.GetType(diaNavigationData, false);
-
-            if (typeDiaSession != null && typeDiaNavigationData != null)
-            {
-                methodGetNavigationData = typeDiaSession.GetRuntimeMethod("GetNavigationData", new[] { typeof(string), typeof(string) });
-                propertyFileName = typeDiaNavigationData.GetRuntimeProperty("FileName");
-                propertyMinLineNumber = typeDiaNavigationData.GetRuntimeProperty("MinLineNumber");
-            }
-        }
-
-        /// <summary>
         /// Loads an assembly.
         /// </summary>
         /// <param name="assemblyName"> The assembly name. </param>
+        /// <param name="isReflectionOnly">Indicates whether this should be a reflection only load.</param>
         /// <returns> The <see cref="Assembly"/>. </returns>
         /// <exception cref="NotImplementedException"> This is currently not implemented. </exception>
         public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly)
@@ -76,7 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Creates a Navigation session for the source file. 
+        /// Creates a Navigation session for the source file.
         /// This is used to get file path and line number information for its components.
         /// </summary>
         /// <param name="source"> The source file. </param>
@@ -116,7 +101,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 if (data != null)
                 {
                     fileName = (string)propertyFileName?.GetValue(data);
-                    minLineNumber = (int)(propertyMinLineNumber?.GetValue(data)?? -1);
+                    minLineNumber = (int)(propertyMinLineNumber?.GetValue(data) ?? -1);
                 }
             }
         }
@@ -141,6 +126,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return assemblyFileName;
         }
 
+        /// <summary>
+        /// 1. Initializes DiaSession.
+        /// 2. Assists in Unit Testing.
+        /// </summary>
+        /// <param name="diaSession">Type name of  DiaSession class.</param>
+        /// <param name="diaNavigationData">Type name of DiaNavigationData class.</param>
+        internal static void Initialize(string diaSession, string diaNavigationData)
+        {
+            typeDiaSession = Type.GetType(diaSession, false);
+            typeDiaNavigationData = Type.GetType(diaNavigationData, false);
+
+            if (typeDiaSession != null && typeDiaNavigationData != null)
+            {
+                methodGetNavigationData = typeDiaSession.GetRuntimeMethod("GetNavigationData", new[] { typeof(string), typeof(string) });
+                propertyFileName = typeDiaNavigationData.GetRuntimeProperty("FileName");
+                propertyMinLineNumber = typeDiaNavigationData.GetRuntimeProperty("MinLineNumber");
+            }
+        }
+
         private static object SafeInvoke<T>(Func<T> action, string messageFormatOnException = null)
         {
             try
@@ -149,10 +153,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
             catch (Exception)
             {
-                //todo : Add EqtTrace
+                // todo : Add EqtTrace
             }
 
             return null;
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

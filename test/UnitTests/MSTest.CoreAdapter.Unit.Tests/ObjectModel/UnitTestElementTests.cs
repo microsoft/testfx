@@ -5,19 +5,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
 {
     extern alias FrameworkV1;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-
     using System;
     using System.Collections.Generic;
     using System.Linq;
-
+    using global::MSTestAdapter.TestUtilities;
     using MSTest.TestAdapter;
     using MSTest.TestAdapter.ObjectModel;
-    using global::MSTestAdapter.TestUtilities;
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
     public class UnitTestElementTests
@@ -29,7 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
         public void TestInit()
         {
             this.testMethod = new TestMethod("M", "C", "A", true);
-            this.unitTestElement = new UnitTestElement(testMethod);
+            this.unitTestElement = new UnitTestElement(this.testMethod);
         }
 
         #region Ctor tests
@@ -130,7 +128,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             this.unitTestElement.TestCategory = new string[] { "TC" };
             testCase = this.unitTestElement.ToTestCase();
 
-            CollectionAssert.AreEqual(new string[] { "TC" }, (testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[]));
+            CollectionAssert.AreEqual(new string[] { "TC" }, testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[]);
         }
 
         [TestMethodV1]
@@ -158,7 +156,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             var trait = new TestPlatform.ObjectModel.Trait("trait", "value");
             this.unitTestElement.Traits = new TestPlatform.ObjectModel.Trait[] { trait };
             testCase = this.unitTestElement.ToTestCase();
-            
+
             Assert.AreEqual(1, testCase.Traits.Count());
             Assert.AreEqual("trait", testCase.Traits.ToArray()[0].Name);
             Assert.AreEqual("value", testCase.Traits.ToArray()[0].Value);
@@ -177,10 +175,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
 
             Assert.IsNull(testCase.GetPropertyValue(Constants.DeploymentItemsProperty));
 
-            this.unitTestElement.DeploymentItems = new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("s" ,"d") };
+            this.unitTestElement.DeploymentItems = new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("s", "d") };
             testCase = this.unitTestElement.ToTestCase();
 
-            CollectionAssert.AreEqual(this.unitTestElement.DeploymentItems, (testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as KeyValuePair<string,string>[]));
+            CollectionAssert.AreEqual(this.unitTestElement.DeploymentItems, testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as KeyValuePair<string, string>[]);
         }
 
         #endregion

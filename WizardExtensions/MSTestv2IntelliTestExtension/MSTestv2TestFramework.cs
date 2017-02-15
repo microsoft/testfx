@@ -11,10 +11,10 @@ namespace MSTestv2IntelliTestExtension
     using Microsoft.ExtendedReflection.Metadata.Names;
     using Microsoft.ExtendedReflection.Monitoring;
     using Microsoft.ExtendedReflection.Utilities.Safe;
+    using Microsoft.ExtendedReflection.Utilities.Safe.Diagnostics;
     using Microsoft.Pex.Engine;
     using Microsoft.Pex.Engine.ComponentModel;
     using Microsoft.Pex.Engine.TestFrameworks;
-    using Microsoft.ExtendedReflection.Utilities.Safe.Diagnostics;
 
     /// <summary>
     /// MSTestv2 test framework
@@ -22,21 +22,56 @@ namespace MSTestv2IntelliTestExtension
     [Serializable]
     public class MSTestv2TestFramework : AttributeBasedTestFrameworkBase
     {
+        private static readonly bool Net2process = typeof(object).Assembly.GetName().Version.Major == 2;
+
+        [NonSerialized]
+        private TypeName assemblySetUpAttribute;
+
+        /// <summary>
+        /// The expected exception attribute.
+        /// </summary>
+        [NonSerialized]
+        private TypeName expectedExceptionAttribute;
+
+        [NonSerialized]
+        private TypeName assemblyTearDownAttribute;
+
+        [NonSerialized]
+        private TypeName fixtureAttribute;
+
+        [NonSerialized]
+        private TypeName fixtureSetUpAttribute;
+
+        [NonSerialized]
+        private TypeName fixtureTearDownAttribute;
+
+        [NonSerialized]
+        private TypeName setUpAttribute;
+
+        [NonSerialized]
+        private TypeName testAttribute;
+
+        [NonSerialized]
+        private TypeName tearDownAttribute;
+
+        [NonSerialized]
+        private TypeName ignoreAttribute;
+
+        [NonSerialized]
+        private TypeName assertionExceptionType;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MSTestv2TestFramework"/> class.
         /// </summary>
-        /// <param name="host">
-        /// </param>
-        public MSTestv2TestFramework(IPexComponent host) : base(host)
+        /// <param name="host">The host.</param>
+        public MSTestv2TestFramework(IPexComponent host)
+            : base(host)
         {
         }
 
-        static readonly bool net2process = typeof(object).Assembly.GetName().Version.Major == 2;
-
         /// <summary>
-        /// identify of the test framework
+        /// Gets identify of the test framework
         /// </summary>
-        /// <value></value>
         public override string Name
         {
             get { return "MSTestv2"; }
@@ -46,7 +81,6 @@ namespace MSTestv2IntelliTestExtension
         /// Gets the assembly name of the framework main's assembly. This name is used
         /// to automatically discover test frameworks, based the assembly references
         /// </summary>
-        /// <value></value>
         public override ShortAssemblyName AssemblyName
         {
             get { return MSTestv2TestFrameworkMetadata.AssemblyName; }
@@ -62,13 +96,14 @@ namespace MSTestv2IntelliTestExtension
         }
 
         /// <summary>
-        /// The adapter and test framework references.
+        /// Gets the adapter and test framework references.
         /// </summary>
         public override ICountable<ShortReferenceAssemblyName> References
         {
             get
             {
-                return Indexable.Two(new ShortReferenceAssemblyName(ShortAssemblyName.FromName("MSTest.TestAdapter"), "1.1.10-rc2", AssemblyReferenceType.NugetReference),
+                return Indexable.Two(
+                    new ShortReferenceAssemblyName(ShortAssemblyName.FromName("MSTest.TestAdapter"), "1.1.10-rc2", AssemblyReferenceType.NugetReference),
                     new ShortReferenceAssemblyName(ShortAssemblyName.FromName("MSTest.TestFramework"), "1.0.8-rc2", AssemblyReferenceType.NugetReference));
             }
         }
@@ -77,31 +112,10 @@ namespace MSTestv2IntelliTestExtension
         /// Gets a value indicating whether
         /// partial test classes
         /// </summary>
-        /// <value></value>
         public override bool SupportsPartialClasses
         {
             get { return true; }
         }
-
-        /// <summary>
-        /// Gets a value indicating if the bitness is supported
-        /// </summary>
-        /// <param name="bitness"></param>
-        /// <returns></returns>
-        public override bool SupportsProjectBitness(Bitness bitness)
-        {
-            SafeDebug.Assume(bitness != Bitness.Unsupported, "bitness != Bitness.Unsupported");
-            if (net2process)
-                return bitness == Bitness.AnyCpu || bitness == Bitness.x86;
-            else
-                return true;
-        }
-
-        /// <summary>
-        /// The _expected exception attribute.
-        /// </summary>
-        [NonSerialized]
-        TypeName _expectedExceptionAttribute;
 
         /// <summary>
         /// Gets the ExpectedException attribute.
@@ -111,14 +125,15 @@ namespace MSTestv2IntelliTestExtension
         {
             get
             {
-                if (this._expectedExceptionAttribute == null)
-                    this._expectedExceptionAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ExpectedExceptionAttribute");
-                return this._expectedExceptionAttribute;
+                if (this.expectedExceptionAttribute == null)
+                {
+                    this.expectedExceptionAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ExpectedExceptionAttribute");
+                }
+
+                return this.expectedExceptionAttribute;
             }
         }
 
-        [NonSerialized]
-        TypeName _assemblySetUpAttribute;
         /// <summary>
         /// Gets the assembly set up attribute.
         /// </summary>
@@ -127,14 +142,15 @@ namespace MSTestv2IntelliTestExtension
         {
             get
             {
-                if (this._assemblySetUpAttribute == null)
-                    this._assemblySetUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("AssemblyInitializeAttribute");
-                return this._assemblySetUpAttribute;
+                if (this.assemblySetUpAttribute == null)
+                {
+                    this.assemblySetUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("AssemblyInitializeAttribute");
+                }
+
+                return this.assemblySetUpAttribute;
             }
         }
 
-        [NonSerialized]
-        TypeName _assemblyTearDownAttribute;
         /// <summary>
         /// Gets the assembly tear down attribute.
         /// </summary>
@@ -143,78 +159,26 @@ namespace MSTestv2IntelliTestExtension
         {
             get
             {
-                if (this._assemblyTearDownAttribute == null)
-                    this._assemblyTearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("AssemblyCleanupAttribute");
-                return this._assemblyTearDownAttribute;
-            }
-        }
-
-        /// <summary>
-        /// Tries to get the assembly set up tear down attribute.
-        /// </summary>
-        /// <param name="assembly">The assembly.</param>
-        /// <param name="setUp">The set up.</param>
-        /// <param name="tearDown">The tear down.</param>
-        /// <returns></returns>
-        public override bool TryGetAssemblySetupTeardownMethods(
-            AssemblyEx assembly,
-            out Method setUp,
-            out Method tearDown)
-        {
-            // <preconditions>
-            SafeDebug.AssumeNotNull((object)assembly, "assembly");
-            // </preconditions>
-            setUp = tearDown = null;
-
-            // look for [TestClass] types
-            foreach (var typeDefinition in assembly.TypeDefinitions)
-            {
-                if (typeDefinition.IsVisible(VisibilityContext.Exported))
+                if (this.assemblyTearDownAttribute == null)
                 {
-                    if (typeDefinition.IsEnumType ||
-                        typeDefinition.GenericTypeParameters.Length > 0)
-                        continue;
-
-                    if (!this.IsFixture(typeDefinition))
-                        continue;
-
-                    // looking for assembly setup/teardown methods
-                    foreach (var methodDefinition in typeDefinition.DeclaredStaticMethods)
-                        if (methodDefinition.IsVisible(VisibilityContext.Exported) &&
-                            methodDefinition.GenericMethodParameters.Length == 0)
-                        {
-                            if (AttributeHelper.IsDefined(methodDefinition, this.AssemblySetUpAttribute, true))
-                                setUp = methodDefinition.Instantiate(TypeEx.NoTypes, TypeEx.NoTypes);
-                            if (AttributeHelper.IsDefined(methodDefinition, this.AssemblyTearDownAttribute, true))
-                                tearDown = methodDefinition.Instantiate(TypeEx.NoTypes, TypeEx.NoTypes);
-
-                            // nothing else to look for
-                            if (setUp != null && tearDown != null)
-                                break;
-                        }
-
-                    // nothing else to look for
-                    if (setUp != null && tearDown != null)
-                        break;
+                    this.assemblyTearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("AssemblyCleanupAttribute");
                 }
-            }
 
-            return setUp != null || tearDown != null;
+                return this.assemblyTearDownAttribute;
+            }
         }
 
         /// <summary>
         /// Gets a value indicating whether fixture set up tear down are instance methods.
         /// </summary>
         /// <value>
-        /// 	<c>true</c> if [fixture set up tear down instance]; otherwise, <c>false</c>.
+        ///     <c>true</c> if [fixture set up tear down instance]; otherwise, <c>false</c>.
         /// </value>
         public override bool FixtureSetupTeardownInstance
         {
             get { return false; }
         }
 
-        [NonSerialized]
-        TypeName _fixtureAttribute;
         /// <summary>
         /// Gets the name of the fixture attribute.
         /// </summary>
@@ -223,14 +187,15 @@ namespace MSTestv2IntelliTestExtension
         {
             get
             {
-                if (this._fixtureAttribute == null)
-                    this._fixtureAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestClassAttribute");
-                return this._fixtureAttribute;
+                if (this.fixtureAttribute == null)
+                {
+                    this.fixtureAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestClassAttribute");
+                }
+
+                return this.fixtureAttribute;
             }
         }
 
-        [NonSerialized]
-        TypeName _fixtureSetUpAttribute;
         /// <summary>
         /// Gets the name of the fixture setup attribute
         /// </summary>
@@ -239,14 +204,15 @@ namespace MSTestv2IntelliTestExtension
         {
             get
             {
-                if (this._fixtureSetUpAttribute == null)
-                    this._fixtureSetUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ClassInitializeAttribute");
-                return this._fixtureSetUpAttribute;
+                if (this.fixtureSetUpAttribute == null)
+                {
+                    this.fixtureSetUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ClassInitializeAttribute");
+                }
+
+                return this.fixtureSetUpAttribute;
             }
         }
 
-        [NonSerialized]
-        TypeName _fixtureTearDownAttribute;
         /// <summary>
         /// Gets the name of the fixture teardown attribute
         /// </summary>
@@ -255,14 +221,15 @@ namespace MSTestv2IntelliTestExtension
         {
             get
             {
-                if (this._fixtureTearDownAttribute == null)
-                    this._fixtureTearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ClassCleanupAttribute");
-                return this._fixtureTearDownAttribute;
+                if (this.fixtureTearDownAttribute == null)
+                {
+                    this.fixtureTearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ClassCleanupAttribute");
+                }
+
+                return this.fixtureTearDownAttribute;
             }
         }
 
-        [NonSerialized]
-        TypeName _setUpAttribute;
         /// <summary>
         /// Gets the name of the test setup attribute.
         /// </summary>
@@ -271,14 +238,15 @@ namespace MSTestv2IntelliTestExtension
         {
             get
             {
-                if (this._setUpAttribute == null)
-                    this._setUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestInitializeAttribute");
-                return this._setUpAttribute;
+                if (this.setUpAttribute == null)
+                {
+                    this.setUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestInitializeAttribute");
+                }
+
+                return this.setUpAttribute;
             }
         }
 
-        [NonSerialized]
-        TypeName _testAttribute;
         /// <summary>
         /// Gets the name of the test attribute.
         /// </summary>
@@ -287,14 +255,15 @@ namespace MSTestv2IntelliTestExtension
         {
             get
             {
-                if (this._testAttribute == null)
-                    this._testAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestMethodAttribute");
-                return this._testAttribute;
+                if (this.testAttribute == null)
+                {
+                    this.testAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestMethodAttribute");
+                }
+
+                return this.testAttribute;
             }
         }
 
-        [NonSerialized]
-        TypeName _tearDownAttribute;
         /// <summary>
         /// Gets the name of the test teardown attribute.
         /// </summary>
@@ -303,14 +272,15 @@ namespace MSTestv2IntelliTestExtension
         {
             get
             {
-                if (this._tearDownAttribute == null)
-                    this._tearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestCleanupAttribute");
-                return this._tearDownAttribute;
+                if (this.tearDownAttribute == null)
+                {
+                    this.tearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestCleanupAttribute");
+                }
+
+                return this.tearDownAttribute;
             }
         }
 
-        [NonSerialized]
-        TypeName _ignoreAttribute;
         /// <summary>
         /// Gets the ignore attribute.
         /// </summary>
@@ -319,16 +289,54 @@ namespace MSTestv2IntelliTestExtension
         {
             get
             {
-                if (this._ignoreAttribute == null)
-                    this._ignoreAttribute = MSTestv2TestFrameworkMetadata.AttributeName("IgnoreAttribute");
-                return _ignoreAttribute;
+                if (this.ignoreAttribute == null)
+                {
+                    this.ignoreAttribute = MSTestv2TestFrameworkMetadata.AttributeName("IgnoreAttribute");
+                }
+
+                return this.ignoreAttribute;
             }
         }
 
         /// <summary>
-        /// Whether the ignore attribute constructor takes a message as its first argument.
+        /// Gets the type of the assertion exception.
         /// </summary>
-        /// <value></value>
+        /// <value>The type of the assertion exception.</value>
+        public override TypeName AssertionExceptionType
+        {
+            get
+            {
+                if (this.assertionExceptionType == null)
+                {
+                    this.assertionExceptionType = MSTestv2TestFrameworkMetadata.AttributeName("AssertFailedException");
+                }
+
+                return this.assertionExceptionType;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether gets a value that indicates if this framework support static unit tests
+        /// </summary>
+        public override bool SupportsStaticTestMethods
+        {
+            get { return false; }
+        }
+
+        /// <summary>
+        /// Gets the assert method filters.
+        /// </summary>
+        public override IIndexable<IAssertMethodFilter> AssertMethodFilters
+        {
+            get
+            {
+                return Indexable.One<IAssertMethodFilter>(MSTestv2AssertMethodFilter.Instance);
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the ignore attribute constructor takes a message as its first argument.
+        /// </summary>
         protected override bool HasIgnoreAttributeMessage
         {
             get { return false; }
@@ -353,10 +361,97 @@ namespace MSTestv2IntelliTestExtension
         }
 
         /// <summary>
+        /// Gets a value indicating if the bitness is supported
+        /// </summary>
+        /// <param name="bitness">The bitness.</param>
+        /// <returns>True if supported.</returns>
+        public override bool SupportsProjectBitness(Bitness bitness)
+        {
+            SafeDebug.Assume(bitness != Bitness.Unsupported, "bitness != Bitness.Unsupported");
+            if (Net2process)
+            {
+                return bitness == Bitness.AnyCpu || bitness == Bitness.x86;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Tries to get the assembly set up tear down attribute.
+        /// </summary>
+        /// <param name="assembly">The assembly.</param>
+        /// <param name="setUp">The set up.</param>
+        /// <param name="tearDown">The tear down.</param>
+        /// <returns>True if found.</returns>
+        public override bool TryGetAssemblySetupTeardownMethods(
+            AssemblyEx assembly,
+            out Method setUp,
+            out Method tearDown)
+        {
+            // <preconditions>
+            SafeDebug.AssumeNotNull((object)assembly, "assembly");
+
+            // </preconditions>
+            setUp = tearDown = null;
+
+            // look for [TestClass] types
+            foreach (var typeDefinition in assembly.TypeDefinitions)
+            {
+                if (typeDefinition.IsVisible(VisibilityContext.Exported))
+                {
+                    if (typeDefinition.IsEnumType ||
+                        typeDefinition.GenericTypeParameters.Length > 0)
+                    {
+                        continue;
+                    }
+
+                    if (!this.IsFixture(typeDefinition))
+                    {
+                        continue;
+                    }
+
+                    // looking for assembly setup/teardown methods
+                    foreach (var methodDefinition in typeDefinition.DeclaredStaticMethods)
+                    {
+                        if (methodDefinition.IsVisible(VisibilityContext.Exported) &&
+                            methodDefinition.GenericMethodParameters.Length == 0)
+                        {
+                            if (AttributeHelper.IsDefined(methodDefinition, this.AssemblySetUpAttribute, true))
+                            {
+                                setUp = methodDefinition.Instantiate(TypeEx.NoTypes, TypeEx.NoTypes);
+                            }
+
+                            if (AttributeHelper.IsDefined(methodDefinition, this.AssemblyTearDownAttribute, true))
+                            {
+                                tearDown = methodDefinition.Instantiate(TypeEx.NoTypes, TypeEx.NoTypes);
+                            }
+
+                            // nothing else to look for
+                            if (setUp != null && tearDown != null)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    // nothing else to look for
+                    if (setUp != null && tearDown != null)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            return setUp != null || tearDown != null;
+        }
+
+        /// <summary>
         /// Gets a list of attribute that should be duplicated from the
         /// pex test to the parameterized test
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Attribute types.</returns>
         protected override IEnumerable<TypeName> GetSatelliteAttributeTypes()
         {
             return Indexable.Array<TypeName>(
@@ -367,8 +462,7 @@ namespace MSTestv2IntelliTestExtension
                     MSTestv2TestFrameworkMetadata.AttributeName("TimeoutAttribute"),
                     MSTestv2TestFrameworkMetadata.AttributeName("WorkItemAttribute"),
                     MSTestv2TestFrameworkMetadata.AttributeName("CssIterationAttribute"),
-                    MSTestv2TestFrameworkMetadata.AttributeName("CssProjectStructureAttributeCtor")
-                );
+                    MSTestv2TestFrameworkMetadata.AttributeName("CssProjectStructureAttributeCtor"));
         }
 
         /// <summary>
@@ -376,47 +470,13 @@ namespace MSTestv2IntelliTestExtension
         /// </summary>
         /// <param name="element">The element.</param>
         /// <param name="names">The names.</param>
-        /// <returns></returns>
+        /// <returns>True if found.</returns>
         protected override bool TryGetCategories(
             ICustomAttributeProviderEx element,
             out IEnumerable<string> names)
         {
             names = null;
             return false;
-        }
-
-        [NonSerialized]
-        TypeName _assertionExceptionType;
-        /// <summary>
-        /// Gets the type of the assertion exception.
-        /// </summary>
-        /// <value>The type of the assertion exception.</value>
-        public override TypeName AssertionExceptionType
-        {
-            get
-            {
-                if (this._assertionExceptionType == null)
-                    this._assertionExceptionType = MSTestv2TestFrameworkMetadata.AttributeName("AssertFailedException");
-                return this._assertionExceptionType;
-            }
-        }
-        /// <summary>
-        /// Gets a value that indicates if this framework support static unit tests
-        /// </summary>
-        public override bool SupportsStaticTestMethods
-        {
-            get { return false; }
-        }
-
-        /// <summary>
-        /// Gets the assert method filters.
-        /// </summary>
-        public override IIndexable<IAssertMethodFilter> AssertMethodFilters
-        {
-            get
-            {
-                return Indexable.One<IAssertMethodFilter>(MSTestv2AssertMethodFilter.Instance);
-            }
         }
     }
 }

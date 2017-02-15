@@ -3,15 +3,13 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
-    using System.Diagnostics;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
-
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-
     using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
     internal class TestMethodFilter
@@ -36,11 +34,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Returns ITestCaseFilterExpression for TestProperties supported by adapter.
         /// </summary>
+        /// <param name="runContext">The current context of the run.</param>
+        /// <param name="testExecutionRecorder">Handler to report test messages/start/end and results.</param>
+        /// <param name="filterHasError">Indicates that the filter is unsupported/has an error.</param>
+        /// <returns>A filter expression.</returns>
         internal ITestCaseFilterExpression GetFilterExpression(IRunContext runContext, IMessageLogger testExecutionRecorder, out bool filterHasError)
         {
             filterHasError = false;
             ITestCaseFilterExpression filter = null;
-            if (null != runContext)
+            if (runContext != null)
             {
                 try
                 {
@@ -52,23 +54,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testExecutionRecorder.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
             }
+
             return filter;
         }
 
         /// <summary>
         /// Provides TestProperty for property name 'propertyName' as used in filter.
         /// </summary>
+        /// <param name="propertyName">The property name.</param>
+        /// <returns>a TestProperty instance.</returns>
         internal TestProperty PropertyProvider(string propertyName)
         {
             TestProperty testProperty;
             this.supportedProperties.TryGetValue(propertyName, out testProperty);
-            Debug.Assert(null != testProperty, "Invalid property queried");
+            Debug.Assert(testProperty != null, "Invalid property queried");
             return testProperty;
         }
 
         /// <summary>
         /// Provides value of TestProperty corresponding to property name 'propertyName' as used in filter.
         /// </summary>
+        /// <param name="currentTest">The current test case.</param>
+        /// <param name="propertyName">Property name.</param>
+        /// <returns>The property value.</returns>
         internal object PropertyValueProvider(TestCase currentTest, string propertyName)
         {
             if (currentTest != null && propertyName != null)
@@ -84,6 +92,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     }
                 }
             }
+
             return null;
         }
     }

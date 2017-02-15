@@ -26,14 +26,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         private readonly TypeValidator typeValidator;
         private readonly TestMethodValidator testMethodValidator;
         private readonly ReflectHelper reflectHelper;
-        
+
         /// <summary>
         /// Whether test class has [Ignore] attribute on it. Nullable so that we can cache the value.
         /// </summary>
         private bool? isIgnoreAttributeOnClass;
 
         /// <summary>
-        /// TypeEnumerator constructor.
+        /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
         /// </summary>
         /// <param name="type"> The reflected type. </param>
         /// <param name="assemblyName"> The name of the assembly being reflected. </param>
@@ -71,7 +71,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// </summary>
         /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
         /// <returns> list of test cases.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "0#")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "0#", Justification = "This is only for internal use.")]
         internal virtual ICollection<UnitTestElement> Enumerate(out ICollection<string> warnings)
         {
             warnings = new Collection<string>();
@@ -120,7 +120,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <returns> Returns a UnitTestElement. </returns>
         internal UnitTestElement GetTestFromMethod(MethodInfo method, ICollection<string> warnings)
         {
-            Debug.Assert(null != this.type.AssemblyQualifiedName, "AssemblyQualifiedName for method is null.");
+            Debug.Assert(this.type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
             // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.
             var isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));

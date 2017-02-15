@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 
             this.RootDeploymentDirectory = rootDirectory;
         }
-        
+
         /// <summary>
         /// Gets or sets the root deployment directory
         /// </summary>
@@ -63,7 +63,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         }
 
         /// <summary>
-        /// In\MachineName directory
+        /// Gets In\MachineName directory
         /// </summary>
         public string InMachineNameDirectory
         {

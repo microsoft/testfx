@@ -3,10 +3,10 @@
 
 namespace Microsoft.MSTestV2.CLIAutomation
 {
+    using System.Collections.Generic;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using System.Collections.Generic;
 
     public class DiscoveryEventsHandler : ITestDiscoveryEventsHandler
     {
@@ -17,7 +17,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
         public DiscoveryEventsHandler()
         {
-            Tests = new List<string>();
+            this.Tests = new List<string>();
         }
 
         public void HandleDiscoveredTests(IEnumerable<TestCase> discoveredTestCases)
@@ -25,7 +25,9 @@ namespace Microsoft.MSTestV2.CLIAutomation
             if (discoveredTestCases != null)
             {
                 foreach (TestCase testCase in discoveredTestCases)
-                    Tests.Add(testCase.FullyQualifiedName);
+                {
+                    this.Tests.Add(testCase.FullyQualifiedName);
+                }
             }
         }
 
@@ -34,7 +36,9 @@ namespace Microsoft.MSTestV2.CLIAutomation
             if (lastChunk != null)
             {
                 foreach (TestCase testCase in lastChunk)
-                    Tests.Add(testCase.FullyQualifiedName);
+                {
+                    this.Tests.Add(testCase.FullyQualifiedName);
+                }
             }
         }
 
@@ -59,7 +63,6 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
         public void HandleRawMessage(string rawMessage)
         {
-
         }
     }
 }
