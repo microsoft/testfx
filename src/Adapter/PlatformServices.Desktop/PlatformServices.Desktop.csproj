@@ -62,7 +62,7 @@
     <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Friends.cs" />
     <Compile Include="Utilities\SequentialIntPermutation.cs" />
-    <Compile Include="Resource.Designer.cs">
+    <Compile Include="Resources\Resource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
@@ -113,10 +113,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resource.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
+    <EmbeddedResource Include="Resources\Resource.resx">
+       <Generator>ResXFileCodeGenerator</Generator>
+       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
