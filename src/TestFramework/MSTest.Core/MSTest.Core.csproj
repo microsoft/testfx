@@ -36,12 +36,6 @@
     <DocumentationLclSubPath>TestFramework</DocumentationLclSubPath>
   </PropertyGroup>
   <ItemGroup>
-    <EmbeddedResource Include="FrameworkMessages.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>FrameworkMessages.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Interfaces\ITestMethod.cs" />
     <Compile Include="Internal\Helper.cs" />
     <Compile Include="DataAccessMethod.cs" />
@@ -61,18 +55,24 @@
     <Compile Include="Assertions\StringAssert.cs" />
     <Compile Include="Assertions\CollectionAssert.cs" />
     <Compile Include="Exceptions\UnitTestAssertException.cs" />
-    <Compile Include="UnitTestOutcome.cs" />
-    <Compile Include="FrameworkMessages.Designer.cs">
+    <Compile Include="Resources\FrameworkMessages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FrameworkMessages.resx</DependentUpon>
     </Compile>
+    <Compile Include="UnitTestOutcome.cs" />
     <Compile Include="Internal\UtfHelper.cs" />
     <Compile Include="Attributes\VSTestAttributes.cs" />
     <Compile Include="Attributes\DataTestMethodAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\FrameworkMessages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FrameworkMessages.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>
