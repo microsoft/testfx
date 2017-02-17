@@ -40,7 +40,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkMessages", typeof(FrameworkMessages).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkMessages", typeof(FrameworkMessages).GetTypeInfo().Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
