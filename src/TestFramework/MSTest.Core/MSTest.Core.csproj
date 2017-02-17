@@ -70,7 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\FrameworkMessages.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
+      <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>FrameworkMessages.Designer.cs</LastGenOutput>
       <CustomToolNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</CustomToolNamespace>
     </EmbeddedResource>

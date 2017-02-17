@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class FrameworkMessages {
+    internal class FrameworkMessages {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -37,7 +37,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
+        internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkMessages", typeof(FrameworkMessages).GetTypeInfo().Assembly);
@@ -52,7 +52,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
+        internal static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -64,7 +64,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Access string has invalid syntax..
         /// </summary>
-        public static string AccessStringInvalidSyntax {
+        internal static string AccessStringInvalidSyntax {
             get {
                 return ResourceManager.GetString("AccessStringInvalidSyntax", resourceCulture);
             }
@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}.
         /// </summary>
-        public static string ActualHasMismatchedElements {
+        internal static string ActualHasMismatchedElements {
             get {
                 return ResourceManager.GetString("ActualHasMismatchedElements", resourceCulture);
             }
@@ -82,7 +82,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Duplicate item found:&lt;{1}&gt;. {0}.
         /// </summary>
-        public static string AllItemsAreUniqueFailMsg {
+        internal static string AllItemsAreUniqueFailMsg {
             get {
                 return ResourceManager.GetString("AllItemsAreUniqueFailMsg", resourceCulture);
             }
@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}.
         /// </summary>
-        public static string AreEqualCaseFailMsg {
+        internal static string AreEqualCaseFailMsg {
             get {
                 return ResourceManager.GetString("AreEqualCaseFailMsg", resourceCulture);
             }
@@ -100,7 +100,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}.
         /// </summary>
-        public static string AreEqualDeltaFailMsg {
+        internal static string AreEqualDeltaFailMsg {
             get {
                 return ResourceManager.GetString("AreEqualDeltaFailMsg", resourceCulture);
             }
@@ -109,7 +109,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}.
         /// </summary>
-        public static string AreEqualDifferentTypesFailMsg {
+        internal static string AreEqualDifferentTypesFailMsg {
             get {
                 return ResourceManager.GetString("AreEqualDifferentTypesFailMsg", resourceCulture);
             }
@@ -118,7 +118,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}.
         /// </summary>
-        public static string AreEqualFailMsg {
+        internal static string AreEqualFailMsg {
             get {
                 return ResourceManager.GetString("AreEqualFailMsg", resourceCulture);
             }
@@ -127,7 +127,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}.
         /// </summary>
-        public static string AreNotEqualDeltaFailMsg {
+        internal static string AreNotEqualDeltaFailMsg {
             get {
                 return ResourceManager.GetString("AreNotEqualDeltaFailMsg", resourceCulture);
             }
@@ -136,7 +136,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}.
         /// </summary>
-        public static string AreNotEqualFailMsg {
+        internal static string AreNotEqualFailMsg {
             get {
                 return ResourceManager.GetString("AreNotEqualFailMsg", resourceCulture);
             }
@@ -145,7 +145,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}.
         /// </summary>
-        public static string AreSameGivenValues {
+        internal static string AreSameGivenValues {
             get {
                 return ResourceManager.GetString("AreSameGivenValues", resourceCulture);
             }
@@ -154,7 +154,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to {0} failed. {1}.
         /// </summary>
-        public static string AssertionFailed {
+        internal static string AssertionFailed {
             get {
                 return ResourceManager.GetString("AssertionFailed", resourceCulture);
             }
@@ -163,7 +163,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute..
         /// </summary>
-        public static string AsyncUITestMethodNotSupported {
+        internal static string AsyncUITestMethodNotSupported {
             get {
                 return ResourceManager.GetString("AsyncUITestMethodNotSupported", resourceCulture);
             }
@@ -172,7 +172,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Both collections are empty. {0}.
         /// </summary>
-        public static string BothCollectionsEmpty {
+        internal static string BothCollectionsEmpty {
             get {
                 return ResourceManager.GetString("BothCollectionsEmpty", resourceCulture);
             }
@@ -181,7 +181,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Both collection contain same elements..
         /// </summary>
-        public static string BothCollectionsSameElements {
+        internal static string BothCollectionsSameElements {
             get {
                 return ResourceManager.GetString("BothCollectionsSameElements", resourceCulture);
             }
@@ -190,7 +190,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Both collection references point to the same collection object. {0}.
         /// </summary>
-        public static string BothCollectionsSameReference {
+        internal static string BothCollectionsSameReference {
             get {
                 return ResourceManager.GetString("BothCollectionsSameReference", resourceCulture);
             }
@@ -199,7 +199,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Both collections contain the same elements. {0}.
         /// </summary>
-        public static string BothSameElements {
+        internal static string BothSameElements {
             get {
                 return ResourceManager.GetString("BothSameElements", resourceCulture);
             }
@@ -208,7 +208,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to {0}({1}).
         /// </summary>
-        public static string CollectionEqualReason {
+        internal static string CollectionEqualReason {
             get {
                 return ResourceManager.GetString("CollectionEqualReason", resourceCulture);
             }
@@ -217,7 +217,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to (null).
         /// </summary>
-        public static string Common_NullInMessages {
+        internal static string Common_NullInMessages {
             get {
                 return ResourceManager.GetString("Common_NullInMessages", resourceCulture);
             }
@@ -226,7 +226,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to (object).
         /// </summary>
-        public static string Common_ObjectString {
+        internal static string Common_ObjectString {
             get {
                 return ResourceManager.GetString("Common_ObjectString", resourceCulture);
             }
@@ -235,7 +235,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to String &apos;{0}&apos; does not contain string &apos;{1}&apos;. {2}..
         /// </summary>
-        public static string ContainsFail {
+        internal static string ContainsFail {
             get {
                 return ResourceManager.GetString("ContainsFail", resourceCulture);
             }
@@ -244,7 +244,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to {0} ({1}).
         /// </summary>
-        public static string DataDrivenResultDisplayName {
+        internal static string DataDrivenResultDisplayName {
             get {
                 return ResourceManager.GetString("DataDrivenResultDisplayName", resourceCulture);
             }
@@ -253,7 +253,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead..
         /// </summary>
-        public static string DoNotUseAssertEquals {
+        internal static string DoNotUseAssertEquals {
             get {
                 return ResourceManager.GetString("DoNotUseAssertEquals", resourceCulture);
             }
@@ -262,7 +262,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}.
         /// </summary>
-        public static string ElementNumbersDontMatch {
+        internal static string ElementNumbersDontMatch {
             get {
                 return ResourceManager.GetString("ElementNumbersDontMatch", resourceCulture);
             }
@@ -271,7 +271,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Element at index {0} do not match..
         /// </summary>
-        public static string ElementsAtIndexDontMatch {
+        internal static string ElementsAtIndexDontMatch {
             get {
                 return ResourceManager.GetString("ElementsAtIndexDontMatch", resourceCulture);
             }
@@ -280,7 +280,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}.
         /// </summary>
-        public static string ElementTypesAtIndexDontMatch {
+        internal static string ElementTypesAtIndexDontMatch {
             get {
                 return ResourceManager.GetString("ElementTypesAtIndexDontMatch", resourceCulture);
             }
@@ -289,7 +289,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}.
         /// </summary>
-        public static string ElementTypesAtIndexDontMatch2 {
+        internal static string ElementTypesAtIndexDontMatch2 {
             get {
                 return ResourceManager.GetString("ElementTypesAtIndexDontMatch2", resourceCulture);
             }
@@ -298,7 +298,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to String &apos;{0}&apos; does not end with string &apos;{1}&apos;. {2}..
         /// </summary>
-        public static string EndsWithFail {
+        internal static string EndsWithFail {
             get {
                 return ResourceManager.GetString("EndsWithFail", resourceCulture);
             }
@@ -307,7 +307,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Invalid argument- EqualsTester can&apos;t use nulls..
         /// </summary>
-        public static string EqualsTesterInvalidArgs {
+        internal static string EqualsTesterInvalidArgs {
             get {
                 return ResourceManager.GetString("EqualsTesterInvalidArgs", resourceCulture);
             }
@@ -316,7 +316,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Cannot convert object of type {0} to {1}..
         /// </summary>
-        public static string ErrorInvalidCast {
+        internal static string ErrorInvalidCast {
             get {
                 return ResourceManager.GetString("ErrorInvalidCast", resourceCulture);
             }
@@ -325,7 +325,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to The internal object referenced is no longer valid..
         /// </summary>
-        public static string InternalObjectNotValid {
+        internal static string InternalObjectNotValid {
             get {
                 return ResourceManager.GetString("InternalObjectNotValid", resourceCulture);
             }
@@ -334,7 +334,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to The parameter &apos;{0}&apos; is invalid. {1}..
         /// </summary>
-        public static string InvalidParameterToAssert {
+        internal static string InvalidParameterToAssert {
             get {
                 return ResourceManager.GetString("InvalidParameterToAssert", resourceCulture);
             }
@@ -343,7 +343,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to The property {0} has type {1}; expected type {2}..
         /// </summary>
-        public static string InvalidPropertyType {
+        internal static string InvalidPropertyType {
             get {
                 return ResourceManager.GetString("InvalidPropertyType", resourceCulture);
             }
@@ -352,7 +352,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to {0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;..
         /// </summary>
-        public static string IsInstanceOfFailMsg {
+        internal static string IsInstanceOfFailMsg {
             get {
                 return ResourceManager.GetString("IsInstanceOfFailMsg", resourceCulture);
             }
@@ -361,7 +361,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to String &apos;{0}&apos; does not match pattern &apos;{1}&apos;. {2}..
         /// </summary>
-        public static string IsMatchFail {
+        internal static string IsMatchFail {
             get {
                 return ResourceManager.GetString("IsMatchFail", resourceCulture);
             }
@@ -370,7 +370,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}.
         /// </summary>
-        public static string IsNotInstanceOfFailMsg {
+        internal static string IsNotInstanceOfFailMsg {
             get {
                 return ResourceManager.GetString("IsNotInstanceOfFailMsg", resourceCulture);
             }
@@ -379,7 +379,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to String &apos;{0}&apos; matches pattern &apos;{1}&apos;. {2}..
         /// </summary>
-        public static string IsNotMatchFail {
+        internal static string IsNotMatchFail {
             get {
                 return ResourceManager.GetString("IsNotMatchFail", resourceCulture);
             }
@@ -388,7 +388,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to No DataRowAttribute specified. Atleast one DataRowAttribute is required with DataTestMethodAttribute..
         /// </summary>
-        public static string NoDataRow {
+        internal static string NoDataRow {
             get {
                 return ResourceManager.GetString("NoDataRow", resourceCulture);
             }
@@ -397,7 +397,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to No exception thrown. {1} exception was expected. {0}.
         /// </summary>
-        public static string NoExceptionThrown {
+        internal static string NoExceptionThrown {
             get {
                 return ResourceManager.GetString("NoExceptionThrown", resourceCulture);
             }
@@ -406,7 +406,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to The parameter &apos;{0}&apos; is invalid. The value cannot be null. {1}..
         /// </summary>
-        public static string NullParameterToAssert {
+        internal static string NullParameterToAssert {
             get {
                 return ResourceManager.GetString("NullParameterToAssert", resourceCulture);
             }
@@ -415,7 +415,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Different number of elements..
         /// </summary>
-        public static string NumberOfElementsDiff {
+        internal static string NumberOfElementsDiff {
             get {
                 return ResourceManager.GetString("NumberOfElementsDiff", resourceCulture);
             }
@@ -428,7 +428,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         ///      that defines the member into PrivateObject&apos;s constructor.
         ///    .
         /// </summary>
-        public static string PrivateAccessorConstructorNotFound {
+        internal static string PrivateAccessorConstructorNotFound {
             get {
                 return ResourceManager.GetString("PrivateAccessorConstructorNotFound", resourceCulture);
             }
@@ -441,7 +441,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         ///      that defines the member into PrivateObject&apos;s constructor.
         ///    .
         /// </summary>
-        public static string PrivateAccessorMemberNotFound {
+        internal static string PrivateAccessorMemberNotFound {
             get {
                 return ResourceManager.GetString("PrivateAccessorMemberNotFound", resourceCulture);
             }
@@ -450,7 +450,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to String &apos;{0}&apos; does not start with string &apos;{1}&apos;. {2}..
         /// </summary>
-        public static string StartsWithFail {
+        internal static string StartsWithFail {
             get {
                 return ResourceManager.GetString("StartsWithFail", resourceCulture);
             }
@@ -459,7 +459,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to The expected exception type must be System.Exception or a type derived from System.Exception..
         /// </summary>
-        public static string UTF_ExpectedExceptionTypeMustDeriveFromException {
+        internal static string UTF_ExpectedExceptionTypeMustDeriveFromException {
             get {
                 return ResourceManager.GetString("UTF_ExpectedExceptionTypeMustDeriveFromException", resourceCulture);
             }
@@ -468,7 +468,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to (Failed to get the message for an exception of type {0} due to an exception.).
         /// </summary>
-        public static string UTF_FailedToGetExceptionMessage {
+        internal static string UTF_FailedToGetExceptionMessage {
             get {
                 return ResourceManager.GetString("UTF_FailedToGetExceptionMessage", resourceCulture);
             }
@@ -477,7 +477,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Test method did not throw expected exception {0}. {1}.
         /// </summary>
-        public static string UTF_TestMethodNoException {
+        internal static string UTF_TestMethodNoException {
             get {
                 return ResourceManager.GetString("UTF_TestMethodNoException", resourceCulture);
             }
@@ -486,7 +486,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method..
         /// </summary>
-        public static string UTF_TestMethodNoExceptionDefault {
+        internal static string UTF_TestMethodNoExceptionDefault {
             get {
                 return ResourceManager.GetString("UTF_TestMethodNoExceptionDefault", resourceCulture);
             }
@@ -495,7 +495,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Test method threw exception {0}, but exception {1} was expected. Exception message: {2}.
         /// </summary>
-        public static string UTF_TestMethodWrongException {
+        internal static string UTF_TestMethodWrongException {
             get {
                 return ResourceManager.GetString("UTF_TestMethodWrongException", resourceCulture);
             }
@@ -504,7 +504,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         /// <summary>
         ///   Looks up a localized string similar to Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}.
         /// </summary>
-        public static string UTF_TestMethodWrongExceptionDerivedAllowed {
+        internal static string UTF_TestMethodWrongExceptionDerivedAllowed {
             get {
                 return ResourceManager.GetString("UTF_TestMethodWrongExceptionDerivedAllowed", resourceCulture);
             }
@@ -515,7 +515,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         ///Exception Message: {3}
         ///Stack Trace: {4}.
         /// </summary>
-        public static string WrongExceptionThrown {
+        internal static string WrongExceptionThrown {
             get {
                 return ResourceManager.GetString("WrongExceptionThrown", resourceCulture);
             }
