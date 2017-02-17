@@ -231,6 +231,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return Directory.GetDirectories(path);
         }
 
+        protected virtual bool DoesFileExist(string filePath)
+        {
+            return File.Exists(filePath);
+        }
+
+        protected virtual Assembly LoadAssemblyFrom(string path)
+        {
+            return Assembly.LoadFrom(path);
+        }
+
+        protected virtual Assembly ReflectionOnlyLoadAssemblyFrom(string path)
+        {
+            return Assembly.ReflectionOnlyLoadFrom(path);
+        }
+
         /// <summary>
         /// It will search for a particular assembly in the given list of directory.
         /// </summary>
@@ -516,6 +531,43 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
+        /// Load assembly from cache if available.
+        /// </summary>
+        /// <param name="assemblyName"> The assembly Name. </param>
+        /// <param name="isReflectionOnly">Indicates if this is a reflection-only context.</param>
+        /// <param name="assembly"> The assembly. </param>
+        /// <returns> The <see cref="bool"/>. </returns>
+        private bool TryLoadFromCache(string assemblyName, bool isReflectionOnly, out Assembly assembly)
+        {
+            bool isFoundInCache = false;
+
+            if (isReflectionOnly)
+            {
+                isFoundInCache = this.reflectionOnlyResolvedAssemblies.TryGetValue(assemblyName, out assembly);
+            }
+            else
+            {
+                isFoundInCache = this.resolvedAssemblies.TryGetValue(assemblyName, out assembly);
+            }
+
+            if (isFoundInCache)
+            {
+                this.SafeLog(
+                    assemblyName,
+                    () =>
+                    {
+                        if (EqtTrace.IsInfoEnabled)
+                        {
+                            EqtTrace.Info("AssemblyResolver: Resolved: {0}.", assemblyName);
+                        }
+                    });
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Call logger APIs safely. We do not want a stackoverflow when objectmodel assembly itself
         /// is being resolved and an EqtTrace message prompts the load of the same dll again.
         /// CLR does not trigger a load when the EqtTrace messages are in a lamda expression. Leaving it that way
@@ -545,7 +597,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             try
             {
-                if (!File.Exists(assemblyPath))
+                if (!this.DoesFileExist(assemblyPath))
                 {
                     return null;
                 }
@@ -561,12 +613,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
                 if (isReflectionOnly)
                 {
-                    assembly = Assembly.ReflectionOnlyLoadFrom(assemblyPath);
+                    assembly = this.ReflectionOnlyLoadAssemblyFrom(assemblyPath);
                     this.reflectionOnlyResolvedAssemblies[assemblyName] = assembly;
                 }
                 else
                 {
-                    assembly = Assembly.LoadFrom(assemblyPath);
+                    assembly = this.LoadAssemblyFrom(assemblyPath);
                     this.resolvedAssemblies[assemblyName] = assembly;
                 }
 
@@ -613,43 +665,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Load assembly from cache if available.
-        /// </summary>
-        /// <param name="assemblyName"> The assembly Name. </param>
-        /// <param name="isReflectionOnly">Indicates if this is a reflection-only context.</param>
-        /// <param name="assembly"> The assembly. </param>
-        /// <returns> The <see cref="bool"/>. </returns>
-        private bool TryLoadFromCache(string assemblyName, bool isReflectionOnly, out Assembly assembly)
-        {
-            bool isFoundInCache = false;
-
-            if (isReflectionOnly)
-            {
-                isFoundInCache = this.reflectionOnlyResolvedAssemblies.TryGetValue(assemblyName, out assembly);
-            }
-            else
-            {
-                isFoundInCache = this.resolvedAssemblies.TryGetValue(assemblyName, out assembly);
-            }
-
-            if (isFoundInCache)
-            {
-                this.SafeLog(
-                    assemblyName,
-                    () =>
-                        {
-                            if (EqtTrace.IsInfoEnabled)
-                            {
-                                EqtTrace.Info("AssemblyResolver: Resolved: {0}.", assemblyName);
-                            }
-                        });
-                return true;
-            }
-
-            return false;
         }
     }
 }

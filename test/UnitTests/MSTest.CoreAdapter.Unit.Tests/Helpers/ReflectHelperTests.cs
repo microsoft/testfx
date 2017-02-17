@@ -6,12 +6,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
     extern alias FrameworkV1;
     extern alias FrameworkV2;
 
+    using System;
     using System.Linq;
     using System.Reflection;
+
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Moq;
+
     using TestableImplementations;
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -21,6 +28,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
     {
         private TestableReflectHelper reflectHelper;
         private Mock<MethodInfo> method;
+        private TestablePlatformServiceProvider testablePlatformServiceProvider;
 
         [TestInitialize]
         public void IntializeTests()
@@ -29,6 +37,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.method = new Mock<MethodInfo>();
             this.method.Setup(x => x.MemberType).Returns(MemberTypes.Method);
             this.method.Setup(x => x.DeclaringType).Returns(typeof(ReflectHelperTests));
+
+            this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+            this.testablePlatformServiceProvider.SetupMockReflectionOperations();
+            PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            PlatformServiceProvider.Instance = null;
         }
 
         /// <summary>
@@ -116,5 +134,173 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             CollectionAssert.AreEqual(expected, actual);
         }
+
+        [TestMethod]
+        public void IsAttributeDefinedShouldReturnTrueIfSpecifiedAttributeIsDefinedOnAMember()
+        {
+            var rh = new ReflectHelper();
+            var mockMemberInfo = new Mock<MemberInfo>();
+            var attribs = new Attribute[] { new UTF.TestMethodAttribute() };
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+                Returns(attribs);
+
+            Assert.IsTrue(rh.IsAttributeDefined(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true));
+        }
+
+        [TestMethod]
+        public void IsAttributeDefinedShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
+        {
+            var rh = new ReflectHelper();
+            var mockMemberInfo = new Mock<MemberInfo>();
+            var attribs = new Attribute[] { new UTF.TestClassAttribute() };
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+                Returns(attribs);
+
+            Assert.IsFalse(rh.IsAttributeDefined(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true));
+        }
+
+        [TestMethod]
+        public void IsAttributeDefinedShouldReturnFromCache()
+        {
+            var rh = new ReflectHelper();
+
+            // Not using mocks here because for some reason a dictionary match of the mock is not returning true in the product code.
+            var memberInfo = typeof(ReflectHelperTests).GetMethod("IsAttributeDefinedShouldReturnFromCache");
+
+            // new Mock<MemberInfo>();
+            var attribs = new Attribute[] { new UTF.TestMethodAttribute() };
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(memberInfo, true)).
+                Returns(attribs);
+
+            Assert.IsTrue(rh.IsAttributeDefined(memberInfo, typeof(UTF.TestMethodAttribute), true));
+
+            // Validate that reflection APIs are not called again.
+            Assert.IsTrue(rh.IsAttributeDefined(memberInfo, typeof(UTF.TestMethodAttribute), true));
+            this.testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo, true), Times.Once);
+
+            // Also validate that reflection APIs for an individual type is not called since the cache gives us what we need already.
+            this.testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<Type>(), It.IsAny<bool>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void IsAttributeDefinedShouldReturnTrueQueryingASpecificAttributesExistenceEvenIfGettingAllAttributesFail()
+        {
+            var rh = new ReflectHelper();
+            var mockMemberInfo = new Mock<MemberInfo>();
+            var attribs = new Attribute[] { new UTF.TestMethodAttribute() };
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+                Returns((object[])null);
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true)).
+                Returns(attribs);
+
+            Assert.IsTrue(rh.IsAttributeDefined(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true));
+        }
+
+        [TestMethod]
+        public void HasAttributeDerivedFromShouldReturnTrueIfSpecifiedAttributeIsDefinedOnAMember()
+        {
+            var rh = new ReflectHelper();
+            var mockMemberInfo = new Mock<MemberInfo>();
+            var attribs = new Attribute[] { new TestableExtendedTestMethod() };
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+                Returns(attribs);
+
+            Assert.IsTrue(rh.HasAttributeDerivedFrom(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true));
+        }
+
+        [TestMethod]
+        public void HasAttributeDerivedFromShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
+        {
+            var rh = new ReflectHelper();
+            var mockMemberInfo = new Mock<MemberInfo>();
+            var attribs = new Attribute[] { new TestableExtendedTestMethod() };
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+                Returns(attribs);
+
+            Assert.IsFalse(rh.IsAttributeDefined(mockMemberInfo.Object, typeof(UTF.TestClassAttribute), true));
+        }
+
+        [TestMethod]
+        public void HasAttributeDerivedFromShouldReturnFromCache()
+        {
+            var rh = new ReflectHelper();
+
+            // Not using mocks here because for some reason a dictionary match of the mock is not returning true in the product code.
+            var memberInfo = typeof(ReflectHelperTests).GetMethod("HasAttributeDerivedFromShouldReturnFromCache");
+
+            // new Mock<MemberInfo>();
+            var attribs = new Attribute[] { new TestableExtendedTestMethod() };
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(memberInfo, true)).
+                Returns(attribs);
+
+            Assert.IsTrue(rh.HasAttributeDerivedFrom(memberInfo, typeof(UTF.TestMethodAttribute), true));
+
+            // Validate that reflection APIs are not called again.
+            Assert.IsTrue(rh.HasAttributeDerivedFrom(memberInfo, typeof(UTF.TestMethodAttribute), true));
+            this.testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo, true), Times.Once);
+
+            // Also validate that reflection APIs for an individual type is not called since the cache gives us what we need already.
+            this.testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<Type>(), It.IsAny<bool>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void HasAttributeDerivedFromShouldReturnFalseQueryingProvidedAttributesExistenceIfGettingAllAttributesFail()
+        {
+            var rh = new ReflectHelper();
+            var mockMemberInfo = new Mock<MemberInfo>();
+            var attribs = new Attribute[] { new TestableExtendedTestMethod() };
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+                Returns((object[])null);
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true)).
+                Returns(attribs);
+
+            Assert.IsFalse(rh.IsAttributeDefined(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true));
+        }
+
+        [TestMethod]
+        public void HasAttributeDerivedFromShouldReturnTrueQueryingProvidedAttributesExistenceIfGettingAllAttributesFail()
+        {
+            var rh = new ReflectHelper();
+            var mockMemberInfo = new Mock<MemberInfo>();
+            var attribs = new Attribute[] { new TestableExtendedTestMethod() };
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
+                Returns((object[])null);
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(TestableExtendedTestMethod), true)).
+                Returns(attribs);
+
+            Assert.IsTrue(rh.IsAttributeDefined(mockMemberInfo.Object, typeof(TestableExtendedTestMethod), true));
+        }
     }
+
+    #region Dummy Implmentations
+
+    public class TestableExtendedTestMethod : UTF.TestMethodAttribute
+    {
+    }
+
+    #endregion
 }
