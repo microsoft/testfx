@@ -73,7 +73,7 @@
     <Compile Include="Helpers\ReflectHelper.cs" />
     <Compile Include="Execution\TestRunCancellationToken.cs" />
     <Compile Include="Discovery\UnitTestDiscoverer.cs" />
-    <Compile Include="Resources\Resource.Designer.cs" >
+    <Compile Include="Resources\Resource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
@@ -114,6 +114,7 @@
     <EmbeddedResource Include="Resources\Resource.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />

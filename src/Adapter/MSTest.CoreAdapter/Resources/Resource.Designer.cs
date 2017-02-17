@@ -40,7 +40,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resource", typeof(Resource).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.Resource", typeof(Resource).GetTypeInfo().Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

@@ -114,9 +114,10 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\Resource.resx">
-       <Generator>ResXFileCodeGenerator</Generator>
-       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-       <SubType>Designer</SubType>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+      <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
