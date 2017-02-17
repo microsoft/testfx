@@ -47,8 +47,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
             if (attributes == null)
             {
-                // If we could not obtain it in a fast (with cache) way, use slow reflection directly.
-                return memberInfo.IsDefined(attributeType, inherit);
+                // If we could not obtain all attributes from cache, just get the one we need.
+                var specificAttributes = GetCustomAttributes(memberInfo, attributeType, inherit);
+                var requiredAttribTypeFullName = attributeType.FullName;
+
+                return specificAttributes.Any(a => string.Equals(a.GetType().FullName, requiredAttribTypeFullName));
             }
 
             string nameToFind = attributeType.FullName;
@@ -69,42 +72,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <returns>True if the specified attribute is defined on the type.</returns>
         public virtual bool IsAttributeDefined(Type type, Type attributeType, bool inherit)
         {
-            if (type == null)
-            {
-                throw new ArgumentNullException(nameof(type));
-            }
-
-            if (attributeType == null)
-            {
-                throw new ArgumentNullException(nameof(attributeType));
-            }
-
-            Debug.Assert(attributeType != null, "attributeType should not e null.");
-
-            // Get attributes defined on the member from the cache.
-            var attributes = GetCustomAttributes(type.GetTypeInfo(), attributeType, inherit);
-
-            if (attributes == null)
-            {
-                // If we could not obtain it in a fast (with cache) way, use slow reflection directly.
-                return type.GetTypeInfo().IsDefined(attributeType, inherit);
-            }
-
-            Dictionary<string, object> attributesDict = new Dictionary<string, object>();
-
-            foreach (Attribute customAttribute in attributes)
-            {
-                Type attrType = customAttribute.GetType();
-                attributesDict[attrType.FullName] = customAttribute;
-            }
-
-            string nameToFind = attributeType.FullName;
-            if (attributesDict.ContainsKey(nameToFind))
-            {
-                return true;
-            }
-
-            return false;
+            return this.IsAttributeDefined(type.GetTypeInfo(), attributeType, inherit);
         }
 
         /// <summary>
@@ -116,42 +84,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <returns>An object derived from Attribute that corresponds to the instance of found attribute.</returns>
         public virtual bool HasAttributeDerivedFrom(Type type, Type baseAttributeType, bool inherit)
         {
-            if (type == null)
-            {
-                throw new ArgumentNullException(nameof(type));
-            }
-
-            if (baseAttributeType == null)
-            {
-                throw new ArgumentNullException(nameof(baseAttributeType));
-            }
-
-            object targetAttribute = null;
-
-            // Get all attributes on the member.
-            var attributes = GetCustomAttributes(type.GetTypeInfo(), inherit);
-            if (attributes == null)
-            {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("ReflectHelper.HasAttributeDerivedFrom: Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.");
-
-                // If we could not obtain attrs in a fast (with cache) way, use slow reflection directly.
-                return type.GetTypeInfo().IsDefined(baseAttributeType, inherit);
-            }
-
-            // Try to find the attribute that is derived from baseAttrType.
-            foreach (object attribute in attributes)
-            {
-                Debug.Assert(attribute != null, "ReflectHeler.DefinesAttributeDerivedFrom: internal error: wrong value in the attrs dictionary.");
-
-                Type attributeType = attribute.GetType();
-                if (attributeType.GetTypeInfo().IsSubclassOf(baseAttributeType))
-                {
-                    targetAttribute = attribute;
-                    return true;
-                }
-            }
-
-            return false;
+            return this.HasAttributeDerivedFrom(type.GetTypeInfo(), baseAttributeType, inherit);
         }
 
         /// <summary>
@@ -173,42 +106,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 throw new ArgumentNullException(nameof(baseAttributeType));
             }
 
-            object ignoredTargetAttribute;
-            return this.HasAttributeDerivedFrom(memberInfo, baseAttributeType, inherit, out ignoredTargetAttribute);
-        }
-
-        /// <summary>
-        /// Returns true when specified class/member has attribute derived from specific attribute.
-        /// </summary>
-        /// <param name="memberInfo">The member.</param>
-        /// <param name="baseAttributeType">Base attribute type.</param>
-        /// <param name="inherit">Whether inheritance hierarchy should be considered.</param>
-        /// <param name="targetAttribute">Target attribute. </param>
-        /// <returns>An object derived from Attribute that corresponds to the instance of found attribute.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1007:UseGenericsWhereAppropriate", Justification = "This is only for internal use.")]
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "3#", Justification ="This is only for internal use.")]
-        public bool HasAttributeDerivedFrom(MemberInfo memberInfo, Type baseAttributeType, bool inherit, out object targetAttribute)
-        {
-            if (memberInfo == null)
-            {
-                throw new ArgumentNullException(nameof(memberInfo));
-            }
-
-            if (baseAttributeType == null)
-            {
-                throw new ArgumentNullException(nameof(baseAttributeType));
-            }
-
-            targetAttribute = null;
-
             // Get all attributes on the member.
             Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
             if (attributes == null)
             {
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("ReflectHelper.HasAttributeDerivedFrom: Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.");
 
-                // If we could not obtain attrs in a fast (with cache) way, use slow reflection directly.
-                return memberInfo.IsDefined(baseAttributeType, inherit);
+                return this.IsAttributeDefined(memberInfo, baseAttributeType, inherit);
             }
 
             // Try to find the attribute that is derived from baseAttrType.
@@ -219,7 +123,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 Type attributeType = attribute.GetType();
                 if (attributeType.GetTypeInfo().IsSubclassOf(baseAttributeType))
                 {
-                    targetAttribute = attribute;
                     return true;
                 }
             }

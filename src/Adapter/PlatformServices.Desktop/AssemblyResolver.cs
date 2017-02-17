@@ -41,10 +41,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private List<string> searchDirectories;
 
         /// <summary>
-        /// Dictionary of Assemblies discovered to date. Must be locked as it may
-        /// be accessed in a multi-threaded context.
+        /// Dictionary of Assemblies discovered to date.
         /// </summary>
         private Dictionary<string, Assembly> resolvedAssemblies = new Dictionary<string, Assembly>();
+
+        /// <summary>
+        /// Dictionary of Reflection-Only Assemblies discovered to date.
+        /// </summary>
+        private Dictionary<string, Assembly> reflectionOnlyResolvedAssemblies = new Dictionary<string, Assembly>();
+
+        /// <summary>
+        /// lock for the loaded assemblies cache.
+        /// </summary>
+        private object syncLock = new object();
 
         private bool disposed;
 
@@ -387,12 +396,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     }
                 });
 
-            lock (this.resolvedAssemblies)
+            lock (this.syncLock)
             {
                 // Since both normal and reflection only cache are accessed in same block, putting only one lock should be sufficient.
                 Assembly assembly = null;
 
-                if (this.TryLoadFromCache(assemblyNameToLoad, out assembly))
+                if (this.TryLoadFromCache(assemblyNameToLoad, isReflectionOnly, out assembly))
                 {
                     return assembly;
                 }
@@ -457,24 +466,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 // Try for default load for System dlls that can't be found in search paths. Needs to loaded just by name.
                 try
                 {
-                    // Put it in the resolved assembly cache so that if the Load call below
-                    // triggers another assembly resolution, then we dont end up in stack overflow.
-                    this.resolvedAssemblies[assemblyNameToLoad] = null;
-
                     if (isReflectionOnly)
                     {
+                        // Put it in the resolved assembly cache so that if the Load call below
+                        // triggers another assembly resolution, then we dont end up in stack overflow.
+                        this.reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = null;
+
                         assembly = Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
+
+                        if (assembly != null)
+                        {
+                            this.reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = assembly;
+                        }
                     }
                     else
                     {
+                        // Put it in the resolved assembly cache so that if the Load call below
+                        // triggers another assembly resolution, then we dont end up in stack overflow.
+                        this.resolvedAssemblies[assemblyNameToLoad] = null;
+
                         assembly = Assembly.Load(assemblyNameToLoad);
+
+                        if (assembly != null)
+                        {
+                            this.resolvedAssemblies[assemblyNameToLoad] = assembly;
+                        }
                     }
 
-                    if (assembly != null)
-                    {
-                        this.resolvedAssemblies[assemblyNameToLoad] = assembly;
-                        return assembly;
-                    }
+                    return assembly;
                 }
                 catch (Exception ex)
                 {
@@ -543,13 +562,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 if (isReflectionOnly)
                 {
                     assembly = Assembly.ReflectionOnlyLoadFrom(assemblyPath);
+                    this.reflectionOnlyResolvedAssemblies[assemblyName] = assembly;
                 }
                 else
                 {
                     assembly = Assembly.LoadFrom(assemblyPath);
+                    this.resolvedAssemblies[assemblyName] = assembly;
                 }
-
-                this.resolvedAssemblies[assemblyName] = assembly;
 
                 this.SafeLog(
                     assemblyName,
@@ -600,11 +619,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Load assembly from cache if available.
         /// </summary>
         /// <param name="assemblyName"> The assembly Name. </param>
+        /// <param name="isReflectionOnly">Indicates if this is a reflection-only context.</param>
         /// <param name="assembly"> The assembly. </param>
         /// <returns> The <see cref="bool"/>. </returns>
-        private bool TryLoadFromCache(string assemblyName, out Assembly assembly)
+        private bool TryLoadFromCache(string assemblyName, bool isReflectionOnly, out Assembly assembly)
         {
-            if (this.resolvedAssemblies.TryGetValue(assemblyName, out assembly))
+            bool isFoundInCache = false;
+
+            if (isReflectionOnly)
+            {
+                isFoundInCache = this.reflectionOnlyResolvedAssemblies.TryGetValue(assemblyName, out assembly);
+            }
+            else
+            {
+                isFoundInCache = this.resolvedAssemblies.TryGetValue(assemblyName, out assembly);
+            }
+
+            if (isFoundInCache)
             {
                 this.SafeLog(
                     assemblyName,
