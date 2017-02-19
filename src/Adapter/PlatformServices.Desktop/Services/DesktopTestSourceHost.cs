@@ -142,7 +142,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             this.appDomain = AppDomain.CreateDomain("TestSourceHost: Enumering assembly", null, appDomainSetup);
 
-            // #824545 Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recurive assembly resolution
+            // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recurive assembly resolution
             // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
             EqtTrace.SetupRemoteEqtTraceListeners(this.appDomain);
 

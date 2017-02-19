@@ -49,12 +49,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             {
                 // If we could not obtain all attributes from cache, just get the one we need.
                 var specificAttributes = GetCustomAttributes(memberInfo, attributeType, inherit);
-                var requiredAttribTypeFullName = attributeType.FullName;
+                var requiredAttributeQualifiedName = attributeType.AssemblyQualifiedName;
 
-                return specificAttributes.Any(a => string.Equals(a.GetType().FullName, requiredAttribTypeFullName));
+                return specificAttributes.Any(a => string.Equals(a.GetType().AssemblyQualifiedName, requiredAttributeQualifiedName));
             }
 
-            string nameToFind = attributeType.FullName;
+            string nameToFind = attributeType.AssemblyQualifiedName;
             if (attributes.ContainsKey(nameToFind))
             {
                 return true;
@@ -585,9 +585,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                     foreach (object customAttribute in customAttributesArray)
                     {
                         Type attrType = customAttribute.GetType();
-
-                        // TODO: make sure setting values to Type works across versioning.
-                        attributes[attrType.FullName] = customAttribute;
+                        attributes[attrType.AssemblyQualifiedName] = customAttribute;
                     }
 
                     this.attributeCache.Add(memberInfo, attributes);
