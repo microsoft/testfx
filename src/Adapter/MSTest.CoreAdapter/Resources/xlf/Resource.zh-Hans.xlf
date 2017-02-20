@@ -1,0 +1,291 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="zh-Hans" original="../Resource.resx">
+    <body>
+      <trans-unit id="UTA_AssemblyCleanupMethodWasUnsuccesful">
+        <source>程序集清理方法 {0}.{1} 失败。错误消息: {2}。StackTrace: {3}</source>
+        <target state="new">程序集清理方法 {0}.{1} 失败。错误消息: {2}。StackTrace: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CouldNotInspectTypeDuringDiscovery1">
+        <source>MSTestAdapter 未能在程序集“{1}”的类“{0}”中发现测试。原因是 {2}。</source>
+        <target state="new">MSTestAdapter 未能在程序集“{1}”的类“{0}”中发现测试。原因是 {2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_CannotBeNullOrEmpty">
+        <source>参数不应为 NULL 或为空。</source>
+        <target state="new">参数不应为 NULL 或为空。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlElement">
+        <source>设置“{0}”无效。意外的 XmlElement:“{1}”。</source>
+        <target state="new">设置“{0}”无效。意外的 XmlElement:“{1}”。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
+        <source>方法 {0}.{1} 具有错误的签名。该方法必须是非静态的公共方法、不返回值并且不应采用任何参数。此外，如果在方法中使用同步等待，则返回类型必须为 Task。</source>
+        <target state="new">方法 {0}.{1} 具有错误的签名。该方法必须是非静态的公共方法、不返回值并且不应采用任何参数。此外，如果在方法中使用同步等待，则返回类型必须为 Task。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature">
+        <source>方法 {0}.{1} 具有错误的签名。该方法必须是静态的公共方法、不返回值并且应采用一个 TestContext 类型的参数。此外，如果在方法中使用同步等待，则返回类型必须为 Task。</source>
+        <target state="new">方法 {0}.{1} 具有错误的签名。该方法必须是静态的公共方法、不返回值并且应采用一个 TestContext 类型的参数。此外，如果在方法中使用同步等待，则返回类型必须为 Task。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlAttribute">
+        <source>设置“{0}”无效。意外的 XmlAttribute:“{1}”。</source>
+        <target state="new">设置“{0}”无效。意外的 XmlAttribute:“{1}”。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiAssemblyInit">
+        <source>UTA013: {0}: 在一个程序集内部，不能定义多个具有 AssemblyInitialize 特性的方法。</source>
+        <target state="new">UTA013: {0}: 在一个程序集内部，不能定义多个具有 AssemblyInitialize 特性的方法。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiClassInit">
+        <source>UTA025: {0}: 在一个类内部，不能定义多个具有 ClassInitialize 特性的方法。</source>
+        <target state="new">UTA025: {0}: 在一个类内部，不能定义多个具有 ClassInitialize 特性的方法。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ExpectedExceptionAttributeConstructionException">
+        <source>测试方法 {0}.{1} 上定义的 ExpectedException 属性在构造过程中引发了一个异常。
+{2}</source>
+        <target state="new">测试方法 {0}.{1} 上定义的 ExpectedException 属性在构造过程中引发了一个异常。
+{2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorPredefinedTestProperty">
+        <source>UTA023: {0}: 不能在方法 {1} 上定义预定义属性 {2}。</source>
+        <target state="new">UTA023: {0}: 不能在方法 {1} 上定义预定义属性 {2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_InitMethodThrows">
+        <source>初始化方法 {0}.{1} 引发异常。{2}。</source>
+        <target state="new">初始化方法 {0}.{1} 引发异常。{2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestNotFound">
+        <source>未找到测试方法 {0}。</source>
+        <target state="new">未找到测试方法 {0}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Execution_Test_Timeout">
+        <source>测试“{0}”的执行超时。</source>
+        <target state="new">测试“{0}”的执行超时。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiInit">
+        <source>UTA018: {0}: 不能定义多个具有 TestInitialize 特性的方法。</source>
+        <target state="new">UTA018: {0}: 不能定义多个具有 TestInitialize 特性的方法。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorNonPublicTestClass">
+        <source>UTA001: 在非公共类 {0} 上定义的 TestClass 特性</source>
+        <target state="new">UTA001: 在非公共类 {0} 上定义的 TestClass 特性</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
+        <source>UTA007: 在类 {0} 中定义的方法 {1} 没有正确的签名。用 [TestMethod] 特性标记的测试方法必须是返回类型为 void 的非静态的公共方法，并且不应采用任何参数。示例: public void Test.Class1.Test()。此外，如果你在测试方法中使用异步等待，则返回类型必须为 Task。示例: public async Task Test.Class1.Test2()</source>
+        <target state="new">UTA007: 在类 {0} 中定义的方法 {1} 没有正确的签名。用 [TestMethod] 特性标记的测试方法必须是返回类型为 void 的非静态的公共方法，并且不应采用任何参数。示例: public void Test.Class1.Test()。此外，如果你在测试方法中使用异步等待，则返回类型必须为 Task。示例: public async Task Test.Class1.Test2()</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorTestPropertyNullOrEmpty">
+        <source>UTA021: {0}: 对方法 {1} 定义了为 NULL 或为空的自定义属性。自定义属性必须具有有效名称。</source>
+        <target state="new">UTA021: {0}: 对方法 {1} 定义了为 NULL 或为空的自定义属性。自定义属性必须具有有效名称。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_NoTestResult">
+        <source>执行测试时出错。扩展未返回任何结果。如果使用的是扩展 TestMethodAttribute ，请与供应商联系。</source>
+        <target state="new">执行测试时出错。扩展未返回任何结果。如果使用的是扩展 TestMethodAttribute ，请与供应商联系。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassCleanupMethodWasUnsuccesful">
+        <source>类清理方法 {0}.{1} 失败。错误消息: {2}。堆栈跟踪: {3}</source>
+        <target state="new">类清理方法 {0}.{1} 失败。错误消息: {2}。堆栈跟踪: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorTestPropertyAlreadyDefined">
+        <source>UTA022: {0}.{1}: 已经定义了自定义属性“{2}”。其值为“{3}”。</source>
+        <target state="new">UTA022: {0}.{1}: 已经定义了自定义属性“{2}”。其值为“{3}”。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="SourcesNotSupported">
+        <source>选定的平台不支持在任何提供的源中运行测试</source>
+        <target state="new">选定的平台不支持在任何提供的源中运行测试</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassInitMethodThrows">
+        <source>类初始化方法 {0}.{1} 引发异常。{2}: {3}。</source>
+        <target state="new">类初始化方法 {0}.{1} 引发异常。{2}: {3}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestContextIsNull">
+        <source>TestContext 不能为 NULL。</source>
+        <target state="new">TestContext 不能为 NULL。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DataDrivenResultDisplayName">
+        <source>{0} (数据行 {1})</source>
+        <target state="new">{0} (数据行 {1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_WrongThread">
+        <source>{0}。如果在测试中使用 UI 对象，请考虑使用 [UITestMethod] 特性代替 [TestMethod] 特性来在 UI 线程中执行测试。</source>
+        <target state="new">{0}。如果在测试中使用 UI 对象，请考虑使用 [UITestMethod] 特性代替 [TestMethod] 特性来在 UI 线程中执行测试。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ExecuteThrewException">
+        <source>执行测试时引发了异常。如果使用的是扩展 TestMethodAttribute，请与供应商联系。错误消息: {0}</source>
+        <target state="new">执行测试时引发了异常。如果使用的是扩展 TestMethodAttribute，请与供应商联系。错误消息: {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestMethodThrows">
+        <source>测试方法 {0}.{1} 引发了异常: 
+{2}</source>
+        <target state="new">测试方法 {0}.{1} 引发了异常: 
+{2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_CleanupMethodThrows">
+        <source>TestCleanup 方法 {0}.{1} 引发异常。{2}。</source>
+        <target state="new">TestCleanup 方法 {0}.{1} 引发异常。{2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_InstanceCreationError">
+        <source>无法创建类 {0} 的实例。错误: {1}。</source>
+        <target state="new">无法创建类 {0} 的实例。错误: {1}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestContextTypeMismatchLoadError">
+        <source>{0}.TestContext 的类型不正确。</source>
+        <target state="new">{0}.TestContext 的类型不正确。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DebugTraceBanner">
+        <source>调试跟踪:</source>
+        <target state="new">调试跟踪:</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature">
+        <source>方法 {0}.{1} 具有错误的签名。该方法必须是静态的公共方法、不返回值并且不应采用任何参数。此外，如果在方法中使用同步等待，则返回类型必须为 Task。</source>
+        <target state="new">方法 {0}.{1} 具有错误的签名。该方法必须是静态的公共方法、不返回值并且不应采用任何参数。此外，如果在方法中使用同步等待，则返回类型必须为 Task。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorGenericTestMethod">
+        <source>UTA015: 泛型方法不可为测试方法。{0}.{1} 具有无效签名</source>
+        <target state="new">UTA015: 泛型方法不可为测试方法。{0}.{1} 具有无效签名</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyInitMethodThrows">
+        <source>程序集初始化方法 {0}.{1} 引发异常。{2}: {3}。正在中止测试的执行。</source>
+        <target state="new">程序集初始化方法 {0}.{1} 引发异常。{2}: {3}。正在中止测试的执行。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiClean">
+        <source>UTA024: {0}: 不能定义多个具有 TestCleanup 特性的方法。</source>
+        <target state="new">UTA024: {0}: 不能定义多个具有 TestCleanup 特性的方法。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_FailedToGetExceptionMessage">
+        <source>(因异常而未能获取类型为 {0} 的异常的消息。)</source>
+        <target state="new">(因异常而未能获取类型为 {0} 的异常的消息。)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AttachmentSetDisplayName">
+        <source>MSTestAdapterV2</source>
+        <target state="new">MSTestAdapterV2</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CouldNotInspectTypeDuringDiscovery">
+        <source>由于 {2}，MSTestAdapter 未能在程序集“{1}”的类“{0}”中发现测试。</source>
+        <target state="new">由于 {2}，MSTestAdapter 未能在程序集“{1}”的类“{0}”中发现测试。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestContextSetError">
+        <source>无法设置类 {0} 的 TestContext 属性。错误: {1}。</source>
+        <target state="new">无法设置类 {0} 的 TestContext 属性。错误: {1}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiAssemblyClean">
+        <source>UTA014: {0}: 在一个程序集内部，不能定义多个具有 AssemblyCleanup 特性的方法。</source>
+        <target state="new">UTA014: {0}: 在一个程序集内部，不能定义多个具有 AssemblyCleanup 特性的方法。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_FailedToGetTestMethodException">
+        <source>未能获取测试方法 {0}.{1} 引发的异常。</source>
+        <target state="new">未能获取测试方法 {0}.{1} 引发的异常。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_EndOfInnerExceptionTrace">
+        <source>---内部异常堆栈跟踪结束---</source>
+        <target state="new">---内部异常堆栈跟踪结束---</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorInvalidTimeout">
+        <source>UTA054: {0}.{1} 具有无效的 Timeout 特性。超时值必须是有效的整数值而且不能小于 0。</source>
+        <target state="new">UTA054: {0}.{1} 具有无效的 Timeout 特性。超时值必须是有效的整数值而且不能小于 0。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="LegacyScenariosNotSupportedWarning">
+        <source>警告: MSTest V2 适配器不支持 testsettings 文件或将 ForcedLegacyMode 设置为 true 的 runsettings。</source>
+        <target state="new">警告: MSTest V2 适配器不支持 testsettings 文件或将 ForcedLegacyMode 设置为 true 的 runsettings。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_MustBeGreaterThanZero">
+        <source>参数必须大于零。</source>
+        <target state="new">参数必须大于零。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_NoDefaultConstructor">
+        <source>无法获取类 {0} 的默认构造函数。</source>
+        <target state="new">无法获取类 {0} 的默认构造函数。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestContextLoadError">
+        <source>无法找到属性 {0}.TestContext。错误: {1}。</source>
+        <target state="new">无法找到属性 {0}.TestContext。错误: {1}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EnumeratorLoadTypeErrorFormat">
+        <source>{0}: {1}</source>
+        <target state="new">{0}: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_MultipleExpectedExceptionsOnTestMethod">
+        <source>测试方法 {0}.{1} 具有多个在该方法上定义的 ExpectedExceptionBaseAttribute 的派生属性。仅允许一个此类属性。</source>
+        <target state="new">测试方法 {0}.{1} 具有多个在该方法上定义的 ExpectedExceptionBaseAttribute 的派生属性。仅允许一个此类属性。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorInValidTestContextSignature">
+        <source>UTA031: 类 {0} 没有有效的 TestContext 属性。TestContext 的类型必须为 TestContext，必须是非静态的、公共的而且不能为只读。例如: public TestContext TestContext。</source>
+        <target state="new">UTA031: 类 {0} 没有有效的 TestContext 属性。TestContext 的类型必须为 TestContext，必须是非静态的、公共的而且不能为只读。例如: public TestContext TestContext。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_MethodDoesNotExists">
+        <source>方法 {0}.{1} 不存在。</source>
+        <target state="new">方法 {0}.{1} 不存在。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestAssembly_FileDoesNotExist">
+        <source>文件不存在: {0}</source>
+        <target state="new">文件不存在: {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TypeLoadError">
+        <source>无法获取类型 {0}。错误: {1}。</source>
+        <target state="new">无法获取类型 {0}。错误: {1}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TypeLoadFailed">
+        <source>无法从测试源“{0}”加载类型。可能无法发现此源中的部分或所有测试。</source>
+        <target state="new">无法从测试源“{0}”加载类型。可能无法发现此源中的部分或所有测试。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiClassClean">
+        <source>UTA026: {0}: 在一个类内部，不能定义多个具有 ClassCleanup 特性的方法。</source>
+        <target state="new">UTA026: {0}: 在一个类内部，不能定义多个具有 ClassCleanup 特性的方法。</target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -1,0 +1,291 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ja" original="../Resource.resx">
+    <body>
+      <trans-unit id="UTA_AssemblyCleanupMethodWasUnsuccesful">
+        <source>アセンブリ クリーンアップ メソッド {0}.{1} に失敗しました。エラー メッセージ: {2}。スタック トレース: {3}</source>
+        <target state="new">アセンブリ クリーンアップ メソッド {0}.{1} に失敗しました。エラー メッセージ: {2}。スタック トレース: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CouldNotInspectTypeDuringDiscovery1">
+        <source>MSTestAdapter でアセンブリ '{1}' のクラス '{0}' にテストが見つかりませんでした。理由 {2}。</source>
+        <target state="new">MSTestAdapter でアセンブリ '{1}' のクラス '{0}' にテストが見つかりませんでした。理由 {2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_CannotBeNullOrEmpty">
+        <source>パラメーターを null または空にすることはできません。</source>
+        <target state="new">パラメーターを null または空にすることはできません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlElement">
+        <source>設定 '{0}' は無効です。予期しない XmlElement: '{1}'。</source>
+        <target state="new">設定 '{0}' は無効です。予期しない XmlElement: '{1}'。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
+        <source>メソッド {0}.{1} は不適切なシグネチャを含んでいます。メソッドは non-static および public である必要があり、値を返しません。また、パラメーターを受け取ることはできません。さらに、メソッドで async-await を使用している場合、戻り値の型は Task である必要があります。</source>
+        <target state="new">メソッド {0}.{1} は不適切なシグネチャを含んでいます。メソッドは non-static および public である必要があり、値を返しません。また、パラメーターを受け取ることはできません。さらに、メソッドで async-await を使用している場合、戻り値の型は Task である必要があります。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature">
+        <source>メソッド {0}.{1} は不適切なシグネチャを含んでいます。メソッドは static および public である必要があり、値を返しません。また、TestContext 型の 1 つのパラメーターを受け取る必要があります。さらに、メソッドで async-await を使用している場合、戻り値の型は Task である必要があります。</source>
+        <target state="new">メソッド {0}.{1} は不適切なシグネチャを含んでいます。メソッドは static および public である必要があり、値を返しません。また、TestContext 型の 1 つのパラメーターを受け取る必要があります。さらに、メソッドで async-await を使用している場合、戻り値の型は Task である必要があります。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlAttribute">
+        <source>設定 '{0}' は無効です。予期しない XmlAttribute: '{1}'。</source>
+        <target state="new">設定 '{0}' は無効です。予期しない XmlAttribute: '{1}'。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiAssemblyInit">
+        <source>UTA013: {0}: 1 つのアセンブリ内で、AssemblyInitialize 属性を伴う 2 つ以上のメソッドを定義することはできません。</source>
+        <target state="new">UTA013: {0}: 1 つのアセンブリ内で、AssemblyInitialize 属性を伴う 2 つ以上のメソッドを定義することはできません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiClassInit">
+        <source>UTA025: {0}: 1 つのクラス内で、ClassInitialize 属性を伴う 2 つ以上のメソッドを定義することはできません。</source>
+        <target state="new">UTA025: {0}: 1 つのクラス内で、ClassInitialize 属性を伴う 2 つ以上のメソッドを定義することはできません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ExpectedExceptionAttributeConstructionException">
+        <source>テスト メソッド {0}.{1} に定義されている ExpectedException 属性が、作成中に例外をスローしました。
+{2}</source>
+        <target state="new">テスト メソッド {0}.{1} に定義されている ExpectedException 属性が、作成中に例外をスローしました。
+{2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorPredefinedTestProperty">
+        <source>UTA023: {0}: メソッド {1} 上の以前に定義されたプロパティ {2} を定義することはできません。</source>
+        <target state="new">UTA023: {0}: メソッド {1} 上の以前に定義されたプロパティ {2} を定義することはできません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_InitMethodThrows">
+        <source>初期化メソッド {0}.{1} は例外をスローしました。{2}。</source>
+        <target state="new">初期化メソッド {0}.{1} は例外をスローしました。{2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestNotFound">
+        <source>テスト メソッド {0} が見つかりませんでした。</source>
+        <target state="new">テスト メソッド {0} が見つかりませんでした。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Execution_Test_Timeout">
+        <source>テスト '{0}' は実行タイムアウトを超えました。</source>
+        <target state="new">テスト '{0}' は実行タイムアウトを超えました。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiInit">
+        <source>UTA018: {0}: TestInitialize 属性を伴う 2 つ以上のメソッドを定義することはできません。</source>
+        <target state="new">UTA018: {0}: TestInitialize 属性を伴う 2 つ以上のメソッドを定義することはできません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorNonPublicTestClass">
+        <source>UTA001: TestClass 属性がパブリックでないクラス {0} で定義されています</source>
+        <target state="new">UTA001: TestClass 属性がパブリックでないクラス {0} で定義されています</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
+        <source>UTA007: クラス {0} で定義されたメソッド {1} は正しいシグネチャを含んでいません。[TestMethod] 属性を伴って設定されたテスト メソッドは non-static、public にする必要があり、戻り値の型は void でなければなりません。また、パラメーターを受け取ることはできません。例: public void Test.Class1.Test()。また、テスト メソッドで async-await を使用する場合、戻り値の型は Task にする必要があります。例: public async Task Test.Class1.Test2()</source>
+        <target state="new">UTA007: クラス {0} で定義されたメソッド {1} は正しいシグネチャを含んでいません。[TestMethod] 属性を伴って設定されたテスト メソッドは non-static、public にする必要があり、戻り値の型は void でなければなりません。また、パラメーターを受け取ることはできません。例: public void Test.Class1.Test()。また、テスト メソッドで async-await を使用する場合、戻り値の型は Task にする必要があります。例: public async Task Test.Class1.Test2()</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorTestPropertyNullOrEmpty">
+        <source>UTA021: {0}: Null または空のカスタム プロパティが、メソッド {1} で定義されています。カスタム プロパティには有効な名前を指定しなければなりません。</source>
+        <target state="new">UTA021: {0}: Null または空のカスタム プロパティが、メソッド {1} で定義されています。カスタム プロパティには有効な名前を指定しなければなりません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_NoTestResult">
+        <source>テストの実行中にエラーが発生しました。拡張から結果が返されませんでした。TestMethodAttribute の拡張クラスを使用している場合は、ベンダーに連絡してください。</source>
+        <target state="new">テストの実行中にエラーが発生しました。拡張から結果が返されませんでした。TestMethodAttribute の拡張クラスを使用している場合は、ベンダーに連絡してください。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassCleanupMethodWasUnsuccesful">
+        <source>クラス クリーンアップ メソッド {0}.{1} に失敗しました。エラー メッセージ: {2}。スタック トレース: {3}</source>
+        <target state="new">クラス クリーンアップ メソッド {0}.{1} に失敗しました。エラー メッセージ: {2}。スタック トレース: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorTestPropertyAlreadyDefined">
+        <source>UTA022: {0}.{1}: カスタム プロパティ "{2}" は既に定義されています。"{3}" を値として使用しています。</source>
+        <target state="new">UTA022: {0}.{1}: カスタム プロパティ "{2}" は既に定義されています。"{3}" を値として使用しています。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="SourcesNotSupported">
+        <source>指定されたソースのいずれかでのテストの実行は、選択されたプラットフォームでサポートされていません</source>
+        <target state="new">指定されたソースのいずれかでのテストの実行は、選択されたプラットフォームでサポートされていません</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassInitMethodThrows">
+        <source>クラス初期化メソッド {0}.{1} は例外をスローしました。{2}: {3}。</source>
+        <target state="new">クラス初期化メソッド {0}.{1} は例外をスローしました。{2}: {3}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestContextIsNull">
+        <source>TestContext を Null にすることはできません。</source>
+        <target state="new">TestContext を Null にすることはできません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DataDrivenResultDisplayName">
+        <source>{0} (データ行 {1})</source>
+        <target state="new">{0} (データ行 {1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_WrongThread">
+        <source>{0}。テスト内で UI オブジェクトを使用している場合は、[TestMethod] の代わりに [UITestMethod] 属性を使用して UI スレッド内でテストを実行することを検討してください。</source>
+        <target state="new">{0}。テスト内で UI オブジェクトを使用している場合は、[TestMethod] の代わりに [UITestMethod] 属性を使用して UI スレッド内でテストを実行することを検討してください。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ExecuteThrewException">
+        <source>テストの実行中に例外がスローされました。TestMethodAttribute の拡張クラスを使用している場合は、ベンダーに連絡してください。エラー メッセージ: {0}</source>
+        <target state="new">テストの実行中に例外がスローされました。TestMethodAttribute の拡張クラスを使用している場合は、ベンダーに連絡してください。エラー メッセージ: {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestMethodThrows">
+        <source>テスト メソッド {0}.{1} が例外をスローしました: 
+{2}</source>
+        <target state="new">テスト メソッド {0}.{1} が例外をスローしました: 
+{2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_CleanupMethodThrows">
+        <source>TestCleanup メソッド {0}.{1} は例外をスローしました。{2}。</source>
+        <target state="new">TestCleanup メソッド {0}.{1} は例外をスローしました。{2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_InstanceCreationError">
+        <source>クラス {0} のインスタンスを作成できません。エラー: {1}。</source>
+        <target state="new">クラス {0} のインスタンスを作成できません。エラー: {1}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestContextTypeMismatchLoadError">
+        <source>{0}.TestContext は不適切な型を含んでいます。</source>
+        <target state="new">{0}.TestContext は不適切な型を含んでいます。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DebugTraceBanner">
+        <source>デバッグ トレース:</source>
+        <target state="new">デバッグ トレース:</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature">
+        <source>メソッド {0}.{1} は不適切なシグネチャを含んでいます。メソッドは static および public である必要があり、値を返しません。また、パラメーターを受け取ることはできません。さらに、メソッドで async-await を使用している場合、戻り値の型は Task である必要があります。</source>
+        <target state="new">メソッド {0}.{1} は不適切なシグネチャを含んでいます。メソッドは static および public である必要があり、値を返しません。また、パラメーターを受け取ることはできません。さらに、メソッドで async-await を使用している場合、戻り値の型は Task である必要があります。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorGenericTestMethod">
+        <source>UTA015: ジェネリック メソッドがテスト メソッドになることはできません。{0}.{1} のシグネチャは無効です</source>
+        <target state="new">UTA015: ジェネリック メソッドがテスト メソッドになることはできません。{0}.{1} のシグネチャは無効です</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyInitMethodThrows">
+        <source>アセンブリ初期化メソッド {0}.{1} は例外をスローしました。{2}: {3}。テストの実行を中止しています。</source>
+        <target state="new">アセンブリ初期化メソッド {0}.{1} は例外をスローしました。{2}: {3}。テストの実行を中止しています。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiClean">
+        <source>UTA024: {0}: TestCleanup 属性を伴う 2 つ以上のメソッドを定義することはできません。</source>
+        <target state="new">UTA024: {0}: TestCleanup 属性を伴う 2 つ以上のメソッドを定義することはできません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_FailedToGetExceptionMessage">
+        <source>(例外が発生したため、型 {0} の例外のメッセージを取得できませんでした。)</source>
+        <target state="new">(例外が発生したため、型 {0} の例外のメッセージを取得できませんでした。)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AttachmentSetDisplayName">
+        <source>MSTestAdapterV2</source>
+        <target state="new">MSTestAdapterV2</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CouldNotInspectTypeDuringDiscovery">
+        <source>MSTestAdapter でアセンブリ '{1}' のクラス '{0}' にテストが見つかりませんでした。理由 {2}。</source>
+        <target state="new">MSTestAdapter でアセンブリ '{1}' のクラス '{0}' にテストが見つかりませんでした。理由 {2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestContextSetError">
+        <source>クラス {0} の TestContext プロパティを設定できません。エラー: {1}。</source>
+        <target state="new">クラス {0} の TestContext プロパティを設定できません。エラー: {1}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiAssemblyClean">
+        <source>UTA014: {0}: 1 つのアセンブリ内で、AssemblyCleanup 属性を伴う 2 つ以上のメソッドを定義することはできません。</source>
+        <target state="new">UTA014: {0}: 1 つのアセンブリ内で、AssemblyCleanup 属性を伴う 2 つ以上のメソッドを定義することはできません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_FailedToGetTestMethodException">
+        <source>テスト メソッド {0}.{1} によってスローされた例外を取得できませんでした。</source>
+        <target state="new">テスト メソッド {0}.{1} によってスローされた例外を取得できませんでした。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_EndOfInnerExceptionTrace">
+        <source>--- 内部例外スタック トレースの終わり ---</source>
+        <target state="new">--- 内部例外スタック トレースの終わり ---</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorInvalidTimeout">
+        <source>UTA054: {0}.{1} は無効な Timeout 属性を含んでいます。タイムアウトは有効な整数値でなければなりません。0 よりも小さい値にすることはできません。</source>
+        <target state="new">UTA054: {0}.{1} は無効な Timeout 属性を含んでいます。タイムアウトは有効な整数値でなければなりません。0 よりも小さい値にすることはできません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="LegacyScenariosNotSupportedWarning">
+        <source>警告: ForcedLegacyMode が true に設定されている testsettings ファイルか runsettings は、MSTest V2 アダプターではサポートされていません。</source>
+        <target state="new">警告: ForcedLegacyMode が true に設定されている testsettings ファイルか runsettings は、MSTest V2 アダプターではサポートされていません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_MustBeGreaterThanZero">
+        <source>パラメーターはゼロよりも大きい必要があります。</source>
+        <target state="new">パラメーターはゼロよりも大きい必要があります。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_NoDefaultConstructor">
+        <source>クラス {0} の既定コンストラクターを取得できません。</source>
+        <target state="new">クラス {0} の既定コンストラクターを取得できません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestContextLoadError">
+        <source>プロパティ {0}.TestContext が見つかりません。エラー: {1}。</source>
+        <target state="new">プロパティ {0}.TestContext が見つかりません。エラー: {1}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EnumeratorLoadTypeErrorFormat">
+        <source>{0}: {1}</source>
+        <target state="new">{0}: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_MultipleExpectedExceptionsOnTestMethod">
+        <source>テスト メソッド {0}.{1} には、ExpectedExceptionBaseAttribute から派生した属性が複数定義されています。このような属性は 1 つしか許可されません。</source>
+        <target state="new">テスト メソッド {0}.{1} には、ExpectedExceptionBaseAttribute から派生した属性が複数定義されています。このような属性は 1 つしか許可されません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorInValidTestContextSignature">
+        <source>UTA031: クラス {0} は有効な TestContext プロパティを含んでいません。TestContext は、型 TestContext でなければなりません。また、non-static および public である必要があり、読み取り専用に指定することはできません。例: public TestContext TestContext。</source>
+        <target state="new">UTA031: クラス {0} は有効な TestContext プロパティを含んでいません。TestContext は、型 TestContext でなければなりません。また、non-static および public である必要があり、読み取り専用に指定することはできません。例: public TestContext TestContext。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_MethodDoesNotExists">
+        <source>メソッド {0}.{1} は存在しません。</source>
+        <target state="new">メソッド {0}.{1} は存在しません。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestAssembly_FileDoesNotExist">
+        <source>ファイルが存在しません: {0}</source>
+        <target state="new">ファイルが存在しません: {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TypeLoadError">
+        <source>型 {0} を取得できません。エラー: {1}。</source>
+        <target state="new">型 {0} を取得できません。エラー: {1}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TypeLoadFailed">
+        <source>テスト ソース '{0}' からタイプを読み込むことができません。このソース内の一部またはすべてのテストが見つからない可能性があります。</source>
+        <target state="new">テスト ソース '{0}' からタイプを読み込むことができません。このソース内の一部またはすべてのテストが見つからない可能性があります。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiClassClean">
+        <source>UTA026: {0}: 1 つのクラス内で、ClassCleanup 属性を伴う 2 つ以上のメソッドを定義することはできません。</source>
+        <target state="new">UTA026: {0}: 1 つのクラス内で、ClassCleanup 属性を伴う 2 つ以上のメソッドを定義することはできません。</target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

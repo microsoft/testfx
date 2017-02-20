@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="de" original="../Resource.resx">
+    <body>
+      <trans-unit id="DeploymentItem">
+        <source>Bereitstellungselement "{0}"</source>
+        <target state="new">Bereitstellungselement "{0}"</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_CannotBeNullOrEmpty">
+        <source>Der Parameter darf nicht NULL oder leer sein.</source>
+        <target state="new">Der Parameter darf nicht NULL oder leer sein.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorDataConnectionFailed">
+        <source>Der Komponententestadapter konnte keine Verbindung mit der Datenquelle herstellen bzw. die Daten nicht lesen. Weitere Informationen zur Problembehandlung dieses Fehlers finden Sie unter "Problembehandlung von datengesteuerten Komponententests" (http://go.microsoft.com/fwlink/?LinkId=62412) in der MSDN Library. Fehlerdetails: {0}</source>
+        <target state="new">Der Komponententestadapter konnte keine Verbindung mit der Datenquelle herstellen bzw. die Daten nicht lesen. Weitere Informationen zur Problembehandlung dieses Fehlers finden Sie unter "Problembehandlung von datengesteuerten Komponententests" (http://go.microsoft.com/fwlink/?LinkId=62412) in der MSDN Library. Fehlerdetails: {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlElement">
+        <source>"MSTestAdapter" hat ein unerwartetes Element "{0}" in den Einstellungen "{1}" ermittelt. Entfernen Sie dieses Element, und versuchen Sie es erneut.</source>
+        <target state="new">"MSTestAdapter" hat ein unerwartetes Element "{0}" in den Einstellungen "{1}" ermittelt. Entfernen Sie dieses Element, und versuchen Sie es erneut.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependencyWithoutReason">
+        <source>Problem bei der Testlaufbereitstellung: Die Assembly oder das Modul "{0}" wurde nicht gefunden.</source>
+        <target state="new">Problem bei der Testlaufbereitstellung: Die Assembly oder das Modul "{0}" wurde nicht gefunden.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemContainsInvalidCharacters">
+        <source>Ungültiges Bereitstellungselement: Der angegebene Pfad "{0}" oder das angegebene Ausgabeverzeichnis "{1}" enthält unzulässige Zeichen.</source>
+        <target state="new">Ungültiges Bereitstellungselement: Der angegebene Pfad "{0}" oder das angegebene Ausgabeverzeichnis "{1}" enthält unzulässige Zeichen.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependency">
+        <source>Problem bei der Testlaufbereitstellung: Die Assembly oder das Modul "{0}" wurde nicht gefunden. Ursache: {1}</source>
+        <target state="new">Problem bei der Testlaufbereitstellung: Die Assembly oder das Modul "{0}" wurde nicht gefunden. Ursache: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorBadDeploymentItem">
+        <source>Problem bei der Testlaufbereitstellung: Ungültiges Bereitstellungselement: "{0}". Das Ausgabeverzeichnis "{1}" gibt das unzulässige Element an, das außerhalb des Bereitstellungsstammverzeichnisses bereitgestellt werden soll.</source>
+        <target state="new">Problem bei der Testlaufbereitstellung: Ungültiges Bereitstellungselement: "{0}". Das Ausgabeverzeichnis "{1}" gibt das unzulässige Element an, das außerhalb des Bereitstellungsstammverzeichnisses bereitgestellt werden soll.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
+        <source>Ungültiges Bereitstellungselement: Das Ausgabeverzeichnis darf nicht NULL sein.</source>
+        <target state="new">Ungültiges Bereitstellungselement: Das Ausgabeverzeichnis darf nicht NULL sein.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
+        <source>Die Datenquelle "{0}" wurde in den Testkonfigurationseinstellungen nicht gefunden.</source>
+        <target state="new">Die Datenquelle "{0}" wurde in den Testkonfigurationseinstellungen nicht gefunden.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorGettingSatellite">
+        <source>Problem bei der Testlaufbereitstellung: Fehler beim Abrufen der Satellitenassemblys für {0}: {1}: {2}</source>
+        <target state="new">Problem bei der Testlaufbereitstellung: Fehler beim Abrufen der Satellitenassemblys für {0}: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToDeployDependencies">
+        <source>Problem bei der Testlaufbereitstellung: Fehler beim Bereitstellen der Abhängigkeiten für den Testspeicher "{0}": {1}</source>
+        <target state="new">Problem bei der Testlaufbereitstellung: Fehler beim Bereitstellen der Abhängigkeiten für den Testspeicher "{0}": {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccessFile">
+        <source>Problem bei der Testlaufbereitstellung: Fehler beim Zugriff auf die Datei "{0}": {1}: {2}</source>
+        <target state="new">Problem bei der Testlaufbereitstellung: Fehler beim Zugriff auf die Datei "{0}": {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestRunName">
+        <source>{0}{1} {2}</source>
+        <target state="new">{0}{1} {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemWithOutputDirectory">
+        <source>Bereitstellungselement "{0}" (Ausgabeverzeichnis "{1}")</source>
+        <target state="new">Bereitstellungselement "{0}" (Ausgabeverzeichnis "{1}")</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToGetFileForDeploymentItem">
+        <source>Problem bei der Testlaufbereitstellung: Fehler beim Abrufen der Datei für {0}: {1}: {2}</source>
+        <target state="new">Problem bei der Testlaufbereitstellung: Fehler beim Abrufen der Datei für {0}: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccesOutputDirectory">
+        <source>Problem bei der Testlaufbereitstellung: Fehler beim Zugriff auf das vom Bereitstellungselement "{0}" angegebene Ausgabeverzeichnis "{1}". Das Element wird nicht bereitgestellt: {2}: {3}</source>
+        <target state="new">Problem bei der Testlaufbereitstellung: Fehler beim Zugriff auf das vom Bereitstellungselement "{0}" angegebene Ausgabeverzeichnis "{1}". Das Element wird nicht bereitgestellt: {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
+        <source>Problem bei der Testlaufbereitstellung: Fehler beim Kopieren der Datei "{0}" nach "{1}": {2}: {3}</source>
+        <target state="new">Problem bei der Testlaufbereitstellung: Fehler beim Kopieren der Datei "{0}" nach "{1}": {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongNumberOfObjects">
+        <source>Falsche Anzahl von Objekten für die Permutation. Die Anzahl muss größer als NULL sein.</source>
+        <target state="new">Falsche Anzahl von Objekten für die Permutation. Die Anzahl muss größer als NULL sein.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CannotFindFile">
+        <source>Die Datei "{0}" konnte nicht gefunden werden.</source>
+        <target state="new">Die Datei "{0}" konnte nicht gefunden werden.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemPathCannotBeNullOrEmpty">
+        <source>Ungültiges Bereitstellungselement: Der Pfad muss mindestens ein Zeichen enthalten.</source>
+        <target state="new">Ungültiges Bereitstellungselement: Der Pfad muss mindestens ein Zeichen enthalten.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryMustBeRelative">
+        <source>Ungültiges Bereitstellungselement: Das angegebene Ausgabeverzeichnis "{0}" ist nicht relativ.</source>
+        <target state="new">Ungültiges Bereitstellungselement: Das angegebene Ausgabeverzeichnis "{0}" ist nicht relativ.</target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

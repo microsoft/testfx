@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="it" original="../Resource.resx">
+    <body>
+      <trans-unit id="DeploymentItem">
+        <source>elemento di distribuzione '{0}'</source>
+        <target state="new">elemento di distribuzione '{0}'</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_CannotBeNullOrEmpty">
+        <source>Il parametro non deve essere vuoto o Null.</source>
+        <target state="new">Il parametro non deve essere vuoto o Null.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorDataConnectionFailed">
+        <source>L'adattatore di unit test non è riuscito a connettersi all'origine dati o a leggere i dati. Per altre informazioni sulla risoluzione di questo errore, vedere "Risoluzione dei problemi relativi a unit test basati su dati" (http://go.microsoft.com/fwlink/?LinkId=62412) in MSDN Library. Dettagli errore: {0}</source>
+        <target state="new">L'adattatore di unit test non è riuscito a connettersi all'origine dati o a leggere i dati. Per altre informazioni sulla risoluzione di questo errore, vedere "Risoluzione dei problemi relativi a unit test basati su dati" (http://go.microsoft.com/fwlink/?LinkId=62412) in MSDN Library. Dettagli errore: {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlElement">
+        <source>MSTestAdapter ha rilevato un elemento imprevisto '{0}' nelle impostazioni '{1}'. Rimuovere l'elemento e riprovare.</source>
+        <target state="new">MSTestAdapter ha rilevato un elemento imprevisto '{0}' nelle impostazioni '{1}'. Rimuovere l'elemento e riprovare.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependencyWithoutReason">
+        <source>Problema di distribuzione dell'esecuzione dei test: l'assembly o il modulo '{0}' non è stato trovato.</source>
+        <target state="new">Problema di distribuzione dell'esecuzione dei test: l'assembly o il modulo '{0}' non è stato trovato.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemContainsInvalidCharacters">
+        <source>Elemento di distribuzione non valido: la directory di output '{1}' o il percorso specificato '{0}' contiene caratteri non validi.</source>
+        <target state="new">Elemento di distribuzione non valido: la directory di output '{1}' o il percorso specificato '{0}' contiene caratteri non validi.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependency">
+        <source>Problema di distribuzione dell'esecuzione dei test: l'assembly o il modulo '{0}' non è stato trovato. Motivo: {1}</source>
+        <target state="new">Problema di distribuzione dell'esecuzione dei test: l'assembly o il modulo '{0}' non è stato trovato. Motivo: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorBadDeploymentItem">
+        <source>Problema di distribuzione dell'esecuzione dei test: l'elemento di distribuzione '{0}' non è corretto. La directory di output '{1}' specifica l'elemento da distribuire all'esterno della directory radice della distribuzione e questa operazione non consentita.</source>
+        <target state="new">Problema di distribuzione dell'esecuzione dei test: l'elemento di distribuzione '{0}' non è corretto. La directory di output '{1}' specifica l'elemento da distribuire all'esterno della directory radice della distribuzione e questa operazione non consentita.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
+        <source>Elemento di distribuzione non valido: la directory di output non può essere Null.</source>
+        <target state="new">Elemento di distribuzione non valido: la directory di output non può essere Null.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
+        <source>L'origine dati '{0}' non è stata trovata nelle impostazioni della configurazione di test</source>
+        <target state="new">L'origine dati '{0}' non è stata trovata nelle impostazioni della configurazione di test</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorGettingSatellite">
+        <source>Problema di distribuzione dell'esecuzione dei test: si è verificato un errore durante il recupero degli assembly satellite per {0}: {1}: {2}</source>
+        <target state="new">Problema di distribuzione dell'esecuzione dei test: si è verificato un errore durante il recupero degli assembly satellite per {0}: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToDeployDependencies">
+        <source>Problema di distribuzione dell'esecuzione dei test: non è stato possibile distribuire le dipendenze per l'archivio dei test '{0}': {1}</source>
+        <target state="new">Problema di distribuzione dell'esecuzione dei test: non è stato possibile distribuire le dipendenze per l'archivio dei test '{0}': {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccessFile">
+        <source>Problema di distribuzione dell'esecuzione dei test: non è stato possibile accedere al file '{0}': {1}: {2}</source>
+        <target state="new">Problema di distribuzione dell'esecuzione dei test: non è stato possibile accedere al file '{0}': {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestRunName">
+        <source>{0}_{1} {2}</source>
+        <target state="new">{0}_{1} {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemWithOutputDirectory">
+        <source>elemento di distribuzione '{0}' (directory di output '{1}')</source>
+        <target state="new">elemento di distribuzione '{0}' (directory di output '{1}')</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToGetFileForDeploymentItem">
+        <source>Problema di distribuzione dell'esecuzione dei test: non è stato possibile ottenere il file per {0}: {1}: {2}</source>
+        <target state="new">Problema di distribuzione dell'esecuzione dei test: non è stato possibile ottenere il file per {0}: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccesOutputDirectory">
+        <source>Problema di distribuzione dell'esecuzione dei test: non è stato possibile accedere alla directory di output '{0}' specificata dall'elemento di distribuzione '{1}'. L'elemento non verrà distribuito: {2}: {3}</source>
+        <target state="new">Problema di distribuzione dell'esecuzione dei test: non è stato possibile accedere alla directory di output '{0}' specificata dall'elemento di distribuzione '{1}'. L'elemento non verrà distribuito: {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
+        <source>Problema di distribuzione dell'esecuzione dei test: non è stato possibile copiare il file '{0}' in '{1}': {2}: {3}</source>
+        <target state="new">Problema di distribuzione dell'esecuzione dei test: non è stato possibile copiare il file '{0}' in '{1}': {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongNumberOfObjects">
+        <source>Il numero di oggetti non è corretto per la permutazione. Deve essere maggiore di zero.</source>
+        <target state="new">Il numero di oggetti non è corretto per la permutazione. Deve essere maggiore di zero.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CannotFindFile">
+        <source>Il file '{0}' non è stato trovato.</source>
+        <target state="new">Il file '{0}' non è stato trovato.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemPathCannotBeNullOrEmpty">
+        <source>Elemento di distribuzione non valido: il percorso deve contenere almeno un carattere.</source>
+        <target state="new">Elemento di distribuzione non valido: il percorso deve contenere almeno un carattere.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryMustBeRelative">
+        <source>Elemento di distribuzione non valido: la directory di output specificata '{0}' non è relativa.</source>
+        <target state="new">Elemento di distribuzione non valido: la directory di output specificata '{0}' non è relativa.</target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

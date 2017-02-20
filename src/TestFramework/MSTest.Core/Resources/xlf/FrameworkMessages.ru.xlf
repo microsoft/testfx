@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ru" original="../FrameworkMessages.resx">
+    <body>
+      <trans-unit id="ElementNumbersDontMatch">
+        <source>Число элементов в коллекциях не соответствует ожидаемому. Ожидается: &lt;{1}&gt;. Фактически: &lt;{2}&gt;. {0}</source>
+        <target state="new">Число элементов в коллекциях не соответствует ожидаемому. Ожидается: &lt;{1}&gt;. Фактически: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsMatchFail">
+        <source>Строка "{0}" не соответствует шаблону "{1}". {2}.</source>
+        <target state="new">Строка "{0}" не соответствует шаблону "{1}". {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsInstanceOfFailMsg">
+        <source>{0} Ожидается тип: &lt;{1}&gt;. Фактический тип: &lt;{2}&gt;.</source>
+        <target state="new">{0} Ожидается тип: &lt;{1}&gt;. Фактический тип: &lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ContainsFail">
+        <source>Строка "{0}" не содержит строку "{1}". {2}.</source>
+        <target state="new">Строка "{0}" не содержит строку "{1}". {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InternalObjectNotValid">
+        <source>Внутренний объект, на который есть ссылка, больше не является допустимым.</source>
+        <target state="new">Внутренний объект, на который есть ссылка, больше не является допустимым.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="StartsWithFail">
+        <source>Строка "{0}" не начинается со строки "{1}". {2}.</source>
+        <target state="new">Строка "{0}" не начинается со строки "{1}". {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailMsg">
+        <source>Ожидается: &lt;{1} ({2})&gt;. Фактически: &lt;{3} ({4})&gt;. {0}</source>
+        <target state="new">Ожидается: &lt;{1} ({2})&gt;. Фактически: &lt;{3} ({4})&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothSameElements">
+        <source>Обе коллекции содержат одинаковые элементы. {0}</source>
+        <target state="new">Обе коллекции содержат одинаковые элементы. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidParameterToAssert">
+        <source>Параметр "{0}" является недопустимым. {1}.</source>
+        <target state="new">Параметр "{0}" является недопустимым. {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailMsg">
+        <source>Между ожидаемым значением (&lt;{1}&gt;) и фактическим значением (&lt;{2}&gt;) требуется разница более чем &lt;{3}&gt;. {0}</source>
+        <target state="new">Между ожидаемым значением (&lt;{1}&gt;) и фактическим значением (&lt;{2}&gt;) требуется разница более чем &lt;{3}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementsAtIndexDontMatch">
+        <source>Элемент по индексу {0} не совпадает.</source>
+        <target state="new">Элемент по индексу {0} не совпадает.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameReference">
+        <source>Ссылки в обоих коллекциях указывают на один и тот же объект коллекции. {0}</source>
+        <target state="new">Ссылки в обоих коллекциях указывают на один и тот же объект коллекции. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AsyncUITestMethodNotSupported">
+        <source>Асинхронный метод TestMethod с UITestMethodAttribute не поддерживается. Удалите префикс async или используйте TestMethodAttribute.</source>
+        <target state="new">Асинхронный метод TestMethod с UITestMethodAttribute не поддерживается. Удалите префикс async или используйте TestMethodAttribute.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorConstructorNotFound">
+        <source>
+      Не удается найти конструктор с указанной сигнатурой. Возможно, требуется снова создать закрытый 
+      метод доступа либо член является закрытым и определенным на основе базового класса. Если 
+      справедливо последнее, то необходимо передать тип, определяющий член, в конструктор для PrivateObject.
+    </source>
+        <target state="new">
+      Не удается найти конструктор с указанной сигнатурой. Возможно, требуется снова создать закрытый 
+      метод доступа либо член является закрытым и определенным на основе базового класса. Если 
+      справедливо последнее, то необходимо передать тип, определяющий член, в конструктор для PrivateObject.
+    </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AssertionFailed">
+        <source>Сбой {0}. {1}</source>
+        <target state="new">Сбой {0}. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertEquals">
+        <source>Нельзя использовать Assert.Equals для утверждений (Assertions). Вместо этого используйте Assert.AreEqual и перегрузки.</source>
+        <target state="new">Нельзя использовать Assert.Equals для утверждений (Assertions). Вместо этого используйте Assert.AreEqual и перегрузки.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoExceptionDefault">
+        <source>Метод теста не создал исключение. Исключение ожидалось атрибутом {0}, определенным в методе теста.</source>
+        <target state="new">Метод теста не создал исключение. Исключение ожидалось атрибутом {0}, определенным в методе теста.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_NullInMessages">
+        <source>(NULL)</source>
+        <target state="new">(NULL)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
+        <source>Метод теста создал исключение "{0}", а ожидалось исключение "{1}" или производный от него тип. Сообщение исключения: "{2}".</source>
+        <target state="new">Метод теста создал исключение "{0}", а ожидалось исключение "{1}" или производный от него тип. Сообщение исключения: "{2}".</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch2">
+        <source>Элемент по индексу {1} имеет значение (NULL). Ожидаемый тип: &lt;{2}&gt;. {0}</source>
+        <target state="new">Элемент по индексу {1} имеет значение (NULL). Ожидаемый тип: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoExceptionThrown">
+        <source>Исключение не создано. Ожидалось исключение {1}. {0}</source>
+        <target state="new">Исключение не создано. Ожидалось исключение {1}. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DataDrivenResultDisplayName">
+        <source>{0} ({1})</source>
+        <target state="new">{0} ({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoDataRow">
+        <source>Не указан атрибут DataRowAttribute. Вместе с атрибутом DataTestMethodAttribute должен использоваться хотя бы один атрибут DataRowAttribute.</source>
+        <target state="new">Не указан атрибут DataRowAttribute. Вместе с атрибутом DataTestMethodAttribute должен использоваться хотя бы один атрибут DataRowAttribute.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CollectionEqualReason">
+        <source>{0}({1})</source>
+        <target state="new">{0}({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EqualsTesterInvalidArgs">
+        <source>Недопустимый аргумент — EqualsTester не может использовать значения NULL.</source>
+        <target state="new">Недопустимый аргумент — EqualsTester не может использовать значения NULL.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AccessStringInvalidSyntax">
+        <source>Строка доступа имеет недопустимый синтаксис.</source>
+        <target state="new">Строка доступа имеет недопустимый синтаксис.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch">
+        <source>Тип элемента по индексу {1} не соответствует ожидаемому. Ожидаемый тип: &lt;{2}&gt;. Фактический тип: &lt;{3}&gt;. {0}</source>
+        <target state="new">Тип элемента по индексу {1} не соответствует ожидаемому. Ожидаемый тип: &lt;{2}&gt;. Фактический тип: &lt;{3}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ErrorInvalidCast">
+        <source>Невозможно преобразовать объект типа {0} в {1}.</source>
+        <target state="new">Невозможно преобразовать объект типа {0} в {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualFailMsg">
+        <source>Ожидается любое значение, кроме &lt;{1}&gt;. Фактически: &lt;{2}&gt;. {0}</source>
+        <target state="new">Ожидается любое значение, кроме &lt;{1}&gt;. Фактически: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoException">
+        <source>Метод теста не создал ожидаемое исключение ({0}). {1}</source>
+        <target state="new">Метод теста не создал ожидаемое исключение ({0}). {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotMatchFail">
+        <source>Строка "{0}" соответствует шаблону "{1}". {2}.</source>
+        <target state="new">Строка "{0}" соответствует шаблону "{1}". {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongException">
+        <source>Метод теста создал исключение "{0}", а ожидалось исключение "{1}". Сообщение исключения: "{2}".</source>
+        <target state="new">Метод теста создал исключение "{0}", а ожидалось исключение "{1}". Сообщение исключения: "{2}".</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongExceptionThrown">
+        <source>Создано исключение {2}, хотя ожидалось исключение {1}. {0}
+Сообщение исключения: {3}
+Трассировка стека: {4}.</source>
+        <target state="new">Создано исключение {2}, хотя ожидалось исключение {1}. {0}
+Сообщение исключения: {3}
+Трассировка стека: {4}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotInstanceOfFailMsg">
+        <source>Неверный тип: &lt;{1}&gt;. Фактический тип: &lt;{2}&gt;. {0}</source>
+        <target state="new">Неверный тип: &lt;{1}&gt;. Фактический тип: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDeltaFailMsg">
+        <source>Между ожидаемым значением (&lt;{1}&gt;) и фактическим значением (&lt;{2}&gt;) требуется разница не более чем &lt;{3}&gt;. {0}</source>
+        <target state="new">Между ожидаемым значением (&lt;{1}&gt;) и фактическим значением (&lt;{2}&gt;) требуется разница не более чем &lt;{3}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_FailedToGetExceptionMessage">
+        <source>(Не удалось получить сообщение для исключения с типом {0} в связи с возникновением исключения.)</source>
+        <target state="new">(Не удалось получить сообщение для исключения с типом {0} в связи с возникновением исключения.)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AllItemsAreUniqueFailMsg">
+        <source>Обнаружен повторяющийся элемент: &lt;{1}&gt;. {0}</source>
+        <target state="new">Обнаружен повторяющийся элемент: &lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_ObjectString">
+        <source>(объект)</source>
+        <target state="new">(объект)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EndsWithFail">
+        <source>Строка "{0}" не оканчивается строкой "{1}". {2}.</source>
+        <target state="new">Строка "{0}" не оканчивается строкой "{1}". {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NumberOfElementsDiff">
+        <source>Разное число элементов.</source>
+        <target state="new">Разное число элементов.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NullParameterToAssert">
+        <source>Параметр "{0}" является недопустимым. Значение не может быть NULL. {1}.</source>
+        <target state="new">Параметр "{0}" является недопустимым. Значение не может быть NULL. {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameElements">
+        <source>Обе коллекции содержат одинаковые элементы.</source>
+        <target state="new">Обе коллекции содержат одинаковые элементы.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsEmpty">
+        <source>Обе коллекции пусты. {0}</source>
+        <target state="new">Обе коллекции пусты. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualCaseFailMsg">
+        <source>Ожидается: &lt;{1}&gt;. В фактическом значении регистр отличается: &lt;{2}&gt;. {0}</source>
+        <target state="new">Ожидается: &lt;{1}&gt;. В фактическом значении регистр отличается: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidPropertyType">
+        <source>Свойство {0} имеет тип {1}. Ожидается тип {2}.</source>
+        <target state="new">Свойство {0} имеет тип {1}. Ожидается тип {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameGivenValues">
+        <source>Не передавайте типы значений в функцию AreSame(). Значения, преобразованные в Object, никогда не будут одинаковыми. Попробуйте использовать AreEqual(). {0}</source>
+        <target state="new">Не передавайте типы значений в функцию AreSame(). Значения, преобразованные в Object, никогда не будут одинаковыми. Попробуйте использовать AreEqual(). {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
+        <source>Тип ожидаемого исключения должен быть System.Exception или производным от System.Exception.</source>
+        <target state="new">Тип ожидаемого исключения должен быть System.Exception или производным от System.Exception.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>Ожидается: &lt;{1}&gt;. Фактически: &lt;{2}&gt;. {0}</source>
+        <target state="new">Ожидается: &lt;{1}&gt;. Фактически: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ActualHasMismatchedElements">
+        <source>Ожидаемая коллекция содержит следующее число вхождений &lt;{2}&gt;: {1}. Фактическая коллекция содержит следующее число вхождений: {3}. {0}</source>
+        <target state="new">Ожидаемая коллекция содержит следующее число вхождений &lt;{2}&gt;: {1}. Фактическая коллекция содержит следующее число вхождений: {3}. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorMemberNotFound">
+        <source>
+      Не удается найти указанный член ({0}). Возможно, требуется снова создать закрытый метод доступа
+      либо член является закрытым и определенным на основе базового класса. Если справедливо последнее, то 
+      необходимо передать тип, определяющий член, в конструктор для PrivateObject.
+    </source>
+        <target state="new">
+      Не удается найти указанный член ({0}). Возможно, требуется снова создать закрытый метод доступа
+      либо член является закрытым и определенным на основе базового класса. Если справедливо последнее, то 
+      необходимо передать тип, определяющий член, в конструктор для PrivateObject.
+    </target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

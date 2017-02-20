@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="tr" original="../Resource.resx">
+    <body>
+      <trans-unit id="DeploymentItem">
+        <source>'{0}' dağıtım öğesi</source>
+        <target state="new">'{0}' dağıtım öğesi</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_CannotBeNullOrEmpty">
+        <source>Parametre null veya boş olamaz.</source>
+        <target state="new">Parametre null veya boş olamaz.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorDataConnectionFailed">
+        <source>Birim test bağdaştırıcısı, veri kaynağına bağlanamadı veya verileri okuyamadı. Bu hata ile ilgili daha fazla sorun giderme bilgisi için MSDN Kitaplığı'ndaki "Veri Temelli Birim Testleriyle İlgili Sorunları Giderme" (http://go.microsoft.com/fwlink/?LinkId=62412) konusuna bakın. Hata ayrıntıları: {0}</source>
+        <target state="new">Birim test bağdaştırıcısı, veri kaynağına bağlanamadı veya verileri okuyamadı. Bu hata ile ilgili daha fazla sorun giderme bilgisi için MSDN Kitaplığı'ndaki "Veri Temelli Birim Testleriyle İlgili Sorunları Giderme" (http://go.microsoft.com/fwlink/?LinkId=62412) konusuna bakın. Hata ayrıntıları: {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlElement">
+        <source>MSTestAdapter, '{1}' ayarlarında beklenmedik bir öğeyle ('{0}') karşılaştı. Bu öğeyi kaldırıp yeniden deneyin.</source>
+        <target state="new">MSTestAdapter, '{1}' ayarlarında beklenmedik bir öğeyle ('{0}') karşılaştı. Bu öğeyi kaldırıp yeniden deneyin.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependencyWithoutReason">
+        <source>Test Çalıştırması dağıtım sorunu: '{0}' adlı bütünleştirilmiş kod veya modül bulunamadı.</source>
+        <target state="new">Test Çalıştırması dağıtım sorunu: '{0}' adlı bütünleştirilmiş kod veya modül bulunamadı.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemContainsInvalidCharacters">
+        <source>Geçersiz dağıtım öğesi: Belirtilen '{0}' yolu veya '{1}' çıktı dizini geçersiz karakterler içeriyor.</source>
+        <target state="new">Geçersiz dağıtım öğesi: Belirtilen '{0}' yolu veya '{1}' çıktı dizini geçersiz karakterler içeriyor.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependency">
+        <source>Test Çalıştırması dağıtım sorunu: '{0}' adlı bütünleştirilmiş kod veya modül bulunamadı. Nedeni: {1}</source>
+        <target state="new">Test Çalıştırması dağıtım sorunu: '{0}' adlı bütünleştirilmiş kod veya modül bulunamadı. Nedeni: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorBadDeploymentItem">
+        <source>Test Çalıştırması dağıtım sorunu: '{0}' dağıtım öğesi hatalı: '{1}' çıktı dizininde öğenin dağıtım kök dizini dışında dağıtılması gerektiği belirtilmiş, ancak buna izin verilmiyor.</source>
+        <target state="new">Test Çalıştırması dağıtım sorunu: '{0}' dağıtım öğesi hatalı: '{1}' çıktı dizininde öğenin dağıtım kök dizini dışında dağıtılması gerektiği belirtilmiş, ancak buna izin verilmiyor.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
+        <source>Geçersiz dağıtım öğesi: Çıktı dizini null olamaz.</source>
+        <target state="new">Geçersiz dağıtım öğesi: Çıktı dizini null olamaz.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
+        <source>Test yapılandırması ayarlarında '{0}' adlı veri kaynağı bulunamıyor</source>
+        <target state="new">Test yapılandırması ayarlarında '{0}' adlı veri kaynağı bulunamıyor</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorGettingSatellite">
+        <source>Test Çalıştırması dağıtım sorunu: {0} için uydu bütünleştirilmiş kodları alınırken bir hata oluştu: {1}: {2}</source>
+        <target state="new">Test Çalıştırması dağıtım sorunu: {0} için uydu bütünleştirilmiş kodları alınırken bir hata oluştu: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToDeployDependencies">
+        <source>Test Çalıştırması dağıtım sorunu: '{0}' adlı test depolama alanı için bağımlılıklar dağıtılamadı: {1}</source>
+        <target state="new">Test Çalıştırması dağıtım sorunu: '{0}' adlı test depolama alanı için bağımlılıklar dağıtılamadı: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccessFile">
+        <source>Test Çalıştırması dağıtım sorunu: '{0}' adlı dosyaya erişilemedi: {1}: {2}</source>
+        <target state="new">Test Çalıştırması dağıtım sorunu: '{0}' adlı dosyaya erişilemedi: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestRunName">
+        <source>{0}_{1} {2}</source>
+        <target state="new">{0}_{1} {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemWithOutputDirectory">
+        <source>'{0}' dağıtım öğesi (çıktı dizini '{1}')</source>
+        <target state="new">'{0}' dağıtım öğesi (çıktı dizini '{1}')</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToGetFileForDeploymentItem">
+        <source>Test Çalıştırması dağıtım sorunu: {0} için dosya alınamadı: {1}: {2}</source>
+        <target state="new">Test Çalıştırması dağıtım sorunu: {0} için dosya alınamadı: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccesOutputDirectory">
+        <source>Test Çalıştırması dağıtım sorunu: '{0}' dağıtım öğesi tarafından belirtilen '{1}' çıktı dizinine erişilemedi, öğe dağıtılmayacak: {2}: {3}</source>
+        <target state="new">Test Çalıştırması dağıtım sorunu: '{0}' dağıtım öğesi tarafından belirtilen '{1}' çıktı dizinine erişilemedi, öğe dağıtılmayacak: {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
+        <source>Test Çalıştırması dağıtım sorunu: '{0}' dosyası '{1}' hedefine kopyalanamadı: {2}: {3}</source>
+        <target state="new">Test Çalıştırması dağıtım sorunu: '{0}' dosyası '{1}' hedefine kopyalanamadı: {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongNumberOfObjects">
+        <source>Permütasyon için nesne sayısı yanlış. Değer, sıfırdan büyük olmalıdır.</source>
+        <target state="new">Permütasyon için nesne sayısı yanlış. Değer, sıfırdan büyük olmalıdır.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CannotFindFile">
+        <source>'{0}' adlı dosya bulunamadı.</source>
+        <target state="new">'{0}' adlı dosya bulunamadı.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemPathCannotBeNullOrEmpty">
+        <source>Geçersiz dağıtım öğesi: Yol, en az bir karakter içermelidir.</source>
+        <target state="new">Geçersiz dağıtım öğesi: Yol, en az bir karakter içermelidir.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryMustBeRelative">
+        <source>Geçersiz dağıtım öğesi: Belirtilen '{0}' çıktı dizini göreli değil.</source>
+        <target state="new">Geçersiz dağıtım öğesi: Belirtilen '{0}' çıktı dizini göreli değil.</target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="pt-BR" original="../FrameworkMessages.resx">
+    <body>
+      <trans-unit id="ElementNumbersDontMatch">
+        <source>O número de elementos nas coleções não corresponde. Esperado:&lt;{1}&gt;. Real:&lt;{2}&gt;.{0}</source>
+        <target state="new">O número de elementos nas coleções não corresponde. Esperado:&lt;{1}&gt;. Real:&lt;{2}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsMatchFail">
+        <source>A cadeia de caracteres '{0}' não corresponde ao padrão '{1}'. {2}.</source>
+        <target state="new">A cadeia de caracteres '{0}' não corresponde ao padrão '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsInstanceOfFailMsg">
+        <source>{0} Tipo esperado:&lt;{1}&gt;. Tipo real:&lt;{2}&gt;.</source>
+        <target state="new">{0} Tipo esperado:&lt;{1}&gt;. Tipo real:&lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ContainsFail">
+        <source>A cadeia de caracteres '{0}' não contém a cadeia de caracteres '{1}'. {2}.</source>
+        <target state="new">A cadeia de caracteres '{0}' não contém a cadeia de caracteres '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InternalObjectNotValid">
+        <source>O objeto interno referenciado não é mais válido.</source>
+        <target state="new">O objeto interno referenciado não é mais válido.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="StartsWithFail">
+        <source>A cadeia de caracteres '{0}' não começa com a cadeia de caracteres '{1}'. {2}.</source>
+        <target state="new">A cadeia de caracteres '{0}' não começa com a cadeia de caracteres '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailMsg">
+        <source>Esperado:&lt;{1} ({2})&gt;. Real:&lt;{3} ({4})&gt;. {0}</source>
+        <target state="new">Esperado:&lt;{1} ({2})&gt;. Real:&lt;{3} ({4})&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothSameElements">
+        <source>Ambas as coleções contêm os mesmos elementos. {0}</source>
+        <target state="new">Ambas as coleções contêm os mesmos elementos. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidParameterToAssert">
+        <source>O parâmetro '{0}' é inválido. {1}.</source>
+        <target state="new">O parâmetro '{0}' é inválido. {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailMsg">
+        <source>É esperada uma diferença maior que &lt;{3}&gt; entre o valor esperado &lt;{1}&gt; e o valor real &lt;{2}&gt;. {0}</source>
+        <target state="new">É esperada uma diferença maior que &lt;{3}&gt; entre o valor esperado &lt;{1}&gt; e o valor real &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementsAtIndexDontMatch">
+        <source>O elemento no índice {0} não corresponde.</source>
+        <target state="new">O elemento no índice {0} não corresponde.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameReference">
+        <source>Ambas as referências de coleção apontam para o mesmo objeto de coleção. {0}</source>
+        <target state="new">Ambas as referências de coleção apontam para o mesmo objeto de coleção. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AsyncUITestMethodNotSupported">
+        <source>TestMethod assíncrono com UITestMethodAttribute não têm suporte. Remova o assíncrono ou use o TestMethodAttribute.</source>
+        <target state="new">TestMethod assíncrono com UITestMethodAttribute não têm suporte. Remova o assíncrono ou use o TestMethodAttribute.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorConstructorNotFound">
+        <source>
+      O construtor com a assinatura especificada não pôde ser encontrado. Talvez seja necessário gerar novamente seu acessador particular
+      ou o membro pode ser particular e definido em uma classe base. Se o último caso for verdadeiro, será necessário passar o tipo
+      que define o membro para o construtor do PrivateObject.
+    </source>
+        <target state="new">
+      O construtor com a assinatura especificada não pôde ser encontrado. Talvez seja necessário gerar novamente seu acessador particular
+      ou o membro pode ser particular e definido em uma classe base. Se o último caso for verdadeiro, será necessário passar o tipo
+      que define o membro para o construtor do PrivateObject.
+    </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AssertionFailed">
+        <source>{0} falhou. {1}</source>
+        <target state="new">{0} falhou. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertEquals">
+        <source>Assert.Equals não deveria ser usado para Asserções. Use Assert.AreEqual e sobrecargas em seu lugar.</source>
+        <target state="new">Assert.Equals não deveria ser usado para Asserções. Use Assert.AreEqual e sobrecargas em seu lugar.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoExceptionDefault">
+        <source>O método de teste não emitiu uma exceção. Uma exceção era esperada pelo atributo {0} definido no método de teste.</source>
+        <target state="new">O método de teste não emitiu uma exceção. Uma exceção era esperada pelo atributo {0} definido no método de teste.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_NullInMessages">
+        <source>(nulo)</source>
+        <target state="new">(nulo)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
+        <source>O método de teste emitiu a exceção {0}, mas a exceção {1} ou um tipo derivado dela eram esperados. Mensagem da exceção: {2}</source>
+        <target state="new">O método de teste emitiu a exceção {0}, mas a exceção {1} ou um tipo derivado dela eram esperados. Mensagem da exceção: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch2">
+        <source>O elemento no índice {1} é (nulo). Tipo esperado:&lt;{2}&gt;.{0}</source>
+        <target state="new">O elemento no índice {1} é (nulo). Tipo esperado:&lt;{2}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoExceptionThrown">
+        <source>Nenhuma exceção lançada. A exceção {1} era esperada. {0}</source>
+        <target state="new">Nenhuma exceção lançada. A exceção {1} era esperada. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DataDrivenResultDisplayName">
+        <source>{0} ({1})</source>
+        <target state="new">{0} ({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoDataRow">
+        <source>Nenhum DataRowAttribute especificado. Ao menos um DataRowAttribute é necessário com DataTestMethodAttribute.</source>
+        <target state="new">Nenhum DataRowAttribute especificado. Ao menos um DataRowAttribute é necessário com DataTestMethodAttribute.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CollectionEqualReason">
+        <source>{0}({1})</source>
+        <target state="new">{0}({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EqualsTesterInvalidArgs">
+        <source>Argumento inválido - EqualsTester não pode usar valores nulos.</source>
+        <target state="new">Argumento inválido - EqualsTester não pode usar valores nulos.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AccessStringInvalidSyntax">
+        <source>A cadeia de caracteres de acesso tem sintaxe inválida.</source>
+        <target state="new">A cadeia de caracteres de acesso tem sintaxe inválida.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch">
+        <source>O elemento no índice {1} não é de tipo esperado. Tipo esperado:&lt;{2}&gt;. Tipo real:&lt;{3}&gt;.{0}</source>
+        <target state="new">O elemento no índice {1} não é de tipo esperado. Tipo esperado:&lt;{2}&gt;. Tipo real:&lt;{3}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ErrorInvalidCast">
+        <source>Não é possível converter objeto do tipo {0} em {1}.</source>
+        <target state="new">Não é possível converter objeto do tipo {0} em {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualFailMsg">
+        <source>É esperado qualquer valor, exceto:&lt;{1}&gt;. Real:&lt;{2}&gt;. {0}</source>
+        <target state="new">É esperado qualquer valor, exceto:&lt;{1}&gt;. Real:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoException">
+        <source>O método de teste não emitiu a exceção esperada {0}. {1}</source>
+        <target state="new">O método de teste não emitiu a exceção esperada {0}. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotMatchFail">
+        <source>A cadeia de caracteres '{0}' corresponde ao padrão '{1}'. {2}.</source>
+        <target state="new">A cadeia de caracteres '{0}' corresponde ao padrão '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongException">
+        <source>O método de teste emitiu a exceção {0}, mas a exceção {1} era esperada. Mensagem de exceção: {2}</source>
+        <target state="new">O método de teste emitiu a exceção {0}, mas a exceção {1} era esperada. Mensagem de exceção: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongExceptionThrown">
+        <source>A exceção {2} foi lançada, mas a exceção {1} era esperada. {0}
+Mensagem de Exceção: {3}
+Rastreamento de Pilha: {4}</source>
+        <target state="new">A exceção {2} foi lançada, mas a exceção {1} era esperada. {0}
+Mensagem de Exceção: {3}
+Rastreamento de Pilha: {4}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotInstanceOfFailMsg">
+        <source>Tipo errado:&lt;{1}&gt;. Tipo real:&lt;{2}&gt;. {0}</source>
+        <target state="new">Tipo errado:&lt;{1}&gt;. Tipo real:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDeltaFailMsg">
+        <source>É esperada uma diferença menor ou igual a &lt;{3}&gt; entre o valor esperado &lt;{1}&gt; e o valor real &lt;{2}&gt;. {0}</source>
+        <target state="new">É esperada uma diferença menor ou igual a &lt;{3}&gt; entre o valor esperado &lt;{1}&gt; e o valor real &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_FailedToGetExceptionMessage">
+        <source>(Falha ao obter a mensagem para uma exceção do tipo {0} devido a uma exceção.)</source>
+        <target state="new">(Falha ao obter a mensagem para uma exceção do tipo {0} devido a uma exceção.)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AllItemsAreUniqueFailMsg">
+        <source>Item duplicado encontrado:&lt;{1}&gt;. {0}</source>
+        <target state="new">Item duplicado encontrado:&lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_ObjectString">
+        <source>(objeto)</source>
+        <target state="new">(objeto)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EndsWithFail">
+        <source>A cadeia de caracteres '{0}' não termina com a cadeia de caracteres '{1}'. {2}.</source>
+        <target state="new">A cadeia de caracteres '{0}' não termina com a cadeia de caracteres '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NumberOfElementsDiff">
+        <source>Número diferente de elementos.</source>
+        <target state="new">Número diferente de elementos.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NullParameterToAssert">
+        <source>O parâmetro '{0}' é inválido. O valor não pode ser nulo. {1}.</source>
+        <target state="new">O parâmetro '{0}' é inválido. O valor não pode ser nulo. {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameElements">
+        <source>Ambas as coleções contêm os mesmos elementos.</source>
+        <target state="new">Ambas as coleções contêm os mesmos elementos.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsEmpty">
+        <source>Ambas as coleções estão vazias. {0}</source>
+        <target state="new">Ambas as coleções estão vazias. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualCaseFailMsg">
+        <source>Esperado:&lt;{1}&gt;. Maiúsculas e minúsculas diferentes para o valor real:&lt;{2}&gt;. {0}</source>
+        <target state="new">Esperado:&lt;{1}&gt;. Maiúsculas e minúsculas diferentes para o valor real:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidPropertyType">
+        <source>A propriedade {0} é do tipo {1}; o tipo esperado era {2}.</source>
+        <target state="new">A propriedade {0} é do tipo {1}; o tipo esperado era {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameGivenValues">
+        <source>Não passe tipos de valores para AreSame(). Os valores convertidos para Object nunca serão os mesmos. Considere usar AreEqual(). {0}</source>
+        <target state="new">Não passe tipos de valores para AreSame(). Os valores convertidos para Object nunca serão os mesmos. Considere usar AreEqual(). {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
+        <source>O tipo de exceção esperado deve ser System.Exception ou um tipo derivado de System.Exception.</source>
+        <target state="new">O tipo de exceção esperado deve ser System.Exception ou um tipo derivado de System.Exception.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>Esperado:&lt;{1}&gt;. Real:&lt;{2}&gt;. {0}</source>
+        <target state="new">Esperado:&lt;{1}&gt;. Real:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ActualHasMismatchedElements">
+        <source>A coleção esperada contém {1} ocorrência(s) de &lt;{2}&gt;. A coleção real contém {3} ocorrência(s). {0}</source>
+        <target state="new">A coleção esperada contém {1} ocorrência(s) de &lt;{2}&gt;. A coleção real contém {3} ocorrência(s). {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorMemberNotFound">
+        <source>
+      O membro especificado ({0}) não pôde ser encontrado. Talvez seja necessário gerar novamente seu acessador particular
+      ou o membro pode ser particular e definido em uma classe base. Se o último caso for verdadeiro, será necessário passar o tipo
+      que define o membro no construtor do PrivateObject.
+    </source>
+        <target state="new">
+      O membro especificado ({0}) não pôde ser encontrado. Talvez seja necessário gerar novamente seu acessador particular
+      ou o membro pode ser particular e definido em uma classe base. Se o último caso for verdadeiro, será necessário passar o tipo
+      que define o membro no construtor do PrivateObject.
+    </target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

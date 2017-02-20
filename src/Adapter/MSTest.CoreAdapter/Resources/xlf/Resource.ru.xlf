@@ -1,0 +1,291 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ru" original="../Resource.resx">
+    <body>
+      <trans-unit id="UTA_AssemblyCleanupMethodWasUnsuccesful">
+        <source>Не удалось применить метод очистки сборки {0}.{1}. Сообщение об ошибке: {2}. Трассировка стека (StackTrace): {3}.</source>
+        <target state="new">Не удалось применить метод очистки сборки {0}.{1}. Сообщение об ошибке: {2}. Трассировка стека (StackTrace): {3}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CouldNotInspectTypeDuringDiscovery1">
+        <source>Средству MSTestAdapter не удалось обнаружить тесты в классе "{0}" сборки "{1}". Причина: {2}.</source>
+        <target state="new">Средству MSTestAdapter не удалось обнаружить тесты в классе "{0}" сборки "{1}". Причина: {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_CannotBeNullOrEmpty">
+        <source>Этот параметр не должен быть пустым или иметь значение NULL.</source>
+        <target state="new">Этот параметр не должен быть пустым или иметь значение NULL.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlElement">
+        <source>Недопустимые параметры "{0}". Непредвиденный элемент XmlElement: "{1}".</source>
+        <target state="new">Недопустимые параметры "{0}". Непредвиденный элемент XmlElement: "{1}".</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
+        <source>Метод {0}.{1} имеет неправильную сигнатуру. Метод должен быть нестатическим и открытым, не должен возвращать значение и принимать параметры. Кроме того, при использовании в методе async-await возвращаемое значение должно иметь тип Task.</source>
+        <target state="new">Метод {0}.{1} имеет неправильную сигнатуру. Метод должен быть нестатическим и открытым, не должен возвращать значение и принимать параметры. Кроме того, при использовании в методе async-await возвращаемое значение должно иметь тип Task.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature">
+        <source>Метод {0}.{1} имеет неправильную сигнатуру. Метод должен быть статическим и открытым, не должен возвращать значение и должен принимать один параметр, имеющий тип TestContext. Кроме того, при использовании в методе async-await возвращаемое значение должно иметь тип Task.</source>
+        <target state="new">Метод {0}.{1} имеет неправильную сигнатуру. Метод должен быть статическим и открытым, не должен возвращать значение и должен принимать один параметр, имеющий тип TestContext. Кроме того, при использовании в методе async-await возвращаемое значение должно иметь тип Task.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlAttribute">
+        <source>Недопустимые параметры "{0}". Непредвиденный атрибут XmlAttribute: "{1}".</source>
+        <target state="new">Недопустимые параметры "{0}". Непредвиденный атрибут XmlAttribute: "{1}".</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiAssemblyInit">
+        <source>UTA013: {0}: в сборке невозможно определить несколько методов с атрибутом AssemblyInitialize.</source>
+        <target state="new">UTA013: {0}: в сборке невозможно определить несколько методов с атрибутом AssemblyInitialize.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiClassInit">
+        <source>UTA025: {0}: в классе невозможно определить несколько методов с атрибутом ClassInitialize.</source>
+        <target state="new">UTA025: {0}: в классе невозможно определить несколько методов с атрибутом ClassInitialize.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ExpectedExceptionAttributeConstructionException">
+        <source>Атрибут ExpectedException, определенный в методе теста {0}.{1}, породил исключение во время создания.
+{2}</source>
+        <target state="new">Атрибут ExpectedException, определенный в методе теста {0}.{1}, породил исключение во время создания.
+{2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorPredefinedTestProperty">
+        <source>UTA023: {0}: не удается определить предопределенное свойство {2} в методе {1}.</source>
+        <target state="new">UTA023: {0}: не удается определить предопределенное свойство {2} в методе {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_InitMethodThrows">
+        <source>Метод инициализации {0}.{1} вызвал исключение. {2}.</source>
+        <target state="new">Метод инициализации {0}.{1} вызвал исключение. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestNotFound">
+        <source>Метод теста {0} не найден.</source>
+        <target state="new">Метод теста {0} не найден.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Execution_Test_Timeout">
+        <source>Превышено время ожидания выполнения теста "{0}".</source>
+        <target state="new">Превышено время ожидания выполнения теста "{0}".</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiInit">
+        <source>UTA018: {0}: невозможно определить несколько методов с атрибутом TestInitialize.</source>
+        <target state="new">UTA018: {0}: невозможно определить несколько методов с атрибутом TestInitialize.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorNonPublicTestClass">
+        <source>UTA001: атрибут TestClass определен в классе {0}, не являющемся открытым</source>
+        <target state="new">UTA001: атрибут TestClass определен в классе {0}, не являющемся открытым</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
+        <source>UTA007: метод {1}, определенный в классе {0}, имеет неправильную сигнатуру. Метод теста, помеченный атрибутом [TestMethod], должен быть нестатическим, открытым и иметь тип возвращаемого значения void; он также не должен принимать параметры. Пример: public void Test.Class1.Test(). Кроме того, если вы используете модификатор async-await в методе теста, тип возвращаемого значения должен быть Task. Пример: public async Task Test.Class1.Test2()</source>
+        <target state="new">UTA007: метод {1}, определенный в классе {0}, имеет неправильную сигнатуру. Метод теста, помеченный атрибутом [TestMethod], должен быть нестатическим, открытым и иметь тип возвращаемого значения void; он также не должен принимать параметры. Пример: public void Test.Class1.Test(). Кроме того, если вы используете модификатор async-await в методе теста, тип возвращаемого значения должен быть Task. Пример: public async Task Test.Class1.Test2()</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorTestPropertyNullOrEmpty">
+        <source>UTA021: {0}: в методе {1} определено пользовательское свойство, имя которого имеет значение NULL или пусто. Пользовательское свойство должно иметь допустимое имя.</source>
+        <target state="new">UTA021: {0}: в методе {1} определено пользовательское свойство, имя которого имеет значение NULL или пусто. Пользовательское свойство должно иметь допустимое имя.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_NoTestResult">
+        <source>Ошибка при выполнении теста. Расширение не возвратило результаты. Если используется расширение атрибута TestMethodAttribute, обратитесь к поставщику.</source>
+        <target state="new">Ошибка при выполнении теста. Расширение не возвратило результаты. Если используется расширение атрибута TestMethodAttribute, обратитесь к поставщику.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassCleanupMethodWasUnsuccesful">
+        <source>Не удалось применить метод очистки класса {0}.{1}. Сообщение об ошибке: {2}. Трассировка стека: {3}.</source>
+        <target state="new">Не удалось применить метод очистки класса {0}.{1}. Сообщение об ошибке: {2}. Трассировка стека: {3}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorTestPropertyAlreadyDefined">
+        <source>UTA022: {0}.{1}: пользовательское свойство "{2}" уже определено. В качестве значения используется "{3}".</source>
+        <target state="new">UTA022: {0}.{1}: пользовательское свойство "{2}" уже определено. В качестве значения используется "{3}".</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="SourcesNotSupported">
+        <source>Запуск тестов в любом из предоставленных источников не поддерживается на выбранной платформе</source>
+        <target state="new">Запуск тестов в любом из предоставленных источников не поддерживается на выбранной платформе</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassInitMethodThrows">
+        <source>Методом инициализации класса {0}.{1} создано исключение. {2}: {3}.</source>
+        <target state="new">Методом инициализации класса {0}.{1} создано исключение. {2}: {3}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestContextIsNull">
+        <source>TestContext не может иметь значение NULL.</source>
+        <target state="new">TestContext не может иметь значение NULL.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DataDrivenResultDisplayName">
+        <source>{0} (строка данных {1})</source>
+        <target state="new">{0} (строка данных {1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_WrongThread">
+        <source>{0}. Если в тесте используются объекты пользовательского интерфейса, рассмотрите возможность использования атрибута [UITestMethod] вместо атрибута [TestMethod] для выполнения теста в потоке пользовательского интерфейса.</source>
+        <target state="new">{0}. Если в тесте используются объекты пользовательского интерфейса, рассмотрите возможность использования атрибута [UITestMethod] вместо атрибута [TestMethod] для выполнения теста в потоке пользовательского интерфейса.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ExecuteThrewException">
+        <source>При выполнении теста возникло исключение. Если используется расширение атрибута TestMethodAttribute, обратитесь к поставщику. Сообщение об ошибке: {0}.</source>
+        <target state="new">При выполнении теста возникло исключение. Если используется расширение атрибута TestMethodAttribute, обратитесь к поставщику. Сообщение об ошибке: {0}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestMethodThrows">
+        <source>Метод теста {0}.{1} создал исключение: 
+{2}.</source>
+        <target state="new">Метод теста {0}.{1} создал исключение: 
+{2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_CleanupMethodThrows">
+        <source>Метод TestCleanup {0}.{1} вызвал исключение. {2}.</source>
+        <target state="new">Метод TestCleanup {0}.{1} вызвал исключение. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_InstanceCreationError">
+        <source>Не удалось создать экземпляр класса {0}. Ошибка: {1}.</source>
+        <target state="new">Не удалось создать экземпляр класса {0}. Ошибка: {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestContextTypeMismatchLoadError">
+        <source>Для свойства {0}.TestContext указан неправильный тип.</source>
+        <target state="new">Для свойства {0}.TestContext указан неправильный тип.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DebugTraceBanner">
+        <source>Трассировка отладки:</source>
+        <target state="new">Трассировка отладки:</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature">
+        <source>Метод {0}.{1} имеет неправильную сигнатуру. Метод должен быть статическим и открытым, не должен возвращать значение и принимать параметры. Кроме того, при использовании в методе async-await возвращаемое значение должно иметь тип Task.</source>
+        <target state="new">Метод {0}.{1} имеет неправильную сигнатуру. Метод должен быть статическим и открытым, не должен возвращать значение и принимать параметры. Кроме того, при использовании в методе async-await возвращаемое значение должно иметь тип Task.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorGenericTestMethod">
+        <source>UTA015: универсальный метод не может быть методом теста. {0}.{1} имеет недопустимую сигнатуру</source>
+        <target state="new">UTA015: универсальный метод не может быть методом теста. {0}.{1} имеет недопустимую сигнатуру</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_AssemblyInitMethodThrows">
+        <source>Методом инициализации сборки {0}.{1} создано исключение. {2}: {3}. Выполнение теста прекращается.</source>
+        <target state="new">Методом инициализации сборки {0}.{1} создано исключение. {2}: {3}. Выполнение теста прекращается.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiClean">
+        <source>UTA024: {0}: невозможно определить несколько методов с атрибутом TestCleanup.</source>
+        <target state="new">UTA024: {0}: невозможно определить несколько методов с атрибутом TestCleanup.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_FailedToGetExceptionMessage">
+        <source>(Не удалось получить сообщение для исключения с типом {0} в связи с возникновением исключения.)</source>
+        <target state="new">(Не удалось получить сообщение для исключения с типом {0} в связи с возникновением исключения.)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AttachmentSetDisplayName">
+        <source>MSTestAdapterV2</source>
+        <target state="new">MSTestAdapterV2</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CouldNotInspectTypeDuringDiscovery">
+        <source>Средству MSTestAdapter не удалось обнаружить тесты в классе "{0}" сборки "{1}", так как {2}.</source>
+        <target state="new">Средству MSTestAdapter не удалось обнаружить тесты в классе "{0}" сборки "{1}", так как {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestContextSetError">
+        <source>Не удалось задать свойство TestContext для класса {0}. Ошибка: {1}.</source>
+        <target state="new">Не удалось задать свойство TestContext для класса {0}. Ошибка: {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiAssemblyClean">
+        <source>UTA014: {0}: в сборке невозможно определить несколько методов с атрибутом AssemblyCleanup.</source>
+        <target state="new">UTA014: {0}: в сборке невозможно определить несколько методов с атрибутом AssemblyCleanup.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_FailedToGetTestMethodException">
+        <source>Не удалось получить исключение, созданное методом теста {0}.{1}.</source>
+        <target state="new">Не удалось получить исключение, созданное методом теста {0}.{1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_EndOfInnerExceptionTrace">
+        <source>--- Конец трассировки стека внутренних исключений ---</source>
+        <target state="new">--- Конец трассировки стека внутренних исключений ---</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorInvalidTimeout">
+        <source>UTA054: {0}.{1} имеет недопустимый атрибут Timeout. Время ожидания должно быть допустимым целым числом и не может быть меньше 0.</source>
+        <target state="new">UTA054: {0}.{1} имеет недопустимый атрибут Timeout. Время ожидания должно быть допустимым целым числом и не может быть меньше 0.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="LegacyScenariosNotSupportedWarning">
+        <source>Внимание! TESTSETTINGS- или RUNSETTINGS-файл, в котором параметр ForcedLegacyMode установлен в значение True, не поддерживается адаптером MSTest версии 2.</source>
+        <target state="new">Внимание! TESTSETTINGS- или RUNSETTINGS-файл, в котором параметр ForcedLegacyMode установлен в значение True, не поддерживается адаптером MSTest версии 2.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_MustBeGreaterThanZero">
+        <source>Этот параметр должен быть больше нуля.</source>
+        <target state="new">Этот параметр должен быть больше нуля.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_NoDefaultConstructor">
+        <source>Не удается получить конструктор по умолчанию для класса {0}.</source>
+        <target state="new">Не удается получить конструктор по умолчанию для класса {0}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TestContextLoadError">
+        <source>Не удается найти свойство {0}.TestContext. Ошибка: {1}.</source>
+        <target state="new">Не удается найти свойство {0}.TestContext. Ошибка: {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EnumeratorLoadTypeErrorFormat">
+        <source>{0}: {1}</source>
+        <target state="new">{0}: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_MultipleExpectedExceptionsOnTestMethod">
+        <source>В методе теста {0}.{1} определено несколько атрибутов, производных от ExpectedExceptionBaseAttribute, заданного в нем. Допускается только один такой атрибут.</source>
+        <target state="new">В методе теста {0}.{1} определено несколько атрибутов, производных от ExpectedExceptionBaseAttribute, заданного в нем. Допускается только один такой атрибут.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorInValidTestContextSignature">
+        <source>UTA031: в классе {0} отсутствует допустимое свойство TestContext. Свойство TestContext должно иметь тип TestContext, быть нестатическим, открытым и не должно быть предназначено только для чтения. Например: public TestContext TestContext.</source>
+        <target state="new">UTA031: в классе {0} отсутствует допустимое свойство TestContext. Свойство TestContext должно иметь тип TestContext, быть нестатическим, открытым и не должно быть предназначено только для чтения. Например: public TestContext TestContext.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_MethodDoesNotExists">
+        <source>Метод {0}.{1} не существует.</source>
+        <target state="new">Метод {0}.{1} не существует.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestAssembly_FileDoesNotExist">
+        <source>Файл не существует: {0}</source>
+        <target state="new">Файл не существует: {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_TypeLoadError">
+        <source>Не удается получить тип {0}. Ошибка: {1}.</source>
+        <target state="new">Не удается получить тип {0}. Ошибка: {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TypeLoadFailed">
+        <source>Не удалось загрузить типы из тестового источника "{0}". В этом источнике невозможно обнаружить часть тестов или все тесты.</source>
+        <target state="new">Не удалось загрузить типы из тестового источника "{0}". В этом источнике невозможно обнаружить часть тестов или все тесты.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorMultiClassClean">
+        <source>UTA026: {0}: в классе невозможно определить несколько методов с атрибутом ClassCleanup.</source>
+        <target state="new">UTA026: {0}: в классе невозможно определить несколько методов с атрибутом ClassCleanup.</target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

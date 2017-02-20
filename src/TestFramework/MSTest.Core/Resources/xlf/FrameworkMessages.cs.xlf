@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="cs" original="../FrameworkMessages.resx">
+    <body>
+      <trans-unit id="ElementNumbersDontMatch">
+        <source>Počet elementů v kolekcích nesouhlasí. Očekáváno:&lt;{1}&gt;. Aktuálně:&lt;{2}&gt;.{0}</source>
+        <target state="new">Počet elementů v kolekcích nesouhlasí. Očekáváno:&lt;{1}&gt;. Aktuálně:&lt;{2}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsMatchFail">
+        <source>Řetězec '{0}' neodpovídá vzoru '{1}'. {2}.</source>
+        <target state="new">Řetězec '{0}' neodpovídá vzoru '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsInstanceOfFailMsg">
+        <source>{0} Očekávaný typ:&lt;{1}&gt;. Aktuální typ:&lt;{2}&gt;.</source>
+        <target state="new">{0} Očekávaný typ:&lt;{1}&gt;. Aktuální typ:&lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ContainsFail">
+        <source>Řetězec '{0}' neobsahuje řetězec '{1}'. {2}.</source>
+        <target state="new">Řetězec '{0}' neobsahuje řetězec '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InternalObjectNotValid">
+        <source>Odkaz na vnitřní objekt už není platný.</source>
+        <target state="new">Odkaz na vnitřní objekt už není platný.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="StartsWithFail">
+        <source>Řetězec '{0}' nezačíná řetězcem '{1}'. {2}.</source>
+        <target state="new">Řetězec '{0}' nezačíná řetězcem '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailMsg">
+        <source>Očekáváno:&lt;{1} ({2})&gt;. Aktuálně:&lt;{3} ({4})&gt;. {0}</source>
+        <target state="new">Očekáváno:&lt;{1} ({2})&gt;. Aktuálně:&lt;{3} ({4})&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothSameElements">
+        <source>Obě kolekce obsahují stejné elementy. {0}</source>
+        <target state="new">Obě kolekce obsahují stejné elementy. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidParameterToAssert">
+        <source>Parametr '{0}' je neplatný. {1}.</source>
+        <target state="new">Parametr '{0}' je neplatný. {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailMsg">
+        <source>Očekáván rozdíl, který je větší jak &lt;{3}&gt; mezi očekávanou hodnotou &lt;{1}&gt; a aktuální hodnotou &lt;{2}&gt;. {0}</source>
+        <target state="new">Očekáván rozdíl, který je větší jak &lt;{3}&gt; mezi očekávanou hodnotou &lt;{1}&gt; a aktuální hodnotou &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementsAtIndexDontMatch">
+        <source>Element na indexu {0} nesouhlasí.</source>
+        <target state="new">Element na indexu {0} nesouhlasí.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameReference">
+        <source>Obě reference na kolekci odkazují na stejný objekt kolekce. {0}</source>
+        <target state="new">Obě reference na kolekci odkazují na stejný objekt kolekce. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AsyncUITestMethodNotSupported">
+        <source>async TestMethod s atributem UITestMethodAttribute se nepodporují. Buď odeberte async, nebo použijte TestMethodAttribute.</source>
+        <target state="new">async TestMethod s atributem UITestMethodAttribute se nepodporují. Buď odeberte async, nebo použijte TestMethodAttribute.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorConstructorNotFound">
+        <source>
+      Konstruktor se zadaným podpisem se nepovedlo najít. Je možné, že bude zapotřebí obnovit soukromý přistupující objekt,
+ nebo může být člen soukromý a definovaný v základní třídě. Pokud je tvrzení pravdivé, bude zapotřebí předat typ
+      , který definuje člena do konstruktoru PrivateObject.
+    </source>
+        <target state="new">
+      Konstruktor se zadaným podpisem se nepovedlo najít. Je možné, že bude zapotřebí obnovit soukromý přistupující objekt,
+ nebo může být člen soukromý a definovaný v základní třídě. Pokud je tvrzení pravdivé, bude zapotřebí předat typ
+      , který definuje člena do konstruktoru PrivateObject.
+    </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AssertionFailed">
+        <source>{0} selhalo. {1}</source>
+        <target state="new">{0} selhalo. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertEquals">
+        <source>Assert.Equals by neměla být pro kontrolní výrazy používána. Použijte prosím místo toho Assert.AreEqual a její přetížení.</source>
+        <target state="new">Assert.Equals by neměla být pro kontrolní výrazy používána. Použijte prosím místo toho Assert.AreEqual a její přetížení.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoExceptionDefault">
+        <source>Testovací metoda nevyvolala výjimku. Atribut {0} definovaný u testovací metody výjimku očekával.</source>
+        <target state="new">Testovací metoda nevyvolala výjimku. Atribut {0} definovaný u testovací metody výjimku očekával.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_NullInMessages">
+        <source>(null)</source>
+        <target state="new">(null)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
+        <source>Testovací metoda vyvolala výjimku {0}, ale očekávala se výjimka {1} nebo od ní odvozený typ. Zpráva o výjimce: {2}</source>
+        <target state="new">Testovací metoda vyvolala výjimku {0}, ale očekávala se výjimka {1} nebo od ní odvozený typ. Zpráva o výjimce: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch2">
+        <source>Element na indexu {1} je (null). Předpokládaný typ:&lt;{2}&gt;.{0}</source>
+        <target state="new">Element na indexu {1} je (null). Předpokládaný typ:&lt;{2}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoExceptionThrown">
+        <source>Nebyla vyvolána žádná výjimka. Byla očekávaná {1} výjimka. {0}</source>
+        <target state="new">Nebyla vyvolána žádná výjimka. Byla očekávaná {1} výjimka. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DataDrivenResultDisplayName">
+        <source>{0} ({1})</source>
+        <target state="new">{0} ({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoDataRow">
+        <source>Nebyl zadán žádný atribut DataRowAttribute. Při použití atributu DataTestMethodAttribute je požadován alespoň jeden atribut DataRowAttribute.</source>
+        <target state="new">Nebyl zadán žádný atribut DataRowAttribute. Při použití atributu DataTestMethodAttribute je požadován alespoň jeden atribut DataRowAttribute.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CollectionEqualReason">
+        <source>{0}({1})</source>
+        <target state="new">{0}({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EqualsTesterInvalidArgs">
+        <source>Neplatný argument- v EqualsTester nelze použít hodnotu null.</source>
+        <target state="new">Neplatný argument- v EqualsTester nelze použít hodnotu null.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AccessStringInvalidSyntax">
+        <source>Přístupový řetězec má neplatnou syntaxi.</source>
+        <target state="new">Přístupový řetězec má neplatnou syntaxi.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch">
+        <source>Element na indexu {1} není očekávaného typu. Očekávaný typ:&lt;{2}&gt;. Aktuální typ:&lt;{3}&gt;.{0}</source>
+        <target state="new">Element na indexu {1} není očekávaného typu. Očekávaný typ:&lt;{2}&gt;. Aktuální typ:&lt;{3}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ErrorInvalidCast">
+        <source>Nelze převést objekt typu {0} na {1}.</source>
+        <target state="new">Nelze převést objekt typu {0} na {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualFailMsg">
+        <source>Nebyla očekávána žádná hodnota kromě:&lt;{1}&gt;. Aktuálně:&lt;{2}&gt;. {0}</source>
+        <target state="new">Nebyla očekávána žádná hodnota kromě:&lt;{1}&gt;. Aktuálně:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoException">
+        <source>Testovací metoda nevyvolala očekávanou výjimku {0}. {1}</source>
+        <target state="new">Testovací metoda nevyvolala očekávanou výjimku {0}. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotMatchFail">
+        <source>Řetězec '{0}' odpovídá vzoru '{1}'. {2}.</source>
+        <target state="new">Řetězec '{0}' odpovídá vzoru '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongException">
+        <source>Testovací metoda vyvolala výjimku {0}, ale očekávala se výjimka {1}. Zpráva o výjimce: {2}</source>
+        <target state="new">Testovací metoda vyvolala výjimku {0}, ale očekávala se výjimka {1}. Zpráva o výjimce: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongExceptionThrown">
+        <source>Způsobil výjimku {2}, ale výjimka {1} byla očekávaná. {0}
+Zpráva výjimky: {3}
+Trasování zásobníku: {4}</source>
+        <target state="new">Způsobil výjimku {2}, ale výjimka {1} byla očekávaná. {0}
+Zpráva výjimky: {3}
+Trasování zásobníku: {4}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotInstanceOfFailMsg">
+        <source>Špatný typ:&lt;{1}&gt;. Aktuální typ:&lt;{2}&gt;. {0}</source>
+        <target state="new">Špatný typ:&lt;{1}&gt;. Aktuální typ:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDeltaFailMsg">
+        <source>Očekáván rozdíl, který není větší jak &lt;{3}&gt; mezi očekávanou hodnotou &lt;{1}&gt; a aktuální hodnotou &lt;{2}&gt;. {0}</source>
+        <target state="new">Očekáván rozdíl, který není větší jak &lt;{3}&gt; mezi očekávanou hodnotou &lt;{1}&gt; a aktuální hodnotou &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_FailedToGetExceptionMessage">
+        <source>(Z důvodu výjimky se nepodařilo získat zprávu o výjimce typu {0}.)</source>
+        <target state="new">(Z důvodu výjimky se nepodařilo získat zprávu o výjimce typu {0}.)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AllItemsAreUniqueFailMsg">
+        <source>Byla nalezena duplicitní položka:&lt;{1}&gt;. {0}</source>
+        <target state="new">Byla nalezena duplicitní položka:&lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_ObjectString">
+        <source>(objekt)</source>
+        <target state="new">(objekt)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EndsWithFail">
+        <source>Řetězec '{0}' nekončí řetězcem '{1}'. {2}.</source>
+        <target state="new">Řetězec '{0}' nekončí řetězcem '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NumberOfElementsDiff">
+        <source>Rozdílný počet elementů.</source>
+        <target state="new">Rozdílný počet elementů.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NullParameterToAssert">
+        <source>Parametr '{0}' je neplatný. Hodnota nemůže být null. {1}.</source>
+        <target state="new">Parametr '{0}' je neplatný. Hodnota nemůže být null. {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameElements">
+        <source>Obě kolekce obsahují stejné elementy.</source>
+        <target state="new">Obě kolekce obsahují stejné elementy.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsEmpty">
+        <source>Obě kolekce jsou prázdné. {0}</source>
+        <target state="new">Obě kolekce jsou prázdné. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualCaseFailMsg">
+        <source>Očekáváno:&lt;{1}&gt;. Případ je rozdílný pro aktuální hodnotu:&lt;{2}&gt;. {0}</source>
+        <target state="new">Očekáváno:&lt;{1}&gt;. Případ je rozdílný pro aktuální hodnotu:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidPropertyType">
+        <source>Vlastnost {0} je typu {1}; očekávaný typ {2}.</source>
+        <target state="new">Vlastnost {0} je typu {1}; očekávaný typ {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameGivenValues">
+        <source>Nevkládejte hodnotu typů do AreSame(). Hodnoty převedené do typu Object už nebudou nikdy stejné. Zvažte použití AreEqual(). {0}</source>
+        <target state="new">Nevkládejte hodnotu typů do AreSame(). Hodnoty převedené do typu Object už nebudou nikdy stejné. Zvažte použití AreEqual(). {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
+        <source>Typ očekávané výjimky musí být typu System.Exception nebo z něj odvozený.</source>
+        <target state="new">Typ očekávané výjimky musí být typu System.Exception nebo z něj odvozený.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>Očekáváno:&lt;{1}&gt;. Aktuálně:&lt;{2}&gt;. {0}</source>
+        <target state="new">Očekáváno:&lt;{1}&gt;. Aktuálně:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ActualHasMismatchedElements">
+        <source>Očekávaná kolekce obsahuje {1} výskyt(ů) &lt;{2}&gt;. Aktuální kolekce obsahuje {3} výskyt(ů). {0}</source>
+        <target state="new">Očekávaná kolekce obsahuje {1} výskyt(ů) &lt;{2}&gt;. Aktuální kolekce obsahuje {3} výskyt(ů). {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorMemberNotFound">
+        <source>
+      Zadaný člen ({0}) nemohl být nalezen. Je možné, že bude zapotřebí obnovit soukromý přístupový objekt,
+ nebo může být člen soukromý a definovaný v základní třídě. Pokud je tvrzení pravdivé, bude zapotřebí předat typ
+      , který definuje člena do konstruktoru PrivateObject.
+    </source>
+        <target state="new">
+      Zadaný člen ({0}) nemohl být nalezen. Je možné, že bude zapotřebí obnovit soukromý přístupový objekt,
+ nebo může být člen soukromý a definovaný v základní třídě. Pokud je tvrzení pravdivé, bude zapotřebí předat typ
+      , který definuje člena do konstruktoru PrivateObject.
+    </target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

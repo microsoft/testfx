@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ko" original="../FrameworkMessages.resx">
+    <body>
+      <trans-unit id="ElementNumbersDontMatch">
+        <source>컬렉션의 요소 수가 일치하지 않습니다. 예상 값: &lt;{1}&gt;. 실제 값: &lt;{2}&gt;.{0}</source>
+        <target state="new">컬렉션의 요소 수가 일치하지 않습니다. 예상 값: &lt;{1}&gt;. 실제 값: &lt;{2}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsMatchFail">
+        <source>'{0}' 문자열이 '{1}' 패턴과 일치하지 않습니다. {2}</source>
+        <target state="new">'{0}' 문자열이 '{1}' 패턴과 일치하지 않습니다. {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsInstanceOfFailMsg">
+        <source>{0} 예상 형식: &lt;{1}&gt;, 실제 형식: &lt;{2}&gt;.</source>
+        <target state="new">{0} 예상 형식: &lt;{1}&gt;, 실제 형식: &lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ContainsFail">
+        <source>'{0}' 문자열이 '{1}' 문자열을 포함하지 않습니다. {2}</source>
+        <target state="new">'{0}' 문자열이 '{1}' 문자열을 포함하지 않습니다. {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InternalObjectNotValid">
+        <source>참조된 내부 개체가 더 이상 유효하지 않습니다.</source>
+        <target state="new">참조된 내부 개체가 더 이상 유효하지 않습니다.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="StartsWithFail">
+        <source>'{0}' 문자열이 '{1}' 문자열로 시작되지 않습니다. {2}</source>
+        <target state="new">'{0}' 문자열이 '{1}' 문자열로 시작되지 않습니다. {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailMsg">
+        <source>예상 값: &lt;{1} ({2})&gt;. 실제 값: &lt;{3} ({4})&gt;. {0}</source>
+        <target state="new">예상 값: &lt;{1} ({2})&gt;. 실제 값: &lt;{3} ({4})&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothSameElements">
+        <source>두 컬렉션에 같은 요소가 포함되어 있습니다. {0}</source>
+        <target state="new">두 컬렉션에 같은 요소가 포함되어 있습니다. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidParameterToAssert">
+        <source>'{0}' 매개 변수가 잘못되었습니다. {1}</source>
+        <target state="new">'{0}' 매개 변수가 잘못되었습니다. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailMsg">
+        <source>예상 값 &lt;{1}&gt;과(와) 실제 값 &lt;{2}&gt;의 차이가 &lt;{3}&gt;보다 커야 합니다. {0}</source>
+        <target state="new">예상 값 &lt;{1}&gt;과(와) 실제 값 &lt;{2}&gt;의 차이가 &lt;{3}&gt;보다 커야 합니다. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementsAtIndexDontMatch">
+        <source>인덱스 {0}에 있는 요소가 일치하지 않습니다.</source>
+        <target state="new">인덱스 {0}에 있는 요소가 일치하지 않습니다.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameReference">
+        <source>두 컬렉션 참조가 동일한 컬렉션 개체를 가리킵니다. {0}</source>
+        <target state="new">두 컬렉션 참조가 동일한 컬렉션 개체를 가리킵니다. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AsyncUITestMethodNotSupported">
+        <source>async TestMethod with UITestMethodAttribute는 지원되지 않습니다. async를 제거하거나 TestMethodAttribute를 사용하세요.</source>
+        <target state="new">async TestMethod with UITestMethodAttribute는 지원되지 않습니다. async를 제거하거나 TestMethodAttribute를 사용하세요.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorConstructorNotFound">
+        <source>
+      지정한 서명을 가진 생성자를 찾을 수 없습니다. 전용 접근자를 다시 생성해야 할 수 있습니다.
+      또는 멤버가 기본 클래스에 정의된 전용 멤버일 수 있습니다. 기본 클래스에 정의된 전용 멤버인 경우에는 이 멤버를 정의하는 형식을
+      PrivateObject의 생성자에 전달해야 합니다.
+    </source>
+        <target state="new">
+      지정한 서명을 가진 생성자를 찾을 수 없습니다. 전용 접근자를 다시 생성해야 할 수 있습니다.
+      또는 멤버가 기본 클래스에 정의된 전용 멤버일 수 있습니다. 기본 클래스에 정의된 전용 멤버인 경우에는 이 멤버를 정의하는 형식을
+      PrivateObject의 생성자에 전달해야 합니다.
+    </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AssertionFailed">
+        <source>{0}이(가) 실패했습니다. {1}</source>
+        <target state="new">{0}이(가) 실패했습니다. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertEquals">
+        <source>어설션에 Assert.Equals를 사용할 수 없습니다. 대신 Assert.AreEqual 및 오버로드를 사용하세요.</source>
+        <target state="new">어설션에 Assert.Equals를 사용할 수 없습니다. 대신 Assert.AreEqual 및 오버로드를 사용하세요.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoExceptionDefault">
+        <source>테스트 메서드에서 예외를 throw하지 않았습니다. 예외는 테스트 메서드에 정의된 {0} 특성에 의해 예상되었습니다.</source>
+        <target state="new">테스트 메서드에서 예외를 throw하지 않았습니다. 예외는 테스트 메서드에 정의된 {0} 특성에 의해 예상되었습니다.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_NullInMessages">
+        <source>(null)</source>
+        <target state="new">(null)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
+        <source>테스트 메서드에서 {0} 예외를 throw했지만 {1} 예외 또는 해당 예외에서 파생된 형식을 예상했습니다. 예외 메시지: {2}</source>
+        <target state="new">테스트 메서드에서 {0} 예외를 throw했지만 {1} 예외 또는 해당 예외에서 파생된 형식을 예상했습니다. 예외 메시지: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch2">
+        <source>인덱스 {1}에 있는 요소가 (null)입니다. 필요한 형식: &lt;{2}&gt;.{0}</source>
+        <target state="new">인덱스 {1}에 있는 요소가 (null)입니다. 필요한 형식: &lt;{2}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoExceptionThrown">
+        <source>{1} 예외를 예상했지만 예외가 throw되지 않았습니다. {0}</source>
+        <target state="new">{1} 예외를 예상했지만 예외가 throw되지 않았습니다. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DataDrivenResultDisplayName">
+        <source>{0}({1})</source>
+        <target state="new">{0}({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoDataRow">
+        <source>DataRowAttribute가 지정되지 않았습니다. DataTestMethodAttribute에는 하나 이상의 DataRowAttribute가 필요합니다.</source>
+        <target state="new">DataRowAttribute가 지정되지 않았습니다. DataTestMethodAttribute에는 하나 이상의 DataRowAttribute가 필요합니다.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CollectionEqualReason">
+        <source>{0}({1})</source>
+        <target state="new">{0}({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EqualsTesterInvalidArgs">
+        <source>잘못된 인수 - EqualsTester에는 null을 사용할 수 없습니다.</source>
+        <target state="new">잘못된 인수 - EqualsTester에는 null을 사용할 수 없습니다.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AccessStringInvalidSyntax">
+        <source>액세스 문자열의 구문이 잘못되었습니다.</source>
+        <target state="new">액세스 문자열의 구문이 잘못되었습니다.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch">
+        <source>인덱스 {1}에 있는 요소가 필요한 형식이 아닙니다. 필요한 형식: &lt;{2}&gt;, 실제 형식: &lt;{3}&gt;.{0}</source>
+        <target state="new">인덱스 {1}에 있는 요소가 필요한 형식이 아닙니다. 필요한 형식: &lt;{2}&gt;, 실제 형식: &lt;{3}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ErrorInvalidCast">
+        <source>{0} 형식의 개체를 {1}(으)로 변환할 수 없습니다.</source>
+        <target state="new">{0} 형식의 개체를 {1}(으)로 변환할 수 없습니다.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualFailMsg">
+        <source>예상 값: &lt;{1}&gt;을(를) 제외한 모든 값. 실제 값: &lt;{2}&gt;. {0}</source>
+        <target state="new">예상 값: &lt;{1}&gt;을(를) 제외한 모든 값. 실제 값: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoException">
+        <source>테스트 메서드에서 예상 예외 {0}을(를) throw하지 않았습니다. {1}</source>
+        <target state="new">테스트 메서드에서 예상 예외 {0}을(를) throw하지 않았습니다. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotMatchFail">
+        <source>'{0}' 문자열이 '{1}' 패턴과 일치합니다. {2}</source>
+        <target state="new">'{0}' 문자열이 '{1}' 패턴과 일치합니다. {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongException">
+        <source>테스트 메서드에서 {0} 예외를 throw했지만 {1} 예외를 예상했습니다. 예외 메시지: {2}</source>
+        <target state="new">테스트 메서드에서 {0} 예외를 throw했지만 {1} 예외를 예상했습니다. 예외 메시지: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongExceptionThrown">
+        <source>{1} 예외를 예상했지만 {2} 예외를 throw했습니다. {0}
+예외 메시지: {3}
+스택 추적: {4}</source>
+        <target state="new">{1} 예외를 예상했지만 {2} 예외를 throw했습니다. {0}
+예외 메시지: {3}
+스택 추적: {4}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotInstanceOfFailMsg">
+        <source>잘못된 형식: &lt;{1}&gt;, 실제 형식: &lt;{2}&gt;. {0}</source>
+        <target state="new">잘못된 형식: &lt;{1}&gt;, 실제 형식: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDeltaFailMsg">
+        <source>예상 값 &lt;{1}&gt;과(와) 실제 값 &lt;{2}&gt;의 차이가 &lt;{3}&gt;보다 크지 않아야 합니다. {0}</source>
+        <target state="new">예상 값 &lt;{1}&gt;과(와) 실제 값 &lt;{2}&gt;의 차이가 &lt;{3}&gt;보다 크지 않아야 합니다. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_FailedToGetExceptionMessage">
+        <source>(예외로 인해 {0} 형식의 예외에 대한 메시지를 가져오지 못했습니다.)</source>
+        <target state="new">(예외로 인해 {0} 형식의 예외에 대한 메시지를 가져오지 못했습니다.)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AllItemsAreUniqueFailMsg">
+        <source>중복된 항목이 있습니다. &lt;{1}&gt;. {0}</source>
+        <target state="new">중복된 항목이 있습니다. &lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_ObjectString">
+        <source>(개체)</source>
+        <target state="new">(개체)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EndsWithFail">
+        <source>'{0}' 문자열이 '{1}' 문자열로 끝나지 않습니다. {2}</source>
+        <target state="new">'{0}' 문자열이 '{1}' 문자열로 끝나지 않습니다. {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NumberOfElementsDiff">
+        <source>요소 수가 다릅니다.</source>
+        <target state="new">요소 수가 다릅니다.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NullParameterToAssert">
+        <source>'{0}' 매개 변수가 잘못되었습니다. 이 값은 null일 수 없습니다. {1}.</source>
+        <target state="new">'{0}' 매개 변수가 잘못되었습니다. 이 값은 null일 수 없습니다. {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameElements">
+        <source>두 컬렉션에 같은 요소가 포함되어 있습니다.</source>
+        <target state="new">두 컬렉션에 같은 요소가 포함되어 있습니다.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsEmpty">
+        <source>두 컬렉션이 모두 비어 있습니다. {0}</source>
+        <target state="new">두 컬렉션이 모두 비어 있습니다. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualCaseFailMsg">
+        <source>예상 값: &lt;{1}&gt;. 대/소문자가 다른 실제 값: &lt;{2}&gt;. {0}</source>
+        <target state="new">예상 값: &lt;{1}&gt;. 대/소문자가 다른 실제 값: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidPropertyType">
+        <source>{0} 속성의 형식은 {2}이어야 하는데 실제로는 {1}입니다.</source>
+        <target state="new">{0} 속성의 형식은 {2}이어야 하는데 실제로는 {1}입니다.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameGivenValues">
+        <source>AreSame()에 값 형식을 전달하면 안 됩니다. Object로 변환된 값은 동일한 값으로 간주되지 않습니다. AreEqual()을 사용해 보세요. {0}</source>
+        <target state="new">AreSame()에 값 형식을 전달하면 안 됩니다. Object로 변환된 값은 동일한 값으로 간주되지 않습니다. AreEqual()을 사용해 보세요. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
+        <source>예상 예외 형식은 System.Exception이거나 System.Exception에서 파생된 형식이어야 합니다.</source>
+        <target state="new">예상 예외 형식은 System.Exception이거나 System.Exception에서 파생된 형식이어야 합니다.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>예상 값: &lt;{1}&gt;. 실제 값: &lt;{2}&gt;. {0}</source>
+        <target state="new">예상 값: &lt;{1}&gt;. 실제 값: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ActualHasMismatchedElements">
+        <source>필요한 컬렉션에 &lt;{2}&gt;은(는) {1}개가 포함되어야 하는데 실제 컬렉션에는 {3}개가 포함되어 있습니다. {0}</source>
+        <target state="new">필요한 컬렉션에 &lt;{2}&gt;은(는) {1}개가 포함되어야 하는데 실제 컬렉션에는 {3}개가 포함되어 있습니다. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorMemberNotFound">
+        <source>
+      지정한 멤버({0})를 찾을 수 없습니다. 전용 접근자를 다시 생성해야 할 수 있습니다.
+      또는 멤버가 기본 클래스에 정의된 전용 멤버일 수 있습니다. 기본 클래스에 정의된 전용 멤버인 경우에는 이 멤버를 정의하는 형식을
+      PrivateObject의 생성자에 전달해야 합니다.
+    </source>
+        <target state="new">
+      지정한 멤버({0})를 찾을 수 없습니다. 전용 접근자를 다시 생성해야 할 수 있습니다.
+      또는 멤버가 기본 클래스에 정의된 전용 멤버일 수 있습니다. 기본 클래스에 정의된 전용 멤버인 경우에는 이 멤버를 정의하는 형식을
+      PrivateObject의 생성자에 전달해야 합니다.
+    </target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

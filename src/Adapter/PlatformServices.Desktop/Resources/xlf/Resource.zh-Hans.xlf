@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="zh-Hans" original="../Resource.resx">
+    <body>
+      <trans-unit id="DeploymentItem">
+        <source>部署项“{0}”</source>
+        <target state="new">部署项“{0}”</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_CannotBeNullOrEmpty">
+        <source>参数不应为 NULL 或为空。</source>
+        <target state="new">参数不应为 NULL 或为空。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorDataConnectionFailed">
+        <source>单元测试适配器未能连接到数据源或读取数据。有关解决此错误的详细信息，请查看 MSDN 库中的“数据驱动单元测试疑难解答”(http://go.microsoft.com/fwlink/?LinkId=62412)。错误详细信息: {0}</source>
+        <target state="new">单元测试适配器未能连接到数据源或读取数据。有关解决此错误的详细信息，请查看 MSDN 库中的“数据驱动单元测试疑难解答”(http://go.microsoft.com/fwlink/?LinkId=62412)。错误详细信息: {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlElement">
+        <source>MSTestAdapter 在其设置“{1}”中遇到意外的元素“{0}”。删除此元素，然后再试一次。</source>
+        <target state="new">MSTestAdapter 在其设置“{1}”中遇到意外的元素“{0}”。删除此元素，然后再试一次。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependencyWithoutReason">
+        <source>测试运行部署问题: 找不到程序集或模块“{0}”。</source>
+        <target state="new">测试运行部署问题: 找不到程序集或模块“{0}”。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemContainsInvalidCharacters">
+        <source>无效的部署项: 指定的路径“{0}”或输出目录“{1}”包含非法字符。</source>
+        <target state="new">无效的部署项: 指定的路径“{0}”或输出目录“{1}”包含非法字符。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependency">
+        <source>测试运行部署问题: 找不到程序集或模块“{0}”。原因: {1}</source>
+        <target state="new">测试运行部署问题: 找不到程序集或模块“{0}”。原因: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorBadDeploymentItem">
+        <source>测试运行部署问题: 错误的部署项:“{0}”: 输出目录“{1}”指定将该项部署到部署根目录的外部，这是不允许的。</source>
+        <target state="new">测试运行部署问题: 错误的部署项:“{0}”: 输出目录“{1}”指定将该项部署到部署根目录的外部，这是不允许的。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
+        <source>无效的部署项: 输出目录不能为 NULL。</source>
+        <target state="new">无效的部署项: 输出目录不能为 NULL。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
+        <source>在测试配置设置中找不到数据源“{0}”</source>
+        <target state="new">在测试配置设置中找不到数据源“{0}”</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorGettingSatellite">
+        <source>测试运行部署问题: 在获取 {0} 的附属程序集时出错: {1}: {2}</source>
+        <target state="new">测试运行部署问题: 在获取 {0} 的附属程序集时出错: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToDeployDependencies">
+        <source>测试运行部署问题: 未能部署测试存储区“{0}”的依赖项: {1}</source>
+        <target state="new">测试运行部署问题: 未能部署测试存储区“{0}”的依赖项: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccessFile">
+        <source>测试运行部署问题: 未能访问文件“{0}”: {1}: {2}</source>
+        <target state="new">测试运行部署问题: 未能访问文件“{0}”: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestRunName">
+        <source>{0}_{1} {2}</source>
+        <target state="new">{0}_{1} {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemWithOutputDirectory">
+        <source>部署项“{0}”(输出目录“{1}”)</source>
+        <target state="new">部署项“{0}”(输出目录“{1}”)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToGetFileForDeploymentItem">
+        <source>测试运行部署问题: 未能获得 {0} 的文件: {1}: {2}</source>
+        <target state="new">测试运行部署问题: 未能获得 {0} 的文件: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccesOutputDirectory">
+        <source>测试运行部署问题: 未能访问由部署项“{0}”指定的输出目录“{1}”，将不会部署该项: {2}: {3}</source>
+        <target state="new">测试运行部署问题: 未能访问由部署项“{0}”指定的输出目录“{1}”，将不会部署该项: {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
+        <source>测试运行部署问题: 未能将文件“{0}”复制到“{1}”: {2}: {3}</source>
+        <target state="new">测试运行部署问题: 未能将文件“{0}”复制到“{1}”: {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongNumberOfObjects">
+        <source>排列的对象数不正确。应大于零。</source>
+        <target state="new">排列的对象数不正确。应大于零。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CannotFindFile">
+        <source>找不到文件“{0}”。</source>
+        <target state="new">找不到文件“{0}”。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemPathCannotBeNullOrEmpty">
+        <source>无效的部署项: 路径必须包含至少一个字符。</source>
+        <target state="new">无效的部署项: 路径必须包含至少一个字符。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryMustBeRelative">
+        <source>无效的部署项: 指定的输出目录“{0}”不相关。</source>
+        <target state="new">无效的部署项: 指定的输出目录“{0}”不相关。</target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="zh-Hant" original="../FrameworkMessages.resx">
+    <body>
+      <trans-unit id="ElementNumbersDontMatch">
+        <source>集合中的項目數目不符。預期: &lt;{1}&gt;。實際: &lt;{2}&gt;。{0}</source>
+        <target state="new">集合中的項目數目不符。預期: &lt;{1}&gt;。實際: &lt;{2}&gt;。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsMatchFail">
+        <source>字串 '{0}' 與模式 '{1}' 不符。{2}。</source>
+        <target state="new">字串 '{0}' 與模式 '{1}' 不符。{2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsInstanceOfFailMsg">
+        <source>{0} 預期的類型: &lt;{1}&gt;。實際的類型: &lt;{2}&gt;。</source>
+        <target state="new">{0} 預期的類型: &lt;{1}&gt;。實際的類型: &lt;{2}&gt;。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ContainsFail">
+        <source>字串 '{0}' 未包含字串 '{1}'。{2}。</source>
+        <target state="new">字串 '{0}' 未包含字串 '{1}'。{2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InternalObjectNotValid">
+        <source>所參考的內部物件已不再有效。</source>
+        <target state="new">所參考的內部物件已不再有效。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="StartsWithFail">
+        <source>字串 '{0}' 不是以字串 '{1}' 開頭。{2}。</source>
+        <target state="new">字串 '{0}' 不是以字串 '{1}' 開頭。{2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailMsg">
+        <source>預期: &lt;{1} ({2})&gt;。實際: &lt;{3} ({4})&gt;。{0}</source>
+        <target state="new">預期: &lt;{1} ({2})&gt;。實際: &lt;{3} ({4})&gt;。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothSameElements">
+        <source>兩個集合含有相同的項目。{0}</source>
+        <target state="new">兩個集合含有相同的項目。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidParameterToAssert">
+        <source>參數 '{0}' 無效。{1}。</source>
+        <target state="new">參數 '{0}' 無效。{1}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailMsg">
+        <source>預期值 &lt;{1}&gt; 和實際值 &lt;{2}&gt; 之間的預期差異大於 &lt;{3}&gt;。{0}</source>
+        <target state="new">預期值 &lt;{1}&gt; 和實際值 &lt;{2}&gt; 之間的預期差異大於 &lt;{3}&gt;。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementsAtIndexDontMatch">
+        <source>位於索引 {0} 的項目不符。</source>
+        <target state="new">位於索引 {0} 的項目不符。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameReference">
+        <source>兩個集合參考都指向同一個集合物件。{0}</source>
+        <target state="new">兩個集合參考都指向同一個集合物件。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AsyncUITestMethodNotSupported">
+        <source>不支援有 UITestMethodAttribute 的 async TestMethod。請移除 async 或使用 TestMethodAttribute。</source>
+        <target state="new">不支援有 UITestMethodAttribute 的 async TestMethod。請移除 async 或使用 TestMethodAttribute。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorConstructorNotFound">
+        <source>
+      找不到具有所指定簽章的建構函式。您可能必須重新產生私用存取子，
+      或者該成員可能為私用，並且定義在基底類別上。如果是後者，您必須
+      將定義該成員的類型傳遞至 PrivateObject 的建構函式。
+    </source>
+        <target state="new">
+      找不到具有所指定簽章的建構函式。您可能必須重新產生私用存取子，
+      或者該成員可能為私用，並且定義在基底類別上。如果是後者，您必須
+      將定義該成員的類型傳遞至 PrivateObject 的建構函式。
+    </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AssertionFailed">
+        <source>{0} 失敗。 {1}</source>
+        <target state="new">{0} 失敗。 {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertEquals">
+        <source>Assert.Equals 不應用於判斷提示。請改用 Assert.AreEqual 及多載。</source>
+        <target state="new">Assert.Equals 不應用於判斷提示。請改用 Assert.AreEqual 及多載。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoExceptionDefault">
+        <source>測試方法未擲回例外狀況。測試方法上定義的屬性 {0} 需要例外狀況。</source>
+        <target state="new">測試方法未擲回例外狀況。測試方法上定義的屬性 {0} 需要例外狀況。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_NullInMessages">
+        <source>(null)</source>
+        <target state="new">(null)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
+        <source>測試方法擲回例外狀況 {0}，但需要的是例外狀況 {1} 或是衍生自其的類型。例外狀況訊息: {2}</source>
+        <target state="new">測試方法擲回例外狀況 {0}，但需要的是例外狀況 {1} 或是衍生自其的類型。例外狀況訊息: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch2">
+        <source>位於索引 {1} 的項目是 (null)。預期的類型: &lt;{2}&gt;。{0}</source>
+        <target state="new">位於索引 {1} 的項目是 (null)。預期的類型: &lt;{2}&gt;。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoExceptionThrown">
+        <source>未擲回任何例外狀況。預期為 {1} 例外狀況。{0}</source>
+        <target state="new">未擲回任何例外狀況。預期為 {1} 例外狀況。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DataDrivenResultDisplayName">
+        <source>{0} ({1})</source>
+        <target state="new">{0} ({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoDataRow">
+        <source>未指定 DataRowAttribute。必須至少有一個 DataRowAttribute 搭配 DataTestMethodAttribute 使用。</source>
+        <target state="new">未指定 DataRowAttribute。必須至少有一個 DataRowAttribute 搭配 DataTestMethodAttribute 使用。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CollectionEqualReason">
+        <source>{0}({1})</source>
+        <target state="new">{0}({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EqualsTesterInvalidArgs">
+        <source>引數無效 - EqualsTester 不可使用 null。</source>
+        <target state="new">引數無效 - EqualsTester 不可使用 null。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AccessStringInvalidSyntax">
+        <source>存取字串有無效的語法。</source>
+        <target state="new">存取字串有無效的語法。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch">
+        <source>位於索引 {1} 的項目不是預期的類型。預期的類型: &lt;{2}&gt;。實際的類型: &lt;{3}&gt;。{0}</source>
+        <target state="new">位於索引 {1} 的項目不是預期的類型。預期的類型: &lt;{2}&gt;。實際的類型: &lt;{3}&gt;。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ErrorInvalidCast">
+        <source>無法將 {0} 類型的物件轉換為 {1}。</source>
+        <target state="new">無法將 {0} 類型的物件轉換為 {1}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualFailMsg">
+        <source>預期 &lt;{1}&gt; 以外的任何值。實際: &lt;{2}&gt;。{0}</source>
+        <target state="new">預期 &lt;{1}&gt; 以外的任何值。實際: &lt;{2}&gt;。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoException">
+        <source>測試方法未擲回預期的例外狀況 {0}。{1}</source>
+        <target state="new">測試方法未擲回預期的例外狀況 {0}。{1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotMatchFail">
+        <source>字串 '{0}' 與模式 '{1}' 相符。{2}。</source>
+        <target state="new">字串 '{0}' 與模式 '{1}' 相符。{2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongException">
+        <source>測試方法擲回例外狀況 {0}，但需要的是例外狀況 {1}。例外狀況訊息: {2}</source>
+        <target state="new">測試方法擲回例外狀況 {0}，但需要的是例外狀況 {1}。例外狀況訊息: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongExceptionThrown">
+        <source>擲回例外狀況 {2}，但需要的是例外狀況 {1}。{0}
+例外狀況訊息: {3}
+堆疊追蹤: {4}</source>
+        <target state="new">擲回例外狀況 {2}，但需要的是例外狀況 {1}。{0}
+例外狀況訊息: {3}
+堆疊追蹤: {4}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotInstanceOfFailMsg">
+        <source>錯誤的類型: &lt;{1}&gt;。實際的類型: &lt;{2}&gt;。{0}</source>
+        <target state="new">錯誤的類型: &lt;{1}&gt;。實際的類型: &lt;{2}&gt;。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDeltaFailMsg">
+        <source>預期值 &lt;{1}&gt; 和實際值 &lt;{2}&gt; 之間的預期差異不大於 &lt;{3}&gt;。{0}</source>
+        <target state="new">預期值 &lt;{1}&gt; 和實際值 &lt;{2}&gt; 之間的預期差異不大於 &lt;{3}&gt;。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_FailedToGetExceptionMessage">
+        <source>(因為發生例外狀況，所以無法取得類型 {0} 之例外狀況的訊息。)</source>
+        <target state="new">(因為發生例外狀況，所以無法取得類型 {0} 之例外狀況的訊息。)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AllItemsAreUniqueFailMsg">
+        <source>找到重複的項目: &lt;{1}&gt;。{0}</source>
+        <target state="new">找到重複的項目: &lt;{1}&gt;。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_ObjectString">
+        <source>(物件)</source>
+        <target state="new">(物件)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EndsWithFail">
+        <source>字串 '{0}' 不是以字串 '{1}' 結尾。{2}。</source>
+        <target state="new">字串 '{0}' 不是以字串 '{1}' 結尾。{2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NumberOfElementsDiff">
+        <source>項目數目不同。</source>
+        <target state="new">項目數目不同。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NullParameterToAssert">
+        <source>參數 '{0}' 無效。此值不可為 null。{1}。</source>
+        <target state="new">參數 '{0}' 無效。此值不可為 null。{1}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameElements">
+        <source>兩個集合含有相同的項目。</source>
+        <target state="new">兩個集合含有相同的項目。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsEmpty">
+        <source>兩個集合皆空白。{0}</source>
+        <target state="new">兩個集合皆空白。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualCaseFailMsg">
+        <source>預期: &lt;{1}&gt;。大小寫與下列實際值不同: &lt;{2}&gt;。{0}</source>
+        <target state="new">預期: &lt;{1}&gt;。大小寫與下列實際值不同: &lt;{2}&gt;。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidPropertyType">
+        <source>屬性 {0} 具有類型 {1}; 預期為類型 {2}。</source>
+        <target state="new">屬性 {0} 具有類型 {1}; 預期為類型 {2}。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameGivenValues">
+        <source>不要將實值型別傳遞給 AreSame()。轉換成 Object 的值從此不再一樣。請考慮使用 AreEqual()。{0}</source>
+        <target state="new">不要將實值型別傳遞給 AreSame()。轉換成 Object 的值從此不再一樣。請考慮使用 AreEqual()。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
+        <source>預期的例外狀況類型必須是 System.Exception 或衍生自 System.Exception 的類型。</source>
+        <target state="new">預期的例外狀況類型必須是 System.Exception 或衍生自 System.Exception 的類型。</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>預期: &lt;{1}&gt;。實際: &lt;{2}&gt;。{0}</source>
+        <target state="new">預期: &lt;{1}&gt;。實際: &lt;{2}&gt;。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ActualHasMismatchedElements">
+        <source>預期在集合中包含 {1} 項 &lt;{2}&gt;，但實際的集合卻有 {3} 項。{0}</source>
+        <target state="new">預期在集合中包含 {1} 項 &lt;{2}&gt;，但實際的集合卻有 {3} 項。{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorMemberNotFound">
+        <source>
+      找不到所指定的成員 ({0})。您可能必須重新產生私用存取子，
+      或者該成員可能為私用，並且定義在基底類別上。如果是後者，
+      您必須將定義該成員的類型傳遞至 PrivateObject 的建構函式。
+    </source>
+        <target state="new">
+      找不到所指定的成員 ({0})。您可能必須重新產生私用存取子，
+      或者該成員可能為私用，並且定義在基底類別上。如果是後者，
+      您必須將定義該成員的類型傳遞至 PrivateObject 的建構函式。
+    </target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

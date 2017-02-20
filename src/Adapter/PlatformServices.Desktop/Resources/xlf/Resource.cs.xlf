@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="cs" original="../Resource.resx">
+    <body>
+      <trans-unit id="DeploymentItem">
+        <source>položka nasazení {0}</source>
+        <target state="new">položka nasazení {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_CannotBeNullOrEmpty">
+        <source>Parametr nemůže být null nebo prázdný.</source>
+        <target state="new">Parametr nemůže být null nebo prázdný.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorDataConnectionFailed">
+        <source>Adaptéru testování částí se buď nepodařilo připojit ke zdroji dat, nebo přečíst data. Další informace o odstraňování této chyby najdete v knihovně MSDN v tématu Troubleshooting Data-Driven Unit Tests (http://go.microsoft.com/fwlink/?LinkId=62412). Podrobnosti o chybě: {0}</source>
+        <target state="new">Adaptéru testování částí se buď nepodařilo připojit ke zdroji dat, nebo přečíst data. Další informace o odstraňování této chyby najdete v knihovně MSDN v tématu Troubleshooting Data-Driven Unit Tests (http://go.microsoft.com/fwlink/?LinkId=62412). Podrobnosti o chybě: {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlElement">
+        <source>Nástroj MSTestAdapter zjistil neočekávaný prvek {0} v nastavení {1}. Odeberte tento prvek a zkuste to znovu.</source>
+        <target state="new">Nástroj MSTestAdapter zjistil neočekávaný prvek {0} v nastavení {1}. Odeberte tento prvek a zkuste to znovu.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependencyWithoutReason">
+        <source>Problém nasazení testovacího běhu: Sestavení nebo modul {0} se nenašly.</source>
+        <target state="new">Problém nasazení testovacího běhu: Sestavení nebo modul {0} se nenašly.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemContainsInvalidCharacters">
+        <source>Neplatná položka nasazení: Zadaná cesta {0} nebo adresář výstupu {1} obsahuje neplatné znaky.</source>
+        <target state="new">Neplatná položka nasazení: Zadaná cesta {0} nebo adresář výstupu {1} obsahuje neplatné znaky.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependency">
+        <source>Problém nasazení testovacího běhu: Sestavení nebo modul {0} se nenašly. Důvod: {1}</source>
+        <target state="new">Problém nasazení testovacího běhu: Sestavení nebo modul {0} se nenašly. Důvod: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorBadDeploymentItem">
+        <source>Problém nasazení testovacího běhu: Chybná položka nasazení: {0}: výstupní adresář {1} určuje položku, která se má nasadit mimo kořenový adresář nasazení, což není povolené.</source>
+        <target state="new">Problém nasazení testovacího běhu: Chybná položka nasazení: {0}: výstupní adresář {1} určuje položku, která se má nasadit mimo kořenový adresář nasazení, což není povolené.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
+        <source>Neplatná položka nasazení: Adresář výstupu nemůže být null.</source>
+        <target state="new">Neplatná položka nasazení: Adresář výstupu nemůže být null.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
+        <source>Zdroj dat {0} se v nastavení konfigurace testu nenašel.</source>
+        <target state="new">Zdroj dat {0} se v nastavení konfigurace testu nenašel.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorGettingSatellite">
+        <source>Problém nasazení testovacího běhu: Během získávání satelitních sestavení pro {0}: {1}: {2} došlo k chybě</source>
+        <target state="new">Problém nasazení testovacího běhu: Během získávání satelitních sestavení pro {0}: {1}: {2} došlo k chybě</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToDeployDependencies">
+        <source>Problém nasazení testovacího běhu: Nepodařilo se nasadit závislosti úložiště testů {0}: {1}</source>
+        <target state="new">Problém nasazení testovacího běhu: Nepodařilo se nasadit závislosti úložiště testů {0}: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccessFile">
+        <source>Problém nasazení testovacího běhu: Nepodařilo se získat přístup k souboru {0}: {1}: {2}</source>
+        <target state="new">Problém nasazení testovacího běhu: Nepodařilo se získat přístup k souboru {0}: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestRunName">
+        <source>{0}_{1} {2}</source>
+        <target state="new">{0}_{1} {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemWithOutputDirectory">
+        <source>položka nasazení {0} (adresář výstupu {1})</source>
+        <target state="new">položka nasazení {0} (adresář výstupu {1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToGetFileForDeploymentItem">
+        <source>Problém nasazení testovacího běhu: Nepodařilo se získat soubor pro {0}: {1}: {2}</source>
+        <target state="new">Problém nasazení testovacího běhu: Nepodařilo se získat soubor pro {0}: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccesOutputDirectory">
+        <source>Problém nasazení testovacího běhu: Nepodařilo se získat přístup k výstupnímu adresáři {1} zadanému položkou nasazení {0}, položka se nenasadí: {2}: {3}</source>
+        <target state="new">Problém nasazení testovacího běhu: Nepodařilo se získat přístup k výstupnímu adresáři {1} zadanému položkou nasazení {0}, položka se nenasadí: {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
+        <source>Problém nasazení testovacího běhu: Nepodařilo se zkopírovat soubor {0} do {1}: {2}: {3}</source>
+        <target state="new">Problém nasazení testovacího běhu: Nepodařilo se zkopírovat soubor {0} do {1}: {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongNumberOfObjects">
+        <source>Chybný počet objektů pro permutaci. Počet musí být větší než nula.</source>
+        <target state="new">Chybný počet objektů pro permutaci. Počet musí být větší než nula.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CannotFindFile">
+        <source>Soubor {0} se nenašel.</source>
+        <target state="new">Soubor {0} se nenašel.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemPathCannotBeNullOrEmpty">
+        <source>Neplatná položka nasazení: Cesta musí obsahovat minimálně jeden znak.</source>
+        <target state="new">Neplatná položka nasazení: Cesta musí obsahovat minimálně jeden znak.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryMustBeRelative">
+        <source>Neplatná položka nasazení: Zadaný adresář výstupu {0} nemá relativní adresu.</source>
+        <target state="new">Neplatná položka nasazení: Zadaný adresář výstupu {0} nemá relativní adresu.</target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

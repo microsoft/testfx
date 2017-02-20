@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="pl" original="../Resource.resx">
+    <body>
+      <trans-unit id="DeploymentItem">
+        <source>element wdrożenia „{0}”</source>
+        <target state="new">element wdrożenia „{0}”</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_CannotBeNullOrEmpty">
+        <source>Parametr nie może mieć wartości null ani być pusty.</source>
+        <target state="new">Parametr nie może mieć wartości null ani być pusty.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_ErrorDataConnectionFailed">
+        <source>Adapter testu jednostkowego nie mógł połączyć się ze źródłem danych lub odczytać danych. Aby uzyskać więcej informacji o rozwiązywaniu tego błędu, zobacz „Rozwiązywanie problemów z testami jednostkowymi sterowanymi danymi” (http://go.microsoft.com/fwlink/?LinkId=62412) w bibliotece MSDN. Szczegóły błędu: {0}</source>
+        <target state="new">Adapter testu jednostkowego nie mógł połączyć się ze źródłem danych lub odczytać danych. Aby uzyskać więcej informacji o rozwiązywaniu tego błędu, zobacz „Rozwiązywanie problemów z testami jednostkowymi sterowanymi danymi” (http://go.microsoft.com/fwlink/?LinkId=62412) w bibliotece MSDN. Szczegóły błędu: {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXmlElement">
+        <source>Adapter MSTestAdapter napotkał nieoczekiwany element „{0}” w ustawieniach „{1}”. Usuń ten element i spróbuj ponownie.</source>
+        <target state="new">Adapter MSTestAdapter napotkał nieoczekiwany element „{0}” w ustawieniach „{1}”. Usuń ten element i spróbuj ponownie.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependencyWithoutReason">
+        <source>Problem wdrażania przebiegu testowego: nie znaleziono zestawu lub modułu „{0}”.</source>
+        <target state="new">Problem wdrażania przebiegu testowego: nie znaleziono zestawu lub modułu „{0}”.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemContainsInvalidCharacters">
+        <source>Nieprawidłowy element wdrożenia: wybrana ścieżka „{0}” lub katalog wyjściowy „{1}” zawiera niedozwolone znaki.</source>
+        <target state="new">Nieprawidłowy element wdrożenia: wybrana ścieżka „{0}” lub katalog wyjściowy „{1}” zawiera niedozwolone znaki.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="MissingDeploymentDependency">
+        <source>Problem wdrażania przebiegu testowego: nie znaleziono zestawu lub modułu „{0}”. Przyczyna: {1}</source>
+        <target state="new">Problem wdrażania przebiegu testowego: nie znaleziono zestawu lub modułu „{0}”. Przyczyna: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorBadDeploymentItem">
+        <source>Problem wdrażania przebiegu testowego: nieprawidłowy element wdrożenia: „{0}”: katalog wyjściowy „{1}” określa element do wdrożenia poza głównym katalogiem wdrożenia. Taka sytuacja jest niedozwolona.</source>
+        <target state="new">Problem wdrażania przebiegu testowego: nieprawidłowy element wdrożenia: „{0}”: katalog wyjściowy „{1}” określa element do wdrożenia poza głównym katalogiem wdrożenia. Taka sytuacja jest niedozwolona.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
+        <source>Nieprawidłowy element wdrożenia: katalog wyjściowy nie może mieć wartości null.</source>
+        <target state="new">Nieprawidłowy element wdrożenia: katalog wyjściowy nie może mieć wartości null.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
+        <source>W ustawieniach konfiguracji testu nie można znaleźć źródła danych „{0}”</source>
+        <target state="new">W ustawieniach konfiguracji testu nie można znaleźć źródła danych „{0}”</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorGettingSatellite">
+        <source>Problem wdrażania przebiegu testowego: wystąpił błąd podczas pobierania zestawów satelickich dla elementu {0}: {1}: {2}</source>
+        <target state="new">Problem wdrażania przebiegu testowego: wystąpił błąd podczas pobierania zestawów satelickich dla elementu {0}: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToDeployDependencies">
+        <source>Problem wdrażania przebiegu testowego: nie można wdrożyć zależności dla magazynu testowego „{0}”: {1}</source>
+        <target state="new">Problem wdrażania przebiegu testowego: nie można wdrożyć zależności dla magazynu testowego „{0}”: {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccessFile">
+        <source>Problem wdrażania przebiegu testowego: nie można uzyskać dostępu do pliku „{0}”: {1}: {2}</source>
+        <target state="new">Problem wdrażania przebiegu testowego: nie można uzyskać dostępu do pliku „{0}”: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="TestRunName">
+        <source>{0}_{1} {2}</source>
+        <target state="new">{0}_{1} {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemWithOutputDirectory">
+        <source>element wdrożenia „{0}” (katalog wyjściowy „{1}”)</source>
+        <target state="new">element wdrożenia „{0}” (katalog wyjściowy „{1}”)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToGetFileForDeploymentItem">
+        <source>Problem wdrażania przebiegu testowego: nie można uzyskać pliku dla elementu {0}: {1}: {2}</source>
+        <target state="new">Problem wdrażania przebiegu testowego: nie można uzyskać pliku dla elementu {0}: {1}: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToAccesOutputDirectory">
+        <source>Problem wdrażania przebiegu testowego: nie można uzyskać dostępu do katalogu wyjściowego „{1}” określonego przy użyciu elementu wdrożenia „{0}”. Nie można wdrożyć elementu: {2}: {3}</source>
+        <target state="new">Problem wdrażania przebiegu testowego: nie można uzyskać dostępu do katalogu wyjściowego „{1}” określonego przy użyciu elementu wdrożenia „{0}”. Nie można wdrożyć elementu: {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
+        <source>Problem wdrażania przebiegu testowego: nie można skopiować pliku „{0}” do „{1}”: {2}: {3}</source>
+        <target state="new">Problem wdrażania przebiegu testowego: nie można skopiować pliku „{0}” do „{1}”: {2}: {3}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongNumberOfObjects">
+        <source>Nieprawidłowa liczba obiektów permutacji. Ta liczba powinna być większa od zera.</source>
+        <target state="new">Nieprawidłowa liczba obiektów permutacji. Ta liczba powinna być większa od zera.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CannotFindFile">
+        <source>Nie można odnaleźć pliku „{0}”.</source>
+        <target state="new">Nie można odnaleźć pliku „{0}”.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemPathCannotBeNullOrEmpty">
+        <source>Nieprawidłowy element wdrożenia: ścieżka musi zawierać co najmniej jeden znak.</source>
+        <target state="new">Nieprawidłowy element wdrożenia: ścieżka musi zawierać co najmniej jeden znak.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DeploymentItemOutputDirectoryMustBeRelative">
+        <source>Nieprawidłowy element wdrożenia: wybrany katalog wyjściowy „{0}” nie jest względny.</source>
+        <target state="new">Nieprawidłowy element wdrożenia: wybrany katalog wyjściowy „{0}” nie jest względny.</target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

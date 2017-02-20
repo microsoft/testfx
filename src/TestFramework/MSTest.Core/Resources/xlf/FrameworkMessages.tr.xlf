@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="tr" original="../FrameworkMessages.resx">
+    <body>
+      <trans-unit id="ElementNumbersDontMatch">
+        <source>Koleksiyonlardaki öğe sayıları eşleşmiyor. Beklenen:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;.{0}</source>
+        <target state="new">Koleksiyonlardaki öğe sayıları eşleşmiyor. Beklenen:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsMatchFail">
+        <source>'{0}' dizesi, '{1}' deseni ile eşleşmiyor. {2}.</source>
+        <target state="new">'{0}' dizesi, '{1}' deseni ile eşleşmiyor. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsInstanceOfFailMsg">
+        <source>{0} Beklenen tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;.</source>
+        <target state="new">{0} Beklenen tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ContainsFail">
+        <source>'{0}' dizesi, '{1}' dizesini içermiyor. {2}.</source>
+        <target state="new">'{0}' dizesi, '{1}' dizesini içermiyor. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InternalObjectNotValid">
+        <source>Başvurulan dahili nesne artık geçerli değil.</source>
+        <target state="new">Başvurulan dahili nesne artık geçerli değil.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="StartsWithFail">
+        <source>'{0}' dizesi, '{1}' dizesi ile başlamıyor. {2}.</source>
+        <target state="new">'{0}' dizesi, '{1}' dizesi ile başlamıyor. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailMsg">
+        <source>Beklenen:&lt;{1} ({2})&gt;. Gerçek:&lt;{3} ({4})&gt;. {0}</source>
+        <target state="new">Beklenen:&lt;{1} ({2})&gt;. Gerçek:&lt;{3} ({4})&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothSameElements">
+        <source>Her iki koleksiyon da aynı öğeleri içeriyor. {0}</source>
+        <target state="new">Her iki koleksiyon da aynı öğeleri içeriyor. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidParameterToAssert">
+        <source>'{0}' parametresi geçersiz. {1}.</source>
+        <target state="new">'{0}' parametresi geçersiz. {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailMsg">
+        <source>Beklenen &lt;{1}&gt; değeri ile gerçek &lt;{2}&gt; değeri arasında, &lt;{3}&gt; değerinden büyük bir fark bekleniyor. {0}</source>
+        <target state="new">Beklenen &lt;{1}&gt; değeri ile gerçek &lt;{2}&gt; değeri arasında, &lt;{3}&gt; değerinden büyük bir fark bekleniyor. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementsAtIndexDontMatch">
+        <source>{0} dizinindeki öğe eşleşmiyor.</source>
+        <target state="new">{0} dizinindeki öğe eşleşmiyor.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameReference">
+        <source>Her iki koleksiyon başvurusu da aynı koleksiyon nesnesine işaret ediyor. {0}</source>
+        <target state="new">Her iki koleksiyon başvurusu da aynı koleksiyon nesnesine işaret ediyor. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AsyncUITestMethodNotSupported">
+        <source>UITestMethodAttribute özniteliğine sahip async TestMethod metodu desteklenmiyor. async ifadesini kaldırın ya da TestMethodAttribute özniteliğini kullanın.</source>
+        <target state="new">UITestMethodAttribute özniteliğine sahip async TestMethod metodu desteklenmiyor. async ifadesini kaldırın ya da TestMethodAttribute özniteliğini kullanın.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorConstructorNotFound">
+        <source>
+      Belirtilmiş imzaya sahip oluşturucu bulunamadı. Özel erişimcinizi yeniden oluşturmanız gerekiyor olabilir
+      veya üye, özel olabilir ve temel sınıfta tanımlı olabilir. Eğer ikincisi doğru ise, türü geçirmeniz gerekir;
+      bu tür, PrivateObject'in oluşturucusunda üyeyi tanımlar.
+    </source>
+        <target state="new">
+      Belirtilmiş imzaya sahip oluşturucu bulunamadı. Özel erişimcinizi yeniden oluşturmanız gerekiyor olabilir
+      veya üye, özel olabilir ve temel sınıfta tanımlı olabilir. Eğer ikincisi doğru ise, türü geçirmeniz gerekir;
+      bu tür, PrivateObject'in oluşturucusunda üyeyi tanımlar.
+    </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AssertionFailed">
+        <source>{0} başarısız. {1}</source>
+        <target state="new">{0} başarısız. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertEquals">
+        <source>Assert.Equals, Onaylamalar için kullanılmamalıdır. Lütfen bunun yerine Assert.AreEqual ve aşırı yüklemeleri kullanın.</source>
+        <target state="new">Assert.Equals, Onaylamalar için kullanılmamalıdır. Lütfen bunun yerine Assert.AreEqual ve aşırı yüklemeleri kullanın.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoExceptionDefault">
+        <source>Test metodu bir özel durum oluşturmadı. Test metodunda tanımlanan {0} özniteliği tarafından bir özel durum bekleniyordu.</source>
+        <target state="new">Test metodu bir özel durum oluşturmadı. Test metodunda tanımlanan {0} özniteliği tarafından bir özel durum bekleniyordu.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_NullInMessages">
+        <source>(null)</source>
+        <target state="new">(null)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
+        <source>Test yöntemi {0} özel durumunu oluşturdu, ancak {1} özel durumu veya ondan türetilmiş bir tür bekleniyordu. Özel durum iletisi: {2}</source>
+        <target state="new">Test yöntemi {0} özel durumunu oluşturdu, ancak {1} özel durumu veya ondan türetilmiş bir tür bekleniyordu. Özel durum iletisi: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch2">
+        <source>{1} dizinindeki öğe (null). Beklenen tür:&lt;{2}&gt;.{0}</source>
+        <target state="new">{1} dizinindeki öğe (null). Beklenen tür:&lt;{2}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoExceptionThrown">
+        <source>Özel durum oluşturulmadı. {1} özel durumu bekleniyordu. {0}</source>
+        <target state="new">Özel durum oluşturulmadı. {1} özel durumu bekleniyordu. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DataDrivenResultDisplayName">
+        <source>{0} ({1})</source>
+        <target state="new">{0} ({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoDataRow">
+        <source>DataRowAttribute belirtilmedi. DataTestMethodAttribute ile en az bir DataRowAttribute gereklidir.</source>
+        <target state="new">DataRowAttribute belirtilmedi. DataTestMethodAttribute ile en az bir DataRowAttribute gereklidir.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CollectionEqualReason">
+        <source>{0}({1})</source>
+        <target state="new">{0}({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EqualsTesterInvalidArgs">
+        <source>Geçersiz bağımsız değişken- EqualsTester, null değerleri kullanamaz.</source>
+        <target state="new">Geçersiz bağımsız değişken- EqualsTester, null değerleri kullanamaz.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AccessStringInvalidSyntax">
+        <source>Erişim dizesi geçersiz söz dizimine sahip.</source>
+        <target state="new">Erişim dizesi geçersiz söz dizimine sahip.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch">
+        <source>{1} dizinindeki öğe, beklenen türde değil. Beklenen tür:&lt;{2}&gt;. Gerçek tür:&lt;{3}&gt;.{0}</source>
+        <target state="new">{1} dizinindeki öğe, beklenen türde değil. Beklenen tür:&lt;{2}&gt;. Gerçek tür:&lt;{3}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ErrorInvalidCast">
+        <source>{0} türündeki nesne {1} türüne dönüştürülemez.</source>
+        <target state="new">{0} türündeki nesne {1} türüne dönüştürülemez.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualFailMsg">
+        <source>&lt;{1}&gt; dışında bir değer bekleniyor. Gerçek:&lt;{2}&gt;. {0}</source>
+        <target state="new">&lt;{1}&gt; dışında bir değer bekleniyor. Gerçek:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoException">
+        <source>Test yöntemi beklenen {0} özel durumunu oluşturmadı. {1}</source>
+        <target state="new">Test yöntemi beklenen {0} özel durumunu oluşturmadı. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotMatchFail">
+        <source>'{0}' dizesi, '{1}' deseni ile eşleşiyor. {2}.</source>
+        <target state="new">'{0}' dizesi, '{1}' deseni ile eşleşiyor. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongException">
+        <source>Test yöntemi {0} özel durumunu oluşturdu, ancak {1} özel durumu bekleniyordu. Özel durum iletisi: {2}</source>
+        <target state="new">Test yöntemi {0} özel durumunu oluşturdu, ancak {1} özel durumu bekleniyordu. Özel durum iletisi: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongExceptionThrown">
+        <source>{2} özel durumu oluşturuldu, ancak {1} özel durumu bekleniyordu. {0}
+Özel Durum İletisi: {3}
+Yığın İzleme: {4}</source>
+        <target state="new">{2} özel durumu oluşturuldu, ancak {1} özel durumu bekleniyordu. {0}
+Özel Durum İletisi: {3}
+Yığın İzleme: {4}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotInstanceOfFailMsg">
+        <source>Yanlış Tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;. {0}</source>
+        <target state="new">Yanlış Tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDeltaFailMsg">
+        <source>Beklenen &lt;{1}&gt; değeri ile gerçek &lt;{2}&gt; değeri arasında, &lt;{3}&gt; değerinden büyük olmayan fark bekleniyor. {0}</source>
+        <target state="new">Beklenen &lt;{1}&gt; değeri ile gerçek &lt;{2}&gt; değeri arasında, &lt;{3}&gt; değerinden büyük olmayan fark bekleniyor. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_FailedToGetExceptionMessage">
+        <source>(Bir özel durum nedeniyle, {0} türündeki özel durum iletisi alınamadı.)</source>
+        <target state="new">(Bir özel durum nedeniyle, {0} türündeki özel durum iletisi alınamadı.)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AllItemsAreUniqueFailMsg">
+        <source>Yinelenen öğe bulundu:&lt;{1}&gt;. {0}</source>
+        <target state="new">Yinelenen öğe bulundu:&lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_ObjectString">
+        <source>(nesne)</source>
+        <target state="new">(nesne)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EndsWithFail">
+        <source>'{0}' dizesi, '{1}' dizesi ile sonlanmıyor. {2}.</source>
+        <target state="new">'{0}' dizesi, '{1}' dizesi ile sonlanmıyor. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NumberOfElementsDiff">
+        <source>Öğe sayıları farklı.</source>
+        <target state="new">Öğe sayıları farklı.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NullParameterToAssert">
+        <source>'{0}' parametresi geçersiz. Değer null olamaz. {1}.</source>
+        <target state="new">'{0}' parametresi geçersiz. Değer null olamaz. {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameElements">
+        <source>Her iki koleksiyon da aynı öğeleri içeriyor.</source>
+        <target state="new">Her iki koleksiyon da aynı öğeleri içeriyor.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsEmpty">
+        <source>Koleksiyonların her ikisi de boş. {0}</source>
+        <target state="new">Koleksiyonların her ikisi de boş. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualCaseFailMsg">
+        <source>Beklenen:&lt;{1}&gt;. Durum, gerçek değer için farklı:&lt;{2}&gt;. {0}</source>
+        <target state="new">Beklenen:&lt;{1}&gt;. Durum, gerçek değer için farklı:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidPropertyType">
+        <source>{0} özelliği, {1} türüne sahip; beklenen tür {2}.</source>
+        <target state="new">{0} özelliği, {1} türüne sahip; beklenen tür {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameGivenValues">
+        <source>AreSame()'e değer türleri geçirmeyin. Object olarak dönüştürülen değerler asla aynı olamayacak. AreEqual() kullanmayı düşün. {0}</source>
+        <target state="new">AreSame()'e değer türleri geçirmeyin. Object olarak dönüştürülen değerler asla aynı olamayacak. AreEqual() kullanmayı düşün. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
+        <source>Beklenen özel durum türü, System.Exception türü veya System.Exception'dan türetilmiş bir tür olmalıdır.</source>
+        <target state="new">Beklenen özel durum türü, System.Exception türü veya System.Exception'dan türetilmiş bir tür olmalıdır.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>Beklenen:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;. {0}</source>
+        <target state="new">Beklenen:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ActualHasMismatchedElements">
+        <source>Beklenen koleksiyon {1} &lt;{2}&gt; örneği içeriyor. Gerçek koleksiyon {3} örnek içeriyor. {0}</source>
+        <target state="new">Beklenen koleksiyon {1} &lt;{2}&gt; örneği içeriyor. Gerçek koleksiyon {3} örnek içeriyor. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorMemberNotFound">
+        <source>
+      Belirtilen üye ({0}) bulunamadı. Özel erişimcinizi yeniden oluşturmanız gerekiyor olabilir
+      veya üye, özel olabilir ve temel sınıfta tanımlı olabilir. Eğer ikincisi doğru ise, türü geçirmeniz gerekir;
+      bu tür PrivateObject'in oluşturucusunda üyeyi tanımlar.
+    </source>
+        <target state="new">
+      Belirtilen üye ({0}) bulunamadı. Özel erişimcinizi yeniden oluşturmanız gerekiyor olabilir
+      veya üye, özel olabilir ve temel sınıfta tanımlı olabilir. Eğer ikincisi doğru ise, türü geçirmeniz gerekir;
+      bu tür PrivateObject'in oluşturucusunda üyeyi tanımlar.
+    </target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

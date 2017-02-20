@@ -1,0 +1,277 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="it" original="../FrameworkMessages.resx">
+    <body>
+      <trans-unit id="ElementNumbersDontMatch">
+        <source>Il numero di elementi nelle raccolte non corrisponde. Valore previsto: &lt;{1}&gt;. Valore effettivo: &lt;{2}&gt;.{0}</source>
+        <target state="new">Il numero di elementi nelle raccolte non corrisponde. Valore previsto: &lt;{1}&gt;. Valore effettivo: &lt;{2}&gt;.{0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsMatchFail">
+        <source>La stringa '{0}' non corrisponde al criterio '{1}'. {2}.</source>
+        <target state="new">La stringa '{0}' non corrisponde al criterio '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsInstanceOfFailMsg">
+        <source>Tipo previsto di {0}: &lt;{1}&gt;. Tipo effettivo: &lt;{2}&gt;.</source>
+        <target state="new">Tipo previsto di {0}: &lt;{1}&gt;. Tipo effettivo: &lt;{2}&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ContainsFail">
+        <source>La stringa '{0}' non contiene la stringa '{1}'. {2}.</source>
+        <target state="new">La stringa '{0}' non contiene la stringa '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InternalObjectNotValid">
+        <source>L'oggetto interno a cui si fa riferimento non è più valido.</source>
+        <target state="new">L'oggetto interno a cui si fa riferimento non è più valido.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="StartsWithFail">
+        <source>La stringa '{0}' non inizia con la stringa '{1}'. {2}.</source>
+        <target state="new">La stringa '{0}' non inizia con la stringa '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDifferentTypesFailMsg">
+        <source>Valore previsto: &lt;{1} ({2})&gt;. Valore effettivo: &lt;{3} ({4})&gt;. {0}</source>
+        <target state="new">Valore previsto: &lt;{1} ({2})&gt;. Valore effettivo: &lt;{3} ({4})&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothSameElements">
+        <source>Le raccolte contengono entrambe gli stessi elementi. {0}</source>
+        <target state="new">Le raccolte contengono entrambe gli stessi elementi. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidParameterToAssert">
+        <source>Il parametro '{0}' non è valido. {1}.</source>
+        <target state="new">Il parametro '{0}' non è valido. {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualDeltaFailMsg">
+        <source>È prevista una differenza maggiore di &lt;{3}&gt; tra il valore previsto &lt;{1}&gt; e il valore effettivo &lt;{2}&gt;. {0}</source>
+        <target state="new">È prevista una differenza maggiore di &lt;{3}&gt; tra il valore previsto &lt;{1}&gt; e il valore effettivo &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementsAtIndexDontMatch">
+        <source>L'elemento alla posizione di indice {0} non corrisponde.</source>
+        <target state="new">L'elemento alla posizione di indice {0} non corrisponde.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameReference">
+        <source>I riferimenti a raccolte puntano entrambi allo stesso oggetto Collection. {0}</source>
+        <target state="new">I riferimenti a raccolte puntano entrambi allo stesso oggetto Collection. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AsyncUITestMethodNotSupported">
+        <source>L'elemento async TestMethod con UITestMethodAttribute non è supportato. Rimuovere async o usare TestMethodAttribute.</source>
+        <target state="new">L'elemento async TestMethod con UITestMethodAttribute non è supportato. Rimuovere async o usare TestMethodAttribute.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorConstructorNotFound">
+        <source>
+      Il costruttore con la firma specificata non è stato trovato. Potrebbe essere necessario rigenerare la funzione di accesso privata
+      oppure il membro potrebbe essere privato e definito per una classe base. In quest'ultimo caso, è necessario passare il tipo
+      che definisce il membro nel costruttore di PrivateObject.
+    </source>
+        <target state="new">
+      Il costruttore con la firma specificata non è stato trovato. Potrebbe essere necessario rigenerare la funzione di accesso privata
+      oppure il membro potrebbe essere privato e definito per una classe base. In quest'ultimo caso, è necessario passare il tipo
+      che definisce il membro nel costruttore di PrivateObject.
+    </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AssertionFailed">
+        <source>{0} non riuscita. {1}</source>
+        <target state="new">{0} non riuscita. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DoNotUseAssertEquals">
+        <source>Per le asserzioni non usare Assert.Equals, ma preferire Assert.AreEqual e gli overload.</source>
+        <target state="new">Per le asserzioni non usare Assert.Equals, ma preferire Assert.AreEqual e gli overload.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoExceptionDefault">
+        <source>Il metodo di test non ha generato un'eccezione. È prevista un'eccezione dall'attributo {0} definito nel metodo di test.</source>
+        <target state="new">Il metodo di test non ha generato un'eccezione. È prevista un'eccezione dall'attributo {0} definito nel metodo di test.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_NullInMessages">
+        <source>(Null)</source>
+        <target state="new">(Null)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
+        <source>Il metodo di test ha generato l'eccezione {0}, ma era prevista l'eccezione {1} o un tipo derivato da essa. Messaggio dell'eccezione: {2}</source>
+        <target state="new">Il metodo di test ha generato l'eccezione {0}, ma era prevista l'eccezione {1} o un tipo derivato da essa. Messaggio dell'eccezione: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch2">
+        <source>L'elemento alla posizione di indice {1} è (Null). Tipo previsto: &lt;{2}&gt;. {0}</source>
+        <target state="new">L'elemento alla posizione di indice {1} è (Null). Tipo previsto: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoExceptionThrown">
+        <source>Non è stata generata alcuna eccezione. Era prevista un'eccezione {1}. {0}</source>
+        <target state="new">Non è stata generata alcuna eccezione. Era prevista un'eccezione {1}. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DataDrivenResultDisplayName">
+        <source>{0} ({1})</source>
+        <target state="new">{0} ({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NoDataRow">
+        <source>Non è stato specificato alcun elemento DataRowAttribute. Con DataTestMethodAttribute è necessario almeno un elemento DataRowAttribute.</source>
+        <target state="new">Non è stato specificato alcun elemento DataRowAttribute. Con DataTestMethodAttribute è necessario almeno un elemento DataRowAttribute.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CollectionEqualReason">
+        <source>{0}({1})</source>
+        <target state="new">{0}({1})</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EqualsTesterInvalidArgs">
+        <source>Argomento non valido: EqualsTester non può usare valori Null.</source>
+        <target state="new">Argomento non valido: EqualsTester non può usare valori Null.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AccessStringInvalidSyntax">
+        <source>La sintassi della stringa di accesso non è valida.</source>
+        <target state="new">La sintassi della stringa di accesso non è valida.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ElementTypesAtIndexDontMatch">
+        <source>L'elemento alla posizione di indice {1} non è del tipo previsto. Tipo previsto: &lt;{2}&gt;. Tipo effettivo: &lt;{3}&gt;. {0}</source>
+        <target state="new">L'elemento alla posizione di indice {1} non è del tipo previsto. Tipo previsto: &lt;{2}&gt;. Tipo effettivo: &lt;{3}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ErrorInvalidCast">
+        <source>Non è possibile convertire un oggetto di tipo {0} in {1}.</source>
+        <target state="new">Non è possibile convertire un oggetto di tipo {0} in {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreNotEqualFailMsg">
+        <source>È previsto un valore qualsiasi eccetto &lt;{1}&gt;. Valore effettivo: &lt;{2}&gt;. {0}</source>
+        <target state="new">È previsto un valore qualsiasi eccetto &lt;{1}&gt;. Valore effettivo: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodNoException">
+        <source>Il metodo di test non ha generato l'eccezione prevista {0}. {1}</source>
+        <target state="new">Il metodo di test non ha generato l'eccezione prevista {0}. {1}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotMatchFail">
+        <source>La stringa '{0}' corrisponde al criterio '{1}'. {2}.</source>
+        <target state="new">La stringa '{0}' corrisponde al criterio '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_TestMethodWrongException">
+        <source>Il metodo di test ha generato l'eccezione {0}, ma era prevista l'eccezione {1}. Messaggio dell'eccezione: {2}</source>
+        <target state="new">Il metodo di test ha generato l'eccezione {0}, ma era prevista l'eccezione {1}. Messaggio dell'eccezione: {2}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="WrongExceptionThrown">
+        <source>È stata generata l'eccezione {2}, ma era prevista un'eccezione {1}. {0}
+Messaggio dell'eccezione: {3}
+Analisi dello stack: {4}</source>
+        <target state="new">È stata generata l'eccezione {2}, ma era prevista un'eccezione {1}. {0}
+Messaggio dell'eccezione: {3}
+Analisi dello stack: {4}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="IsNotInstanceOfFailMsg">
+        <source>Tipo errato: &lt;{1}&gt;. Tipo effettivo: &lt;{2}&gt;. {0}</source>
+        <target state="new">Tipo errato: &lt;{1}&gt;. Tipo effettivo: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualDeltaFailMsg">
+        <source>È prevista una differenza minore di &lt;{3}&gt; tra il valore previsto &lt;{1}&gt; e il valore effettivo &lt;{2}&gt;. {0}</source>
+        <target state="new">È prevista una differenza minore di &lt;{3}&gt; tra il valore previsto &lt;{1}&gt; e il valore effettivo &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_FailedToGetExceptionMessage">
+        <source>Non è stato possibile ottenere il messaggio per un'eccezione di tipo {0} a causa di un'eccezione.</source>
+        <target state="new">Non è stato possibile ottenere il messaggio per un'eccezione di tipo {0} a causa di un'eccezione.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AllItemsAreUniqueFailMsg">
+        <source>È stato trovato un elemento duplicato: &lt;{1}&gt;. {0}</source>
+        <target state="new">È stato trovato un elemento duplicato: &lt;{1}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Common_ObjectString">
+        <source>(oggetto)</source>
+        <target state="new">(oggetto)</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="EndsWithFail">
+        <source>La stringa '{0}' non termina con la stringa '{1}'. {2}.</source>
+        <target state="new">La stringa '{0}' non termina con la stringa '{1}'. {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NumberOfElementsDiff">
+        <source>Il numero di elementi è diverso.</source>
+        <target state="new">Il numero di elementi è diverso.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="NullParameterToAssert">
+        <source>Il parametro '{0}' non è valido. Il valore non può essere Null. {1}.</source>
+        <target state="new">Il parametro '{0}' non è valido. Il valore non può essere Null. {1}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsSameElements">
+        <source>Le raccolte contengono entrambe gli stessi elementi.</source>
+        <target state="new">Le raccolte contengono entrambe gli stessi elementi.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="BothCollectionsEmpty">
+        <source>Le raccolte sono entrambe vuote. {0}</source>
+        <target state="new">Le raccolte sono entrambe vuote. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualCaseFailMsg">
+        <source>Il valore previsto è &lt;{1}&gt;, ma la combinazione di maiuscole/minuscole è diversa per il valore effettivo &lt;{2}&gt;. {0}</source>
+        <target state="new">Il valore previsto è &lt;{1}&gt;, ma la combinazione di maiuscole/minuscole è diversa per il valore effettivo &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidPropertyType">
+        <source>Il tipo della proprietà {0} è {1}, ma quello previsto è {2}.</source>
+        <target state="new">Il tipo della proprietà {0} è {1}, ma quello previsto è {2}.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreSameGivenValues">
+        <source>Non passare tipi valore a AreSame(). I valori convertiti in Object non saranno mai uguali. Usare AreEqual(). {0}</source>
+        <target state="new">Non passare tipi valore a AreSame(). I valori convertiti in Object non saranno mai uguali. Usare AreEqual(). {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
+        <source>Il tipo di eccezione previsto deve essere System.Exception o un tipo derivato da System.Exception.</source>
+        <target state="new">Il tipo di eccezione previsto deve essere System.Exception o un tipo derivato da System.Exception.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="AreEqualFailMsg">
+        <source>Valore previsto: &lt;{1}&gt;. Valore effettivo: &lt;{2}&gt;. {0}</source>
+        <target state="new">Valore previsto: &lt;{1}&gt;. Valore effettivo: &lt;{2}&gt;. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="ActualHasMismatchedElements">
+        <source>La raccolta prevista contiene {1} occorrenza/e di &lt;{2}&gt;, mentre quella effettiva ne contiene {3}. {0}</source>
+        <target state="new">La raccolta prevista contiene {1} occorrenza/e di &lt;{2}&gt;, mentre quella effettiva ne contiene {3}. {0}</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="PrivateAccessorMemberNotFound">
+        <source>
+      Il membro specificato ({0}) non è stato trovato. Potrebbe essere necessario rigenerare la funzione di accesso privata
+      oppure il membro potrebbe essere privato e definito per una classe base. In quest'ultimo caso, è necessario passare il tipo
+      che definisce il membro nel costruttore di PrivateObject.
+    </source>
+        <target state="new">
+      Il membro specificato ({0}) non è stato trovato. Potrebbe essere necessario rigenerare la funzione di accesso privata
+      oppure il membro potrebbe essere privato e definito per una classe base. In quest'ultimo caso, è necessario passare il tipo
+      che definisce il membro nel costruttore di PrivateObject.
+    </target>
+        <note></note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
