@@ -3,287 +3,287 @@
   <file datatype="xml" source-language="en" target-language="es" original="../Resource.resx">
     <body>
       <trans-unit id="UTA_AssemblyCleanupMethodWasUnsuccesful">
-        <source>Error de método Cleanup de ensamblado {0}.{1}. Mensaje de error: {2}. StackTrace: {3}</source>
-        <target state="new">Error de método Cleanup de ensamblado {0}.{1}. Mensaje de error: {2}. StackTrace: {3}</target>
+        <source>Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}</source>
+        <target state="translated">Error de método Cleanup de ensamblado {0}.{1}. Mensaje de error: {2}. StackTrace: {3}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="CouldNotInspectTypeDuringDiscovery1">
-        <source>MSTestAdapter no detectó pruebas en la clase '{0}' del ensamblado '{1}'. Motivo: {2}.</source>
-        <target state="new">MSTestAdapter no detectó pruebas en la clase '{0}' del ensamblado '{1}'. Motivo: {2}.</target>
+        <source>MSTestAdapter failed to discover tests in class '{0}' of assembly '{1}'. Reason {2}.</source>
+        <target state="translated">MSTestAdapter no detectó pruebas en la clase '{0}' del ensamblado '{1}'. Motivo: {2}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="Common_CannotBeNullOrEmpty">
-        <source>El parámetro no debe ser NULL ni estar vacío.</source>
-        <target state="new">El parámetro no debe ser NULL ni estar vacío.</target>
+        <source>The parameter should not be null or empty.</source>
+        <target state="translated">El parámetro no debe ser NULL ni estar vacío.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlElement">
-        <source>Valor no válido '{0}'. XmlElement no esperado: '{1}'.</source>
-        <target state="new">Valor no válido '{0}'. XmlElement no esperado: '{1}'.</target>
+        <source>Invalid settings '{0}'. Unexpected XmlElement: '{1}'.</source>
+        <target state="translated">Valor no válido '{0}'. XmlElement no esperado: '{1}'.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
-        <source>Método {0}.{1} tiene firma incorrecta. Debe ser un método no estático, público, no devolver ningún valor y no debe aceptar parámetros. Además, si está usando async-await en el método, el tipo devuelto debe ser Task.</source>
-        <target state="new">Método {0}.{1} tiene firma incorrecta. Debe ser un método no estático, público, no devolver ningún valor y no debe aceptar parámetros. Además, si está usando async-await en el método, el tipo devuelto debe ser Task.</target>
+        <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.</source>
+        <target state="translated">Método {0}.{1} tiene firma incorrecta. Debe ser un método no estático, público, no devolver ningún valor y no debe aceptar parámetros. Además, si está usando async-await en el método, el tipo devuelto debe ser Task.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature">
-        <source>Método {0}.{1} tiene firma incorrecta. El método debe ser estático y público, no devolver ningún valor y debe aceptar un solo parámetro tipo TestContext. Además, si está usando async-await en el método, el tipo devuelto debe ser Task.</source>
-        <target state="new">Método {0}.{1} tiene firma incorrecta. El método debe ser estático y público, no devolver ningún valor y debe aceptar un solo parámetro tipo TestContext. Además, si está usando async-await en el método, el tipo devuelto debe ser Task.</target>
+        <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be Task.</source>
+        <target state="translated">Método {0}.{1} tiene firma incorrecta. El método debe ser estático y público, no devolver ningún valor y debe aceptar un solo parámetro tipo TestContext. Además, si está usando async-await en el método, el tipo devuelto debe ser Task.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
-        <source>Valor no válido '{0}'. XmlAttribute no esperado: '{1}'.</source>
-        <target state="new">Valor no válido '{0}'. XmlAttribute no esperado: '{1}'.</target>
+        <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
+        <target state="translated">Valor no válido '{0}'. XmlAttribute no esperado: '{1}'.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiAssemblyInit">
-        <source>UTA013: {0}: No se puede definir más de un método con el atributo AssemblyInitialize dentro de un ensamblado.</source>
-        <target state="new">UTA013: {0}: No se puede definir más de un método con el atributo AssemblyInitialize dentro de un ensamblado.</target>
+        <source>UTA013: {0}: Cannot define more than one method with the AssemblyInitialize attribute inside an assembly.</source>
+        <target state="translated">UTA013: {0}: No se puede definir más de un método con el atributo AssemblyInitialize dentro de un ensamblado.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiClassInit">
-        <source>UTA025: {0}: No se puede definir más de un método con el atributo ClassInitialize dentro de una clase.</source>
-        <target state="new">UTA025: {0}: No se puede definir más de un método con el atributo ClassInitialize dentro de una clase.</target>
+        <source>UTA025: {0}: Cannot define more than one method with the ClassInitialize attribute inside a class.</source>
+        <target state="translated">UTA025: {0}: No se puede definir más de un método con el atributo ClassInitialize dentro de una clase.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ExpectedExceptionAttributeConstructionException">
-        <source>El atributo ExpectedException definido en el método de prueba {0}.{1} inició una excepción durante la construcción.
+        <source>The ExpectedException attribute defined on test method {0}.{1} threw an exception during construction.
 {2}</source>
-        <target state="new">El atributo ExpectedException definido en el método de prueba {0}.{1} inició una excepción durante la construcción.
+        <target state="translated">El atributo ExpectedException definido en el método de prueba {0}.{1} inició una excepción durante la construcción.
 {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">
-        <source>UTA023: {0}: no se puede definir la propiedad predefinida {2} en el método {1}.</source>
-        <target state="new">UTA023: {0}: no se puede definir la propiedad predefinida {2} en el método {1}.</target>
+        <source>UTA023: {0}: Cannot define predefined property {2} on method {1}.</source>
+        <target state="translated">UTA023: {0}: no se puede definir la propiedad predefinida {2} en el método {1}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_InitMethodThrows">
-        <source>El método de inicialización {0}.{1} devolvió una excepción. {2}.</source>
-        <target state="new">El método de inicialización {0}.{1} devolvió una excepción. {2}.</target>
+        <source>Initialization method {0}.{1} threw exception. {2}.</source>
+        <target state="translated">El método de inicialización {0}.{1} devolvió una excepción. {2}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestNotFound">
-        <source>No encontrado método prueba {0}.</source>
-        <target state="new">No encontrado método prueba {0}.</target>
+        <source>Test method {0} was not found.</source>
+        <target state="translated">No encontrado método prueba {0}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
-        <source>La prueba '{0}' superó el tiempo de espera de ejecución.</source>
-        <target state="new">La prueba '{0}' superó el tiempo de espera de ejecución.</target>
+        <source>Test '{0}' exceeded execution timeout period.</source>
+        <target state="translated">La prueba '{0}' superó el tiempo de espera de ejecución.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiInit">
-        <source>UTA018: {0}: No se puede definir más de un método con el atributo TestInitialize.</source>
-        <target state="new">UTA018: {0}: No se puede definir más de un método con el atributo TestInitialize.</target>
+        <source>UTA018: {0}: Cannot define more than one method with the TestInitialize attribute.</source>
+        <target state="translated">UTA018: {0}: No se puede definir más de un método con el atributo TestInitialize.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorNonPublicTestClass">
-        <source>UTA001: se ha definido el atributo TestClass en la clase no pública {0}</source>
-        <target state="new">UTA001: se ha definido el atributo TestClass en la clase no pública {0}</target>
+        <source>UTA001: TestClass attribute defined on non-public class {0}</source>
+        <target state="translated">UTA001: se ha definido el atributo TestClass en la clase no pública {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
-        <source>UTA007: El método {1} definido en la clase {0} no tiene una signatura correcta. El método de prueba marcado con el atributo [TestMethod] debe ser no estático, público, con el tipo devuelto void y no debe tomar ningún parámetro. Ejemplo: public void Test.Class1.Test(). Además, si está usando async-await en el método de prueba, el tipo devuelto debe ser Task. Ejemplo: public async Task Test.Class1.Test2()</source>
-        <target state="new">UTA007: El método {1} definido en la clase {0} no tiene una signatura correcta. El método de prueba marcado con el atributo [TestMethod] debe ser no estático, público, con el tipo devuelto void y no debe tomar ningún parámetro. Ejemplo: public void Test.Class1.Test(). Además, si está usando async-await en el método de prueba, el tipo devuelto debe ser Task. Ejemplo: public async Task Test.Class1.Test2()</target>
+        <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be Task. Example: public async Task Test.Class1.Test2()</source>
+        <target state="translated">UTA007: El método {1} definido en la clase {0} no tiene una signatura correcta. El método de prueba marcado con el atributo [TestMethod] debe ser no estático, público, con el tipo devuelto void y no debe tomar ningún parámetro. Ejemplo: public void Test.Class1.Test(). Además, si está usando async-await en el método de prueba, el tipo devuelto debe ser Task. Ejemplo: public async Task Test.Class1.Test2()</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorTestPropertyNullOrEmpty">
-        <source>UTA021: {0}: se ha definido una propiedad personalizada nula o vacía en el método {1}. La propiedad personalizada debe tener un nombre válido.</source>
-        <target state="new">UTA021: {0}: se ha definido una propiedad personalizada nula o vacía en el método {1}. La propiedad personalizada debe tener un nombre válido.</target>
+        <source>UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.</source>
+        <target state="translated">UTA021: {0}: se ha definido una propiedad personalizada nula o vacía en el método {1}. La propiedad personalizada debe tener un nombre válido.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">
-        <source>No se pudo ejecutar prueba. Extensión no devolvió resultados. Si usa extensión TestMethodAttribute, contacte con el proveedor.</source>
-        <target state="new">No se pudo ejecutar prueba. Extensión no devolvió resultados. Si usa extensión TestMethodAttribute, contacte con el proveedor.</target>
+        <source>Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.</source>
+        <target state="translated">No se pudo ejecutar prueba. Extensión no devolvió resultados. Si usa extensión TestMethodAttribute, contacte con el proveedor.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ClassCleanupMethodWasUnsuccesful">
-        <source>Error de método Cleanup de clase {0}.{1}. Mensaje error: {2}. Seguimiento de pila: {3}</source>
-        <target state="new">Error de método Cleanup de clase {0}.{1}. Mensaje error: {2}. Seguimiento de pila: {3}</target>
+        <source>Class Cleanup method {0}.{1} failed. Error Message: {2}. Stack Trace: {3}</source>
+        <target state="translated">Error de método Cleanup de clase {0}.{1}. Mensaje error: {2}. Seguimiento de pila: {3}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorTestPropertyAlreadyDefined">
-        <source>UTA022: {0}.{1}: ya definida propiedad personalizada "{2}". Usando "{3}" como valor.</source>
-        <target state="new">UTA022: {0}.{1}: ya definida propiedad personalizada "{2}". Usando "{3}" como valor.</target>
+        <source>UTA022: {0}.{1}: The custom property "{2}" is already defined. Using "{3}" as value.</source>
+        <target state="translated">UTA022: {0}.{1}: ya definida propiedad personalizada "{2}". Usando "{3}" como valor.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="SourcesNotSupported">
-        <source>La ejecución de pruebas en las fuentes proporcionadas no se admite para la plataforma seleccionada</source>
-        <target state="new">La ejecución de pruebas en las fuentes proporcionadas no se admite para la plataforma seleccionada</target>
+        <source>Running tests in any of the provided sources is not supported for the selected platform</source>
+        <target state="translated">La ejecución de pruebas en las fuentes proporcionadas no se admite para la plataforma seleccionada</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ClassInitMethodThrows">
-        <source>Excepción del método inicialización clase {0}. {1}. {2}: {3}.</source>
-        <target state="new">Excepción del método inicialización clase {0}. {1}. {2}: {3}.</target>
+        <source>Class Initialization method {0}.{1} threw exception. {2}: {3}.</source>
+        <target state="translated">Excepción del método inicialización clase {0}. {1}. {2}: {3}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestContextIsNull">
-        <source>TestContext no será null.</source>
-        <target state="new">TestContext no será null.</target>
+        <source>TestContext cannot be Null.</source>
+        <target state="translated">TestContext no será null.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
-        <source>{0} (Fila de datos {1})</source>
-        <target state="new">{0} (Fila de datos {1})</target>
+        <source>{0} (Data Row {1})</source>
+        <target state="translated">{0} (Fila de datos {1})</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_WrongThread">
-        <source>{0}. Si usa objetos de interfaz de usuario en la prueba, podría usar el atributo [UITestMethod] en lugar de [TestMethod] para ejecutar la prueba en el subproceso de interfaz de usuario.</source>
-        <target state="new">{0}. Si usa objetos de interfaz de usuario en la prueba, podría usar el atributo [UITestMethod] en lugar de [TestMethod] para ejecutar la prueba en el subproceso de interfaz de usuario.</target>
+        <source>{0}. If you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</source>
+        <target state="translated">{0}. Si usa objetos de interfaz de usuario en la prueba, podría usar el atributo [UITestMethod] en lugar de [TestMethod] para ejecutar la prueba en el subproceso de interfaz de usuario.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ExecuteThrewException">
-        <source>Se inició una excepción al ejecutar la prueba. Si usa la extensión de TestMethodAttribute, póngase en contacto con el proveedor. Mensaje de error: {0}</source>
-        <target state="new">Se inició una excepción al ejecutar la prueba. Si usa la extensión de TestMethodAttribute, póngase en contacto con el proveedor. Mensaje de error: {0}</target>
+        <source>Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}</source>
+        <target state="translated">Se inició una excepción al ejecutar la prueba. Si usa la extensión de TestMethodAttribute, póngase en contacto con el proveedor. Mensaje de error: {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestMethodThrows">
-        <source>Excepción método de prueba {0}.{1}: 
+        <source>Test method {0}.{1} threw exception: 
 {2}</source>
-        <target state="new">Excepción método de prueba {0}.{1}: 
+        <target state="translated">Excepción método de prueba {0}.{1}: 
 {2}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
-        <source>El método TestCleanup {0}.{1} devolvió una excepción. {2}.</source>
-        <target state="new">El método TestCleanup {0}.{1} devolvió una excepción. {2}.</target>
+        <source>TestCleanup method {0}.{1} threw exception. {2}.</source>
+        <target state="translated">El método TestCleanup {0}.{1} devolvió una excepción. {2}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_InstanceCreationError">
-        <source>No se puede crear una instancia de la clase {0}. Error: {1}.</source>
-        <target state="new">No se puede crear una instancia de la clase {0}. Error: {1}.</target>
+        <source>Unable to create instance of class {0}. Error: {1}.</source>
+        <target state="translated">No se puede crear una instancia de la clase {0}. Error: {1}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestContextTypeMismatchLoadError">
-        <source>Tipo {0}.TestContext no es correcto.</source>
-        <target state="new">Tipo {0}.TestContext no es correcto.</target>
+        <source>The {0}.TestContext has incorrect type.</source>
+        <target state="translated">Tipo {0}.TestContext no es correcto.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DebugTraceBanner">
-        <source>Seguimiento de depuración:</source>
-        <target state="new">Seguimiento de depuración:</target>
+        <source>Debug Trace:</source>
+        <target state="translated">Seguimiento de depuración:</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature">
-        <source>Método {0}.{1} tiene firma incorrecta. El método debe ser estático, público, no devolver un valor y no aceptar ningún parámetro. Además, si usa async-esperan en método de tipo de valor devuelto debe ser una tarea.</source>
-        <target state="new">Método {0}.{1} tiene firma incorrecta. El método debe ser estático, público, no devolver un valor y no aceptar ningún parámetro. Además, si usa async-esperan en método de tipo de valor devuelto debe ser una tarea.</target>
+        <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.</source>
+        <target state="translated">Método {0}.{1} tiene firma incorrecta. El método debe ser estático, público, no devolver un valor y no aceptar ningún parámetro. Además, si usa async-esperan en método de tipo de valor devuelto debe ser una tarea.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorGenericTestMethod">
-        <source>UTA015: Un método genérico no puede ser un método de prueba. {0}.{1} tiene una firma no válida</source>
-        <target state="new">UTA015: Un método genérico no puede ser un método de prueba. {0}.{1} tiene una firma no válida</target>
+        <source>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</source>
+        <target state="translated">UTA015: Un método genérico no puede ser un método de prueba. {0}.{1} tiene una firma no válida</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_AssemblyInitMethodThrows">
-        <source>Excepción método inicialización ensamblado {0}.{1}. {2}: {3}. Anulada ejecución de prueba.</source>
-        <target state="new">Excepción método inicialización ensamblado {0}.{1}. {2}: {3}. Anulada ejecución de prueba.</target>
+        <source>Assembly Initialization method {0}.{1} threw exception. {2}: {3}. Aborting test execution.</source>
+        <target state="translated">Excepción método inicialización ensamblado {0}.{1}. {2}: {3}. Anulada ejecución de prueba.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiClean">
-        <source>UTA024: {0}: No se puede definir más de un método con el atributo TestCleanup.</source>
-        <target state="new">UTA024: {0}: No se puede definir más de un método con el atributo TestCleanup.</target>
+        <source>UTA024: {0}: Cannot define more than one method with the TestCleanup attribute.</source>
+        <target state="translated">UTA024: {0}: No se puede definir más de un método con el atributo TestCleanup.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
-        <source>(No se pudo obtener el mensaje para una excepción del tipo {0} debido a una excepción.)</source>
-        <target state="new">(No se pudo obtener el mensaje para una excepción del tipo {0} debido a una excepción.)</target>
+        <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
+        <target state="translated">(No se pudo obtener el mensaje para una excepción del tipo {0} debido a una excepción.)</target>
         <note></note>
       </trans-unit>
       <trans-unit id="AttachmentSetDisplayName">
         <source>MSTestAdapterV2</source>
-        <target state="new">MSTestAdapterV2</target>
+        <target state="translated">MSTestAdapterV2</target>
         <note></note>
       </trans-unit>
       <trans-unit id="CouldNotInspectTypeDuringDiscovery">
-        <source>MSTestAdapter no detectó pruebas en la clase '{0}' del ensamblado '{1}' porque {2}.</source>
-        <target state="new">MSTestAdapter no detectó pruebas en la clase '{0}' del ensamblado '{1}' porque {2}.</target>
+        <source>MSTestAdapter failed to discover tests in class '{0}' of assembly '{1}' because {2}.</source>
+        <target state="translated">MSTestAdapter no detectó pruebas en la clase '{0}' del ensamblado '{1}' porque {2}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
-        <source>No se puede establecer la propiedad TestContext para la clase {0}. Error: {1}.</source>
-        <target state="new">No se puede establecer la propiedad TestContext para la clase {0}. Error: {1}.</target>
+        <source>Unable to set TestContext property for the class {0}. Error: {1}.</source>
+        <target state="translated">No se puede establecer la propiedad TestContext para la clase {0}. Error: {1}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiAssemblyClean">
-        <source>UTA014: {0}: No se puede definir más de un método con el atributo AssemblyCleanup dentro de un ensamblado.</source>
-        <target state="new">UTA014: {0}: No se puede definir más de un método con el atributo AssemblyCleanup dentro de un ensamblado.</target>
+        <source>UTA014: {0}: Cannot define more than one method with the AssemblyCleanup attribute inside an assembly.</source>
+        <target state="translated">UTA014: {0}: No se puede definir más de un método con el atributo AssemblyCleanup dentro de un ensamblado.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_FailedToGetTestMethodException">
-        <source>No se pudo obtener la excepción iniciada por el método de prueba {0}.{1}.</source>
-        <target state="new">No se pudo obtener la excepción iniciada por el método de prueba {0}.{1}.</target>
+        <source>Failed to obtain the exception thrown by test method {0}.{1}.</source>
+        <target state="translated">No se pudo obtener la excepción iniciada por el método de prueba {0}.{1}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_EndOfInnerExceptionTrace">
-        <source>--- Fin del seguimiento de la pila de excepción interna ---</source>
-        <target state="new">--- Fin del seguimiento de la pila de excepción interna ---</target>
+        <source>--- End of inner exception stack trace ---</source>
+        <target state="translated">--- Fin del seguimiento de la pila de excepción interna ---</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
-        <source>UTA054: atributo tiempo espera {0}.{1} no válido. Valor tiempo de espera debe ser entero válido y no menor que 0.</source>
-        <target state="new">UTA054: atributo tiempo espera {0}.{1} no válido. Valor tiempo de espera debe ser entero válido y no menor que 0.</target>
+        <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0.</source>
+        <target state="translated">UTA054: atributo tiempo espera {0}.{1} no válido. Valor tiempo de espera debe ser entero válido y no menor que 0.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="LegacyScenariosNotSupportedWarning">
-        <source>Advertencia: Un archivo testsettings o runsettings con el modo ForcedLegacyMode establecido en true no es compatible con el adaptador de MSTest V2.</source>
-        <target state="new">Advertencia: Un archivo testsettings o runsettings con el modo ForcedLegacyMode establecido en true no es compatible con el adaptador de MSTest V2.</target>
+        <source>Warning : A testsettings file or a runsettings with a ForcedLegacyMode set to true is not supported with the MSTest V2 Adapter.</source>
+        <target state="translated">Advertencia: Un archivo testsettings o runsettings con el modo ForcedLegacyMode establecido en true no es compatible con el adaptador de MSTest V2.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="Common_MustBeGreaterThanZero">
-        <source>El parámetro debe ser mayor que cero.</source>
-        <target state="new">El parámetro debe ser mayor que cero.</target>
+        <source>The parameter must be greater than zero.</source>
+        <target state="translated">El parámetro debe ser mayor que cero.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_NoDefaultConstructor">
-        <source>No se puede obtener el constructor predeterminado para la clase {0}.</source>
-        <target state="new">No se puede obtener el constructor predeterminado para la clase {0}.</target>
+        <source>Unable to get default constructor for class {0}.</source>
+        <target state="translated">No se puede obtener el constructor predeterminado para la clase {0}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestContextLoadError">
-        <source>No se puede encontrar la propiedad {0}.TestContext. Error:{1}.</source>
-        <target state="new">No se puede encontrar la propiedad {0}.TestContext. Error:{1}.</target>
+        <source>Unable to find property {0}.TestContext. Error:{1}.</source>
+        <target state="translated">No se puede encontrar la propiedad {0}.TestContext. Error:{1}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="EnumeratorLoadTypeErrorFormat">
         <source>{0}: {1}</source>
-        <target state="new">{0}: {1}</target>
+        <target state="translated">{0}: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_MultipleExpectedExceptionsOnTestMethod">
-        <source>El método de prueba {0}.{1} tiene definidos varios atributos derivados de ExpectedExceptionBaseAttribute. Solo se permite uno de estos atributos.</source>
-        <target state="new">El método de prueba {0}.{1} tiene definidos varios atributos derivados de ExpectedExceptionBaseAttribute. Solo se permite uno de estos atributos.</target>
+        <source>The test method {0}.{1} has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.</source>
+        <target state="translated">El método de prueba {0}.{1} tiene definidos varios atributos derivados de ExpectedExceptionBaseAttribute. Solo se permite uno de estos atributos.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
-        <source>UTA031: la clase {0} no tiene la propiedad TestContext válida. TestContext debe ser de tipo TestContext, debe ser no estática, pública y no debe ser de solo lectura. Por ejemplo: public TestContext TestContext.</source>
-        <target state="new">UTA031: la clase {0} no tiene la propiedad TestContext válida. TestContext debe ser de tipo TestContext, debe ser no estática, pública y no debe ser de solo lectura. Por ejemplo: public TestContext TestContext.</target>
+        <source>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, public and must not be read-only. For example: public TestContext TestContext.</source>
+        <target state="translated">UTA031: la clase {0} no tiene la propiedad TestContext válida. TestContext debe ser de tipo TestContext, debe ser no estática, pública y no debe ser de solo lectura. Por ejemplo: public TestContext TestContext.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_MethodDoesNotExists">
-        <source>El método {0}.{1} no existe.</source>
-        <target state="new">El método {0}.{1} no existe.</target>
+        <source>Method {0}.{1} does not exist.</source>
+        <target state="translated">El método {0}.{1} no existe.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
-        <source>El archivo no existe: {0}</source>
-        <target state="new">El archivo no existe: {0}</target>
+        <source>File does not exist: {0}</source>
+        <target state="translated">El archivo no existe: {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TypeLoadError">
-        <source>No se puede obtener el tipo {0}. Error: {1}.</source>
-        <target state="new">No se puede obtener el tipo {0}. Error: {1}.</target>
+        <source>Unable to get type {0}. Error: {1}.</source>
+        <target state="translated">No se puede obtener el tipo {0}. Error: {1}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TypeLoadFailed">
-        <source>No se pueden cargar tipos del origen de pruebas '{0}'. Puede que no se detecten algunas o ninguna de las pruebas de este origen.</source>
-        <target state="new">No se pueden cargar tipos del origen de pruebas '{0}'. Puede que no se detecten algunas o ninguna de las pruebas de este origen.</target>
+        <source>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.</source>
+        <target state="translated">No se pueden cargar tipos del origen de pruebas '{0}'. Puede que no se detecten algunas o ninguna de las pruebas de este origen.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiClassClean">
-        <source>UTA026: {0}: No se puede definir más de un método con el atributo ClassCleanup dentro de una clase.</source>
-        <target state="new">UTA026: {0}: No se puede definir más de un método con el atributo ClassCleanup dentro de una clase.</target>
+        <source>UTA026: {0}: Cannot define more than one method with the ClassCleanup attribute inside a class.</source>
+        <target state="translated">UTA026: {0}: No se puede definir más de un método con el atributo ClassCleanup dentro de una clase.</target>
         <note></note>
       </trans-unit>
     </body>
