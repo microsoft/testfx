@@ -69,10 +69,8 @@
       <Name>MSTestv2IntelliTestExtension</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Loc.targets" />
-  
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
   <PropertyGroup>
     <RunCodeAnalysisOnThisProject>false</RunCodeAnalysisOnThisProject>
   </PropertyGroup>
