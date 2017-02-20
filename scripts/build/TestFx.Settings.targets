@@ -17,8 +17,9 @@
     <GenerateLCE>true</GenerateLCE>
     <AssemblyOriginatorKeyFile>$(TestFxRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
-    <PublicSign>true</PublicSign>
-    <!--<DelaySign Condition="'$(CIBuild)' == 'true'">true</DelaySign>-->
+    <PublicSign Condition="'$(IsLocalizedBuild)' == '' or '$(IsLocalizedBuild)' != 'true'">true</PublicSign>
+    <!-- Temporarily turning on Delay signing for Localized builds because publickey = true is not passed on to the assembler to create resource assmblies.-->
+    <DelaySign Condition="'$(IsLocalizedBuild)' == 'true'">true</DelaySign>
     <OutputPath Condition="$(OutputPath) == ''">$(TestFxRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\</OutputPath>
     <IntermediatePath Condition="$(IntermediatePath) == ''">$(TestFxRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\obj\</IntermediatePath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>

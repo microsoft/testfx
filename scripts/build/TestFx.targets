@@ -46,10 +46,10 @@
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
 
-    <FilesToLocalize Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(AssemblyLclSubPath)' != ''">
+    <!--<FilesToLocalize Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(AssemblyLclSubPath)' != ''">
       <TranslationFile>$(LclRoot)\{Lang}\$(AssemblyLclSubPath)\$(AssemblyName).dll.lcl</TranslationFile>
       <HasLceComments>false</HasLceComments>
-    </FilesToLocalize>
+    </FilesToLocalize>-->
     
     <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning" Condition="'$(AssemblyLclSubPath)' != ''">
       <!-- Do not have this show up in Solution Explorer in VS -->
