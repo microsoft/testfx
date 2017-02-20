@@ -3,14 +3,19 @@
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" Condition="$(TargetFrameworkProfile) == 'Profile259'" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" Condition="$(TargetPlatformIdentifier) == 'UAP'" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="($(TargetFrameworkProfile) == '' or $(TargetFrameworkProfile) != 'Profile259') and $(TargetPlatformIdentifier) != 'UAP'"/>
-  
+    
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\</TestFxRoot>
+    <RepoRoot Condition="$(RepoRoot) == ''">..\..\</RepoRoot>
+    <TestFxPackagesRoot>$(TestFxRoot)packages\</TestFxPackagesRoot>
+    <IsLocalizationEnabled Condition="'$(UpdateXlf)' == 'true' or '$(IsLocalizedBuild)' == 'true'">true</IsLocalizationEnabled>
+  </PropertyGroup>
+
   <!-- Import props/targets with $(RepoRoot) since msbuild takes the relative path based on settings.targets and not with respect to the project. -->
   <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
 
-  <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\</TestFxRoot>
-    <TestFxPackagesRoot>$(TestFxRoot)packages\</TestFxPackagesRoot>
-  </PropertyGroup>
+  <!-- Import localization specific Targets if enabled. -->
+  <Import Project="$(RepoRoot)scripts\build\TestFx.Loc.targets" Condition="($(IsTest) == '' or $(IsTest) == 'false') and $(IsLocalizationEnabled) == 'true'"/>
 
   <ItemGroup>
     <None Include="$(TestFxRoot)scripts\build\key.snk">
@@ -28,16 +33,7 @@
     <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
     <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
     <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
-  </ItemGroup>
-
-   <!-- Localization -->
-  <ItemGroup>
-    <ResxLang Include="cs;de;es;fr;it;ja;ko;pl;pt-BR;ru;tr;zh-Hans;zh-Hant" />
-  </ItemGroup>
-
-  <PropertyGroup>
-    <ResourceDirectory>$(ProjectDir)Resources</ResourceDirectory>
-  </PropertyGroup>  
+  </ItemGroup> 
 
   <!-- Signing and Localization. -->
   <ItemGroup Condition="$(IsTest) == '' or $(IsTest) == 'false'">
@@ -78,29 +74,6 @@
       <TranslationFile>$(LclRoot)\{Lang}\$(VsixLclSubPath)\extension.vsixlangpack.lcl</TranslationFile>
     </FilesToLocalize>
   </ItemGroup>
-
-  <!-- Localization -->
-  <Target Name="BeforeBuild" Condition="$(TestProject) =='' and $(TestProject) !='true' and @(EmbeddedResource) != ''">
-    <CallTarget Targets="CreateLocalizeXLF;CreateLocalizeResx"/>
-  </Target>
-
-  <Target Name="CreateLocalizeXLF" Condition="'$(UpdateXlf)' == 'true'">
-    <CreateItem Include="@(EmbeddedResource)" AdditionalMetadata="Language=%(ResxLang.Identity)">
-      <Output ItemName="LocResourceFile" TaskParameter="Include"/>
-    </CreateItem>
-    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool\0.1.3\tools\xlftool.exe update -Resx %(LocResourceFile.Identity) -Xlf $(ResourceDirectory)\xlf\%(LocResourceFile.Filename).%(LocResourceFile.Language).xlf" />
-    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool\0.1.3\tools\xlftool.exe update -Resx %(EmbeddedResource.Identity) -Xlf $(ResourceDirectory)\xlf\%(EmbeddedResource.Filename).xlf" />
-  </Target>
-
-  <Target Name="CreateLocalizeResx" Condition="'$(IsLocalizedBuild)' == 'true'">
-    <CreateItem Include="@(EmbeddedResource)" AdditionalMetadata="Language=%(ResxLang.Identity)">
-      <Output ItemName="LocResourceFile" TaskParameter="Include"/>
-    </CreateItem>
-    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool\0.1.3\tools\xlftool.exe  writeTarget -Xlf $(ResourceDirectory)\xlf\%(LocResourceFile.Filename).%(LocResourceFile.Language).xlf -Resx $(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx -verbose" />
-    <ItemGroup>
-      <EmbeddedResource Include="$(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx" />
-    </ItemGroup>
-  </Target>
 
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
