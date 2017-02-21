@@ -55,46 +55,46 @@
     <file src="$srcroot$\**\*.cs" target="src" />
 
     <!-- Resources -->
-    <file src="MSTest.CoreAdapter\localize\CHS\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\zh-Hans" />
-    <file src="MSTest.CoreAdapter\localize\CHT\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\zh-Hant" />
-    <file src="MSTest.CoreAdapter\localize\CSY\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\cs" />
-    <file src="MSTest.CoreAdapter\localize\DEU\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\de" />
-    <file src="MSTest.CoreAdapter\localize\ESN\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\es" />
-    <file src="MSTest.CoreAdapter\localize\FRA\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\fr" />
-    <file src="MSTest.CoreAdapter\localize\ITA\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\it" />
-    <file src="MSTest.CoreAdapter\localize\JPN\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ja" />
-    <file src="MSTest.CoreAdapter\localize\KOR\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ko" />
-    <file src="MSTest.CoreAdapter\localize\PLK\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\pl" />
-    <file src="MSTest.CoreAdapter\localize\PTB\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\pt" />
-    <file src="MSTest.CoreAdapter\localize\RUS\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ru" />
-    <file src="MSTest.CoreAdapter\localize\TRK\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\tr" />
+    <file src="MSTest.CoreAdapter\zh-Hans\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\zh-Hans" />
+    <file src="MSTest.CoreAdapter\zh-Hant\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\zh-Hant" />
+    <file src="MSTest.CoreAdapter\cs\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\cs" />
+    <file src="MSTest.CoreAdapter\de\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\de" />
+    <file src="MSTest.CoreAdapter\es\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\es" />
+    <file src="MSTest.CoreAdapter\fr\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\fr" />
+    <file src="MSTest.CoreAdapter\it\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\it" />
+    <file src="MSTest.CoreAdapter\ja\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ja" />
+    <file src="MSTest.CoreAdapter\ko\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ko" />
+    <file src="MSTest.CoreAdapter\pl\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\pl" />
+    <file src="MSTest.CoreAdapter\pt-BR\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\pt" />
+    <file src="MSTest.CoreAdapter\ru\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ru" />
+    <file src="MSTest.CoreAdapter\tr\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\tr" />
 
-    <file src="PlatformServices.Desktop\localize\CHS\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\zh-Hans" />
-    <file src="PlatformServices.Desktop\localize\CHT\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\zh-Hant" />
-    <file src="PlatformServices.Desktop\localize\CSY\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\cs" />
-    <file src="PlatformServices.Desktop\localize\DEU\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\de" />
-    <file src="PlatformServices.Desktop\localize\ESN\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\es" />
-    <file src="PlatformServices.Desktop\localize\FRA\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\fr" />
-    <file src="PlatformServices.Desktop\localize\ITA\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\it" />
-    <file src="PlatformServices.Desktop\localize\JPN\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ja" />
-    <file src="PlatformServices.Desktop\localize\KOR\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ko" />
-    <file src="PlatformServices.Desktop\localize\PLK\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\pl" />
-    <file src="PlatformServices.Desktop\localize\PTB\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\pt" />
-    <file src="PlatformServices.Desktop\localize\RUS\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ru" />
-    <file src="PlatformServices.Desktop\localize\TRK\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\tr" />
+    <file src="PlatformServices.Desktop\zh-Hans\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\zh-Hans" />
+    <file src="PlatformServices.Desktop\zh-Hant\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\zh-Hant" />
+    <file src="PlatformServices.Desktop\cs\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\cs" />
+    <file src="PlatformServices.Desktop\de\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\de" />
+    <file src="PlatformServices.Desktop\es\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\es" />
+    <file src="PlatformServices.Desktop\fr\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\fr" />
+    <file src="PlatformServices.Desktop\it\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\it" />
+    <file src="PlatformServices.Desktop\ja\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ja" />
+    <file src="PlatformServices.Desktop\ko\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ko" />
+    <file src="PlatformServices.Desktop\pl\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\pl" />
+    <file src="PlatformServices.Desktop\pt-BR\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\pt" />
+    <file src="PlatformServices.Desktop\ru\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ru" />
+    <file src="PlatformServices.Desktop\tr\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\tr" />
 
-    <file src="MSTest.Core\localize\CHS\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\zh-Hans" />
-    <file src="MSTest.Core\localize\CHT\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\zh-Hant" />
-    <file src="MSTest.Core\localize\CSY\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\cs" />
-    <file src="MSTest.Core\localize\DEU\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\de" />
-    <file src="MSTest.Core\localize\ESN\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\es" />
-    <file src="MSTest.Core\localize\FRA\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\fr" />
-    <file src="MSTest.Core\localize\ITA\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\it" />
-    <file src="MSTest.Core\localize\JPN\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ja" />
-    <file src="MSTest.Core\localize\KOR\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ko" />
-    <file src="MSTest.Core\localize\PLK\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\pl" />
-    <file src="MSTest.Core\localize\PTB\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\pt" />
-    <file src="MSTest.Core\localize\RUS\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ru" />
-    <file src="MSTest.Core\localize\TRK\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\tr" />
+    <file src="MSTest.Core\zh-Hans\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\zh-Hans" />
+    <file src="MSTest.Core\zh-Hant\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\zh-Hant" />
+    <file src="MSTest.Core\cs\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\cs" />
+    <file src="MSTest.Core\de\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\de" />
+    <file src="MSTest.Core\es\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\es" />
+    <file src="MSTest.Core\fr\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\fr" />
+    <file src="MSTest.Core\it\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\it" />
+    <file src="MSTest.Core\ja\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ja" />
+    <file src="MSTest.Core\ko\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ko" />
+    <file src="MSTest.Core\pl\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\pl" />
+    <file src="MSTest.Core\pt-BR\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\pt" />
+    <file src="MSTest.Core\ru\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ru" />
+    <file src="MSTest.Core\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\tr" />
   </files>
 </package>
