@@ -15,11 +15,14 @@
     <ItemGroup>
       <ResxResources Include="@(EmbeddedResource)" Condition="%(Extension) == '.resx'" />
     </ItemGroup>
+    <PropertyGroup>
+      <HasResxResources Condition="@(ResxResources) != ''">true</HasResxResources>
+    </PropertyGroup>
   </Target>
 
   <!-- Localization for Libraries.-->
   <Target Name="TestFxLocalization" Condition="$(IsVsixProj) =='' and $(IsVsixProj) !='true'" BeforeTargets="BeforeBuild" DependsOnTargets="GatherResxResources">
-    <CallTarget Targets="CreateLocalizeXLF;CreateLocalizeResx" Condition="@(ResxResources) != ''"/>
+    <CallTarget Targets="CreateLocalizeXLF;CreateLocalizeResx" Condition="'$(HasResxResources)' == 'true'"/>
   </Target>
 
   <Target Name="CreateLocalizeXLF" Condition="'$(UpdateXlf)' == 'true'">
