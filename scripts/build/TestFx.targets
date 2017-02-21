@@ -53,7 +53,7 @@
       <HasLceComments>false</HasLceComments>
     </FilesToLocalize>-->
     
-    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning" Condition="'$(HasResxResources)' == 'true'">
+    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning">
       <!-- Do not have this show up in Solution Explorer in VS -->
       <InProject>false</InProject>
     </SignFilesDependsOn>
@@ -85,7 +85,7 @@
     <Error Condition="!Exists('$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
   </Target>
 
-  <Target Name="GatherLocalizedOutputsForSigning">
+  <Target Name="GatherLocalizedOutputsForSigning" DependsOnTargets="TestFxLocalization">
     <ItemGroup>
       <FilesToSign Include="$(OutDir)\**\$(AssemblyName).resources.dll">
         <Authenticode>Microsoft</Authenticode>
