@@ -53,7 +53,15 @@ Param(
   [Switch] $Official = $false,
 
   [Parameter(Mandatory=$false)]
-  [Switch] $Full = $false
+  [Switch] $Full = $false,
+
+  [Parameter(Mandatory=$false)]
+  [Alias("uxlf")]
+  [Switch] $UpdateXlf = $false,
+
+  [Parameter(Mandatory=$false)]
+  [Alias("loc")]
+  [Switch] $IsLocalizedBuild = $false
 )
 
 . $PSScriptRoot\common.lib.ps1
@@ -73,6 +81,8 @@ $TFB_Templates = $Templates
 $TFB_Wizards = $Wizards
 $TFB_Full = $Full
 $TFB_Official = $Official
+$TFB_UpdateXlf = $UpdateXlf
+$TFB_IsLocalizedBuild = $IsLocalizedBuild -or $TFB_Official
 $TFB_Solutions = @("TestFx.sln","Templates\MSTestTemplates.sln","WizardExtensions\WizardExtensions.sln")
 $TFB_VSmanprojs =@("src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest.vsmanproj",
                    "src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.vsmanproj", 
@@ -180,11 +190,11 @@ function Perform-Build {
     {
       $outDir = Join-Path $env:TF_OUT_DIR -ChildPath $folder
 	  
-	  if(Test-Path $outDir)
-	  {
-		Write-Output "    Deleting $outDir"
-		Remove-Item -Recurse -Force $outDir
-	  }
+      if(Test-Path $outDir)
+      {
+        Write-Output "    Deleting $outDir"
+        Remove-Item -Recurse -Force $outDir
+      }
     }
   }
 
@@ -192,17 +202,17 @@ function Perform-Build {
   
   if($TFB_Templates -or $TFB_Full)
   {
-	Invoke-Build -solution "Templates\MSTestTemplates.sln" -hasVsixExtension true
+	  Invoke-Build -solution "Templates\MSTestTemplates.sln" -hasVsixExtension true
   }
   
   if($TFB_Wizards -or $TFB_Full)
   {
-	Invoke-Build -solution "WizardExtensions\WizardExtensions.sln" -hasVsixExtension true
+	  Invoke-Build -solution "WizardExtensions\WizardExtensions.sln" -hasVsixExtension true
   }
   
   if($TFB_Official)
   {
-	Build-vsmanprojs -hasVsixExtension true
+	  Build-vsmanprojs -hasVsixExtension true
   }
   
   Write-Log "Perform-Build: Completed. {$(Get-ElapsedTime($timer))}"
@@ -210,16 +220,16 @@ function Perform-Build {
 
 function Invoke-Build([string] $solution, $hasVsixExtension = "false")
 {
-    $msbuild = Locate-MSBuild -hasVsixExtension $hasVsixExtension
+  $msbuild = Locate-MSBuild -hasVsixExtension $hasVsixExtension
 	$solutionPath = Locate-Solution -relativePath $solution
-    $solutionDir = [System.IO.Path]::GetDirectoryName($solutionPath)
-    $solutionSummaryLog = Join-Path -path $solutionDir -childPath "msbuild.log"
-    $solutionWarningLog = Join-Path -path $solutionDir -childPath "msbuild.wrn"
-    $solutionFailureLog = Join-Path -path $solutionDir -childPath "msbuild.err"
+  $solutionDir = [System.IO.Path]::GetDirectoryName($solutionPath)
+  $solutionSummaryLog = Join-Path -path $solutionDir -childPath "msbuild.log"
+  $solutionWarningLog = Join-Path -path $solutionDir -childPath "msbuild.wrn"
+  $solutionFailureLog = Join-Path -path $solutionDir -childPath "msbuild.err"
 
 	Write-Log "    Building $solution..."
-	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog $solutionPath"
-	& $msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog $solutionPath
+	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf $solutionPath"
+	& $msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf $solutionPath
   
 	if ($lastExitCode -ne 0) {
 		throw "Build failed with an exit code of '$lastExitCode'."

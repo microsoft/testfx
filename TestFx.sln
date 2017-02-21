@@ -83,12 +83,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{929A3EDE-893B-4801-82BA-01FD947291CB}"
 	ProjectSection(SolutionItems) = preProject
 		Nuget.config = Nuget.config
-		scripts\build\stylecop.json = scripts\build\stylecop.json
-		scripts\build\stylecop.ruleset = scripts\build\stylecop.ruleset
-		scripts\build\stylecop.test.ruleset = scripts\build\stylecop.test.ruleset
-		scripts\build\TestFx.Loc.targets = scripts\build\TestFx.Loc.targets
-		scripts\build\TestFx.Settings.targets = scripts\build\TestFx.Settings.targets
-		scripts\build\TestFx.targets = scripts\build\TestFx.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Package", "Package", "{E374A3A6-C364-4890-B315-D60F5C682B6E}"
@@ -128,6 +122,33 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Core.Unit.Tests", "test\UnitTests\MSTest.Core.Unit.Tests\MSTest.Core.Unit.Tests.csproj", "{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PlatformServices.Shared.Unit.Tests", "test\UnitTests\PlatformServices.Shared.Unit.Tests\PlatformServices.Shared.Unit.Tests.shproj", "{BCB1CB25-C70E-4B40-B50C-9DA2FEFE48D8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "toolPackages", "toolPackages", "{1701E9E5-E06B-45FE-B860-6A83BBAEE6A9}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\toolset\packages.config = scripts\toolset\packages.config
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "stylecop", "stylecop", "{FE0DF239-0D81-46CA-9277-3342009E83F9}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\build\stylecop.json = scripts\build\stylecop.json
+		scripts\build\stylecop.ruleset = scripts\build\stylecop.ruleset
+		scripts\build\stylecop.test.ruleset = scripts\build\stylecop.test.ruleset
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{F60B647A-E14C-48AF-9BD6-89F44EB60115}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\build\TestFx.Loc.targets = scripts\build\TestFx.Loc.targets
+		scripts\build\TestFx.Settings.targets = scripts\build\TestFx.Settings.targets
+		scripts\build\TestFx.targets = scripts\build\TestFx.targets
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BCF525B1-E67F-486D-B091-06A8BB8A2793}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\Build.ps1 = scripts\Build.ps1
+		scripts\common.lib.ps1 = scripts\common.lib.ps1
+		scripts\test.ps1 = scripts\test.ps1
+		scripts\UpdateTemplates.ps1 = scripts\UpdateTemplates.ps1
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -778,5 +799,9 @@ Global
 		{FA7C719F-A400-45AF-8091-7C23435617A8} = {F2D0BF2C-38F2-4244-80E3-4AAD1C3F4C89}
 		{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2} = {C6F38A55-2B8E-4C5D-A49A-2D0B9D4F10C8}
 		{BCB1CB25-C70E-4B40-B50C-9DA2FEFE48D8} = {F2D0BF2C-38F2-4244-80E3-4AAD1C3F4C89}
+		{1701E9E5-E06B-45FE-B860-6A83BBAEE6A9} = {929A3EDE-893B-4801-82BA-01FD947291CB}
+		{FE0DF239-0D81-46CA-9277-3342009E83F9} = {929A3EDE-893B-4801-82BA-01FD947291CB}
+		{F60B647A-E14C-48AF-9BD6-89F44EB60115} = {929A3EDE-893B-4801-82BA-01FD947291CB}
+		{BCF525B1-E67F-486D-B091-06A8BB8A2793} = {929A3EDE-893B-4801-82BA-01FD947291CB}
 	EndGlobalSection
 EndGlobal

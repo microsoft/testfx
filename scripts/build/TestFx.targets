@@ -3,9 +3,19 @@
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" Condition="$(TargetFrameworkProfile) == 'Profile259'" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" Condition="$(TargetPlatformIdentifier) == 'UAP'" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="($(TargetFrameworkProfile) == '' or $(TargetFrameworkProfile) != 'Profile259') and $(TargetPlatformIdentifier) != 'UAP'"/>
-  
+    
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\</TestFxRoot>
+    <RepoRoot Condition="$(RepoRoot) == ''">..\..\</RepoRoot>
+    <TestFxPackagesRoot>$(TestFxRoot)packages\</TestFxPackagesRoot>
+    <IsLocalizationEnabled Condition="'$(UpdateXlf)' == 'true' or '$(IsLocalizedBuild)' == 'true'">true</IsLocalizationEnabled>
+  </PropertyGroup>
+
   <!-- Import props/targets with $(RepoRoot) since msbuild takes the relative path based on settings.targets and not with respect to the project. -->
   <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
+
+  <!-- Import localization specific Targets if enabled. -->
+  <Import Project="$(RepoRoot)scripts\build\TestFx.Loc.targets" Condition="($(IsTest) == '' or $(IsTest) == 'false') and $(IsLocalizationEnabled) == 'true'"/>
 
   <ItemGroup>
     <None Include="$(TestFxRoot)scripts\build\key.snk">
@@ -20,11 +30,12 @@
       <Link>stylecop.json</Link>
     </AdditionalFiles>
     
-    <Analyzer Include="$(TestFxRoot)packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
-    <Analyzer Include="$(TestFxRoot)packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
-    <Analyzer Include="$(TestFxRoot)packages\StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
-  </ItemGroup>
+    <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
+    <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
+    <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
+  </ItemGroup> 
 
+  <!-- Signing and Localization. -->
   <ItemGroup Condition="$(IsTest) == '' or $(IsTest) == 'false'">
     <FilesToSign Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(IsVsixProj)' == '' or '$(IsVsixProj)' != 'true'">
       <Authenticode>Microsoft</Authenticode>
@@ -35,10 +46,10 @@
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
 
-    <FilesToLocalize Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(AssemblyLclSubPath)' != ''">
+    <!--<FilesToLocalize Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(AssemblyLclSubPath)' != ''">
       <TranslationFile>$(LclRoot)\{Lang}\$(AssemblyLclSubPath)\$(AssemblyName).dll.lcl</TranslationFile>
       <HasLceComments>false</HasLceComments>
-    </FilesToLocalize>
+    </FilesToLocalize>-->
     
     <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning" Condition="'$(AssemblyLclSubPath)' != ''">
       <!-- Do not have this show up in Solution Explorer in VS -->
@@ -68,8 +79,8 @@
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props'))" />
-    <Error Condition="!Exists('$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
+    <Error Condition="!Exists('$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.props'))" />
+    <Error Condition="!Exists('$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
   </Target>
 
   <Target Name="GatherLocalizedOutputsForSigning">
