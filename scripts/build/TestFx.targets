@@ -53,7 +53,7 @@
       <HasLceComments>false</HasLceComments>
     </FilesToLocalize>-->
     
-    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning" Condition="'$(AssemblyLclSubPath)' != ''">
+    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning" Condition="'$(HasResxResources)' == 'true'">
       <!-- Do not have this show up in Solution Explorer in VS -->
       <InProject>false</InProject>
     </SignFilesDependsOn>
@@ -87,7 +87,7 @@
 
   <Target Name="GatherLocalizedOutputsForSigning">
     <ItemGroup>
-      <FilesToSign Include="$(OutDir)\localize\**\$(AssemblyName).resources.dll">
+      <FilesToSign Include="$(OutDir)\**\$(AssemblyName).resources.dll">
         <Authenticode>Microsoft</Authenticode>
         <StrongName>StrongName</StrongName>
       </FilesToSign>
