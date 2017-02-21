@@ -17,7 +17,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     /// </summary>
     internal class TypeValidator
     {
-        private static readonly string TestContextFullName = typeof(TestContext).FullName;
+        // Setting this to a string representation instead of a typeof(TestContext).FullName
+        // since the later would require a load of the Test Framework extension assembly at this point.
+        private const string TestContextFullName = "Microsoft.VisualStudio.TestTools.UnitTesting.TestContext";
         private readonly ReflectHelper reflectHelper;
 
         /// <summary>
