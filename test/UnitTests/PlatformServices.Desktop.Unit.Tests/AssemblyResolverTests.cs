@@ -8,6 +8,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Reflection;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -81,7 +82,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
             assemblyResolver.DoesDirectoryExistSetter = (str) => true;
 
-            // shimming the Directory.GetDirectories, to get sub directories
+            // mocking the Directory.GetDirectories, to get sub directories
             assemblyResolver.GetDirectoriesSetter = (str) =>
             {
                 if (string.Compare(@"C:\unitTesting", str, true) == 0)
@@ -147,6 +148,48 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             // is now got added in m_searchDirectories.
             assemblyResolver.OnResolve(null, dummyArgs);
         }
+
+        [TestMethod]
+        public void ReflectionOnlyOnResolveShouldNotReturnACachedDefaultLoadedAssembly()
+        {
+            var currentAssembly = typeof(AssemblyResolverTests).Assembly;
+            var currentAssemblyPath = Path.GetDirectoryName(currentAssembly.Location);
+            var assemblyResolver = new TestableAssemblyResolver(new List<string> { currentAssemblyPath });
+
+            bool isAssemblyLoaded = false;
+            bool isAssemblyReflectionOnlyLoaded = false;
+
+            assemblyResolver.LoadAssemblyFromSetter = (string path) =>
+            {
+                isAssemblyLoaded = true;
+                return typeof(AssemblyResolverTests).Assembly;
+            };
+
+            assemblyResolver.ReflectionOnlyLoadAssemblyFromSetter = (string path) =>
+            {
+                isAssemblyReflectionOnlyLoaded = true;
+                return typeof(AssemblyResolverTests).Assembly;
+            };
+
+            assemblyResolver.DoesDirectoryExistSetter = (str) => true;
+            assemblyResolver.DoesFileExistSetter = (str) => true;
+
+            // Simulate loading the assembly in default context first.
+            assemblyResolver.OnResolve(null, new ResolveEventArgs(currentAssembly.FullName));
+
+            Assert.IsTrue(isAssemblyLoaded);
+            Assert.IsFalse(isAssemblyReflectionOnlyLoaded);
+
+            // Reset.
+            isAssemblyLoaded = false;
+
+            // Simulate loading the assembly in Reflection-only context.
+            assemblyResolver.ReflectionOnlyOnResolve(null, new ResolveEventArgs(currentAssembly.FullName));
+
+            // The below assertions ensure that a cached version is not returned out because it actually Reflection only loads the assembly.
+            Assert.IsFalse(isAssemblyLoaded);
+            Assert.IsTrue(isAssemblyReflectionOnlyLoaded);
+        }
     }
 
     public class TestableAssemblyResolver : AssemblyResolver
@@ -159,6 +202,12 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public Func<string, bool> DoesDirectoryExistSetter { get; set; }
 
         public Func<string, string[]> GetDirectoriesSetter { get; set; }
+
+        public Func<string, bool> DoesFileExistSetter { get; set; }
+
+        public Func<string, Assembly> LoadAssemblyFromSetter { get; set; }
+
+        public Func<string, Assembly> ReflectionOnlyLoadAssemblyFromSetter { get; set; }
 
         public Func<List<string>, string, bool, Assembly> SearchAssemblySetter { get; internal set; }
 
@@ -190,6 +239,36 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             }
 
             return this.SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
+        }
+
+        protected override bool DoesFileExist(string filePath)
+        {
+            if (this.DoesFileExistSetter == null)
+            {
+                return base.DoesFileExist(filePath);
+            }
+
+            return this.DoesFileExistSetter(filePath);
+        }
+
+        protected override Assembly LoadAssemblyFrom(string path)
+        {
+            if (this.LoadAssemblyFromSetter == null)
+            {
+                return base.LoadAssemblyFrom(path);
+            }
+
+            return this.LoadAssemblyFromSetter(path);
+        }
+
+        protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path)
+        {
+            if (this.ReflectionOnlyLoadAssemblyFromSetter == null)
+            {
+                return base.ReflectionOnlyLoadAssemblyFrom(path);
+            }
+
+            return this.ReflectionOnlyLoadAssemblyFromSetter(path);
         }
     }
 }

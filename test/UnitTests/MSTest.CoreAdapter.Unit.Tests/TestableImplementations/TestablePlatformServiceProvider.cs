@@ -93,6 +93,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
             set;
         }
 
+        public Mock<IReflectionOperations> MockReflectionOperations
+        {
+            get;
+            set;
+        }
+
         #endregion
 
         public ITestSource TestSource => this.MockTestSourceValidator.Object;
@@ -108,7 +114,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
         public IThreadOperations ThreadOperations => this.MockThreadOperations.Object;
 
         public IReflectionOperations ReflectionOperations
-            => this.reflectionOperations ?? (this.reflectionOperations = new ReflectionOperations());
+        {
+            get
+            {
+                if (this.MockReflectionOperations != null)
+                {
+                    return this.MockReflectionOperations.Object;
+                }
+
+                return this.reflectionOperations ?? (this.reflectionOperations = new ReflectionOperations());
+            }
+        }
 
         public ITestDataSource TestDataSource => this.MockTestDataSource.Object;
 
@@ -130,6 +146,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
         public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter)
         {
             return this.MockTraceListenerManager.Object;
+        }
+
+        public void SetupMockReflectionOperations()
+        {
+            this.MockReflectionOperations = new Mock<IReflectionOperations>();
         }
     }
 }
