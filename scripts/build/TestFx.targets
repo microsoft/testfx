@@ -47,11 +47,6 @@
     <FilesToSign Include="$(OutDir)\$(AssemblyName).vsix" Condition="'$(IsVsixProj)' == 'true'">
       <Authenticode>VsixSHA2</Authenticode>
     </FilesToSign>
-
-    <!--<FilesToLocalize Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(AssemblyLclSubPath)' != ''">
-      <TranslationFile>$(LclRoot)\{Lang}\$(AssemblyLclSubPath)\$(AssemblyName).dll.lcl</TranslationFile>
-      <HasLceComments>false</HasLceComments>
-    </FilesToLocalize>-->
     
     <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning">
       <!-- Do not have this show up in Solution Explorer in VS -->
@@ -65,15 +60,6 @@
       <SettingsFile>$(LSBuildRoot)\locxml_teamarch.lss</SettingsFile>
       <LciCommentFile>$(LciRoot)\$(DocumentationLclSubPath)\$(AssemblyName).XML.lci</LciCommentFile>
       <TranslationFile>$(LclRoot)\{Lang}\$(DocumentationLclSubPath)\$(AssemblyName).XML.lcl</TranslationFile>
-    </FilesToLocalize>
-
-    <FilesToLocalize Include="$(OutDir)\extension.vsixlangpack" Condition="'$(VsixLclSubPath)' != ''">
-      <Languages>$(VS)</Languages>
-      <ProjectFile>$(MSBuildThisFileFullPath)</ProjectFile>
-      <Parser>210</Parser>
-      <SettingsFile>$(LSBuildRoot)\locxml_teamarch.lss</SettingsFile>
-      <LciCommentFile>$(LciRoot)\$(VsixLclSubPath)\extension.vsixlangpack.lci </LciCommentFile>
-      <TranslationFile>$(LclRoot)\{Lang}\$(VsixLclSubPath)\extension.vsixlangpack.lcl</TranslationFile>
     </FilesToLocalize>
   </ItemGroup>
 
