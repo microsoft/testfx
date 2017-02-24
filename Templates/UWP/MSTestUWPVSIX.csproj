@@ -28,7 +28,6 @@
     <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
     <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
     <IsVsixProj>true</IsVsixProj>
-    <VsixLclSubPath>Templates\CSharp\UWP</VsixLclSubPath>
     <DeployExtension>False</DeployExtension>    
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
