@@ -42,6 +42,11 @@
       <EmbeddedResource Include="$(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx" />
     </ItemGroup>
   </Target>
+  
+  <!-- Localization for documentation files. -->
+  <Target Name="CopyLocalizedXmls" BeforeTargets="BeforeBuild" Condition="$(LocDocumentationSubPath) != ''">
+    <Exec Command="xcopy /Y /I /S /E $(TestFxPackagesRoot)MSTest.Internal.TestFx.Localized.Documentation\1.0.0-build-20170227-9\contentFiles\any\any\$(LocDocumentationSubPath) $(OutDir)" />
+  </Target>
 
   <!-- Localization for vsix files.-->
   <!-- Forcing the Localize task and the localized vsixlangpack inclusion to run before the vsix package is created. 

@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0"?>
 <package >
   <metadata>
-    <id>MSTest.Internal.TestFramework.Documentation</id>
+    <id>MSTest.Internal.TestFx.Documentation</id>
     <version>1.0.0-Dev</version>
-    <title>MSTest.Internal.TestFramework.Documentation</title>
+    <title>MSTest.Internal.TestFx.Documentation</title>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
@@ -17,7 +17,7 @@
   </metadata>
   <files>
     <!--DotNet-->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="contentFiles\any\any\" />
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="contentFiles\any\any\Core" />
     <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Core" />
     <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Desktop" />
     <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\UWP" />

@@ -30,7 +30,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
-    <DocumentationLclSubPath>TestFramework\Extensions\Desktop</DocumentationLclSubPath>
+    <LocDocumentationSubPath>Extensions\Desktop</LocDocumentationSubPath>
   </PropertyGroup>
   <ItemGroup>
     <None Include="packages.config" />

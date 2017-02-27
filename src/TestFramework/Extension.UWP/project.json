@@ -2,7 +2,8 @@
   "dependencies": {
     "MicroBuild.Core": "0.2.0",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.1.0",
-    "StyleCop.Analyzers": "1.0.0"
+    "StyleCop.Analyzers": "1.0.0",
+    "MSTest.Internal.TestFx.Localized.Documentation": "1.0.0-build-20170227-9"
   },
   "frameworks": {
     "uap10.0": {}

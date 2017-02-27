@@ -52,15 +52,6 @@
       <!-- Do not have this show up in Solution Explorer in VS -->
       <InProject>false</InProject>
     </SignFilesDependsOn>
-
-	  <FilesToLocalize Include="$(OutDir)\$(AssemblyName).XML" Condition="'$(DocumentationLclSubPath)' != ''">
-      <Languages>$(VS)</Languages>
-      <ProjectFile>$(MSBuildThisFileFullPath)</ProjectFile>
-      <Parser>210</Parser>
-      <SettingsFile>$(LSBuildRoot)\locxml_teamarch.lss</SettingsFile>
-      <LciCommentFile>$(LciRoot)\$(DocumentationLclSubPath)\$(AssemblyName).XML.lci</LciCommentFile>
-      <TranslationFile>$(LclRoot)\{Lang}\$(DocumentationLclSubPath)\$(AssemblyName).XML.lcl</TranslationFile>
-    </FilesToLocalize>
   </ItemGroup>
 
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

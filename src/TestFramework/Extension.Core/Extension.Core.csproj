@@ -32,7 +32,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
-    <DocumentationLclSubPath>TestFramework\Extensions\Core</DocumentationLclSubPath>
+    <LocDocumentationSubPath>Extensions\Core</LocDocumentationSubPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
