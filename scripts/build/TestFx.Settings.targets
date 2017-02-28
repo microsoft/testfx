@@ -26,8 +26,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <LclRoot>$(TestFxRoot)\loc\lcl</LclRoot>
-    <LciRoot>$(TestFxRoot)\loc\lci</LciRoot>
     <IsTest Condition="$(MSBuildProjectDirectory.Contains('\test\'))">true</IsTest>
   </PropertyGroup>
 
