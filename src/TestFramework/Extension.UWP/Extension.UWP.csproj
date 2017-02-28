@@ -97,7 +97,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
-    <DocumentationLclSubPath>TestFramework\Extensions\UWP</DocumentationLclSubPath>
+    <LocDocumentationSubPath>Extensions\UWP</LocDocumentationSubPath>
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->

@@ -32,7 +32,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.XML</DocumentationFile>
-    <DocumentationLclSubPath>TestFramework</DocumentationLclSubPath>
+    <LocDocumentationSubPath>Core</LocDocumentationSubPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Interfaces\ITestMethod.cs" />

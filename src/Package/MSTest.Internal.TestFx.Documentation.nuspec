@@ -1,0 +1,25 @@
+﻿<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>MSTest.Internal.TestFx.Documentation</id>
+    <version>1.0.0-Dev</version>
+    <title>MSTest.Internal.TestFx.Documentation</title>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <summary>This is a private nuget package that contains the xml documentation files for MSTest V2 Framework.</summary>
+    <description>This is a private nuget package that contains the xml documentation files for MSTest V2 Framework.</description>
+    <releaseNotes>This is a pre-release version of the MSTest V2 cross platform test framework.</releaseNotes>
+    <licenseUrl>http://www.microsoft.com/web/webpi/eula/net_library_eula_enu.htm</licenseUrl>
+    <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
+    <copyright>Copyright © Microsoft Corporation</copyright>
+    <tags>MSTest TestFramework MSTestV2</tags>
+  </metadata>
+  <files>
+    <!--DotNet-->
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="contentFiles\any\any\Core" />
+    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Core" />
+    <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Desktop" />
+    <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\UWP" />
+  </files>
+</package>
