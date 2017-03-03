@@ -43,15 +43,15 @@
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.ExtendedReflection">
       <HintPath>$(TestFxRoot)packages\Microsoft.Internal.IntelliTest.15.0.0\lib\net45\Microsoft.ExtendedReflection.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.ExtendedReflection.Reasoning">
       <HintPath>$(TestFxRoot)packages\Microsoft.Internal.IntelliTest.15.0.0\lib\net45\Microsoft.ExtendedReflection.Reasoning.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Pex.Framework">
       <HintPath>$(TestFxRoot)packages\Microsoft.Internal.IntelliTest.15.0.0\lib\net45\Microsoft.Pex.Framework.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
