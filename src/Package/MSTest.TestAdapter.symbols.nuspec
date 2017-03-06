@@ -15,6 +15,7 @@
    - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017) 
    - ASP.NET Core 1.0+ (Visual Studio 2017) 
    </description>
+    <projectUrl>https://github.com/microsoft/testfx</projectUrl>
     <licenseUrl>http://www.microsoft.com/web/webpi/eula/net_library_eula_enu.htm</licenseUrl>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>Copyright © Microsoft Corporation</copyright>
