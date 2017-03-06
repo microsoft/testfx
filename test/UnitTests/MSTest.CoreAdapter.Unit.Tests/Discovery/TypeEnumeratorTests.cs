@@ -313,7 +313,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
 
             // Setup mocks
-            this.mockReflectHelper.Setup(rh => rh.GetCustomAttributes(It.IsAny<MemberInfo>(), typeof(UTF.DeploymentItemAttribute))).Returns(new Attribute[] { });
             this.testablePlatformServiceProvider.MockTestDeployment.Setup(
                 td => td.GetDeploymentItems(It.IsAny<MethodInfo>(), It.IsAny<Type>(), this.warnings))
                 .Returns((KeyValuePair<string, string>[])null);
@@ -333,8 +332,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             var deploymentItems = new[] { new KeyValuePair<string, string>("C:\\temp", string.Empty) };
 
             // Setup mocks
-            this.mockReflectHelper.Setup(rh => rh.GetCustomAttributes(typeof(DummyTestClass).GetTypeInfo(), typeof(UTF.DeploymentItemAttribute))).Returns(new Attribute[] { new UTF.DeploymentItemAttribute("C:\\temp") });
-            this.mockReflectHelper.Setup(rh => rh.GetCustomAttributes(methodInfo, typeof(UTF.DeploymentItemAttribute))).Returns(new Attribute[] { });
             this.testablePlatformServiceProvider.MockTestDeployment.Setup(
                 td => td.GetDeploymentItems(methodInfo, typeof(DummyTestClass), this.warnings)).Returns(deploymentItems);
 

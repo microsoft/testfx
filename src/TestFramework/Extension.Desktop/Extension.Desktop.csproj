@@ -54,6 +54,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\DeploymentItemAttribute.cs" />
     <Compile Include="ConfigurationSettings\ConfigurationNames.cs" />
     <Compile Include="ConfigurationSettings\DataSourceElement.cs" />
     <Compile Include="ConfigurationSettings\DataSourceElementCollection.cs" />

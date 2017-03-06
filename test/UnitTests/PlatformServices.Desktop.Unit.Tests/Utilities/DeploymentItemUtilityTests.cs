@@ -5,6 +5,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
 {
     extern alias FrameworkV1;
     extern alias FrameworkV2;
+    extern alias FrameworkV2DesktopExtension;
 
     using System.Collections.Generic;
     using System.Linq;
@@ -22,6 +23,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestFrameworkV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using TestFrameworkV2Extension = FrameworkV2DesktopExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
@@ -451,18 +453,18 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
 
         private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
         {
-            var deploymentItemAttributes = new List<TestFrameworkV2.DeploymentItemAttribute>();
+            var deploymentItemAttributes = new List<TestFrameworkV2Extension.DeploymentItemAttribute>();
 
             foreach (var deploymentItem in deploymentItems)
             {
-                deploymentItemAttributes.Add(new TestFrameworkV2.DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
+                deploymentItemAttributes.Add(new TestFrameworkV2Extension.DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
             }
 
             this.mockReflectionUtility.Setup(
                 ru =>
                 ru.GetCustomAttributes(
                     memberInfo,
-                    typeof(TestFrameworkV2.DeploymentItemAttribute))).Returns((object[])deploymentItemAttributes.ToArray());
+                    typeof(TestFrameworkV2Extension.DeploymentItemAttribute))).Returns((object[])deploymentItemAttributes.ToArray());
         }
 
         #endregion

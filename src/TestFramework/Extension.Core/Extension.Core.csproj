@@ -35,6 +35,7 @@
     <LocDocumentationSubPath>Extensions\Core</LocDocumentationSubPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Attributes\DeploymentItemAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
