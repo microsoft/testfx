@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
-
+    using System.Security;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -183,6 +183,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             ExpectedExceptionBaseAttribute expectedException = expectedExceptions[0];
 
             return expectedException;
+        }
+
+        /// <summary>
+        /// Returns object to be used for controlling lifetime, null means infinite lifetime.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="object"/>.
+        /// </returns>
+        [SecurityCritical]
+        public override object InitializeLifetimeService()
+        {
+            return null;
         }
 
         /// <summary>

@@ -14,5 +14,13 @@ namespace System
     [ComVisible(true)]
     public abstract class MarshalByRefObject
     {
+        /// <summary>
+        /// Returns object to be used for controlling lifetime, null means infinite lifetime.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="object"/>.
+        /// </returns>
+        [SecurityCritical]
+        public abstract object InitializeLifetimeService();
     }
 }
