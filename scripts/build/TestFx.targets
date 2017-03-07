@@ -19,6 +19,8 @@
   <!-- Import localization specific Targets if enabled. -->
   <Import Project="$(RepoRoot)scripts\build\TestFx.Loc.targets" Condition="($(IsTest) == '' or $(IsTest) == 'false') and $(IsLocalizationEnabled) == 'true'"/>
 
+  <Import Project="$(RepoRoot)packages\microsoft.vssdk.buildtools\15.0.26201\build\Microsoft.VSSDK.BuildTools.targets" Condition="$(IsVsixProj) == 'true' and Exists('$(RepoRoot)packages\microsoft.vssdk.buildtools\15.0.26201\build\Microsoft.VSSDK.BuildTools.targets')" />
+
   <ItemGroup>
     <None Include="$(TestFxRoot)scripts\build\key.snk">
       <!-- Do not have this show up in Solution Explorer in VS -->
@@ -60,6 +62,14 @@
     </PropertyGroup>
     <Error Condition="!Exists('$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.props'))" />
     <Error Condition="!Exists('$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
+  </Target>
+  
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild" Condition="$(IsVsixProj) == 'true'">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(TestFxPackagesRoot)microsoft.vssdk.buildtools\15.0.26201\build\Microsoft.VSSDK.BuildTools.props')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxPackagesRoot)microsoft.vssdk.buildtools\15.0.26201\build\Microsoft.VSSDK.BuildTools.props'))" />
+    <Error Condition="!Exists('$(TestFxPackagesRoot)microsoft.vssdk.buildtools\15.0.26201\build\Microsoft.VSSDK.BuildTools.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxPackagesRoot)microsoft.vssdk.buildtools\15.0.26201\build\Microsoft.VSSDK.BuildTools.targets'))" />
   </Target>
 
   <Target Name="GatherLocalizedOutputsForSigning" DependsOnTargets="TestFxLocalization">
