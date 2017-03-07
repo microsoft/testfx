@@ -9,6 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
+    using System.Security;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -140,6 +141,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             // Get the testMethod
             return this.ResolveTestMethod(testMethod, testClassInfo, testContext);
+        }
+
+        /// <summary>
+        /// Returns object to be used for controlling lifetime, null means infinite lifetime.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="object"/>.
+        /// </returns>
+        [SecurityCritical]
+        public override object InitializeLifetimeService()
+        {
+            return null;
         }
 
         #region ClassInfo creation and cache logic.

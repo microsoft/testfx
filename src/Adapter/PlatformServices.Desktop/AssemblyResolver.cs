@@ -102,7 +102,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Returns object to be used for conrtolling lifetime, null means infinite lifetime.
+        /// Returns object to be used for controlling lifetime, null means infinite lifetime.
         /// </summary>
         /// <remarks>
         /// Note that LinkDemand is needed by FxCop.

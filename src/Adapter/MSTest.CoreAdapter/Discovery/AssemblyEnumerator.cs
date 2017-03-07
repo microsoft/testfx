@@ -10,7 +10,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
+    using System.Security;
     using System.Text;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
@@ -19,6 +21,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     /// </summary>
     internal class AssemblyEnumerator : MarshalByRefObject
     {
+        /// <summary>
+        /// Returns object to be used for controlling lifetime, null means infinite lifetime.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="object"/>.
+        /// </returns>
+        [SecurityCritical]
+        public override object InitializeLifetimeService()
+        {
+            return null;
+        }
+
         /// <summary>
         /// Enumerates through all types in the assembly in search of valid test methods.
         /// </summary>
