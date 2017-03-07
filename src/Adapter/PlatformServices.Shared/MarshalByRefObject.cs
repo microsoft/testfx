@@ -21,9 +21,6 @@ namespace System
         /// The <see cref="object"/>.
         /// </returns>
         [SecurityCritical]
-        public virtual object InitializeLifetimeService()
-        {
-            return null;
-        }
+        public abstract object InitializeLifetimeService();
     }
 }
