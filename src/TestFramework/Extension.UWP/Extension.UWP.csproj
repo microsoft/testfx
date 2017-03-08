@@ -104,6 +104,7 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DeploymentItemAttribute.cs" />
     <Compile Include="UITestMethodAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Extension.UWP.rd.xml" />
