@@ -183,8 +183,6 @@ function Edit-Templates
         }
     }
 
-
-
     Write-Log "Successfully edited the project template related artifacts.."
 }
 
@@ -221,6 +219,32 @@ function Edit-Wizards
     $fileContent = $fileContent -replace $TestFrameworkCWizRegex,$TestFrameworkCWizReplacement
     $fileContent = $fileContent -replace $TestAdapterCWizRegex,$TestAdapterCWizReplacement
     Out-File $cutWizardFile -InputObject $fileContent -Encoding utf8
+
+    Write-Log "   Editing the Wizard vsix version in the vsixmanifest with $TemplateVersion..."
+    
+    $IntelliTestManifestRegex = [regex]"Identity Id=""MSTestV2IntelliTestExtensionPackage.Microsoft.935a8bb8-364d-46ce-a02f-fbb74f2d9188"" Version=(.+) Language"
+    $CUTManifestRegex = [regex]"Identity Id=""MSTestV2UnitTestExtensionPackage.Microsoft.632139eb-968c-47ce-8667-f0898f00833f"" Version=(.+) Language"
+
+    $IntelliTestManifestReplacement = "Identity Id=""MSTestV2IntelliTestExtensionPackage.Microsoft.935a8bb8-364d-46ce-a02f-fbb74f2d9188"" Version=""$TemplateVersion"" Language"
+    $CUTManifestReplacement = "Identity Id=""MSTestV2UnitTestExtensionPackage.Microsoft.632139eb-968c-47ce-8667-f0898f00833f"" Version=""$TemplateVersion"" Language"
+
+    $intellitestWizardDir = Join-Path $env:MSTEST_WIZARDS_DIR "MSTestv2IntelliTestExtensionPackage"
+    $cutWizardDir = Join-Path $env:MSTEST_WIZARDS_DIR "MSTestv2UnitTestExtensionPackage"
+
+    $wizardVSIXDirs = @($intellitestWizardDir, $cutWizardDir)
+
+    foreach($templateDir in $wizardVSIXDirs)
+    {
+        $files = (Get-ChildItem -File $templateDir -Filter *.vsixmanifest).FullName
+        
+        foreach($file in $files){
+            Write-Verbose "Editing $file"
+            $fileContent = Get-Content $file
+            $fileContent = $fileContent -replace $IntelliTestManifestRegex,$IntelliTestManifestReplacement
+            $fileContent = $fileContent -replace $CUTManifestRegex,$CUTManifestReplacement
+            Out-File $file -InputObject $fileContent -Encoding default
+        }
+    }
 
     Write-Log "Successfully edited the wizard experience related artifacts.."
 }
