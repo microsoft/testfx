@@ -66,6 +66,7 @@
     <ProjectReference Include="..\MSTestv2IntelliTestExtension\MSTestv2IntelliTestExtension.csproj">
       <Project>{aab9f3cf-72d5-419b-b31e-209388bf3e7c}</Project>
       <Name>MSTestv2IntelliTestExtension</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup</IncludeOutputGroupsInVSIX>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />

@@ -11,14 +11,37 @@ namespace MSTestv2IntelliTestExtension
     /// </summary>
     internal static class MSTestv2TestFrameworkMetadata
     {
-        public static readonly TypeName AssertType = MSTestv2TestFrameworkMetadata.TypeName("Assert");
-        public static readonly TypeDefinitionName AssertTypeDefinition = AssertType.Definition;
-        public static readonly TypeName CollectionAssertType = MSTestv2TestFrameworkMetadata.TypeName("CollectionAssert");
-        public static readonly TypeDefinitionName CollectionAssertTypeDefinition = CollectionAssertType.Definition;
-
         internal static readonly ShortAssemblyName AssemblyName = ShortAssemblyName.FromName("Microsoft.VisualStudio.TestPlatform.TestFramework");
-
         internal static readonly string RootNamespace = "Microsoft.VisualStudio.TestTools.UnitTesting";
+
+        private static TypeName assertType;
+        private static TypeName collectionAssertType;
+
+        public static TypeDefinitionName AssertTypeDefinition
+        {
+            get
+            {
+                if (assertType == null)
+                {
+                    assertType = MSTestv2TestFrameworkMetadata.TypeName("Assert");
+                }
+
+                return assertType.Definition;
+            }
+        }
+
+        public static TypeDefinitionName CollectionAssertTypeDefinition
+        {
+            get
+            {
+                if (collectionAssertType == null)
+                {
+                    collectionAssertType = MSTestv2TestFrameworkMetadata.TypeName("CollectionAssert");
+                }
+
+                return collectionAssertType.Definition;
+            }
+        }
 
         public static TypeName AttributeName(string name)
         {
