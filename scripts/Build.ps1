@@ -292,8 +292,13 @@ function Create-NugetPackages
             $version = $TFB_AdapterVersion
         }
 
-        Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version=$version-$TFB_VersionSuffix -Properties Version=$version-$TFB_VersionSuffix"
-        & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version-$TFB_VersionSuffix -Properties Version=$version-$TFB_VersionSuffix`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR
+        if(![string]::IsNullOrEmpty($TFB_VersionSuffix))
+        {
+            $version = $version + "-" + $TFB_VersionSuffix
+        }
+
+        Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version=$version -Properties Version=$version"
+        & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR
     }
 
     Write-Log "Create-NugetPackages: Complete. {$(Get-ElapsedTime($timer))}"
