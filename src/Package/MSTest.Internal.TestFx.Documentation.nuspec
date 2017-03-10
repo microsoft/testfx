@@ -9,7 +9,6 @@
     <owners>Microsoft</owners>
     <summary>This is a private nuget package that contains the xml documentation files for MSTest V2 Framework.</summary>
     <description>This is a private nuget package that contains the xml documentation files for MSTest V2 Framework.</description>
-    <releaseNotes>This is a pre-release version of the MSTest V2 cross platform test framework.</releaseNotes>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
     <licenseUrl>http://www.microsoft.com/web/webpi/eula/net_library_eula_enu.htm</licenseUrl>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
