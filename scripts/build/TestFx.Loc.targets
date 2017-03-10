@@ -45,7 +45,7 @@
   
   <!-- Localization for documentation files. -->
   <Target Name="CopyLocalizedXmls" BeforeTargets="BeforeBuild" Condition="$(LocDocumentationSubPath) != ''">
-    <Exec Command="xcopy /Y /I /S /E $(TestFxPackagesRoot)MSTest.Internal.TestFx.Localized.Documentation\1.0.0-build-20170228-11\contentFiles\any\any\$(LocDocumentationSubPath) $(OutDir)" />
+    <Exec Command="xcopy /Y /I /S /E $(TestFxPackagesRoot)MSTest.Internal.TestFx.Localized.Documentation\1.0.0-build-20170310-7\contentFiles\any\any\$(LocDocumentationSubPath) $(OutDir)" />
   </Target>
 
   <!-- Localization for vsix files.-->
