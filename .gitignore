@@ -54,20 +54,6 @@ _ReSharper*/
 # DotCover is a Code Coverage Tool
 *.dotCover
 
-# NCrunch
-*.ncrunch*
-.*crunch*.local.xml
-
-# DocProject is a documentation generator add-in
-DocProject/buildhelp/
-DocProject/Help/*.HxT
-DocProject/Help/*.HxC
-DocProject/Help/*.hhc
-DocProject/Help/*.hhk
-DocProject/Help/*.hhp
-DocProject/Help/Html2
-DocProject/Help/html
-
 # Backup & report files from converting an old project file to a newer
 # Visual Studio version. Backup files are not needed, because we have git ;-)
 _UpgradeReport_Files/
@@ -100,11 +86,11 @@ ehthumbs.db
 packages
 artifacts
 Tools
+!Templates/**/packages
 
 # ===========================
 # Intermediate packages
 # ===========================
-*.nupkg
 *.zip
 
 # ===========================
