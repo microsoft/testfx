@@ -19,6 +19,22 @@ namespace UnitTestFramework.Tests
     [TestClass]
     public class AssertTests
     {
+        #region That tests
+
+        [TestMethod]
+        public void ThatShouldReturnAnInstanceOfAssert()
+        {
+            Assert.IsNotNull(TestFrameworkV2.Assert.That);
+        }
+
+        [TestMethod]
+        public void ThatShouldCacheAssertInstance()
+        {
+            Assert.AreEqual(TestFrameworkV2.Assert.That, TestFrameworkV2.Assert.That);
+        }
+
+        #endregion
+
         #region ThrowsException tests
 
         [TestMethod]

@@ -15,8 +15,36 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// with collections within unit tests. If the condition being tested is not
     /// met, an exception is thrown.
     /// </summary>
-    public static class CollectionAssert
+    public class CollectionAssert
     {
+        private static CollectionAssert that;
+
+        #region Singleton constructor
+
+        /// <summary>
+        /// Gets the singleton instance of the CollectionAssert functionality.
+        /// </summary>
+        /// <remarks>
+        /// Users can use this to plug-in custom assertions through C# extension methods.
+        /// For instance, the signature of a custom assertion provider could be "public static void AreEqualUnordered(this CollectionAssert cusomtAssert, ICollection expected, ICollection actual)"
+        /// Users could then use a synthax similar to the default assertions which in this case is "CollectionAssert.That.AreEqualUnordered(list1, list2);"
+        /// More documentation is at "https://github.com/Microsoft/testfx-docs".
+        /// </remarks>
+        public static CollectionAssert That
+        {
+            get
+            {
+                if (that == null)
+                {
+                    that = new CollectionAssert();
+                }
+
+                return that;
+            }
+        }
+
+        #endregion
+
         #region Membership
 
         /// <summary>
