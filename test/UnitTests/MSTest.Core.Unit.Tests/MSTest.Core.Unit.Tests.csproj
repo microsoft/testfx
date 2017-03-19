@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assertions\AssertTests.cs" />
+    <Compile Include="Attributes\DataRowAttributeTests.cs" />
     <Compile Include="Attributes\DataTestMethodAttributeTests.cs" />
     <Compile Include="Attributes\ExpectedExceptionAttributeTests.cs" />
     <Compile Include="Attributes\ExpectedExceptionBaseAttributeTests.cs" />
