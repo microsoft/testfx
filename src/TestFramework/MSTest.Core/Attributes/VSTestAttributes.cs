@@ -31,14 +31,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public class TestClassAttribute : Attribute
     {
         /// <summary>
-        /// The get test method attribute.
+        /// Gets a test method attribute that enables running this test.
         /// </summary>
-        /// <param name="testMethodAttribute">
-        /// The test method attribute.
-        /// </param>
-        /// <returns>
-        /// The <see cref="TestMethodAttribute"/>.
-        /// </returns>
+        /// <param name="testMethodAttribute">The test method attribute instance defined on this method.</param>
+        /// <returns>The <see cref="TestMethodAttribute"/> to be used to run this test.</returns>
+        /// <remarks>Extensions can override this method to customize how all methods in a class are run.</remarks>
         public virtual TestMethodAttribute GetTestMethodAttribute(TestMethodAttribute testMethodAttribute)
         {
             // If TestMethod is not extended by derived class then return back the original TestMethodAttribute
@@ -53,10 +50,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public class TestMethodAttribute : Attribute
     {
         /// <summary>
-        /// Extension point for UTF Extension to execute tests.
+        /// Executes a test method.
         /// </summary>
-        /// <param name="testMethod"> TestMethod for execution. </param>
-        /// <returns> Test Results </returns>
+        /// <param name="testMethod">The test method to execute.</param>
+        /// <returns>An array of TestResult objects that represent the outcome(s) of the test.</returns>
+        /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
         public virtual TestResult[] Execute(ITestMethod testMethod)
         {
             DataRowAttribute[] dataRows = testMethod.GetAttributes<DataRowAttribute>(false);

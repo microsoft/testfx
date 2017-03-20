@@ -32,9 +32,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         ParameterInfo[] ParameterTypes { get; }
 
         /// <summary>
-        /// Gets the methodInfo for test method. Should not be used to invoke test method.
-        /// Its just for any other info may needed by extension.
+        /// Gets the methodInfo for test method.
         /// </summary>
+        /// <remarks>
+        /// This is just to retrieve additional information about the method.
+        /// Do not directly invoke the method using MethodInfo. Use ITestMethod.Invoke instead.
+        /// </remarks>
         MethodInfo MethodInfo { get; }
 
         /// <summary>
