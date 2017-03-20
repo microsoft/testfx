@@ -118,12 +118,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
             // Make sure only expected number of tests passed and not more.
             Assert.AreEqual(passedTests.Length, this.runEventsHandler.PassedTests.Count);
 
-            foreach (var test in passedTests)
-            {
-                var testFound = this.runEventsHandler.PassedTests.Where(p => p.TestCase.FullyQualifiedName.Equals(test) ||
-                           p.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
-                Assert.IsNotNull(testFound, "Test {0} does not appear in passed tests list.", test);
-            }
+            this.ValidatePassedTestsContain(passedTests);
         }
 
         /// <summary>
@@ -140,6 +135,48 @@ namespace Microsoft.MSTestV2.CLIAutomation
             // Make sure only expected number of tests failed and not more.
             Assert.AreEqual(failedTests.Length, this.runEventsHandler.FailedTests.Count);
 
+            this.ValidateFailedTestsContain(source, failedTests);
+        }
+
+        /// <summary>
+        /// Validates if the test results have the specified set of skipped tests.
+        /// </summary>
+        /// <param name="skippedTests">The set of skipped tests.</param>
+        /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodSkipped.</remarks>
+        public void ValidateSkippedTests(params string[] skippedTests)
+        {
+            // Make sure only expected number of tests skipped and not more.
+            Assert.AreEqual(skippedTests.Length, this.runEventsHandler.SkippedTests.Count);
+
+            this.ValidateSkippedTestsContain(skippedTests);
+        }
+
+        /// <summary>
+        /// Validates if the test results contains the specified set of passed tests.
+        /// </summary>
+        /// <param name="passedTests">Set of passed tests.</param>
+        /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodPass.</remarks>
+        public void ValidatePassedTestsContain(params string[] passedTests)
+        {
+            foreach (var test in passedTests)
+            {
+                var testFound = this.runEventsHandler.PassedTests.Where(p => p.TestCase.FullyQualifiedName.Equals(test) ||
+                           p.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
+                Assert.IsNotNull(testFound, "Test {0} does not appear in passed tests list.", test);
+            }
+        }
+
+        /// <summary>
+        /// Validates if the test results contains the specified set of failed tests.
+        /// </summary>
+        /// <param name="source">The test container.</param>
+        /// <param name="failedTests">Set of failed tests.</param>
+        /// <remarks>
+        /// Provide the full test name similar to this format SampleTest.TestCode.TestMethodFailed.
+        /// Also validates whether these tests have stack trace info.
+        /// </remarks>
+        public void ValidateFailedTestsContain(string source, params string[] failedTests)
+        {
             foreach (var test in failedTests)
             {
                 var testFound = this.runEventsHandler.FailedTests.Where(f => f.TestCase.FullyQualifiedName.Equals(test) ||
@@ -156,15 +193,12 @@ namespace Microsoft.MSTestV2.CLIAutomation
         }
 
         /// <summary>
-        /// Validates if the test results have the specified set of skipped tests.
+        /// Validates if the test results contains the specified set of skipped tests.
         /// </summary>
         /// <param name="skippedTests">The set of skipped tests.</param>
         /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodSkipped.</remarks>
-        public void ValidateSkippedTests(params string[] skippedTests)
+        public void ValidateSkippedTestsContain(params string[] skippedTests)
         {
-            // Make sure only expected number of tests skipped and not more.
-            Assert.AreEqual(skippedTests.Length, this.runEventsHandler.SkippedTests.Count);
-
             foreach (var test in skippedTests)
             {
                 var testFound = this.runEventsHandler.SkippedTests.Where(s => s.TestCase.FullyQualifiedName.Equals(test) ||
