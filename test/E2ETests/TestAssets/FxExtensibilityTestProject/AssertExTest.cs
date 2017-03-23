@@ -1,0 +1,39 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace FxExtensibilityTestProject
+{
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using MSTest.Extensibility.Samples;
+    using System;
+
+    [TestClass]
+    public class AssertExTest
+    {
+        [TestMethod]
+        public void BasicAssertExtensionTest()
+        {
+            Assert.That.IsOfType<ArgumentException>(new ArgumentOutOfRangeException());
+        }
+
+        [TestMethod]
+        public void BasicFailingAssertExtensionTest()
+        {
+            Assert.That.IsOfType<FormatException>(new ArgumentNullException());
+        }
+
+        [TestMethod]
+        public void ChainedAssertExtensionTest()
+        {
+            Assert.That.Is().Divisor(120, 5);
+        }
+
+        [TestMethod]
+        public void ChainedFailingAssertExtensionTest()
+        {
+            Assert.That.Is().Positive(-10);
+        }
+    }
+
+
+}
