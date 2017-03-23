@@ -60,6 +60,8 @@
     <Compile Include="Deployment\TestRunDirectories.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Friends.cs" />
+    <Compile Include="Utilities\AppDomainWrapper.cs" />
+    <Compile Include="Utilities\IAppDomain.cs" />
     <Compile Include="Utilities\SequentialIntPermutation.cs" />
     <Compile Include="Resources\Resource.Designer.cs">
       <AutoGen>True</AutoGen>

@@ -145,12 +145,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <param name="runSettings">
         /// The run Settings for the session.
         /// </param>
+        /// <param name="frameworkHandle">
+        /// The handle to the the test platform.
+        /// </param>
         /// <returns>
         /// Returns the host for the source provided.
         /// </returns>
-        public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings)
+        public ITestSourceHost CreateTestSourceHost(
+            string source,
+            TestPlatform.ObjectModel.Adapter.IRunSettings runSettings,
+            TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle)
         {
-            return new TestSourceHost(source, runSettings);
+            return new TestSourceHost(source, runSettings, frameworkHandle);
         }
 
         /// <summary>

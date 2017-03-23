@@ -35,7 +35,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         [TestMethod]
         public void CheckResolutionPathsDoNotContainPrivateAssembliesPathTest()
         {
-            TestSourceHost isolatedHost = new TestSourceHost(null, null);
+            TestSourceHost isolatedHost = new TestSourceHost(null, null, null);
             List<string> paths = isolatedHost.GetResolutionPaths(Assembly.GetExecutingAssembly().FullName, true);
             Assert.IsFalse(paths.Contains(Constants.PublicAssemblies) || paths.Contains(Constants.PrivateAssemblies));
         }

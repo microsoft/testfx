@@ -10,9 +10,11 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
     using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
+    using System.Security.Policy;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
     using Moq;
 
@@ -27,7 +29,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void GetResolutionPathsShouldAddPublicAndPrivateAssemblyPath()
         {
             // Setup
-            TestSourceHost sut = new TestSourceHost(null, null);
+            TestSourceHost sut = new TestSourceHost(null, null, null);
 
             // Execute
             // It should return public and private path if it is not running in portable mode.
@@ -42,7 +44,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void GetResolutionPathsShouldNotAddPublicAndPrivateAssemblyPathInPortableMode()
         {
             // Setup
-            TestSourceHost sut = new TestSourceHost(null, null);
+            TestSourceHost sut = new TestSourceHost(null, null, null);
 
             // Execute
             // It should not return public and private path if it is running in portable mode.
@@ -60,7 +62,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             DummyClass dummyclass = new DummyClass();
             int currentAppDomainId = dummyclass.AppDomainId;
 
-            TestSourceHost sut = new TestSourceHost(Assembly.GetExecutingAssembly().Location, null);
+            TestSourceHost sut = new TestSourceHost(Assembly.GetExecutingAssembly().Location, null, null);
 
             // Execute
             var expectedObject = sut.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
@@ -129,6 +131,25 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             {
                 sourceHost.Object.Dispose();
             }
+        }
+
+        [TestMethod]
+        public void DisposeShouldSetTestHostShutdownOnIssueWithAppDomainUnload()
+        {
+            // Arrange
+            var frameworkHandle = new Mock<IFrameworkHandle>();
+            var testableAppDomain = new Mock<IAppDomain>();
+
+            testableAppDomain.Setup(ad => ad.CreateDomain(It.IsAny<string>(), It.IsAny<Evidence>(), It.IsAny<AppDomainSetup>())).Returns(AppDomain.CurrentDomain);
+            testableAppDomain.Setup(ad => ad.Unload(It.IsAny<AppDomain>())).Throws(new CannotUnloadAppDomainException());
+            var sourceHost = new TestSourceHost(typeof(DesktopTestSourceHostTests).Assembly.Location, null, frameworkHandle.Object, testableAppDomain.Object);
+
+            // Act
+            sourceHost.CreateInstanceForType(typeof(DesktopTestSourceHostTests), null);
+            sourceHost.Dispose();
+
+            // Assert
+            frameworkHandle.VerifySet(fh => fh.EnableShutdownAfterTestRun = true);
         }
     }
 
