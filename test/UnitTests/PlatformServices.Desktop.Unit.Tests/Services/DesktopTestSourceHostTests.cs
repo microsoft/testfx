@@ -89,7 +89,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             DummyClass dummyclass = new DummyClass();
 
             var location = typeof(DesktopTestSourceHostTests).Assembly.Location;
-            var sourceHost = new Mock<TestSourceHost>(location, null) { CallBase = true };
+            var sourceHost = new Mock<TestSourceHost>(location, null, null) { CallBase = true };
             try
             {
                 sourceHost.Setup(tsh => tsh.GetTargetFrameworkVersionString(location))
@@ -115,7 +115,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             DummyClass dummyclass = new DummyClass();
 
             var location = typeof(TestSourceHost).Assembly.Location;
-            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, null) { CallBase = true };
+            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, null, null) { CallBase = true };
 
             try
             {
