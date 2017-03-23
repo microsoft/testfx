@@ -4,11 +4,9 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Reflection;
-    using System.Text;
     using System.Threading.Tasks;
 
     /// <summary>
@@ -16,8 +14,36 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// unit tests. If the condition being tested is not met, an exception
     /// is thrown.
     /// </summary>
-    public static partial class Assert
+    public class Assert
     {
+        private static Assert that;
+
+        #region Singleton constructor
+
+        /// <summary>
+        /// Gets the singleton instance of the Assert functionality.
+        /// </summary>
+        /// <remarks>
+        /// Users can use this to plug-in custom assertions through C# extension methods.
+        /// For instance, the signature of a custom assertion provider could be "public static void IsOfType&lt;T&gt;(this Assert assert, object obj)"
+        /// Users could then use a syntax similar to the default assertions which in this case is "Assert.That.IsOfType&lt;Dog&gt;(animal);"
+        /// More documentation is at "https://github.com/Microsoft/testfx-docs".
+        /// </remarks>
+        public static Assert That
+        {
+            get
+            {
+               if (that == null)
+               {
+                   that = new Assert();
+               }
+
+                return that;
+            }
+        }
+
+        #endregion
+
         #region Boolean
 
         /// <summary>
