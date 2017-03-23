@@ -146,7 +146,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Returns a GenericParameterHelper object that is equal to
-        /// 'this' one.
+        /// the current object.
         /// </summary>
         /// <returns>The cloned object.</returns>
         public object Clone()
