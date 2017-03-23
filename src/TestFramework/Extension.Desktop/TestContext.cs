@@ -17,7 +17,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public abstract class TestContext
     {
         /// <summary>
-        /// Gets per test properties
+        /// Gets test properties for a test.
         /// </summary>
         public abstract IDictionary Properties { get; }
 
