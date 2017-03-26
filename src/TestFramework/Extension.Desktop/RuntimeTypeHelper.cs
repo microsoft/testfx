@@ -42,7 +42,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Gets the hierarchy depty from the base type of the provided type.
+        /// Gets the hierarchy depth from the base type of the provided type.
         /// </summary>
         /// <param name="t">The type.</param>
         /// <returns>The depth.</returns>
