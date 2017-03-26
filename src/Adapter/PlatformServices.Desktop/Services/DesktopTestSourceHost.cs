@@ -228,6 +228,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 }
                 catch (Exception exception)
                 {
+                    // This happens usually when a test spawns off a thread and fails to clean it up.
                     if (EqtTrace.IsErrorEnabled)
                     {
                         EqtTrace.Error("The app domain running tests could not be unloaded. Exception: {0}", exception);
