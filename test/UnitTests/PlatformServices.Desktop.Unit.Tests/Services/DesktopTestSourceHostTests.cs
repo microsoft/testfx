@@ -143,9 +143,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             testableAppDomain.Setup(ad => ad.CreateDomain(It.IsAny<string>(), It.IsAny<Evidence>(), It.IsAny<AppDomainSetup>())).Returns(AppDomain.CurrentDomain);
             testableAppDomain.Setup(ad => ad.Unload(It.IsAny<AppDomain>())).Throws(new CannotUnloadAppDomainException());
             var sourceHost = new TestSourceHost(typeof(DesktopTestSourceHostTests).Assembly.Location, null, frameworkHandle.Object, testableAppDomain.Object);
+            sourceHost.CreateInstanceForType(typeof(DesktopTestSourceHostTests), null);
 
             // Act
-            sourceHost.CreateInstanceForType(typeof(DesktopTestSourceHostTests), null);
             sourceHost.Dispose();
 
             // Assert

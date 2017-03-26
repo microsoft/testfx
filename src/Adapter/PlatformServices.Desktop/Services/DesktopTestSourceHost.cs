@@ -226,7 +226,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 {
                     this.appDomain.Unload(this.domain);
                 }
-                catch (CannotUnloadAppDomainException exception)
+                catch (Exception exception)
                 {
                     if (EqtTrace.IsErrorEnabled)
                     {
