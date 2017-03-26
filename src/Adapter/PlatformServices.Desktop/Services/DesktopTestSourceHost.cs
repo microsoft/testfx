@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// AppDomain used to discover tests
         /// </summary>
-        private AppDomain appDomain;
+        private AppDomain domain;
 
         /// <summary>
         /// Assembly resolver used in the app-domain
@@ -34,18 +34,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         private string sourceFileName;
         private IRunSettings runSettings;
+        private IFrameworkHandle frameworkHandle;
 
         private string currentDirectory = null;
+        private IAppDomain appDomain;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TestSourceHost"/> class.
         /// </summary>
         /// <param name="sourceFileName"> The source file name. </param>
         /// <param name="runSettings"> The run-settings provided for this session. </param>
-        public TestSourceHost(string sourceFileName, IRunSettings runSettings)
+        /// <param name="frameworkHandle"> The handle to the test platform. </param>
+        public TestSourceHost(string sourceFileName, IRunSettings runSettings, IFrameworkHandle frameworkHandle)
+            : this(sourceFileName, runSettings, frameworkHandle, new AppDomainWrapper())
+        {
+        }
+
+        internal TestSourceHost(string sourceFileName, IRunSettings runSettings, IFrameworkHandle frameworkHandle, IAppDomain appDomain)
         {
             this.sourceFileName = sourceFileName;
             this.runSettings = runSettings;
+            this.frameworkHandle = frameworkHandle;
+
+            this.appDomain = appDomain;
 
             // Set the environment context.
             this.SetContext(sourceFileName);
@@ -140,11 +151,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             var configFile = this.GetConfigFileForTestSource(this.sourceFileName);
             AppDomainUtilities.SetConfigurationFile(appDomainSetup, configFile);
 
-            this.appDomain = AppDomain.CreateDomain("TestSourceHost: Enumering assembly", null, appDomainSetup);
+            this.domain = this.appDomain.CreateDomain("TestSourceHost: Enumering assembly", null, appDomainSetup);
 
             // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recurive assembly resolution
             // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
-            EqtTrace.SetupRemoteEqtTraceListeners(this.appDomain);
+            EqtTrace.SetupRemoteEqtTraceListeners(this.domain);
 
             // Add an assembly resolver...
             Type assemblyResolverType = typeof(AssemblyResolver);
@@ -155,7 +166,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             var resolver = AppDomainUtilities.CreateInstance(
-                this.appDomain,
+                this.domain,
                 assemblyResolverType,
                 new object[] { resolutionPaths });
 
@@ -191,7 +202,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             var enumerator = AppDomainUtilities.CreateInstance(
-                this.appDomain,
+                this.domain,
                 type,
                 args);
 
@@ -209,10 +220,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 this.assemblyResolver = null;
             }
 
-            if (this.appDomain != null)
+            if (this.domain != null)
             {
-                AppDomain.Unload(this.appDomain);
-                this.appDomain = null;
+                try
+                {
+                    this.appDomain.Unload(this.domain);
+                }
+                catch (Exception exception)
+                {
+                    // This happens usually when a test spawns off a thread and fails to clean it up.
+                    if (EqtTrace.IsErrorEnabled)
+                    {
+                        EqtTrace.Error("The app domain running tests could not be unloaded. Exception: {0}", exception);
+                    }
+
+                    if (this.frameworkHandle != null)
+                    {
+                        // Let the test platform know that it should tear down the test host process
+                        // since we we have issues in unloading appdomain. We do so to avoid any assembly locking issues.
+                        this.frameworkHandle.EnableShutdownAfterTestRun = true;
+
+                        if (EqtTrace.IsVerboseEnabled)
+                        {
+                            EqtTrace.Verbose("Notifying the test platform that the test host process should be shut down because the app domain running tests could not be unloaded successfully.");
+                        }
+                    }
+                }
+
+                this.domain = null;
             }
 
             this.ResetContext();

@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
         [TestInitialize]
         public void TestInit()
         {
-            this.testSourceHost = new TestSourceHost(null, null);
+            this.testSourceHost = new TestSourceHost(null, null, null);
         }
 
         /// <summary>

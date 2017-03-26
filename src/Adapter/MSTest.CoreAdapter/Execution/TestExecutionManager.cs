@@ -188,10 +188,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="tests">Tests to execute.</param>
         /// <param name="runContext">The run context.</param>
-        /// <param name="testExecutionRecorder">Handle to record test start/end/results.</param>
+        /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
         /// <param name="source">The test container for the tests.</param>
         /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-        private void ExecuteTestsInSource(IEnumerable<TestCase> tests, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, string source, bool isDeploymentDone)
+        private void ExecuteTestsInSource(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
         {
             Debug.Assert(!string.IsNullOrEmpty(source), "Source cannot be empty");
 
@@ -200,14 +200,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                              PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory(),
                              Path.GetFileName(source)) : source;
 
-            using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings))
+            using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle))
             {
                 var testRunner = isolationHost.CreateInstanceForType(
                     typeof(UnitTestRunner),
                     new object[] { MSTestSettings.CurrentSettings.CaptureDebugTraces }) as UnitTestRunner;
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
-                this.ExecuteTestsWithTestRunner(tests, runContext, testExecutionRecorder, source, testRunner);
+                this.ExecuteTestsWithTestRunner(tests, runContext, frameworkHandle, source, testRunner);
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                     "Executed tests belonging to source {0}",

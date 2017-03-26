@@ -20,7 +20,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests
         [TestInitialize]
         public void TestInit()
         {
-            this.testSourceHost = new TestSourceHost(null, null);
+            this.testSourceHost = new TestSourceHost(null, null, null);
         }
 
         [TestMethod]

@@ -133,7 +133,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
             return new TestContextImplementation(testMethod, writer, properties);
         }
 
-        public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings)
+        public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle)
         {
             return this.MockTestSourceHost.Object;
         }

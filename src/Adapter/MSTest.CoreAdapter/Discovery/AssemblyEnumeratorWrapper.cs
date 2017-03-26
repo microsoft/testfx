@@ -136,7 +136,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
         private ICollection<UnitTestElement> GetTestsInIsolation(string fullFilePath, IRunSettings runSettings, out ICollection<string> warnings)
         {
-            using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings))
+            using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null))
             {
                 var assemblyEnumerator =
                     isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), null) as AssemblyEnumerator;

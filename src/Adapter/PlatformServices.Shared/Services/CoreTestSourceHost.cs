@@ -20,7 +20,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="sourceFileName"> The source file name. </param>
         /// <param name="runSettings"> The run-settings provided for this session. </param>
-        public TestSourceHost(string sourceFileName, IRunSettings runSettings)
+        /// <param name="frameworkHandle"> The handle to the test platform. </param>
+        public TestSourceHost(string sourceFileName, IRunSettings runSettings, IFrameworkHandle frameworkHandle)
         {
         }
 
