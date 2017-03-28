@@ -15,6 +15,7 @@ This is a fully supported, open source and cross-platform implementation of the 
 |            | Framework | Adapter |
 |:----------:|:----------------:|:------------------:|
 |**nuget** <br> (official)  |[![#](https://img.shields.io/nuget/v/mstest.testframework.svg?style=flat)](http://www.nuget.org/packages/MSTest.TestFramework/)|[![#](https://img.shields.io/nuget/v/mstest.testadapter.svg?style=flat)](http://www.nuget.org/packages/MSTest.TestAdapter/)|
+|**myget** <br> (daily)  |[![#](https://img.shields.io/dotnet.myget/mstestv2/vpre/MSTest.TestFramework.svg?style=flat)](https://dotnet.myget.org/feed/mstestv2/package/nuget/MSTest.TestFramework)|[![#](https://img.shields.io/dotnet.myget/mstestv2/vpre/MSTest.TestAdapter.svg)](https://dotnet.myget.org/feed/mstestv2/package/nuget/MSTest.TestAdapter)|
 
 ### Contributing
 There are many ways to contribute to testfx
