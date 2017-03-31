@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="mstestUniversalProjectTemplate" Version="15.0.26113.00" Language="en-US" Publisher="Microsoft" />
+    <Identity Id="mstestUniversalProjectTemplate" Version="15.0.26120.00" Language="en-US" Publisher="Microsoft" />
     <DisplayName>MSTest V2 Templates (Universal Windows)</DisplayName>
     <Description xml:space="preserve">Provides Visual Studio project template for MSTest V2 (For UWP applications).</Description>
     <License>UniversalTemplateLicense.rtf</License>
