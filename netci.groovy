@@ -28,7 +28,7 @@ def branch = GithubBranchName
             }
         }
 
-        Utilities.setMachineAffinity(newJob, 'Windows_NT', 'latest-or-auto-dev15-internal')       
+        Utilities.setMachineAffinity(newJob, 'Windows_NT', 'latest-or-auto-dev15')       
 
         // This call performs remaining common job setup on the newly created job.
         Utilities.standardJobSetup(newJob, project, isPR, "*/${branch}")
