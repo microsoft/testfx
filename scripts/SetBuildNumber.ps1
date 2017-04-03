@@ -12,7 +12,7 @@ function Set_BuildNumber()
     $monthDiff = ($currentDate.Month - $TFB_FirstReleaseDate.Month) + 12*($currentDate.Year - $TFB_FirstReleaseDate.Year)
     $buildNumber = $monthDiff.ToString() + $currentDate.ToString("dd") + $RevisionNumber
     Write-Verbose("Build number used: " + $buildNumber)
-    Wrte-Host("##vso[build.updatebuildnumber]$buildNumber")
+    Write-Host("##vso[build.updatebuildnumber]$buildNumber")
 }
 
 Set_BuildNumber
