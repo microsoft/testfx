@@ -294,7 +294,8 @@ function Create-NugetPackages
 
         if(![string]::IsNullOrEmpty($TFB_VersionSuffix))
         {
-            $version = $version + "-" + $TFB_VersionSuffix
+			$versionSuffix = $TFB_VersionSuffix -replace ".","-"
+            $version = $version + "-" + $versionSuffix
         }
 
         Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version=$version -Properties Version=$version"
