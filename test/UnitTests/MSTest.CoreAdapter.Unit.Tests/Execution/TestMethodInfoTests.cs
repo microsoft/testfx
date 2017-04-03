@@ -20,6 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Moq;
+
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
@@ -702,6 +703,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void TestMethodInfoInvokeShouldSetTestOutcomeBeforeTestCleanup()
+        {
+            UTF.UnitTestOutcome testOutcome = UTF.UnitTestOutcome.Unknown;
+            DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
+            DummyTestClass.TestCleanupMethodBody = c =>
+                        {
+                            if (DummyTestClass.GetTestContext() != null)
+                            {
+                                testOutcome = DummyTestClass.GetTestContext().CurrentTestOutcome;
+                            }
+                        };
+            this.testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute, this.expectedException, this.testClassInfo, this.testContextImplementation);
+
+            var result = testMethodInfo.Invoke(null);
+
+            Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, testOutcome);
+        }
+
+        [TestMethodV1]
         public void HandleMethodExceptionShouldInvokeVerifyOfCustomExpectedException()
         {
             CustomExpectedExceptionAttribute customExpectedException = new CustomExpectedExceptionAttribute(typeof(DivideByZeroException), "Attempted to divide by zero");
@@ -982,6 +1003,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         public class DummyTestClass : DummyTestClassBase
         {
+            private static UTFExtension.TestContext tc;
+
             public DummyTestClass()
             {
                 TestConstructorMethodBody();
@@ -999,6 +1022,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             public static Func<Task> DummyAsyncTestMethodBody { get; set; }
 
+            public static UTFExtension.TestContext GetTestContext()
+            {
+                return tc;
+            }
+
             public UTFExtension.TestContext TestContext
             {
                 get
@@ -1009,6 +1037,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 set
                 {
                     TestContextSetterBody(value);
+                    tc = value;
                 }
             }
 

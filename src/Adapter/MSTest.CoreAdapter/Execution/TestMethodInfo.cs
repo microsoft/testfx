@@ -259,6 +259,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 testRunnerException = exception;
             }
 
+            // Set the current tests outcome before cleanup so it can be used in the cleanup logic.
+            this.testContext.SetOutcome(result.Outcome);
+
             // TestCleanup can potentially be a long running operation which should'nt ideally be in a finally block.
             // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block
             // does not allow a threadabort exception to be raised within the block but throws one after finally is executed
