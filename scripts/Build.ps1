@@ -294,7 +294,7 @@ function Create-NugetPackages
 
         if(![string]::IsNullOrEmpty($TFB_VersionSuffix))
         {
-			$versionSuffix = $TFB_VersionSuffix -replace ".","-"
+			$versionSuffix = $TFB_VersionSuffix -replace "\.","-"
             $version = $version + "-" + $versionSuffix
         }
 
