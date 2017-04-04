@@ -22,14 +22,14 @@ function Set_BuildNumber()
 {
     $currentDate = [System.DateTime]::UTCNow
     
-	# The default build number would be of the format $(date:yyyymmdd)$(rev:.rr)
+    # The default build number would be of the format $(date:yyyymmdd)$(rev:.rr)
     $revisionNumber = $TFB_DefinitionBuildNumber.Split(".")[1]
     
-	$monthDiff = ($currentDate.Month - $TFB_FirstReleaseDate.Month) + 12*($currentDate.Year - $TFB_FirstReleaseDate.Year)
+    $monthDiff = ($currentDate.Month - $TFB_FirstReleaseDate.Month) + 12*($currentDate.Year - $TFB_FirstReleaseDate.Year)
     $buildNumber = $monthDiff.ToString() + $currentDate.ToString("dd") + "." + $revisionNumber
     Write-Verbose("Build number used: " + $buildNumber)
-	
-	# This sets the build number.
+    
+    # This sets the build number.
     Write-Host("##vso[build.updatebuildnumber]$buildNumber")
 }
 
