@@ -83,10 +83,10 @@
 
   <!-- Generate AssemblyInfo.cs -->
   <PropertyGroup>
-    <BuildNumber Condition=" '$(BuildNumber)' == '' ">0.1</BuildNumber>
+    <TFBuildNumber Condition=" '$(TFBuildNumber)' == '' ">0.1</TFBuildNumber>
     <MajorVersion>14.0</MajorVersion>
     <AssemblyVersion>$(MajorVersion).0.0</AssemblyVersion>
-    <BuildVersion>$(MajorVersion).$(BuildNumber)</BuildVersion>
+    <BuildVersion>$(MajorVersion).$(TFBuildNumber)</BuildVersion>
   </PropertyGroup>
   <ItemGroup>
     <AssemblyVersionAttribute Include="System.Reflection.AssemblyVersionAttribute">
