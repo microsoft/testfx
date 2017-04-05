@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+  </PropertyGroup>
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <PropertyGroup>
+    <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.3' ">$(PackageTargetFallback);portable-net45+win8+wpa81+wp8</PackageTargetFallback>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Constants.cs" Link="Constants.cs" />
+    <!--<Compile Include="..\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs" Link="MarshalByRefObject.cs" />-->
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs" Link="SerializableAttribute.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\FileOperations.cs" Link="Services\FileOperations.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ReflectionOperations.cs" Link="Services\ReflectionOperations.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\SettingsProvider.cs" Link="Services\SettingsProvider.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestContextImplementation.cs" Link="Services\TestContextImplementation.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestDataSource.cs" Link="Services\TestDataSource.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestDeployment.cs" Link="Services\TestDeployment.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestSource.cs" Link="Services\TestSource.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestSourceHost.cs" Link="Services\TestSourceHost.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ThreadOperations.cs" Link="Services\ThreadOperations.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TraceLogger.cs" Link="Services\TraceLogger.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\TraceListener.cs" Link="Services\TraceListener.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\TraceListenerManager.cs" Link="Services\TraceListenerManager.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="11.0.0" />
+    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PlatformServices.Interface\PlatformServices.Interface.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
+  <!--<Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />-->
+</Project>

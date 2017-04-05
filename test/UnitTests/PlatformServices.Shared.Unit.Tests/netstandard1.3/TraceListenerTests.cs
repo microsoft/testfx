@@ -15,7 +15,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
-    public class DesktopTraceListenerTests
+    public class TraceListenerTests
     {
         [TestMethod]
         public void GetWriterShouldReturnInitialisedWriter()

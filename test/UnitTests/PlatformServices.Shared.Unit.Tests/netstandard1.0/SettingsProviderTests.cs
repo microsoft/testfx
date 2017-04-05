@@ -12,7 +12,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
-    public class PortableSettingsProviderTests
+    public class SettingsProviderTests
     {
         [TestMethod]
         public void GetPropertiesShouldReturnEmptyDictionary()

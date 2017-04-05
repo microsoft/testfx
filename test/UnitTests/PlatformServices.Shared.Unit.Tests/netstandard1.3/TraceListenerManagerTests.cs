@@ -16,7 +16,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
-    public class DesktopTraceListenerManagerTests
+    public class TraceListenerManagerTests
     {
         [TestMethod]
         public void AddShouldAddTraceListenerToListOfTraceListeners()
@@ -50,22 +50,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             Assert.AreEqual(originalCount + 1, countAfterAdding);
             Assert.AreEqual(countAfterAdding - 1, countAfterRemoving);
             Assert.IsFalse(Trace.Listeners.Contains(traceListener));
-        }
-
-        [TestMethod]
-        public void CloseShouldCallCloseOnCorrespondingTraceListener()
-        {
-            var stringWriter = new StringWriter();
-            var traceListenerManager = new TraceListenerManager(stringWriter, stringWriter);
-
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
-            var traceListener = new TraceListenerWrapper(writer);
-            traceListenerManager.Add(traceListener);
-            traceListenerManager.Close(traceListener);
-
-            // Tring to write after closing textWriter should throw exception
-            Action shouldThrowException = () => writer.WriteLine("Try to write something");
-            ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
         }
 
         [TestMethod]

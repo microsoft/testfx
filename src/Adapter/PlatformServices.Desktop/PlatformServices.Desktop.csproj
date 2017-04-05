@@ -68,6 +68,12 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\TraceListener.cs">
+      <Link>Services\TraceListener.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\TraceListenerManager.cs">
+      <Link>Services\TraceListenerManager.cs</Link>
+    </Compile>
     <Compile Include="Services\DesktopAdapterTraceLogger.cs" />
     <Compile Include="Services\DesktopReflectionOperations.cs" />
     <Compile Include="Services\DesktopThreadOperations.cs" />
@@ -80,8 +86,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecursiveDirectoryPath.cs" />
     <Compile Include="Services\DesktopTestContextImplementation.cs" />
-    <Compile Include="Services\DesktopTraceListener.cs" />
-    <Compile Include="Services\DesktopTraceListenerManager.cs" />
     <Compile Include="Utilities\AppDomainUtilities.cs" />
     <Compile Include="Utilities\AssemblyUtility.cs" />
     <Compile Include="Utilities\DeploymentItemUtility.cs" />

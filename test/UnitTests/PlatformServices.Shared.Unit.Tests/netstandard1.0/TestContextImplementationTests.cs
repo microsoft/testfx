@@ -22,7 +22,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
     using UnitTestOutcome = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
     [TestClass]
-    public class PortableTestContextImplementationTests
+    public class TestContextImplementationTests
     {
         private Mock<ITestMethod> testMethod;
 

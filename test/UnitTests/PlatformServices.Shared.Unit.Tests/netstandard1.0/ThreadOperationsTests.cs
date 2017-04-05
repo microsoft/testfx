@@ -16,11 +16,11 @@ namespace MSTestAdapter.PlatformServices.CoreSystem.Tests
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
-    public class CoreThreadOperationsTests
+    public class ThreadOperationsTests
     {
         private ThreadOperations asyncOperations;
 
-        public CoreThreadOperationsTests()
+        public ThreadOperationsTests()
         {
             this.asyncOperations = new ThreadOperations();
         }

@@ -31,12 +31,53 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Constants.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Constants.cs">
+      <Link>Constants.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs">
+      <Link>MarshalByRefObject.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs">
+      <Link>SerializableAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\FileOperations.cs">
+      <Link>Services\FileOperations.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ReflectionOperations.cs">
+      <Link>Services\ReflectionOperations.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\SettingsProvider.cs">
+      <Link>Services\SettingsProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestContextImplementation.cs">
+      <Link>Services\TestContextImplementation.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestDataSource.cs">
+      <Link>Services\TestDataSource.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestDeployment.cs">
+      <Link>Services\TestDeployment.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestSource.cs">
+      <Link>Services\TestSource.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestSourceHost.cs">
+      <Link>Services\TestSourceHost.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ThreadOperations.cs">
+      <Link>Services\ThreadOperations.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TraceListener.cs">
+      <Link>Services\TraceListener.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TraceListenerManager.cs">
+      <Link>Services\TraceListenerManager.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TraceLogger.cs">
+      <Link>Services\TraceLogger.cs</Link>
+    </Compile>
     <Compile Include="Friends.cs" />
-    <Compile Include="Services\PortableFileOperations.cs" />
-    <Compile Include="Services\PortableTestSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\PortableTraceLogger.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj">
@@ -64,6 +105,5 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <Import Project="..\PlatformServices.Shared\PlatformServices.Shared.projitems" Label="Shared" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

@@ -13,7 +13,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
-    public class PortableTestSourceHostTests
+    public class TestSourceHostTests
     {
         private TestSourceHost testSourceHost;
 

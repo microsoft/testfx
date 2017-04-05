@@ -16,7 +16,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
-    public class PortableFileOperationsTests
+    public class FileOperationsTests
     {
         private FileOperations fileOperations;
 
@@ -125,7 +125,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                 string fileName;
                 this.fileOperations.GetNavigationData(
                     diaSession,
-                    typeof(PortableFileOperationsTests).FullName,
+                    typeof(FileOperationsTests).FullName,
                     "GetNavigationDataShouldReturnDataFromNavigationSession",
                     out minLineNumber,
                     out fileName);
@@ -149,7 +149,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
             string fileName;
             this.fileOperations.GetNavigationData(
                 null,
-                typeof(PortableFileOperationsTests).FullName,
+                typeof(FileOperationsTests).FullName,
                 "GetNavigationDataShouldReturnDataFromNavigationSession",
                 out minLineNumber,
                 out fileName);
@@ -174,7 +174,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                 string fileName;
                 this.fileOperations.GetNavigationData(
                     diaSession,
-                    typeof(PortableFileOperationsTests).FullName,
+                    typeof(FileOperationsTests).FullName,
                     "GetNavigationDataShouldReturnDataFromNavigationSession",
                     out minLineNumber,
                     out fileName);
@@ -204,7 +204,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                 string fileName;
                 this.fileOperations.GetNavigationData(
                     diaSession,
-                    typeof(PortableFileOperationsTests).FullName,
+                    typeof(FileOperationsTests).FullName,
                     "GetNavigationDataShouldReturnDataFromNavigationSession",
                     out minLineNumber,
                     out fileName);

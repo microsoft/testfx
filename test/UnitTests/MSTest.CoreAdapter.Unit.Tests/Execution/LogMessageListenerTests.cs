@@ -106,14 +106,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
-        public void DisposeShouldCloseTraceListener()
-        {
-            var logMessageListener = new LogMessageListener(true);
-            logMessageListener.Dispose();
-            this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Close(this.testablePlatformServiceProvider.MockTraceListener.Object), Times.Once);
-        }
-
-        [TestMethod]
         public void DisposeShouldDisposeTraceListener()
         {
             var logMessageListener = new LogMessageListener(true);

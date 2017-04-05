@@ -17,11 +17,11 @@ namespace MSTestAdapter.PlatformServices.CoreSystem.Tests
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
     [TestClass]
-    public class CoreReflectionOperationsTests
+    public class ReflectionOperationsTests
     {
         private ReflectionOperations reflectionOperations;
 
-        public CoreReflectionOperationsTests()
+        public ReflectionOperationsTests()
         {
             this.reflectionOperations = new ReflectionOperations();
         }
