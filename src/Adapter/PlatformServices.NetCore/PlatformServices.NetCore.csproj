@@ -11,21 +11,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Constants.cs" Link="Constants.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\ns10Constants.cs" Link="ns10Constants.cs" />
     <!--<Compile Include="..\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs" Link="MarshalByRefObject.cs" />-->
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs" Link="SerializableAttribute.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\FileOperations.cs" Link="Services\FileOperations.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ReflectionOperations.cs" Link="Services\ReflectionOperations.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\SettingsProvider.cs" Link="Services\SettingsProvider.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestContextImplementation.cs" Link="Services\TestContextImplementation.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestDataSource.cs" Link="Services\TestDataSource.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestDeployment.cs" Link="Services\TestDeployment.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestSource.cs" Link="Services\TestSource.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestSourceHost.cs" Link="Services\TestSourceHost.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ThreadOperations.cs" Link="Services\ThreadOperations.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TraceLogger.cs" Link="Services\TraceLogger.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\TraceListener.cs" Link="Services\TraceListener.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\TraceListenerManager.cs" Link="Services\TraceListenerManager.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10FileOperations.cs" Link="Services\ns10FileOperations.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs" Link="Services\ns10ReflectionOperations.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10SettingsProvider.cs" Link="Services\ns10SettingsProvider.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs" Link="Services\ns10TestContextImplementation.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs" Link="Services\ns10TestDataSource.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestDeployment.cs" Link="Services\ns10TestDeployment.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestSource.cs" Link="Services\ns10TestSource.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestSourceHost.cs" Link="Services\ns10TestSourceHost.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" Link="Services\ns10ThreadOperations.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TraceLogger.cs" Link="Services\ns10TraceLogger.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs" Link="Services\ns13TraceListener.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListenerManager.cs" Link="Services\ns13TraceListenerManager.cs" />
   </ItemGroup>
 
   <ItemGroup>

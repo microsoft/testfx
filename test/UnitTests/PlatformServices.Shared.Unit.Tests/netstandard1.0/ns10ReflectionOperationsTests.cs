@@ -1,20 +1,25 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.CoreSystem.Tests
+namespace MSTestAdapter.PlatformServices.Tests.Services
 {
+#if NETCORETESTPROJECT
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
     extern alias FrameworkV1;
-
-    using System;
-    using System.Collections.Generic;
-    using System.Reflection;
-
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+#endif
+
+    using System;
+    using System.Collections.Generic;
+    using System.Reflection;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     [TestClass]
     public class ReflectionOperationsTests
@@ -198,7 +203,7 @@ namespace MSTestAdapter.PlatformServices.CoreSystem.Tests
         [TestMethod]
         public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
         {
-            var asm = typeof(DummyTestClass).Assembly;
+            var asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
 
             var attribs = this.reflectionOperations.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
@@ -280,4 +285,7 @@ namespace MSTestAdapter.PlatformServices.CoreSystem.Tests
             }
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
+
 }

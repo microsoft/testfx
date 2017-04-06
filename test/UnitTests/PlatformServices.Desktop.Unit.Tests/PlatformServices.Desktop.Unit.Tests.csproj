@@ -55,11 +55,11 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\TraceListenerManagerTests.cs">
-      <Link>Services\TraceListenerManagerTests.cs</Link>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerManagerTests.cs">
+      <Link>Services\ns13TraceListenerManagerTests.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\TraceListenerTests.cs">
-      <Link>Services\TraceListenerTests.cs</Link>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerTests.cs">
+      <Link>Services\ns13TraceListenerTests.cs</Link>
     </Compile>
     <Compile Include="AssemblyResolverTests.cs" />
     <Compile Include="Deployment\AssemblyLoadWorkerTests.cs" />

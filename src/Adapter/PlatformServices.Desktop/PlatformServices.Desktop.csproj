@@ -68,11 +68,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\TraceListener.cs">
-      <Link>Services\TraceListener.cs</Link>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs">
+      <Link>Services\ns13TraceListener.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\TraceListenerManager.cs">
-      <Link>Services\TraceListenerManager.cs</Link>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListenerManager.cs">
+      <Link>Services\ns13TraceListenerManager.cs</Link>
     </Compile>
     <Compile Include="Services\DesktopAdapterTraceLogger.cs" />
     <Compile Include="Services\DesktopReflectionOperations.cs" />
