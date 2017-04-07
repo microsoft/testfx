@@ -146,6 +146,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BCF5
 	ProjectSection(SolutionItems) = preProject
 		scripts\Build.ps1 = scripts\Build.ps1
 		scripts\common.lib.ps1 = scripts\common.lib.ps1
+		scripts\SetBuildNumber.ps1 = scripts\SetBuildNumber.ps1
 		scripts\test.ps1 = scripts\test.ps1
 		scripts\UpdateTemplates.ps1 = scripts\UpdateTemplates.ps1
 	EndProjectSection
