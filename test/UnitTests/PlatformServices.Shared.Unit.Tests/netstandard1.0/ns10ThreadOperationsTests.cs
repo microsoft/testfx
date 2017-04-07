@@ -3,7 +3,9 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Services
 {
-#if !NETCORETESTPROJECT
+#if NETCOREAPP1_0
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
     extern alias FrameworkV1;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -16,7 +18,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 

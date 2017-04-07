@@ -3,10 +3,15 @@
 
 namespace MSTestAdapter.TestUtilities
 {
+#if NETCOREAPP1_0
+    using TestFramework = Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
     extern alias FrameworkV1;
 
+    using TestFramework = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
+
     using System;
-    using TestFrameworkV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// Utility function for Action
@@ -23,11 +28,11 @@ namespace MSTestAdapter.TestUtilities
             try
             {
                 action.Invoke();
-                TestFrameworkV1.Assert.Fail("It should throw Exception of type {0}", type);
+                TestFramework.Assert.Fail("It should throw Exception of type {0}", type);
             }
             catch (Exception ex)
             {
-                TestFrameworkV1.Assert.AreEqual(type, ex.GetType());
+                TestFramework.Assert.AreEqual(type, ex.GetType());
             }
         }
 
@@ -41,12 +46,12 @@ namespace MSTestAdapter.TestUtilities
             try
             {
                 action.Invoke();
-                TestFrameworkV1.Assert.Fail("It should throw Exception of type {0}", type);
+                TestFramework.Assert.Fail("It should throw Exception of type {0}", type);
             }
             catch (Exception ex)
             {
-                TestFrameworkV1.Assert.IsNotNull(ex.InnerException);
-                TestFrameworkV1.Assert.AreEqual(type, ex.InnerException.GetType());
+                TestFramework.Assert.IsNotNull(ex.InnerException);
+                TestFramework.Assert.AreEqual(type, ex.InnerException.GetType());
             }
         }
 

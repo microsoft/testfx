@@ -3,7 +3,7 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Services
 {
-#if NETCORETESTPROJECT
+#if NETCOREAPP1_0
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
     extern alias FrameworkV1;
@@ -18,8 +18,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     using System.IO;
     using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-    using MSTestAdapter.TestUtilities;
-
+     using MSTestAdapter.TestUtilities;
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     [TestClass]
@@ -38,8 +37,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         {
             var filePath = "temp<>txt";
             Action a = () => this.fileOperations.LoadAssembly(filePath, false);
-
-            // ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentException));
+            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentException));
         }
 
         [TestMethod]
@@ -47,8 +45,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         {
             var filePath = "temptxt";
             Action a = () => this.fileOperations.LoadAssembly(filePath, false);
-
-            // ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
+            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
         }
 
         [TestMethod]

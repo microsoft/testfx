@@ -3,7 +3,7 @@
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services
 {
-#if NETCORETESTPROJECT
+#if NETCOREAPP1_0
         using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
     extern alias FrameworkV1;
@@ -42,8 +42,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services
 
             // Tring to write after disposing textWriter should throw exception
             Action shouldThrowException = () => writer.WriteLine("Try to write something");
-
-            // ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
+            ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
         }
     }
 
