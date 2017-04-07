@@ -97,8 +97,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             // Test class is already valid. Verify methods.
             foreach (var method in this.type.GetRuntimeMethods())
             {
-                // Todo: Provide settings to allow users to pick up tests from other assemblies as well.
-                if (!method.DeclaringType.GetTypeInfo().Assembly.Equals(this.type.GetTypeInfo().Assembly))
+                var isMethodDeclaredInTestTypeAssembly = method.DeclaringType.GetTypeInfo().Assembly.Equals(this.type.GetTypeInfo().Assembly);
+                var enableMethodsFromOtherAssemblies = MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies;
+
+                if (!isMethodDeclaredInTestTypeAssembly && !enableMethodsFromOtherAssemblies)
                 {
                     continue;
                 }
