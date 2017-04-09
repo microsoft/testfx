@@ -11,11 +11,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
+    using global::MSTestAdapter.TestUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Moq;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
@@ -101,13 +103,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             var tests = typeEnumerator.Enumerate(out this.warnings);
 
-            var methodCount = typeof(DummyDerivedTestClass).GetMethods(BindingFlags.Instance | BindingFlags.Public).Count(m => m.DeclaringType.Assembly == typeof(DummyDerivedTestClass).Assembly);
             Assert.IsNotNull(tests);
-            Assert.AreEqual(methodCount, tests.Count);
+            Assert.IsTrue(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
         }
 
         [TestMethod]
-        public void GetTestsShouldNotReturnBaseTestMethodsFromAnotherAssembly()
+        public void GetTestsShouldNotReturnBaseTestMethodsFromAnotherAssemblyByDefault()
         {
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
@@ -119,6 +120,58 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
                 typeof(DummyDerivedTestClass).GetMethods(BindingFlags.Instance | BindingFlags.Public).Count();
             Assert.IsNotNull(tests);
             Assert.IsTrue(methodCount > tests.Count);
+        }
+
+        [TestMethod]
+        public void GetTestsShouldReturnBaseTestMethodsFromAnotherAssemblyByConfiguration()
+        {
+            string runSettingxml =
+            @"<RunSettings>   
+                <MSTestV2>
+                  <CaptureTraceOutput>true</CaptureTraceOutput>
+                  <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
+                  <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+              </MSTestV2>
+            </RunSettings>";
+
+            var mockRunContext = new Mock<IRunContext>();
+            var mockRunSettings = new Mock<IRunSettings>();
+            mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
+            mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+
+            MSTestSettings.PopulateSettings(mockRunContext.Object);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyDerivedFromRemoteTestClass), Assembly.GetExecutingAssembly().FullName);
+
+            var tests = typeEnumerator.Enumerate(out this.warnings);
+
+            Assert.IsTrue(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
+        }
+
+        [TestMethod]
+        public void GetTestsShouldNotReturnBaseTestMethodsFromAnotherAssemblyByConfiguration()
+        {
+            string runSettingxml =
+                @"<RunSettings>   
+                <MSTestV2>
+                  <CaptureTraceOutput>true</CaptureTraceOutput>
+                  <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
+                  <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
+              </MSTestV2>
+            </RunSettings>";
+
+            var mockRunContext = new Mock<IRunContext>();
+            var mockRunSettings = new Mock<IRunSettings>();
+            mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
+            mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+
+            MSTestSettings.PopulateSettings(mockRunContext.Object);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyDerivedFromRemoteTestClass), Assembly.GetExecutingAssembly().FullName);
+
+            var tests = typeEnumerator.Enumerate(out this.warnings);
+
+            Assert.IsTrue(tests.All(t => t.TestMethod.Name != "BaseTestMethod"));
         }
 
         #endregion
@@ -412,9 +465,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
     #region Dummy Test Types
 
+    public class DummyDerivedFromRemoteTestClass : DummyRemoteBaseTestClass
+    {
+        public void TestMethod2()
+        {
+        }
+    }
+
     public class DummyBaseTestClass
     {
-        public void TestMethod()
+        public void BaseTestMethod()
         {
         }
     }
