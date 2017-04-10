@@ -7,6 +7,7 @@
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
     <TargetFramework>netstandard1.3</TargetFramework>
+    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.3' ">$(PackageTargetFallback);portable-net45+win8+wpa81+wp8</PackageTargetFallback>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
@@ -42,4 +43,5 @@
   <ItemGroup>
     <Folder Include="Services\" />
   </ItemGroup>
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>
