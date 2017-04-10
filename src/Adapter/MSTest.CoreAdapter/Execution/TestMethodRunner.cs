@@ -93,8 +93,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         // Assembly or class initialize can throw exceptions in which case we need to ensure that we fail the test.
                         this.testMethodInfo.Parent.Parent.RunAssemblyInitialize(this.testContext.Context);
                         this.testMethodInfo.Parent.RunClassInitialize(this.testContext.Context);
-
-                        result = this.RunTestMethod();
                     }
                     finally
                     {
@@ -103,6 +101,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         errorLogs = logListener.StandardError;
                     }
                 }
+
+                // Listening to log messages when running the test method with its Test Initialize and cleanup later on in the stack.
+                // This allows us to differentiate logging when data driven methods are used.
+                result = this.RunTestMethod();
             }
             catch (TestFailedException ex)
             {
@@ -146,18 +148,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             UTF.TestResult[] results = null;
 
-            if (this.testMethodInfo.Executor != null)
+            if (this.testMethodInfo.TestMethodOptions.Executor != null)
             {
                 try
                 {
                     bool isDataDriven = PlatformServiceProvider.Instance.TestDataSource.HasDataDrivenTests(this.testMethodInfo);
                     if (isDataDriven)
                     {
-                        results = PlatformServiceProvider.Instance.TestDataSource.RunDataDrivenTest(this.testContext.Context, this.testMethodInfo, this.test, this.testMethodInfo.Executor);
+                        results = PlatformServiceProvider.Instance.TestDataSource.RunDataDrivenTest(this.testContext.Context, this.testMethodInfo, this.test, this.testMethodInfo.TestMethodOptions.Executor);
                     }
                     else
                     {
-                        results = this.testMethodInfo.Executor.Execute(this.testMethodInfo);
+                        results = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo);
                     }
                 }
                 catch (Exception ex)

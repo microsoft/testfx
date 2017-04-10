@@ -12,7 +12,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
@@ -25,43 +24,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Specifies the timeout when it is not set in a test case
         /// </summary>
         public const int TimeoutWhenNotSet = 0;
-        private readonly ITestContext testContext;
 
         internal TestMethodInfo(
             MethodInfo testMethod,
-            int timeout,
-            TestMethodAttribute executor,
-            ExpectedExceptionBaseAttribute expectedException,
             TestClassInfo parent,
-            ITestContext testContext)
+            TestMethodOptions testmethodOptions)
         {
             Debug.Assert(testMethod != null, "TestMethod should not be null");
             Debug.Assert(parent != null, "Parent should not be null");
 
             this.TestMethod = testMethod;
-            this.Timeout = timeout;
             this.Parent = parent;
-            this.ExpectedException = expectedException;
-            this.Executor = executor;
-            this.testContext = testContext;
+            this.TestMethodOptions = testmethodOptions;
         }
-
-        public TestMethodAttribute Executor { get; set; }
 
         /// <summary>
         /// Gets testMethod referred by this object
         /// </summary>
         public MethodInfo TestMethod { get; private set; }
-
-        /// <summary>
-        /// Gets attribute that validates whether an exception qualifies as the expected exception
-        /// </summary>
-        public ExpectedExceptionBaseAttribute ExpectedException { get; private set; }
-
-        /// <summary>
-        /// Gets the timeout defined on the test method.
-        /// </summary>
-        public int Timeout { get; private set; }
 
         /// <summary>
         /// Gets the parent class Info object
@@ -71,7 +51,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Gets a value indicating whether timeout is set.
         /// </summary>
-        public bool IsTimeoutSet => this.Timeout != TimeoutWhenNotSet;
+        public bool IsTimeoutSet => this.TestMethodOptions.Timeout != TimeoutWhenNotSet;
 
         /// <summary>
         /// Gets the reason why the test is not runnable
@@ -83,10 +63,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         public bool IsRunnable => string.IsNullOrEmpty(this.NotRunnableReason);
 
+        internal TestMethodOptions TestMethodOptions { get; private set; }
+
         #region ITestMethod implementation
+
+#pragma warning disable SA1202 // Elements must be ordered by access
 
         /// <inheritdoc/>
         public ParameterInfo[] ParameterTypes => this.TestMethod.GetParameters();
+#pragma warning restore SA1202 // Elements must be ordered by access
 
         /// <inheritdoc/>
         public Type ReturnType => this.TestMethod.ReturnType;
@@ -142,7 +127,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             Stopwatch watch = new Stopwatch();
             TestResult result = null;
-            using (LogMessageListener listener = new LogMessageListener(true))
+            using (LogMessageListener listener = new LogMessageListener(this.TestMethodOptions.CaptureDebugTraces))
             {
                 watch.Start();
                 try
@@ -167,7 +152,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         result.DebugTrace = listener.DebugTrace;
                         result.LogOutput = listener.StandardOutput;
                         result.LogError = listener.StandardError;
-                        result.ResultFiles = this.testContext.GetResultFiles();
+                        result.ResultFiles = this.TestMethodOptions.TestContext.GetResultFiles();
                     }
                 }
             }
@@ -246,11 +231,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // if we get here, the test method did not throw the exception
                 // if the user specified that the test was going to throw an exception, and
                 // it did not, we should fail the test
-                if (!isExceptionThrown && this.ExpectedException != null)
+                if (!isExceptionThrown && this.TestMethodOptions.ExpectedException != null)
                 {
                     result.TestFailureException = new TestFailedException(
                         UnitTestOutcome.Failed,
-                        this.ExpectedException.NoExceptionMessage);
+                        this.TestMethodOptions.ExpectedException.NoExceptionMessage);
                     result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
                 }
             }
@@ -260,7 +245,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             // Set the current tests outcome before cleanup so it can be used in the cleanup logic.
-            this.testContext.SetOutcome(result.Outcome);
+            this.TestMethodOptions.TestContext.SetOutcome(result.Outcome);
 
             // TestCleanup can potentially be a long running operation which should'nt ideally be in a finally block.
             // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block
@@ -287,14 +272,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             // if the user specified an expected exception, we need to check if this
             // exception was thrown. If it was thrown, we should pass the test. In
             // case a different exception was thrown, the test is seen as failure
-            if (this.ExpectedException != null)
+            if (this.TestMethodOptions.ExpectedException != null)
             {
                 Exception exceptionFromVerify;
                 try
                 {
                     // If the expected exception attribute's Verify method returns, then it
                     // considers this exception as expected, so the test passed
-                    this.ExpectedException.Verify(realException);
+                    this.TestMethodOptions.ExpectedException.Verify(realException);
                     return true;
                 }
                 catch (Exception verifyEx)
@@ -539,7 +524,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 if (this.Parent.TestContextProperty != null && this.Parent.TestContextProperty.CanWrite)
                 {
-                    this.Parent.TestContextProperty.SetValue(classInstance, this.testContext);
+                    this.Parent.TestContextProperty.SetValue(classInstance, this.TestMethodOptions.TestContext);
                 }
 
                 return true;
@@ -623,7 +608,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     }
                 };
 
-            if (PlatformServiceProvider.Instance.ThreadOperations.Execute(executeAsyncAction, this.Timeout))
+            if (PlatformServiceProvider.Instance.ThreadOperations.Execute(executeAsyncAction, this.TestMethodOptions.Timeout))
             {
                 if (failure != null)
                 {

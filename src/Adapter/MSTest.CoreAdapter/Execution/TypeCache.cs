@@ -116,8 +116,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="testMethod"> The test Method. </param>
         /// <param name="testContext"> The test Context. </param>
+        /// <param name="captureDebugTraces"> Indicates whether the test method should capture debug traces.</param>
         /// <returns> The <see cref="TestMethodInfo"/>. </returns>
-        public TestMethodInfo GetTestMethodInfo(TestMethod testMethod, ITestContext testContext)
+        public TestMethodInfo GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
         {
             if (testMethod == null)
             {
@@ -140,7 +141,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             // Get the testMethod
-            return this.ResolveTestMethod(testMethod, testClassInfo, testContext);
+            return this.ResolveTestMethod(testMethod, testClassInfo, testContext, captureDebugTraces);
         }
 
         /// <summary>
@@ -530,10 +531,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="testMethod"> The test Method. </param>
         /// <param name="testClassInfo"> The test Class Info. </param>
         /// <param name="testContext"> The test Context. </param>
+        /// <param name="captureDebugTraces"> Indicates whether the test method should capture debug traces.</param>
         /// <returns>
         /// The TestMethodInfo for the given test method. Null if the test method could not be found.
         /// </returns>
-        private TestMethodInfo ResolveTestMethod(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext)
+        private TestMethodInfo ResolveTestMethod(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext, bool captureDebugTraces)
         {
             Debug.Assert(testMethod != null, "testMethod is Null");
             Debug.Assert(testClassInfo != null, "testClassInfo is Null");
@@ -548,7 +550,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var expectedExceptionAttribute = this.reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
             var timeout = this.GetTestTimeout(methodInfo, testMethod);
 
-            var testMethodInfo = new TestMethodInfo(methodInfo, timeout, this.GetTestMethodAttribute(methodInfo, testClassInfo), expectedExceptionAttribute, testClassInfo, testContext);
+            var testMethodOptions = new TestMethodOptions() { Timeout = timeout, Executor = this.GetTestMethodAttribute(methodInfo, testClassInfo), ExpectedException = expectedExceptionAttribute, TestContext = testContext, CaptureDebugTraces = captureDebugTraces };
+            var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testMethodOptions);
 
             this.SetCustomProperties(testMethodInfo, testContext);
 
