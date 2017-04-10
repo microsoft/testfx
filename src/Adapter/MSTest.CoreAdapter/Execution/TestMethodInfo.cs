@@ -177,6 +177,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var classInstance = this.CreateTestClassInstance(result);
             var testContextSetup = false;
             bool isExceptionThrown = false;
+            bool hasTestInitializePassed = false;
             Exception testRunnerException = null;
 
             try
@@ -190,6 +191,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                         if (this.RunTestInitializeMethod(classInstance, result))
                         {
+                            hasTestInitializePassed = true;
                             PlatformServiceProvider.Instance.ThreadOperations.ExecuteWithAbortSafety(
                                 () => this.TestMethod.InvokeAsSynchronousTask(classInstance, arguments));
                             result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed;
@@ -231,7 +233,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // if we get here, the test method did not throw the exception
                 // if the user specified that the test was going to throw an exception, and
                 // it did not, we should fail the test
-                if (!isExceptionThrown && this.TestMethodOptions.ExpectedException != null)
+                // We only perform this check if the test initialize passes and the test method is actually run.
+                if (hasTestInitializePassed && !isExceptionThrown && this.ExpectedException != null)
                 {
                     result.TestFailureException = new TestFailedException(
                         UnitTestOutcome.Failed,

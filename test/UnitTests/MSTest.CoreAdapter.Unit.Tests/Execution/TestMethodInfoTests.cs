@@ -488,6 +488,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestInitializeThrowsUnitTestAssertException>b__");
         }
 
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldSetTestInitializeExceptionEvenIfMethodHasExpectedExceptionAttriute()
+        {
+            // Arrange.
+            DummyTestClass.TestInitializeMethodBody = classInstance => { UTF.Assert.Fail("dummyFailMessage"); };
+            this.testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
+            const string ErrorMessage = "Assert.Fail failed. dummyFailMessage";
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute, this.expectedException, this.testClassInfo, this.testContextImplementation);
+
+            // Act.
+            var exception = testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
+
+            // Assert.
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(ErrorMessage, exception?.Message);
+        }
+
         #endregion
 
         #region TestCleanup method setup
