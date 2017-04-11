@@ -39,6 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             this.CaptureDebugTraces = true;
             this.MapInconclusiveToFailed = false;
+            this.EnableBaseClassTestMethodsFromOtherAssemblies = false;
             this.ForcedLegacyMode = false;
             this.TestSettingsFile = null;
         }
@@ -84,6 +85,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// Gets a value indicating whether an inconclusive result be mapped to failed test.
         /// </summary>
         public bool MapInconclusiveToFailed { get; private set; }
+
+        /// <summary>
+        /// Gets a value indicating whether to enable discovery of test methods from base classes in a different assembly from the inheriting test class.
+        /// </summary>
+        public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
 
         /// <summary>
         /// Populate adapter settings from the context
@@ -194,6 +200,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             // <MSTestV2>
             //     <CaptureTraceOutput>true</CaptureTraceOutput>
             //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
+            //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
             // </MSTestV2>
             //
             // (or)
@@ -233,6 +240,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                 if (bool.TryParse(reader.ReadInnerXml(), out result))
                                 {
                                     settings.ForcedLegacyMode = result;
+                                }
+
+                                break;
+                            }
+
+                        case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
+                            {
+                                if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                {
+                                    settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
                                 }
 
                                 break;

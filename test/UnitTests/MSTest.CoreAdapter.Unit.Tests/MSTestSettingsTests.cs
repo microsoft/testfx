@@ -133,6 +133,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsNotNull(adapterSettings.TestSettingsFile);
         }
 
+        [TestMethod]
+        public void EnableBaseClassTestMethodsFromOtherAssembliesIsByDefaultFalseWhenNotSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, false);
+        }
+
+        [TestMethod]
+        public void EnableBaseClassTestMethodsFromOtherAssembliesShouldBeConsumedFromRunSettingsWhenSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <EnableBaseClassTestMethodsFromOtherAssemblies>True</EnableBaseClassTestMethodsFromOtherAssemblies>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+        }
+
         #endregion
 
         #region GetSettings Tests
@@ -250,6 +279,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                         <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                         <UnReadableSetting>foobar</UnReadableSetting>
                         <ForcedLegacyMode>true</ForcedLegacyMode>
+                        <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
                         <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
                         <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
                       </MSTest>
@@ -293,6 +323,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsTrue(dummyPlatformSpecificSetting);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
             Assert.AreEqual(adapterSettings.ForcedLegacyMode, true);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
             Assert.AreEqual("DummyPath\\\\TestSettings1.testsettings", adapterSettings.TestSettingsFile);
         }
 
@@ -355,6 +386,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                         <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
                         <!-- Force Legacy mode -->
                         <ForcedLegacyMode>true</ForcedLegacyMode>
+                        <!-- Enable base class test methods from other assemblies -->
+                        <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
                       </MSTest>
                       <BadElement>Bad</BadElement>
                     </RunSettings>";
@@ -397,6 +430,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsTrue(dummyPlatformSpecificSetting);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
             Assert.AreEqual(adapterSettings.ForcedLegacyMode, true);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
         }
 
         #endregion
@@ -450,6 +484,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, false);
         }
 
         [TestMethod]
@@ -460,6 +495,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, false);
         }
 
         [TestMethod]
@@ -471,6 +507,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, false);
         }
 
         [TestMethod]
@@ -504,6 +541,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                    <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                    <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
                    <ForcedLegacyMode>true</ForcedLegacyMode>
+                   <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
                  </MSTest>
                </RunSettings>";
 
@@ -517,6 +555,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
             Assert.AreEqual(adapterSettings.ForcedLegacyMode, true);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
             Assert.IsFalse(string.IsNullOrEmpty(adapterSettings.TestSettingsFile));
         }
 
@@ -529,6 +568,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                    <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
                    <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
                    <ForcedLegacyMode>true</ForcedLegacyMode>
+                   <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
                  </MSTestV2>
                </RunSettings>";
 
@@ -542,6 +582,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
             Assert.AreEqual(adapterSettings.ForcedLegacyMode, true);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
             Assert.IsFalse(string.IsNullOrEmpty(adapterSettings.TestSettingsFile));
         }
 
@@ -552,6 +593,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             @"<RunSettings>
                  <MSTestV2>
                    <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+                   <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
                  </MSTestV2>
                  <MSTest>
                    <CaptureDebugTraces>False</CaptureDebugTraces>
@@ -569,6 +611,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsNotNull(adapterSettings);
 
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
             Assert.AreEqual(adapterSettings.ForcedLegacyMode, false);
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
             Assert.IsTrue(string.IsNullOrEmpty(adapterSettings.TestSettingsFile));

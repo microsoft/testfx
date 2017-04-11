@@ -299,6 +299,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
+        /// Returns true when the method is delcared in the assembly where the type is declared.
+        /// </summary>
+        /// <param name="method">The method to check for.</param>
+        /// <param name="type">The type declared in the assembly to check.</param>
+        /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
+        internal virtual bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
+        {
+            return method.DeclaringType.GetTypeInfo().Assembly.Equals(type.GetTypeInfo().Assembly);
+        }
+
+        /// <summary>
         /// Get categories applied to the test method
         /// </summary>
         /// <param name="categoryAttributeProvider">The member to inspect.</param>
