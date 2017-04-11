@@ -495,7 +495,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClass.TestInitializeMethodBody = classInstance => { UTF.Assert.Fail("dummyFailMessage"); };
             this.testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
             const string ErrorMessage = "Assert.Fail failed. dummyFailMessage";
-            var testMethodInfo = new TestMethodInfo(this.methodInfo, 3600 * 1000, this.testMethodAttribute, this.expectedException, this.testClassInfo, this.testContextImplementation);
+
+            this.testMethodOptions.ExpectedException = this.expectedException;
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
 
             // Act.
             var exception = testMethodInfo.Invoke(null).TestFailureException as TestFailedException;

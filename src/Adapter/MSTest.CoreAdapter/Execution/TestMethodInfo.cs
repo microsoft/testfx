@@ -39,16 +39,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Gets testMethod referred by this object
-        /// </summary>
-        public MethodInfo TestMethod { get; private set; }
-
-        /// <summary>
-        /// Gets the parent class Info object
-        /// </summary>
-        public TestClassInfo Parent { get; internal set; }
-
-        /// <summary>
         /// Gets a value indicating whether timeout is set.
         /// </summary>
         public bool IsTimeoutSet => this.TestMethodOptions.Timeout != TimeoutWhenNotSet;
@@ -63,15 +53,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         public bool IsRunnable => string.IsNullOrEmpty(this.NotRunnableReason);
 
-        internal TestMethodOptions TestMethodOptions { get; private set; }
-
-        #region ITestMethod implementation
-
-#pragma warning disable SA1202 // Elements must be ordered by access
-
         /// <inheritdoc/>
         public ParameterInfo[] ParameterTypes => this.TestMethod.GetParameters();
-#pragma warning restore SA1202 // Elements must be ordered by access
 
         /// <inheritdoc/>
         public Type ReturnType => this.TestMethod.ReturnType;
@@ -84,6 +67,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         /// <inheritdoc/>
         public MethodInfo MethodInfo => this.TestMethod;
+
+        /// <summary>
+        /// Gets testMethod referred by this object
+        /// </summary>
+        internal MethodInfo TestMethod { get; private set; }
+
+        /// <summary>
+        /// Gets the parent class Info object
+        /// </summary>
+        internal TestClassInfo Parent { get; private set; }
+
+        /// <summary>
+        /// Gets the options for the test method in this environment.
+        /// </summary>
+        internal TestMethodOptions TestMethodOptions { get; private set; }
 
         /// <inheritdoc/>
         public Attribute[] GetAllAttributes(bool inherit)
@@ -159,7 +157,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             return result;
         }
-        #endregion
 
         /// <summary>
         /// Execute test without timeout.
@@ -234,7 +231,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // if the user specified that the test was going to throw an exception, and
                 // it did not, we should fail the test
                 // We only perform this check if the test initialize passes and the test method is actually run.
-                if (hasTestInitializePassed && !isExceptionThrown && this.ExpectedException != null)
+                if (hasTestInitializePassed && !isExceptionThrown && this.TestMethodOptions.ExpectedException != null)
                 {
                     result.TestFailureException = new TestFailedException(
                         UnitTestOutcome.Failed,
