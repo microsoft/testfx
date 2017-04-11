@@ -97,7 +97,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             // Test class is already valid. Verify methods.
             foreach (var method in this.type.GetRuntimeMethods())
             {
-                var isMethodDeclaredInTestTypeAssembly = method.DeclaringType.GetTypeInfo().Assembly.Equals(this.type.GetTypeInfo().Assembly);
+                var isMethodDeclaredInTestTypeAssembly = this.reflectHelper.IsMethodDeclaredInSameAssemblyAsType(method, this.type);
                 var enableMethodsFromOtherAssemblies = MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies;
 
                 if (!isMethodDeclaredInTestTypeAssembly && !enableMethodsFromOtherAssemblies)
