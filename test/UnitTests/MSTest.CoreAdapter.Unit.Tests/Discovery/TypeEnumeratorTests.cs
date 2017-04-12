@@ -11,11 +11,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
+    using global::MSTestAdapter.TestUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Moq;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
@@ -67,7 +69,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void EnumerateShouldReturnEmptyCollectionWhenNoValidTestMethodsExist()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: false);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: false, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), string.Empty);
 
             var tests = typeEnumerator.Enumerate(out this.warnings);
@@ -83,42 +85,102 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestsShouldReturnDeclaredTestMethods()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyBaseTestClass), Assembly.GetExecutingAssembly().FullName);
 
             var tests = typeEnumerator.Enumerate(out this.warnings);
 
-            var methodCount = typeof(DummyBaseTestClass).GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Public).Count();
             Assert.IsNotNull(tests);
-            Assert.AreEqual(methodCount, tests.Count);
+            Assert.IsTrue(
+                tests.Any(t => t.TestMethod.Name == "BaseTestMethod"),
+                "DummyBaseTestClass declares BaseTestMethod directly so it should always be discovered.");
         }
 
         [TestMethod]
         public void GetTestsShouldReturnBaseTestMethodsInSameAssembly()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
 
             var tests = typeEnumerator.Enumerate(out this.warnings);
 
-            var methodCount = typeof(DummyDerivedTestClass).GetMethods(BindingFlags.Instance | BindingFlags.Public).Count(m => m.DeclaringType.Assembly == typeof(DummyDerivedTestClass).Assembly);
             Assert.IsNotNull(tests);
-            Assert.AreEqual(methodCount, tests.Count);
+            Assert.IsTrue(
+                tests.Any(t => t.TestMethod.Name == "BaseTestMethod"),
+                "DummyDerivedTestClass inherits DummyBaseTestClass from same assembly. BestTestMethod from DummyBaseTestClass should be discovered.");
         }
 
         [TestMethod]
-        public void GetTestsShouldNotReturnBaseTestMethodsFromAnotherAssembly()
+        public void GetTestsShouldNotReturnBaseTestMethodsFromAnotherAssemblyByDefault()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: false);
+
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
 
             var tests = typeEnumerator.Enumerate(out this.warnings);
 
-            // This would return basic object methods like ToString() as well.
-            var methodCount =
-                typeof(DummyDerivedTestClass).GetMethods(BindingFlags.Instance | BindingFlags.Public).Count();
             Assert.IsNotNull(tests);
-            Assert.IsTrue(methodCount > tests.Count);
+            Assert.IsTrue(
+                tests.All(t => t.TestMethod.Name != "BaseTestMethod"),
+                "DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should not be discovered by default.");
+        }
+
+        [TestMethod]
+        public void GetTestsShouldReturnBaseTestMethodsFromAnotherAssemblyByConfiguration()
+        {
+            string runSettingxml =
+            @"<RunSettings>   
+                <MSTestV2>
+                  <CaptureTraceOutput>true</CaptureTraceOutput>
+                  <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
+                  <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+              </MSTestV2>
+            </RunSettings>";
+
+            var mockRunContext = new Mock<IRunContext>();
+            var mockRunSettings = new Mock<IRunSettings>();
+            mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
+            mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+
+            MSTestSettings.PopulateSettings(mockRunContext.Object);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
+
+            var tests = typeEnumerator.Enumerate(out this.warnings);
+
+            Assert.IsNotNull(tests);
+            Assert.IsTrue(
+                tests.Any(t => t.TestMethod.Name == "BaseTestMethod"),
+                "DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = truem.");
+        }
+
+        [TestMethod]
+        public void GetTestsShouldNotReturnBaseTestMethodsFromAnotherAssemblyByConfiguration()
+        {
+            string runSettingxml =
+                @"<RunSettings>   
+                <MSTestV2>
+                  <CaptureTraceOutput>true</CaptureTraceOutput>
+                  <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
+                  <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
+              </MSTestV2>
+            </RunSettings>";
+
+            var mockRunContext = new Mock<IRunContext>();
+            var mockRunSettings = new Mock<IRunSettings>();
+            mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
+            mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+
+            MSTestSettings.PopulateSettings(mockRunContext.Object);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: false);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
+
+            var tests = typeEnumerator.Enumerate(out this.warnings);
+
+            Assert.IsNotNull(tests);
+            Assert.IsTrue(
+                tests.All(t => t.TestMethod.Name != "BaseTestMethod"),
+                "DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should not be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = false.");
         }
 
         #endregion
@@ -128,7 +190,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldInitiateTestMethodWithCorrectParameters()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
 
             var testElement = typeEnumerator.GetTestFromMethod(typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType"), this.warnings);
@@ -143,7 +205,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldInitiateAsyncTypeNameCorrectly()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("AsyncMethodWithTaskReturnType");
 
@@ -160,7 +222,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldSetIgnoredPropertyToTrueIfSetOnTestClass()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
 
@@ -179,7 +241,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldSetIgnoredPropertyToTrueIfSetOnTestMethod()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
 
@@ -198,7 +260,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldSetIgnoredPropertyToFalseIfNotSetOnTestClassAndTestMethod()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
 
@@ -217,7 +279,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldSetTestCategory()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
             var testCategories = new string[] { "foo", "bar" };
@@ -234,7 +296,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldFillTraitsWithTestProperties()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
             var testProperties = new List<Trait> { new Trait("foo", "bar"), new Trait("fooprime", "barprime") };
@@ -251,7 +313,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldFillTraitsWithTestOwnerPropertyIfPresent()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
             var testProperties = new List<Trait> { new Trait("foo", "bar"), new Trait("fooprime", "barprime") };
@@ -271,7 +333,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldFillTraitsWithTestPriorityPropertyIfPresent()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
             var testProperties = new List<Trait> { new Trait("foo", "bar"), new Trait("fooprime", "barprime") };
@@ -292,7 +354,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldSetPriority()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
 
@@ -308,7 +370,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldSetDeploymentItemsToNullIfNotPresent()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
 
@@ -326,7 +388,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldSetDeploymentItems()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
             var deploymentItems = new[] { new KeyValuePair<string, string>("C:\\temp", string.Empty) };
@@ -349,7 +411,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void IsIgnoreAttributeOnTestClassReturnsTrueIfIgnoreIsSetOnTestClass()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
 
             // Setup mocks
@@ -361,7 +423,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void IsIgnoreAttributeOnTestClassReturnsFalseIfIgnoreIsNotSetOnTestClass()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
 
             // Setup mocks
@@ -373,7 +435,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void IsIgnoreAttributeOnTestClassShouldBeCached()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
 
             // Setup mocks
@@ -389,12 +451,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
         #region private methods
 
-        private void SetupTestClassAndTestMethods(bool isValidTestClass, bool isValidTestMethod)
+        private void SetupTestClassAndTestMethods(bool isValidTestClass, bool isValidTestMethod, bool isMethodFromSameType)
         {
             this.mockTypeValidator.Setup(tv => tv.IsValidTestClass(It.IsAny<Type>(), It.IsAny<ICollection<string>>()))
                 .Returns(isValidTestClass);
             this.mockTestMethodValidator.Setup(
                 tmv => tmv.IsValidTestMethod(It.IsAny<MethodInfo>(), It.IsAny<Type>(), It.IsAny<ICollection<string>>())).Returns(isValidTestMethod);
+            this.mockReflectHelper.Setup(
+                rh => rh.IsMethodDeclaredInSameAssemblyAsType(It.IsAny<MethodInfo>(), It.IsAny<Type>())).Returns(isMethodFromSameType);
         }
 
         private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName)
@@ -414,14 +478,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
     public class DummyBaseTestClass
     {
-        public void TestMethod()
+        public void BaseTestMethod()
         {
         }
     }
 
     public class DummyDerivedTestClass : DummyBaseTestClass
     {
-        public void TestMethod2()
+        public void DerivedTestMethod()
         {
         }
     }

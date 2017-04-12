@@ -42,10 +42,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             // Cache the original output/error streams and replace it with the own stream.
             this.redirectLoggerOut = new ThreadSafeStringWriter(CultureInfo.InvariantCulture);
-            Logger.OnLogMessage += this.redirectLoggerOut.WriteLine;
-
             this.redirectStdErr = new ThreadSafeStringWriter(CultureInfo.InvariantCulture);
-            Logger.OnLogMessage += this.redirectStdErr.WriteLine;
+
+            Logger.OnLogMessage += this.redirectLoggerOut.WriteLine;
 
             // Cache the previous redirector if any and replace the trace listener.
             this.previousRedirector = activeRedirector;
