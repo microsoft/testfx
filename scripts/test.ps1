@@ -122,7 +122,7 @@ function Invoke-Test
         }
 	}
 						
-    if($testContainers.Count -gt 0)
+    if($testContainers.Count -gt 0 -Or $netCoreTestContainers.Count -gt 0)
     {
         $testContainersString = [system.String]::Join(",",$testContainers)
         Write-Log "    Matched Test Containers: $testContainersString."
@@ -148,22 +148,28 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
     {
        $additionalArguments += "/parallel"
     }
-
-	if(!(Test-Path $vstestPath))
+	
+	if($testContainers.Count -gt 0)
 	{
-		Write-Error "Unable to find vstest.console.exe at $vstestPath. Test aborted."
+		if(!(Test-Path $vstestPath))
+		{
+			Write-Error "Unable to find vstest.console.exe at $vstestPath. Test aborted."
+		}
+	
+		Write-Verbose "$vstestPath $testContainers $additionalArguments /logger:trx"
+		& $vstestPath $testContainers $additionalArguments /logger:trx
 	}
 	
-	Write-Verbose "$vstestPath $testContainers $additionalArguments /logger:trx"
-	& $vstestPath $testContainers $additionalArguments /logger:trx
-	
-	if(!(Test-Path $TPV2VSTestPath))
-	{
-		Write-Error "Unable to find vstest.console.exe at $TPV2VSTestPath. Test aborted."
+	if($netCoreTestContainers.Count -gt 0)
+	{	
+		if(!(Test-Path $TPV2VSTestPath))
+		{
+			Write-Error "Unable to find vstest.console.exe at $TPV2VSTestPath. Test aborted."
+		}
+		
+		Write-Verbose "$TPV2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
+		& $TPV2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx 
 	}
-	
-	Write-Verbose "$TPV2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
-	& $TPV2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx 
 }
 
 function Get-VSTestPath
