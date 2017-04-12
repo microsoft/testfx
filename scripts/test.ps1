@@ -49,6 +49,8 @@ $TFT_Configuration = $Configuration
 $TFT_Pattern = $Pattern
 $TFT_Parallel = $Parallel
 $TFT_All = $All
+$TFB_NetCoreContainers =@("MSTestAdapter.PlatformServices.NetCore.UnitTests.dll")
+$TestFramework = ".NETCoreApp,Version=v1.0"
 
 #
 # Prints help text for the switches this script supports.
@@ -94,22 +96,37 @@ function Invoke-Test
         
         if($TFT_All)
         {
-    		$testContainers += ,"$testContainerPath"
+			if($TFB_NetCoreContainers -Contains $testContainerName)
+			{
+				$netCoreTestContainers += ,"$testContainerPath" 
+			}
+    		else
+			{
+				$testContainers += ,"$testContainerPath"
+			}
         }
         else 
         {
             if($testContainerPath -match $TFT_Pattern)
             {
-    		    $testContainers += ,"$testContainerPath"
+    		    if($TFB_NetCoreContainers -Contains $testContainerName)
+				{
+					$netCoreTestContainers += ,"$testContainerPath" 
+
+				}
+				else
+				{
+					$testContainers += ,"$testContainerPath"
+				}
             }
         }
 	}
-    
+						
     if($testContainers.Count -gt 0)
     {
         $testContainersString = [system.String]::Join(",",$testContainers)
         Write-Log "    Matched Test Containers: $testContainersString."
-        Run-Test($testContainers)
+        Run-Test -testContainers $testContainers -netCoreTestContainers $netCoreTestContainers
     }
     else
     {
@@ -121,14 +138,10 @@ function Invoke-Test
 	Write-Log "Run-Test: Complete. {$(Get-ElapsedTime($timer))}"
 }
 
-function Run-Test($testContainers)
-{
+function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
+{	
     $vstestPath = Get-VSTestPath
-	
-	if(!(Test-Path $vstestPath))
-	{
-		Write-Error "Unable to find vstest.console.exe at $vstestPath. Test aborted."
-	}
+	$TPV2VSTestPath = Get-TPv2VSTestPath
  
     $additionalArguments = ''
     if($TFT_Parallel)
@@ -136,8 +149,21 @@ function Run-Test($testContainers)
        $additionalArguments += "/parallel"
     }
 
+	if(!(Test-Path $vstestPath))
+	{
+		Write-Error "Unable to find vstest.console.exe at $vstestPath. Test aborted."
+	}
+	
 	Write-Verbose "$vstestPath $testContainers $additionalArguments /logger:trx"
 	& $vstestPath $testContainers $additionalArguments /logger:trx
+	
+	if(!(Test-Path $TPV2VSTestPath))
+	{
+		Write-Error "Unable to find vstest.console.exe at $TPV2VSTestPath. Test aborted."
+	}
+	
+	Write-Verbose "$TPV2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
+	& $TPV2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx 
 }
 
 function Get-VSTestPath
@@ -145,6 +171,13 @@ function Get-VSTestPath
 	$vsInstallPath = Locate-VsInstallPath
 	$vstestPath = Join-Path -path $vsInstallPath "Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
 	return Resolve-Path -path $vstestPath
+}
+
+function Get-TPv2VSTestPath
+{
+    $packagesPath = Locate-PackagesPath
+	$vstestConsolePath = Join-Path -path $packagesPath "Microsoft.TestPlatform.15.0.1\tools\net46\vstest.console.exe"
+	return Resolve-Path -path $vstestConsolePath
 }
 	
 Print-Help

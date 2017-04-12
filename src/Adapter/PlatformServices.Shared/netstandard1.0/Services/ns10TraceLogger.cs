@@ -3,7 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
-    using System;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName

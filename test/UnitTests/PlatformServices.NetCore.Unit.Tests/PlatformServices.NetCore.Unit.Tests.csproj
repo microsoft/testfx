@@ -27,8 +27,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="Moq" Version="4.7.8" />
-    <PackageReference Include="MSTest.TestAdapter" Version="1.1.14" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.1.14" />
   </ItemGroup>
 
   <ItemGroup>
@@ -60,4 +58,9 @@
       <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions' or '%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework'" />
     </ItemGroup>
   </Target>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <Exec Command="xcopy /Y /I $(TargetDir)..\..\MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll $(TargetDir)" />
+      <Exec Command="xcopy /Y /I $(TargetDir)..\..\MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb $(TargetDir)" />
+  </Target>
+
 </Project>

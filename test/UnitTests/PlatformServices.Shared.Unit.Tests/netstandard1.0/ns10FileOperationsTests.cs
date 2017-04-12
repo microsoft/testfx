@@ -51,7 +51,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void LoadAssemblyShouldLoadAssemblyInCurrentContext()
         {
-            var filePath = typeof(FileOperationsTests).GetTypeInfo().Assembly.Location; // Assembly.GetExecutingAssembly().Location;
+            var filePath = typeof(FileOperationsTests).GetTypeInfo().Assembly.Location;
 
             // This should not throw.
             this.fileOperations.LoadAssembly(filePath, false);
@@ -105,7 +105,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                     typeof(MockDiaSession).AssemblyQualifiedName,
                     typeof(MockDiaNavigationData).AssemblyQualifiedName);
 
-                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location); // Assembly.GetExecutingAssembly().Location);
+                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location);
 
                 Assert.IsTrue(diaSession is MockDiaSession);
             }
@@ -126,7 +126,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 var navigationData = new MockDiaNavigationData() { FileName = "mock", MinLineNumber = 123 };
                 MockDiaSession.DiaNavigationData = navigationData;
 
-                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location); // Assembly.GetExecutingAssembly().Location);
+                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location);
                 this.fileOperations.GetNavigationData(
     diaSession,
     typeof(FileOperationsTests).FullName,
@@ -171,7 +171,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 var navigationData = new MockDiaNavigationData3() { MinLineNumber = 123 };
                 MockDiaSession.DiaNavigationData = navigationData;
 
-                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location); // Assembly.GetExecutingAssembly().Location);
+                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location);
                 this.fileOperations.GetNavigationData(
                 diaSession,
                 typeof(FileOperationsTests).FullName,
@@ -199,7 +199,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 var navigationData = new MockDiaNavigationData2() { FileName = "mock" };
                 MockDiaSession.DiaNavigationData = navigationData;
 
-                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location); // Assembly.GetExecutingAssembly().Location);
+                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location);
                 this.fileOperations.GetNavigationData(
                 diaSession,
                 typeof(FileOperationsTests).FullName,
@@ -232,7 +232,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                     typeof(MockDiaSession).AssemblyQualifiedName,
                     typeof(MockDiaNavigationData).AssemblyQualifiedName);
 
-                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location); // Assembly.GetExecutingAssembly().Location);
+                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location);
                 this.fileOperations.DisposeNavigationSession(diaSession);
 
                 Assert.IsTrue(MockDiaSession.IsDisposeInvoked);

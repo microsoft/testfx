@@ -31,8 +31,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\ns10Constants.cs">
-      <Link>ns10Constants.cs</Link>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Constants.cs">
+      <Link>Constants.cs</Link>
     </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs">
       <Link>MarshalByRefObject.cs</Link>

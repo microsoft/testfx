@@ -165,8 +165,8 @@ function Perform-Restore {
   {
 	$solutionPath = Locate-Item -relativePath $solution
 
-	Write-Verbose "$nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath"
-	& $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath
+	Write-Verbose "$nuget restore -msbuildPath $msbuildPath -verbosity minimal -nonInteractive -configFile $nugetConfig $solutionPath"
+	& $nuget restore -msbuildPath $msbuildPath -verbosity minimal -nonInteractive -configFile $nugetConfig $solutionPath
   }
 
   if ($lastExitCode -ne 0) {
@@ -180,8 +180,8 @@ function Perform-Restore {
   {
 	$projectPath = Locate-Item -relativePath $project
 
-	Write-Verbose "$msbuild /t:restore -verbosity:quiet $projectPath"
-	& $msbuild /t:restore -verbosity:quiet $projectPath
+	Write-Verbose "$msbuild /t:restore -verbosity:minimal $projectPath"
+	& $msbuild /t:restore -verbosity:minimal $projectPath
   }
   
   if ($lastExitCode -ne 0) {
