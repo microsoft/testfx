@@ -64,7 +64,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
             Action a = () => this.typeCache.GetTestMethodInfo(
                 null,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                false);
 
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
@@ -73,7 +74,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void GetTestMethodInfoShouldThrowIfTestContextIsNull()
         {
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-            Action a = () => this.typeCache.GetTestMethodInfo(testMethod, null);
+            Action a = () => this.typeCache.GetTestMethodInfo(testMethod, null, false);
 
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
@@ -86,7 +87,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNull(
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>())));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false));
         }
 
         [TestMethodV1]
@@ -97,7 +99,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNull(
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>())));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false));
         }
 
         [TestMethodV1]
@@ -111,7 +114,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Action action = () =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var exception = ActionUtility.PerformActionAndReturnException(action);
 
@@ -129,7 +133,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Action action = () =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var exception = ActionUtility.PerformActionAndReturnException(action);
 
@@ -147,7 +152,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Action action = () =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var exception = ActionUtility.PerformActionAndReturnException(action);
 
@@ -165,7 +171,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Action action = () =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var exception = ActionUtility.PerformActionAndReturnException(action);
 
@@ -185,8 +192,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
 
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                                        testMethod,
+                                        new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                                        false);
 
             Assert.IsNotNull(testMethodInfo);
             Assert.IsNotNull(testMethodInfo.Parent.TestContextProperty);
@@ -203,8 +211,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
 
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                                    testMethod,
+                                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                                    false);
 
             Assert.IsNotNull(testMethodInfo);
             Assert.IsNull(testMethodInfo.Parent.TestContextProperty);
@@ -223,8 +232,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.AssemblyInfoCache.Count());
         }
@@ -243,8 +253,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(typeof(DummyTestClassWithTestMethods), typeof(UTF.TestClassAttribute), true)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.AssemblyInfoCache.Count());
         }
@@ -262,8 +273,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyInit"), typeof(UTF.AssemblyInitializeAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.AssemblyInfoCache.Count());
             Assert.AreEqual(type.GetMethod("AssemblyInit"), this.typeCache.AssemblyInfoCache.ToArray()[0].AssemblyInitializeMethod);
@@ -282,8 +294,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyCleanup"), typeof(UTF.AssemblyCleanupAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.AssemblyInfoCache.Count());
             Assert.AreEqual(type.GetMethod("AssemblyCleanup"), this.typeCache.AssemblyInfoCache.ToArray()[0].AssemblyCleanupMethod);
@@ -304,8 +317,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyCleanup"), typeof(UTF.AssemblyCleanupAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.AssemblyInfoCache.Count());
             Assert.AreEqual(type.GetMethod("AssemblyCleanup"), this.typeCache.AssemblyInfoCache.ToArray()[0].AssemblyCleanupMethod);
@@ -328,7 +342,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 () =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var exception = ActionUtility.PerformActionAndReturnException(a);
             Assert.IsNotNull(exception);
@@ -360,7 +375,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 () =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var exception = ActionUtility.PerformActionAndReturnException(a);
             Assert.IsNotNull(exception);
@@ -387,12 +403,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             this.mockReflectHelper.Verify(rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true), Times.Once);
             Assert.AreEqual(1, this.typeCache.AssemblyInfoCache.Count());
@@ -413,8 +431,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.IsNull(this.typeCache.ClassInfoCache.ToArray()[0].TestInitializeMethod);
@@ -434,8 +453,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyInit"), typeof(UTF.ClassInitializeAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.AreEqual(type.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
@@ -454,8 +474,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyCleanup"), typeof(UTF.ClassCleanupAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.AreEqual(type.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
@@ -476,8 +497,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyCleanup"), typeof(UTF.ClassCleanupAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.AreEqual(type.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
@@ -500,7 +522,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 () =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var exception = ActionUtility.PerformActionAndReturnException(a);
             Assert.IsNotNull(exception);
@@ -532,7 +555,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 () =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var exception = ActionUtility.PerformActionAndReturnException(a);
             Assert.IsNotNull(exception);
@@ -561,8 +585,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("TestInit"), typeof(UTF.TestInitializeAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.AreEqual(type.GetMethod("TestInit"), this.typeCache.ClassInfoCache.ToArray()[0].TestInitializeMethod);
@@ -581,8 +606,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("TestCleanup"), typeof(UTF.TestCleanupAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.AreEqual(type.GetMethod("TestCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].TestCleanupMethod);
@@ -604,7 +630,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 () =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var exception = ActionUtility.PerformActionAndReturnException(a);
 
@@ -635,8 +662,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(baseType.GetMethod("TestInit"), typeof(UTF.TestInitializeAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.AreEqual(baseType.GetMethod("TestInit"), this.typeCache.ClassInfoCache.ToArray()[0].BaseTestInitializeMethodsQueue.Peek());
@@ -656,8 +684,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(baseType.GetMethod("TestCleanup"), typeof(UTF.TestCleanupAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.AreEqual(baseType.GetMethod("TestCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].BaseTestCleanupMethodsQueue.Peek());
@@ -674,12 +703,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             this.testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()), Times.Once);
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
@@ -700,7 +731,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 () =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var exception = ActionUtility.PerformActionAndReturnException(a);
 
@@ -723,13 +755,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
-            Assert.AreEqual(0, testMethodInfo.Timeout);
+            Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
             Assert.AreEqual(this.typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
-            Assert.IsNotNull(testMethodInfo.Executor);
+            Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor);
         }
 
         [TestMethodV1]
@@ -743,13 +776,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 .Returns(true);
 
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
-            Assert.AreEqual(10, testMethodInfo.Timeout);
+            Assert.AreEqual(10, testMethodInfo.TestMethodOptions.Timeout);
             Assert.AreEqual(this.typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
-            Assert.IsNotNull(testMethodInfo.Executor);
+            Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor);
         }
 
         [TestMethodV1]
@@ -763,8 +797,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 .Returns(true);
 
             Action a = () => this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var exception = ActionUtility.PerformActionAndReturnException(a);
 
@@ -788,14 +823,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
-            Assert.AreEqual(0, testMethodInfo.Timeout);
+            Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
             Assert.AreEqual(this.typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
-            Assert.IsNotNull(testMethodInfo.Executor);
-            Assert.IsNotNull(testMethodInfo.Executor is DerivedTestMethodAttribute);
+            Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor);
+            Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor is DerivedTestMethodAttribute);
         }
 
         [TestMethodV1]
@@ -809,7 +845,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 null,
                 new Dictionary<string, object>());
 
-            this.typeCache.GetTestMethodInfo(testMethod, testContext);
+            this.typeCache.GetTestMethodInfo(testMethod, testContext, false);
             var customProperty = testContext.Properties.FirstOrDefault(p => p.Key.Equals("WhoAmI"));
 
             Assert.IsNotNull(customProperty);
@@ -827,7 +863,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                  null,
                 new Dictionary<string, object>());
 
-            var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext);
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, false);
 
             Assert.IsNotNull(testMethodInfo);
             var expectedMessage = string.Format(
@@ -849,7 +885,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 null,
                 new Dictionary<string, object>());
 
-            var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext);
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, false);
 
             Assert.IsNotNull(testMethodInfo);
             var expectedMessage = string.Format(
@@ -870,7 +906,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 null,
                 new Dictionary<string, object>());
 
-            var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext);
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, false);
 
             Assert.IsNotNull(testMethodInfo);
             var expectedMessage = string.Format(
@@ -891,7 +927,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 null,
                 new Dictionary<string, object>());
 
-            var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext);
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, false);
 
             Assert.IsNotNull(testMethodInfo);
 
@@ -909,13 +945,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
-            Assert.AreEqual(0, testMethodInfo.Timeout);
+            Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
             Assert.AreEqual(this.typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
-            Assert.IsNotNull(testMethodInfo.Executor);
+            Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor);
         }
 
         #endregion
@@ -947,8 +984,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("TestCleanup"), typeof(UTF.ClassCleanupAttribute), false)).Returns(false);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var cleanupMethods = this.typeCache.ClassInfoListWithExecutableCleanupMethods;
 
@@ -970,8 +1008,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyCleanup"), typeof(UTF.ClassCleanupAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var cleanupMethods = this.typeCache.ClassInfoListWithExecutableCleanupMethods;
 
@@ -1007,8 +1046,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyCleanup"), typeof(UTF.AssemblyCleanupAttribute), false)).Returns(false);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var cleanupMethods = this.typeCache.AssemblyInfoListWithExecutableCleanupMethods;
 
@@ -1030,8 +1070,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyCleanup"), typeof(UTF.AssemblyCleanupAttribute), false)).Returns(true);
 
             this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             var cleanupMethods = this.typeCache.AssemblyInfoListWithExecutableCleanupMethods;
 
@@ -1057,10 +1098,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(rh => rh.ResolveExpectedExceptionHelper(methodInfo, testMethod)).Returns(expectedException);
 
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
-            Assert.AreEqual(expectedException, testMethodInfo.ExpectedException);
+            Assert.AreEqual(expectedException, testMethodInfo.TestMethodOptions.ExpectedException);
         }
 
         [TestMethodV1]
@@ -1074,12 +1116,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 .Returns(true);
 
             var testMethodInfo = this.typeCache.GetTestMethodInfo(
-                testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
 
             UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
 
-            Assert.AreEqual(null, testMethodInfo.ExpectedException);
+            Assert.AreEqual(null, testMethodInfo.TestMethodOptions.ExpectedException);
         }
 
         [TestMethodV1]
@@ -1096,7 +1139,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             {
                 var testMethodInfo = this.typeCache.GetTestMethodInfo(
                     testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()));
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
             }
             catch (Exception ex)
             {

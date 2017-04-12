@@ -82,7 +82,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testContext.SetOutcome(TestTools.UnitTesting.UnitTestOutcome.InProgress);
 
                     // Get the testMethod
-                    var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext);
+                    var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, this.captureDebugTraces);
 
                     // If the specified TestMethod could not be found, return a NotFound result.
                     if (testMethodInfo == null)

@@ -51,17 +51,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
-        public void LogMessageListenerShouldCaptureErrorMessages()
-        {
-            using (var logMessageListener = new LogMessageListener(false))
-            {
-                UTF.Logging.Logger.LogMessage("Error Message");
-
-                Assert.AreEqual("Error Message" + Environment.NewLine, logMessageListener.StandardError);
-            }
-        }
-
-        [TestMethod]
         public void NoTraceListenerOperationShouldBePerformedIfDebugTraceIsNotEnabled()
         {
             var logMessageListener = new LogMessageListener(false);

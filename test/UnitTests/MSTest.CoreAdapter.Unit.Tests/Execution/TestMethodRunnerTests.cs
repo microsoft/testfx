@@ -19,7 +19,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Moq;
     using MSTest.TestAdapter;
-    using PlatformServices.Interface;
     using TestableImplementations;
     using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -48,6 +47,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private TestablePlatformServiceProvider testablePlatformServiceProvider;
 
+        private TestMethodOptions globaltestMethodOptions;
+        private TestMethodOptions testMethodOptions;
+
         public TestMethodRunnerTests()
         {
             var constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
@@ -65,14 +67,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 testContextProperty: testContextProperty,
                 classAttribute: classAttribute,
                 parent: testAssemblyInfo);
+
+            this.globaltestMethodOptions = new TestMethodOptions()
+            {
+                Timeout = 3600 * 1000,
+                Executor = this.testMethodAttribute,
+                TestContext = this.testContextImplementation,
+                ExpectedException = null
+            };
             var globalTestMethodInfo = new TestMethodInfo(
                 this.methodInfo,
-                timeout: 3600 * 1000,
-                executor: this.testMethodAttribute,
-                expectedException: null,
-                parent: this.testClassInfo,
-                testContext: this.testContextImplementation);
+                this.testClassInfo,
+                this.globaltestMethodOptions);
             this.globalTestMethodRunner = new TestMethodRunner(globalTestMethodInfo, this.testMethod, this.testContextImplementation, false);
+
+            this.testMethodOptions = new TestMethodOptions()
+            {
+                Timeout = 200,
+                Executor = this.testMethodAttribute,
+                TestContext = this.testContextImplementation,
+                ExpectedException = null
+            };
 
             // Reset test hooks
             DummyTestClass.TestConstructorMethodBody = () => { };
@@ -114,7 +129,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 testContextProperty: testContextProperty,
                 classAttribute: classAttribute,
                 parent: tai);
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, tci, this.testContextImplementation, () => { throw new Exception("DummyException"); });
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, tci, this.testMethodOptions, () => { throw new Exception("DummyException"); });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             // Act.
@@ -146,7 +161,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 "InitMethodThrowingException",
                 BindingFlags.Static | BindingFlags.NonPublic);
 
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, tci, this.testContextImplementation, () => { throw new Exception("DummyException"); });
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, tci, this.testMethodOptions, () => { throw new Exception("DummyException"); });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             // Act.
@@ -160,7 +175,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void ExecuteForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => { throw new Exception("DummyException"); });
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => { throw new Exception("DummyException"); });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             var results = testMethodRunner.Execute();
@@ -171,7 +186,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void ExecuteForPassingTestShouldReturnUnitTestResultWithPassedOutcome()
         {
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             var results = testMethodRunner.Execute();
@@ -179,22 +194,45 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
-        public void ExecuteShouldFillInDebugAndTraceLogsIfDebugTraceEnabled()
+        public void ExecuteShouldFillInDebugAndTraceLogsFromClassInitialize()
         {
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            StringWriter writer = new StringWriter(new StringBuilder());
+            DummyTestClass.ClassInitializeMethodBody = (UTFExtension.TestContext tc) =>
+                                                            {
+                                                                writer.Write("ClassInit trace");
+                                                            };
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("DummyClassInit");
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, true);
 
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
             this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
 
             var results = testMethodRunner.Execute();
-            Assert.AreEqual(results[0].DebugTrace, "DummyTrace");
+            Assert.AreEqual("ClassInit trace", results[0].DebugTrace);
+        }
+
+        [TestMethodV1]
+        public void ExecuteShouldFillInDebugAndTraceLogsFromAssemblyInitialize()
+        {
+            StringWriter writer = new StringWriter(new StringBuilder());
+            DummyTestClass.AssemblyInitializeMethodBody = (UTFExtension.TestContext tc) =>
+            {
+                writer.Write("AssemblyInit trace");
+            };
+            this.testClassInfo.Parent.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("DummyAssemblyInit");
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, true);
+
+            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual("AssemblyInit trace", results[0].DebugTrace);
         }
 
         [TestMethodV1]
         public void ExecuteShouldNotFillInDebugAndTraceLogsIfDebugTraceDisabled()
         {
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
@@ -205,9 +243,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void ExecuteShouldNotFillInDebugAndTraceLogsFromRunningTestMethod()
+        {
+            StringWriter writer = new StringWriter(new StringBuilder());
+            var testMethodInfo = new TestableTestmethodInfo(
+                this.methodInfo,
+                this.testClassInfo,
+                this.testMethodOptions,
+                () =>
+                {
+                    writer.Write("InTestMethod");
+                    return new UTF.TestResult()
+                    {
+                        Outcome = UTF.UnitTestOutcome.Passed
+                    };
+                });
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, true);
+            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
+
+            var results = testMethodRunner.Execute();
+
+            Assert.AreEqual(string.Empty, results[0].DebugTrace);
+        }
+
+        [TestMethodV1]
         public void RunTestMethodForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => { throw new Exception("Dummy Exception"); });
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => { throw new Exception("Dummy Exception"); });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             var results = testMethodRunner.RunTestMethod();
@@ -218,7 +280,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodForPassingTestThrowingExceptionShouldReturnUnitTestResultWithPassedOutcome()
         {
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo,  this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             var results = testMethodRunner.Execute();
@@ -228,7 +290,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodForFailingTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             var results = testMethodRunner.Execute();
@@ -238,7 +300,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodChecksIfTestsAreDataDriven()
         {
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             // setup mocks
@@ -252,7 +314,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodRunsDataDrivenTestsWhenDataIsProvided()
         {
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, 200, this.testMethodAttribute, this.testClassInfo, this.testContextImplementation, () => new UTF.TestResult());
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult());
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             // Set outcome to be failed
@@ -383,8 +445,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             private Func<UTF.TestResult> invokeTest;
 
-            internal TestableTestmethodInfo(MethodInfo testMethod, int timeout, UTF.TestMethodAttribute executor, TestClassInfo parent, TestContextImplementation testContext, Func<UTF.TestResult> invoke)
-                : base(testMethod, timeout, executor, null, parent, testContext)
+            internal TestableTestmethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<UTF.TestResult> invoke)
+                : base(testMethod, parent, testMethodOptions)
             {
                 this.invokeTest = invoke;
             }
@@ -425,6 +487,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             public static Func<Task> DummyAsyncTestMethodBody { get; set; }
 
+            public static Action<UTFExtension.TestContext> AssemblyInitializeMethodBody { get; set; }
+
+            public static Action<UTFExtension.TestContext> ClassInitializeMethodBody { get; set; }
+
             public UTFExtension.TestContext TestContext
             {
                 get
@@ -436,6 +502,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 {
                     TestContextSetterBody(value);
                 }
+            }
+
+            public static void DummyAssemblyInit(UTFExtension.TestContext tc)
+            {
+                AssemblyInitializeMethodBody(tc);
+            }
+
+            public static void DummyClassInit(UTFExtension.TestContext tc)
+            {
+                ClassInitializeMethodBody(tc);
             }
 
             public void DummyTestInitializeMethod()
