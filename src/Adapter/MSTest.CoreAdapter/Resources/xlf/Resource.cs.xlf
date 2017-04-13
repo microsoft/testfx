@@ -286,6 +286,11 @@
         <target state="translated">UTA026: {0}: Uvnitř třídy nejde definovat více jak jednu metodu s atributem ClassCleanup.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="TestContextMessageBanner">
+        <source>TestContext Messages:</source>
+        <target state="new">TestContext Messages:</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

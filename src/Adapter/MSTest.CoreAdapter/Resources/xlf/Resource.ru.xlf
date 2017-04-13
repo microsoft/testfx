@@ -286,6 +286,11 @@
         <target state="translated">UTA026: {0}: в классе невозможно определить несколько методов с атрибутом ClassCleanup.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="TestContextMessageBanner">
+        <source>TestContext Messages:</source>
+        <target state="new">TestContext Messages:</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
