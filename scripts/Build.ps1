@@ -150,8 +150,8 @@ function Perform-Restore {
   }
 
   Write-Log "    Starting toolset restore..."
-  Write-Verbose "$nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset"
-  & $nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset
+  Write-Verbose "$nuget restore -msbuildVersion $msbuildVersion -verbosity normal -nonInteractive -configFile $nugetConfig $toolset"
+  & $nuget restore -msbuildVersion $msbuildVersion -verbosity normal -nonInteractive -configFile $nugetConfig $toolset
   
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
