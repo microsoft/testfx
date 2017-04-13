@@ -122,6 +122,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 newResult.StandardOut = result[result.Length - 1].StandardOut;
                 newResult.StandardError = result[result.Length - 1].StandardError;
                 newResult.DebugTrace = result[result.Length - 1].DebugTrace;
+                newResult.TestContextMessages = result[result.Length - 1].TestContextMessages;
                 newResult.Duration = result[result.Length - 1].Duration;
                 result[result.Length - 1] = newResult;
             }
@@ -271,6 +272,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 unitTestResult.StandardOut = results[i].LogOutput;
                 unitTestResult.StandardError = results[i].LogError;
                 unitTestResult.DebugTrace = results[i].DebugTrace;
+                unitTestResult.TestContextMessages = results[i].TestContextMessages;
                 unitTestResult.Duration = results[i].Duration;
                 unitTestResult.DisplayName = results[i].DisplayName;
                 unitTestResult.DatarowIndex = results[i].DatarowIndex;

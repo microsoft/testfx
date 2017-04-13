@@ -157,9 +157,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
                             Debug.Assert(currentResult[0] != null, "current result should not be null.");
                             dataRowResults.Add(currentResult[0]);
-
-                            // Clear the testContext's internal string writer to start afresh for the next datarow iteration
-                            testContextImpl.ClearMessages();
                         }
                     }
                     finally

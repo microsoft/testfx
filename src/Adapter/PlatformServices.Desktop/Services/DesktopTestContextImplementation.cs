@@ -293,13 +293,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             throw new NotSupportedException();
         }
 
-        // Summary:
-        //     When overridden in a derived class, used to write trace messages while the
-        //     test is running.
-        //
-        // Parameters:
-        //   message:
-        //     The formatted string that contains the trace message.
+        /// <summary>
+        /// When overridden in a derived class, used to write trace messages while the
+        ///     test is running.
+        /// </summary>
+        /// <param name="message">The formatted string that contains the trace message.</param>
         public override void WriteLine(string message)
         {
             if (this.stringWriterDisposed)
@@ -318,16 +316,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        // Summary:
-        //     When overridden in a derived class, used to write trace messages while the
-        //     test is running.
-        //
-        // Parameters:
-        //   format:
-        //     The string that contains the trace message.
-        //
-        //   args:
-        //     Arguments to add to the trace message.
+        /// <summary>
+        /// When overridden in a derived class, used to write trace messages while the
+        ///     test is running.
+        /// </summary>
+        /// <param name="format">The string that contains the trace message.</param>
+        /// <param name="args">Arguments to add to the trace message.</param>
         public override void WriteLine(string format, params object[] args)
         {
             if (this.stringWriterDisposed)
@@ -406,30 +400,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return results;
         }
 
-        #endregion
-
-        #region internal methods
-
-#pragma warning disable SA1201 // Elements must appear in the correct order
-
         /// <summary>
         /// Gets messages from the testContext writeLines
         /// </summary>
-        internal string Messages
+        /// <returns>The test context messages added so far.</returns>
+        public string GetDiagnosticMessages()
         {
-            get { return this.stringWriter.ToString(); }
+            return this.stringWriter.ToString();
         }
-
-#pragma warning restore SA1201 // Elements must appear in the correct order
 
         /// <summary>
         /// Clears the previous testContext writeline messages.
         /// </summary>
-        internal void ClearMessages()
+        public void ClearDiagnosticMessages()
         {
             var sb = this.stringWriter.GetStringBuilder();
             sb.Remove(0, sb.Length);
         }
+
+        #endregion
+
+        #region internal methods
 
         /// <summary>
         /// Set connection for TestContext

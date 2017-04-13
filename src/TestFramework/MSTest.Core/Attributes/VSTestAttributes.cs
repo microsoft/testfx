@@ -382,6 +382,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public string DebugTrace { get; set; }
 
         /// <summary>
+        /// Gets or sets the debug traces by test code.
+        /// </summary>
+        public string TestContextMessages { get; set; }
+
+        /// <summary>
         /// Gets or sets the duration of test execution.
         /// </summary>
         public TimeSpan Duration { get; set; }
