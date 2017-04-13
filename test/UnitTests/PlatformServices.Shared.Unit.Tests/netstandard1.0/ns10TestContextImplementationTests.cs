@@ -1,18 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
+namespace MSTestAdapter.PlatformServices.Tests.Services
 {
+#if NETCOREAPP1_0
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
     extern alias FrameworkV1;
     extern alias FrameworkV2;
-
-    using System.Collections.Generic;
-    using System.Linq;
-
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
-
-    using Moq;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
@@ -20,9 +15,20 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UnitTestOutcome = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
+#endif
+
+    using System.Collections.Generic;
+    using System.Linq;
+
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+    using Moq;
+    using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
+
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     [TestClass]
-    public class PortableTestContextImplementationTests
+    public class TestContextImplementationTests
     {
         private Mock<ITestMethod> testMethod;
 
@@ -163,4 +169,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                 new KeyValuePair<string, object>("SomeNewProperty", "SomeValue"));
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
+
 }

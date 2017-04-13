@@ -31,12 +31,53 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Constants.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Constants.cs">
+      <Link>Constants.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs">
+      <Link>MarshalByRefObject.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs">
+      <Link>SerializableAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10FileOperations.cs">
+      <Link>Services\ns10FileOperations.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs">
+      <Link>Services\ns10ReflectionOperations.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10SettingsProvider.cs">
+      <Link>Services\ns10SettingsProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs">
+      <Link>Services\ns10TestContextImplementation.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs">
+      <Link>Services\ns10TestDataSource.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestDeployment.cs">
+      <Link>Services\ns10TestDeployment.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestSource.cs">
+      <Link>Services\ns10TestSource.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestSourceHost.cs">
+      <Link>Services\ns10TestSourceHost.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs">
+      <Link>Services\ns10ThreadOperations.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs">
+      <Link>Services\ns10TraceListener.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs">
+      <Link>Services\ns10TraceListenerManager.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TraceLogger.cs">
+      <Link>Services\ns10TraceLogger.cs</Link>
+    </Compile>
     <Compile Include="Friends.cs" />
-    <Compile Include="Services\PortableFileOperations.cs" />
-    <Compile Include="Services\PortableTestSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\PortableTraceLogger.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj">
@@ -64,6 +105,5 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <Import Project="..\PlatformServices.Shared\PlatformServices.Shared.projitems" Label="Shared" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

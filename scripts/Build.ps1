@@ -88,6 +88,8 @@ $TFB_VSmanprojs =@("src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.Deskt
                    "src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.vsmanproj", 
                    "src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.IntelliTest.vsmanproj", 
                    "src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.UnitTest.vsmanproj")
+$TFB_NetCoreProjects =@("src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj",
+						"test\UnitTests\PlatformServices.NetCore.Unit.Tests\PlatformServices.NetCore.Unit.Tests.csproj")
 
 #
 # Script Preferences
@@ -148,8 +150,8 @@ function Perform-Restore {
   }
 
   Write-Log "    Starting toolset restore..."
-  Write-Verbose "$nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset"
-  & $nuget restore -msbuildVersion $msbuildVersion -verbosity quiet -nonInteractive -configFile $nugetConfig $toolset
+  Write-Verbose "$nuget restore -msbuildVersion $msbuildVersion -verbosity normal -nonInteractive -configFile $nugetConfig $toolset"
+  & $nuget restore -msbuildVersion $msbuildVersion -verbosity normal -nonInteractive -configFile $nugetConfig $toolset
   
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
@@ -161,12 +163,27 @@ function Perform-Restore {
   Write-Verbose "Starting solution restore..."
   foreach($solution in $TFB_Solutions)
   {
-	$solutionPath = Locate-Solution -relativePath $solution
+	$solutionPath = Locate-Item -relativePath $solution
 
 	Write-Verbose "$nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath"
 	& $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath
   }
 
+  if ($lastExitCode -ne 0) {
+    throw "The restore failed with an exit code of '$lastExitCode'."
+  }
+  
+  $msbuild = Join-Path $msbuildPath "MSBuild.exe"
+  
+  Write-Verbose "Starting restore for NetCore Projects"
+  foreach($project in $TFB_NetCoreProjects)
+  {
+	$projectPath = Locate-Item -relativePath $project
+
+	Write-Verbose "$msbuild /t:restore -verbosity:minimal $projectPath"
+	& $msbuild /t:restore -verbosity:minimal $projectPath
+  }
+  
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
   }
@@ -221,7 +238,7 @@ function Perform-Build {
 function Invoke-Build([string] $solution, $hasVsixExtension = "false")
 {
   $msbuild = Locate-MSBuild -hasVsixExtension $hasVsixExtension
-	$solutionPath = Locate-Solution -relativePath $solution
+	$solutionPath = Locate-Item -relativePath $solution
   $solutionDir = [System.IO.Path]::GetDirectoryName($solutionPath)
   $solutionSummaryLog = Join-Path -path $solutionDir -childPath "msbuild.log"
   $solutionWarningLog = Join-Path -path $solutionDir -childPath "msbuild.wrn"
@@ -242,7 +259,7 @@ function Build-vsmanprojs
   
   foreach($vsmanproj in $TFB_VSmanprojs)
   {
-	$vsmanprojPath = Locate-Solution -relativePath $vsmanproj
+	$vsmanprojPath = Locate-Item -relativePath $vsmanproj
 	
 	Write-Log "    Building $vsmanproj..."
 	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /m /p:TargetExt=.vsman $vsmanprojPath"

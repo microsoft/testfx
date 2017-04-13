@@ -1,9 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
+namespace MSTestAdapter.PlatformServices.UnitTests.Services
 {
+#if NETCOREAPP1_0
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
     extern alias FrameworkV1;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+#endif
 
     using System;
     using System.Diagnostics;
@@ -11,12 +19,11 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     using System.Text;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using TestUtilities;
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     [TestClass]
-    public class DesktopTraceListenerManagerTests
+    public class TraceListenerManagerTests
     {
         [TestMethod]
         public void AddShouldAddTraceListenerToListOfTraceListeners()
@@ -53,22 +60,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         }
 
         [TestMethod]
-        public void CloseShouldCallCloseOnCorrespondingTraceListener()
-        {
-            var stringWriter = new StringWriter();
-            var traceListenerManager = new TraceListenerManager(stringWriter, stringWriter);
-
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
-            var traceListener = new TraceListenerWrapper(writer);
-            traceListenerManager.Add(traceListener);
-            traceListenerManager.Close(traceListener);
-
-            // Tring to write after closing textWriter should throw exception
-            Action shouldThrowException = () => writer.WriteLine("Try to write something");
-            ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
-        }
-
-        [TestMethod]
         public void DisposeShouldCallDisposeOnCorrespondingTraceListener()
         {
             var stringWriter = new StringWriter();
@@ -84,4 +75,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
+
 }

@@ -27,13 +27,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         // Summary:
-        //     Wrapper over Close() of System.Diagnostics.TextWriterTraceListener.Writer
-        public override void Close()
-        {
-            base.Close();
-        }
-
-        // Summary:
         //     Wrapper over Dispose() of System.Diagnostics.TextWriterTraceListener object
         public new void Dispose()
         {

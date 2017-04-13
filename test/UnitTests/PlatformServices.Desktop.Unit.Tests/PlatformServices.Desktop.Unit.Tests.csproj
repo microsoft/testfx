@@ -55,6 +55,12 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerManagerTests.cs">
+      <Link>Services\ns13TraceListenerManagerTests.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerTests.cs">
+      <Link>Services\ns13TraceListenerTests.cs</Link>
+    </Compile>
     <Compile Include="AssemblyResolverTests.cs" />
     <Compile Include="Deployment\AssemblyLoadWorkerTests.cs" />
     <Compile Include="Deployment\DeploymentItemTests.cs" />
@@ -69,8 +75,6 @@
     <Compile Include="Services\DesktopTestDeploymentTests.cs" />
     <Compile Include="Services\DesktopTestSourceHostTests.cs" />
     <Compile Include="Services\DesktopTestSourceTests.cs" />
-    <Compile Include="Services\DesktopTraceListenerManagerTests.cs" />
-    <Compile Include="Services\DesktopTraceListenerTests.cs" />
     <Compile Include="Utilities\AppDomainUtilitiesTests.cs" />
     <Compile Include="Utilities\DeploymentItemUtilityTests.cs" />
     <Compile Include="Services\DesktopFileOperationsTests.cs" />

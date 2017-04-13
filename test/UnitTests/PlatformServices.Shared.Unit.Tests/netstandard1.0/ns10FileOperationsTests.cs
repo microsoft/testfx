@@ -1,22 +1,28 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
+namespace MSTestAdapter.PlatformServices.Tests.Services
 {
+#if NETCOREAPP1_0
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
     extern alias FrameworkV1;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+#endif
 
     using System;
     using System.IO;
     using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-    using MSTestAdapter.TestUtilities;
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+     using MSTestAdapter.TestUtilities;
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     [TestClass]
-    public class PortableFileOperationsTests
+    public class FileOperationsTests
     {
         private FileOperations fileOperations;
 
@@ -45,7 +51,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
         [TestMethod]
         public void LoadAssemblyShouldLoadAssemblyInCurrentContext()
         {
-            var filePath = Assembly.GetExecutingAssembly().Location;
+            var filePath = typeof(FileOperationsTests).GetTypeInfo().Assembly.Location;
 
             // This should not throw.
             this.fileOperations.LoadAssembly(filePath, false);
@@ -99,7 +105,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                     typeof(MockDiaSession).AssemblyQualifiedName,
                     typeof(MockDiaNavigationData).AssemblyQualifiedName);
 
-                var diaSession = this.fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
+                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location);
 
                 Assert.IsTrue(diaSession is MockDiaSession);
             }
@@ -120,15 +126,13 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                 var navigationData = new MockDiaNavigationData() { FileName = "mock", MinLineNumber = 123 };
                 MockDiaSession.DiaNavigationData = navigationData;
 
-                var diaSession = this.fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
-                int minLineNumber;
-                string fileName;
+                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location);
                 this.fileOperations.GetNavigationData(
-                    diaSession,
-                    typeof(PortableFileOperationsTests).FullName,
-                    "GetNavigationDataShouldReturnDataFromNavigationSession",
-                    out minLineNumber,
-                    out fileName);
+    diaSession,
+    typeof(FileOperationsTests).FullName,
+    "GetNavigationDataShouldReturnDataFromNavigationSession",
+    out int minLineNumber,
+    out string fileName);
 
                 Assert.AreEqual(navigationData.MinLineNumber, minLineNumber);
                 Assert.AreEqual(navigationData.FileName, fileName);
@@ -145,14 +149,12 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
         {
             FileOperations.Initialize(string.Empty, string.Empty);
 
-            int minLineNumber;
-            string fileName;
             this.fileOperations.GetNavigationData(
-                null,
-                typeof(PortableFileOperationsTests).FullName,
-                "GetNavigationDataShouldReturnDataFromNavigationSession",
-                out minLineNumber,
-                out fileName);
+            null,
+            typeof(FileOperationsTests).FullName,
+            "GetNavigationDataShouldReturnDataFromNavigationSession",
+            out int minLineNumber,
+            out string fileName);
 
             Assert.AreEqual(-1, minLineNumber);
             Assert.IsNull(fileName);
@@ -169,15 +171,13 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                 var navigationData = new MockDiaNavigationData3() { MinLineNumber = 123 };
                 MockDiaSession.DiaNavigationData = navigationData;
 
-                var diaSession = this.fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
-                int minLineNumber;
-                string fileName;
+                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location);
                 this.fileOperations.GetNavigationData(
-                    diaSession,
-                    typeof(PortableFileOperationsTests).FullName,
-                    "GetNavigationDataShouldReturnDataFromNavigationSession",
-                    out minLineNumber,
-                    out fileName);
+                diaSession,
+                typeof(FileOperationsTests).FullName,
+                "GetNavigationDataShouldReturnDataFromNavigationSession",
+                out int minLineNumber,
+                out string fileName);
 
                 Assert.AreEqual(123, minLineNumber);
                 Assert.IsNull(fileName);
@@ -199,15 +199,13 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                 var navigationData = new MockDiaNavigationData2() { FileName = "mock" };
                 MockDiaSession.DiaNavigationData = navigationData;
 
-                var diaSession = this.fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
-                int minLineNumber;
-                string fileName;
+                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location);
                 this.fileOperations.GetNavigationData(
-                    diaSession,
-                    typeof(PortableFileOperationsTests).FullName,
-                    "GetNavigationDataShouldReturnDataFromNavigationSession",
-                    out minLineNumber,
-                    out fileName);
+                diaSession,
+                typeof(FileOperationsTests).FullName,
+                "GetNavigationDataShouldReturnDataFromNavigationSession",
+                out int minLineNumber,
+                out string fileName);
 
                 Assert.AreEqual(-1, minLineNumber);
                 Assert.AreEqual(navigationData.FileName, fileName);
@@ -234,7 +232,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
                     typeof(MockDiaSession).AssemblyQualifiedName,
                     typeof(MockDiaNavigationData).AssemblyQualifiedName);
 
-                var diaSession = this.fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
+                var diaSession = this.fileOperations.CreateNavigationSession(typeof(FileOperationsTests).GetTypeInfo().Assembly.Location);
                 this.fileOperations.DisposeNavigationSession(diaSession);
 
                 Assert.IsTrue(MockDiaSession.IsDisposeInvoked);
@@ -310,4 +308,7 @@ namespace MSTestAdapter.PlatformServices.Portable.Tests.Services
     {
         public int MinLineNumber { get; set; }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
+
 }
