@@ -69,7 +69,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             this.testAssemblyInfo = new TestAssemblyInfo();
             var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
-            this.testContextImplementation = new TestContextImplementation(testMethod, null, new Dictionary<string, object>());
+            this.testContextImplementation = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object>());
             this.testClassInfo = new TestClassInfo(
                 type: typeof(DummyTestClass),
                 constructor: this.constructorInfo,
@@ -166,6 +166,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
                 Assert.AreEqual(string.Empty, result.DebugTrace);
             });
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldReportTestContextMessages()
+        {
+            DummyTestClass.TestMethodBody = o => { this.testContextImplementation.WriteLine("TestContext"); };
+
+            var method = new TestMethodInfo(
+                this.methodInfo,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            var result = method.Invoke(null);
+
+            StringAssert.Contains(result.TestContextMessages, "TestContext");
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldClearTestContextMessagesAfterReporting()
+        {
+            DummyTestClass.TestMethodBody = o => { this.testContextImplementation.WriteLine("TestContext"); };
+
+            var method = new TestMethodInfo(
+                this.methodInfo,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            var result = method.Invoke(null);
+
+            StringAssert.Contains(result.TestContextMessages, "TestContext");
+
+            DummyTestClass.TestMethodBody = o => { this.testContextImplementation.WriteLine("SeaShore"); };
+
+            result = method.Invoke(null);
+
+            StringAssert.Contains(result.TestContextMessages, "SeaShore");
         }
 
         #endregion

@@ -60,7 +60,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var testAssemblyInfo = new TestAssemblyInfo();
             this.testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
-            this.testContextImplementation = new TestContextImplementation(this.testMethod, null, new Dictionary<string, object>());
+            this.testContextImplementation = new TestContextImplementation(this.testMethod, new StringWriter(), new Dictionary<string, object>());
             this.testClassInfo = new TestClassInfo(
                 type: typeof(DummyTestClass),
                 constructor: constructorInfo,
@@ -264,6 +264,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var results = testMethodRunner.Execute();
 
             Assert.AreEqual(string.Empty, results[0].DebugTrace);
+        }
+
+        [TestMethodV1]
+        public void ExecuteShouldFillInLogsIfAssemblyInitializeThrows()
+        {
+            StringWriter writer = new StringWriter(new StringBuilder());
+            DummyTestClass.AssemblyInitializeMethodBody = (UTFExtension.TestContext tc) =>
+            {
+                writer.Write("AssemblyInit trace");
+                tc.WriteLine("Mountains");
+                throw new ArgumentException();
+            };
+            this.testClassInfo.Parent.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("DummyAssemblyInit");
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, true);
+
+            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual("AssemblyInit trace", results[0].DebugTrace);
+            Assert.AreEqual("Mountains", results[0].TestContextMessages);
         }
 
         [TestMethodV1]
