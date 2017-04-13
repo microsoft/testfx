@@ -40,7 +40,7 @@ $env:TF_TESTS_OUTDIR_PATTERN = "*.Tests"
 $env:TF_UNITTEST_FILES_PATTERN = "*.UnitTests*.dll"
 $env:TF_COMPONENTTEST_FILES_PATTERN = "*.ComponentTests*.dll"
 $env:TF_E2ETEST_FILES_PATTERN = "*.E2ETests*.dll"
-
+$env:TF_NetCoreContainers =@("MSTestAdapter.PlatformServices.NetCore.UnitTests.dll")
 #
 # Test configuration
 #
@@ -49,8 +49,8 @@ $TFT_Configuration = $Configuration
 $TFT_Pattern = $Pattern
 $TFT_Parallel = $Parallel
 $TFT_All = $All
-$TFB_NetCoreContainers =@("MSTestAdapter.PlatformServices.NetCore.UnitTests.dll")
 $TestFramework = ".NETCoreApp,Version=v1.0"
+$VSTestConsoleRelativePath = "Microsoft.TestPlatform.15.0.1\tools\net46\vstest.console.exe"
 
 #
 # Prints help text for the switches this script supports.
@@ -96,7 +96,7 @@ function Invoke-Test
         
         if($TFT_All)
         {
-			if($TFB_NetCoreContainers -Contains $testContainerName)
+			if($env:TF_NetCoreContainers -Contains $testContainerName)
 			{
 				$netCoreTestContainers += ,"$testContainerPath" 
 			}
@@ -109,7 +109,7 @@ function Invoke-Test
         {
             if($testContainerPath -match $TFT_Pattern)
             {
-    		    if($TFB_NetCoreContainers -Contains $testContainerName)
+    		    if($env:TF_NetCoreContainers -Contains $testContainerName)
 				{
 					$netCoreTestContainers += ,"$testContainerPath" 
 
@@ -141,7 +141,7 @@ function Invoke-Test
 function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 {	
     $vstestPath = Get-VSTestPath
-	$TPV2VSTestPath = Get-TPv2VSTestPath
+	$tpv2VSTestPath = Get-TPv2VSTestPath
  
     $additionalArguments = ''
     if($TFT_Parallel)
@@ -162,13 +162,13 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 	
 	if($netCoreTestContainers.Count -gt 0)
 	{	
-		if(!(Test-Path $TPV2VSTestPath))
+		if(!(Test-Path $tpv2VSTestPath))
 		{
-			Write-Error "Unable to find vstest.console.exe at $TPV2VSTestPath. Test aborted."
+			Write-Error "Unable to find vstest.console.exe at $tpv2VSTestPath. Test aborted."
 		}
 		
-		Write-Verbose "$TPV2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
-		& $TPV2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx 
+		Write-Verbose "$tpv2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
+		& $tpv2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx 
 	}
 }
 
@@ -182,7 +182,7 @@ function Get-VSTestPath
 function Get-TPv2VSTestPath
 {
     $packagesPath = Locate-PackagesPath
-	$vstestConsolePath = Join-Path -path $packagesPath "Microsoft.TestPlatform.15.0.1\tools\net46\vstest.console.exe"
+	$vstestConsolePath = Join-Path -path $packagesPath $VSTestConsoleRelativePath
 	return Resolve-Path -path $vstestConsolePath
 }
 	
