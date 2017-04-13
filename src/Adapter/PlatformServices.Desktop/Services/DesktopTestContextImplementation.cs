@@ -67,9 +67,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         private DataRow dataRow;
 
-        // Summary:
-        //     Initializes a new instance of an object that derives from the Microsoft.VisualStudio.TestTools.UnitTesting.TestContext
-        //     class.
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
+        /// </summary>
+        /// <param name="testMethod">The test method.</param>
+        /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
+        /// <param name="properties">Properties/configuration passed in.</param>
         public TestContextImplementation(ITestMethod testMethod, StringWriter stringWriter, IDictionary<string, object> properties)
         {
             Debug.Assert(testMethod != null, "TestMethod is not null");
@@ -87,13 +90,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         #region TestContext impl
 
-        // Summary:
-        //     You can use this property in a TestCleanup method to determine the outcome
-        //     of a test that has run.
-        //
-        // Returns:
-        //     A Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome that states
-        //     the outcome of a test that has run.
+        /// <inheritdoc/>
         public override UTF.UnitTestOutcome CurrentTestOutcome
         {
             get
@@ -102,12 +99,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        // Summary:
-        //     When overridden in a derived class, gets the current data connection when
-        //     the test is used for data driven testing.
-        //
-        // Returns:
-        //     A System.Data.Common.DbConnection object.
+        /// <inheritdoc/>
         public override DbConnection DataConnection
         {
             get
@@ -116,12 +108,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        // Summary:
-        //     When overridden in a derived class, gets the current data row when test is
-        //     used for data driven testing.
-        //
-        // Returns:
-        //     A System.Data.DataRow object.
+        /// <inheritdoc/>
         public override DataRow DataRow
         {
             get
@@ -130,12 +117,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        // Summary:
-        //     When overridden in a derived class, gets the test properties.
-        //
-        // Returns:
-        //     An System.Collections.IDictionary object that contains key/value pairs that
-        //     represent the test properties.
+        /// <inheritdoc/>
         public override IDictionary Properties
         {
             get
@@ -144,9 +126,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        /// <summary>
-        /// Gets base directory for the test run, under which deployed files and result files are stored.
-        /// </summary>
+        /// <inheritdoc/>
         public override string TestRunDirectory
         {
             get
@@ -155,9 +135,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        /// <summary>
-        /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
-        /// </summary>
+        /// <inheritdoc/>
         public override string DeploymentDirectory
         {
             get
@@ -166,9 +144,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        /// <summary>
-        /// Gets base directory for results from the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
-        /// </summary>
+        /// <inheritdoc/>
         public override string ResultsDirectory
         {
             get
@@ -177,9 +153,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        /// <summary>
-        /// Gets directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
-        /// </summary>
+        /// <inheritdoc/>
         public override string TestRunResultsDirectory
         {
             get
@@ -188,9 +162,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        /// <summary>
-        /// Gets directory for test result files.
-        /// </summary>
+        /// <inheritdoc/>
         [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", Justification = "TestResultsDirectory is what we need.")]
         public override string TestResultsDirectory
         {
@@ -255,12 +227,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        // Summary:
-        //     When overridden in a derived class, adds a file name to the list in TestResult.ResultFileNames.
-        //
-        // Parameters:
-        //   fileName:
-        //     The file name to add.
+        /// <inheritdoc/>
         public override void AddResultFile(string fileName)
         {
             if (string.IsNullOrEmpty(fileName))
@@ -271,23 +238,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.testResultFiles.Add(Path.GetFullPath(fileName));
         }
 
-        // Summary:
-        //     When overridden in a derived class, begins a timer with the specified name.
-        //
-        // Parameters:
-        //   timerName:
-        //     The name of the timer to begin.
+        /// <inheritdoc/>
         public override void BeginTimer(string timerName)
         {
             throw new NotSupportedException();
         }
 
-        // Summary:
-        //     When overridden in a derived class, ends a timer with the specified name
-        //
-        // Parameters:
-        //   timerName:
-        //     The name of the timer to end.
+        /// <inheritdoc/>
         public override void EndTimer(string timerName)
         {
             throw new NotSupportedException();

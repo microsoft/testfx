@@ -150,7 +150,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         result.DebugTrace = listener.DebugTrace;
                         result.LogOutput = listener.StandardOutput;
                         result.LogError = listener.StandardError;
-                        this.AddDiagnosticMessagesFromTestContext(result);
+                        result.TestContextMessages = this.TestMethodOptions.TestContext.GetAndClearDiagnosticMessages();
                         result.ResultFiles = this.TestMethodOptions.TestContext.GetResultFiles();
                     }
                 }
@@ -544,18 +544,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// Adds the diagnostic test context writeline messages to the result.
-        /// </summary>
-        /// <param name="result">The result object to add data to.</param>
-        private void AddDiagnosticMessagesFromTestContext(TestResult result)
-        {
-            result.TestContextMessages = this.TestMethodOptions.TestContext.GetDiagnosticMessages();
-
-            // Clear this up as well, so the current tests data does not flow into the next.
-            this.TestMethodOptions.TestContext.ClearDiagnosticMessages();
         }
 
         /// <summary>

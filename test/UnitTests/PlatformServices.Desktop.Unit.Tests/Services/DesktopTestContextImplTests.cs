@@ -10,7 +10,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
@@ -289,6 +288,32 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 
             // Calling it twice to cover the direct return when we know the object has been disposed.
             this.testContextImplementation.WriteLine("1 Testing write");
+        }
+
+        [TestMethod]
+        public void GetDiagnosticMessagesShouldReturnMessagesFromWriteLine()
+        {
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+
+            this.testContextImplementation.WriteLine("1 Testing write");
+            this.testContextImplementation.WriteLine("2 Its a happy day");
+
+            StringAssert.Contains(this.testContextImplementation.GetDiagnosticMessages(), "1 Testing write");
+            StringAssert.Contains(this.testContextImplementation.GetDiagnosticMessages(), "1 Testing write");
+        }
+
+        [TestMethod]
+        public void ClearDiagnosticMessagesShouldClearMessagesFromWriteLine()
+        {
+            var stringWriter = new StringWriter();
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
+
+            this.testContextImplementation.WriteLine("1 Testing write");
+            this.testContextImplementation.WriteLine("2 Its a happy day");
+
+            this.testContextImplementation.ClearDiagnosticMessages();
+
+            Assert.AreEqual(string.Empty, stringWriter.ToString());
         }
     }
 }
