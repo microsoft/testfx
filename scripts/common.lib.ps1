@@ -143,10 +143,10 @@ function Locate-LocateVsApi {
   return Resolve-Path -path $locateVsApi
 }
 
-function Locate-Solution([string] $relativePath) {
+function Locate-Item([string] $relativePath) {
   $rootPath = $env:TF_ROOT_DIR
-  $solution = Join-Path -path $rootPath -childPath $relativePath
-  return Resolve-Path -path $solution
+  $itemPath = Join-Path -path $rootPath -childPath $relativePath
+  return Resolve-Path -path $itemPath
 }
 
 function Start-Timer

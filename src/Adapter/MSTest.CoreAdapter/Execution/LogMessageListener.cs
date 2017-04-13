@@ -133,7 +133,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     if (this.traceListener != null)
                     {
                         // Dispose trace manager and listeners
-                        this.traceListenerManager.Close(this.traceListener);
                         this.traceListenerManager.Dispose(this.traceListener);
                         this.traceListenerManager = null;
                         this.traceListener = null;

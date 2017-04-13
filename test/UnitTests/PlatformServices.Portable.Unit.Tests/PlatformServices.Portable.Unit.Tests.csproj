@@ -52,12 +52,31 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Services\PortableFileOperationsTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10AssemblyAttributes.cs">
+      <Link>Services\ns10AssemblyAttributes.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs">
+      <Link>Services\ns10FileOperationsTests.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs">
+      <Link>Services\ns10ReflectionOperationsTests.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10SettingsProviderTests.cs">
+      <Link>Services\ns10SettingsProviderTests.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestContextImplementationTests.cs">
+      <Link>Services\ns10TestContextImplementationTests.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs">
+      <Link>Services\ns10TestSourceHostTests.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceTests.cs">
+      <Link>Services\ns10TestSourceTests.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs">
+      <Link>Services\ns10ThreadOperationsTests.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\PortableSettingsProviderTests.cs" />
-    <Compile Include="Services\PortableTestContextImplementationTests.cs" />
-    <Compile Include="Services\PortableTestSourceHostTests.cs" />
-    <Compile Include="Services\PortableTestSourceValidatorTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -85,7 +104,6 @@
       <Name>MSTest.CoreAdapter.TestUtilities</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\PlatformServices.Shared.Unit.Tests\PlatformServices.Shared.Unit.Tests.projitems" Label="Shared" />
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

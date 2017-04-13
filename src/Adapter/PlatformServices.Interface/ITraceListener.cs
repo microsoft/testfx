@@ -17,11 +17,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         TextWriter GetWriter();
 
         /// <summary>
-        /// Closes the TextWriter so that it no longer receives tracing or debugging output.
-        /// </summary>
-        void Close();
-
-        /// <summary>
         ///  Disposes this TraceListener object.
         /// </summary>
         void Dispose();

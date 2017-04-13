@@ -48,19 +48,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="traceListener">The trace listener instance.</param>
         public void Add(ITraceListener traceListener)
         {
-            try
-            {
-                Trace.Listeners.Add(traceListener as TextWriterTraceListener);
-            }
-            catch (Exception ex)
-            {
-                // Catch exceptions if the configuration file is invalid and allow a stack
-                // trace to show the error on the test method instead of here.
-                if (!(ex.InnerException is System.Configuration.ConfigurationErrorsException))
-                {
-                    throw;
-                }
-            }
+            Trace.Listeners.Add(traceListener as TextWriterTraceListener);
         }
 
         /// <summary>
@@ -70,15 +58,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public void Remove(ITraceListener traceListener)
         {
             Trace.Listeners.Remove(traceListener as TextWriterTraceListener);
-        }
-
-        /// <summary>
-        /// Wrapper over Close() of ITraceListener.
-        /// </summary>
-        /// <param name="traceListener">The trace listener instance.</param>
-        public void Close(ITraceListener traceListener)
-        {
-            traceListener.Close();
         }
 
         /// <summary>

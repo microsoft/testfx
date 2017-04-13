@@ -24,12 +24,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         void Remove(ITraceListener traceListener);
 
         /// <summary>
-        /// Closes the writer which is monitored by the arguement traceListener object.
-        /// </summary>
-        /// <param name="traceListener">The trace listener instance.</param>
-        void Close(ITraceListener traceListener);
-
-        /// <summary>
         /// Disposes the traceListener object passed as arguement.
         /// </summary>
         /// <param name="traceListener">The trace listener instance.</param>
