@@ -23,7 +23,8 @@
 	<dependencies>
 	    <group targetFramework="netstandard1.3">
 			<dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
-		</group>      
+			<dependency id="System.Xml.ReaderWriter" version="4.3.0" />
+	    </group>      
     </dependencies>
   </metadata>
   <files>
@@ -74,7 +75,7 @@
     <file src="MSTest.Core\ru\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ru" />
     <file src="MSTest.Core\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\tr" />
 
-	<!-- NetCore -->
+    <!-- NetCore -->
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netstandard1.3\" />
     <file src="PlatformServices.NetCore\netstandard1.3\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard1.3\" />
 
