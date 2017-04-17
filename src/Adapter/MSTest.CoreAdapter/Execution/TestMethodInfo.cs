@@ -150,6 +150,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         result.DebugTrace = listener.DebugTrace;
                         result.LogOutput = listener.StandardOutput;
                         result.LogError = listener.StandardError;
+                        result.TestContextMessages = this.TestMethodOptions.TestContext.GetAndClearDiagnosticMessages();
                         result.ResultFiles = this.TestMethodOptions.TestContext.GetResultFiles();
                     }
                 }

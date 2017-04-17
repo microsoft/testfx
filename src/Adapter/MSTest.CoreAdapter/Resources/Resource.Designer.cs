@@ -197,6 +197,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to TestContext Messages:.
+        /// </summary>
+        internal static string TestContextMessageBanner {
+            get {
+                return ResourceManager.GetString("TestContextMessageBanner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test method {0} was not found..
         /// </summary>
         internal static string TestNotFound {

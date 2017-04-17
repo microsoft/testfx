@@ -286,6 +286,11 @@
         <target state="translated">UTA026: {0}: Es darf nur eine Methode mit dem Attribut 'ClassCleanup' innerhalb einer Klasse definiert werden.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="TestContextMessageBanner">
+        <source>TestContext Messages:</source>
+        <target state="new">TestContext Messages:</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

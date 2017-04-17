@@ -77,6 +77,8 @@
     <Compile Include="Extensions\ExceptionExtensionsTests.cs" />
     <Compile Include="Extensions\MethodInfoExtensionsTests.cs" />
     <Compile Include="Extensions\TestCaseExtensionsTests.cs" />
+    <Compile Include="Extensions\TestContextExtensionsTests.cs" />
+    <Compile Include="Extensions\TestResultExtensionsTests.cs" />
     <Compile Include="Helpers\ReflectHelperTests.cs" />
     <Compile Include="Helpers\RunSettingsUtilitiesTests.cs" />
     <Compile Include="Helpers\UnitTestOutcomeHelperTests.cs" />

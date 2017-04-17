@@ -113,6 +113,8 @@ function Print-Help {
   Write-Host -object "  ClearPackageCache (-cache)    - [Switch] - Indicates local package cache should be cleared before restore."
   Write-Host -object "  Templates (-tmpl)             - [Switch] - Indicates Templates should also be built."
   Write-Host -object "  Wizards (-wiz)                - [Switch] - Indicates WizardExtensions should also be built."
+  Write-Host -object "  Updatexlf (-uxlf)             - [Switch] - Indicates that there are resource changes and that these need to be copied to other languages as well."
+  Write-Host -object "  IsLocalizedBuild (-loc)       - [Switch] - Indicates that the build needs to generate resource assemblies as well."
   Write-Host -object "  Official                      - [Switch] - Indicates that this is an official build. Only used in CI builds."
   Write-Host -object "  Full                          - [Switch] - Indicates to perform a full build which includes Adapter,Framework,Templates,Wizards, and vsmanprojs."
   Write-Host -object ""

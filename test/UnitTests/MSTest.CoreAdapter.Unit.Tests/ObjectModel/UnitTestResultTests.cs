@@ -116,6 +116,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
         }
 
         [TestMethod]
+        public void ToTestResultForUniTestResultWithTestContextMessagesShouldReturnTestResultWithTestContextStdOutMessage()
+        {
+            UnitTestResult result = new UnitTestResult()
+            {
+                TestContextMessages = "KeepMovingForward"
+            };
+            TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false);
+            Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("\n\nTestContext Messages:\nKeepMovingForward") && m.Category.Equals("StdOutMsgs")));
+        }
+
+        [TestMethod]
         public void ToTestResultForUniTestResultWithResultFilesShouldReturnTestResultWithResultFilesAttachment()
         {
             UnitTestResult result = new UnitTestResult()

@@ -286,6 +286,11 @@
         <target state="translated">UTA026: {0}: 클래스 내부에서 ClassCleanup 특성을 사용하는 메서드를 여러 개 정의할 수 없습니다.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="TestContextMessageBanner">
+        <source>TestContext Messages:</source>
+        <target state="new">TestContext Messages:</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
