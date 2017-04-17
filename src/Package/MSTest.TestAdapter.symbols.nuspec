@@ -22,8 +22,8 @@
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
 	<dependencies>
 	    <group targetFramework="netstandard1.3">
+			<dependency id="NETStandard.Library" version="1.6.1" />
 			<dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
-			<dependency id="System.Xml.ReaderWriter" version="4.3.0" />
 	    </group>      
     </dependencies>
   </metadata>
