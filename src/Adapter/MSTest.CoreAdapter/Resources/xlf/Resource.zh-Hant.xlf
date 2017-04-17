@@ -286,6 +286,11 @@
         <target state="translated">UTA026: {0}: 類別內不可定義一個以上具有 ClassCleanup 屬性的方法。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="TestContextMessageBanner">
+        <source>TestContext Messages:</source>
+        <target state="new">TestContext Messages:</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

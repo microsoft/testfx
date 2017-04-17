@@ -44,5 +44,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// The list of result files.
         /// </returns>
         IList<string> GetResultFiles();
+
+        /// <summary>
+        /// Gets the diagnostics messages written to TestContext.WriteLine()
+        /// </summary>
+        /// <returns>The test context messages added so far.</returns>
+        string GetDiagnosticMessages();
+
+        /// <summary>
+        /// Clears the previous testContext writeline messages.
+        /// </summary>
+        void ClearDiagnosticMessages();
     }
 }

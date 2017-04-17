@@ -3,8 +3,10 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Globalization;
     using System.IO;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -41,6 +43,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         private ITestMethod testMethod;
 
+        private StringWriter stringWriter;
+        private bool stringWriterDisposed;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
         /// </summary>
@@ -54,7 +59,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             this.testMethod = testMethod;
             this.properties = new Dictionary<string, object>(properties);
-
+            this.stringWriter = writer;
             this.InitializeProperties();
         }
 
@@ -174,6 +179,71 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public IList<string> GetResultFiles()
         {
             return null;
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, used to write trace messages while the
+        ///     test is running.
+        /// </summary>
+        /// <param name="message">The formatted string that contains the trace message.</param>
+        public override void WriteLine(string message)
+        {
+            if (this.stringWriterDisposed)
+            {
+                return;
+            }
+
+            try
+            {
+                var msg = message?.Replace("\0", "\\0");
+                this.stringWriter.WriteLine(msg);
+            }
+            catch (ObjectDisposedException)
+            {
+                this.stringWriterDisposed = true;
+            }
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, used to write trace messages while the
+        ///     test is running.
+        /// </summary>
+        /// <param name="format">The string that contains the trace message.</param>
+        /// <param name="args">Arguments to add to the trace message.</param>
+        public override void WriteLine(string format, params object[] args)
+        {
+            if (this.stringWriterDisposed)
+            {
+                return;
+            }
+
+            try
+            {
+                string message = string.Format(CultureInfo.CurrentCulture, format?.Replace("\0", "\\0"), args);
+                this.stringWriter.WriteLine(message);
+            }
+            catch (ObjectDisposedException)
+            {
+                this.stringWriterDisposed = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets messages from the testContext writeLines
+        /// </summary>
+        /// <returns>The test context messages added so far.</returns>
+        public string GetDiagnosticMessages()
+        {
+            return this.stringWriter.ToString();
+        }
+
+        /// <summary>
+        /// Clears the previous testContext writeline messages.
+        /// </summary>
+        public void ClearDiagnosticMessages()
+        {
+            var sb = this.stringWriter.GetStringBuilder();
+            sb.Remove(0, sb.Length);
         }
 
         #endregion

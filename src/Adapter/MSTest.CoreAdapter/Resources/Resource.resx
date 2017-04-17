@@ -287,4 +287,7 @@
   <data name="LegacyScenariosNotSupportedWarning" xml:space="preserve">
     <value>Warning : A testsettings file or a runsettings with a ForcedLegacyMode set to true is not supported with the MSTest V2 Adapter.</value>
   </data>
+  <data name="TestContextMessageBanner" xml:space="preserve">
+    <value>TestContext Messages:</value>
+  </data>
 </root>

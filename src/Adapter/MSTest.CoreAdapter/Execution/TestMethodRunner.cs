@@ -80,7 +80,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             string initLogs = string.Empty;
             string initTrace = string.Empty;
-            string errorLogs = string.Empty;
+            string initErrorLogs = string.Empty;
+            string inittestContextMessages = string.Empty;
 
             UnitTestResult[] result = null;
             try
@@ -98,7 +99,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     {
                         initLogs = logListener.StandardOutput;
                         initTrace = logListener.DebugTrace;
-                        errorLogs = logListener.StandardError;
+                        initErrorLogs = logListener.StandardError;
+                        inittestContextMessages = this.testContext.GetAndClearDiagnosticMessages();
                     }
                 }
 
@@ -122,6 +124,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 newResult.StandardOut = result[result.Length - 1].StandardOut;
                 newResult.StandardError = result[result.Length - 1].StandardError;
                 newResult.DebugTrace = result[result.Length - 1].DebugTrace;
+                newResult.TestContextMessages = result[result.Length - 1].TestContextMessages;
                 newResult.Duration = result[result.Length - 1].Duration;
                 result[result.Length - 1] = newResult;
             }
@@ -129,8 +132,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 var firstResult = result[0];
                 firstResult.StandardOut = initLogs + firstResult.StandardOut;
-                firstResult.StandardError = errorLogs + firstResult.StandardError;
+                firstResult.StandardError = initErrorLogs + firstResult.StandardError;
                 firstResult.DebugTrace = initTrace + firstResult.DebugTrace;
+                firstResult.TestContextMessages = inittestContextMessages + firstResult.TestContextMessages;
             }
 
             return result;
@@ -203,82 +207,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Unknown, TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult) } };
             }
 
-            return this.ConvertTestResultToUnitTestResult(results);
-        }
-
-        /// <summary>
-        /// The convert test result to unit test result.
-        /// </summary>
-        /// <param name="results">
-        /// The results.
-        /// </param>
-        /// <returns>
-        /// converted UnitTestResult array
-        /// </returns>
-        internal UnitTestResult[] ConvertTestResultToUnitTestResult(UTF.TestResult[] results)
-        {
-            UnitTestResult[] unitTestResults = new UnitTestResult[results.Length];
-
-            for (int i = 0; i < results.Length; ++i)
-            {
-                UnitTestResult unitTestResult = null;
-                UnitTestOutcome outcome = UnitTestOutcome.Passed;
-
-                switch (results[i].Outcome)
-                {
-                    case UTF.UnitTestOutcome.Failed:
-                        outcome = UnitTestOutcome.Failed;
-                        break;
-
-                    case UTF.UnitTestOutcome.Inconclusive:
-                        outcome = UnitTestOutcome.Inconclusive;
-                        break;
-
-                    case UTF.UnitTestOutcome.InProgress:
-                        outcome = UnitTestOutcome.InProgress;
-                        break;
-
-                    case UTF.UnitTestOutcome.Passed:
-                        outcome = UnitTestOutcome.Passed;
-                        break;
-
-                    case UTF.UnitTestOutcome.Timeout:
-                        outcome = UnitTestOutcome.Timeout;
-                        break;
-
-                    case UTF.UnitTestOutcome.Unknown:
-                    default:
-                        outcome = UnitTestOutcome.Error;
-                        break;
-                }
-
-                if (results[i].TestFailureException != null)
-                {
-                    TestFailedException testException = results[i].TestFailureException as TestFailedException;
-
-                    unitTestResult =
-                        new UnitTestResult(
-                            new TestFailedException(
-                                outcome,
-                                results[i].TestFailureException.TryGetMessage(),
-                                testException != null ? testException.StackTraceInformation : results[i].TestFailureException.TryGetStackTraceInformation()));
-                }
-                else
-                {
-                    unitTestResult = new UnitTestResult { Outcome = outcome };
-                }
-
-                unitTestResult.StandardOut = results[i].LogOutput;
-                unitTestResult.StandardError = results[i].LogError;
-                unitTestResult.DebugTrace = results[i].DebugTrace;
-                unitTestResult.Duration = results[i].Duration;
-                unitTestResult.DisplayName = results[i].DisplayName;
-                unitTestResult.DatarowIndex = results[i].DatarowIndex;
-                unitTestResult.ResultFiles = results[i].ResultFiles;
-                unitTestResults[i] = unitTestResult;
-            }
-
-            return unitTestResults;
+            return results.ToUnitTestResults();
         }
     }
 }

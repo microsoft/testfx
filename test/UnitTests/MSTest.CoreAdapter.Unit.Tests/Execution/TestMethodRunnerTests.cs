@@ -60,7 +60,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var testAssemblyInfo = new TestAssemblyInfo();
             this.testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
-            this.testContextImplementation = new TestContextImplementation(this.testMethod, null, new Dictionary<string, object>());
+            this.testContextImplementation = new TestContextImplementation(this.testMethod, new StringWriter(), new Dictionary<string, object>());
             this.testClassInfo = new TestClassInfo(
                 type: typeof(DummyTestClass),
                 constructor: constructorInfo,
@@ -267,6 +267,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void ExecuteShouldFillInLogsIfAssemblyInitializeThrows()
+        {
+            StringWriter writer = new StringWriter(new StringBuilder());
+            DummyTestClass.AssemblyInitializeMethodBody = (UTFExtension.TestContext tc) =>
+            {
+                writer.Write("Hills");
+                tc.WriteLine("Valleys");
+                throw new ArgumentException();
+            };
+            this.testClassInfo.Parent.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("DummyAssemblyInit");
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, true);
+
+            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
+
+            var results = testMethodRunner.Execute();
+
+            Assert.AreEqual("Hills", results[0].DebugTrace);
+            StringAssert.Contains(results[0].TestContextMessages, "Valleys");
+        }
+
+        [TestMethodV1]
         public void RunTestMethodForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => { throw new Exception("Dummy Exception"); });
@@ -330,108 +352,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             // check for outcome
             Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
-        }
-
-        [TestMethodV1]
-        public void ConvertTestResultToUnitTestResultForPassedTestResultsConvertsToPassedUnitTestResults()
-        {
-           var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed } };
-           var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
-
-            Assert.AreEqual(AdapterTestOutcome.Passed, convertedResults[0].Outcome);
-        }
-
-        [TestMethodV1]
-        public void ConvertTestResultToUnitTestResultForFailedTestResultsConvertsToFailedUnitTestResults()
-        {
-            var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed } };
-            var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
-
-            Assert.AreEqual(AdapterTestOutcome.Failed, convertedResults[0].Outcome);
-        }
-
-        [TestMethodV1]
-        public void ConvertTestResultToUnitTestResultForInProgressTestResultsConvertsToInProgressUnitTestResults()
-        {
-            var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.InProgress } };
-            var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
-
-            Assert.AreEqual(AdapterTestOutcome.InProgress, convertedResults[0].Outcome);
-        }
-
-        [TestMethodV1]
-        public void ConvertTestResultToUnitTestResultForInconclusiveTestResultsConvertsToInconclusiveUnitTestResults()
-        {
-            var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Inconclusive } };
-            var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
-
-            Assert.AreEqual(AdapterTestOutcome.Inconclusive, convertedResults[0].Outcome);
-        }
-
-        [TestMethodV1]
-        public void ConvertTestResultToUnitTestResultForTimeoutTestResultsConvertsToTimeoutUnitTestResults()
-        {
-            var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Timeout } };
-            var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
-
-            Assert.AreEqual(AdapterTestOutcome.Timeout, convertedResults[0].Outcome);
-        }
-
-        [TestMethodV1]
-        public void ConvertTestResultToUnitTestResultForUnknownTestResultsConvertsToErrorUnitTestResults()
-        {
-            var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Unknown } };
-            var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
-
-            Assert.AreEqual(AdapterTestOutcome.Error, convertedResults[0].Outcome);
-        }
-
-        [TestMethodV1]
-        public void ConvertTestResultToUnitTestResultForTestResultWithExceptionConvertsToUnitTestResultsWithFailureOutcome()
-        {
-            var results = new[] { new UTF.TestResult() { TestFailureException = new Exception() } };
-            var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
-
-            Assert.AreEqual(AdapterTestOutcome.Failed, convertedResults[0].Outcome);
-        }
-
-        [TestMethodV1]
-        public void ConvertTestResultToUnitTestResultForTestResultWithExceptionConvertsToUnitTestResultsWithInconclusiveOutcome()
-        {
-            var results = new[] { new UTF.TestResult() { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive } };
-            var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
-
-            Assert.AreEqual(AdapterTestOutcome.Inconclusive, convertedResults[0].Outcome);
-        }
-
-        [TestMethodV1]
-        public void ConvertTestResultToUnitTestResultForTestResultShouldSetLoggingDatatForConvertedUnitTestResults()
-        {
-            var timespan = default(TimeSpan);
-            var results = new[]
-            {
-                new UTF.TestResult()
-                {
-                    DebugTrace = "debugTrace", DisplayName = "displayName", Duration = timespan, LogOutput = "logOutput",
-                                                         LogError = "logError", DatarowIndex = 1
-                }
-            };
-            var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
-
-            Assert.AreEqual("logOutput", convertedResults[0].StandardOut);
-            Assert.AreEqual("logError", convertedResults[0].StandardError);
-            Assert.AreEqual("displayName", convertedResults[0].DisplayName);
-            Assert.AreEqual("debugTrace", convertedResults[0].DebugTrace);
-            Assert.AreEqual(timespan, convertedResults[0].Duration);
-            Assert.AreEqual(1, convertedResults[0].DatarowIndex);
-        }
-
-        [TestMethodV1]
-        public void ConvertTestResultToUnitTestResultShouldHaveResultsFileProvidedToTestResult()
-        {
-            var results = new[] { new UTF.TestResult() { ResultFiles = new List<string>() { "DummyFile.txt" } } };
-            var convertedResults = this.globalTestMethodRunner.ConvertTestResultToUnitTestResult(results);
-            Assert.AreEqual("DummyFile.txt", convertedResults[0].ResultFiles[0]);
         }
 
         #region Test data

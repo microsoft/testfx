@@ -286,6 +286,11 @@
         <target state="translated">UTA026: {0}: 1 つのクラス内で、ClassCleanup 属性を伴う 2 つ以上のメソッドを定義することはできません。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="TestContextMessageBanner">
+        <source>TestContext Messages:</source>
+        <target state="new">TestContext Messages:</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

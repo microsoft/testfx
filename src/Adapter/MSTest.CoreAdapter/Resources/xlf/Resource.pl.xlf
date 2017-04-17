@@ -286,6 +286,11 @@
         <target state="translated">UTA026: {0}: W klasie nie można zdefiniować więcej niż jednej metody z atrybutem ClassCleanup.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="TestContextMessageBanner">
+        <source>TestContext Messages:</source>
+        <target state="new">TestContext Messages:</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
