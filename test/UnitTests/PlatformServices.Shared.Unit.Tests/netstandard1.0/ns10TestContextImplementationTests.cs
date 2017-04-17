@@ -252,7 +252,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             this.testContextImplementation.WriteLine("2 Its a happy day");
 
             StringAssert.Contains(this.testContextImplementation.GetDiagnosticMessages(), "1 Testing write");
-            StringAssert.Contains(this.testContextImplementation.GetDiagnosticMessages(), "1 Testing write");
+            StringAssert.Contains(this.testContextImplementation.GetDiagnosticMessages(), "2 Its a happy day");
         }
 
         [TestMethod]
