@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>MSTest.TestFramework</id>
-    <version>1.0.8-rc2</version>
+    <version>1.1.15</version>
     <title>MSTest.TestFramework</title>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <authors>Microsoft</authors>
@@ -27,73 +27,39 @@
     <tags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework </tags>
   </metadata>
   <files>
-    <!--DotNet-->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\dotnet" />
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\dotnet" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet" />
+
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard1.0" />
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0" />
+    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard1.0" />
+    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0" />
  
-    <file src="MSTest.Core\zh-Hans\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\zh-Hans" />   
-    <file src="MSTest.Core\zh-Hant\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\zh-Hant" />    
-    <file src="MSTest.Core\cs\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\cs" />    
-    <file src="MSTest.Core\de\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\de" />     
-    <file src="MSTest.Core\es\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\es" />   
-    <file src="MSTest.Core\fr\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\fr" />   
-    <file src="MSTest.Core\it\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\it" />    
-    <file src="MSTest.Core\ja\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\ja" />   
-    <file src="MSTest.Core\ko\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\ko" />    
-    <file src="MSTest.Core\pl\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\pl" />   
-    <file src="MSTest.Core\pt-BR\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\pt" />  
-    <file src="MSTest.Core\ru\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\ru" />    
-    <file src="MSTest.Core\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\tr" />
+    <file src="MSTest.Core\zh-Hans\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\zh-Hans" />
+    <file src="MSTest.Core\zh-Hant\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\zh-Hant" />
+    <file src="MSTest.Core\cs\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\cs" />
+    <file src="MSTest.Core\de\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\de" />
+    <file src="MSTest.Core\es\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\es" />
+    <file src="MSTest.Core\fr\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\fr" />
+    <file src="MSTest.Core\it\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\it" />
+    <file src="MSTest.Core\ja\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\ja" />
+    <file src="MSTest.Core\ko\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\ko" />
+    <file src="MSTest.Core\pl\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\pl" />
+    <file src="MSTest.Core\pt-BR\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\pt" />
+    <file src="MSTest.Core\ru\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\ru" />
+    <file src="MSTest.Core\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\tr" />
 
-    <file src="Extension.Core\zh-Hans\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\zh-Hans" />
-    <file src="Extension.Core\zh-Hant\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\zh-Hant" />
-    <file src="Extension.Core\cs\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\cs" />
-    <file src="Extension.Core\de\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\de" />
-    <file src="Extension.Core\es\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\es" />
-    <file src="Extension.Core\fr\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\fr" />
-    <file src="Extension.Core\it\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\it" />
-    <file src="Extension.Core\ja\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\ja" />
-    <file src="Extension.Core\ko\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\ko" />
-    <file src="Extension.Core\pl\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\pl" />
-    <file src="Extension.Core\pt-BR\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\pt" />
-    <file src="Extension.Core\ru\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\ru" />
-    <file src="Extension.Core\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet\tr" />
-
-    <!-- NetCoreApp -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netcoreapp1.0" />
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netcoreapp1.0" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0" />
- 
-    <file src="MSTest.Core\zh-Hans\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\zh-Hans" />
-    <file src="MSTest.Core\zh-Hant\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\zh-Hant" />
-    <file src="MSTest.Core\cs\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\cs" />
-    <file src="MSTest.Core\de\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\de" />
-    <file src="MSTest.Core\es\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\es" />
-    <file src="MSTest.Core\fr\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\fr" />
-    <file src="MSTest.Core\it\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\it" />
-    <file src="MSTest.Core\ja\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\ja" />
-    <file src="MSTest.Core\ko\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\ko" />
-    <file src="MSTest.Core\pl\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\pl" />
-    <file src="MSTest.Core\pt-BR\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\pt" />
-    <file src="MSTest.Core\ru\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\ru" />
-    <file src="MSTest.Core\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\tr" />
-
-    <file src="Extension.Core\zh-Hans\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\zh-Hans" />
-    <file src="Extension.Core\zh-Hant\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\zh-Hant" />
-    <file src="Extension.Core\cs\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\cs" />
-    <file src="Extension.Core\de\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\de" />
-    <file src="Extension.Core\es\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\es" />
-    <file src="Extension.Core\fr\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\fr" />
-    <file src="Extension.Core\it\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\it" />
-    <file src="Extension.Core\ja\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\ja" />
-    <file src="Extension.Core\ko\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\ko" />
-    <file src="Extension.Core\pl\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\pl" />
-    <file src="Extension.Core\pt-BR\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\pt" />
-    <file src="Extension.Core\ru\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\ru" />
-    <file src="Extension.Core\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0\tr" />
+    <file src="Extension.Core\zh-Hans\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\zh-Hans" />
+    <file src="Extension.Core\zh-Hant\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\zh-Hant" />
+    <file src="Extension.Core\cs\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\cs" />
+    <file src="Extension.Core\de\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\de" />
+    <file src="Extension.Core\es\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\es" />
+    <file src="Extension.Core\fr\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\fr" />
+    <file src="Extension.Core\it\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\it" />
+    <file src="Extension.Core\ja\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\ja" />
+    <file src="Extension.Core\ko\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\ko" />
+    <file src="Extension.Core\pl\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\pl" />
+    <file src="Extension.Core\pt-BR\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\pt" />
+    <file src="Extension.Core\ru\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\ru" />
+    <file src="Extension.Core\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\tr" />
 	
     <!--Net45-->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net45" />

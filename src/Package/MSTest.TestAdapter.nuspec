@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>MSTest.TestAdapter</id>
-    <version>1.1.10-rc2</version>
+    <version>1.1.15</version>
     <title>MSTest.TestAdapter</title>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <authors>Microsoft</authors>
@@ -20,6 +20,12 @@
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>Copyright © Microsoft Corporation</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
+	<dependencies>
+	    <group targetFramework="netstandard1.3">
+			<dependency id="NETStandard.Library" version="1.6.1" />
+			<dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
+	    </group>      
+    </dependencies>
   </metadata>
   <files>
     <file src="MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\_common\" />
@@ -69,9 +75,9 @@
     <file src="MSTest.Core\ru\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ru" />
     <file src="MSTest.Core\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\tr" />
 
-    <!-- Portable -->
-    <file src="Build\Portable\MSTest.TestAdapter.props" target="build\netstandard1.0\" />
-    <file src="PlatformServices.Portable\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard1.0\" />
+    <!-- NetCore -->
+    <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netstandard1.3\" />
+    <file src="PlatformServices.NetCore\netstandard1.3\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard1.3\" />
 
     <!-- UWP -->
     <file src="Build\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />
