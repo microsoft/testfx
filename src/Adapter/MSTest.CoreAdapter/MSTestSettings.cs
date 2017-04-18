@@ -67,9 +67,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether capture debug traces.
+        /// Gets a value indicating whether capture debug traces.
         /// </summary>
-        public bool CaptureDebugTraces { get; set; }
+        public bool CaptureDebugTraces { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether user wants the adapter to run in legacy mode or not.
@@ -239,11 +239,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                     string elementName = reader.Name.ToUpperInvariant();
                     switch (elementName)
                     {
-                        case "MAPINCONCLUSIVETOFAILED":
+                        case "CAPTURETRACEOUTPUT":
                             {
                                 if (bool.TryParse(reader.ReadInnerXml(), out result))
                                 {
-                                    settings.MapInconclusiveToFailed = result;
+                                    settings.CaptureDebugTraces = result;
+                                }
+
+                                break;
+                            }
+
+                        case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
+                            {
+                                if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                {
+                                    settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
                                 }
 
                                 break;
@@ -259,11 +269,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                 break;
                             }
 
-                        case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
+                        case "MAPINCONCLUSIVETOFAILED":
                             {
                                 if (bool.TryParse(reader.ReadInnerXml(), out result))
                                 {
-                                    settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
+                                    settings.MapInconclusiveToFailed = result;
                                 }
 
                                 break;

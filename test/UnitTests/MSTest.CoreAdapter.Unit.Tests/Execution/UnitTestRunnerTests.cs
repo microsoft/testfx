@@ -45,11 +45,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestInitialize]
         public void TestInit()
         {
-            this.unitTestRunner = new UnitTestRunner(new MSTestSettings() { CaptureDebugTraces = false });
             this.testRunParameters = new Dictionary<string, object>();
             this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
 
             PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
+
+            this.unitTestRunner = new UnitTestRunner(this.GetSettingsWithDebugTrace(false));
         }
 
         [TestCleanup]
@@ -280,7 +281,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunCleanupShouldReturnCleanupResultsWithDebugTraceLogsSetIfDebugTraceEnabled()
         {
-            this.unitTestRunner = new UnitTestRunner(new MSTestSettings { CaptureDebugTraces = true });
+            this.unitTestRunner = new UnitTestRunner(this.GetSettingsWithDebugTrace(true));
             var type = typeof(DummyTestClassWithCleanupMethods);
             var methodInfo = type.GetMethod("TestMethod");
             var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
@@ -314,6 +315,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var cleanupresult = this.unitTestRunner.RunCleanup();
             Assert.AreEqual(cleanupresult.DebugTrace, string.Empty);
+        }
+
+        #endregion
+
+        #region private helpers
+
+        private MSTestSettings GetSettingsWithDebugTrace(bool captureDebugTraceValue)
+        {
+            string runSettingxml =
+                 @"<RunSettings>
+                     <MSTest>
+                        <CaptureTraceOutput>" + captureDebugTraceValue + @"</CaptureTraceOutput>
+                     </MSTest>
+                   </RunSettings>";
+
+            this.testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+                .Callback((XmlReader actualReader) =>
+                {
+                    if (actualReader != null)
+                    {
+                        actualReader.Read();
+                        actualReader.ReadInnerXml();
+                    }
+                });
+
+            return MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
         }
 
         #endregion

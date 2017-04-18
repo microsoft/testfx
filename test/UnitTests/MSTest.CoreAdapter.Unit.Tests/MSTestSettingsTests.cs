@@ -162,6 +162,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
         }
 
+        [TestMethod]
+        public void CaptureDebugTracesShouldBeTrueByDefault()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
+        }
+
+        [TestMethod]
+        public void CaptureDebugTracesShouldBeConsumedFromRunSettingsWhenSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <CaptureTraceOutput>False</CaptureTraceOutput>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(adapterSettings.CaptureDebugTraces, false);
+        }
+
         #endregion
 
         #region GetSettings Tests
@@ -475,6 +504,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         #endregion
 
         #region PopulateSettings tests.
+
+        [TestMethod]
+        public void PopulateSettingsShouldFillInSettingsFromSettingsObject()
+        {
+            string runsettingsXml =
+            @"<RunSettings>
+                 <MSTest>
+                   <CaptureTraceOutput>False</CaptureTraceOutput> 
+                   <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+                   <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                   <ForcedLegacyMode>true</ForcedLegacyMode>
+                   <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+                 </MSTest>
+               </RunSettings>";
+
+            var settings = MSTestSettings.GetSettings(runsettingsXml, MSTestSettings.SettingsName);
+
+            MSTestSettings.PopulateSettings(settings);
+
+            Assert.AreEqual(MSTestSettings.CurrentSettings.CaptureDebugTraces, false);
+            Assert.AreEqual(MSTestSettings.CurrentSettings.MapInconclusiveToFailed, true);
+            Assert.AreEqual(MSTestSettings.CurrentSettings.ForcedLegacyMode, true);
+            Assert.AreEqual(MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+            Assert.IsFalse(string.IsNullOrEmpty(MSTestSettings.CurrentSettings.TestSettingsFile));
+        }
 
         [TestMethod]
         public void PopulateSettingsShouldInitializeDefaultAdapterSettingsWhenDiscoveryContextIsNull()
