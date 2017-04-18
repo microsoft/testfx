@@ -15,6 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     /// <summary>
     /// Adapter Settings for the run
     /// </summary>
+    [Serializable]
     public class MSTestSettings
     {
         /// <summary>
@@ -66,9 +67,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether capture debug traces.
+        /// Gets a value indicating whether capture debug traces.
         /// </summary>
-        public bool CaptureDebugTraces { get; set; }
+        public bool CaptureDebugTraces { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether user wants the adapter to run in legacy mode or not.
@@ -90,6 +91,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// Gets a value indicating whether to enable discovery of test methods from base classes in a different assembly from the inheriting test class.
         /// </summary>
         public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
+
+        /// <summary>
+        /// Populate settings based on existing settings object.
+        /// </summary>
+        /// <param name="settings">The existing settings object.</param>
+        public static void PopulateSettings(MSTestSettings settings)
+        {
+            CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;
+            CurrentSettings.ForcedLegacyMode = settings.ForcedLegacyMode;
+            CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
+            CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
+            CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
+        }
 
         /// <summary>
         /// Populate adapter settings from the context
@@ -225,11 +239,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                     string elementName = reader.Name.ToUpperInvariant();
                     switch (elementName)
                     {
-                        case "MAPINCONCLUSIVETOFAILED":
+                        case "CAPTURETRACEOUTPUT":
                             {
                                 if (bool.TryParse(reader.ReadInnerXml(), out result))
                                 {
-                                    settings.MapInconclusiveToFailed = result;
+                                    settings.CaptureDebugTraces = result;
+                                }
+
+                                break;
+                            }
+
+                        case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
+                            {
+                                if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                {
+                                    settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
                                 }
 
                                 break;
@@ -245,11 +269,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                 break;
                             }
 
-                        case "ENABLEBASECLASSTESTMETHODSFROMOTHERASSEMBLIES":
+                        case "MAPINCONCLUSIVETOFAILED":
                             {
                                 if (bool.TryParse(reader.ReadInnerXml(), out result))
                                 {
-                                    settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
+                                    settings.MapInconclusiveToFailed = result;
                                 }
 
                                 break;

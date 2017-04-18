@@ -122,7 +122,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             this.testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out this.warnings);
 
-            this.testablePlatformServiceProvider.MockTestSourceHost.Verify(ih => ih.CreateInstanceForType(typeof(AssemblyEnumerator), null), Times.Once);
+            this.testablePlatformServiceProvider.MockTestSourceHost.Verify(ih => ih.CreateInstanceForType(typeof(AssemblyEnumerator), It.IsAny<object[]>()), Times.Once);
         }
 
         #region Exception handling tests.
@@ -193,7 +193,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName, It.IsAny<bool>()))
                 .Returns(Assembly.GetExecutingAssembly());
             this.testablePlatformServiceProvider.MockTestSourceHost.Setup(
-                ih => ih.CreateInstanceForType(typeof(AssemblyEnumerator), null))
+                ih => ih.CreateInstanceForType(typeof(AssemblyEnumerator), It.IsAny<object[]>()))
                 .Returns(new AssemblyEnumerator());
         }
 

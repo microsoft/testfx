@@ -24,28 +24,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private readonly TypeCache typeCache;
 
         /// <summary>
-        /// Specifies whether debug traces should be captured or not
-        /// </summary>
-        private readonly bool captureDebugTraces;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
         /// </summary>
-        /// <param name="captureDebugTraces"> Specifies whether debug traces should be captured or not. </param>
-        public UnitTestRunner(bool captureDebugTraces)
-            : this(captureDebugTraces, new ReflectHelper())
+        /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
+        public UnitTestRunner(MSTestSettings settings)
+            : this(settings, new ReflectHelper())
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
         /// </summary>
-        /// <param name="captureDebugTraces"> Specifies whether debug traces should be captured or not.  </param>
+        /// <param name="settings"> Specifies adapter settings. </param>
         /// <param name="reflectHelper"> The reflect Helper. </param>
-        internal UnitTestRunner(bool captureDebugTraces, ReflectHelper reflectHelper)
+        internal UnitTestRunner(MSTestSettings settings, ReflectHelper reflectHelper)
         {
             this.typeCache = new TypeCache(reflectHelper);
-            this.captureDebugTraces = captureDebugTraces;
+
+            // Populate the settings into the domain(Desktop workflow) performing discovery.
+            // This would just be resettings the settings to itself in non desktop workflows.
+            MSTestSettings.PopulateSettings(settings);
         }
 
         /// <summary>
@@ -82,7 +80,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testContext.SetOutcome(TestTools.UnitTesting.UnitTestOutcome.InProgress);
 
                     // Get the testMethod
-                    var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, this.captureDebugTraces);
+                    var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
 
                     // If the specified TestMethod could not be found, return a NotFound result.
                     if (testMethodInfo == null)
@@ -96,7 +94,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         return new UnitTestResult[] { new UnitTestResult(UnitTestOutcome.NotRunnable, testMethodInfo.NotRunnableReason) };
                     }
 
-                    return new TestMethodRunner(testMethodInfo, testMethod, testContext, this.captureDebugTraces).Execute();
+                    return new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces).Execute();
                 }
             }
             catch (TypeInspectionException ex)
@@ -123,7 +121,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             var result = new RunCleanupResult { Warnings = new List<string>() };
 
-            using (var redirector = new LogMessageListener(this.captureDebugTraces))
+            using (var redirector = new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces))
             {
                 try
                 {
