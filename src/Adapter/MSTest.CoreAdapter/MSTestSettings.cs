@@ -15,6 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     /// <summary>
     /// Adapter Settings for the run
     /// </summary>
+    [Serializable]
     public class MSTestSettings
     {
         /// <summary>
@@ -90,6 +91,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// Gets a value indicating whether to enable discovery of test methods from base classes in a different assembly from the inheriting test class.
         /// </summary>
         public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
+
+        /// <summary>
+        /// Populate settings based on existing settings object.
+        /// </summary>
+        /// <param name="settings">The existing settings object.</param>
+        public static void PopulateSettings(MSTestSettings settings)
+        {
+            CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;
+            CurrentSettings.ForcedLegacyMode = settings.ForcedLegacyMode;
+            CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
+            CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
+            CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
+        }
 
         /// <summary>
         /// Populate adapter settings from the context

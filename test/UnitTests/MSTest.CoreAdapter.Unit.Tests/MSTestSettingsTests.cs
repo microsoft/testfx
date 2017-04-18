@@ -479,7 +479,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         [TestMethod]
         public void PopulateSettingsShouldInitializeDefaultAdapterSettingsWhenDiscoveryContextIsNull()
         {
-            MSTestSettings.PopulateSettings(null);
+            MSTestSettings.PopulateSettings((IDiscoveryContext)null);
 
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
@@ -624,7 +624,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         [TestMethod]
         public void IsLegacyScenarioReturnsFalseWhenDiscoveryContextIsNull()
         {
-            MSTestSettings.PopulateSettings(null);
+            MSTestSettings.PopulateSettings((IDiscoveryContext)null);
             Assert.IsFalse(MSTestSettings.IsLegacyScenario(null));
         }
 

@@ -13,13 +13,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System.Linq;
     using System.Reflection;
     using System.Text;
+    using System.Xml;
+
     using global::MSTestAdapter.TestUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+
     using Moq;
+
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
@@ -41,7 +45,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestInitialize]
         public void TestInit()
         {
-            this.unitTestRunner = new UnitTestRunner(false);
+            this.unitTestRunner = new UnitTestRunner(new MSTestSettings() { CaptureDebugTraces = false });
             this.testRunParameters = new Dictionary<string, object>();
             this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
 
@@ -53,6 +57,38 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             PlatformServiceProvider.Instance = null;
         }
+
+        #region Constructor tests
+
+        [TestMethodV1]
+        public void ConstructorShouldPopulateSettings()
+        {
+            string runSettingxml =
+                 @"<RunSettings>
+                     <MSTest>
+                        <ForcedLegacyMode>True</ForcedLegacyMode>
+                        <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
+                     </MSTest>
+                   </RunSettings>";
+
+            this.testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+                .Callback((XmlReader actualReader) =>
+                {
+                    if (actualReader != null)
+                    {
+                        actualReader.Read();
+                        actualReader.ReadInnerXml();
+                    }
+                });
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+            var assemblyEnumerator = new UnitTestRunner(adapterSettings);
+
+            Assert.IsTrue(MSTestSettings.CurrentSettings.ForcedLegacyMode);
+            Assert.AreEqual("DummyPath\\TestSettings1.testsettings", MSTestSettings.CurrentSettings.TestSettingsFile);
+        }
+
+        #endregion
 
         #region RunSingleTest tests
 
@@ -172,7 +208,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
         {
             var mockReflectHelper = new Mock<ReflectHelper>();
-            this.unitTestRunner = new UnitTestRunner(false, mockReflectHelper.Object);
+            this.unitTestRunner = new UnitTestRunner(new MSTestSettings(), mockReflectHelper.Object);
 
             var type = typeof(DummyTestClassWithInitializeMethods);
             var methodInfo = type.GetMethod("TestMethod");
@@ -244,7 +280,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunCleanupShouldReturnCleanupResultsWithDebugTraceLogsSetIfDebugTraceEnabled()
         {
-            this.unitTestRunner = new UnitTestRunner(true);
+            this.unitTestRunner = new UnitTestRunner(new MSTestSettings { CaptureDebugTraces = true });
             var type = typeof(DummyTestClassWithCleanupMethods);
             var methodInfo = type.GetMethod("TestMethod");
             var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
@@ -281,6 +317,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         #endregion
+
+        #region Dummmy implementations
 
         [UTF.TestClass]
         private class DummyTestClass
@@ -347,5 +385,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             {
             }
         }
+
+        #endregion
     }
 }

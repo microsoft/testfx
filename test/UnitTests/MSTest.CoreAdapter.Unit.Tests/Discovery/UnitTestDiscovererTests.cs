@@ -107,7 +107,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
                 .Returns((object)null);
             this.testablePlatformServiceProvider.MockTestSourceHost.Setup(
-                ih => ih.CreateInstanceForType(It.IsAny<Type>(), null))
+                ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
                 .Returns(new AssemblyEnumerator());
 
             this.unitTestDiscoverer.DiscoverTestsInSource(source, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object, this.mockRunSettings.Object);
