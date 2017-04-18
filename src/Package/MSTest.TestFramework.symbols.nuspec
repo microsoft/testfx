@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>MSTest.TestFramework.symbols</id>
-    <version>1.0.8-rc2</version>
+    <version>1.1.15</version>
     <title>MSTest.TestFramework.symbols</title>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <authors>Microsoft</authors>
@@ -26,25 +26,15 @@
     <tags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework </tags>
   </metadata>
   <files>
-    <!-- dotnet -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\dotnet\" />
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\dotnet\" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\dotnet" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\dotnet" />
+
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard1.0\" />
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\" />
+    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard1.0" />
+    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0" />
 
     <!-- Symbols -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\dotnet\" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\dotnet" />
-
-    <!-- NetCoreApp -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netcoreapp1.0\" />
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp1.0\" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netcoreapp1.0" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp1.0" />
-
-    <!-- Symbols -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\netcoreapp1.0\" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\netcoreapp1.0" />
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\netstandard1.0\" />
+    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\netstandard1.0" />
 	
     <!-- net45 -->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net45\" />
