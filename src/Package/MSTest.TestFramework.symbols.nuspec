@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>MSTest.TestFramework.symbols</id>
-    <version>1.1.15</version>
+    <version>1.1.16</version>
     <title>MSTest.TestFramework.symbols</title>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <authors>Microsoft</authors>
