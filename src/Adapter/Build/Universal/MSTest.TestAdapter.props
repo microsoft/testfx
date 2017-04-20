@@ -11,7 +11,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
     </Content>
-	<Content Include="$(MSBuildThisFileDirectory)..\uap10.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll">
+	<Content Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll">
       <Link>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
