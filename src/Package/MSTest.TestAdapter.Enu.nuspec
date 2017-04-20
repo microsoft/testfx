@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>MSTest.TestAdapter</id>
-    <version>1.1.16</version>
+    <version>1.1.17</version>
     <title>MSTest.TestAdapter.Enu</title>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <authors>Microsoft</authors>
