@@ -21,7 +21,7 @@
     <copyright>Copyright © Microsoft Corporation</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
 	<dependencies>
-	    <group targetFramework="netstandard1.3">
+	    <group targetFramework="netcoreapp1.0">
 			<dependency id="NETStandard.Library" version="1.6.1" />
 			<dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
 	    </group>      
@@ -34,8 +34,8 @@
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\_common\" />
 
     <!-- NetCore -->
-    <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netstandard1.3\" />
-    <file src="PlatformServices.NetCore\netstandard1.3\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard1.3\" />
+    <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netcoreapp1.0\" />
+    <file src="PlatformServices.NetCore\netstandard1.3\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp1.0\" />
 
     <!-- UWP -->
     <file src="Build\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />
