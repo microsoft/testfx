@@ -57,10 +57,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="packages\MSTest.TestAdapter.1.1.14.nupkg">
+    <Content Include="packages\MSTest.TestAdapter.1.1.17.nupkg">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="packages\MSTest.TestFramework.1.1.14.nupkg">
+    <Content Include="packages\MSTest.TestFramework.1.1.17.nupkg">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="source.extension.vsixmanifest">
