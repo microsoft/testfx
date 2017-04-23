@@ -128,9 +128,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
 
             var testMethod = new TestMethod(method.Name, this.type.FullName, this.assemblyName, isAsync);
+
             if (!method.DeclaringType.FullName.Equals(this.type.FullName))
             {
                 testMethod.DeclaringClassFullName = method.DeclaringType.FullName;
+            }
+
+            if (!this.reflectHelper.IsMethodDeclaredInSameAssemblyAsType(method, this.type))
+            {
+                testMethod.DeclaringAssemblyName =
+                    PlatformServiceProvider.Instance.FileOperations.GetAssemblyPath(
+                        method.DeclaringType.GetTypeInfo().Assembly);
             }
 
             var testElement = new UnitTestElement(testMethod);
