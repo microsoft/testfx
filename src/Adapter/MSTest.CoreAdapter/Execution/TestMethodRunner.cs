@@ -7,9 +7,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
+    using System.Reflection;
 
     using Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
@@ -18,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     /// <summary>
     /// This class is responsible to running tests and converting framework TestResults to adapter TestResults.
     /// </summary>
-    public class TestMethodRunner
+    internal class TestMethodRunner
     {
         /// <summary>
         /// Test context which needs to be passed to the various methods of the test
@@ -41,6 +43,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private readonly bool captureDebugTraces;
 
         /// <summary>
+        /// Helper for reflection API's.
+        /// </summary>
+        private ReflectHelper reflectHelper;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TestMethodRunner"/> class.
         /// </summary>
         /// <param name="testMethodInfo">
@@ -60,6 +67,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             TestMethod testMethod,
             ITestContext testContext,
             bool captureDebugTraces)
+            : this(testMethodInfo, testMethod, testContext, captureDebugTraces, new ReflectHelper())
         {
             Debug.Assert(testMethodInfo != null, "testMethodInfo should not be null");
             Debug.Assert(testMethod != null, "testMethod should not be null");
@@ -69,6 +77,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.test = testMethod;
             this.testContext = testContext;
             this.captureDebugTraces = captureDebugTraces;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestMethodRunner"/> class.
+        /// </summary>
+        /// <param name="testMethodInfo">
+        /// The test method info.
+        /// </param>
+        /// <param name="testMethod">
+        /// The test method.
+        /// </param>
+        /// <param name="testContext">
+        /// The test context.
+        /// </param>
+        /// <param name="captureDebugTraces">
+        /// The capture debug traces.
+        /// </param>
+        /// <param name="reflectHelper">
+        /// The reflect Helper object.
+        /// </param>
+        public TestMethodRunner(
+            TestMethodInfo testMethodInfo,
+            TestMethod testMethod,
+            ITestContext testContext,
+            bool captureDebugTraces,
+            ReflectHelper reflectHelper)
+        {
+            Debug.Assert(testMethodInfo != null, "testMethodInfo should not be null");
+            Debug.Assert(testMethod != null, "testMethod should not be null");
+            Debug.Assert(testContext != null, "testContext should not be null");
+
+            this.testMethodInfo = testMethodInfo;
+            this.test = testMethod;
+            this.testContext = testContext;
+            this.captureDebugTraces = captureDebugTraces;
+            this.reflectHelper = reflectHelper;
         }
 
         /// <summary>
@@ -84,6 +128,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             string inittestContextMessages = string.Empty;
 
             UnitTestResult[] result = null;
+
+            string ignoreMessage = null;
+            var isIgnoreAttributeOnClass = this.reflectHelper.IsAttributeDefined(this.testMethodInfo.Parent.ClassType, typeof(UTF.IgnoreAttribute), false);
+            var isIgnoreAttributeOnMethod = this.reflectHelper.IsAttributeDefined(this.testMethodInfo.TestMethod, typeof(UTF.IgnoreAttribute), false);
+
+            if (isIgnoreAttributeOnClass)
+            {
+                ignoreMessage = this.reflectHelper.GetIgnoreMessage(this.testMethodInfo.Parent.ClassType.GetTypeInfo());
+            }
+
+            if (string.IsNullOrEmpty(ignoreMessage) && isIgnoreAttributeOnMethod)
+            {
+                ignoreMessage = this.reflectHelper.GetIgnoreMessage(this.testMethodInfo.TestMethod);
+            }
+
+            if (isIgnoreAttributeOnClass || isIgnoreAttributeOnMethod)
+            {
+                return new[] { new UnitTestResult(UnitTestOutcome.Ignored, ignoreMessage) };
+            }
+
             try
             {
                 using (LogMessageListener logListener = new LogMessageListener(this.captureDebugTraces))

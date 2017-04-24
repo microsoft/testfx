@@ -129,8 +129,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         internal virtual void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
         {
             var testsBySource = from test in tests
-                                 group test by test.Source into testGroup
-                                 select new { Source = testGroup.Key, Tests = testGroup };
+                                group test by test.Source into testGroup
+                                select new { Source = testGroup.Key, Tests = testGroup };
 
             foreach (var group in testsBySource)
             {
@@ -263,23 +263,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         "Executing test {0}",
                         unitTestElement.TestMethod.Name);
 
-                    if (unitTestElement.Ignored)
-                    {
-                        unitTestResult = new[] { new UnitTestResult(UnitTestOutcome.Ignored, null) };
-                    }
-                    else
-                    {
-                        // this is done so that appropriate values of testcontext properties are set at source level
-                        // and are merged with session level parameters
-                        var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
+                    // this is done so that appropriate values of testcontext properties are set at source level
+                    // and are merged with session level parameters
+                    var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
 
-                        if (this.sessionParameters != null && this.sessionParameters.Count > 0)
-                        {
-                            sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
-                        }
-
-                        unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
+                    if (this.sessionParameters != null && this.sessionParameters.Count > 0)
+                    {
+                        sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
                     }
+
+                    unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
 
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                         "Executed test {0}",

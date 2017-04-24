@@ -15,6 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System.Text;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Moq;
@@ -49,6 +50,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private TestMethodOptions globaltestMethodOptions;
         private TestMethodOptions testMethodOptions;
+        private Mock<ReflectHelper> mockReflectHelper;
 
         public TestMethodRunnerTests()
         {
@@ -79,6 +81,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 this.methodInfo,
                 this.testClassInfo,
                 this.globaltestMethodOptions);
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, null);
             this.globalTestMethodRunner = new TestMethodRunner(globalTestMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             this.testMethodOptions = new TestMethodOptions()
@@ -88,6 +91,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 TestContext = this.testContextImplementation,
                 ExpectedException = null
             };
+
+            this.mockReflectHelper = new Mock<ReflectHelper>();
 
             // Reset test hooks
             DummyTestClass.TestConstructorMethodBody = () => { };
@@ -108,6 +113,106 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void Cleanup()
         {
             PlatformServiceProvider.Instance = null;
+        }
+
+        [TestMethodV1]
+        public void IgnoreAttributeOnTestClassIgnoresTestAndPrintsClassIgnoreMessageIfProvided()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, null);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
+
+            // Setup mocks
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(true);
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(this.methodInfo, typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(false);
+            this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(typeof(DummyTestClass).GetTypeInfo())).Returns("IgnoreTestClassMessage");
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
+            Assert.AreEqual(results[0].ErrorMessage, "IgnoreTestClassMessage");
+        }
+
+        [TestMethodV1]
+        public void IgnoreAttributeOnTestClassIgnoresTestAndSkipsPrintingIgnoreMessageIfNotProvided()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, null);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
+
+            // Setup mocks
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(true);
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(this.methodInfo, typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(false);
+            this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(typeof(DummyTestClass).GetTypeInfo())).Returns(string.Empty);
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
+            Assert.AreEqual(results[0].ErrorMessage, string.Empty);
+        }
+
+        [TestMethodV1]
+        public void IgnoreAttributeOnTestMethodIgnoresTestAndOuputsMethodIgnoreMessageIfProvided()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, null);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
+
+            // Setup mocks
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(false);
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(this.methodInfo, typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(true);
+            this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(this.methodInfo)).Returns("IgnoreMethodMessage");
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
+            Assert.AreEqual(results[0].ErrorMessage, "IgnoreMethodMessage");
+        }
+
+        [TestMethodV1]
+        public void IgnoreAttributeOnTestMethodIgnoresTestAndSkipsPrintingIgnoreMessageIfNotProvided()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, null);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
+
+            // Setup mocks
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(false);
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(this.methodInfo, typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(true);
+            this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(this.methodInfo)).Returns(string.Empty);
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
+            Assert.AreEqual(results[0].ErrorMessage, string.Empty);
+        }
+
+        [TestMethodV1]
+        public void IgnoreAttributeOnBothTestClassAndTestMethodIgnoresTestAndPrintsClassIgnoreMessageIfProvided()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, null);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
+
+            // Setup mocks
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(true);
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(this.methodInfo, typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(true);
+
+            this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(typeof(DummyTestClass).GetTypeInfo())).Returns("IgnoreTestClassMessage");
+            this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(this.methodInfo)).Returns("IgnoreMethodMessage");
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
+            Assert.AreEqual(results[0].ErrorMessage, "IgnoreTestClassMessage");
+        }
+
+        [TestMethodV1]
+        public void IgnoreAttributeOnBothTestClassAndTestMethodIgnoresTestAndPrintsMethodIgnoreMessageIfClassIgnoreMessageNotProvided()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, null);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
+
+            // Setup mocks
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(true);
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(this.methodInfo, typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(true);
+
+            this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(typeof(DummyTestClass).GetTypeInfo())).Returns(string.Empty);
+            this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(this.methodInfo)).Returns("IgnoreMethodMessage");
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
+            Assert.AreEqual(results[0].ErrorMessage, "IgnoreMethodMessage");
         }
 
         [TestMethodV1]

@@ -87,7 +87,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             TestCase testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
             testCase.DisplayName = this.TestMethod.Name;
 
-            testCase.SetPropertyValue(TestAdapter.Constants.TestEnabledProperty, !this.Ignored);
             testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
 
             // Many of the tests will not be async, so there is no point in sending extra data

@@ -438,6 +438,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
+        /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
+        /// else null;
+        /// </summary>
+        /// <param name="ignoreAttributeProvider">The member to inspect.</param>
+        /// <returns>Priority value if defined. Null otherwise.</returns>
+        internal virtual string GetIgnoreMessage(MemberInfo ignoreAttributeProvider)
+        {
+            var ignoreAttribute = GetCustomAttributes(ignoreAttributeProvider, typeof(IgnoreAttribute), true);
+
+            if (ignoreAttribute == null || ignoreAttribute.Length != 1)
+            {
+                return null;
+            }
+
+            return (ignoreAttribute[0] as IgnoreAttribute).IgnoreMessage;
+        }
+
+        /// <summary>
         /// KeyValue pairs that are provided by TestPropertyAttributes of the given test method.
         /// </summary>
         /// <param name="testPropertyProvider">The member to inspect.</param>
