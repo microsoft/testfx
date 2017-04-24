@@ -12,6 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using System.Linq;
     using System.Reflection;
     using System.Text;
+    using System.Xml;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -50,6 +51,38 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             PlatformServiceProvider.Instance = null;
         }
+
+        #region  Constructor tests
+
+        [TestMethodV1]
+        public void ConstructorShouldPopulateSettings()
+        {
+            string runSettingxml =
+                 @"<RunSettings>
+                     <MSTest>
+                        <ForcedLegacyMode>True</ForcedLegacyMode>
+                        <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
+                     </MSTest>
+                   </RunSettings>";
+
+            this.testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+                .Callback((XmlReader actualReader) =>
+                {
+                    if (actualReader != null)
+                    {
+                        actualReader.Read();
+                        actualReader.ReadInnerXml();
+                    }
+                });
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+            var assemblyEnumerator = new AssemblyEnumerator(adapterSettings);
+
+            Assert.IsTrue(MSTestSettings.CurrentSettings.ForcedLegacyMode);
+            Assert.AreEqual("DummyPath\\TestSettings1.testsettings", MSTestSettings.CurrentSettings.TestSettingsFile);
+        }
+
+        #endregion
 
         #region GetTypes tests
 

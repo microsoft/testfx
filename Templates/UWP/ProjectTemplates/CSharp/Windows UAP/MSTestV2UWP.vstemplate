@@ -57,8 +57,8 @@
       <package id="Microsoft.NETCore.UniversalWindowsPlatform" version="5.2.2" skipAssemblyReferences="false" />
     </packages>
     <packages repository="extension" repositoryId="mstestUniversalProjectTemplate" isPreunzipped="false" >
-        <package id="MSTest.TestAdapter" version="1.1.14" skipAssemblyReferences="false"  />
-        <package id="MSTest.TestFramework" version="1.1.14" skipAssemblyReferences="false" />
+        <package id="MSTest.TestAdapter" version="1.1.17" skipAssemblyReferences="false"  />
+        <package id="MSTest.TestFramework" version="1.1.17" skipAssemblyReferences="false" />
     </packages>
   </WizardData>
 </VSTemplate>

@@ -204,7 +204,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 var testRunner = isolationHost.CreateInstanceForType(
                     typeof(UnitTestRunner),
-                    new object[] { MSTestSettings.CurrentSettings.CaptureDebugTraces }) as UnitTestRunner;
+                    new object[] { MSTestSettings.CurrentSettings }) as UnitTestRunner;
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
                 this.ExecuteTestsWithTestRunner(tests, runContext, frameworkHandle, source, testRunner);

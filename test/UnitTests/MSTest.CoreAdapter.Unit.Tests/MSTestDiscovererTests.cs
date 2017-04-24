@@ -165,7 +165,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
                 .Returns((object)null);
             this.testablePlatformServiceProvider.MockTestSourceHost.Setup(
-                ih => ih.CreateInstanceForType(It.IsAny<Type>(), null))
+                ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
                 .Returns(new AssemblyEnumerator());
 
             this.discoverer.DiscoverTests(new List<string> { source }, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
