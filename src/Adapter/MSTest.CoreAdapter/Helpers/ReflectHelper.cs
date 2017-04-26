@@ -447,12 +447,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         {
             var ignoreAttribute = GetCustomAttributes(ignoreAttributeProvider, typeof(IgnoreAttribute), true);
 
-            if (ignoreAttribute == null || ignoreAttribute.Length != 1)
+            if (!ignoreAttribute.Any())
             {
                 return null;
             }
 
-            return (ignoreAttribute[0] as IgnoreAttribute).IgnoreMessage;
+            return (ignoreAttribute?.FirstOrDefault() as IgnoreAttribute).IgnoreMessage;
         }
 
         /// <summary>
