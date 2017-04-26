@@ -220,44 +220,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethod]
-        public void GetTestFromMethodShouldSetIgnoredPropertyToTrueIfSetOnTestClass()
-        {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
-            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-
-            // Setup mocks
-            this.mockReflectHelper.Setup(
-                rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), false)).Returns(true);
-            this.mockReflectHelper.Setup(
-                rh => rh.IsAttributeDefined(methodInfo, typeof(UTF.IgnoreAttribute), false)).Returns(false);
-
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
-
-            Assert.IsNotNull(testElement);
-            Assert.IsTrue(testElement.Ignored);
-        }
-
-        [TestMethod]
-        public void GetTestFromMethodShouldSetIgnoredPropertyToTrueIfSetOnTestMethod()
-        {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
-            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-
-            // Setup mocks
-            this.mockReflectHelper.Setup(
-                rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), false)).Returns(false);
-            this.mockReflectHelper.Setup(
-                rh => rh.IsAttributeDefined(methodInfo, typeof(UTF.IgnoreAttribute), false)).Returns(true);
-
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
-
-            Assert.IsNotNull(testElement);
-            Assert.IsTrue(testElement.Ignored);
-        }
-
-        [TestMethod]
         public void GetTestFromMethodShouldSetIgnoredPropertyToFalseIfNotSetOnTestClassAndTestMethod()
         {
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
@@ -402,49 +364,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             Assert.IsNotNull(testElement);
             Assert.IsNotNull(testElement.DeploymentItems);
             CollectionAssert.AreEqual(deploymentItems, testElement.DeploymentItems.ToArray());
-        }
-
-        #endregion
-
-        #region IsIgnoreAttributeOnTestClass tests
-
-        [TestMethod]
-        public void IsIgnoreAttributeOnTestClassReturnsTrueIfIgnoreIsSetOnTestClass()
-        {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
-            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-
-            // Setup mocks
-            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(true);
-
-            Assert.IsTrue(typeEnumerator.IsIgnoreAttributeOnTestClass);
-        }
-
-        [TestMethod]
-        public void IsIgnoreAttributeOnTestClassReturnsFalseIfIgnoreIsNotSetOnTestClass()
-        {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
-            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-
-            // Setup mocks
-            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(false);
-
-            Assert.IsFalse(typeEnumerator.IsIgnoreAttributeOnTestClass);
-        }
-
-        [TestMethod]
-        public void IsIgnoreAttributeOnTestClassShouldBeCached()
-        {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameType: true);
-            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-
-            // Setup mocks
-            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(true);
-
-            Assert.IsTrue(typeEnumerator.IsIgnoreAttributeOnTestClass);
-
-            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(typeof(DummyTestClass), typeof(UTF.IgnoreAttribute), It.IsAny<bool>())).Returns(false);
-            Assert.IsTrue(typeEnumerator.IsIgnoreAttributeOnTestClass);
         }
 
         #endregion
