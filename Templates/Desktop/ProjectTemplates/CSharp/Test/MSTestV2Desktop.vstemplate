@@ -25,8 +25,8 @@
   </WizardExtension>
   <WizardData>
     <packages repository="extension" repositoryId="mstestProjectTemplate" isPreunzipped="false" >
-      <package id="MSTest.TestAdapter" version="1.1.14" skipAssemblyReferences="false"  />
-      <package id="MSTest.TestFramework" version="1.1.14" skipAssemblyReferences="false" />
+      <package id="MSTest.TestAdapter" version="1.1.17" skipAssemblyReferences="false"  />
+      <package id="MSTest.TestFramework" version="1.1.17" skipAssemblyReferences="false" />
     </packages>
   </WizardData>
 </VSTemplate>

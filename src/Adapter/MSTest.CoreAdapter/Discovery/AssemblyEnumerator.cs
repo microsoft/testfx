@@ -22,6 +22,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     internal class AssemblyEnumerator : MarshalByRefObject
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="AssemblyEnumerator"/> class.
+        /// </summary>
+        public AssemblyEnumerator()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssemblyEnumerator"/> class.
+        /// </summary>
+        /// <param name="settings">The settings for the session.</param>
+        /// <remarks>Use this constructor when creating this object in a new app domain so the settings for this app domain are set.</remarks>
+        public AssemblyEnumerator(MSTestSettings settings)
+        {
+            // Populate the settings into the domain(Desktop workflow) performing discovery.
+            // This would just be resettings the settings to itself in non desktop workflows.
+            MSTestSettings.PopulateSettings(settings);
+        }
+
+        /// <summary>
         /// Returns object to be used for controlling lifetime, null means infinite lifetime.
         /// </summary>
         /// <returns>
