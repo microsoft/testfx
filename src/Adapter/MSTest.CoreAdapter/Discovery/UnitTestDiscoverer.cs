@@ -4,10 +4,13 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 {
     using System.Collections.Generic;
+    using System.IO;
+    using System.Xml;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
     internal class UnitTestDiscoverer
     {
@@ -75,20 +78,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 testElements.Count,
                 source);
 
-            this.SendTestCases(source, testElements, discoverySink);
+            this.SendTestCases(source, testElements, discoverySink, collectSourceInformation: this.CollectSourceInformation(runSettings));
         }
 
-        internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink)
+        internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, bool collectSourceInformation = true)
         {
             object navigationSession = null;
             try
             {
-                navigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source);
+                if (collectSourceInformation == true)
+                {
+                    navigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source);
+                }
+
                 foreach (var testElement in testElements)
                 {
                     var testCase = testElement.ToTestCase();
 
-                    if (navigationSession != null)
+                    if (navigationSession != null && collectSourceInformation)
                     {
                         var className = testElement.TestMethod.DeclaringClassFullName
                                         ?? testElement.TestMethod.FullClassName;
@@ -128,6 +135,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             {
                 PlatformServiceProvider.Instance.FileOperations.DisposeNavigationSession(navigationSession);
             }
+        }
+
+        private bool CollectSourceInformation(IRunSettings runSettings)
+        {
+            bool collectSourceInformation = true;
+
+            if (runSettings != null && !string.IsNullOrEmpty(runSettings.SettingsXml))
+            {
+                StringReader stringReader = new StringReader(runSettings.SettingsXml);
+                XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+
+                if (reader.ReadToFollowing("CollectSourceInformation"))
+                {
+                    if (!bool.TryParse(reader.ReadInnerXml(), out collectSourceInformation))
+                    {
+                        collectSourceInformation = true;
+                    }
+                }
+            }
+
+            return collectSourceInformation;
         }
     }
 }
