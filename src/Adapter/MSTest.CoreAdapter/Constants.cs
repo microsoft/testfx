@@ -30,8 +30,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         #region Test Property registration
 
-        internal static readonly TestProperty TestEnabledProperty = TestProperty.Register("MSTestDiscovererv2.IsEnabled", IsEnabledLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
-
         internal static readonly TestProperty TestClassNameProperty = TestProperty.Register("MSTestDiscovererv2.TestClassName", TestClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
         internal static readonly TestProperty AsyncTestProperty = TestProperty.Register("MSTestDiscovererv2.IsAsync", IsAsyncLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
@@ -53,7 +51,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// to attributes on tests, and may be available in command line/TeamBuild to filter tests.
         /// These Property names should not be localized.
         /// </summary>
-        private const string IsEnabledLabel = "IsEnabled";
         private const string TestClassNameLabel = "ClassName";
         private const string IsAsyncLabel = "IsAsync";
         private const string TestCategoryLabel = "TestCategory";

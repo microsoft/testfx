@@ -21,14 +21,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         internal static UnitTestElement ToUnitTestElement(this TestCase testCase, string source)
         {
             var isAsync = (testCase.GetPropertyValue(Constants.AsyncTestProperty) as bool?) ?? false;
-            var isEnabled = (testCase.GetPropertyValue(Constants.TestEnabledProperty) as bool?) ?? true;
             var testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
 
             TestMethod testMethod = new TestMethod(testCase.DisplayName, testClassName, source, isAsync);
 
             UnitTestElement testElement = new UnitTestElement(testMethod)
                                         {
-                                            Ignored = !isEnabled,
                                             IsAsync = isAsync,
                                             TestCategory = testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[],
                                             Priority = testCase.GetPropertyValue(Constants.PriorityProperty) as int?
