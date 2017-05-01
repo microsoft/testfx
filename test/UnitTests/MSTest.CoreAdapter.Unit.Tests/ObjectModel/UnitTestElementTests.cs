@@ -77,20 +77,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
         }
 
         [TestMethodV1]
-        public void ToTestCaseShouldSetTestEnabledProperty()
-        {
-            this.unitTestElement.Ignored = false;
-            var testCase = this.unitTestElement.ToTestCase();
-
-            Assert.AreEqual(true, testCase.GetPropertyValue(Constants.TestEnabledProperty));
-
-            this.unitTestElement.Ignored = true;
-            testCase = this.unitTestElement.ToTestCase();
-
-            Assert.AreEqual(false, testCase.GetPropertyValue(Constants.TestEnabledProperty));
-        }
-
-        [TestMethodV1]
         public void ToTestCaseShouldSetTestClassNameProperty()
         {
             var testCase = this.unitTestElement.ToTestCase();
