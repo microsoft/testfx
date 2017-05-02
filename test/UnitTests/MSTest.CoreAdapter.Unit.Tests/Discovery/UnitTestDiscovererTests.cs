@@ -26,6 +26,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     [TestClass]
     public class UnitTestDiscovererTests
     {
+        private static bool VerifyTestCase(TestCase tc)
+        {
+            return tc.FullyQualifiedName == "C.M";
+        }
+
         private UnitTestDiscoverer unitTestDiscoverer;
 
         private TestablePlatformServiceProvider testablePlatformServiceProvider;
@@ -193,6 +198,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             // Assert
             this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M")), Times.Once);
+        }
+
+        [TestMethodV1]
+        public void SendTestCasesShouldSendTestCasesWithNaigationDataWhenDeclaredAssemblyNameIsNonNull()
+        {
+            var source = "DummyAssembly.dll";
+
+            // Setup mocks.
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
+                .Returns((object)null);
+
+            var test = new UnitTestElement(new TestMethod("M", "C", "A", false));
+            test.TestMethod.DeclaringAssemblyName = "DA";
+
+            var testElements = new List<UnitTestElement> { test };
+
+            this.SetupNavigation(source, test, test.TestMethod.DeclaringClassFullName, test.TestMethod.Name);
+
+            // Act
+            this.unitTestDiscoverer.SendTestCases(source, testElements, this.mockTestCaseDiscoverySink.Object);
+
+            // Assert
+            this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => VerifyTestCase(tc))), Times.Once);
         }
 
         [TestMethodV1]
