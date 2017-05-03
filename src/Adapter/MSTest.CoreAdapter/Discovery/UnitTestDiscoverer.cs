@@ -80,16 +80,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink)
         {
-            object sourceNavigationSession = null;
+            Dictionary<string, object> navigationSessions = new Dictionary<string, object>();
             try
             {
-                sourceNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source);
+                navigationSessions.Add(source, PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source));
 
                 foreach (var testElement in testElements)
                 {
-                    var testNavigationSession = testElement.TestMethod.DeclaringAssemblyName != null
-                        ? PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testElement.TestMethod.DeclaringAssemblyName)
-                        : sourceNavigationSession;
+                    string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
+                    object testNavigationSession;
+
+                    if (navigationSessions.ContainsKey(testSource))
+                    {
+                        testNavigationSession = navigationSessions[testSource];
+                    }
+                    else
+                    {
+                        testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
+                        navigationSessions.Add(testSource, testNavigationSession);
+                    }
 
                     var testCase = testElement.ToTestCase();
 
@@ -131,7 +140,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             }
             finally
             {
-                PlatformServiceProvider.Instance.FileOperations.DisposeNavigationSession(sourceNavigationSession);
+                foreach (object navigationSession in navigationSessions.Values)
+                {
+                    PlatformServiceProvider.Instance.FileOperations.DisposeNavigationSession(navigationSession);
+                }
             }
         }
     }
