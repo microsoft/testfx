@@ -86,6 +86,8 @@ $TFB_IsLocalizedBuild = $IsLocalizedBuild -or $TFB_Official
 $TFB_Solutions = @("TestFx.sln","Templates\MSTestTemplates.sln","WizardExtensions\WizardExtensions.sln")
 $TFB_VSmanprojs =@("src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest.vsmanproj",
                    "src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.vsmanproj", 
+				   "src\setup\Microsoft.VisualStudio.Templates.VB.MSTestv2.Desktop.UnitTest.vsmanproj",
+				   "src\setup\Microsoft.VisualStudio.Templates.VB.MSTestv2.UWP.UnitTest.vsmanproj",
                    "src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.IntelliTest.vsmanproj", 
                    "src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.UnitTest.vsmanproj")
 $TFB_NetCoreProjects =@("src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj",
