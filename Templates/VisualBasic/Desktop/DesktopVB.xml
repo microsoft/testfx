@@ -1,0 +1,14 @@
+﻿<Zips>
+  <Zip>
+    <File TargetFileName="AssemblyInfo.vb">ProjectTemplates\VisualBasic\Test\AssemblyInfo.vb</File>
+    <File TargetFileName="Application.myapp">ProjectTemplates\VisualBasic\Test\Application.myapp</File>
+    <File TargetFileName="Application.Designer.vb">ProjectTemplates\VisualBasic\Test\Application.Designer.vb</File>
+    <File TargetFileName="Resources.resx">ProjectTemplates\VisualBasic\Test\Resources.resx</File>
+    <File TargetFileName="Resources.Designer.vb">ProjectTemplates\VisualBasic\Test\Resources.Designer.vb</File>
+    <File TargetFileName="Settings.settings">ProjectTemplates\VisualBasic\Test\Settings.settings</File>
+    <File TargetFileName="Settings.Designer.vb">ProjectTemplates\VisualBasic\Test\Settings.Designer.vb</File>
+    <File TargetFileName="UnitTest1.vb">ProjectTemplates\VisualBasic\Test\UnitTest1.vb</File>
+    <File TargetFileName="MSTestV2DesktopVB.vstemplate">ProjectTemplates\VisualBasic\Test\MSTestV2DesktopVB.vstemplate</File>
+    <File TargetFileName="UnitTestProject.vbproj">ProjectTemplates\VisualBasic\Test\UnitTestProject.vbproj</File>
+  </Zip>
+</Zips>
