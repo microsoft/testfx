@@ -28,11 +28,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         private readonly ReflectHelper reflectHelper;
 
         /// <summary>
-        /// Whether test class has [Ignore] attribute on it. Nullable so that we can cache the value.
-        /// </summary>
-        private bool? isIgnoreAttributeOnClass;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
         /// </summary>
         /// <param name="type"> The reflected type. </param>
@@ -47,23 +42,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             this.reflectHelper = reflectHelper;
             this.typeValidator = typeValidator;
             this.testMethodValidator = testMethodValidator;
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the test class has an ignored attribute or not.
-        /// </summary>
-        internal bool IsIgnoreAttributeOnTestClass
-        {
-            get
-            {
-                if (this.isIgnoreAttributeOnClass == null)
-                {
-                    this.isIgnoreAttributeOnClass = this.reflectHelper.IsAttributeDefined(this.type, typeof(IgnoreAttribute), false);
-                }
-
-                Debug.Assert(this.isIgnoreAttributeOnClass.HasValue, "isIgnoreAttributeOnClass.HasValue");
-                return this.isIgnoreAttributeOnClass.Value;
-            }
         }
 
         /// <summary>
@@ -138,8 +116,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             // Get compiler generated type name for async test method (either void returning or task returning).
             var asyncTypeName = method.GetAsyncTypeName();
             testElement.AsyncTypeName = asyncTypeName;
-
-            testElement.Ignored = this.IsIgnoreAttributeOnTestClass || this.reflectHelper.IsAttributeDefined(method, typeof(IgnoreAttribute), false);
 
             testElement.TestCategory = this.reflectHelper.GetCategories(method);
 
