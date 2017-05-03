@@ -7,9 +7,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTestDesktopVB", "VisualBa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTestUWPVB", "VisualBasic\UWP\MSTestUWPVB.csproj", "{49460594-BA56-4348-82AF-7B517263630B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTestDesktopVSIX", "CSharp\Desktop\MSTestDesktopVSIX.csproj", "{9E08BE4A-D3C8-4E8D-AFBE-FA571F878464}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTestDesktopCSharp", "CSharp\Desktop\MSTestDesktopCSharp.csproj", "{9E08BE4A-D3C8-4E8D-AFBE-FA571F878464}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTestUWPVSIX", "CSharp\UWP\MSTestUWPVSIX.csproj", "{11207E9D-1AE5-41B2-A04A-5F2BC1DCD5E7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTestUWPCSharp", "CSharp\UWP\MSTestUWPCSharp.csproj", "{11207E9D-1AE5-41B2-A04A-5F2BC1DCD5E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
