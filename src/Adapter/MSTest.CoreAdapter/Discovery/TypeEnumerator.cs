@@ -112,7 +112,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 testMethod.DeclaringClassFullName = method.DeclaringType.FullName;
             }
 
-            // TODO: unit test coverage
             if (!this.reflectHelper.IsMethodDeclaredInSameAssemblyAsType(method, this.type))
             {
                 testMethod.DeclaringAssemblyName =
