@@ -1,0 +1,24 @@
+﻿<Zips>
+  <Zip>
+    <File TargetFileName="Assets\LockScreenLogo.scale-200.png">ProjectTemplates\VisualBasic\Windows UAP\Assets\LockScreenLogo.scale-200.png</File>
+    <File TargetFileName="Assets\SplashScreen.scale-200.png">ProjectTemplates\VisualBasic\Windows UAP\Assets\SplashScreen.scale-200.png</File>
+    <File TargetFileName="Assets\Square44x44Logo.scale-200.png">ProjectTemplates\VisualBasic\Windows UAP\Assets\Square44x44Logo.scale-200.png</File>
+    <File TargetFileName="Assets\Square44x44Logo.targetsize-24_altform-unplated.png">ProjectTemplates\VisualBasic\Windows UAP\Assets\Square44x44Logo.targetsize-24_altform-unplated.png</File>
+    <File TargetFileName="Assets\Square150x150Logo.scale-200.png">ProjectTemplates\VisualBasic\Windows UAP\Assets\Square150x150Logo.scale-200.png</File>
+    <File TargetFileName="Assets\StoreLogo.png">ProjectTemplates\VisualBasic\Windows UAP\Assets\StoreLogo.png</File>
+    <File TargetFileName="Assets\Wide310x150Logo.scale-200.png">ProjectTemplates\VisualBasic\Windows UAP\Assets\Wide310x150Logo.scale-200.png</File>
+
+    <File TargetFileName="Properties\AssemblyInfo.vb">ProjectTemplates\VisualBasic\Windows UAP\Properties\AssemblyInfo.vb</File>
+    <File TargetFileName="Properties\UnitTestApp.rd.xml">ProjectTemplates\VisualBasic\Windows UAP\Properties\UnitTestApp.rd.xml</File>
+
+    <File TargetFileName="__PreviewImage.png">ProjectTemplates\VisualBasic\Windows UAP\__PreviewImage.png</File>
+    <File TargetFileName="MSTestV2UWP_VB.vstemplate">ProjectTemplates\VisualBasic\Windows UAP\MSTestV2UWP_VB.vstemplate</File>
+    <File TargetFileName="Package.appxmanifest">ProjectTemplates\VisualBasic\Windows UAP\Package.appxmanifest</File>
+    <File TargetFileName="project.json">ProjectTemplates\VisualBasic\Windows UAP\project.json</File>
+    <File TargetFileName="UnitTest1.vb">ProjectTemplates\VisualBasic\Windows UAP\UnitTest1.vb</File>
+    <File TargetFileName="UnitTestApp.xaml">ProjectTemplates\VisualBasic\Windows UAP\UnitTestApp.xaml</File>
+    <File TargetFileName="UnitTestApp.xaml.vb">ProjectTemplates\VisualBasic\Windows UAP\UnitTestApp.xaml.vb</File>
+    <File TargetFileName="UnitTestApp1.vbproj">ProjectTemplates\VisualBasic\Windows UAP\UnitTestApp1.vbproj</File>
+    <File TargetFileName="UnitTestApp1_TemporaryKey.pfx">ProjectTemplates\VisualBasic\Windows UAP\UnitTestApp1_TemporaryKey.pfx</File>
+  </Zip>
+</Zips>
