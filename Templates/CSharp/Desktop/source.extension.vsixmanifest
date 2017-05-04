@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="mstestUniversalProjectTemplate" Version="15.0.26126.00" Language="en-US" Publisher="Microsoft" />
-    <DisplayName>MSTest V2 Templates (Universal Windows)</DisplayName>
-    <Description xml:space="preserve">Provides Visual Studio project template for MSTest V2 (For UWP applications).</Description>
-    <License>UniversalTemplateLicense.rtf</License>
-    <PackageId>Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest</PackageId>
+    <Identity Id="mstestProjectTemplate" Version="15.0.26127.00" Language="en-US" Publisher="Microsoft" />
+    <DisplayName>MSTest V2 Templates</DisplayName>
+    <Description xml:space="preserve">Provides Visual Studio project template for MSTest V2.</Description>
+    <License>DesktopTemplateLicense.rtf</License>
+    <PackageId>Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest</PackageId>
   </Metadata>
   <Installation AllUsers="true">
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0]" />
@@ -19,7 +19,7 @@
     <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.5,)" />
   </Dependencies>
   <Assets>
-    <Asset Type="Microsoft.VisualStudio.ProjectTemplate" d:Source="File" Path="ProjectTemplates" d:TargetPath="ProjectTemplates\CSharp\Windows UAP\UWP.zip" />
+    <Asset Type="Microsoft.VisualStudio.ProjectTemplate" d:Source="File" Path="ProjectTemplates" d:TargetPath="ProjectTemplates\CSharp\Test\Desktop.zip" />
   </Assets>
   <Prerequisites>
     <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0]" DisplayName="Visual Studio core editor" />
