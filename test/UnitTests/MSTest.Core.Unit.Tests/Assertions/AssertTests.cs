@@ -245,5 +245,37 @@ namespace UnitTestFramework.Tests
         }
 
         #endregion
+
+        #region InstanceOfType tests
+
+        [TestMethod]
+        public void InstanceOfTypeShouldFailWhenValueIsNull()
+        {
+            Action action = () => TestFrameworkV2.Assert.IsInstanceOfType(null, typeof(AssertTests));
+            TestFrameworkV2.Assert.ThrowsException<TestFrameworkV2.AssertFailedException>(action);
+        }
+
+        [TestMethod]
+        public void InstanceOfTypeShouldFailWhenTypeIsNull()
+        {
+            Action action = () => TestFrameworkV2.Assert.IsInstanceOfType(5, null);
+            TestFrameworkV2.Assert.ThrowsException<TestFrameworkV2.AssertFailedException>(action);
+        }
+
+        [TestMethod]
+        public void InstanceNotOfTypeShouldFailWhenValueIsNull()
+        {
+            Action action = () => TestFrameworkV2.Assert.IsNotInstanceOfType(null, typeof(AssertTests));
+            TestFrameworkV2.Assert.ThrowsException<TestFrameworkV2.AssertFailedException>(action);
+        }
+
+        [TestMethod]
+        public void InstanceNotOfTypeShouldFailWhenTypeIsNull()
+        {
+            Action action = () => TestFrameworkV2.Assert.IsNotInstanceOfType(5, null);
+            TestFrameworkV2.Assert.ThrowsException<TestFrameworkV2.AssertFailedException>(action);
+        }
+
+        #endregion
     }
 }

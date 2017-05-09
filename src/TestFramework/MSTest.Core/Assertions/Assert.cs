@@ -1658,7 +1658,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void IsInstanceOfType(object value, Type expectedType, string message, params object[] parameters)
         {
-            if (expectedType == null)
+            if (expectedType == null || value == null)
             {
                 HandleFail("Assert.IsInstanceOfType", message, parameters);
             }
@@ -1750,7 +1750,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void IsNotInstanceOfType(object value, Type wrongType, string message, params object[] parameters)
         {
-            if (wrongType == null)
+            if (wrongType == null || value == null)
             {
                 HandleFail("Assert.IsNotInstanceOfType", message, parameters);
             }
