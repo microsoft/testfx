@@ -1663,9 +1663,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 HandleFail("Assert.IsInstanceOfType", message, parameters);
             }
 
-            var elementTypeInfo = value != null ? value.GetType().GetTypeInfo() : null;
-            var expectedTypeInfo = expectedType != null ? expectedType.GetTypeInfo() : null;
-            if (expectedTypeInfo != null && elementTypeInfo != null && !expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
+            var elementTypeInfo = value.GetType().GetTypeInfo();
+            var expectedTypeInfo = expectedType.GetTypeInfo();
+            if (!expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
             {
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
@@ -1755,9 +1755,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 HandleFail("Assert.IsNotInstanceOfType", message, parameters);
             }
 
-            var elementTypeInfo = value != null ? value.GetType().GetTypeInfo() : null;
-            var expectedTypeInfo = wrongType != null ? wrongType.GetTypeInfo() : null;
-            if (expectedTypeInfo != null && elementTypeInfo != null && expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
+            var elementTypeInfo = value.GetType().GetTypeInfo();
+            var expectedTypeInfo = wrongType.GetTypeInfo();
+            if (expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
             {
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
