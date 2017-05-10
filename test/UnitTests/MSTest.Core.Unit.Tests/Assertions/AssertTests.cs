@@ -245,5 +245,61 @@ namespace UnitTestFramework.Tests
         }
 
         #endregion
+
+        #region InstanceOfType tests
+
+        [TestMethod]
+        public void InstanceOfTypeShouldFailWhenValueIsNull()
+        {
+            Action action = () => TestFrameworkV2.Assert.IsInstanceOfType(null, typeof(AssertTests));
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        }
+
+        [TestMethod]
+        public void InstanceOfTypeShouldFailWhenTypeIsNull()
+        {
+            Action action = () => TestFrameworkV2.Assert.IsInstanceOfType(5, null);
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        }
+
+        [TestMethod]
+        public void InstanceOfTypeShouldPassOnSameInstance()
+        {
+            TestFrameworkV2.Assert.IsInstanceOfType(5, typeof(int));
+        }
+
+        [TestMethod]
+        public void InstanceOfTypeShouldPassOnHigherInstance()
+        {
+            TestFrameworkV2.Assert.IsInstanceOfType(5, typeof(object));
+        }
+
+        [TestMethod]
+        public void InstanceNotOfTypeShouldFailWhenValueIsNull()
+        {
+            Action action = () => TestFrameworkV2.Assert.IsNotInstanceOfType(null, typeof(AssertTests));
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        }
+
+        [TestMethod]
+        public void InstanceNotOfTypeShouldFailWhenTypeIsNull()
+        {
+            Action action = () => TestFrameworkV2.Assert.IsNotInstanceOfType(5, null);
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        }
+
+        [TestMethod]
+        public void InstanceNotOfTypeShouldPassOnWrongInstance()
+        {
+            TestFrameworkV2.Assert.IsNotInstanceOfType(5L, typeof(int));
+        }
+
+        [TestMethod]
+        public void InstanceNotOfTypeShouldPassOnSubInstance()
+        {
+            TestFrameworkV2.Assert.IsNotInstanceOfType(new object(), typeof(int));
+        }
+
+        #endregion
     }
 }
