@@ -26,11 +26,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     [TestClass]
     public class UnitTestDiscovererTests
     {
-        private static bool VerifyTestCase(TestCase tc)
-        {
-            return tc.FullyQualifiedName == "C.M";
-        }
-
         private UnitTestDiscoverer unitTestDiscoverer;
 
         private TestablePlatformServiceProvider testablePlatformServiceProvider;
@@ -201,7 +196,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethodV1]
-        public void SendTestCasesShouldSendTestCasesWithNaigationDataWhenDeclaredAssemblyNameIsNonNull()
+        public void SendTestCasesShouldUseNaigationSessionForDeclaredAssemblyName()
         {
             var source = "DummyAssembly.dll";
 
@@ -209,8 +204,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
                 .Returns((object)null);
 
-            var test = new UnitTestElement(new TestMethod("M", "C", "A", false));
-            test.TestMethod.DeclaringAssemblyName = "DA";
+            var test = new UnitTestElement(
+                new TestMethod("M", "C", "A", false)
+                {
+                    DeclaringAssemblyName = "DummyAssembly2.dll"
+                });
 
             var testElements = new List<UnitTestElement> { test };
 
@@ -220,7 +218,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.unitTestDiscoverer.SendTestCases(source, testElements, this.mockTestCaseDiscoverySink.Object);
 
             // Assert
-            this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => VerifyTestCase(tc))), Times.Once);
+            this.testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.CreateNavigationSession("DummyAssembly2.dll"), Times.Once);
         }
 
         [TestMethodV1]

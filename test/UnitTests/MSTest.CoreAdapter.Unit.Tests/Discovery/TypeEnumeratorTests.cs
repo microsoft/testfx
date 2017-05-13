@@ -193,7 +193,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
 
-            var testElement = typeEnumerator.GetTestFromMethod(typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType"), this.warnings);
+            var testElement = typeEnumerator.GetTestFromMethod(typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType"), true, this.warnings);
 
             Assert.IsNotNull(testElement);
             Assert.AreEqual("MethodWithVoidReturnType", testElement.TestMethod.Name);
@@ -209,7 +209,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("AsyncMethodWithTaskReturnType");
 
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
             var expectedAsyncTaskName =
                 (methodInfo.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) as AsyncStateMachineAttribute)
@@ -232,7 +232,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockReflectHelper.Setup(
                 rh => rh.IsAttributeDefined(methodInfo, typeof(UTF.IgnoreAttribute), false)).Returns(false);
 
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
             Assert.IsNotNull(testElement);
             Assert.IsFalse(testElement.Ignored);
@@ -249,7 +249,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             // Setup mocks
             this.mockReflectHelper.Setup(rh => rh.GetCategories(methodInfo)).Returns(testCategories);
 
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
             Assert.IsNotNull(testElement);
             CollectionAssert.AreEqual(testCategories, testElement.TestCategory);
@@ -266,7 +266,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             // Setup mocks
             this.mockReflectHelper.Setup(rh => rh.GetTestPropertiesAsTraits(methodInfo)).Returns(testProperties);
 
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
             Assert.IsNotNull(testElement);
             CollectionAssert.AreEqual(testProperties, testElement.Traits);
@@ -285,7 +285,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockReflectHelper.Setup(rh => rh.GetTestPropertiesAsTraits(methodInfo)).Returns(testProperties);
             this.mockReflectHelper.Setup(rh => rh.GetTestOwnerAsTraits(methodInfo)).Returns(ownerTrait);
 
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
             Assert.IsNotNull(testElement);
             testProperties.Add(ownerTrait);
@@ -306,7 +306,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockReflectHelper.Setup(rh => rh.GetPriority(methodInfo)).Returns(1);
             this.mockReflectHelper.Setup(rh => rh.GetTestPriorityAsTraits(1)).Returns(priorityTrait);
 
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
             Assert.IsNotNull(testElement);
             testProperties.Add(priorityTrait);
@@ -323,7 +323,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             // Setup mocks
             this.mockReflectHelper.Setup(rh => rh.GetPriority(methodInfo)).Returns(1);
 
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
             Assert.IsNotNull(testElement);
             Assert.AreEqual(1, testElement.Priority);
@@ -341,7 +341,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
                 td => td.GetDeploymentItems(It.IsAny<MethodInfo>(), It.IsAny<Type>(), this.warnings))
                 .Returns((KeyValuePair<string, string>[])null);
 
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
             Assert.IsNotNull(testElement);
             Assert.IsNull(testElement.DeploymentItems);
@@ -359,7 +359,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.testablePlatformServiceProvider.MockTestDeployment.Setup(
                 td => td.GetDeploymentItems(methodInfo, typeof(DummyTestClass), this.warnings)).Returns(deploymentItems);
 
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
             Assert.IsNotNull(testElement);
             Assert.IsNotNull(testElement.DeploymentItems);
@@ -369,17 +369,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethod]
         public void GetTestFromMethodShouldSetDeclaringAssemblyName()
         {
-            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: false);
+            const bool isMethodFromSameAssemly = false;
+
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-            var deploymentItems = new[] { new KeyValuePair<string, string>("C:\\temp", string.Empty) };
 
             // Setup mocks
             string otherAssemblyName = "ADifferentAssembly";
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetAssemblyPath(It.IsAny<Assembly>()))
                 .Returns(otherAssemblyName);
 
-            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, this.warnings);
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, isMethodFromSameAssemly, this.warnings);
 
             Assert.IsNotNull(testElement);
             Assert.AreEqual(otherAssemblyName, testElement.TestMethod.DeclaringAssemblyName);

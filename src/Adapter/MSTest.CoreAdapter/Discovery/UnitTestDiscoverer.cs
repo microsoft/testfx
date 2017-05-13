@@ -80,7 +80,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink)
         {
-            Dictionary<string, object> navigationSessions = new Dictionary<string, object>();
+            var navigationSessions = new Dictionary<string, object>();
             try
             {
                 navigationSessions.Add(source, PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source));
