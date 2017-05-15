@@ -80,15 +80,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink)
         {
-            object navigationSession = null;
+            var navigationSessions = new Dictionary<string, object>();
             try
             {
-                navigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source);
+                navigationSessions.Add(source, PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source));
+
                 foreach (var testElement in testElements)
                 {
+                    string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
+                    object testNavigationSession;
+
+                    if (navigationSessions.ContainsKey(testSource))
+                    {
+                        testNavigationSession = navigationSessions[testSource];
+                    }
+                    else
+                    {
+                        testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
+                        navigationSessions.Add(testSource, testNavigationSession);
+                    }
+
                     var testCase = testElement.ToTestCase();
 
-                    if (navigationSession != null)
+                    if (testNavigationSession != null)
                     {
                         var className = testElement.TestMethod.DeclaringClassFullName
                                         ?? testElement.TestMethod.FullClassName;
@@ -108,7 +122,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                         string fileName;
 
                         PlatformServiceProvider.Instance.FileOperations.GetNavigationData(
-                            navigationSession,
+                            testNavigationSession,
                             className,
                             methodName,
                             out minLineNumber,
@@ -126,7 +140,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             }
             finally
             {
-                PlatformServiceProvider.Instance.FileOperations.DisposeNavigationSession(navigationSession);
+                foreach (object navigationSession in navigationSessions.Values)
+                {
+                    PlatformServiceProvider.Instance.FileOperations.DisposeNavigationSession(navigationSession);
+                }
             }
         }
     }

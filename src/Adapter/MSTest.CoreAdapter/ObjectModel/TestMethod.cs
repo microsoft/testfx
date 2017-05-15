@@ -21,6 +21,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         private string declaringClassFullName = null;
 
+        /// <summary>
+        /// Member field for the property 'DeclaringAssemblyName'
+        /// </summary>
+        private string declaringAssemblyName = null;
+
         #endregion
 
         public TestMethod(string name, string fullClassName, string assemblyName,  bool isAsync)
@@ -51,6 +56,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
         /// <summary>
         /// Gets or sets the declaring class full name. This will be used while getting navigation data.
+        /// This will be null if AssemblyName is same as DeclaringAssemblyName.
+        /// Reason to set to null in the above case is to minimise the transfer of data across appdomains and not have a perf hit.
+        /// </summary>
+        public string DeclaringAssemblyName
+        {
+            get
+            {
+                return this.declaringAssemblyName;
+            }
+
+            set
+            {
+                Debug.Assert(value != this.AssemblyName, "DeclaringAssemblyName should not be the same as AssemblyName.");
+                this.declaringAssemblyName = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the declaring class full name. This will be used while getting navigation data.
         /// This will be null if FullClassName is same as DeclaringClassFullName.
         /// Reason to set to null in the above case is to minimise the transfer of data across appdomains and not have a perf hit.
         /// </summary>
@@ -63,7 +87,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
             set
             {
-                Debug.Assert(value != this.FullClassName, "FullClassName should not be null.");
+                Debug.Assert(value != this.FullClassName, "DeclaringClassFullName should not be the same as FullClassName.");
                 this.declaringClassFullName = value;
             }
         }
