@@ -77,7 +77,7 @@
 
     <!-- NetCore -->
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netcoreapp1.0\" />
-    <file src="PlatformServices.NetCore\netstandard1.3\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp1.0\" />
+    <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp1.0\" />
 
     <!-- UWP -->
     <file src="Build\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />

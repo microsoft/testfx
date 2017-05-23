@@ -321,6 +321,10 @@ function Create-NugetPackages
 
         Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version=$version -Properties Version=$version"
         & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR
+
+		if ($lastExitCode -ne 0) {
+		throw "Nuget pack failed with an exit code of '$lastExitCode'."
+	    }
     }
 
     Write-Log "Create-NugetPackages: Complete. {$(Get-ElapsedTime($timer))}"
