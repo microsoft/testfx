@@ -277,4 +277,10 @@ Stack Trace: {4}</value>
   <data name="AsyncUITestMethodNotSupported" xml:space="preserve">
     <value>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</value>
   </data>
+  <data name="DynamicDataIEnumerableNull" xml:space="preserve">
+    <value>Property or method {0} on {1} did not return IEnumerable&lt;object[]&gt;.</value>
+  </data>
+  <data name="DynamicDataValueNull" xml:space="preserve">
+    <value>Value returned by property or method {0} shouldn't be null.</value>
+  </data>
 </root>

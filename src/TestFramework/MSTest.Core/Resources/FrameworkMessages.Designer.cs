@@ -260,6 +260,24 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Property or method {0} on {1} did not return IEnumerable&lt;object[]&gt;..
+        /// </summary>
+        internal static string DynamicDataIEnumerableNull {
+            get {
+                return ResourceManager.GetString("DynamicDataIEnumerableNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value returned by property or method {0} shouldn&apos;t be null..
+        /// </summary>
+        internal static string DynamicDataValueNull {
+            get {
+                return ResourceManager.GetString("DynamicDataValueNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}.
         /// </summary>
         internal static string ElementNumbersDontMatch {

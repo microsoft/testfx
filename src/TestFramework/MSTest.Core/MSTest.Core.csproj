@@ -35,6 +35,8 @@
     <LocDocumentationSubPath>Core</LocDocumentationSubPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Attributes\DynamicDataAttribute.cs" />
+    <Compile Include="Interfaces\DataSource.cs" />
     <Compile Include="Interfaces\ITestMethod.cs" />
     <Compile Include="Internal\Helper.cs" />
     <Compile Include="DataAccessMethod.cs" />
@@ -72,6 +74,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>FrameworkMessages.Designer.cs</LastGenOutput>
       <CustomToolNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</CustomToolNamespace>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />

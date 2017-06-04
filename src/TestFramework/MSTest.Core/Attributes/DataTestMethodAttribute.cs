@@ -7,6 +7,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Collections.Generic;
     using System.Globalization;
 
+    using Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces;
+
     /// <summary>
     /// Attribute for data driven test where data can be specified inline.
     /// </summary>
@@ -24,40 +26,48 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </returns>
         public override TestResult[] Execute(ITestMethod testMethod)
         {
-            DataRowAttribute[] dataRows = testMethod.GetAttributes<DataRowAttribute>(false);
+            DataSource[] dataSources = testMethod.GetAttributes<DataSource>(true);
 
-            if (dataRows == null || dataRows.Length == 0)
+            if (dataSources == null || dataSources.Length == 0)
             {
-                return new TestResult[] { new TestResult() { Outcome = UnitTestOutcome.Failed, TestFailureException = new Exception(FrameworkMessages.NoDataRow) } };
+                return new TestResult[]
+                           {
+                                   new TestResult()
+                                       {
+                                           Outcome = UnitTestOutcome.Failed,
+                                           TestFailureException =
+                                               new Exception(FrameworkMessages.NoDataRow)
+                                       }
+                           };
             }
 
-            return RunDataDrivenTest(testMethod, dataRows);
+            return RunDataDrivenTest(testMethod, dataSources);
         }
 
         /// <summary>
         /// Run data driven test method.
         /// </summary>
         /// <param name="testMethod"> Test method to execute. </param>
-        /// <param name="dataRows"> Data Row. </param>
+        /// <param name="dataSources"> Data Sources. </param>
         /// <returns> Results of execution. </returns>
-        internal static TestResult[] RunDataDrivenTest(ITestMethod testMethod, DataRowAttribute[] dataRows)
+        internal static TestResult[] RunDataDrivenTest(ITestMethod testMethod, DataSource[] dataSources)
         {
             List<TestResult> results = new List<TestResult>();
 
-            foreach (var dataRow in dataRows)
+            foreach (var dataSource in dataSources)
             {
-                TestResult result = testMethod.Invoke(dataRow.Data);
-
-                if (!string.IsNullOrEmpty(dataRow.DisplayName))
+                foreach (var data in dataSource.GetData(testMethod.MethodInfo))
                 {
-                    result.DisplayName = dataRow.DisplayName;
-                }
-                else
-                {
-                    result.DisplayName = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, testMethod.TestMethodName, string.Join(",", dataRow.Data));
-                }
+                    TestResult result = testMethod.Invoke(data);
 
-                results.Add(result);
+                    result.DisplayName = string.Format(
+                        CultureInfo.CurrentCulture,
+                        FrameworkMessages.DataDrivenResultDisplayName,
+                        testMethod.TestMethodName,
+                        string.Join(",", data));
+
+                    results.Add(result);
+                }
             }
 
             return results.ToArray();

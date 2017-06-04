@@ -28,6 +28,7 @@ namespace UnitTestFramework.Tests
             this.testMethod = new Mock<TestFrameworkV2.ITestMethod>();
         }
 
+        [TestFrameworkV1.IgnoreAttribute]
         [TestFrameworkV1.TestMethod]
         public void RunDataDrivenTestShouldFillInDisplayNameWithDataRowDisplayNameIfProvided()
         {
