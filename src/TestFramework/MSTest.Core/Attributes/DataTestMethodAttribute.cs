@@ -5,7 +5,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces;
 
@@ -30,15 +29,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
             if (dataSources == null || dataSources.Length == 0)
             {
-                return new TestResult[]
-                           {
-                                   new TestResult()
-                                       {
-                                           Outcome = UnitTestOutcome.Failed,
-                                           TestFailureException =
-                                               new Exception(FrameworkMessages.NoDataRow)
-                                       }
-                           };
+                return new TestResult[] { new TestResult() { Outcome = UnitTestOutcome.Failed, TestFailureException = new Exception(FrameworkMessages.NoDataRow) } };
             }
 
             return RunDataDrivenTest(testMethod, dataSources);
@@ -48,19 +39,19 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Run data driven test method.
         /// </summary>
         /// <param name="testMethod"> Test method to execute. </param>
-        /// <param name="dataSources"> Data Sources. </param>
+        /// <param name="testDataSources">Test data sources. </param>
         /// <returns> Results of execution. </returns>
-        internal static TestResult[] RunDataDrivenTest(ITestMethod testMethod, TestDataSource[] dataSources)
+        internal static TestResult[] RunDataDrivenTest(ITestMethod testMethod, TestDataSource[] testDataSources)
         {
             List<TestResult> results = new List<TestResult>();
 
-            foreach (var dataSource in dataSources)
+            foreach (var testDataSource in testDataSources)
             {
-                foreach (var data in dataSource.GetData(testMethod.MethodInfo))
+                foreach (var data in testDataSource.GetData(testMethod.MethodInfo))
                 {
                     TestResult result = testMethod.Invoke(data);
 
-                    result.DisplayName = dataSource.GetDisplayName(testMethod.MethodInfo, data);
+                    result.DisplayName = testDataSource.GetDisplayName(testMethod.MethodInfo, data);
 
                     results.Add(result);
                 }

@@ -269,7 +269,7 @@ Exception Message: {3}
 Stack Trace: {4}</value>
   </data>
   <data name="NoDataRow" xml:space="preserve">
-    <value>No DataRowAttribute specified. Atleast one DataRowAttribute is required with DataTestMethodAttribute.</value>
+    <value>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</value>
   </data>
   <data name="DataDrivenResultDisplayName" xml:space="preserve">
     <value>{0} ({1})</value>

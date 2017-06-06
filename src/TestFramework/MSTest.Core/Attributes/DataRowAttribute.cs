@@ -63,7 +63,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <inheritdoc />
         public override string GetDisplayName(MethodInfo methodInfo, object[] data)
         {
-            if (!string.IsNullOrEmpty(this.DisplayName))
+            if (!string.IsNullOrWhiteSpace(this.DisplayName))
             {
                 return this.DisplayName;
             }

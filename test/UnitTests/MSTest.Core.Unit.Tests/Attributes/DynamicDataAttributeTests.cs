@@ -14,14 +14,8 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
     using FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.Attributes;
 
-    using Moq;
-
     using MSTestAdapter.TestUtilities;
 
-    using UnitTestFramework.Tests;
-
-    using CollectionAssert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-    using DataRowAttribute = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute;
     using TestInitializeV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
 
     [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute]
@@ -91,6 +85,32 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             Assert.IsTrue(data is IEnumerable<object[]>);
             Assert.IsTrue(data.ToList().Count == 2);
         }
+
+        [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        public void GetDataShouldThrowExceptionIfPropertyReturnsNull()
+        {
+            Action action = () =>
+            {
+                var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod4");
+                this.dynamicDataAttribute = new DynamicDataAttribute("NullProperty", typeof(DummyTestClass));
+                this.dynamicDataAttribute.GetData(methodInfo);
+            };
+
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        }
+
+        [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType()
+        {
+            Action action = () =>
+            {
+                var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod3");
+                this.dynamicDataAttribute = new DynamicDataAttribute("WrongDataTypeProperty", typeof(DummyTestClass));
+                this.dynamicDataAttribute.GetData(methodInfo);
+            };
+
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        }
     }
 
     /// <summary>
@@ -106,6 +126,28 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             get
             {
                 return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
+            }
+        }
+
+        /// <summary>
+        /// Gets the reusable test data property.
+        /// </summary>
+        public static IEnumerable<object[]> NullProperty
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the reusable test data property.
+        /// </summary>
+        public static IEnumerable<object[]> WrongDataTypeProperty
+        {
+            get
+            {
+                return null;
             }
         }
 
@@ -135,6 +177,24 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
         [DynamicData("ReusableTestDataMethod")]
         public void TestMethod2()
+        {
+        }
+
+        /// <summary>
+        /// The test method 3.
+        /// </summary>
+        [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        [DynamicData("WrongDataTypeProperty")]
+        public void TestMethod3()
+        {
+        }
+
+        /// <summary>
+        /// The test method 4.
+        /// </summary>
+        [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        [DynamicData("NullProperty")]
+        public void TestMethod4()
         {
         }
     }

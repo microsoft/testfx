@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
     using Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces;
 
     /// <summary>
-    /// The dynamic data source type.
+    /// Enum to specify whether the data is stored as property or in method.
     /// </summary>
     public enum DynamicDataSourceType
     {
@@ -41,10 +41,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
         /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
         /// </summary>
         /// <param name="dynamicDataSourceName">
-        /// The dynamic Data Source Name.
+        /// The name of method or property having test data.
         /// </param>
         /// <param name="dynamicDataSourceType">
-        /// The dynamic Data Source Type.
+        /// Specifies whether the data is stored as property or in method.
         /// </param>
         public DynamicDataAttribute(string dynamicDataSourceName, DynamicDataSourceType dynamicDataSourceType = DynamicDataSourceType.Property)
         {
@@ -56,13 +56,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
         /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
         /// </summary>
         /// <param name="dynamicDataSourceName">
-        /// The dynamic Data Source Name.
+        /// The type in which the test data is declared (as property or in method).
         /// </param>
         /// <param name="dynamicDataDeclaringType">
         /// The declaring type of property or method having data.
         /// </param>
         /// <param name="dynamicDataSourceType">
-        /// The dynamic Data Source Type.
+        /// Specifies whether the data is stored as property or in method.
         /// </param>
         public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType = DynamicDataSourceType.Property)
         {
@@ -74,7 +74,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
         /// <inheritdoc />
         public override IEnumerable<object[]> GetData(MethodInfo methodInfo)
         {
-            // Check if the class type of attribute is passed in constructor. If not, default to test method's class.
+            // Check if the declaring type of test data is passed in constructor. If not, default to test method's class type.
             if (this.dynamicDataDeclaringType == null)
             {
                 this.dynamicDataDeclaringType = methodInfo.DeclaringType;
@@ -111,7 +111,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
             {
                 throw new ArgumentNullException(
                     string.Format(
-                        FrameworkMessages.DynamicDataIEnumerableNull,
+                        FrameworkMessages.DynamicDataValueNull,
                         this.dynamicDataSourceName,
                         this.dynamicDataDeclaringType.FullName));
             }

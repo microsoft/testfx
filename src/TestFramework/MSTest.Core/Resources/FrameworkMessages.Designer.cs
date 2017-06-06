@@ -404,7 +404,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No DataRowAttribute specified. Atleast one DataRowAttribute is required with DataTestMethodAttribute..
+        ///   Looks up a localized string similar to No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute..
         /// </summary>
         internal static string NoDataRow {
             get {

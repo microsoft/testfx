@@ -20,18 +20,18 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces
         /// The method info of test method.
         /// </param>
         /// <returns>
-        /// Gets the data for calling test method.
+        /// Test data for calling test method.
         /// </returns>
         public abstract IEnumerable<object[]> GetData(MethodInfo methodInfo);
 
         /// <summary>
-        /// Gets the display name corresponding to test data row in test results for customization.
+        /// Gets the display name corresponding to test data row for displaying in TestResults.
         /// </summary>
         /// <param name="methodInfo">
         /// The method Info of test method.
         /// </param>
         /// <param name="data">
-        /// The test data row.
+        /// The test data which is passed to test method.
         /// </param>
         /// <returns>
         /// The <see cref="string"/>.
