@@ -36,7 +36,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Attributes\DynamicDataAttribute.cs" />
-    <Compile Include="Interfaces\DataSource.cs" />
+    <Compile Include="Interfaces\TestDataSource.cs" />
     <Compile Include="Interfaces\ITestMethod.cs" />
     <Compile Include="Internal\Helper.cs" />
     <Compile Include="DataAccessMethod.cs" />

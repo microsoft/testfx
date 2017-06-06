@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Reflection;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces;
@@ -13,7 +14,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// Attribute to define inline data for a test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class DataRowAttribute : DataSource
+    public class DataRowAttribute : TestDataSource
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
@@ -57,6 +58,19 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public override IEnumerable<object[]> GetData(MethodInfo methodInfo)
         {
             return new[] { this.Data };
+        }
+
+        /// <inheritdoc />
+        public override string GetDisplayName(MethodInfo methodInfo, object[] data)
+        {
+            if (!string.IsNullOrEmpty(this.DisplayName))
+            {
+                return this.DisplayName;
+            }
+            else
+            {
+                return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data));
+            }
         }
     }
 }

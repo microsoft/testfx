@@ -160,9 +160,11 @@ namespace Microsoft.MSTestV2.CLIAutomation
         {
             foreach (var test in passedTests)
             {
-                var testFound = this.runEventsHandler.PassedTests.Where(p => p.TestCase.FullyQualifiedName.Equals(test) ||
-                           p.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
-                Assert.IsNotNull(testFound, "Test {0} does not appear in passed tests list.", test);
+                var testFound = this.runEventsHandler.PassedTests.Where(
+                    p => p.TestCase.FullyQualifiedName.Equals(test)
+                         || p.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test))
+                         || p.DisplayName.Equals(test)).ToList();
+                Assert.IsTrue(testFound.Count > 0, "Test {0} does not appear in passed tests list.", test);
             }
         }
 

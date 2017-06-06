@@ -8,6 +8,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
 
+    using Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces;
+
 #pragma warning disable SA1402 // FileMayOnlyContainASingleType
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
@@ -15,7 +17,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// Enumeration for timeouts, that can be used with the <see cref="TimeoutAttribute"/> class.
     /// The type of the enumeration must match
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification ="Compat reasons")]
+    [SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification = "Compat reasons")]
     public enum TestTimeout
     {
         /// <summary>
@@ -57,14 +59,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
         public virtual TestResult[] Execute(ITestMethod testMethod)
         {
-            DataRowAttribute[] dataRows = testMethod.GetAttributes<DataRowAttribute>(false);
+            TestDataSource[] dataSources = testMethod.GetAttributes<TestDataSource>(true);
 
-            if (dataRows == null || dataRows.Length == 0)
+            if (dataSources == null || dataSources.Length == 0)
             {
                 return new TestResult[] { testMethod.Invoke(null) };
             }
 
-            return DataTestMethodAttribute.RunDataDrivenTest(testMethod, dataRows);
+            return DataTestMethodAttribute.RunDataDrivenTest(testMethod, dataSources);
         }
     }
 
@@ -438,7 +440,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// [DataSource("Provider=SQLOLEDB.1;Data Source=source;Integrated Security=SSPI;Initial Catalog=EqtCoverage;Persist Security Info=False", "MyTable")]
     /// [DataSource("dataSourceNameFromConfigFile")]
     /// </example>
-    [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments", Justification ="Compat")]
+    [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments", Justification = "Compat")]
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class DataSourceAttribute : Attribute
     {
@@ -448,7 +450,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// The default provider name for DataSource.
         /// </summary>
-        [SuppressMessage("Microsoft.Performance", "CA1802:UseLiteralsWhereAppropriate", Justification ="Compat")]
+        [SuppressMessage("Microsoft.Performance", "CA1802:UseLiteralsWhereAppropriate", Justification = "Compat")]
         public static readonly string DefaultProviderName = "System.Data.OleDb";
 
         /// <summary>

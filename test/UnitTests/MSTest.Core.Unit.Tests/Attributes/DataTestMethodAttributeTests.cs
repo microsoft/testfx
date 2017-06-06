@@ -8,6 +8,7 @@ namespace UnitTestFramework.Tests
 
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
 
     using Moq;
 
@@ -28,7 +29,6 @@ namespace UnitTestFramework.Tests
             this.testMethod = new Mock<TestFrameworkV2.ITestMethod>();
         }
 
-        [TestFrameworkV1.IgnoreAttribute]
         [TestFrameworkV1.TestMethod]
         public void RunDataDrivenTestShouldFillInDisplayNameWithDataRowDisplayNameIfProvided()
         {
@@ -66,7 +66,9 @@ namespace UnitTestFramework.Tests
             TestFrameworkV2.TestResult testResult = new TestFrameworkV2.TestResult();
 
             // Setup mocks.
-            this.testMethod.Setup(tm => tm.TestMethodName).Returns("DummyTestMethod");
+            var mockMethodInfo = new Mock<MethodInfo>();
+            mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
+            this.testMethod.Setup(tm => tm.MethodInfo).Returns(mockMethodInfo.Object);
             this.testMethod.Setup(tm => tm.Invoke(It.IsAny<object[]>())).Returns(testResult);
 
             // Act.
@@ -90,6 +92,9 @@ namespace UnitTestFramework.Tests
             testResult.ResultFiles = new List<string>() { "C:\\temp.txt" };
 
             // Setup mocks.
+            var mockMethodInfo = new Mock<MethodInfo>();
+            mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
+            this.testMethod.Setup(tm => tm.MethodInfo).Returns(mockMethodInfo.Object);
             this.testMethod.Setup(tm => tm.Invoke(It.IsAny<object[]>())).Returns(testResult);
 
             // Act.

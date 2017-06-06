@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
     /// Attribute to define dynamic data for a test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class DynamicDataAttribute : DataSource
+    public class DynamicDataAttribute : TestDataSource
     {
         private string dynamicDataSourceName;
 
@@ -55,16 +55,16 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
         /// <summary>
         /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
         /// </summary>
-        /// <param name="dynamicDataDeclaringType">
-        /// The declaring type of property or method having data.
-        /// </param>
         /// <param name="dynamicDataSourceName">
         /// The dynamic Data Source Name.
+        /// </param>
+        /// <param name="dynamicDataDeclaringType">
+        /// The declaring type of property or method having data.
         /// </param>
         /// <param name="dynamicDataSourceType">
         /// The dynamic Data Source Type.
         /// </param>
-        public DynamicDataAttribute(Type dynamicDataDeclaringType, string dynamicDataSourceName, DynamicDataSourceType dynamicDataSourceType = DynamicDataSourceType.Property)
+        public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType = DynamicDataSourceType.Property)
         {
             this.dynamicDataSourceName = dynamicDataSourceName;
             this.dynamicDataDeclaringType = dynamicDataDeclaringType;

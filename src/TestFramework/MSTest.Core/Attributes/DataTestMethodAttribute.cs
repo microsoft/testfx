@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </returns>
         public override TestResult[] Execute(ITestMethod testMethod)
         {
-            DataSource[] dataSources = testMethod.GetAttributes<DataSource>(true);
+            TestDataSource[] dataSources = testMethod.GetAttributes<TestDataSource>(true);
 
             if (dataSources == null || dataSources.Length == 0)
             {
@@ -50,7 +50,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="testMethod"> Test method to execute. </param>
         /// <param name="dataSources"> Data Sources. </param>
         /// <returns> Results of execution. </returns>
-        internal static TestResult[] RunDataDrivenTest(ITestMethod testMethod, DataSource[] dataSources)
+        internal static TestResult[] RunDataDrivenTest(ITestMethod testMethod, TestDataSource[] dataSources)
         {
             List<TestResult> results = new List<TestResult>();
 
@@ -60,11 +60,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 {
                     TestResult result = testMethod.Invoke(data);
 
-                    result.DisplayName = string.Format(
-                        CultureInfo.CurrentCulture,
-                        FrameworkMessages.DataDrivenResultDisplayName,
-                        testMethod.TestMethodName,
-                        string.Join(",", data));
+                    result.DisplayName = dataSource.GetDisplayName(testMethod.MethodInfo, data);
 
                     results.Add(result);
                 }

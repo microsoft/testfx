@@ -66,7 +66,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         public void GetDataShouldReadDataFromPropertyInDifferntClass()
         {
             var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
-            this.dynamicDataAttribute = new DynamicDataAttribute(typeof(DummyTestClass), "ReusableTestDataProperty");
+            this.dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty", typeof(DummyTestClass));
             var data = this.dynamicDataAttribute.GetData(methodInfo);
             Assert.IsTrue(data is IEnumerable<object[]>);
             Assert.IsTrue(data.ToList().Count == 2);
@@ -86,7 +86,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         public void GetDataShouldReadDataFromMethodInDifferentClass()
         {
             var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
-            this.dynamicDataAttribute = new DynamicDataAttribute(typeof(DummyTestClass), "ReusableTestDataMethod", DynamicDataSourceType.Method);
+            this.dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod", typeof(DummyTestClass), DynamicDataSourceType.Method);
             var data = this.dynamicDataAttribute.GetData(methodInfo);
             Assert.IsTrue(data is IEnumerable<object[]>);
             Assert.IsTrue(data.ToList().Count == 2);
