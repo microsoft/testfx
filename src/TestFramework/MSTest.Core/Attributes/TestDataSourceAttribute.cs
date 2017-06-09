@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces
+namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
     using System.Collections.Generic;
@@ -9,9 +9,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces
     using System.Reflection;
 
     /// <summary>
-    /// Test data source for data driven tests.
+    /// Test data source attribute for data driven tests.
     /// </summary>
-    public abstract class TestDataSource : Attribute
+    public abstract class TestDataSourceAttribute : Attribute
     {
         /// <summary>
         /// Gets the test data from custom test data source.
@@ -38,7 +38,16 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces
         /// </returns>
         public virtual string GetDisplayName(MethodInfo methodInfo, object[] data)
         {
-            return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data));
+            if (data != null)
+            {
+                return string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.DataDrivenResultDisplayName,
+                    methodInfo.Name,
+                    string.Join(",", data));
+            }
+
+            return null;
         }
     }
 }

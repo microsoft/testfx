@@ -260,7 +260,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Property or method {0} on {1} did not return IEnumerable&lt;object[]&gt;..
+        ///   Looks up a localized string similar to Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;..
         /// </summary>
         internal static string DynamicDataIEnumerableNull {
             get {

@@ -16,9 +16,9 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
 
     using MSTestAdapter.TestUtilities;
 
-    using TestInitializeV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestFrameworkV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute]
+    [TestFrameworkV1.TestClassAttribute]
     public class DynamicDataAttributeTests
     {
         private DummyTestClass dummyTestClass;
@@ -27,14 +27,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
 
         private MethodInfo testMethodInfo;
 
-        [TestInitializeV1]
+        [TestFrameworkV1.TestInitialize]
         public void TestInit()
         {
             this.dummyTestClass = new DummyTestClass();
             this.testMethodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
         }
 
-        [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        [TestFrameworkV1.TestMethod]
         public void GetDataShoudThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()
         {
             Action action = () =>
@@ -46,7 +46,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
 
-        [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        [TestFrameworkV1.TestMethod]
         public void GetDataShouldReadDataFromProperty()
         {
             var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
@@ -56,7 +56,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             Assert.IsTrue(data.ToList().Count == 2);
         }
 
-        [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        [TestFrameworkV1.TestMethod]
         public void GetDataShouldReadDataFromPropertyInDifferntClass()
         {
             var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
@@ -66,7 +66,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             Assert.IsTrue(data.ToList().Count == 2);
         }
 
-        [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        [TestFrameworkV1.TestMethod]
         public void GetDataShouldReadDataFromMethod()
         {
             var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
@@ -76,7 +76,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             Assert.IsTrue(data.ToList().Count == 2);
         }
 
-        [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        [TestFrameworkV1.TestMethod]
         public void GetDataShouldReadDataFromMethodInDifferentClass()
         {
             var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
@@ -86,7 +86,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             Assert.IsTrue(data.ToList().Count == 2);
         }
 
-        [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        [TestFrameworkV1.TestMethod]
         public void GetDataShouldThrowExceptionIfPropertyReturnsNull()
         {
             Action action = () =>
@@ -99,7 +99,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
 
-        [FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        [TestFrameworkV1.TestMethod]
         public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType()
         {
             Action action = () =>

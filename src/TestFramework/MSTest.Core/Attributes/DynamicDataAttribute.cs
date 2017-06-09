@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
     using System.Collections.Generic;
     using System.Reflection;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// Enum to specify whether the data is stored as property or in method.
@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
     /// Attribute to define dynamic data for a test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class DynamicDataAttribute : TestDataSource
+    public class DynamicDataAttribute : TestDataSourceAttribute
     {
         private string dynamicDataSourceName;
 
@@ -85,10 +85,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
             switch (this.dynamicDataSourceType)
             {
                 case DynamicDataSourceType.Property:
-                    var property = this.dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(this.dynamicDataSourceName);
+                    var property = this.dynamicDataDeclaringType.GetRuntimeProperty(this.dynamicDataSourceName);
                     if (property == null)
                     {
-                        throw new ArgumentNullException(nameof(property));
+                        throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Property, this.dynamicDataSourceName));
                     }
 
                     obj = property.GetValue(null, null);
@@ -96,10 +96,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
                     break;
 
                 case DynamicDataSourceType.Method:
-                    var method = this.dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(this.dynamicDataSourceName);
+                    var method = this.dynamicDataDeclaringType.GetRuntimeMethod(this.dynamicDataSourceName, null);
                     if (method == null)
                     {
-                        throw new ArgumentNullException(nameof(method));
+                        throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, this.dynamicDataSourceName));
                     }
 
                     obj = method.Invoke(null, null);

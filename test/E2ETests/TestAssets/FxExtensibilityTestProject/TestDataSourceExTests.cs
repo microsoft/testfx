@@ -6,7 +6,7 @@ namespace FxExtensibilityTestProject
     using System.Collections.Generic;
     using System.Reflection;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces;
+    using Microsoft.VisualStudio.TestTools.UnitTesting.Attributes;
 
     [TestClass]
     public class TestDataSourceExTests
@@ -22,7 +22,7 @@ namespace FxExtensibilityTestProject
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class CustomTestDataSource : TestDataSource
+    public class CustomTestDataSourceAttribute : TestDataSourceAttribute
     {
         public override IEnumerable<object[]> GetData(MethodInfo methodInfo)
         {

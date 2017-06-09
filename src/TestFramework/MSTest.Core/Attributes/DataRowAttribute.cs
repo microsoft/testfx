@@ -8,13 +8,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Globalization;
     using System.Reflection;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting.Interfaces;
-
     /// <summary>
     /// Attribute to define inline data for a test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class DataRowAttribute : TestDataSource
+    public class DataRowAttribute : TestDataSourceAttribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
@@ -69,7 +67,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
             else
             {
-                return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data));
+                return base.GetDisplayName(methodInfo, data);
             }
         }
     }
