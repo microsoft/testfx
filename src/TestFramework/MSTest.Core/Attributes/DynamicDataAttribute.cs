@@ -85,7 +85,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
             switch (this.dynamicDataSourceType)
             {
                 case DynamicDataSourceType.Property:
-                    var property = this.dynamicDataDeclaringType.GetRuntimeProperty(this.dynamicDataSourceName);
+                    var property = this.dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(this.dynamicDataSourceName);
                     if (property == null)
                     {
                         throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Property, this.dynamicDataSourceName));
@@ -96,7 +96,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
                     break;
 
                 case DynamicDataSourceType.Method:
-                    var method = this.dynamicDataDeclaringType.GetRuntimeMethod(this.dynamicDataSourceName, null);
+                    var method = this.dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(this.dynamicDataSourceName);
                     if (method == null)
                     {
                         throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, this.dynamicDataSourceName));
