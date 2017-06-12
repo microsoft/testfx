@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
     /// Attribute to define dynamic data for a test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class DynamicDataAttribute : TestDataSourceAttribute
+    public sealed class DynamicDataAttribute : TestDataSourceAttribute
     {
         private string dynamicDataSourceName;
 
