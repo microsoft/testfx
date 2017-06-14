@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     /// <summary>
     /// Attribute for data driven test where data can be specified inline.
@@ -23,7 +24,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </returns>
         public override TestResult[] Execute(ITestMethod testMethod)
         {
-            TestDataSourceAttribute[] dataSources = testMethod.GetAttributes<TestDataSourceAttribute>(true);
+            ITestDataSource[] dataSources = testMethod.GetAllAttributes(true)?.Where(a => a is ITestDataSource).OfType<ITestDataSource>().ToArray();
 
             if (dataSources == null || dataSources.Length == 0)
             {
@@ -39,7 +40,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="testMethod"> Test method to execute. </param>
         /// <param name="testDataSources">Test data sources. </param>
         /// <returns> Results of execution. </returns>
-        internal static TestResult[] RunDataDrivenTest(ITestMethod testMethod, TestDataSourceAttribute[] testDataSources)
+        internal static TestResult[] RunDataDrivenTest(ITestMethod testMethod, ITestDataSource[] testDataSources)
         {
             List<TestResult> results = new List<TestResult>();
 

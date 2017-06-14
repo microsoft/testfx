@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Reflection;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -29,7 +30,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
     /// Attribute to define dynamic data for a test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public sealed class DynamicDataAttribute : TestDataSourceAttribute
+    public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     {
         private string dynamicDataSourceName;
 
@@ -72,7 +73,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
         }
 
         /// <inheritdoc />
-        public override IEnumerable<object[]> GetData(MethodInfo methodInfo)
+        public IEnumerable<object[]> GetData(MethodInfo methodInfo)
         {
             // Check if the declaring type of test data is passed in constructor. If not, default to test method's class type.
             if (this.dynamicDataDeclaringType == null)
@@ -127,6 +128,17 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
             }
 
             return enumerable;
+        }
+
+        /// <inheritdoc />
+        public string GetDisplayName(MethodInfo methodInfo, object[] data)
+        {
+            if (data != null)
+            {
+                return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data));
+            }
+
+            return null;
         }
     }
 }

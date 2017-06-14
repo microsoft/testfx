@@ -7,6 +7,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
+    using System.Linq;
 
 #pragma warning disable SA1402 // FileMayOnlyContainASingleType
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
@@ -57,7 +58,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
         public virtual TestResult[] Execute(ITestMethod testMethod)
         {
-            TestDataSourceAttribute[] dataSources = testMethod.GetAttributes<TestDataSourceAttribute>(true);
+            ITestDataSource[] dataSources = testMethod.GetAllAttributes(true)?.Where(a => a is ITestDataSource).OfType<ITestDataSource>().ToArray();
 
             if (dataSources == null || dataSources.Length == 0)
             {

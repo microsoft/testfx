@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace FxExtensibilityTestProject
 {
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Reflection;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting.Attributes;
@@ -22,11 +23,21 @@ namespace FxExtensibilityTestProject
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class CustomTestDataSourceAttribute : TestDataSourceAttribute
+    public class CustomTestDataSourceAttribute : Attribute, ITestDataSource
     {
-        public override IEnumerable<object[]> GetData(MethodInfo methodInfo)
+        public IEnumerable<object[]> GetData(MethodInfo methodInfo)
         {
             return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
+        }
+
+        public string GetDisplayName(MethodInfo methodInfo, object[] data)
+        {
+            if (data != null)
+            {
+                return string.Format(CultureInfo.CurrentCulture, "{0} ({1})", methodInfo.Name, string.Join(",", data));
+            }
+
+            return null;
         }
     }
 }

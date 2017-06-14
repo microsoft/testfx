@@ -12,7 +12,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// Attribute to define inline data for a test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class DataRowAttribute : TestDataSourceAttribute
+    public class DataRowAttribute : Attribute, ITestDataSource
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
@@ -53,13 +53,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public string DisplayName { get; set; }
 
         /// <inheritdoc />
-        public override IEnumerable<object[]> GetData(MethodInfo methodInfo)
+        public IEnumerable<object[]> GetData(MethodInfo methodInfo)
         {
             return new[] { this.Data };
         }
 
         /// <inheritdoc />
-        public override string GetDisplayName(MethodInfo methodInfo, object[] data)
+        public string GetDisplayName(MethodInfo methodInfo, object[] data)
         {
             if (!string.IsNullOrWhiteSpace(this.DisplayName))
             {
@@ -67,8 +67,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
             else
             {
-                return base.GetDisplayName(methodInfo, data);
+                if (data != null)
+                {
+                    return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data));
+                }
             }
+
+            return null;
         }
     }
 }

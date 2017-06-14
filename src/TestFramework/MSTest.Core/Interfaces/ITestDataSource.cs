@@ -9,9 +9,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Reflection;
 
     /// <summary>
-    /// Test data source attribute for data driven tests.
+    /// Test data source for data driven tests.
     /// </summary>
-    public abstract class TestDataSourceAttribute : Attribute
+    public interface ITestDataSource
     {
         /// <summary>
         /// Gets the test data from custom test data source.
@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// Test data for calling test method.
         /// </returns>
-        public abstract IEnumerable<object[]> GetData(MethodInfo methodInfo);
+        IEnumerable<object[]> GetData(MethodInfo methodInfo);
 
         /// <summary>
         /// Gets the display name corresponding to test data row for displaying in TestResults.
@@ -36,18 +36,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        public virtual string GetDisplayName(MethodInfo methodInfo, object[] data)
-        {
-            if (data != null)
-            {
-                return string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.DataDrivenResultDisplayName,
-                    methodInfo.Name,
-                    string.Join(",", data));
-            }
-
-            return null;
-        }
+        string GetDisplayName(MethodInfo methodInfo, object[] data);
     }
 }
