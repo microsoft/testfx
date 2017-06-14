@@ -66,10 +66,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Attributes
         /// Specifies whether the data is stored as property or in method.
         /// </param>
         public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType = DynamicDataSourceType.Property)
+            : this(dynamicDataSourceName, dynamicDataSourceType)
         {
-            this.dynamicDataSourceName = dynamicDataSourceName;
             this.dynamicDataDeclaringType = dynamicDataDeclaringType;
-            this.dynamicDataSourceType = dynamicDataSourceType;
         }
 
         /// <inheritdoc />

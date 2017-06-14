@@ -58,7 +58,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
         public virtual TestResult[] Execute(ITestMethod testMethod)
         {
-            ITestDataSource[] dataSources = testMethod.GetAllAttributes(true)?.Where(a => a is ITestDataSource).OfType<ITestDataSource>().ToArray();
+            ITestDataSource[] dataSources = testMethod.GetAttributes<Attribute>(true)?.Where(a => a is ITestDataSource).OfType<ITestDataSource>().ToArray();
 
             if (dataSources == null || dataSources.Length == 0)
             {
