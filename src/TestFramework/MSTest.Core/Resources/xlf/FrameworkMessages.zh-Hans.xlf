@@ -121,8 +121,8 @@
         <note></note>
       </trans-unit>
       <trans-unit id="NoDataRow">
-        <source>No DataRowAttribute specified. Atleast one DataRowAttribute is required with DataTestMethodAttribute.</source>
-        <target state="translated">未指定 DataRowAttribute。 DataTestMethodAttribute 至少需要一个 DataRowAttribute。</target>
+        <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
+        <target state="new">未指定 DataRowAttribute。 DataTestMethodAttribute 至少需要一个 DataRowAttribute。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
@@ -270,6 +270,16 @@ Stack Trace: {4}</source>
       或者该成员可能是私有成员并且是在基类上定义的。如果属于后一种情况，则需要将定义
       该成员的类型传递到 PrivateObject 的构造函数中。
     </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DynamicDataIEnumerableNull">
+        <source>Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</source>
+        <target state="new">Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DynamicDataValueNull">
+        <source>Value returned by property or method {0} shouldn't be null.</source>
+        <target state="new">Value returned by property or method {0} shouldn't be null.</target>
         <note></note>
       </trans-unit>
     </body>

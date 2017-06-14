@@ -121,8 +121,8 @@
         <note></note>
       </trans-unit>
       <trans-unit id="NoDataRow">
-        <source>No DataRowAttribute specified. Atleast one DataRowAttribute is required with DataTestMethodAttribute.</source>
-        <target state="translated">No se especificó ningún DataRowAttribute. Se requiere al menos un DataRowAttribute con DataTestMethodAttribute.</target>
+        <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
+        <target state="new">No se especificó ningún DataRowAttribute. Se requiere al menos un DataRowAttribute con DataTestMethodAttribute.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
@@ -270,6 +270,16 @@ Seguimiento de la pila: {4}</target>
       o que el miembro sea privado y esté definido en una clase base. Si esto último es cierto, debe pasar el tipo
       que define el miembro al constructor de PrivateObject.
     </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DynamicDataIEnumerableNull">
+        <source>Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</source>
+        <target state="new">Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DynamicDataValueNull">
+        <source>Value returned by property or method {0} shouldn't be null.</source>
+        <target state="new">Value returned by property or method {0} shouldn't be null.</target>
         <note></note>
       </trans-unit>
     </body>

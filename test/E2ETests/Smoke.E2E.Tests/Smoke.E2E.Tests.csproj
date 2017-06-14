@@ -41,6 +41,8 @@
     <Compile Include="AssertExtensibilityTests.cs" />
     <Compile Include="DesktopCSharpCLITests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="DynamicDataExtensibilityTests.cs" />
+    <Compile Include="TestDataSourceExtensibilityTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

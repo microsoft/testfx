@@ -121,8 +121,8 @@
         <note></note>
       </trans-unit>
       <trans-unit id="NoDataRow">
-        <source>No DataRowAttribute specified. Atleast one DataRowAttribute is required with DataTestMethodAttribute.</source>
-        <target state="translated">DataRowAttribute가 지정되지 않았습니다. DataTestMethodAttribute에는 하나 이상의 DataRowAttribute가 필요합니다.</target>
+        <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
+        <target state="new">DataRowAttribute가 지정되지 않았습니다. DataTestMethodAttribute에는 하나 이상의 DataRowAttribute가 필요합니다.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
@@ -270,6 +270,16 @@ Stack Trace: {4}</source>
       또는 멤버가 기본 클래스에 정의된 전용 멤버일 수 있습니다. 기본 클래스에 정의된 전용 멤버인 경우에는 이 멤버를 정의하는 형식을
       PrivateObject의 생성자에 전달해야 합니다.
     </target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DynamicDataIEnumerableNull">
+        <source>Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</source>
+        <target state="new">Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="DynamicDataValueNull">
+        <source>Value returned by property or method {0} shouldn't be null.</source>
+        <target state="new">Value returned by property or method {0} shouldn't be null.</target>
         <note></note>
       </trans-unit>
     </body>

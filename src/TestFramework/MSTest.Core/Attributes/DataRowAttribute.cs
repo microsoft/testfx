@@ -4,12 +4,15 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.Reflection;
 
     /// <summary>
     /// Attribute to define inline data for a test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class DataRowAttribute : Attribute
+    public class DataRowAttribute : Attribute, ITestDataSource
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
@@ -48,5 +51,29 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Gets or sets display name in test results for customization.
         /// </summary>
         public string DisplayName { get; set; }
+
+        /// <inheritdoc />
+        public IEnumerable<object[]> GetData(MethodInfo methodInfo)
+        {
+            return new[] { this.Data };
+        }
+
+        /// <inheritdoc />
+        public string GetDisplayName(MethodInfo methodInfo, object[] data)
+        {
+            if (!string.IsNullOrWhiteSpace(this.DisplayName))
+            {
+                return this.DisplayName;
+            }
+            else
+            {
+                if (data != null)
+                {
+                    return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data));
+                }
+            }
+
+            return null;
+        }
     }
 }

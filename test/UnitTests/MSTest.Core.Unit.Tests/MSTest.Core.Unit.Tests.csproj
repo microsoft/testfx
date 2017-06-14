@@ -70,6 +70,7 @@
     <Compile Include="Attributes\DataTestMethodAttributeTests.cs" />
     <Compile Include="Attributes\ExpectedExceptionAttributeTests.cs" />
     <Compile Include="Attributes\ExpectedExceptionBaseAttributeTests.cs" />
+    <Compile Include="Attributes\DynamicDataAttributeTests.cs" />
     <Compile Include="GenericParameterHelperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

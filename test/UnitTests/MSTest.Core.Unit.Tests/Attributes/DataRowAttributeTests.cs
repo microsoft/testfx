@@ -6,6 +6,8 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
     extern alias FrameworkV1;
     extern alias FrameworkV2;
 
+    using System.Linq;
+
     using CollectionAssert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using DataRowAttribute = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute;
     using TestClass = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
@@ -44,6 +46,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             var dataRow = new DataRowAttribute(null, "logos");
 
             CollectionAssert.AreEqual(new object[] { null, "logos" }, dataRow.Data);
+        }
+
+        [TestMethod]
+        public void GetDataShouldReturnDataPassed()
+        {
+            var dataRow = new DataRowAttribute("mercury");
+
+            CollectionAssert.AreEqual(new object[] { "mercury" }, dataRow.GetData(null).FirstOrDefault());
         }
     }
 }
