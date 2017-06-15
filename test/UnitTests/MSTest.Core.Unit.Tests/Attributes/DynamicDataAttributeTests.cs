@@ -12,7 +12,6 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
     using System.Reflection;
 
     using FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
-    using FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.Attributes;
 
     using MSTestAdapter.TestUtilities;
 
