@@ -7,8 +7,6 @@ namespace FxExtensibilityTestProject
     using System.Globalization;
     using System.Reflection;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting.Attributes;
-
     [TestClass]
     public class TestDataSourceExTests
     {

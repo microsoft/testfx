@@ -3,9 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
-    using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.Reflection;
 
     /// <summary>

@@ -6,7 +6,6 @@ namespace FxExtensibilityTestProject
     using System.Collections.Generic;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Microsoft.VisualStudio.TestTools.UnitTesting.Attributes;
 
     [TestClass]
     public class DynamicDataExTests
