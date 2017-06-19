@@ -146,7 +146,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             }
             finally
             {
-                PlatformServiceProvider.Instance.FileOperations.DisposeNavigationSession(navigationSession);
+                foreach (object navigationSession in navigationSessions.Values)
+                {
+                    PlatformServiceProvider.Instance.FileOperations.DisposeNavigationSession(navigationSession);
+                }
             }
         }
 
