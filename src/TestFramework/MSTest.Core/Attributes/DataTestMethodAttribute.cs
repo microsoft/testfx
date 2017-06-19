@@ -5,7 +5,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
+    using System.Linq;
 
     /// <summary>
     /// Attribute for data driven test where data can be specified inline.
@@ -24,40 +24,36 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </returns>
         public override TestResult[] Execute(ITestMethod testMethod)
         {
-            DataRowAttribute[] dataRows = testMethod.GetAttributes<DataRowAttribute>(false);
+            ITestDataSource[] dataSources = testMethod.GetAttributes<Attribute>(true)?.Where(a => a is ITestDataSource).OfType<ITestDataSource>().ToArray();
 
-            if (dataRows == null || dataRows.Length == 0)
+            if (dataSources == null || dataSources.Length == 0)
             {
                 return new TestResult[] { new TestResult() { Outcome = UnitTestOutcome.Failed, TestFailureException = new Exception(FrameworkMessages.NoDataRow) } };
             }
 
-            return RunDataDrivenTest(testMethod, dataRows);
+            return RunDataDrivenTest(testMethod, dataSources);
         }
 
         /// <summary>
         /// Run data driven test method.
         /// </summary>
         /// <param name="testMethod"> Test method to execute. </param>
-        /// <param name="dataRows"> Data Row. </param>
+        /// <param name="testDataSources">Test data sources. </param>
         /// <returns> Results of execution. </returns>
-        internal static TestResult[] RunDataDrivenTest(ITestMethod testMethod, DataRowAttribute[] dataRows)
+        internal static TestResult[] RunDataDrivenTest(ITestMethod testMethod, ITestDataSource[] testDataSources)
         {
             List<TestResult> results = new List<TestResult>();
 
-            foreach (var dataRow in dataRows)
+            foreach (var testDataSource in testDataSources)
             {
-                TestResult result = testMethod.Invoke(dataRow.Data);
-
-                if (!string.IsNullOrEmpty(dataRow.DisplayName))
+                foreach (var data in testDataSource.GetData(testMethod.MethodInfo))
                 {
-                    result.DisplayName = dataRow.DisplayName;
-                }
-                else
-                {
-                    result.DisplayName = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, testMethod.TestMethodName, string.Join(",", dataRow.Data));
-                }
+                    TestResult result = testMethod.Invoke(data);
 
-                results.Add(result);
+                    result.DisplayName = testDataSource.GetDisplayName(testMethod.MethodInfo, data);
+
+                    results.Add(result);
+                }
             }
 
             return results.ToArray();

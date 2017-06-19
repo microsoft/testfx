@@ -48,6 +48,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
+        /// Gets the path to the .DLL of the assembly.
+        /// </summary>
+        /// <param name="assembly">The assembly.</param>
+        /// <returns>Path to the .DLL of the assembly.</returns>
+        public string GetAssemblyPath(Assembly assembly)
+        {
+            #if NETSTANDARD1_5
+                return assembly.Location;
+            #else
+                return null;
+            #endif
+        }
+
+        /// <summary>
         /// Verifies if file exists in context.
         /// </summary>
         /// <param name="assemblyFileName"> The assembly file name. </param>

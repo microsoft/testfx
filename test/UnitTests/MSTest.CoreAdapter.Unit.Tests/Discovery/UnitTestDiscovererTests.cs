@@ -196,6 +196,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethodV1]
+        public void SendTestCasesShouldUseNaigationSessionForDeclaredAssemblyName()
+        {
+            var source = "DummyAssembly.dll";
+
+            // Setup mocks.
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
+                .Returns((object)null);
+
+            var test = new UnitTestElement(
+                new TestMethod("M", "C", "A", false)
+                {
+                    DeclaringAssemblyName = "DummyAssembly2.dll"
+                });
+
+            var testElements = new List<UnitTestElement> { test };
+
+            this.SetupNavigation(source, test, test.TestMethod.DeclaringClassFullName, test.TestMethod.Name);
+
+            // Act
+            this.unitTestDiscoverer.SendTestCases(source, testElements, this.mockTestCaseDiscoverySink.Object);
+
+            // Assert
+            this.testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.CreateNavigationSession("DummyAssembly2.dll"), Times.Once);
+        }
+
+        [TestMethodV1]
         public void SendTestCasesShouldSendTestCasesWithNaigationDataForAsyncMethods()
         {
             var source = "DummyAssembly.dll";

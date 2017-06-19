@@ -83,19 +83,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, bool collectSourceInformation = true)
         {
-            object navigationSession = null;
+            var navigationSessions = new Dictionary<string, object>();
             try
             {
                 if (collectSourceInformation == true)
                 {
-                    navigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source);
+                navigationSessions.Add(source, PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source));
                 }
 
                 foreach (var testElement in testElements)
                 {
+                    string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
+                    object testNavigationSession;
+
+                    if (navigationSessions.ContainsKey(testSource))
+                    {
+                        testNavigationSession = navigationSessions[testSource];
+                    }
+                    else
+                    {
+                        testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
+                        navigationSessions.Add(testSource, testNavigationSession);
+                    }
+
                     var testCase = testElement.ToTestCase();
 
-                    if (navigationSession != null && collectSourceInformation)
+                    if (testNavigationSession != null && collectSourceInformation)
                     {
                         var className = testElement.TestMethod.DeclaringClassFullName
                                         ?? testElement.TestMethod.FullClassName;
@@ -115,7 +128,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                         string fileName;
 
                         PlatformServiceProvider.Instance.FileOperations.GetNavigationData(
-                            navigationSession,
+                            testNavigationSession,
                             className,
                             methodName,
                             out minLineNumber,

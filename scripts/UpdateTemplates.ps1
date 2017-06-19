@@ -85,10 +85,12 @@ function Replace-Nugets
 {
     Write-Log "Replacing the nuget packages in the templates"
 
-    $DesktopPackagesDir = Join-Path $env:MSTEST_TEMPLATES_DIR "Desktop\Packages"
-    $UWPPackagesDir = Join-Path $env:MSTEST_TEMPLATES_DIR "UWP\Packages"
+    $CSDesktopPackagesDir = Join-Path $env:MSTEST_TEMPLATES_DIR "CSharp\Desktop\Packages"
+    $CSUWPPackagesDir = Join-Path $env:MSTEST_TEMPLATES_DIR "CSharp\UWP\Packages"
+	$VBDesktopPackagesDir = Join-Path $env:MSTEST_TEMPLATES_DIR "VisualBasic\Desktop\Packages"
+    $VBUWPPackagesDir = Join-Path $env:MSTEST_TEMPLATES_DIR "VisualBasic\UWP\Packages"
 
-    $packagesDir = ($DesktopPackagesDir, $UWPPackagesDir)
+    $packagesDir = ($CSDesktopPackagesDir, $CSUWPPackagesDir, $VBDesktopPackagesDir, $VBUWPPackagesDir)
     foreach($dir in $packagesDir)
     {
         # Delete the old nuget packages.
@@ -115,8 +117,10 @@ function Edit-Templates
     # 3. The vsixmanifest file version bump.
 
     Write-Log "   Editing vstemplate artifacts..."
-    $DesktopProjectTemplateDir = Join-Path $env:MSTEST_TEMPLATES_DIR "Desktop\ProjectTemplates\CSharp\Test"
-    $UWPProjectTemplateDir = Join-Path $env:MSTEST_TEMPLATES_DIR "UWP\ProjectTemplates\CSharp\Windows UAP"
+    $CSDesktopProjectTemplateDir = Join-Path $env:MSTEST_TEMPLATES_DIR "CSharp\Desktop\ProjectTemplates\CSharp\Test"
+    $CSUWPProjectTemplateDir = Join-Path $env:MSTEST_TEMPLATES_DIR "CSharp\UWP\ProjectTemplates\CSharp\Windows UAP"
+	$VBDesktopProjectTemplateDir = Join-Path $env:MSTEST_TEMPLATES_DIR "VisualBasic\Desktop\ProjectTemplates\VisualBasic\Test"
+    $VBUWPProjectTemplateDir = Join-Path $env:MSTEST_TEMPLATES_DIR "VisualBasic\UWP\ProjectTemplates\VisualBasic\Windows UAP"
     
     $TestFrameworkvstemplateRegex = [regex]"package id=""MSTest.TestFramework"" version=(.+) skipAssemblyReferences=""false"""
     $TestAdaptervstemplateRegex = [regex]"package id=""MSTest.TestAdapter"" version=(.+) skipAssemblyReferences=""false"""
@@ -124,7 +128,7 @@ function Edit-Templates
     $TestFrameworkvstemplateReplacement = "package id=""MSTest.TestFramework"" version=""$global:TestFrameworkVersion"" skipAssemblyReferences=""false"""
     $TestAdaptervstemplateReplacement = "package id=""MSTest.TestAdapter"" version=""$global:TestAdapterVersion"" skipAssemblyReferences=""false"""
 
-    $projecttemplatesDirs = @($DesktopProjectTemplateDir, $UWPProjectTemplateDir)
+    $projecttemplatesDirs = @($CSDesktopProjectTemplateDir, $CSUWPProjectTemplateDir, $VBDesktopProjectTemplateDir, $VBUWPProjectTemplateDir)
     foreach($templateDir in $projecttemplatesDirs)
     {
         $files = (Get-ChildItem -File $templateDir -Filter *.vstemplate).FullName
@@ -139,8 +143,10 @@ function Edit-Templates
     }
 
     Write-Log "   Editing csproj artifacts..."
-    $DesktopTemplateVSIXDir = Join-Path $env:MSTEST_TEMPLATES_DIR "Desktop"
-    $UWPTemplateVSIXDir = Join-Path $env:MSTEST_TEMPLATES_DIR "UWP"
+    $CSDesktopTemplateVSIXDir = Join-Path $env:MSTEST_TEMPLATES_DIR "CSharp\Desktop"
+    $CSUWPTemplateVSIXDir = Join-Path $env:MSTEST_TEMPLATES_DIR "CSharp\UWP"
+    $VBDesktopTemplateVSIXDir = Join-Path $env:MSTEST_TEMPLATES_DIR "VisualBasic\Desktop"
+    $VBUWPTemplateVSIXDir = Join-Path $env:MSTEST_TEMPLATES_DIR "VisualBasic\UWP"
     
     $TestFrameworkcsprojRegex = [regex]"Content Include=""packages\\MSTest.TestFramework.(.+).nupkg"""
     $TestAdaptercsprojRegex = [regex]"Content Include=""packages\\MSTest.TestAdapter.(.+).nupkg"""
@@ -148,7 +154,7 @@ function Edit-Templates
     $TestFrameworkcsprojReplacement = "Content Include=""packages\MSTest.TestFramework.$global:TestFrameworkVersion.nupkg"""
     $TestAdaptercsprojReplacement = "Content Include=""packages\MSTest.TestAdapter.$global:TestAdapterVersion.nupkg"""
 
-    $templatesVSIXDirs = @($DesktopTemplateVSIXDir, $UWPTemplateVSIXDir)
+    $templatesVSIXDirs = @($CSDesktopTemplateVSIXDir, $CSUWPTemplateVSIXDir, $VBDesktopTemplateVSIXDir, $VBUWPTemplateVSIXDir)
     foreach($templateDir in $templatesVSIXDirs)
     {
         $files = (Get-ChildItem -File $templateDir -Filter *.csproj).FullName
@@ -164,11 +170,15 @@ function Edit-Templates
 
     Write-Log "   Editing the template version in the vsixmanifest with $TemplateVersion..."
     
-    $DesktopManifestRegex = [regex]"Identity Id=""mstestProjectTemplate"" Version=(.+) Language"
-    $UWPManifestRegex = [regex]"Identity Id=""mstestUniversalProjectTemplate"" Version=(.+) Language"
+    $CSDesktopManifestRegex = [regex]"Identity Id=""mstestProjectTemplate"" Version=(.+) Language"
+    $CSUWPManifestRegex = [regex]"Identity Id=""mstestUniversalProjectTemplate"" Version=(.+) Language"
+	$VBDesktopManifestRegex = [regex]"Identity Id=""MSTestDesktopVB.Microsoft.c6c7fff6-20cb-405d-9ad4-a60a6d0c55d9"" Version=(.+) Language"
+    $VBUWPManifestRegex = [regex]"Identity Id=""MSTestUWPVB.Microsoft.3dc1d5cd-bbfb-456f-965e-5b962ad063d1"" Version=(.+) Language"
 
-    $DesktopManifestReplacement = "Identity Id=""mstestProjectTemplate"" Version=""$TemplateVersion"" Language"
-    $UWPManifestReplacement = "Identity Id=""mstestUniversalProjectTemplate"" Version=""$TemplateVersion"" Language"
+    $CSDesktopManifestReplacement = "Identity Id=""mstestProjectTemplate"" Version=""$TemplateVersion"" Language"
+    $CSUWPManifestReplacement = "Identity Id=""mstestUniversalProjectTemplate"" Version=""$TemplateVersion"" Language"
+    $VBDesktopManifestReplacement = "Identity Id=""MSTestDesktopVB.Microsoft.c6c7fff6-20cb-405d-9ad4-a60a6d0c55d9"" Version=""$TemplateVersion"" Language"
+    $VBUWPManifestReplacement = "Identity Id=""MSTestUWPVB.Microsoft.3dc1d5cd-bbfb-456f-965e-5b962ad063d1"" Version=""$TemplateVersion"" Language"
 
     foreach($templateDir in $templatesVSIXDirs)
     {
@@ -177,8 +187,10 @@ function Edit-Templates
         foreach($file in $files){
             Write-Verbose "Editing $file"
             $fileContent = Get-Content $file
-            $fileContent = $fileContent -replace $DesktopManifestRegex,$DesktopManifestReplacement
-            $fileContent = $fileContent -replace $UWPManifestRegex,$UWPManifestReplacement
+            $fileContent = $fileContent -replace $CSDesktopManifestRegex,$CSDesktopManifestReplacement
+            $fileContent = $fileContent -replace $CSUWPManifestRegex,$CSUWPManifestReplacement
+			$fileContent = $fileContent -replace $VBDesktopManifestRegex,$VBDesktopManifestReplacement
+            $fileContent = $fileContent -replace $VBUWPManifestRegex,$VBUWPManifestReplacement
             Out-File $file -InputObject $fileContent -Encoding default
         }
     }

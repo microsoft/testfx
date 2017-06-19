@@ -3,9 +3,11 @@
 
 namespace FxExtensibilityTestProject
 {
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using MSTest.Extensibility.Samples;
     using System;
+
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+    using MSTest.Extensibility.Samples;
 
     [TestClass]
     public class AssertExTest
@@ -34,6 +36,4 @@ namespace FxExtensibilityTestProject
             Assert.That.Is().Positive(-10);
         }
     }
-
-
 }

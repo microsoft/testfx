@@ -85,7 +85,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
                 if (this.testMethodValidator.IsValidTestMethod(method, this.type, warnings))
                 {
-                    tests.Add(this.GetTestFromMethod(method, warnings));
+                    tests.Add(this.GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings));
                 }
             }
 
@@ -95,10 +95,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <summary>
         /// Gets a UnitTestElement from a MethodInfo object filling it up with appropriate values.
         /// </summary>
-        /// <param name="method">  The reflected method. </param>
-        /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
-        /// <returns> Returns a UnitTestElement. </returns>
-        internal UnitTestElement GetTestFromMethod(MethodInfo method, ICollection<string> warnings)
+        /// <param name="method">The reflected method.</param>
+        /// <param name="isDeclaredInTestTypeAssembly">True if the reflected method is declared in the same assembly as the current type.</param>
+        /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
+        /// <returns> Returns a UnitTestElement.</returns>
+        internal UnitTestElement GetTestFromMethod(MethodInfo method, bool isDeclaredInTestTypeAssembly, ICollection<string> warnings)
         {
             Debug.Assert(this.type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
@@ -106,9 +107,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
 
             var testMethod = new TestMethod(method.Name, this.type.FullName, this.assemblyName, isAsync);
+
             if (!method.DeclaringType.FullName.Equals(this.type.FullName))
             {
                 testMethod.DeclaringClassFullName = method.DeclaringType.FullName;
+            }
+
+            if (!isDeclaredInTestTypeAssembly)
+            {
+                testMethod.DeclaringAssemblyName =
+                    PlatformServiceProvider.Instance.FileOperations.GetAssemblyPath(
+                        method.DeclaringType.GetTypeInfo().Assembly);
             }
 
             var testElement = new UnitTestElement(testMethod);
