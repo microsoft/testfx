@@ -134,7 +134,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
-        public void EnableBaseClassTestMethodsFromOtherAssembliesIsByDefaultFalseWhenNotSpecified()
+        public void EnableBaseClassTestMethodsFromOtherAssembliesIsByDefaulTrueWhenNotSpecified()
         {
             string runSettingxml =
                 @"<RunSettings>
@@ -144,7 +144,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, false);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
         }
 
         [TestMethod]
