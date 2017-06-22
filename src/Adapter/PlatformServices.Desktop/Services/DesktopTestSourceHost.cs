@@ -155,7 +155,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recurive assembly resolution
             // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
-            EqtTrace.SetupRemoteEqtTraceListeners(this.domain);
+            if (EqtTrace.IsVerboseEnabled)
+            {
+                EqtTrace.SetupRemoteEqtTraceListeners(this.domain);
+            }
 
             // Add an assembly resolver...
             Type assemblyResolverType = typeof(AssemblyResolver);
