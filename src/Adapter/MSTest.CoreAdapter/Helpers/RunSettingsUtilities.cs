@@ -37,14 +37,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <remarks>If there is no test run parameters section defined in the settingsxml a blank dictionary is returned.</remarks>
         internal static Dictionary<string, object> GetTestRunParameters(string settingsXml)
         {
-            var nodeValue = GetNodeValue<Dictionary<string, object>>(settingsXml, TestAdapter.Constants.TestRunParametersName, TestRunParameters.FromXml);
-            if (nodeValue == default(Dictionary<string, object>))
-            {
-                // Return default.
-                nodeValue = new Dictionary<string, object>();
-            }
+            var defaultTestRunParameters = new Dictionary<string, object>();
+            return GetNodeValue(settingsXml, TestAdapter.Constants.TestRunParametersName, defaultTestRunParameters, TestRunParameters.FromXml);
+        }
 
-            return nodeValue;
+        internal static bool IsDesignMode(string settingsXml)
+        {
+            bool defaultDesignMode = true;
+            return GetNodeValue(settingsXml, "DesignMode", defaultDesignMode);
         }
 
         /// <summary>
@@ -67,8 +67,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         [SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver", Justification = "XmlReaderSettings.XmlResolver is not available in portable code.")]
-        private static T GetNodeValue<T>(string settingsXml, string nodeName, Func<XmlReader, T> nodeParser)
+        private static T GetNodeValue<T>(string settingsXml, string nodeName, T defaultValue, Func<XmlReader, T> nodeParser = null)
         {
+            T result = defaultValue;
+
             // use XmlReader to avoid loading of the plugins in client code (mainly from VS).
             if (!string.IsNullOrWhiteSpace(settingsXml))
             {
@@ -80,23 +82,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                     XmlReaderUtilities.ReadToRootNode(reader);
                     reader.ReadToNextElement();
 
-                    // Read till we reach nodeName element or reach EOF
-                    while (!string.Equals(reader.Name, nodeName, StringComparison.OrdinalIgnoreCase)
-                            &&
-                            !reader.EOF)
+                    // Read to desired node
+                    if (reader.ReadToFollowing(nodeName))
                     {
-                        reader.SkipToNextElement();
-                    }
-
-                    if (!reader.EOF)
-                    {
-                        // read nodeName element.
-                        return nodeParser(reader);
+                        if (nodeParser != null)
+                        {
+                            // read nodeName element.
+                            return nodeParser(reader);
+                        }
+                        else
+                        {
+                            if (typeof(T).Equals(typeof(bool)))
+                            {
+                                bool nodeValue;
+                                if (bool.TryParse(reader.ReadInnerXml(), out nodeValue))
+                                {
+                                    result = (T)Convert.ChangeType(nodeValue, typeof(bool));
+                                    return result;
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            return default(T);
+            return result;
         }
     }
 }
