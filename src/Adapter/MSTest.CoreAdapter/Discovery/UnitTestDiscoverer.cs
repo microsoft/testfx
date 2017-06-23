@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 {
     using System.Collections.Generic;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -80,58 +81,62 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink)
         {
+            var isDesignMode = RunConfigurationSettings.ConfigurationSettings.DesignMode;
+
             var navigationSessions = new Dictionary<string, object>();
             try
             {
-                navigationSessions.Add(source, PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source));
+                if (isDesignMode)
+                {
+                    navigationSessions.Add(source, PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source));
+                }
 
                 foreach (var testElement in testElements)
                 {
-                    string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
                     object testNavigationSession;
-
-                    if (navigationSessions.ContainsKey(testSource))
-                    {
-                        testNavigationSession = navigationSessions[testSource];
-                    }
-                    else
-                    {
-                        testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
-                        navigationSessions.Add(testSource, testNavigationSession);
-                    }
-
                     var testCase = testElement.ToTestCase();
 
-                    if (testNavigationSession != null)
+                    if (isDesignMode)
                     {
-                        var className = testElement.TestMethod.DeclaringClassFullName
-                                        ?? testElement.TestMethod.FullClassName;
+                        string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
 
-                        var methodName = testElement.TestMethod.Name;
-
-                        // If it is async test method use compiler generated type and method name for navigation data.
-                        if (!string.IsNullOrEmpty(testElement.AsyncTypeName))
+                        if (!navigationSessions.TryGetValue(testSource, out testNavigationSession))
                         {
-                            className = testElement.AsyncTypeName;
-
-                            // compiler generated method name is "MoveNext".
-                            methodName = "MoveNext";
+                            testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
+                            navigationSessions.Add(testSource, testNavigationSession);
                         }
 
-                        int minLineNumber;
-                        string fileName;
-
-                        PlatformServiceProvider.Instance.FileOperations.GetNavigationData(
-                            testNavigationSession,
-                            className,
-                            methodName,
-                            out minLineNumber,
-                            out fileName);
-
-                        if (!string.IsNullOrEmpty(fileName))
+                        if (testNavigationSession != null)
                         {
-                            testCase.LineNumber = minLineNumber;
-                            testCase.CodeFilePath = fileName;
+                            var className = testElement.TestMethod.DeclaringClassFullName
+                                            ?? testElement.TestMethod.FullClassName;
+
+                            var methodName = testElement.TestMethod.Name;
+
+                            // If it is async test method use compiler generated type and method name for navigation data.
+                            if (!string.IsNullOrEmpty(testElement.AsyncTypeName))
+                            {
+                                className = testElement.AsyncTypeName;
+
+                                // compiler generated method name is "MoveNext".
+                                methodName = "MoveNext";
+                            }
+
+                            int minLineNumber;
+                            string fileName;
+
+                            PlatformServiceProvider.Instance.FileOperations.GetNavigationData(
+                                testNavigationSession,
+                                className,
+                                methodName,
+                                out minLineNumber,
+                                out fileName);
+
+                            if (!string.IsNullOrEmpty(fileName))
+                            {
+                                testCase.LineNumber = minLineNumber;
+                                testCase.CodeFilePath = fileName;
+                            }
                         }
                     }
 

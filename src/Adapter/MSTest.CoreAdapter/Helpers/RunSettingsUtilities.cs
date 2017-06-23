@@ -90,8 +90,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
                     if (!reader.EOF)
                     {
-                        // read nodeName element.
-                        return nodeParser(reader);
+                            // read nodeName element.
+                            return nodeParser(reader);
                     }
                 }
             }
