@@ -40,7 +40,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             this.CaptureDebugTraces = true;
             this.MapInconclusiveToFailed = false;
-            this.EnableBaseClassTestMethodsFromOtherAssemblies = false;
+            this.EnableBaseClassTestMethodsFromOtherAssemblies = true;
             this.ForcedLegacyMode = false;
             this.TestSettingsFile = null;
         }
