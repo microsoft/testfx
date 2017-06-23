@@ -76,12 +76,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 testElements.Count,
                 source);
 
-            this.SendTestCases(source, testElements, discoverySink, runSettings);
+            this.SendTestCases(source, testElements, discoverySink);
         }
 
-        internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IRunSettings runSettings)
+        internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink)
         {
-            var isDesignMode = RunSettingsUtilities.IsDesignMode(runSettings?.SettingsXml);
+            var isDesignMode = RunConfigurationSettings.ConfigurationSettings.DesignMode;
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                "DesignMode value Found : {0} ",
+                isDesignMode);
+
             var navigationSessions = new Dictionary<string, object>();
             try
             {
@@ -98,11 +102,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                     if (isDesignMode)
                     {
                         string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
-                        if (navigationSessions.ContainsKey(testSource))
-                        {
-                            testNavigationSession = navigationSessions[testSource];
-                        }
-                        else
+
+                        if (!navigationSessions.TryGetValue(testSource, out testNavigationSession))
                         {
                             testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
                             navigationSessions.Add(testSource, testNavigationSession);

@@ -180,44 +180,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
             Assert.IsNotNull(trp);
             Assert.AreEqual(0, trp.Count);
         }
-
-        [TestMethod]
-        public void IsDesignModeReturnsTrueOnNullRunSettings()
-        {
-            bool isDesignMode = RunSettingsUtilities.IsDesignMode(null);
-            Assert.IsTrue(isDesignMode);
-        }
-
-        [TestMethod]
-        public void IsDesignModeReturnsTrueWhenNoDesignModeSpecified()
-        {
-            string settingsXml =
-                @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <TargetPlatform>x86</TargetPlatform>
-                     </RunConfiguration>
-                </RunSettings>";
-
-            bool isDesignMode = RunSettingsUtilities.IsDesignMode(settingsXml);
-            Assert.IsTrue(isDesignMode);
-        }
-
-        [TestMethod]
-        public void IsDesignModeReturnsFalseWhenDesignModeSpecifiedAsFalse()
-        {
-            string settingsXml =
-                @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <DesignMode>false</DesignMode>
-                     </RunConfiguration>
-                </RunSettings>";
-
-            bool isDesignMode = RunSettingsUtilities.IsDesignMode(settingsXml);
-            Assert.IsFalse(isDesignMode);
-        }
     }
 }
