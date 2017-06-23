@@ -162,6 +162,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                 if (bool.TryParse(reader.ReadInnerXml(), out result))
                                 {
                                     settings.DesignMode = result;
+                                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                                    "DesignMode value Found : {0} ",
+                                    result);
                                 }
 
                                 break;

@@ -82,9 +82,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink)
         {
             var isDesignMode = RunConfigurationSettings.ConfigurationSettings.DesignMode;
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                "DesignMode value Found : {0} ",
-                isDesignMode);
 
             var navigationSessions = new Dictionary<string, object>();
             try
