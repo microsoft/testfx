@@ -73,6 +73,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.AreEqual(configurationSettings.DesignMode, false);
         }
 
+        [TestMethod]
+        public void CollectSourceInformationIsByDefaultTrueWhenNotSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                  <RunConfiguration>
+                  </RunConfiguration>
+                  </RunSettings>";
+
+            RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
+            Assert.AreEqual(configurationSettings.CollectSourceInformation, true);
+        }
+
+        [TestMethod]
+        public void CollectSourceInformationShouldBeConsumedFromRunSettingsWhenSpecified()
+        {
+            string runSettingxml =
+                @"<?xml version=""1.0"" encoding=""utf-8""?>
+                <RunSettings>
+                     <RunConfiguration>
+                       <ResultsDirectory>.\TestResults</ResultsDirectory>
+                       <DesignMode>false</DesignMode>
+                       <CollectSourceInformation>false</CollectSourceInformation>
+                     </RunConfiguration>
+                </RunSettings>";
+
+            RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
+            Assert.AreEqual(configurationSettings.CollectSourceInformation, false);
+        }
+
         #endregion
 
         #region ConfigurationSettings tests

@@ -30,6 +30,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public RunConfigurationSettings()
         {
             this.DesignMode = true;
+            this.CollectSourceInformation = true;
         }
 
         /// <summary>
@@ -57,6 +58,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// Gets a value indicating whether designMode is on(IDE scenario) or off(CLI scenario).
         /// </summary>
         public bool DesignMode { get; private set; }
+
+        /// <summary>
+        /// Gets a value indicating whether adapter should collect source information for discovered tests (non-Roslyn supported test projects) or not (Roslyn supported test projects).
+        /// </summary>
+        public bool CollectSourceInformation { get; private set; }
 
         /// <summary>
         /// Populate adapter settings from the context
@@ -138,13 +144,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             // Expected format of the xml is: -
             //
             // <Runsettings>
-            // <RunConfiguration>
-            // <DesignMode>true</DesignMode>
-            // </RunConfiguration>
+            //   <RunConfiguration>
+            //     <DesignMode>true</DesignMode>
+            //     <CollectSourceInformation>true</CollectSourceInformation>
+            //   </RunConfiguration>
             // </Runsettings>
             RunConfigurationSettings settings = new RunConfigurationSettings();
 
-            // Read the first element in the section which is either "MSTest"/"MSTestV2"
             reader.ReadToNextElement();
 
             if (!reader.IsEmptyElement)
@@ -164,6 +170,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                     settings.DesignMode = result;
                                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                                     "DesignMode value Found : {0} ",
+                                    result);
+                                }
+
+                                break;
+                            }
+
+                        case "COLLECTSOURCEINFORMATION":
+                            {
+                                if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                {
+                                    settings.CollectSourceInformation = result;
+                                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                                    "CollectSourceInformation value Found : {0} ",
                                     result);
                                 }
 
