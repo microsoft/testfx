@@ -47,7 +47,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
             // Populate the runsettings.
             MSTestSettings.PopulateSettings(discoveryContext);
-            RunConfigurationSettings.PopulateSettings(discoveryContext);
 
             // Scenarios that include testsettings or forcing a run via the legacy adapter are currently not supported in MSTestAdapter.
             if (MSTestSettings.IsLegacyScenario(logger))

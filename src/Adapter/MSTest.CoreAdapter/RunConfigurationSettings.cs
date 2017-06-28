@@ -20,37 +20,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public const string SettingsName = "RunConfiguration";
 
         /// <summary>
-        /// Member variable for RunConfiguration settings
-        /// </summary>
-        private static RunConfigurationSettings configurationSettings;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="RunConfigurationSettings"/> class.
         /// </summary>
         public RunConfigurationSettings()
         {
             this.CollectSourceInformation = true;
-        }
-
-        /// <summary>
-        /// Gets the current settings.
-        /// </summary>
-        public static RunConfigurationSettings ConfigurationSettings
-        {
-            get
-            {
-                if (configurationSettings == null)
-                {
-                    configurationSettings = new RunConfigurationSettings();
-                }
-
-                return configurationSettings;
-            }
-
-            private set
-            {
-                configurationSettings = value;
-            }
         }
 
         /// <summary>
@@ -64,24 +38,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <param name="context">
         /// The discovery context that contains the runsettings.
         /// </param>
-        public static void PopulateSettings(IDiscoveryContext context)
+        /// <returns>Populated RunConfigurationSettings from the discovery context.</returns>
+        public static RunConfigurationSettings PopulateSettings(IDiscoveryContext context)
         {
             if (context == null || context.RunSettings == null || string.IsNullOrEmpty(context.RunSettings.SettingsXml))
             {
-                // This will contain default adapter settings
-                ConfigurationSettings = new RunConfigurationSettings();
-                return;
+                // This will contain default configuration settings
+                return new RunConfigurationSettings();
             }
 
             var settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
 
             if (settings != null)
             {
-                ConfigurationSettings = settings;
-                return;
+                return settings;
             }
 
-            ConfigurationSettings = new RunConfigurationSettings();
+            return new RunConfigurationSettings();
         }
 
         /// <summary>
@@ -116,14 +89,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Resets any settings loaded.
-        /// </summary>
-        internal static void Reset()
-        {
-            RunConfigurationSettings.ConfigurationSettings = null;
         }
 
         /// <summary>

@@ -101,7 +101,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
             this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
 
-            Assert.IsTrue(RunConfigurationSettings.ConfigurationSettings.CollectSourceInformation);
+            Assert.IsTrue(MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
         }
 
         [TestMethod]
@@ -118,7 +118,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
             this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
 
-            Assert.IsFalse(RunConfigurationSettings.ConfigurationSettings.CollectSourceInformation);
+            Assert.IsFalse(MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
         }
     }
 }

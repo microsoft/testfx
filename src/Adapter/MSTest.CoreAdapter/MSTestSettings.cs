@@ -34,6 +34,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         private static MSTestSettings currentSettings;
 
         /// <summary>
+        /// Member variable for RunConfiguration settings
+        /// </summary>
+        private static RunConfigurationSettings runConfigurationSettings;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MSTestSettings"/> class.
         /// </summary>
         public MSTestSettings()
@@ -63,6 +68,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             private set
             {
                 currentSettings = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current configuration settings.
+        /// </summary>
+        public static RunConfigurationSettings RunConfigurationSettings
+        {
+            get
+            {
+                if (runConfigurationSettings == null)
+                {
+                    runConfigurationSettings = new RunConfigurationSettings();
+                }
+
+                return runConfigurationSettings;
+            }
+
+            private set
+            {
+                runConfigurationSettings = value;
             }
         }
 
@@ -113,6 +139,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </param>
         public static void PopulateSettings(IDiscoveryContext context)
         {
+            RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
+
             if (context == null || context.RunSettings == null || string.IsNullOrEmpty(context.RunSettings.SettingsXml))
             {
                 // This will contain default adapter settings
@@ -198,6 +226,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         internal static void Reset()
         {
             MSTestSettings.CurrentSettings = null;
+            MSTestSettings.RunConfigurationSettings = null;
         }
 
         /// <summary>

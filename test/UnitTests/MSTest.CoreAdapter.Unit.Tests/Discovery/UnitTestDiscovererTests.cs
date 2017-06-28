@@ -174,7 +174,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
 
             // Act
-            RunConfigurationSettings.PopulateSettings(mockDiscoveryContext.Object);
+            MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
             this.unitTestDiscoverer.SendTestCases(Source, this.testElements, this.mockTestCaseDiscoverySink.Object);
 
             // Assert

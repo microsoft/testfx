@@ -81,12 +81,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink)
         {
-            var collectSourceInformation = RunConfigurationSettings.ConfigurationSettings.CollectSourceInformation;
+            var shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
 
             var navigationSessions = new Dictionary<string, object>();
             try
             {
-                if (collectSourceInformation)
+                if (shouldCollectSourceInformation)
                 {
                     navigationSessions.Add(source, PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source));
                 }
@@ -96,7 +96,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                     object testNavigationSession;
                     var testCase = testElement.ToTestCase();
 
-                    if (collectSourceInformation)
+                    if (shouldCollectSourceInformation)
                     {
                         string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
 
