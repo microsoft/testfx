@@ -75,11 +75,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         {
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
             string runSettingxml =
-            @"<RunSettings>   
+            @"<RunSettings>
 			        <MSTest>   
 				        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
 				        <ForcedLegacyMode>true</ForcedLegacyMode>    
-				        <IgnoreTestImpact>true</IgnoreTestImpact>  
+				        <IgnoreTestImpact>true</IgnoreTestImpact>
 			        </MSTest>
 		    </RunSettings>";
             this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
@@ -88,6 +88,37 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             // Test should not start if TestSettings is given.
             this.mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void RunTestsWithSourcesShouldSetDefaultDesignModeAsTrue()
+        {
+            var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
+            string runSettingxml =
+            @"<RunSettings>
+		    </RunSettings>";
+            this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+            this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+            this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
+
+            Assert.IsTrue(RunConfigurationSettings.ConfigurationSettings.DesignMode);
+        }
+
+        [TestMethod]
+        public void RunTestsWithSourcesShouldSetDefaultDesignModeAsFalseIfSpecifiedInRunSettings()
+        {
+            var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
+            string runSettingxml =
+            @"<RunSettings>
+                <RunConfiguration>
+                    <DesignMode>false</DesignMode>
+                </RunConfiguration>
+		    </RunSettings>";
+            this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+            this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+            this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
+
+            Assert.IsFalse(RunConfigurationSettings.ConfigurationSettings.DesignMode);
         }
     }
 }
