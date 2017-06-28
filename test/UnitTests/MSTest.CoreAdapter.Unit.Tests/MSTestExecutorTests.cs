@@ -105,7 +105,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
-        public void RunTestsWithSourcesShouldSetDefaultDesignModeAsFalseIfSpecifiedInRunSettings()
+        public void RunTestsWithSourcesShouldSetDesignModeAsFalseIfSpecifiedInRunSettings()
         {
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
             string runSettingxml =
