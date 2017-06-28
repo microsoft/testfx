@@ -152,14 +152,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethodV1]
-        public void SendTestCasesShouldSendTestCasesWithoutNavigationDataWhenDesignModeIsFalse()
+        public void SendTestCasesShouldSendTestCasesWithoutNavigationDataWhenCollectSourceInformationIsFalse()
         {
             string settingsXml =
             @"<?xml version=""1.0"" encoding=""utf-8""?>
                 <RunSettings>
                      <RunConfiguration>
                        <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <DesignMode>false</DesignMode>
+                       <CollectSourceInformation>false</CollectSourceInformation>
                      </RunConfiguration>
                 </RunSettings>";
 
@@ -174,7 +174,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
 
             // Act
-            RunConfigurationSettings.PopulateSettings(mockDiscoveryContext.Object);
+            MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
             this.unitTestDiscoverer.SendTestCases(Source, this.testElements, this.mockTestCaseDiscoverySink.Object);
 
             // Assert
