@@ -152,7 +152,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethodV1]
-        public void SendTestCasesShouldSendTestCasesWithoutNavigationDataWhenDesignModeIsFalse()
+        public void SendTestCasesShouldSendTestsWithoutNavDataWhenDesignModeIsFalseAndCollectSourceInformationIsFalse()
         {
             string settingsXml =
             @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -160,26 +160,59 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
                      <RunConfiguration>
                        <ResultsDirectory>.\TestResults</ResultsDirectory>
                        <DesignMode>false</DesignMode>
+                       <CollectSourceInformation>false</CollectSourceInformation>
                      </RunConfiguration>
                 </RunSettings>";
 
-            // Setup mocks.
-            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
-                .Returns((object)null);
+            this.VerifyNavigationDataPresenceAsPerRunSettings(settingsXml, navigationDataExpected: false);
+        }
 
-            this.SetupNavigation(Source, this.test, this.test.TestMethod.FullClassName, this.test.TestMethod.Name);
-            this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
+        [TestMethodV1]
+        public void SendTestCasesShouldSendTestsWithoutNavDataWhenDesignModeIsFalseAndCollectSourceInformationIsTrue()
+        {
+            string settingsXml =
+            @"<?xml version=""1.0"" encoding=""utf-8""?>
+                <RunSettings>
+                     <RunConfiguration>
+                       <ResultsDirectory>.\TestResults</ResultsDirectory>
+                       <DesignMode>false</DesignMode>
+                       <CollectSourceInformation>true</CollectSourceInformation>
+                     </RunConfiguration>
+                </RunSettings>";
 
-            Mock<IDiscoveryContext> mockDiscoveryContext = new Mock<IDiscoveryContext>();
-            mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+            this.VerifyNavigationDataPresenceAsPerRunSettings(settingsXml, navigationDataExpected: false);
+        }
 
-            // Act
-            RunConfigurationSettings.PopulateSettings(mockDiscoveryContext.Object);
-            this.unitTestDiscoverer.SendTestCases(Source, this.testElements, this.mockTestCaseDiscoverySink.Object);
+        [TestMethodV1]
+        public void SendTestCasesShouldSendTestsWithNavDataWhenDesignModeIsTrueAndCollectSourceInformationIsTrue()
+        {
+            string settingsXml =
+            @"<?xml version=""1.0"" encoding=""utf-8""?>
+                <RunSettings>
+                     <RunConfiguration>
+                       <ResultsDirectory>.\TestResults</ResultsDirectory>
+                       <DesignMode>true</DesignMode>
+                       <CollectSourceInformation>true</CollectSourceInformation>
+                     </RunConfiguration>
+                </RunSettings>";
 
-            // Assert
-            this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.LineNumber == -1)), Times.Once);
-            this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.CodeFilePath == null)), Times.Once);
+            this.VerifyNavigationDataPresenceAsPerRunSettings(settingsXml, navigationDataExpected: true);
+        }
+
+        [TestMethodV1]
+        public void SendTestCasesShouldSendTestsWithoutNavDataWhenDesignModeIsTrueAndCollectSourceInformationIsFalse()
+        {
+            string settingsXml =
+            @"<?xml version=""1.0"" encoding=""utf-8""?>
+                <RunSettings>
+                     <RunConfiguration>
+                       <ResultsDirectory>.\TestResults</ResultsDirectory>
+                       <DesignMode>true</DesignMode>
+                       <CollectSourceInformation>false</CollectSourceInformation>
+                     </RunConfiguration>
+                </RunSettings>";
+
+            this.VerifyNavigationDataPresenceAsPerRunSettings(settingsXml, navigationDataExpected: false);
         }
 
         [TestMethodV1]
@@ -290,6 +323,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.LineNumber == 1)), Times.Once);
             this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.CodeFilePath.Equals("DummyFileName.cs"))), Times.Once);
+        }
+
+        private void VerifyNavigationDataPresenceAsPerRunSettings(string settingsXml, bool navigationDataExpected)
+        {
+            // Setup mocks.
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
+                .Returns((object)null);
+
+            this.SetupNavigation(Source, this.test, this.test.TestMethod.FullClassName, this.test.TestMethod.Name);
+            this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
+
+            Mock<IDiscoveryContext> mockDiscoveryContext = new Mock<IDiscoveryContext>();
+            mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+
+            // Act
+            RunConfigurationSettings.PopulateSettings(mockDiscoveryContext.Object);
+            this.unitTestDiscoverer.SendTestCases(Source, this.testElements, this.mockTestCaseDiscoverySink.Object);
+
+            // Assert
+            if (navigationDataExpected)
+            {
+                this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.LineNumber > -1)), Times.Once);
+                this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.CodeFilePath != null)), Times.Once);
+            }
+            else
+            {
+                this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.LineNumber == -1)), Times.Once);
+                this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.CodeFilePath == null)), Times.Once);
+            }
         }
     }
 
