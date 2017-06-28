@@ -211,7 +211,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
                 var assemblyResolverType = typeof(AssemblyResolver);
 
-                EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
+                if (EqtTrace.IsVerboseEnabled)
+                {
+                    EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
+                }
 
                 // This has to be LoadFrom, otherwise we will have to use AssemblyResolver to find self.
                 using (

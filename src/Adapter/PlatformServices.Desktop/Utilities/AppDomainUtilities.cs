@@ -93,7 +93,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     appDomain = AppDomain.CreateDomain("Framework Version String Domain", null, appDomainSetup);
 
                     // Wire the eqttrace logs in this domain to the current domain.
-                    EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
+                    if (EqtTrace.IsVerboseEnabled)
+                    {
+                        EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
+                    }
 
                     // Add an assembly resolver to resolve ObjectModel or any Test Platform dependencies.
                     // Not moving to IMetaDataImport APIs because the time taken for this operation is <20 ms and
