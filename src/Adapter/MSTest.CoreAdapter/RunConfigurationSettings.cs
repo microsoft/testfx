@@ -20,43 +20,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public const string SettingsName = "RunConfiguration";
 
         /// <summary>
-        /// Member variable for RunConfiguration settings
-        /// </summary>
-        private static RunConfigurationSettings configurationSettings;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="RunConfigurationSettings"/> class.
         /// </summary>
         public RunConfigurationSettings()
         {
-            this.DesignMode = true;
+            this.CollectSourceInformation = true;
         }
 
         /// <summary>
-        /// Gets the current settings.
+        /// Gets a value indicating whether source information needs to be collected or not.
         /// </summary>
-        public static RunConfigurationSettings ConfigurationSettings
-        {
-            get
-            {
-                if (configurationSettings == null)
-                {
-                    configurationSettings = new RunConfigurationSettings();
-                }
-
-                return configurationSettings;
-            }
-
-            private set
-            {
-                configurationSettings = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether designMode is on(IDE scenario) or off(CLI scenario).
-        /// </summary>
-        public bool DesignMode { get; private set; }
+        public bool CollectSourceInformation { get; private set; }
 
         /// <summary>
         /// Populate adapter settings from the context
@@ -64,31 +38,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <param name="context">
         /// The discovery context that contains the runsettings.
         /// </param>
-        public static void PopulateSettings(IDiscoveryContext context)
+        /// <returns>Populated RunConfigurationSettings from the discovery context.</returns>
+        public static RunConfigurationSettings PopulateSettings(IDiscoveryContext context)
         {
             if (context == null || context.RunSettings == null || string.IsNullOrEmpty(context.RunSettings.SettingsXml))
             {
-                // This will contain default adapter settings
-                ConfigurationSettings = new RunConfigurationSettings();
-                return;
+                // This will contain default configuration settings
+                return new RunConfigurationSettings();
             }
 
             var settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
 
             if (settings != null)
             {
-                ConfigurationSettings = settings;
-                return;
+                return settings;
             }
 
-            ConfigurationSettings = new RunConfigurationSettings();
+            return new RunConfigurationSettings();
         }
 
         /// <summary>
-        /// Gets the adapter specific settings from the xml.
+        /// Gets the configuration settings from the xml.
         /// </summary>
         /// <param name="runsettingsXml"> The xml with the settings passed from the test platform. </param>
-        /// <param name="settingName"> The name of the adapter settings to fetch - Its either MSTest or MSTestV2 </param>
+        /// <param name="settingName"> The name of the settings to fetch.</param>
         /// <returns> The settings if found. Null otherwise. </returns>
         internal static RunConfigurationSettings GetSettings(string runsettingsXml, string settingName)
         {
@@ -119,14 +92,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         }
 
         /// <summary>
-        /// Resets any settings loaded.
-        /// </summary>
-        internal static void Reset()
-        {
-            RunConfigurationSettings.ConfigurationSettings = null;
-        }
-
-        /// <summary>
         /// Convert the parameter xml to TestSettings
         /// </summary>
         /// <param name="reader">Reader to load the settings from.</param>
@@ -139,12 +104,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             //
             // <Runsettings>
             // <RunConfiguration>
-            // <DesignMode>true</DesignMode>
+            // <CollectSourceInformation>true</CollectSourceInformation>
             // </RunConfiguration>
             // </Runsettings>
             RunConfigurationSettings settings = new RunConfigurationSettings();
 
-            // Read the first element in the section which is either "MSTest"/"MSTestV2"
+            // Read the first element in the section
             reader.ReadToNextElement();
 
             if (!reader.IsEmptyElement)
@@ -157,13 +122,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                     string elementName = reader.Name.ToUpperInvariant();
                     switch (elementName)
                     {
-                        case "DESIGNMODE":
+                        case "COLLECTSOURCEINFORMATION":
                             {
                                 if (bool.TryParse(reader.ReadInnerXml(), out result))
                                 {
-                                    settings.DesignMode = result;
+                                    settings.CollectSourceInformation = result;
                                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                                    "DesignMode value Found : {0} ",
+                                    "CollectSourceInformation value Found : {0} ",
                                     result);
                                 }
 

@@ -45,7 +45,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         #region Property validation.
 
         [TestMethod]
-        public void DesignModeIsByDefaultTrueWhenNotSpecified()
+        public void CollectSourceInformationIsByDefaultTrueWhenNotSpecified()
         {
             string runSettingxml =
                 @"<RunSettings>
@@ -54,23 +54,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                   </RunSettings>";
 
             RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
-            Assert.AreEqual(configurationSettings.DesignMode, true);
+            Assert.AreEqual(configurationSettings.CollectSourceInformation, true);
         }
 
         [TestMethod]
-        public void DesignModeShouldBeConsumedFromRunSettingsWhenSpecified()
+        public void CollectSourceInformationShouldBeConsumedFromRunSettingsWhenSpecified()
         {
             string runSettingxml =
                 @"<?xml version=""1.0"" encoding=""utf-8""?>
                 <RunSettings>
                      <RunConfiguration>
                        <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <DesignMode>false</DesignMode>
+                       <CollectSourceInformation>false</CollectSourceInformation>
                      </RunConfiguration>
                 </RunSettings>";
 
             RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
-            Assert.AreEqual(configurationSettings.DesignMode, false);
+            Assert.AreEqual(configurationSettings.CollectSourceInformation, false);
         }
 
         #endregion
@@ -80,13 +80,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         [TestMethod]
         public void ConfigurationSettingsShouldReturnDefaultSettingsIfNotSet()
         {
-            RunConfigurationSettings.Reset();
-            var settings = RunConfigurationSettings.ConfigurationSettings;
+            MSTestSettings.Reset();
+            var settings = MSTestSettings.RunConfigurationSettings;
 
             Assert.IsNotNull(settings);
 
             // Validating the default value of a random setting.
-            Assert.AreEqual(settings.DesignMode, true);
+            Assert.AreEqual(settings.CollectSourceInformation, true);
         }
 
         #endregion
@@ -96,29 +96,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         [TestMethod]
         public void PopulateSettingsShouldInitializeDefaultConfigurationSettingsWhenDiscoveryContextIsNull()
         {
-            RunConfigurationSettings.PopulateSettings((IDiscoveryContext)null);
+            MSTestSettings.PopulateSettings((IDiscoveryContext)null);
 
-            RunConfigurationSettings settings = RunConfigurationSettings.ConfigurationSettings;
-            Assert.AreEqual(settings.DesignMode, true);
+            RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
+            Assert.AreEqual(settings.CollectSourceInformation, true);
         }
 
         [TestMethod]
         public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
         {
-            RunConfigurationSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+            MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
 
-            RunConfigurationSettings settings = RunConfigurationSettings.ConfigurationSettings;
-            Assert.AreEqual(settings.DesignMode, true);
+            RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
+            Assert.AreEqual(settings.CollectSourceInformation, true);
         }
 
         [TestMethod]
         public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
         {
             this.mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
-            RunConfigurationSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+            MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
 
-            RunConfigurationSettings settings = RunConfigurationSettings.ConfigurationSettings;
-            Assert.AreEqual(settings.DesignMode, true);
+            RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
+            Assert.AreEqual(settings.CollectSourceInformation, true);
         }
 
         [TestMethod]
@@ -133,13 +133,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-            RunConfigurationSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+            MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
 
-            RunConfigurationSettings settings = RunConfigurationSettings.ConfigurationSettings;
+            RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
             Assert.IsNotNull(settings);
 
             // Validating the default value of a random setting.
-            Assert.AreEqual(settings.DesignMode, true);
+            Assert.AreEqual(settings.CollectSourceInformation, true);
         }
 
         [TestMethod]
@@ -149,19 +149,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             @"<RunSettings>
                      <RunConfiguration>
                        <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <DesignMode>false</DesignMode>
+                       <CollectSourceInformation>false</CollectSourceInformation>
                      </RunConfiguration>
               </RunSettings>";
 
             this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-            RunConfigurationSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+            MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
 
-            RunConfigurationSettings settings = RunConfigurationSettings.ConfigurationSettings;
+            RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
             Assert.IsNotNull(settings);
 
             // Validating the default value of a random setting.
-            Assert.AreEqual(settings.DesignMode, false);
+            Assert.AreEqual(settings.CollectSourceInformation, false);
         }
 
         #endregion
