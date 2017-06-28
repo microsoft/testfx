@@ -152,14 +152,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethodV1]
-        public void SendTestCasesShouldSendTestCasesWithoutNavigationDataWhenDesignModeIsFalse()
+        public void SendTestCasesShouldSendTestCasesWithoutNavigationDataWhenCollectSourceInformationIsFalse()
         {
             string settingsXml =
             @"<?xml version=""1.0"" encoding=""utf-8""?>
                 <RunSettings>
                      <RunConfiguration>
                        <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <DesignMode>false</DesignMode>
+                       <CollectSourceInformation>false</CollectSourceInformation>
                      </RunConfiguration>
                 </RunSettings>";
 

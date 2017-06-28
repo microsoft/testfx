@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
-        public void RunTestsWithSourcesShouldSetDefaultDesignModeAsTrue()
+        public void RunTestsWithSourcesShouldSetDefaultCollectSourceInformationAsTrue()
         {
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
             string runSettingxml =
@@ -101,11 +101,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
             this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
 
-            Assert.IsTrue(RunConfigurationSettings.ConfigurationSettings.DesignMode);
+            Assert.IsTrue(RunConfigurationSettings.ConfigurationSettings.CollectSourceInformation);
         }
 
         [TestMethod]
-        public void RunTestsWithSourcesShouldSetDesignModeAsFalseIfSpecifiedInRunSettings()
+        public void RunTestsWithSourcesShouldSetCollectSourceInformationAsFalseIfSpecifiedInRunSettings()
         {
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
             string runSettingxml =
@@ -118,7 +118,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
             this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
 
-            Assert.IsFalse(RunConfigurationSettings.ConfigurationSettings.DesignMode);
+            Assert.IsFalse(RunConfigurationSettings.ConfigurationSettings.CollectSourceInformation);
         }
     }
 }
