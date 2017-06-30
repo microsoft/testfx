@@ -9,11 +9,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Reflection;
+    using System.Text;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// Defines the TestMethod Info object
@@ -430,15 +432,83 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             catch (Exception ex)
             {
-                var stackTraceInformation = StackTraceHelper.GetStackTraceInformation(ex.GetInnerExceptionOrDefault());
-                var errorMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_CleanupMethodThrows,
-                    this.TestClassName,
-                    testCleanupMethod?.Name,
-                    StackTraceHelper.GetExceptionMessage(ex.GetInnerExceptionOrDefault()));
-                result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
-                result.TestFailureException = new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTraceInformation);
+                var cleanupOutcome = UTF.UnitTestOutcome.Failed;
+                var cleanupError = new StringBuilder();
+                var cleanupStackTrace = new StringBuilder();
+                StackTraceInformation cleanupStackTraceInfo = null;
+
+                TestFailedException testFailureException = result.TestFailureException as TestFailedException;
+                if (testFailureException != null)
+                {
+                    if (!string.IsNullOrEmpty(testFailureException.Message))
+                    {
+                        cleanupError.Append(testFailureException.Message);
+                        cleanupError.AppendLine();
+                    }
+
+                    if (testFailureException.StackTraceInformation != null && !string.IsNullOrEmpty(testFailureException.StackTraceInformation.ErrorStackTrace))
+                    {
+                        cleanupStackTrace.Append(testFailureException.StackTraceInformation.ErrorStackTrace);
+                        cleanupStackTrace.Append(Environment.NewLine);
+                        cleanupStackTrace.Append(Resource.UTA_CleanupStackTrace);
+                        cleanupStackTrace.Append(Environment.NewLine);
+                    }
+                }
+
+                Exception realException = ex.GetInnerExceptionOrDefault();
+
+                // special case UnitTestAssertException to trim off part of the stack trace
+                if (realException is UnitTestAssertException)
+                {
+                    cleanupOutcome =
+                        realException is AssertInconclusiveException ? UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed;
+                    cleanupError.Append(StackTraceHelper.GetExceptionMessage(realException));
+
+                    StackTraceInformation realExceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
+                    if (realExceptionStackTraceInfo != null)
+                    {
+                        cleanupStackTrace.Append(realExceptionStackTraceInfo.ErrorStackTrace);
+                        cleanupStackTraceInfo = cleanupStackTraceInfo ?? realExceptionStackTraceInfo;
+                    }
+                }
+                else
+                {
+                    cleanupOutcome = UTF.UnitTestOutcome.Failed;
+                    string message = testCleanupMethod != null ?
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            Resource.UTA_CleanupMethodThrows,
+                            this.TestClassName,
+                            testCleanupMethod?.Name,
+                            realException.GetType().ToString(),
+                            StackTraceHelper.GetExceptionMessage(realException)) :
+                        string.Format(
+                            CultureInfo.CurrentCulture,
+                            Resource.UTA_CleanupMethodThrowsGeneralError,
+                            this.TestClassName,
+                            StackTraceHelper.GetExceptionMessage(realException));
+
+                    cleanupError.Append(message);
+
+                    StackTraceInformation realExceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
+                    if (realExceptionStackTraceInfo != null)
+                    {
+                        cleanupStackTrace.Append(realExceptionStackTraceInfo.ErrorStackTrace);
+                        cleanupStackTraceInfo = cleanupStackTraceInfo ?? realExceptionStackTraceInfo;
+                    }
+                }
+
+                UTF.UnitTestOutcome outcome = testFailureException == null ? cleanupOutcome : UnitTestOutcomeHelper.GetMoreImportantOutcome(cleanupOutcome, result.Outcome);
+                StackTraceInformation finalStackTraceInfo = cleanupStackTraceInfo != null ?
+                                new StackTraceInformation(
+                                    cleanupStackTrace.ToString(),
+                                    cleanupStackTraceInfo.ErrorFilePath,
+                                    cleanupStackTraceInfo.ErrorLineNumber,
+                                    cleanupStackTraceInfo.ErrorColumnNumber) :
+                                new StackTraceInformation(cleanupStackTrace.ToString());
+
+                result.Outcome = outcome;
+                result.TestFailureException = new TestFailedException(outcome.ToUnitTestOutcome(), cleanupError.ToString(), finalStackTraceInfo);
             }
         }
 

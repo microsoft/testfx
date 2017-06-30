@@ -6,6 +6,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
     internal static class UnitTestOutcomeHelper
     {
         /// <summary>
@@ -45,6 +47,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 default:
                     return TestOutcome.None;
             }
+        }
+
+        /// <summary>
+        /// Returns more important outcome of two.
+        /// </summary>
+        /// <param name="outcome1"> First outcome that needs to be compared. </param>
+        /// <param name="outcome2"> Second outcome that needs to be compared. </param>
+        /// <returns> Outcome which has higher importance.</returns>
+        internal static UTF.UnitTestOutcome GetMoreImportantOutcome(UTF.UnitTestOutcome outcome1, UTF.UnitTestOutcome outcome2)
+        {
+            return outcome1 < outcome2 ? outcome1 : outcome2;
         }
     }
 }

@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
 {
     extern alias FrameworkV1;
+    extern alias FrameworkV2;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -12,6 +13,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class UnitTestOutcomeHelperTests
@@ -77,6 +80,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
         {
             var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.InProgress, mapInconclusiveToFailed: false);
             Assert.AreEqual(TestOutcome.None, resultOutcome);
+        }
+
+        [TestMethod]
+        public void GetMoreImportantOutcomeShouldReturnFailIfTwoOutcomesAreFailedAndInconclusive()
+        {
+            var resultOutcome = UnitTestOutcomeHelper.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed, UTF.UnitTestOutcome.Inconclusive);
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, resultOutcome);
+        }
+
+        [TestMethod]
+        public void GetMoreImportantOutcomeShouldReturnInconclusiveIfTwoOutcomesArePassedAndInconclusive()
+        {
+            var resultOutcome = UnitTestOutcomeHelper.GetMoreImportantOutcome(UTF.UnitTestOutcome.Passed, UTF.UnitTestOutcome.Inconclusive);
+            Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, resultOutcome);
+        }
+
+        [TestMethod]
+        public void GetMoreImportantOutcomeShouldReturnFailedIfTwoOutcomesArePassedAndFailed()
+        {
+            var resultOutcome = UnitTestOutcomeHelper.GetMoreImportantOutcome(UTF.UnitTestOutcome.Passed, UTF.UnitTestOutcome.Failed);
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, resultOutcome);
+        }
+
+        [TestMethod]
+        public void GetMoreImportantOutcomeShouldReturnFailedIfBothOutcomesAreFailed()
+        {
+            var resultOutcome = UnitTestOutcomeHelper.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed, UTF.UnitTestOutcome.Failed);
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, resultOutcome);
         }
     }
 }

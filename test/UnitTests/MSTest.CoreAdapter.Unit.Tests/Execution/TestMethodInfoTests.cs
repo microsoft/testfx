@@ -665,6 +665,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 Resource.UTA_CleanupMethodThrows,
                 typeof(DummyTestClass).FullName,
                 this.testClassInfo.TestCleanupMethod.Name,
+                typeof(NotImplementedException).ToString(),
                 "System.NotImplementedException: dummyErrorMessage");
 
             Assert.IsNotNull(exception);
@@ -683,6 +684,78 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             StringAssert.StartsWith(
                 exception?.StackTraceInformation.ErrorStackTrace,
                 "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestCleanupThrows>b__");
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldAppendErrorMessagesIfBothTestMethodAndTestCleanupThrows()
+        {
+            DummyTestClass.TestCleanupMethodBody = classInstance => { throw new NotImplementedException("dummyErrorMessage"); };
+            DummyTestClass.TestMethodBody = classInstance => { throw new NotImplementedException("dummyMethodError"); };
+            this.testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
+
+            var result = this.testMethodInfo.Invoke(null);
+            var exception = result.TestFailureException as TestFailedException;
+            var errorMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_TestMethodThrows,
+                typeof(DummyTestClass).FullName,
+                this.testMethodInfo.TestMethodName,
+                "System.NotImplementedException: dummyMethodError");
+            var cleanupError = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_CleanupMethodThrows,
+                typeof(DummyTestClass).FullName,
+                this.testClassInfo.TestCleanupMethod.Name,
+                typeof(NotImplementedException).ToString(),
+                "System.NotImplementedException: dummyErrorMessage");
+
+            Assert.AreEqual(result.Outcome, UTF.UnitTestOutcome.Failed);
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(string.Concat(errorMessage, Environment.NewLine, cleanupError), exception?.Message);
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldAppendStackTraceInformationIfBothTestMethodAndTestCleanupThrows()
+        {
+            DummyTestClass.TestCleanupMethodBody = classInstance => { throw new NotImplementedException(); };
+            DummyTestClass.TestMethodBody = classInstance => { throw new NotImplementedException("dummyMethodError"); };
+            this.testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
+
+            var result = this.testMethodInfo.Invoke(null);
+            var exception = result.TestFailureException as TestFailedException;
+
+            Assert.AreEqual(result.Outcome, UTF.UnitTestOutcome.Failed);
+            Assert.IsNotNull(exception);
+            StringAssert.Contains(exception?.StackTraceInformation.ErrorStackTrace, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()");
+            StringAssert.Contains(exception?.StackTraceInformation.ErrorStackTrace, Resource.UTA_CleanupStackTrace);
+            StringAssert.Contains(exception?.StackTraceInformation.ErrorStackTrace, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()");
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldSetOutcomeAsInconclusiveIfTestCleanupIsInconclusive()
+        {
+            DummyTestClass.TestCleanupMethodBody = classInstance => { throw new UTF.AssertInconclusiveException(); };
+            this.testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
+
+            var result = this.testMethodInfo.Invoke(null);
+            var exception = result.TestFailureException as TestFailedException;
+
+            Assert.AreEqual(result.Outcome, UTF.UnitTestOutcome.Inconclusive);
+            Assert.IsNotNull(exception);
+            StringAssert.Contains(exception?.Message, "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException");
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldSetMoreImportantOutcomeIfTestCleanupIsInconclusiveButTestMethodFails()
+        {
+            DummyTestClass.TestCleanupMethodBody = classInstance => { throw new UTF.AssertInconclusiveException(); };
+            DummyTestClass.TestMethodBody = classInstance => { Assert.Fail(); };
+            this.testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
+
+            var result = this.testMethodInfo.Invoke(null);
+            var exception = result.TestFailureException as TestFailedException;
+
+            Assert.AreEqual(result.Outcome, UTF.UnitTestOutcome.Failed);
         }
 
         [TestMethodV1]
