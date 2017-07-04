@@ -5,9 +5,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 {
     using System;
     using System.Globalization;
-
+    using System.Text;
     using Execution;
-    using ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// Extensions to <see cref="Exception"/> type.
@@ -55,6 +56,53 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Checks whether exception is an Assert exception
+        /// </summary>
+        /// <param name="exception">An <see cref="Exception"/> instance.</param>
+        /// <param name="outcome"> Outcome depending on type of assertion.</param>
+        /// <param name="exceptionMessage">Exception message.</param>
+        /// <param name="exceptionStackTrace">StackTraceInformation for the exception</param>
+        /// <returns>True, if Assert exception. False, otherwise.</returns>
+        internal static bool IsUnitTestAssertException(this Exception exception, ref UTF.UnitTestOutcome outcome, ref string exceptionMessage, ref StackTraceInformation exceptionStackTrace)
+        {
+            if (exception is UTF.UnitTestAssertException)
+            {
+                outcome = exception is UTF.AssertInconclusiveException ?
+                            UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed;
+
+                exceptionMessage = exception.TryGetMessage();
+                exceptionStackTrace = exception.TryGetStackTraceInformation();
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets exception message and stack trace for TestFailedException.
+        /// </summary>
+        /// <param name="testFailureException">An <see cref="TestFailedException"/> instance.</param>
+        /// <param name="message"> Appends TestFailedException message to this message.</param>
+        /// <param name="stackTrace"> Appends TestFailedExeption stacktrace to this stackTrace</param>
+        internal static void TryGetTestFailureExceptionMessageAndStackTrace(this TestFailedException testFailureException, StringBuilder message, StringBuilder stackTrace)
+        {
+            if (testFailureException != null)
+            {
+                if (!string.IsNullOrEmpty(testFailureException.Message))
+                {
+                    message.Append(testFailureException.Message);
+                    message.AppendLine();
+                }
+
+                if (testFailureException.StackTraceInformation != null && !string.IsNullOrEmpty(testFailureException.StackTraceInformation.ErrorStackTrace))
+                {
+                    stackTrace.Append(testFailureException.StackTraceInformation.ErrorStackTrace);
+                    stackTrace.Append(Environment.NewLine);
+                }
+            }
         }
     }
 }

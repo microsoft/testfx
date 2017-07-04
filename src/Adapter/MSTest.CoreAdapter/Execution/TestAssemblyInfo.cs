@@ -156,18 +156,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var realException = this.AssemblyInitializationException.InnerException
                                 ?? this.AssemblyInitializationException;
 
-            var outcome = UnitTestOutcome.Failed;
+            var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
             string errorMessage = null;
             StackTraceInformation stackTraceInfo = null;
-            if (realException is UnitTestAssertException)
-            {
-                outcome = realException is AssertInconclusiveException ?
-                            UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
-
-                errorMessage = realException.TryGetMessage();
-                stackTraceInfo = realException.TryGetStackTraceInformation();
-            }
-            else
+            if (!realException.IsUnitTestAssertException(ref outcome, ref errorMessage, ref stackTraceInfo))
             {
                 var exception = realException.GetType().ToString();
                 var message = StackTraceHelper.GetExceptionMessage(realException);
@@ -181,7 +173,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 stackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
             }
 
-            var testFailedException = new TestFailedException(outcome, errorMessage, stackTraceInfo);
+            var testFailedException = new TestFailedException(outcome.ToUnitTestOutcome(), errorMessage, stackTraceInfo);
             this.AssemblyInitializationException = testFailedException;
 
             throw testFailedException;

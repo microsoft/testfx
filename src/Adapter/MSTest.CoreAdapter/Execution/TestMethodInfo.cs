@@ -353,14 +353,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             // Get the real exception thrown by the test method
             Exception realException = this.GetRealException(ex);
+            string exceptionMessage = null;
+            StackTraceInformation exceptionStackTraceInfo = null;
+            var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
 
-            if (realException is UnitTestAssertException)
+            if (realException.IsUnitTestAssertException(ref outcome, ref exceptionMessage, ref exceptionStackTraceInfo))
             {
-                return new TestFailedException(
-                    realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed,
-                                              realException.TryGetMessage(),
-                                              realException.TryGetStackTraceInformation(),
-                                              realException);
+                return new TestFailedException(outcome.ToUnitTestOutcome(), exceptionMessage, exceptionStackTraceInfo, realException);
             }
             else
             {
@@ -438,67 +437,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 StackTraceInformation cleanupStackTraceInfo = null;
 
                 TestFailedException testFailureException = result.TestFailureException as TestFailedException;
-                if (testFailureException != null)
-                {
-                    if (!string.IsNullOrEmpty(testFailureException.Message))
-                    {
-                        cleanupError.Append(testFailureException.Message);
-                        cleanupError.AppendLine();
-                    }
+                testFailureException.TryGetTestFailureExceptionMessageAndStackTrace(cleanupError, cleanupStackTrace);
 
-                    if (testFailureException.StackTraceInformation != null && !string.IsNullOrEmpty(testFailureException.StackTraceInformation.ErrorStackTrace))
-                    {
-                        cleanupStackTrace.Append(testFailureException.StackTraceInformation.ErrorStackTrace);
-                        cleanupStackTrace.Append(Environment.NewLine);
+                if (cleanupStackTrace.Length > 0)
+                {
                         cleanupStackTrace.Append(Resource.UTA_CleanupStackTrace);
                         cleanupStackTrace.Append(Environment.NewLine);
-                    }
                 }
 
                 Exception realException = ex.GetInnerExceptionOrDefault();
+                string exceptionMessage = null;
+                StackTraceInformation realExceptionStackTraceInfo = null;
 
                 // special case UnitTestAssertException to trim off part of the stack trace
-                if (realException is UnitTestAssertException)
-                {
-                    cleanupOutcome =
-                        realException is AssertInconclusiveException ? UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed;
-                    cleanupError.Append(StackTraceHelper.GetExceptionMessage(realException));
-
-                    StackTraceInformation realExceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
-                    if (realExceptionStackTraceInfo != null)
-                    {
-                        cleanupStackTrace.Append(realExceptionStackTraceInfo.ErrorStackTrace);
-                        cleanupStackTraceInfo = cleanupStackTraceInfo ?? realExceptionStackTraceInfo;
-                    }
-                }
-                else
+                if (!realException.IsUnitTestAssertException(ref cleanupOutcome, ref exceptionMessage, ref realExceptionStackTraceInfo))
                 {
                     cleanupOutcome = UTF.UnitTestOutcome.Failed;
-                    string message = testCleanupMethod != null ?
-                        string.Format(
-                            CultureInfo.CurrentCulture,
-                            Resource.UTA_CleanupMethodThrows,
-                            this.TestClassName,
-                            testCleanupMethod?.Name,
-                            realException.GetType().ToString(),
-                            StackTraceHelper.GetExceptionMessage(realException)) :
-                        string.Format(
-                            CultureInfo.CurrentCulture,
-                            Resource.UTA_CleanupMethodThrowsGeneralError,
-                            this.TestClassName,
-                            StackTraceHelper.GetExceptionMessage(realException));
-
-                    cleanupError.Append(message);
-
-                    StackTraceInformation realExceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
-                    if (realExceptionStackTraceInfo != null)
-                    {
-                        cleanupStackTrace.Append(realExceptionStackTraceInfo.ErrorStackTrace);
-                        cleanupStackTraceInfo = cleanupStackTraceInfo ?? realExceptionStackTraceInfo;
-                    }
+                    exceptionMessage = this.GetTestCleanUpExceptionMessage(testCleanupMethod, realException);
                 }
 
-                UTF.UnitTestOutcome outcome = testFailureException == null ? cleanupOutcome : UnitTestOutcomeHelper.GetMoreImportantOutcome(cleanupOutcome, result.Outcome);
+                cleanupError.Append(exceptionMessage);
+                if (realExceptionStackTraceInfo != null)
+                {
+                    cleanupStackTrace.Append(realExceptionStackTraceInfo.ErrorStackTrace);
+                    cleanupStackTraceInfo = cleanupStackTraceInfo ?? realExceptionStackTraceInfo;
+                }
+
+                UTF.UnitTestOutcome outcome = testFailureException == null ? cleanupOutcome : UnitTestOutcomeExtensions.GetMoreImportantOutcome(cleanupOutcome, result.Outcome);
                 StackTraceInformation finalStackTraceInfo = cleanupStackTraceInfo != null ?
                                 new StackTraceInformation(
                                     cleanupStackTrace.ToString(),
@@ -509,6 +474,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 result.Outcome = outcome;
                 result.TestFailureException = new TestFailedException(outcome.ToUnitTestOutcome(), cleanupError.ToString(), finalStackTraceInfo);
+            }
+        }
+
+        private string GetTestCleanUpExceptionMessage(MethodInfo testCleanupMethod, Exception exception)
+        {
+            if (testCleanupMethod != null)
+            {
+                return string.Format(
+                            CultureInfo.CurrentCulture,
+                            Resource.UTA_CleanupMethodThrows,
+                            this.TestClassName,
+                            testCleanupMethod?.Name,
+                            exception.GetType().ToString(),
+                            StackTraceHelper.GetExceptionMessage(exception));
+            }
+            else
+            {
+                return string.Format(
+                            CultureInfo.CurrentCulture,
+                            Resource.UTA_CleanupMethodThrowsGeneralError,
+                            this.TestClassName,
+                            StackTraceHelper.GetExceptionMessage(exception));
             }
         }
 
@@ -544,16 +531,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             catch (Exception ex)
             {
                 var innerException = ex.GetInnerExceptionOrDefault();
-                if (innerException is UnitTestAssertException)
-                {
-                    result.Outcome = innerException is AssertInconclusiveException
-                                         ? TestTools.UnitTesting.UnitTestOutcome.Inconclusive
-                                         : TestTools.UnitTesting.UnitTestOutcome.Failed;
+                string exceptionMessage = null;
+                StackTraceInformation exceptionStackTraceInfo = null;
+                var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
 
+                if (innerException.IsUnitTestAssertException(ref outcome, ref exceptionMessage, ref exceptionStackTraceInfo))
+                {
+                    result.Outcome = outcome;
                     result.TestFailureException = new TestFailedException(
                         UnitTestOutcome.Failed,
-                        innerException.TryGetMessage(),
-                        innerException.TryGetStackTraceInformation());
+                        exceptionMessage,
+                        exceptionStackTraceInfo);
                 }
                 else
                 {

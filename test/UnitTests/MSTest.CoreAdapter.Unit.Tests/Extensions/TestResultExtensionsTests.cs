@@ -20,60 +20,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
     public class TestResultExtensionsTests
     {
         [TestMethod]
-        public void ToUnitTestResultsForPassedTestResultsConvertsToPassedUnitTestResults()
-        {
-            var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed } };
-            var convertedResults = results.ToUnitTestResults();
-
-            Assert.AreEqual(AdapterTestOutcome.Passed, convertedResults[0].Outcome);
-        }
-
-        [TestMethod]
-        public void ToUnitTestResultsForFailedTestResultsConvertsToFailedUnitTestResults()
-        {
-            var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed } };
-            var convertedResults = results.ToUnitTestResults();
-
-            Assert.AreEqual(AdapterTestOutcome.Failed, convertedResults[0].Outcome);
-        }
-
-        [TestMethod]
-        public void ToUnitTestResultsForInProgressTestResultsConvertsToInProgressUnitTestResults()
-        {
-            var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.InProgress } };
-            var convertedResults = results.ToUnitTestResults();
-
-            Assert.AreEqual(AdapterTestOutcome.InProgress, convertedResults[0].Outcome);
-        }
-
-        [TestMethod]
-        public void ToUnitTestResultsForInconclusiveTestResultsConvertsToInconclusiveUnitTestResults()
-        {
-            var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Inconclusive } };
-            var convertedResults = results.ToUnitTestResults();
-
-            Assert.AreEqual(AdapterTestOutcome.Inconclusive, convertedResults[0].Outcome);
-        }
-
-        [TestMethod]
-        public void ToUnitTestResultsForTimeoutTestResultsConvertsToTimeoutUnitTestResults()
-        {
-            var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Timeout } };
-            var convertedResults = results.ToUnitTestResults();
-
-            Assert.AreEqual(AdapterTestOutcome.Timeout, convertedResults[0].Outcome);
-        }
-
-        [TestMethod]
-        public void ToUnitTestResultsForUnknownTestResultsConvertsToErrorUnitTestResults()
-        {
-            var results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Unknown } };
-            var convertedResults = results.ToUnitTestResults();
-
-            Assert.AreEqual(AdapterTestOutcome.Error, convertedResults[0].Outcome);
-        }
-
-        [TestMethod]
         public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithFailureOutcome()
         {
             var results = new[] { new UTF.TestResult() { TestFailureException = new Exception() } };

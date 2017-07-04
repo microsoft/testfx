@@ -81,33 +81,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
             var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.InProgress, mapInconclusiveToFailed: false);
             Assert.AreEqual(TestOutcome.None, resultOutcome);
         }
-
-        [TestMethod]
-        public void GetMoreImportantOutcomeShouldReturnFailIfTwoOutcomesAreFailedAndInconclusive()
-        {
-            var resultOutcome = UnitTestOutcomeHelper.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed, UTF.UnitTestOutcome.Inconclusive);
-            Assert.AreEqual(UTF.UnitTestOutcome.Failed, resultOutcome);
-        }
-
-        [TestMethod]
-        public void GetMoreImportantOutcomeShouldReturnInconclusiveIfTwoOutcomesArePassedAndInconclusive()
-        {
-            var resultOutcome = UnitTestOutcomeHelper.GetMoreImportantOutcome(UTF.UnitTestOutcome.Passed, UTF.UnitTestOutcome.Inconclusive);
-            Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, resultOutcome);
-        }
-
-        [TestMethod]
-        public void GetMoreImportantOutcomeShouldReturnFailedIfTwoOutcomesArePassedAndFailed()
-        {
-            var resultOutcome = UnitTestOutcomeHelper.GetMoreImportantOutcome(UTF.UnitTestOutcome.Passed, UTF.UnitTestOutcome.Failed);
-            Assert.AreEqual(UTF.UnitTestOutcome.Failed, resultOutcome);
-        }
-
-        [TestMethod]
-        public void GetMoreImportantOutcomeShouldReturnFailedIfBothOutcomesAreFailed()
-        {
-            var resultOutcome = UnitTestOutcomeHelper.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed, UTF.UnitTestOutcome.Failed);
-            Assert.AreEqual(UTF.UnitTestOutcome.Failed, resultOutcome);
-        }
     }
 }
