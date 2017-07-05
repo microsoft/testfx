@@ -357,7 +357,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             StackTraceInformation exceptionStackTraceInfo = null;
             var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
 
-            if (realException.IsUnitTestAssertException(ref outcome, ref exceptionMessage, ref exceptionStackTraceInfo))
+            if (realException.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out exceptionStackTraceInfo))
             {
                 return new TestFailedException(outcome.ToUnitTestOutcome(), exceptionMessage, exceptionStackTraceInfo, realException);
             }
@@ -450,7 +450,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 StackTraceInformation realExceptionStackTraceInfo = null;
 
                 // special case UnitTestAssertException to trim off part of the stack trace
-                if (!realException.IsUnitTestAssertException(ref cleanupOutcome, ref exceptionMessage, ref realExceptionStackTraceInfo))
+                if (!realException.TryGetUnitTestAssertException(out cleanupOutcome, out exceptionMessage, out realExceptionStackTraceInfo))
                 {
                     cleanupOutcome = UTF.UnitTestOutcome.Failed;
                     exceptionMessage = this.GetTestCleanUpExceptionMessage(testCleanupMethod, realException);
@@ -463,7 +463,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     cleanupStackTraceInfo = cleanupStackTraceInfo ?? realExceptionStackTraceInfo;
                 }
 
-                UTF.UnitTestOutcome outcome = testFailureException == null ? cleanupOutcome : UnitTestOutcomeExtensions.GetMoreImportantOutcome(cleanupOutcome, result.Outcome);
+                UTF.UnitTestOutcome outcome = testFailureException == null ? cleanupOutcome : cleanupOutcome.GetMoreImportantOutcome(result.Outcome);
                 StackTraceInformation finalStackTraceInfo = cleanupStackTraceInfo != null ?
                                 new StackTraceInformation(
                                     cleanupStackTrace.ToString(),
@@ -535,7 +535,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 StackTraceInformation exceptionStackTraceInfo = null;
                 var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
 
-                if (innerException.IsUnitTestAssertException(ref outcome, ref exceptionMessage, ref exceptionStackTraceInfo))
+                if (innerException.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out exceptionStackTraceInfo))
                 {
                     result.Outcome = outcome;
                     result.TestFailureException = new TestFailedException(

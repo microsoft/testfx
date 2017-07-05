@@ -259,10 +259,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             // Fail the current test if it was a failure.
             var realException = this.ClassInitializationException.InnerException ?? this.ClassInitializationException;
 
-            var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
+            var outcome = UnitTestOutcome.Failed;
             string errorMessage = null;
             StackTraceInformation exceptionStackTraceInfo = null;
-            if (!realException.IsUnitTestAssertException(ref outcome, ref errorMessage, ref exceptionStackTraceInfo))
+            if (!realException.TryGetUnitTestAssertException(out outcome, out errorMessage, out exceptionStackTraceInfo))
             {
                 errorMessage = string.Format(
                     CultureInfo.CurrentCulture,
@@ -273,7 +273,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     StackTraceHelper.GetExceptionMessage(realException));
             }
 
-            var testFailedException = new TestFailedException(outcome.ToUnitTestOutcome(), errorMessage, realException.TryGetStackTraceInformation());
+            var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo);
             this.ClassInitializationException = testFailedException;
 
             throw testFailedException;

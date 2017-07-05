@@ -62,11 +62,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// Checks whether exception is an Assert exception
         /// </summary>
         /// <param name="exception">An <see cref="Exception"/> instance.</param>
-        /// <param name="outcome"> Outcome depending on type of assertion.</param>
+        /// <param name="outcome"> Framework's Outcome depending on type of assertion.</param>
         /// <param name="exceptionMessage">Exception message.</param>
         /// <param name="exceptionStackTrace">StackTraceInformation for the exception</param>
         /// <returns>True, if Assert exception. False, otherwise.</returns>
-        internal static bool IsUnitTestAssertException(this Exception exception, ref UTF.UnitTestOutcome outcome, ref string exceptionMessage, ref StackTraceInformation exceptionStackTrace)
+        internal static bool TryGetUnitTestAssertException(this Exception exception, out UTF.UnitTestOutcome outcome, out string exceptionMessage, out StackTraceInformation exceptionStackTrace)
         {
             if (exception is UTF.UnitTestAssertException)
             {
@@ -77,8 +77,41 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
                 exceptionStackTrace = exception.TryGetStackTraceInformation();
                 return true;
             }
+            else
+            {
+                outcome = UTF.UnitTestOutcome.Failed;
+                exceptionMessage = null;
+                exceptionStackTrace = null;
+                return false;
+            }
+        }
 
-            return false;
+        /// <summary>
+        /// Checks whether exception is an Assert exception
+        /// </summary>
+        /// <param name="exception">An <see cref="Exception"/> instance.</param>
+        /// <param name="outcome"> Adapter's Outcome depending on type of assertion.</param>
+        /// <param name="exceptionMessage">Exception message.</param>
+        /// <param name="exceptionStackTrace">StackTraceInformation for the exception</param>
+        /// <returns>True, if Assert exception. False, otherwise.</returns>
+        internal static bool TryGetUnitTestAssertException(this Exception exception, out UnitTestOutcome outcome, out string exceptionMessage, out StackTraceInformation exceptionStackTrace)
+        {
+            if (exception is UTF.UnitTestAssertException)
+            {
+                outcome = exception is UTF.AssertInconclusiveException ?
+                            UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
+
+                exceptionMessage = exception.TryGetMessage();
+                exceptionStackTrace = exception.TryGetStackTraceInformation();
+                return true;
+            }
+            else
+            {
+                outcome = UnitTestOutcome.Failed;
+                exceptionMessage = null;
+                exceptionStackTrace = null;
+                return false;
+            }
         }
 
         /// <summary>
