@@ -118,13 +118,19 @@ function Locate-VsInstallPath($hasVsixExtension = "false") {
    Write-Verbose "VSInstallation requirements : $requiredPackageIds"
 
    Add-Type -path $locateVsApi
-
    try
    {
-    $vsInstallPath = [LocateVS.Instance]::GetInstallPath("15.3", $requiredPackageIds)
-   } catch [Exception] {
-    $vsInstallPath = [LocateVS.Instance]::GetInstallPath($msbuildVersion, $requiredPackageIds)
-  }
+		try
+		{	
+			$vsInstallPath = [LocateVS.Instance]::GetInstallPath("15.3", $requiredPackageIds)
+		} catch [Exception] {
+			$vsInstallPath = [LocateVS.Instance]::GetInstallPath($msbuildVersion, $requiredPackageIds)
+		}
+    }catch [System.Management.Automation.MethodInvocationException]
+	{
+      Write-Error "Failed to find VS installation with requirements : $requiredPackageIds"
+    }
+
 
    Write-Verbose "VSInstallPath is : $vsInstallPath"
    return Resolve-Path -path $vsInstallPath
