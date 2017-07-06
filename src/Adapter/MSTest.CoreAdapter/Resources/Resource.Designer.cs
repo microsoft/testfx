@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resource {
@@ -278,11 +278,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup method {0}.{1} threw exception. {2}..
+        ///   Looks up a localized string similar to TestCleanup method {0}.{1} threw exception. {2}: {3}..
         /// </summary>
         internal static string UTA_CleanupMethodThrows {
             get {
                 return ResourceManager.GetString("UTA_CleanupMethodThrows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error calling Test Cleanup method for test class {0}: {1}.
+        /// </summary>
+        internal static string UTA_CleanupMethodThrowsGeneralError {
+            get {
+                return ResourceManager.GetString("UTA_CleanupMethodThrowsGeneralError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TestCleanup Stack Trace.
+        /// </summary>
+        internal static string UTA_CleanupStackTrace {
+            get {
+                return ResourceManager.GetString("UTA_CleanupStackTrace", resourceCulture);
             }
         }
         
