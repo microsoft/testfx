@@ -159,15 +159,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var outcome = UnitTestOutcome.Failed;
             string errorMessage = null;
             StackTraceInformation stackTraceInfo = null;
-            if (realException is UnitTestAssertException)
-            {
-                outcome = realException is AssertInconclusiveException ?
-                            UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
-
-                errorMessage = realException.TryGetMessage();
-                stackTraceInfo = realException.TryGetStackTraceInformation();
-            }
-            else
+            if (!realException.TryGetUnitTestAssertException(out outcome, out errorMessage, out stackTraceInfo))
             {
                 var exception = realException.GetType().ToString();
                 var message = StackTraceHelper.GetExceptionMessage(realException);
