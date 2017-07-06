@@ -16,7 +16,7 @@ namespace MSTestv2IntelliTestExtension
     /// </summary>
     public class MSTestv2TestFrameworkPackageAttribute : PexPackageAttributeBase
     {
-        public override string Name => "MSTestv2TestFrameworkPackage";
+        public override string Name => nameof(MSTestv2TestFrameworkPackage);
 
         protected override void Initialize(IEngine engine)
         {
