@@ -111,7 +111,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             string runSettingxml =
             @"<RunSettings>
                 <RunConfiguration>
-                    <DesignMode>false</DesignMode>
+                    <CollectSourceInformation>false</CollectSourceInformation>
                 </RunConfiguration>
 		    </RunSettings>";
             this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);

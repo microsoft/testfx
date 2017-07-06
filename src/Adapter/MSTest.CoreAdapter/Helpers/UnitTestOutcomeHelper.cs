@@ -6,6 +6,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+    using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
     internal static class UnitTestOutcomeHelper
     {
         /// <summary>
