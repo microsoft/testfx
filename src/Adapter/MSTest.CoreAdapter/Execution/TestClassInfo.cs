@@ -271,6 +271,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     this.ClassInitializeMethod.Name,
                     realException.GetType().ToString(),
                     StackTraceHelper.GetExceptionMessage(realException));
+
+                exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
             }
 
             var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo);

@@ -180,7 +180,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             string exceptionMessage = null;
             StackTraceInformation stackTraceInfo = null;
 
-            Assert.IsTrue(exception.IsUnitTestAssertException(ref outcome, ref exceptionMessage, ref stackTraceInfo));
+            Assert.IsTrue(exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo));
         }
 
         [TestMethod]
@@ -191,7 +191,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             string exceptionMessage = null;
             StackTraceInformation stackTraceInfo = null;
 
-            Assert.IsFalse(exception.IsUnitTestAssertException(ref outcome, ref exceptionMessage, ref stackTraceInfo));
+            Assert.IsFalse(exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo));
         }
 
         [TestMethod]
@@ -202,7 +202,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             string exceptionMessage = null;
             StackTraceInformation stackTraceInfo = null;
 
-            exception.IsUnitTestAssertException(ref outcome, ref exceptionMessage, ref stackTraceInfo);
+            exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo);
 
             Assert.AreEqual(outcome, UTF.UnitTestOutcome.Inconclusive);
             Assert.AreEqual(exceptionMessage, "Dummy Message");
@@ -216,7 +216,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             string exceptionMessage = null;
             StackTraceInformation stackTraceInfo = null;
 
-            exception.IsUnitTestAssertException(ref outcome, ref exceptionMessage, ref stackTraceInfo);
+            exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo);
 
             Assert.AreEqual(outcome, UTF.UnitTestOutcome.Failed);
             Assert.AreEqual(exceptionMessage, "Dummy Message");

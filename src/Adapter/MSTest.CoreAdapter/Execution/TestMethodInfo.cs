@@ -454,6 +454,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 {
                     cleanupOutcome = UTF.UnitTestOutcome.Failed;
                     exceptionMessage = this.GetTestCleanUpExceptionMessage(testCleanupMethod, realException);
+                    realExceptionStackTraceInfo = realException.TryGetStackTraceInformation();
                 }
 
                 cleanupError.Append(exceptionMessage);
