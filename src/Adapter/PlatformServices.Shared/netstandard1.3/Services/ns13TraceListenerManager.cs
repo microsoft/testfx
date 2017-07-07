@@ -48,6 +48,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="traceListener">The trace listener instance.</param>
         public void Add(ITraceListener traceListener)
         {
+            // NOTE: Listeners will not get Debug events in dotnet core due to platform limitation.
             Trace.Listeners.Add(traceListener as TextWriterTraceListener);
         }
 
