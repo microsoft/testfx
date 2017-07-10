@@ -49,6 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public void Add(ITraceListener traceListener)
         {
             // NOTE: Listeners will not get Debug events in dotnet core due to platform limitation.
+            // Refer https://github.com/Microsoft/testfx/pull/218 for more details.
             Trace.Listeners.Add(traceListener as TextWriterTraceListener);
         }
 
