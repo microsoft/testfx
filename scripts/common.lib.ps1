@@ -8,7 +8,7 @@
 #
 $global:msbuildVersion = "15.0"
 $global:nugetVersion = "3.6.0-beta1"
-$global:locateVsApiVersion = "0.2.4-beta"
+$global:vswhereVersion = "2.0.2"
 $global:nugetUrl = "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/NuGet.exe"
 
 #
@@ -53,7 +53,7 @@ function Locate-MSBuild($hasVsixExtension = "false") {
 }
 
 function Locate-MSBuildPath($hasVsixExtension = "false") {
-  $vsInstallPath = Locate-VsInstallPath
+  $vsInstallPath = Locate-VsInstallPath -hasVsixExtension $hasVsixExtension
   $msbuildPath = Join-Path -path $vsInstallPath -childPath "MSBuild\$msbuildVersion\Bin"
   return Resolve-Path -path $msbuildPath
 }
@@ -103,30 +103,36 @@ function Locate-PackagesPath {
 }
 
 function Locate-VsWhere {
-	$nuget = Locate-NuGet
+	$packagesPath = Locate-PackagesPath 
 	
-	Write-Verbose "$nuget install vswhere -OutputDirectory $env:TF_ROOT_DIR -ExcludeVersion | Out-Null"
-	& $nuget install vswhere -OutputDirectory $env:TF_ROOT_DIR -ExcludeVersion | Out-Null
-	
-	$vswhere = Join-Path -path $env:TF_ROOT_DIR -childPath "vswhere\tools\vswhere.exe"
+	$vswhere = Join-Path -path $packagesPath -childPath "vswhere.$vswhereVersion\tools\vswhere.exe"
 	
 	Write-Verbose "vswhere location is : $vswhere"
 	return $vswhere
 }
 
-function Locate-VsInstallPath{
+function Locate-VsInstallPath($hasVsixExtension ="false"){
 	$vswhere = Locate-VsWhere
+	$requiredPackageIds = @()
 	
-	Write-Verbose "$vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath"
+	$requiredPackageIds += "Microsoft.Component.MSBuild" 
+	$requiredPackageIds += "Microsoft.Net.Component.4.6.TargetingPack"
+	
+	if($hasVsixExtension -eq 'true')
+	{
+		$requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK" 
+	}
+	
+	Write-Verbose "$vswhere -latest -products * -requires $requiredPackageIds -property installationPath"
 	try
 	{
-		$vsInstallPath =  & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
-    }catch [System.Management.Automation.MethodInvocationException]
+		$vsInstallPath =  & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
+	}catch [System.Management.Automation.MethodInvocationException]
 	{
-      Write-Error "Failed to find VS installation."
-    }
+		Write-Error "Failed to find VS installation with requirements : $requiredPackageIds."
+	}
 	
-   Write-Verbose "VSInstallPath is : $vsInstallPath"
+	Write-Verbose "VSInstallPath is : $vsInstallPath"
 	return Resolve-Path -path $vsInstallPath
 }
 
