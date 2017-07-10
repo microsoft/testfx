@@ -538,7 +538,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, false);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
         }
 
         [TestMethod]
@@ -549,7 +549,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, false);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
         }
 
         [TestMethod]
@@ -561,7 +561,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, false);
+            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
         }
 
         [TestMethod]

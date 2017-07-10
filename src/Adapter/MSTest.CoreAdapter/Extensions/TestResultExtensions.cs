@@ -21,35 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             for (int i = 0; i < testResults.Length; ++i)
             {
                 UnitTestResult unitTestResult = null;
-                UnitTestOutcome outcome = UnitTestOutcome.Passed;
-
-                switch (testResults[i].Outcome)
-                {
-                    case UTF.UnitTestOutcome.Failed:
-                        outcome = UnitTestOutcome.Failed;
-                        break;
-
-                    case UTF.UnitTestOutcome.Inconclusive:
-                        outcome = UnitTestOutcome.Inconclusive;
-                        break;
-
-                    case UTF.UnitTestOutcome.InProgress:
-                        outcome = UnitTestOutcome.InProgress;
-                        break;
-
-                    case UTF.UnitTestOutcome.Passed:
-                        outcome = UnitTestOutcome.Passed;
-                        break;
-
-                    case UTF.UnitTestOutcome.Timeout:
-                        outcome = UnitTestOutcome.Timeout;
-                        break;
-
-                    case UTF.UnitTestOutcome.Unknown:
-                    default:
-                        outcome = UnitTestOutcome.Error;
-                        break;
-                }
+                UnitTestOutcome outcome = testResults[i].Outcome.ToUnitTestOutcome();
 
                 if (testResults[i].TestFailureException != null)
                 {

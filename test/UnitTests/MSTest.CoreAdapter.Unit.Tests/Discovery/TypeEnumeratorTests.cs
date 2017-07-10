@@ -111,7 +111,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethod]
-        public void GetTestsShouldNotReturnBaseTestMethodsFromAnotherAssemblyByDefault()
+        public void GetTestsShouldReturnBaseTestMethodsFromAnotherAssemblyByDefault()
         {
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: false);
 
@@ -121,8 +121,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             Assert.IsNotNull(tests);
             Assert.IsTrue(
-                tests.All(t => t.TestMethod.Name != "BaseTestMethod"),
-                "DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should not be discovered by default.");
+                tests.Any(t => t.TestMethod.Name == "BaseTestMethod"),
+                "DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should be discovered by default.");
         }
 
         [TestMethod]
