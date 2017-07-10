@@ -127,7 +127,7 @@ namespace MSTestv2IntelliTestExtension
             {
                 if (this.expectedExceptionAttribute == null)
                 {
-                    this.expectedExceptionAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ExpectedExceptionAttribute");
+                    this.expectedExceptionAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ExpectedException");
                 }
 
                 return this.expectedExceptionAttribute;
@@ -144,7 +144,7 @@ namespace MSTestv2IntelliTestExtension
             {
                 if (this.assemblySetUpAttribute == null)
                 {
-                    this.assemblySetUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("AssemblyInitializeAttribute");
+                    this.assemblySetUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("AssemblyInitialize");
                 }
 
                 return this.assemblySetUpAttribute;
@@ -161,7 +161,7 @@ namespace MSTestv2IntelliTestExtension
             {
                 if (this.assemblyTearDownAttribute == null)
                 {
-                    this.assemblyTearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("AssemblyCleanupAttribute");
+                    this.assemblyTearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("AssemblyCleanup");
                 }
 
                 return this.assemblyTearDownAttribute;
@@ -189,7 +189,7 @@ namespace MSTestv2IntelliTestExtension
             {
                 if (this.fixtureAttribute == null)
                 {
-                    this.fixtureAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestClassAttribute");
+                    this.fixtureAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestClass");
                 }
 
                 return this.fixtureAttribute;
@@ -206,7 +206,7 @@ namespace MSTestv2IntelliTestExtension
             {
                 if (this.fixtureSetUpAttribute == null)
                 {
-                    this.fixtureSetUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ClassInitializeAttribute");
+                    this.fixtureSetUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ClassInitialize");
                 }
 
                 return this.fixtureSetUpAttribute;
@@ -223,7 +223,7 @@ namespace MSTestv2IntelliTestExtension
             {
                 if (this.fixtureTearDownAttribute == null)
                 {
-                    this.fixtureTearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ClassCleanupAttribute");
+                    this.fixtureTearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("ClassCleanup");
                 }
 
                 return this.fixtureTearDownAttribute;
@@ -240,7 +240,7 @@ namespace MSTestv2IntelliTestExtension
             {
                 if (this.setUpAttribute == null)
                 {
-                    this.setUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestInitializeAttribute");
+                    this.setUpAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestInitialize");
                 }
 
                 return this.setUpAttribute;
@@ -257,7 +257,7 @@ namespace MSTestv2IntelliTestExtension
             {
                 if (this.testAttribute == null)
                 {
-                    this.testAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestMethodAttribute");
+                    this.testAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestMethod");
                 }
 
                 return this.testAttribute;
@@ -274,7 +274,7 @@ namespace MSTestv2IntelliTestExtension
             {
                 if (this.tearDownAttribute == null)
                 {
-                    this.tearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestCleanupAttribute");
+                    this.tearDownAttribute = MSTestv2TestFrameworkMetadata.AttributeName("TestCleanup");
                 }
 
                 return this.tearDownAttribute;
@@ -291,7 +291,7 @@ namespace MSTestv2IntelliTestExtension
             {
                 if (this.ignoreAttribute == null)
                 {
-                    this.ignoreAttribute = MSTestv2TestFrameworkMetadata.AttributeName("IgnoreAttribute");
+                    this.ignoreAttribute = MSTestv2TestFrameworkMetadata.AttributeName("Ignore");
                 }
 
                 return this.ignoreAttribute;
@@ -455,13 +455,13 @@ namespace MSTestv2IntelliTestExtension
         protected override IEnumerable<TypeName> GetSatelliteAttributeTypes()
         {
             return Indexable.Array<TypeName>(
-                    MSTestv2TestFrameworkMetadata.AttributeName("DeploymentItemAttribute"),
-                    MSTestv2TestFrameworkMetadata.AttributeName("OwnerAttribute"),
-                    MSTestv2TestFrameworkMetadata.AttributeName("PriorityAttribute"),
-                    MSTestv2TestFrameworkMetadata.AttributeName("TestPropertyAttribute"),
-                    MSTestv2TestFrameworkMetadata.AttributeName("TimeoutAttribute"),
-                    MSTestv2TestFrameworkMetadata.AttributeName("WorkItemAttribute"),
-                    MSTestv2TestFrameworkMetadata.AttributeName("CssIterationAttribute"),
+                    MSTestv2TestFrameworkMetadata.AttributeName("DeploymentItem"),
+                    MSTestv2TestFrameworkMetadata.AttributeName("Owner"),
+                    MSTestv2TestFrameworkMetadata.AttributeName("Priority"),
+                    MSTestv2TestFrameworkMetadata.AttributeName("TestProperty"),
+                    MSTestv2TestFrameworkMetadata.AttributeName("Timeout"),
+                    MSTestv2TestFrameworkMetadata.AttributeName("WorkItem"),
+                    MSTestv2TestFrameworkMetadata.AttributeName("CssIteration"),
                     MSTestv2TestFrameworkMetadata.AttributeName("CssProjectStructureAttributeCtor"));
         }
 
