@@ -4,15 +4,19 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 {
     extern alias FrameworkV1;
+    extern alias FrameworkV2;
 
     using System;
+    using System.Text;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using ExpectedException = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute;
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// Tests for <see cref="ExceptionExtensions"/> class.
@@ -165,5 +169,76 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         }
 
         #endregion
+
+        #region IsUnitTestAssertException scenarios
+
+        [TestMethod]
+        public void IsUnitTestAssertExceptionReturnsTrueIfExceptionIsAssertException()
+        {
+            var exception = new UTF.AssertInconclusiveException();
+            UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
+            string exceptionMessage = null;
+            StackTraceInformation stackTraceInfo = null;
+
+            Assert.IsTrue(exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo));
+        }
+
+        [TestMethod]
+        public void IsUnitTestAssertExceptionReturnsFalseIfExceptionIsNotAssertException()
+        {
+            var exception = new NotImplementedException();
+            UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
+            string exceptionMessage = null;
+            StackTraceInformation stackTraceInfo = null;
+
+            Assert.IsFalse(exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo));
+        }
+
+        [TestMethod]
+        public void IsUnitTestAssertExceptionSetsOutcomeAsInconclusiveIfAssertInconclusiveException()
+        {
+            var exception = new UTF.AssertInconclusiveException("Dummy Message", new NotImplementedException("notImplementedException"));
+            UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
+            string exceptionMessage = null;
+            StackTraceInformation stackTraceInfo = null;
+
+            exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo);
+
+            Assert.AreEqual(outcome, UTF.UnitTestOutcome.Inconclusive);
+            Assert.AreEqual(exceptionMessage, "Dummy Message");
+        }
+
+        [TestMethod]
+        public void IsUnitTestAssertExceptionSetsOutcomeAsFailedIfAssertFailedException()
+        {
+            var exception = new UTF.AssertFailedException("Dummy Message", new NotImplementedException("notImplementedException"));
+            UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
+            string exceptionMessage = null;
+            StackTraceInformation stackTraceInfo = null;
+
+            exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo);
+
+            Assert.AreEqual(outcome, UTF.UnitTestOutcome.Failed);
+            Assert.AreEqual(exceptionMessage, "Dummy Message");
+        }
+        #endregion
+
+        #region TryGetTestFailureExceptionMessageAndStackTrace scenarios
+
+        [TestMethod]
+        public void TryGetTestFailureExceptionMessageAndStackTraceFillsInMessageAndStackTrace()
+        {
+            StringBuilder message = new StringBuilder();
+            StringBuilder stackTrace = new StringBuilder();
+            var testFailureException = new TestFailedException(UnitTestOutcome.NotFound, "DummyMessage", new StackTraceInformation("DummyStack"));
+
+            testFailureException.TryGetTestFailureExceptionMessageAndStackTrace(message, stackTrace);
+
+            StringAssert.StartsWith(message.ToString(), "DummyMessage");
+            StringAssert.StartsWith(stackTrace.ToString(), "DummyStack");
+        }
+
+        #endregion
+
     }
 }
