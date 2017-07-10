@@ -103,37 +103,37 @@ function Locate-PackagesPath {
 }
 
 function Locate-VsWhere {
-	$packagesPath = Locate-PackagesPath 
-	
-	$vswhere = Join-Path -path $packagesPath -childPath "vswhere.$vswhereVersion\tools\vswhere.exe"
-	
-	Write-Verbose "vswhere location is : $vswhere"
-	return $vswhere
+  $packagesPath = Locate-PackagesPath 
+
+  $vswhere = Join-Path -path $packagesPath -childPath "vswhere.$vswhereVersion\tools\vswhere.exe"
+
+  Write-Verbose "vswhere location is : $vswhere"
+  return $vswhere
 }
 
 function Locate-VsInstallPath($hasVsixExtension ="false"){
-	$vswhere = Locate-VsWhere
-	$requiredPackageIds = @()
-	
-	$requiredPackageIds += "Microsoft.Component.MSBuild" 
-	$requiredPackageIds += "Microsoft.Net.Component.4.6.TargetingPack"
-	
-	if($hasVsixExtension -eq 'true')
-	{
-		$requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK" 
-	}
-	
-	Write-Verbose "$vswhere -latest -products * -requires $requiredPackageIds -property installationPath"
-	try
-	{
-		$vsInstallPath =  & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
-	}catch [System.Management.Automation.MethodInvocationException]
-	{
-		Write-Error "Failed to find VS installation with requirements : $requiredPackageIds."
-	}
-	
-	Write-Verbose "VSInstallPath is : $vsInstallPath"
-	return Resolve-Path -path $vsInstallPath
+  $vswhere = Locate-VsWhere
+  $requiredPackageIds = @()
+
+  $requiredPackageIds += "Microsoft.Component.MSBuild" 
+  $requiredPackageIds += "Microsoft.Net.Component.4.6.TargetingPack"
+
+  if($hasVsixExtension -eq 'true')
+  {
+    $requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK" 
+  }
+
+  Write-Verbose "$vswhere -latest -products * -requires $requiredPackageIds -property installationPath"
+  try
+  {
+    $vsInstallPath =  & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
+  }catch [System.Management.Automation.MethodInvocationException]
+  {
+    Write-Error "Failed to find VS installation with requirements : $requiredPackageIds."
+  }
+
+  Write-Verbose "VSInstallPath is : $vsInstallPath"
+  return Resolve-Path -path $vsInstallPath
 }
 
 
