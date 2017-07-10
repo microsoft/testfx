@@ -30,17 +30,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         #region Test Property registration
 
-        internal static readonly TestProperty TestClassNameProperty = TestProperty.Register("MSTestDiscovererv2.TestClassName", TestClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
+        internal static readonly TestProperty TestClassNameProperty = TestProperty.Register("MSTestDiscoverer.TestClassName", TestClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
-        internal static readonly TestProperty AsyncTestProperty = TestProperty.Register("MSTestDiscovererv2.IsAsync", IsAsyncLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
+        internal static readonly TestProperty AsyncTestProperty = TestProperty.Register("MSTestDiscoverer.IsAsync", IsAsyncLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
 
 #pragma warning disable CS0618 // Type or member is obsolete
-        internal static readonly TestProperty TestCategoryProperty = TestProperty.Register("MSTestDiscovererv2.TestCategory", TestCategoryLabel, typeof(string[]), TestPropertyAttributes.Hidden | TestPropertyAttributes.Trait, typeof(TestCase));
+        internal static readonly TestProperty TestCategoryProperty = TestProperty.Register("MSTestDiscoverer.TestCategory", TestCategoryLabel, typeof(string[]), TestPropertyAttributes.Hidden | TestPropertyAttributes.Trait, typeof(TestCase));
 #pragma warning restore CS0618 // Type or member is obsolete
 
-        internal static readonly TestProperty PriorityProperty = TestProperty.Register("MSTestDiscovererv2.Priority", PriorityLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
+        internal static readonly TestProperty PriorityProperty = TestProperty.Register("MSTestDiscoverer.Priority", PriorityLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
 
-        internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register("MSTestDiscoverer2.DeploymentItems", DeploymentItemsLabel, typeof(KeyValuePair<string, string>[]), TestPropertyAttributes.Hidden, typeof(TestCase));
+        internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register("MSTestDiscoverer.DeploymentItems", DeploymentItemsLabel, typeof(KeyValuePair<string, string>[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
         #endregion
 
