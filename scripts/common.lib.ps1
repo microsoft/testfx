@@ -8,7 +8,7 @@
 #
 $global:msbuildVersion = "15.0"
 $global:nugetVersion = "3.6.0-beta1"
-$global:locateVsApiVersion = "0.2.4-beta"
+$global:vswhereVersion = "2.0.2"
 $global:nugetUrl = "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/NuGet.exe"
 
 #
@@ -102,46 +102,40 @@ function Locate-PackagesPath {
   return Resolve-Path -path $packagesPath
 }
 
-function Locate-VsInstallPath($hasVsixExtension = "false") {
-   $locateVsApi = Locate-LocateVsApi
-   $requiredPackageIds = @()
+function Locate-VsWhere {
+  $packagesPath = Locate-PackagesPath 
 
-   $requiredPackageIds += "Microsoft.Component.MSBuild"
-   $requiredPackageIds += "Microsoft.Net.Component.4.6.TargetingPack"
-   $requiredPackageIds += "Microsoft.VisualStudio.Component.Roslyn.Compiler"
-   
-   if($hasVsixExtension -eq 'true')
-   {
-     $requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK"
-   }
-   
-   Write-Verbose "VSInstallation requirements : $requiredPackageIds"
+  $vswhere = Join-Path -path $packagesPath -childPath "vswhere.$vswhereVersion\tools\vswhere.exe"
 
-   Add-Type -path $locateVsApi
-
-   Try
-   {
-     $vsInstallPath = [LocateVS.Instance]::GetInstallPath($msbuildVersion, $requiredPackageIds)
-   }
-   Catch [System.Management.Automation.MethodInvocationException]
-   {
-      Write-Error "Failed to find VS installation with requirements : $requiredPackageIds"
-   }
-
-   Write-Verbose "VSInstallPath is : $vsInstallPath"
-   return Resolve-Path -path $vsInstallPath
+  Write-Verbose "vswhere location is : $vswhere"
+  return $vswhere
 }
 
-function Locate-LocateVsApi {
-  $packagesPath = Locate-PackagesPath
-  $locateVsApi = Join-Path -path $packagesPath -ChildPath "RoslynTools.Microsoft.LocateVS.$locateVsApiVersion\tools\LocateVS.dll"
+function Locate-VsInstallPath($hasVsixExtension ="false"){
+  $vswhere = Locate-VsWhere
+  $requiredPackageIds = @()
 
-  if (!(Test-Path -path $locateVsApi)) {
-    throw "The specified LocateVS API version ($locateVsApiVersion) could not be located."
+  $requiredPackageIds += "Microsoft.Component.MSBuild" 
+  $requiredPackageIds += "Microsoft.Net.Component.4.6.TargetingPack"
+
+  if($hasVsixExtension -eq 'true')
+  {
+    $requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK" 
   }
 
-  return Resolve-Path -path $locateVsApi
+  Write-Verbose "$vswhere -latest -products * -requires $requiredPackageIds -property installationPath"
+  try
+  {
+    $vsInstallPath =  & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
+  }catch [System.Management.Automation.MethodInvocationException]
+  {
+    Write-Error "Failed to find VS installation with requirements : $requiredPackageIds."
+  }
+
+  Write-Verbose "VSInstallPath is : $vsInstallPath"
+  return Resolve-Path -path $vsInstallPath
 }
+
 
 function Locate-Item([string] $relativePath) {
   $rootPath = $env:TF_ROOT_DIR
