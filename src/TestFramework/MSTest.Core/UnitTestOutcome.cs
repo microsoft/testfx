@@ -48,6 +48,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Test is in an unknown state
         /// </summary>
-        Unknown
+        Unknown,
+
+        /// <summary>
+        /// Test cannot be executed.
+        /// </summary>
+        NotRunnable
     }
 }

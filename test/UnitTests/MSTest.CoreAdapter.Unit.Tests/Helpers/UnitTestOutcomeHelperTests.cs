@@ -41,10 +41,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
         }
 
         [TestMethod]
-        public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailed()
+        public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeNone()
         {
             var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, mapInconclusiveToFailed: false);
-            Assert.AreEqual(TestOutcome.Failed, resultOutcome);
+            Assert.AreEqual(TestOutcome.None, resultOutcome);
         }
 
         [TestMethod]

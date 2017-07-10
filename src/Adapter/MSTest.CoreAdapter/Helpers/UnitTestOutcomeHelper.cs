@@ -25,12 +25,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
                 case UnitTestOutcome.Failed:
                 case UnitTestOutcome.Error:
-                case UnitTestOutcome.NotRunnable:
                 case UnitTestOutcome.Timeout:
                     return TestOutcome.Failed;
 
+                case UnitTestOutcome.NotRunnable:
+                    return TestOutcome.None;
+
                 case UnitTestOutcome.Ignored:
                     return TestOutcome.Skipped;
+
                 case UnitTestOutcome.Inconclusive:
                     {
                         if (mapInconclusiveToFailed)

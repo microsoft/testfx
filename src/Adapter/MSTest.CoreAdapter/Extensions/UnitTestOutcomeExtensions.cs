@@ -40,6 +40,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
                     outcome = UnitTestOutcome.Timeout;
                     break;
 
+                case UTF.UnitTestOutcome.NotRunnable:
+                    outcome = UnitTestOutcome.NotRunnable;
+                    break;
+
                 case UTF.UnitTestOutcome.Unknown:
                 default:
                     outcome = UnitTestOutcome.Error;
