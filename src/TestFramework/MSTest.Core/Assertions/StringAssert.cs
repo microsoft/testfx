@@ -10,11 +10,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// <summary>
     /// The string assert.
     /// </summary>
-    public class StringAssert
+    public sealed class StringAssert
     {
         private static StringAssert that;
 
         #region Singleton constructor
+
+        private StringAssert()
+        {
+        }
 
         /// <summary>
         /// Gets the singleton instance of the CollectionAssert functionality.

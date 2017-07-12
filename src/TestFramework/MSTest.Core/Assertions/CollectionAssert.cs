@@ -15,11 +15,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// with collections within unit tests. If the condition being tested is not
     /// met, an exception is thrown.
     /// </summary>
-    public class CollectionAssert
+    public sealed class CollectionAssert
     {
         private static CollectionAssert that;
 
         #region Singleton constructor
+
+        private CollectionAssert()
+        {
+        }
 
         /// <summary>
         /// Gets the singleton instance of the CollectionAssert functionality.
