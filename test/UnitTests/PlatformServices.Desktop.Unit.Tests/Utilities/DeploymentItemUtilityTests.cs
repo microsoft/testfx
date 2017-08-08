@@ -31,7 +31,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
     public class DeploymentItemUtilityTests
     {
         internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register(
-            "MSTestDiscoverer2.DeploymentItems",
+            "MSTestDiscoverer.DeploymentItems",
             "DeploymentItems",
             typeof(KeyValuePair<string, string>[]),
             TestPropertyAttributes.Hidden,
