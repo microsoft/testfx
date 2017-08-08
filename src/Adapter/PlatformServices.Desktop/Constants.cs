@@ -27,7 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         public const string PrivateAssemblies = "PrivateAssemblies";
 
-        public static readonly TestProperty DeploymentItemsProperty = TestProperty.Register("MSTestDiscoverer2.DeploymentItems", DeploymentItemsLabel, typeof(KeyValuePair<string, string>[]), TestPropertyAttributes.Hidden, typeof(TestCase));
+        public static readonly TestProperty DeploymentItemsProperty = TestProperty.Register("MSTestDiscoverer.DeploymentItems", DeploymentItemsLabel, typeof(KeyValuePair<string, string>[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
         internal const string DllExtension = ".dll";
         internal const string ExeExtension = ".exe";
