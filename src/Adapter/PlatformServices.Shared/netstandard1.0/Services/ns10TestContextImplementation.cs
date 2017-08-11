@@ -248,47 +248,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             sb.Remove(0, sb.Length);
         }
 
+        public void SetDataRow(object dataRow)
+        {
+            // Do nothing.
+        }
+
+        public void SetDataConnection(object dbConnection)
+        {
+            // Do nothing.
+        }
+
         #endregion
-
-        bool ITestContext.TryGetPropertyValue(string propertyName, out object propertyValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        void ITestContext.AddProperty(string propertyName, string propertyValue)
-        {
-            throw new NotImplementedException();
-        }
-
-        void ITestContext.SetOutcome(UTF.UnitTestOutcome outcome)
-        {
-            throw new NotImplementedException();
-        }
-
-        void ITestContext.SetDataRow(object dataRow)
-        {
-            throw new NotImplementedException();
-        }
-
-        void ITestContext.SetDataConnection(object dbConnection)
-        {
-            throw new NotImplementedException();
-        }
-
-        IList<string> ITestContext.GetResultFiles()
-        {
-            throw new NotImplementedException();
-        }
-
-        string ITestContext.GetDiagnosticMessages()
-        {
-            throw new NotImplementedException();
-        }
-
-        void ITestContext.ClearDiagnosticMessages()
-        {
-            throw new NotImplementedException();
-        }
 
         /// <summary>
         /// Helper to safely fetch a property value.
