@@ -131,8 +131,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        UTF.TestContext ITestContext.Context => throw new NotImplementedException();
-
         /// <summary>
         /// Set the unit-test outcome
         /// </summary>
