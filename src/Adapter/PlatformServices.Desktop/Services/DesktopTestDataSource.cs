@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-
+    using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -32,49 +32,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </remarks>
     public class TestDataSource : ITestDataSource
     {
-        /// <summary>
-        /// Gets a value indicating whether testMethod has data driven tests.
-        /// </summary>
-        /// <param name="testMethodInfo">
-        /// The test Method Info.
-        /// </param>
-        /// <returns>
-        /// True of it is a data driven test method. False otherwise.
-        /// </returns>
-        public bool HasDataDrivenTests(UTF.ITestMethod testMethodInfo)
+        public IEnumerable<object> GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
         {
-            UTF.DataSourceAttribute[] dataSourceAttribute = testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
-            if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Run a data driven test. Test case is executed once for each data row.
-        /// </summary>
-        /// <param name="testContext">
-        /// The test Context.
-        /// </param>
-        /// <param name="testMethodInfo">
-        /// The test Method Info.
-        /// </param>
-        /// <param name="testMethod">
-        /// The test Method.
-        /// </param>
-        /// <param name="executor">
-        /// The default test method executor.
-        /// </param>
-        /// <returns>
-        /// The results after running all the data driven tests.
-        /// </returns>
-        public UTF.TestResult[] RunDataDrivenTest(UTF.TestContext testContext, UTF.ITestMethod testMethodInfo, ITestMethod testMethod, UTF.TestMethodAttribute executor)
-        {
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
-
             // Figure out where (as well as the current directory) we could look for data files
             // for unit tests this means looking at the the location of the test itself
             List<string> dataFolders = new List<string>();
@@ -90,92 +49,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             string tableName;
             UTF.DataAccessMethod dataAccessMethod;
 
-            try
-            {
-                this.GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
-            }
-            catch (Exception ex)
-            {
-                watch.Stop();
-                var result = new UTF.TestResult();
-                result.Outcome = UTF.UnitTestOutcome.Failed;
-                result.TestFailureException = ex;
-                result.Duration = watch.Elapsed;
-                return new UTF.TestResult[] { result };
-            }
+            this.GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
 
-            try
+            using (TestDataConnection connection = factory.Create(providerNameInvariant, connectionString, dataFolders))
             {
-                using (TestDataConnection connection = factory.Create(providerNameInvariant, connectionString, dataFolders))
+                DataTable table = connection.ReadTable(tableName, null);
+                DataRow[] rows = table.Select();
+                Debug.Assert(rows != null, "rows should not be null.");
+
+                // check for rowlength is 0
+                if (rows.Length == 0)
                 {
-                    DataTable table = connection.ReadTable(tableName, null);
-                    DataRow[] rows = table.Select();
-                    Debug.Assert(rows != null, "rows should not be null.");
-
-                    if (rows.Length == 0)
-                    {
-                        watch.Stop();
-                        var inconclusiveResult = new UTF.TestResult();
-                        inconclusiveResult.Outcome = UTF.UnitTestOutcome.Inconclusive;
-                        inconclusiveResult.Duration = watch.Elapsed;
-                        return new UTF.TestResult[] { inconclusiveResult };
-                    }
-
-                    IEnumerable<int> permutation = this.GetPermutation(dataAccessMethod, rows.Length);
-                    TestContextImplementation testContextImpl = testContext as TestContextImplementation;
-
-                    try
-                    {
-                        testContextImpl.SetDataConnection(connection.Connection);
-
-                        // For each data row...
-                        foreach (int rowIndex in permutation)
-                        {
-                            watch.Reset();
-                            watch.Start();
-
-                            testContextImpl.SetDataRow(rows[rowIndex]);
-
-                            UTF.TestResult[] currentResult = new UTF.TestResult[1];
-
-                            try
-                            {
-                                currentResult = executor.Execute(testMethodInfo);
-                            }
-                            catch (Exception ex)
-                            {
-                                currentResult[0].Outcome = UTF.UnitTestOutcome.Failed;
-
-                                // Trace whole exception but do not show call stack to the user, only show message.
-                                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, "Unit Test Adapter threw exception: {0}", ex);
-                            }
-
-                            currentResult[0].DatarowIndex = rowIndex;
-
-                            watch.Stop();
-                            currentResult[0].Duration = watch.Elapsed;
-
-                            Debug.Assert(currentResult[0] != null, "current result should not be null.");
-                            dataRowResults.Add(currentResult[0]);
-                        }
-                    }
-                    finally
-                    {
-                        testContextImpl.SetDataConnection(null);
-                        testContextImpl.SetDataRow(null);
-                    }
+                    return null;
                 }
-            }
-            catch (Exception ex)
-            {
-                string message = ExceptionExtensions.GetExceptionMessage(ex);
-                UTF.TestResult failedResult = new UTF.TestResult();
-                failedResult.Outcome = UTF.UnitTestOutcome.Error;
-                failedResult.TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorDataConnectionFailed, ex.Message), ex);
-                return new UTF.TestResult[] { failedResult };
-            }
 
-            return dataRowResults.ToArray();
+                IEnumerable<int> permutation = this.GetPermutation(dataAccessMethod, rows.Length);
+
+                // TODO search for a better way if possible
+                object[] rowsAfterPermutation = new object[rows.Length];
+                int index = 0;
+                foreach (int rowIndex in permutation)
+                {
+                    rowsAfterPermutation[index++] = rows[rowIndex];
+                }
+
+                testContext.SetDataConnection(connection.Connection);
+                return rowsAfterPermutation;
+            }
         }
 
         /// <summary>

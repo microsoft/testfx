@@ -38,6 +38,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         void SetOutcome(UnitTestOutcome outcome);
 
         /// <summary>
+        /// Set data row for particular run of TestMethod.
+        /// </summary>
+        /// <param name="dataRow">data row</param>
+        void SetDataRow(object dataRow);
+
+        /// <summary>
+        /// Set connection for TestContext
+        /// </summary>
+        /// <param name="dbConnection">db Connection.</param>
+        void SetDataConnection(object dbConnection);
+
+        /// <summary>
         /// Gets the attached Result files
         /// </summary>
         /// <returns>

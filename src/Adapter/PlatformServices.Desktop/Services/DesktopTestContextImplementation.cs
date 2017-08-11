@@ -307,6 +307,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
+        /// Set data row for particular run of TestMethod.
+        /// </summary>
+        /// <param name="dataRow">data row.</param>
+        public void SetDataRow(object dataRow)
+        {
+            this.dataRow = dataRow as DataRow;
+        }
+
+        /// <summary>
+        /// Set connection for TestContext
+        /// </summary>
+        /// <param name="dbConnection">db Connection.</param>
+        public void SetDataConnection(object dbConnection)
+        {
+            this.dbConnection = dbConnection as DbConnection;
+        }
+
+        /// <summary>
         /// Returns whether property with parameter name is present or not
         /// </summary>
         /// <param name="propertyName">The property name.</param>
@@ -373,28 +391,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             var sb = this.stringWriter.GetStringBuilder();
             sb.Remove(0, sb.Length);
-        }
-
-        #endregion
-
-        #region internal methods
-
-        /// <summary>
-        /// Set connection for TestContext
-        /// </summary>
-        /// <param name="dbConnection">db Connection.</param>
-        internal void SetDataConnection(DbConnection dbConnection)
-        {
-            this.dbConnection = dbConnection;
-        }
-
-        /// <summary>
-        /// Set data row for particular run of Windows Store app.
-        /// </summary>
-        /// <param name="dataRow">data row</param>
-        internal void SetDataRow(DataRow dataRow)
-        {
-            this.dataRow = dataRow;
         }
 
         #endregion
