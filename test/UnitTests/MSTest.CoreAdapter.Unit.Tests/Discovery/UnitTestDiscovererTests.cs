@@ -58,7 +58,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.test = null;
             this.testElements = null;
             PlatformServiceProvider.Instance = null;
-            MSTestSettings.PopulateSettings(new Mock<IDiscoveryContext>().Object);
+            MSTestSettings.Reset();
         }
 
         [TestMethodV1]
