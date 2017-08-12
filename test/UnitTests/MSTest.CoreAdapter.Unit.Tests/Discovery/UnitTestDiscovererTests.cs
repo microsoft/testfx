@@ -58,6 +58,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.test = null;
             this.testElements = null;
             PlatformServiceProvider.Instance = null;
+            MSTestSettings.PopulateSettings(new Mock<IDiscoveryContext>().Object);
         }
 
         [TestMethodV1]
@@ -240,7 +241,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethodV1]
-        public void SendTestCasesShouldSendTestCasesWithNaigationDataForAsyncMethods()
+        public void SendTestCasesShouldSendTestCasesWithNavigationDataForAsyncMethods()
         {
             // Setup mocks.
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
