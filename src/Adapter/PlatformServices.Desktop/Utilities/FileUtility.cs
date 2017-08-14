@@ -293,9 +293,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private string GetSymbolsFileName(string path)
         {
+            Debug.Assert(!string.IsNullOrEmpty(path), "path");
+
             try
             {
-                return DiaHelper.GetSymbolsFileName(path);
+                string pdbFile = Path.ChangeExtension(path, ".pdb");
+                if (File.Exists(pdbFile))
+                {
+                    return pdbFile;
+                }
             }
             catch (Exception ex)
             {
