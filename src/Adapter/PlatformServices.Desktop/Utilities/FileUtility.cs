@@ -293,27 +293,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private string GetSymbolsFileName(string path)
         {
-            Debug.Assert(!string.IsNullOrEmpty(path), "path");
-
-            try
+            if (string.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
             {
-                string pdbFile = Path.ChangeExtension(path, ".pdb");
-                if (File.Exists(pdbFile))
-                {
-                    return pdbFile;
-                }
-            }
-            catch (Exception ex)
-            {
-                // If we can't get a pdb, it's unfortunate, but not fatal.  If
-                // anything figure out a way to add a warning to the test for the
-                // deployment.  Previously we were tracking specific exceptions,
-                // and then EqtException and ComException started getting thrown.
-                // This was breaking xcopy deployment where DIA is not installed.
                 if (EqtTrace.IsWarningEnabled)
                 {
-                    EqtTrace.Warning("Error while trying to get pdb for assembly '{0}': {1}", path, ex);
+                    EqtTrace.Warning("Path is either null or invalid. Path = '{0}'", path);
                 }
+
+                return null;
+            }
+
+            string pdbFile = Path.ChangeExtension(path, ".pdb");
+            if (File.Exists(pdbFile))
+            {
+                if (EqtTrace.IsInfoEnabled)
+                {
+                    EqtTrace.Info("Pdb file found for path '{0}'", path);
+                }
+
+                return pdbFile;
             }
 
             return null;
