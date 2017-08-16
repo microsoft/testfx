@@ -365,7 +365,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         }
 
         [TestMethod]
-        public void DeployShouldDeployPdbWithSource()
+        public void DeployShouldDeployPdbWithSourceIfPdbFileIsPresentInSourceDirectory()
         {
             TestRunDirectories testRunDirectories;
             var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out testRunDirectories);
@@ -414,6 +414,62 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                     Path.Combine(testRunDirectories.OutDirectory, pdbFile),
                     out warning),
                 Times.Once);
+        }
+
+        [TestMethod]
+        public void DeployShouldNotDeployPdbFileOfAssemblyIfPdbFileIsNotPresentInAssemblyDirectory()
+        {
+            var dependencyFile = "C:\\temp\\dependency.dll";
+
+            // Path for pdb file of dependent assembly if pdb file is present.
+            var pdbFile = Path.ChangeExtension(dependencyFile, "pdb");
+
+            TestRunDirectories testRunDirectories;
+            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out testRunDirectories);
+
+            // Setup mocks.
+            this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
+            this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
+            this.mockAssemblyUtility.Setup(
+                au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
+                .Returns(new string[] { dependencyFile });
+            this.mockAssemblyUtility.Setup(
+                au => au.GetSatelliteAssemblies(It.IsAny<string>()))
+                .Returns(new List<string> { });
+            string warning;
+            this.mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
+                .Returns(
+                    (string x, string y, string z) =>
+                    {
+                        z = string.Empty;
+                        return y;
+                    });
+
+            // Act.
+            Assert.IsTrue(
+                this.deploymentUtility.Deploy(
+                    new List<TestCase> { testCase },
+                    testCase.Source,
+                    this.mockRunContext.Object,
+                    this.mocktestExecutionRecorder.Object,
+                    ref testRunDirectories));
+
+            // Assert.
+            this.mockFileUtility.Verify(
+                fu =>
+                fu.CopyFileOverwrite(
+                    It.Is<string>(s => s.Contains(dependencyFile)),
+                    Path.Combine(testRunDirectories.OutDirectory, Path.GetFileName(dependencyFile)),
+                    out warning),
+                Times.Once);
+
+            this.mockFileUtility.Verify(
+                fu =>
+                fu.CopyFileOverwrite(
+                    It.Is<string>(s => s.Contains(pdbFile)),
+                    Path.Combine(testRunDirectories.OutDirectory, Path.GetFileName(pdbFile)),
+                    out warning),
+                Times.Never);
         }
 
         #endregion
