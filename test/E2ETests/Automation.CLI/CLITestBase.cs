@@ -18,7 +18,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         private const string TestAssetsFolder = "TestAssets";
         private const string ArtifactsFolder = "artifacts";
         private const string PackagesFolder = "packages";
-        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.15.0.1";
+        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.15.3.0";
         private const string VstestConsoleRelativePath = @"tools\net46\vstest.console.exe";
 
         private static VsTestConsoleWrapper vsTestConsoleWrapper;
