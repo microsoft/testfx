@@ -117,6 +117,57 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
             Assert.AreEqual(-1, minLineNumber);
         }
 
+        // Enable these tests when we take dependency on TpV2 object model
+        // In Tpv1 UWP Object model these below methods are not defined.
+        /*
+        [TestMethod]
+        public void CreateNavigationSessionShouldReturnDiaSession()
+        {
+            var diaSession = this.fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
+            Assert.IsNotNull(diaSession);
+        }
+
+        [TestMethod]
+        public void GetNavigationDataShouldReturnDataFromNavigationSession()
+        {
+            var diaSession = this.fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
+            int minLineNumber;
+            string fileName;
+            this.fileOperations.GetNavigationData(
+                diaSession,
+                typeof(UniversalFileOperationsTests).FullName,
+                "GetNavigationDataShouldReturnDataFromNavigationSession",
+                out minLineNumber,
+                out fileName);
+
+            Assert.AreNotEqual(-1, minLineNumber);
+            Assert.IsNotNull(fileName);
+        }
+
+        [TestMethod]
+        public void GetNavigationDataShouldNotThrowOnNullNavigationSession()
+        {
+            int minLineNumber;
+            string fileName;
+            this.fileOperations.GetNavigationData(
+                null,
+                typeof(UniversalFileOperationsTests).FullName,
+                "GetNavigationDataShouldNotThrowOnNullNavigationSession",
+                out minLineNumber,
+                out fileName);
+
+            Assert.AreEqual(-1, minLineNumber);
+            Assert.IsNull(fileName);
+        }
+
+        [TestMethod]
+        public void DisposeNavigationSessionShouldNotThrowOnNullNavigationSession()
+        {
+            // This should not throw.
+            this.fileOperations.DisposeNavigationSession(null);
+        }
+        */
+
         /// <summary>
         /// The get full file path should return assembly file name.
         /// </summary>

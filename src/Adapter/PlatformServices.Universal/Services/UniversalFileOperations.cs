@@ -6,8 +6,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System;
     using System.IO;
     using System.Reflection;
-
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
@@ -74,8 +74,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </returns>
         public object CreateNavigationSession(string source)
         {
-            // Navigation session for UWP is handled by Desktop Adapter
-            return null;
+            var messageFormatOnException =
+                string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
+
+            try
+            {
+                Assembly objectModelAssembly = Assembly.Load(new AssemblyName("Microsoft.VisualStudio.TestPlatform.ObjectModel"));
+                Type diaType = objectModelAssembly.GetType("Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaSession");
+
+                return (diaType != null) ? Activator.CreateInstance(diaType, new object[] { source }) : null;
+            }
+            catch (Exception exception)
+            {
+                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, messageFormatOnException, exception.Message);
+                return null;
+            }
         }
 
         /// <summary>
@@ -91,6 +104,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             // Initiate values and bail out.
             fileName = null;
             minLineNumber = -1;
+
+            MethodInfo methodInfo = navigationSession.GetType().GetMethod("GetNavigationData");
+            if (methodInfo != null)
+            {
+                var navigationData = methodInfo.Invoke(navigationSession, new object[] { className, methodName });
+
+                if (navigationData != null)
+                {
+                    var minLineProp = navigationData.GetType().GetProperty("MinLineNumber");
+                    var fileNameProp = navigationData.GetType().GetProperty("FileName");
+
+                    minLineNumber = (int)(minLineProp != null ? minLineProp.GetValue(navigationData) : 0);
+                    fileName = (string)(fileNameProp != null ? fileNameProp.GetValue(navigationData) : string.Empty);
+                }
+            }
         }
 
         /// <summary>
@@ -99,7 +127,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="navigationSession"> The navigation session. </param>
         public void DisposeNavigationSession(object navigationSession)
         {
-            // Do nothing.
+            MethodInfo methodInfo = navigationSession?.GetType().GetMethod("Dispose");
+            methodInfo?.Invoke(navigationSession, null);
         }
 
         /// <summary>
