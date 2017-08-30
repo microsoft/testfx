@@ -161,13 +161,16 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 	
 	if($netCoreTestContainers.Count -gt 0)
 	{
-	    if(!(dotnet vstest))
- 		{
- 			Write-Error "Unable to find dotnet vstest. Test aborted."	
-		}
+	    Try 
+        {
+            Write-Verbose "dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
+            & dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx
+        }
 
-		Write-Verbose "dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
-		& dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx 
+        Catch [System.Management.Automation.CommandNotFoundException]
+        {
+            Write-Error "Unable to find dotnet.exe. Test aborted."
+        }
 	}
 }
 
