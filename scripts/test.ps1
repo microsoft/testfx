@@ -141,7 +141,6 @@ function Invoke-Test
 function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 {	
     $vstestPath = Get-VSTestPath
-	$tpv2VSTestPath = Get-TPv2VSTestPath
  
     $additionalArguments = ''
     if($TFT_Parallel)
@@ -161,14 +160,14 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 	}
 	
 	if($netCoreTestContainers.Count -gt 0)
-	{	
-		if(!(Test-Path $tpv2VSTestPath))
-		{
-			Write-Error "Unable to find vstest.console.exe at $tpv2VSTestPath. Test aborted."
+	{
+	    if(!(dotnet vstest))
+ 		{
+ 			Write-Error "Unable to find dotnet vstest. Test aborted."	
 		}
-		
-		Write-Verbose "$tpv2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
-		& $tpv2VSTestPath $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx 
+
+		Write-Verbose "dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
+		& dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx 
 	}
 }
 
@@ -177,13 +176,6 @@ function Get-VSTestPath
 	$vsInstallPath = Locate-VsInstallPath
 	$vstestPath = Join-Path -path $vsInstallPath "Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
 	return Resolve-Path -path $vstestPath
-}
-
-function Get-TPv2VSTestPath
-{
-    $packagesPath = Locate-PackagesPath
-	$vstestConsolePath = Join-Path -path $packagesPath $VSTestConsoleRelativePath
-	return Resolve-Path -path $vstestConsolePath
 }
 	
 Print-Help
