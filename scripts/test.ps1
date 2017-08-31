@@ -161,17 +161,17 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 	
 	if($netCoreTestContainers.Count -gt 0)
 	{
-        Try
-        {
-            Write-Verbose "dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
-            & dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx
-        }
+		Try
+		{
+			Write-Verbose "dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
+			& dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx
+		}
 
-        Catch [System.Management.Automation.CommandNotFoundException]
-        {
-            Write-Error "Unable to find dotnet.exe. Test aborted."
-        }
-    }
+		Catch [System.Management.Automation.CommandNotFoundException]
+		{
+			Write-Error "Unable to find dotnet.exe. Test aborted."
+		}
+	}
 }
 
 function Get-VSTestPath
