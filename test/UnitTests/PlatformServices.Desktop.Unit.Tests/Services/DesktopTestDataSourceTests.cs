@@ -7,17 +7,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     extern alias FrameworkV2;
     extern alias FrameworkV2DesktopExtension;
 
-    using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
+    using System.Data;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
-
     using Moq;
-
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using DesktopTestFrameworkV2 = FrameworkV2DesktopExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestFrameworkV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -30,7 +26,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         private Mock<TestFrameworkV2.ITestMethod> mockTestMethodInfo;
         private Mock<ITestMethod> testMethod;
         private IDictionary<string, object> properties;
-        private TestContextImplementation testContextImplementation;
+        private Mock<ITestContext> mockTestContext;
 
         [TestInitialize]
         public void TestInit()
@@ -38,205 +34,44 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             this.testMethod = new Mock<ITestMethod>();
             this.properties = new Dictionary<string, object>();
             this.mockTestMethodInfo = new Mock<TestFrameworkV2.ITestMethod>();
+            this.mockTestContext = new Mock<ITestContext>();
         }
 
         [TestMethod]
-        public void HasDataDrivenTestsReturnsTrueWhenTestIsDataDriven()
+        public void GetDataShouldReadDataFromGivenDataSource()
         {
-            TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new TestFrameworkV2.DataSourceAttribute(
-                "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", TestFrameworkV2.DataAccessMethod.Sequential);
-            this.mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
-                .Returns(new TestFrameworkV2.DataSourceAttribute[] { dataSourceAttribute });
-
-            TestDataSource testDataSource = new TestDataSource();
-            bool result = testDataSource.HasDataDrivenTests(this.mockTestMethodInfo.Object);
-            Assert.AreEqual(result, true);
-        }
-
-        [TestMethod]
-        public void HasDataDrivenReturnsFalseWhenDataSourceAttributeIsNull()
-        {
-            TestFrameworkV2.DataSourceAttribute[] dataSourceAttribute = null;
-            this.mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
-                .Returns(dataSourceAttribute);
-
-            TestDataSource testDataSource = new TestDataSource();
-            bool result = testDataSource.HasDataDrivenTests(this.mockTestMethodInfo.Object);
-            Assert.AreEqual(result, false);
-        }
-
-        [TestMethod]
-        public void RunDataDrivenTestsGivesTestResultAsPassedWhenTestMethodPasses()
-        {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
-
-            TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new TestFrameworkV2.DataSourceAttribute(
-                "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", TestFrameworkV2.DataAccessMethod.Sequential);
-
-            this.mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
-                .Returns(new TestFrameworkV2.DataSourceAttribute[] { dataSourceAttribute });
-
-            TestFrameworkV2.TestResult testResult = new TestFrameworkV2.TestResult();
-            DummyTestClass testClassInstance = new DummyTestClass();
             var methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
-
-            this.mockTestMethodInfo.Setup(ds => ds.Invoke(null)).
-                Callback(() =>
-                {
-                    try
-                    {
-                        testClassInstance.TestContext = this.testContextImplementation;
-
-                        var task = methodInfo.Invoke(testClassInstance, null) as Task;
-                        task?.GetAwaiter().GetResult();
-
-                        testResult.Outcome = TestFrameworkV2.UnitTestOutcome.Passed;
-                    }
-                    catch (Exception ex)
-                    {
-                        testResult.Outcome = TestFrameworkV2.UnitTestOutcome.Failed;
-                        testResult.TestFailureException = ex;
-                    }
-                }).Returns(testResult);
-            this.mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
-
-            TestFrameworkV2.TestMethodAttribute testMethodAttribute = new TestFrameworkV2.TestMethodAttribute();
-            TestDataSource testDataSource = new TestDataSource();
-
-            TestFrameworkV2.TestResult[] result = testDataSource.RunDataDrivenTest(this.testContextImplementation, this.mockTestMethodInfo.Object, null, testMethodAttribute);
-            Assert.AreEqual(result[0].Outcome, TestFrameworkV2.UnitTestOutcome.Passed);
-        }
-
-        [TestMethod]
-        public void RunDataDrivenTestsGivesTestResultAsFailedWhenTestMethodFails()
-        {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
-
             TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new TestFrameworkV2.DataSourceAttribute(
                 "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", TestFrameworkV2.DataAccessMethod.Sequential);
 
             this.mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
                 .Returns(new TestFrameworkV2.DataSourceAttribute[] { dataSourceAttribute });
-
-            TestFrameworkV2.TestResult testResult = new TestFrameworkV2.TestResult();
-            DummyTestClass testClassInstance = new DummyTestClass();
-
-            var methodInfo = typeof(DummyTestClass).GetMethod("FailingTest");
-
-            this.mockTestMethodInfo.Setup(ds => ds.Invoke(null)).
-                Callback(() =>
-                {
-                    try
-                    {
-                        testClassInstance.TestContext = this.testContextImplementation;
-
-                        var task = methodInfo.Invoke(testClassInstance, null) as Task;
-                        task?.GetAwaiter().GetResult();
-
-                        testResult.Outcome = TestFrameworkV2.UnitTestOutcome.Passed;
-                    }
-                    catch (Exception ex)
-                    {
-                        testResult.Outcome = TestFrameworkV2.UnitTestOutcome.Failed;
-                        testResult.TestFailureException = ex;
-                    }
-                }).Returns(testResult);
             this.mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
-            TestFrameworkV2.TestMethodAttribute testMethodAttribute = new TestFrameworkV2.TestMethodAttribute();
             TestDataSource testDataSource = new TestDataSource();
+            IEnumerable<object> dataRows = testDataSource.GetData(this.mockTestMethodInfo.Object, this.mockTestContext.Object);
 
-            TestFrameworkV2.TestResult[] result = testDataSource.RunDataDrivenTest(this.testContextImplementation, this.mockTestMethodInfo.Object, null, testMethodAttribute);
-            Assert.AreEqual(result[0].Outcome, TestFrameworkV2.UnitTestOutcome.Failed);
+            foreach (DataRow dataRow in dataRows)
+            {
+                Assert.AreEqual("v1", dataRow[3]);
+            }
         }
 
         [TestMethod]
-        public void RunDataDrivenTestsShouldSetDataRowIndex()
+        public void GetDataShouldSetDataConnectionInTestContextObject()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
-
-            TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new TestFrameworkV2.DataSourceAttribute(
-                "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", TestFrameworkV2.DataAccessMethod.Sequential);
-
-            this.mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
-                .Returns(new TestFrameworkV2.DataSourceAttribute[] { dataSourceAttribute });
-
-            TestFrameworkV2.TestResult testResult = new TestFrameworkV2.TestResult();
-            DummyTestClass testClassInstance = new DummyTestClass();
             var methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
-
-            this.mockTestMethodInfo.Setup(ds => ds.Invoke(null)).
-                Callback(() =>
-                {
-                    try
-                    {
-                        testClassInstance.TestContext = this.testContextImplementation;
-
-                        var task = methodInfo.Invoke(testClassInstance, null) as Task;
-                        task?.GetAwaiter().GetResult();
-
-                        testResult.Outcome = TestFrameworkV2.UnitTestOutcome.Passed;
-                    }
-                    catch (Exception ex)
-                    {
-                        testResult.Outcome = TestFrameworkV2.UnitTestOutcome.Failed;
-                        testResult.TestFailureException = ex;
-                    }
-                }).Returns(testResult);
-            this.mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
-
-            TestFrameworkV2.TestMethodAttribute testMethodAttribute = new TestFrameworkV2.TestMethodAttribute();
-            TestDataSource testDataSource = new TestDataSource();
-
-            TestFrameworkV2.TestResult[] result = testDataSource.RunDataDrivenTest(this.testContextImplementation, this.mockTestMethodInfo.Object, null, testMethodAttribute);
-            Assert.AreEqual(result[3].DatarowIndex, 3);
-        }
-
-        [TestMethod]
-        public void RunDataDrivenTestsShouldAttachResultsFilesForEachTestCase()
-        {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
-
             TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new TestFrameworkV2.DataSourceAttribute(
                 "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", TestFrameworkV2.DataAccessMethod.Sequential);
 
             this.mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
                 .Returns(new TestFrameworkV2.DataSourceAttribute[] { dataSourceAttribute });
-
-            TestFrameworkV2.TestResult testResult = new TestFrameworkV2.TestResult();
-
-            DummyTestClass testClassInstance = new DummyTestClass();
-            var methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
-
-            this.mockTestMethodInfo.Setup(ds => ds.Invoke(null)).
-                Callback(() =>
-                {
-                    try
-                    {
-                        testClassInstance.TestContext = this.testContextImplementation;
-
-                        var task = methodInfo.Invoke(testClassInstance, null) as Task;
-                        task?.GetAwaiter().GetResult();
-
-                        testResult.Outcome = TestFrameworkV2.UnitTestOutcome.Passed;
-                        testResult.ResultFiles = this.testContextImplementation.GetResultFiles();
-                    }
-                    catch (Exception ex)
-                    {
-                        testResult.Outcome = TestFrameworkV2.UnitTestOutcome.Failed;
-                        testResult.TestFailureException = ex;
-                    }
-                }).Returns(testResult);
             this.mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
-            TestFrameworkV2.TestMethodAttribute testMethodAttribute = new TestFrameworkV2.TestMethodAttribute();
             TestDataSource testDataSource = new TestDataSource();
+            IEnumerable<object> dataRows = testDataSource.GetData(this.mockTestMethodInfo.Object, this.mockTestContext.Object);
 
-            TestFrameworkV2.TestResult[] result = testDataSource.RunDataDrivenTest(this.testContextImplementation, this.mockTestMethodInfo.Object, null, testMethodAttribute);
-            CollectionAssert.Contains(result[0].ResultFiles.ToList(), "C:\\temp.txt");
-            CollectionAssert.Contains(result[1].ResultFiles.ToList(), "C:\\temp.txt");
-            CollectionAssert.Contains(result[2].ResultFiles.ToList(), "C:\\temp.txt");
-            CollectionAssert.Contains(result[3].ResultFiles.ToList(), "C:\\temp.txt");
+            this.mockTestContext.Verify(tc => tc.SetDataConnection(It.IsAny<object>()), Times.Once);
         }
 
         #region Dummy implementation
@@ -267,6 +102,5 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         }
 
         #endregion
-
     }
 }

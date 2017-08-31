@@ -10,13 +10,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-    using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
-
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -26,7 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// The platform service that provides values from data source when data driven tests are run.
     /// </summary>
     /// <remarks>
-    /// NOTE NOTE NOTE: This platform service refers to the inbox UTF extension assembly for UTF.TestContext which can only be loadable inside of the app domain that discovers/runs
+    /// NOTE NOTE NOTE: This platform service refers to the inbox UTF extension assembly for UTF.ITestMethod which can only be loadable inside of the app domain that discovers/runs
     /// the tests since it can only be found at the test output directory. DO NOT call into this platform service outside of the appdomain context if you do not want to hit
     /// a ReflectionTypeLoadException.
     /// </remarks>
@@ -49,32 +45,46 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             string tableName;
             UTF.DataAccessMethod dataAccessMethod;
 
-            this.GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
-
-            using (TestDataConnection connection = factory.Create(providerNameInvariant, connectionString, dataFolders))
+            try
             {
-                DataTable table = connection.ReadTable(tableName, null);
-                DataRow[] rows = table.Select();
-                Debug.Assert(rows != null, "rows should not be null.");
+                this.GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
 
-                // check for rowlength is 0
-                if (rows.Length == 0)
+            try
+            {
+                using (TestDataConnection connection = factory.Create(providerNameInvariant, connectionString, dataFolders))
                 {
-                    return null;
+                    DataTable table = connection.ReadTable(tableName, null);
+                    DataRow[] rows = table.Select();
+                    Debug.Assert(rows != null, "rows should not be null.");
+
+                    // check for rowlength is 0
+                    if (rows.Length == 0)
+                    {
+                        return null;
+                    }
+
+                    IEnumerable<int> permutation = this.GetPermutation(dataAccessMethod, rows.Length);
+
+                    object[] rowsAfterPermutation = new object[rows.Length];
+                    int index = 0;
+                    foreach (int rowIndex in permutation)
+                    {
+                        rowsAfterPermutation[index++] = rows[rowIndex];
+                    }
+
+                    testContext.SetDataConnection(connection.Connection);
+                    return rowsAfterPermutation;
                 }
-
-                IEnumerable<int> permutation = this.GetPermutation(dataAccessMethod, rows.Length);
-
-                // TODO search for a better way if possible
-                object[] rowsAfterPermutation = new object[rows.Length];
-                int index = 0;
-                foreach (int rowIndex in permutation)
-                {
-                    rowsAfterPermutation[index++] = rows[rowIndex];
-                }
-
-                testContext.SetDataConnection(connection.Connection);
-                return rowsAfterPermutation;
+            }
+            catch (Exception ex)
+            {
+                string message = ExceptionExtensions.GetExceptionMessage(ex);
+                throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorDataConnectionFailed, ex.Message), ex);
             }
         }
 

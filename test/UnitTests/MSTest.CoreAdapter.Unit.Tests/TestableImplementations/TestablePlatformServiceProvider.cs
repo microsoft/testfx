@@ -29,6 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
             this.MockTraceListener = new Mock<ITraceListener>();
             this.MockTraceListenerManager = new Mock<ITraceListenerManager>();
             this.MockThreadOperations = new Mock<IThreadOperations>();
+            this.MockReflectionOperations = new Mock<IReflectionOperations>();
         }
 
         #region Mock Implementations
@@ -146,11 +147,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
         public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter)
         {
             return this.MockTraceListenerManager.Object;
-        }
-
-        public void SetupMockReflectionOperations()
-        {
-            this.MockReflectionOperations = new Mock<IReflectionOperations>();
         }
     }
 }

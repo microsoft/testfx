@@ -18,11 +18,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
     using Moq;
     using MSTest.TestAdapter;
     using TestableImplementations;
     using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
@@ -425,38 +427,166 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
-        public void RunTestMethodChecksIfTestsAreDataDriven()
+        public void RunTestMethodShouldGiveTestResultAsPassedWhenTestMethodPasses()
         {
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
-            // setup mocks
-            this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.HasDataDrivenTests(testMethodInfo));
-            var results = testMethodRunner.Execute();
+            var results = testMethodRunner.RunTestMethod();
 
             // Since data is not provided, tests run normally giving passed as outcome.
             Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
         }
 
         [TestMethodV1]
-        public void RunTestMethodRunsDataDrivenTestsWhenDataIsProvided()
+        public void RunTestMethodShouldGiveTestResultAsFailedWhenTestMethodFails()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
+
+            var results = testMethodRunner.RunTestMethod();
+
+            // Since data is not provided, tests run normally giving passed as outcome.
+            Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
+        }
+
+        [TestMethodV1]
+        public void RunTestMethodShouldRunDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
+
+            UTF.DataSourceAttribute dataSourceAttribute = new UTF.DataSourceAttribute("DummyConnectionString", "DummyTableName");
+
+            var attribs = new Attribute[] { dataSourceAttribute };
+
+            TestDataSource testDataSource = new TestDataSource();
+
+            // Setup mocks
+            this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+            this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, this.testContextImplementation)).Returns(new object[] { 1, 2, 3 });
+
+            var results = testMethodRunner.RunTestMethod();
+
+            // check for outcome
+            Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
+            Assert.AreEqual(AdapterTestOutcome.Passed, results[1].Outcome);
+            Assert.AreEqual(AdapterTestOutcome.Passed, results[2].Outcome);
+        }
+
+        [TestMethodV1]
+        public void RunTestMethodShouldRunDataDrivenTestsWhenDataIsProvidedUsingDataRowAttribute()
+        {
+            UTF.TestResult testResult = new UTF.TestResult();
+            testResult.Outcome = UTF.UnitTestOutcome.Inconclusive;
+
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
+
+            int dummyIntData = 2;
+            string dummyStringData = "DummyString";
+            UTF.DataRowAttribute dataRowAttribute = new UTF.DataRowAttribute(
+                dummyIntData,
+                dummyStringData);
+
+            var attribs = new Attribute[] { dataRowAttribute };
+
+            // Setup mocks
+            this.testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+
+            var results = testMethodRunner.RunTestMethod();
+            Assert.AreEqual(AdapterTestOutcome.Inconclusive, results[0].Outcome);
+        }
+
+        [TestMethodV1]
+        public void RunTestMethodShouldSetDataRowIndexForDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
         {
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult());
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
-            // Set outcome to be failed
-            var result = new UTF.TestResult();
-            result.Outcome = UTF.UnitTestOutcome.Failed;
+            UTF.DataSourceAttribute dataSourceAttribute = new UTF.DataSourceAttribute("DummyConnectionString", "DummyTableName");
 
-            // setup mocks
-            this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.HasDataDrivenTests(It.IsAny<TestMethodInfo>())).Returns(true);
-            this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.RunDataDrivenTest(It.IsAny<UTFExtension.TestContext>(), It.IsAny<TestMethodInfo>(), It.IsAny<TestMethod>(), It.IsAny<UTF.TestMethodAttribute>()))
-                .Returns(new UTF.TestResult[] { result });
+            var attribs = new Attribute[] { dataSourceAttribute };
 
-            var results = testMethodRunner.Execute();
+            // Setup mocks
+            this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+            this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, this.testContextImplementation)).Returns(new object[] { 1, 2, 3 });
 
-            // check for outcome
-            Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
+            var results = testMethodRunner.RunTestMethod();
+
+            // check for datarowIndex
+            Assert.AreEqual(results[0].DatarowIndex, 0);
+            Assert.AreEqual(results[1].DatarowIndex, 1);
+            Assert.AreEqual(results[2].DatarowIndex, 2);
+        }
+
+        [TestMethodV1]
+        public void RunTestMethodShouldFillInDisplayNameWithDataRowDisplayNameIfProvidedForDataDrivenTests()
+        {
+            UTF.TestResult testResult = new UTF.TestResult();
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
+
+            int dummyIntData = 2;
+            string dummyStringData = "DummyString";
+            UTF.DataRowAttribute dataRowAttribute = new UTF.DataRowAttribute(
+                dummyIntData,
+                dummyStringData);
+            dataRowAttribute.DisplayName = "DataRowTestDisplayName";
+
+            var attribs = new Attribute[] { dataRowAttribute };
+
+            // Setup mocks
+            this.testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+
+            var results = testMethodRunner.RunTestMethod();
+            Assert.AreEqual(results[0].DisplayName, "DataRowTestDisplayName");
+        }
+
+        [TestMethodV1]
+        public void RunTestMethodShouldFillInDisplayNameWithDataRowArgumentsIfNoDisplayNameIsProvidedForDataDrivenTests()
+        {
+            UTF.TestResult testResult = new UTF.TestResult();
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
+
+            int dummyIntData = 2;
+            string dummyStringData = "DummyString";
+            UTF.DataRowAttribute dataRowAttribute = new UTF.DataRowAttribute(
+                dummyIntData,
+                dummyStringData);
+
+            var attribs = new Attribute[] { dataRowAttribute };
+
+            // Setup mocks
+            this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+
+            var results = testMethodRunner.RunTestMethod();
+            Assert.AreEqual(results[0].DisplayName, "DummyTestMethod (2,DummyString)");
+        }
+
+        [TestMethodV1]
+        public void RunTestMethodShouldSetResultFilesIfPresentForDataDrivenTests()
+        {
+            UTF.TestResult testResult = new UTF.TestResult();
+            testResult.ResultFiles = new List<string>() { "C:\\temp.txt" };
+
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
+
+            int dummyIntData1 = 1;
+            int dummyIntData2 = 2;
+            UTF.DataRowAttribute dataRowAttribute1 = new UTF.DataRowAttribute(dummyIntData1);
+            UTF.DataRowAttribute dataRowAttribute2 = new UTF.DataRowAttribute(dummyIntData2);
+
+            var attribs = new Attribute[] { dataRowAttribute1, dataRowAttribute2 };
+
+            // Setup mocks
+            this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+
+            var results = testMethodRunner.RunTestMethod();
+            CollectionAssert.Contains(results[0].ResultFiles.ToList(), "C:\\temp.txt");
+            CollectionAssert.Contains(results[1].ResultFiles.ToList(), "C:\\temp.txt");
         }
 
         #region Test data

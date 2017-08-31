@@ -223,19 +223,58 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     UTF.DataSourceAttribute[] dataSourceAttribute = this.testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
                     if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
                     {
-                        IEnumerable<object> dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(this.testMethodInfo, this.testContext);
+                        Stopwatch watch = new Stopwatch();
+                        watch.Start();
 
-                        int rowIndex = 0;
-                        foreach (object dataRow in dataRows)
+                        try
                         {
-                            this.testContext.SetDataRow(dataRow);
-                            UTF.TestResult currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
-                            currentResult.DatarowIndex = rowIndex++;
-                            results.Add(currentResult);
-                        }
+                            IEnumerable<object> dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(this.testMethodInfo, this.testContext);
 
-                        this.testContext.SetDataConnection(null);
-                        this.testContext.SetDataRow(null);
+                            if (dataRows == null)
+                            {
+                                watch.Stop();
+                                var inconclusiveResult = new UTF.TestResult();
+                                inconclusiveResult.Outcome = UTF.UnitTestOutcome.Inconclusive;
+                                inconclusiveResult.Duration = watch.Elapsed;
+                                results.Add(inconclusiveResult);
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    int rowIndex = 0;
+                                    foreach (object dataRow in dataRows)
+                                    {
+                                        watch.Reset();
+                                        watch.Start();
+
+                                        this.testContext.SetDataRow(dataRow);
+                                        UTF.TestResult currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
+
+                                        currentResult.DatarowIndex = rowIndex++;
+
+                                        watch.Stop();
+                                        currentResult.Duration = watch.Elapsed;
+
+                                        results.Add(currentResult);
+                                    }
+                                }
+                                finally
+                                {
+                                    this.testContext.SetDataConnection(null);
+                                    this.testContext.SetDataRow(null);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            watch.Stop();
+                            var failedResult = new UTF.TestResult();
+                            failedResult.Outcome = UTF.UnitTestOutcome.Error;
+                            failedResult.TestFailureException = ex;
+                            failedResult.Duration = watch.Elapsed;
+                            results.Add(failedResult);
+                        }
                     }
                     else
                     {
