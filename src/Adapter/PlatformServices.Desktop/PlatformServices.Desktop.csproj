@@ -56,7 +56,6 @@
     <Compile Include="Data\XmlDataConnection.cs" />
     <Compile Include="Deployment\AssemblyLoadWorker.cs" />
     <Compile Include="Deployment\DeploymentItem.cs" />
-    <Compile Include="Deployment\DiaHelper.cs" />
     <Compile Include="Deployment\TestRunDirectories.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Friends.cs" />
