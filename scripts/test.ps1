@@ -161,7 +161,7 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 	
 	if($netCoreTestContainers.Count -gt 0)
 	{
-	    Try 
+        Try
         {
             Write-Verbose "dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
             & dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx
@@ -171,7 +171,7 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
         {
             Write-Error "Unable to find dotnet.exe. Test aborted."
         }
-	}
+    }
 }
 
 function Get-VSTestPath
