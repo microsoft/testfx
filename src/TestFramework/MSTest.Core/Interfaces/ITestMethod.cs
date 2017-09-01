@@ -27,6 +27,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         Type ReturnType { get; }
 
         /// <summary>
+        /// Gets the arguments with which test method is invoked.
+        /// </summary>
+        object[] Arguments { get; }
+
+        /// <summary>
         /// Gets the parameters of test method.
         /// </summary>
         ParameterInfo[] ParameterTypes { get; }

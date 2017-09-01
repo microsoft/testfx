@@ -246,6 +246,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             sb.Remove(0, sb.Length);
         }
 
+        public void SetDataRow(object dataRow)
+        {
+            // Do nothing.
+        }
+
+        public void SetDataConnection(object dbConnection)
+        {
+            // Do nothing.
+        }
+
         #endregion
 
         /// <summary>

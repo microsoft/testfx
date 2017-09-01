@@ -58,15 +58,16 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
         public virtual TestResult[] Execute(ITestMethod testMethod)
         {
-            ITestDataSource[] dataSources = testMethod.GetAttributes<Attribute>(true)?.Where(a => a is ITestDataSource).OfType<ITestDataSource>().ToArray();
-
-            if (dataSources == null || dataSources.Length == 0)
-            {
-                return new TestResult[] { testMethod.Invoke(null) };
-            }
-
-            return DataTestMethodAttribute.RunDataDrivenTest(testMethod, dataSources);
+            return new TestResult[] { testMethod.Invoke(null) };
         }
+    }
+
+    /// <summary>
+    /// Attribute for data driven test where data can be specified inline.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public class DataTestMethodAttribute : TestMethodAttribute
+    {
     }
 
     /// <summary>

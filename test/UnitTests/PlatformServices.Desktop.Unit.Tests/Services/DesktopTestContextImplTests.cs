@@ -8,16 +8,14 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 
     using System;
     using System.Collections.Generic;
+    using System.Data;
+    using System.Data.Common;
     using System.IO;
     using System.Linq;
-
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
-
     using Moq;
-
     using MSTestAdapter.TestUtilities;
-
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
@@ -314,6 +312,41 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             this.testContextImplementation.ClearDiagnosticMessages();
 
             Assert.AreEqual(string.Empty, stringWriter.ToString());
+        }
+
+        [TestMethod]
+        public void SetDataRowShouldSetDataRowObjectForCurrentRun()
+        {
+            var stringWriter = new StringWriter();
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
+
+            DataTable dataTable = new DataTable();
+
+            // create the table with the appropriate column names
+            dataTable.Columns.Add("Id", typeof(int));
+            dataTable.Columns.Add("Name", typeof(string));
+
+            dataTable.LoadDataRow(new object[] { 2, "Hello" }, true);
+
+            this.testContextImplementation.SetDataRow(dataTable.Select()[0]);
+
+            Assert.AreEqual(2, this.testContextImplementation.DataRow.ItemArray[0]);
+            Assert.AreEqual("Hello", this.testContextImplementation.DataRow.ItemArray[1]);
+        }
+
+        [TestMethod]
+        public void SetDataConnectionShouldSetDbConnectionForFetchingData()
+        {
+            var stringWriter = new StringWriter();
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
+
+            DbProviderFactory factory = DbProviderFactories.GetFactory("System.Data.Odbc");
+            DbConnection connection = factory.CreateConnection();
+            connection.ConnectionString = @"Dsn=Excel Files;dbq=.\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5";
+
+            this.testContextImplementation.SetDataConnection(connection);
+
+            Assert.AreEqual("Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5", this.testContextImplementation.DataConnection.ConnectionString);
         }
     }
 }
