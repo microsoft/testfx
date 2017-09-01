@@ -218,91 +218,108 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             if (this.testMethodInfo.TestMethodOptions.Executor != null)
             {
-                try
+                UTF.DataSourceAttribute[] dataSourceAttribute = this.testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
+                if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
                 {
-                    UTF.DataSourceAttribute[] dataSourceAttribute = this.testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
-                    if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
+                    Stopwatch watch = new Stopwatch();
+                    watch.Start();
+
+                    try
                     {
-                        Stopwatch watch = new Stopwatch();
-                        watch.Start();
+                        IEnumerable<object> dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(this.testMethodInfo, this.testContext);
 
-                        try
-                        {
-                            IEnumerable<object> dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(this.testMethodInfo, this.testContext);
-
-                            if (dataRows == null)
-                            {
-                                watch.Stop();
-                                var inconclusiveResult = new UTF.TestResult();
-                                inconclusiveResult.Outcome = UTF.UnitTestOutcome.Inconclusive;
-                                inconclusiveResult.Duration = watch.Elapsed;
-                                results.Add(inconclusiveResult);
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    int rowIndex = 0;
-                                    foreach (object dataRow in dataRows)
-                                    {
-                                        watch.Reset();
-                                        watch.Start();
-
-                                        this.testContext.SetDataRow(dataRow);
-                                        UTF.TestResult currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
-
-                                        currentResult.DatarowIndex = rowIndex++;
-
-                                        watch.Stop();
-                                        currentResult.Duration = watch.Elapsed;
-
-                                        results.Add(currentResult);
-                                    }
-                                }
-                                finally
-                                {
-                                    this.testContext.SetDataConnection(null);
-                                    this.testContext.SetDataRow(null);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
+                        if (dataRows == null)
                         {
                             watch.Stop();
-                            var failedResult = new UTF.TestResult();
-                            failedResult.Outcome = UTF.UnitTestOutcome.Error;
-                            failedResult.TestFailureException = ex;
-                            failedResult.Duration = watch.Elapsed;
-                            results.Add(failedResult);
+                            var inconclusiveResult = new UTF.TestResult();
+                            inconclusiveResult.Outcome = UTF.UnitTestOutcome.Inconclusive;
+                            inconclusiveResult.Duration = watch.Elapsed;
+                            results.Add(inconclusiveResult);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                int rowIndex = 0;
+                                foreach (object dataRow in dataRows)
+                                {
+                                    watch.Reset();
+                                    watch.Start();
+
+                                    this.testContext.SetDataRow(dataRow);
+                                    UTF.TestResult currentResult;
+
+                                    try
+                                    {
+                                        currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        currentResult = new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) };
+                                    }
+
+                                    currentResult.DatarowIndex = rowIndex++;
+                                    watch.Stop();
+                                    currentResult.Duration = watch.Elapsed;
+
+                                    results.Add(currentResult);
+                                }
+                            }
+                            finally
+                            {
+                                this.testContext.SetDataConnection(null);
+                                this.testContext.SetDataRow(null);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        watch.Stop();
+                        var failedResult = new UTF.TestResult();
+                        failedResult.Outcome = UTF.UnitTestOutcome.Error;
+                        failedResult.TestFailureException = ex;
+                        failedResult.Duration = watch.Elapsed;
+                        results.Add(failedResult);
+                    }
+                }
+                else
+                {
+                    UTF.ITestDataSource[] testDataSources = this.testMethodInfo.GetAttributes<Attribute>(true)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
+
+                    if (testDataSources != null && testDataSources.Length > 0)
+                    {
+                        foreach (var testDataSource in testDataSources)
+                        {
+                            foreach (var data in testDataSource.GetData(this.testMethodInfo.MethodInfo))
+                            {
+                                this.testMethodInfo.SetArguments(data);
+                                UTF.TestResult currentResult;
+                                try
+                                {
+                                    currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
+                                }
+                                catch (Exception ex)
+                                {
+                                    currentResult = new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) };
+                                }
+
+                                currentResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
+                                results.Add(currentResult);
+                                this.testMethodInfo.SetArguments(null);
+                            }
                         }
                     }
                     else
                     {
-                        UTF.ITestDataSource[] testDataSources = this.testMethodInfo.GetAttributes<Attribute>(true)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
-
-                        if (testDataSources != null && testDataSources.Length > 0)
-                        {
-                            foreach (var testDataSource in testDataSources)
-                            {
-                                foreach (var data in testDataSource.GetData(this.testMethodInfo.MethodInfo))
-                                {
-                                    this.testMethodInfo.SetArguments(data);
-                                    UTF.TestResult currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
-                                    currentResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
-                                    results.Add(currentResult);
-                                    this.testMethodInfo.SetArguments(null);
-                                }
-                            }
-                        }
-                        else
+                        try
                         {
                             results.Add(this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0]);
                         }
+                        catch (Exception ex)
+                        {
+                            results.Add(new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) });
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    results.Add(new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) });
                 }
             }
             else

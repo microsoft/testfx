@@ -522,6 +522,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void RunTestMethodShoudlRunOnlyDataSourceTestsWhenBothDataSourceAndDataRowAreProvided()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult());
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
+
+            UTF.DataSourceAttribute dataSourceAttribute = new UTF.DataSourceAttribute("DummyConnectionString", "DummyTableName");
+            int dummyIntData = 2;
+            string dummyStringData = "DummyString";
+            UTF.DataRowAttribute dataRowAttribute = new UTF.DataRowAttribute(
+                dummyIntData,
+                dummyStringData);
+
+            var attribs = new Attribute[] { dataSourceAttribute, dataRowAttribute };
+
+            // Setup mocks
+            this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+            this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, this.testContextImplementation)).Returns(new object[] { 1, 2, 3 });
+
+            var results = testMethodRunner.RunTestMethod();
+
+            // check for datarowIndex as only DataSource Tests are Run
+            Assert.AreEqual(results[0].DatarowIndex, 0);
+            Assert.AreEqual(results[1].DatarowIndex, 1);
+            Assert.AreEqual(results[2].DatarowIndex, 2);
+        }
+
+        [TestMethodV1]
         public void RunTestMethodShouldFillInDisplayNameWithDataRowDisplayNameIfProvidedForDataDrivenTests()
         {
             UTF.TestResult testResult = new UTF.TestResult();

@@ -70,10 +70,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     {
     }
 
-        /// <summary>
-        /// The test initialize attribute.
-        /// </summary>
-        [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    /// <summary>
+    /// The test initialize attribute.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class TestInitializeAttribute : Attribute
     {
     }
