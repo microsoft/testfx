@@ -15,6 +15,7 @@
     <Compile Include="..\MSTest.CoreAdapter.TestUtilities\ActionUtility.cs" Link="ActionUtility.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10AssemblyAttributes.cs" Link="ns10AssemblyAttributes.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs" Link="Services\ns10FileOperationsTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs" Link="Services\ns10DiaSessionOperationsTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs" Link="Services\ns10ReflectionOperationsTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10SettingsProviderTests.cs" Link="Services\ns10SettingsProviderTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestContextImplementationTests.cs" Link="Services\ns10TestContextImplementationTests.cs" />

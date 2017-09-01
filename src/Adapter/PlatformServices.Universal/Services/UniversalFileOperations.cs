@@ -6,7 +6,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System;
     using System.IO;
     using System.Reflection;
-
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
@@ -74,8 +73,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </returns>
         public object CreateNavigationSession(string source)
         {
-            // Navigation session for UWP is handled by Desktop Adapter
-            return null;
+            return DiaSessionOperations.CreateNavigationSession(source);
         }
 
         /// <summary>
@@ -88,9 +86,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="fileName"> The file name. </param>
         public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string fileName)
         {
-            // Initiate values and bail out.
-            fileName = null;
-            minLineNumber = -1;
+            DiaSessionOperations.GetNavigationData(navigationSession, className, methodName, out minLineNumber, out fileName);
         }
 
         /// <summary>
@@ -99,7 +95,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="navigationSession"> The navigation session. </param>
         public void DisposeNavigationSession(object navigationSession)
         {
-            // Do nothing.
+            DiaSessionOperations.DisposeNavigationSession(navigationSession);
         }
 
         /// <summary>

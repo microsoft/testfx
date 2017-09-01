@@ -58,6 +58,9 @@
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs">
       <Link>Services\ns10FileOperationsTests.cs</Link>
     </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs">
+      <Link>Services\ns10DiaSessionOperationsTests.cs</Link>
+    </Compile>
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs">
       <Link>Services\ns10ReflectionOperationsTests.cs</Link>
     </Compile>
