@@ -64,7 +64,6 @@
     <Compile Include="UnitTestOutcome.cs" />
     <Compile Include="Internal\UtfHelper.cs" />
     <Compile Include="Attributes\VSTestAttributes.cs" />
-    <Compile Include="Attributes\DataTestMethodAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

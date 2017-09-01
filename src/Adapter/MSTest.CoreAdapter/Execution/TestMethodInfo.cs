@@ -27,6 +27,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         public const int TimeoutWhenNotSet = 0;
 
+        private object[] arguments;
+
         internal TestMethodInfo(
             MethodInfo testMethod,
             TestClassInfo parent,
@@ -55,20 +57,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         public bool IsRunnable => string.IsNullOrEmpty(this.NotRunnableReason);
 
-        /// <inheritdoc/>
         public ParameterInfo[] ParameterTypes => this.TestMethod.GetParameters();
 
-        /// <inheritdoc/>
         public Type ReturnType => this.TestMethod.ReturnType;
 
-        /// <inheritdoc/>
         public string TestClassName => this.Parent.ClassType.FullName;
 
-        /// <inheritdoc/>
         public string TestMethodName => this.TestMethod.Name;
 
-        /// <inheritdoc/>
         public MethodInfo MethodInfo => this.TestMethod;
+
+        public object[] Arguments => this.arguments;
 
         /// <summary>
         /// Gets testMethod referred by this object
@@ -85,13 +84,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         internal TestMethodOptions TestMethodOptions { get; private set; }
 
-        /// <inheritdoc/>
         public Attribute[] GetAllAttributes(bool inherit)
         {
             return ReflectHelper.GetCustomAttributes(this.TestMethod, inherit) as Attribute[];
         }
 
-        /// <inheritdoc/>
         public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
             where TAttributeType : Attribute
         {
@@ -119,14 +116,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             return tAttributeList.ToArray();
         }
 
-        /// <inheritdoc/>
-        /// <remarks>
+        /// <summary>
         /// Execute test method. Capture failures, handle async and return result.
-        /// </remarks>
+        /// </summary>
+        /// <param name="arguments">
+        ///  Arguments to pass to test method. (E.g. For data driven)
+        /// </param>
+        /// <returns>Result of test method invocation.</returns>
         public virtual TestResult Invoke(object[] arguments)
         {
             Stopwatch watch = new Stopwatch();
             TestResult result = null;
+
+            // check if arguments are set for data driven tests
+            if (arguments == null)
+            {
+                arguments = this.Arguments;
+            }
+
             using (LogMessageListener listener = new LogMessageListener(this.TestMethodOptions.CaptureDebugTraces))
             {
                 watch.Start();
@@ -159,6 +166,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             return result;
+        }
+
+        internal void SetArguments(object[] arguments)
+        {
+            this.arguments = arguments;
         }
 
         /// <summary>

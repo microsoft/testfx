@@ -4,17 +4,17 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
+    using System.Linq;
     using System.Reflection;
-
     using Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -214,36 +214,123 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             Debug.Assert(this.test != null, "Test should not be null.");
             Debug.Assert(this.testMethodInfo.TestMethod != null, "Test method should not be null.");
 
-            UTF.TestResult[] results = null;
+            List<UTF.TestResult> results = new List<UTF.TestResult>();
 
             if (this.testMethodInfo.TestMethodOptions.Executor != null)
             {
-                try
+                UTF.DataSourceAttribute[] dataSourceAttribute = this.testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
+                if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
                 {
-                    bool isDataDriven = PlatformServiceProvider.Instance.TestDataSource.HasDataDrivenTests(this.testMethodInfo);
-                    if (isDataDriven)
+                    Stopwatch watch = new Stopwatch();
+                    watch.Start();
+
+                    try
                     {
-                        results = PlatformServiceProvider.Instance.TestDataSource.RunDataDrivenTest(this.testContext.Context, this.testMethodInfo, this.test, this.testMethodInfo.TestMethodOptions.Executor);
+                        IEnumerable<object> dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(this.testMethodInfo, this.testContext);
+
+                        if (dataRows == null)
+                        {
+                            watch.Stop();
+                            var inconclusiveResult = new UTF.TestResult();
+                            inconclusiveResult.Outcome = UTF.UnitTestOutcome.Inconclusive;
+                            inconclusiveResult.Duration = watch.Elapsed;
+                            results.Add(inconclusiveResult);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                int rowIndex = 0;
+                                foreach (object dataRow in dataRows)
+                                {
+                                    watch.Reset();
+                                    watch.Start();
+
+                                    this.testContext.SetDataRow(dataRow);
+                                    UTF.TestResult currentResult;
+
+                                    try
+                                    {
+                                        currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        currentResult = new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) };
+                                    }
+
+                                    currentResult.DatarowIndex = rowIndex++;
+                                    watch.Stop();
+                                    currentResult.Duration = watch.Elapsed;
+
+                                    results.Add(currentResult);
+                                }
+                            }
+                            finally
+                            {
+                                this.testContext.SetDataConnection(null);
+                                this.testContext.SetDataRow(null);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        watch.Stop();
+                        var failedResult = new UTF.TestResult();
+                        failedResult.Outcome = UTF.UnitTestOutcome.Error;
+                        failedResult.TestFailureException = ex;
+                        failedResult.Duration = watch.Elapsed;
+                        results.Add(failedResult);
+                    }
+                }
+                else
+                {
+                    UTF.ITestDataSource[] testDataSources = this.testMethodInfo.GetAttributes<Attribute>(true)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
+
+                    if (testDataSources != null && testDataSources.Length > 0)
+                    {
+                        foreach (var testDataSource in testDataSources)
+                        {
+                            foreach (var data in testDataSource.GetData(this.testMethodInfo.MethodInfo))
+                            {
+                                this.testMethodInfo.SetArguments(data);
+                                UTF.TestResult currentResult;
+                                try
+                                {
+                                    currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
+                                }
+                                catch (Exception ex)
+                                {
+                                    currentResult = new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) };
+                                }
+
+                                currentResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
+                                results.Add(currentResult);
+                                this.testMethodInfo.SetArguments(null);
+                            }
+                        }
                     }
                     else
                     {
-                        results = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo);
+                        try
+                        {
+                            results.Add(this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0]);
+                        }
+                        catch (Exception ex)
+                        {
+                            results.Add(new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) });
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    results = new[] { new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) } };
                 }
             }
             else
             {
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
-                    "Not able to get executor for method {0}.{1}",
-                    this.testMethodInfo.TestClassName,
-                    this.testMethodInfo.TestMethodName);
+                "Not able to get executor for method {0}.{1}",
+                this.testMethodInfo.TestClassName,
+                this.testMethodInfo.TestMethodName);
             }
 
-            if (results != null && results.Length > 0)
+            if (results != null && results.Count > 0)
             {
                 // aggregate for data driven tests
                 UTF.UnitTestOutcome aggregateOutcome = UTF.UnitTestOutcome.Passed;
@@ -268,10 +355,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             else
             {
                 this.testContext.SetOutcome(UTF.UnitTestOutcome.Unknown);
-                results = new[] { new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Unknown, TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult) } };
+                results.Add(new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Unknown, TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult) });
             }
 
-            return results.ToUnitTestResults();
+            return results.ToArray().ToUnitTestResults();
         }
     }
 }

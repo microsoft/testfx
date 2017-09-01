@@ -98,6 +98,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClass.TestCleanupMethodBody = value => { };
         }
 
+        [TestMethodV1]
+        public void SetArgumentsShouldSetArgumentsNeededForCurrentTestRun()
+        {
+            object[] arguments = new object[] { 10, 20, 30 };
+            this.testMethodInfo.SetArguments(arguments);
+
+            Assert.AreEqual(3, this.testMethodInfo.Arguments.Length);
+            Assert.AreEqual(10, this.testMethodInfo.Arguments[0]);
+            Assert.AreEqual(20, this.testMethodInfo.Arguments[1]);
+            Assert.AreEqual(30, this.testMethodInfo.Arguments[2]);
+        }
+
         #region TestMethod invoke scenarios
 
         [TestMethodV1]

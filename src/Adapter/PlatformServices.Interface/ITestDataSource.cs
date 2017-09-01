@@ -3,8 +3,8 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface
 {
+    using System.Collections.Generic;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
-
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -13,34 +13,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
     public interface ITestDataSource
     {
         /// <summary>
-        /// Gets a value indicating whether testMethod has data driven tests.
+        /// Gets the test data from custom test data source and sets dbconnection in testContext object.
         /// </summary>
         /// <param name="testMethodInfo">
-        /// The test Method Info.
+        /// The info of test method.
         /// </param>
-        /// <returns>
-        /// True of it is a data driven test method. False otherwise.
-        /// </returns>
-        bool HasDataDrivenTests(UTF.ITestMethod testMethodInfo);
-
-        /// <summary>
-        /// Run a data driven test. Test case is executed once for each data row.
-        /// </summary>
         /// <param name="testContext">
-        /// The test Context.
-        /// </param>
-        /// <param name="testMethodInfo">
-        /// The test Method Info.
-        /// </param>
-        /// <param name="testMethod">
-        /// The test Method.
-        /// </param>
-        /// <param name="executor">
-        /// The default test method executor.
+        /// Test Context object
         /// </param>
         /// <returns>
-        /// The results after running all the data driven tests.
+        /// Test data for calling test method.
         /// </returns>
-        UTF.TestResult[] RunDataDrivenTest(UTF.TestContext testContext, UTF.ITestMethod testMethodInfo, ITestMethod testMethod, UTF.TestMethodAttribute executor);
+        IEnumerable<object> GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext);
     }
 }
