@@ -16,18 +16,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     public class FileOperations : IFileOperations
     {
         /// <summary>
-        /// Initializes static members of the <see cref="FileOperations"/> class.
-        /// </summary>
-        /// <remarks>Initializes DiaSession.</remarks>
-        static FileOperations()
-        {
-            const string diaSessionTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaSession, Microsoft.VisualStudio.TestPlatform.ObjectModel";
-            const string diaNavigationDataTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaNavigationData,  Microsoft.VisualStudio.TestPlatform.ObjectModel";
-
-            Initialize(diaSessionTypeName, diaNavigationDataTypeName);
-        }
-
-        /// <summary>
         /// Loads an assembly.
         /// </summary>
         /// <param name="assemblyName"> The assembly name. </param>
@@ -120,17 +108,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public string GetFullFilePath(string assemblyFileName)
         {
             return assemblyFileName;
-        }
-
-        /// <summary>
-        /// 1. Initializes DiaSession.
-        /// 2. Assists in Unit Testing.
-        /// </summary>
-        /// <param name="diaSession">Type name of  DiaSession class.</param>
-        /// <param name="diaNavigationData">Type name of DiaNavigationData class.</param>
-        internal static void Initialize(string diaSession, string diaNavigationData)
-        {
-            DiaSessionOperations.Initialize(diaSession, diaNavigationData);
         }
     }
 

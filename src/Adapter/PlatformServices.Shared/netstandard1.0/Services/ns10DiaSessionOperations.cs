@@ -17,6 +17,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private static Type typeDiaNavigationData;
 
         /// <summary>
+        /// Initializes static members of the <see cref="FileOperations"/> class.
+        /// </summary>
+        /// <remarks>Initializes DiaSession.</remarks>
+        static DiaSessionOperations()
+        {
+            const string diaSessionTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaSession, Microsoft.VisualStudio.TestPlatform.ObjectModel";
+            const string diaNavigationDataTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaNavigationData,  Microsoft.VisualStudio.TestPlatform.ObjectModel";
+
+            Initialize(diaSessionTypeName, diaNavigationDataTypeName);
+        }
+
+        /// <summary>
         /// Creates a Navigation session for the source file.
         /// This is used to get file path and line number information for its components.
         /// </summary>
