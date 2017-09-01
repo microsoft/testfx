@@ -108,6 +108,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestInit()
         {
             this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+            this.testablePlatformServiceProvider.SetupMockReflectionOperations();
             PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
         }
 

@@ -39,6 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.method.Setup(x => x.DeclaringType).Returns(typeof(ReflectHelperTests));
 
             this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+            this.testablePlatformServiceProvider.SetupMockReflectionOperations();
             PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
         }
 

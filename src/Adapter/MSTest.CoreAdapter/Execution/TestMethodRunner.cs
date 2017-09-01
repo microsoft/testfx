@@ -290,6 +290,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                     UTF.TestResult currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
                                     currentResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
                                     results.Add(currentResult);
+                                    this.testMethodInfo.SetArguments(null);
                                 }
                             }
                         }
