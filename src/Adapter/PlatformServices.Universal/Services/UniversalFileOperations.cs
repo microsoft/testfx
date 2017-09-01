@@ -7,7 +7,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.IO;
     using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
@@ -16,6 +15,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </summary>
     public class FileOperations : IFileOperations
     {
+        /// <summary>
+        /// Initializes static members of the <see cref="FileOperations"/> class.
+        /// </summary>
+        /// <remarks>Initializes DiaSession.</remarks>
+        static FileOperations()
+        {
+            const string diaSessionTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaSession, Microsoft.VisualStudio.TestPlatform.ObjectModel";
+            const string diaNavigationDataTypeName = "Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaNavigationData,  Microsoft.VisualStudio.TestPlatform.ObjectModel";
+
+            Initialize(diaSessionTypeName, diaNavigationDataTypeName);
+        }
+
         /// <summary>
         /// Loads an assembly.
         /// </summary>
@@ -74,21 +85,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </returns>
         public object CreateNavigationSession(string source)
         {
-            var messageFormatOnException =
-                string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
-
-            try
-            {
-                Assembly objectModelAssembly = Assembly.Load(new AssemblyName("Microsoft.VisualStudio.TestPlatform.ObjectModel"));
-                Type diaType = objectModelAssembly.GetType("Microsoft.VisualStudio.TestPlatform.ObjectModel.DiaSession");
-
-                return (diaType != null) ? Activator.CreateInstance(diaType, new object[] { source }) : null;
-            }
-            catch (Exception exception)
-            {
-                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, messageFormatOnException, exception.Message);
-                return null;
-            }
+            return DiaSessionOperations.CreateNavigationSession(source);
         }
 
         /// <summary>
@@ -101,24 +98,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="fileName"> The file name. </param>
         public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string fileName)
         {
-            // Initiate values and bail out.
-            fileName = null;
-            minLineNumber = -1;
-
-            MethodInfo methodInfo = navigationSession.GetType().GetMethod("GetNavigationData");
-            if (methodInfo != null)
-            {
-                var navigationData = methodInfo.Invoke(navigationSession, new object[] { className, methodName });
-
-                if (navigationData != null)
-                {
-                    var minLineProp = navigationData.GetType().GetProperty("MinLineNumber");
-                    var fileNameProp = navigationData.GetType().GetProperty("FileName");
-
-                    minLineNumber = (int)(minLineProp != null ? minLineProp.GetValue(navigationData) : 0);
-                    fileName = (string)(fileNameProp != null ? fileNameProp.GetValue(navigationData) : string.Empty);
-                }
-            }
+            DiaSessionOperations.GetNavigationData(navigationSession, className, methodName, out minLineNumber, out fileName);
         }
 
         /// <summary>
@@ -127,8 +107,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="navigationSession"> The navigation session. </param>
         public void DisposeNavigationSession(object navigationSession)
         {
-            MethodInfo methodInfo = navigationSession?.GetType().GetMethod("Dispose");
-            methodInfo?.Invoke(navigationSession, null);
+            DiaSessionOperations.DisposeNavigationSession(navigationSession);
         }
 
         /// <summary>
@@ -141,6 +120,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public string GetFullFilePath(string assemblyFileName)
         {
             return assemblyFileName;
+        }
+
+        /// <summary>
+        /// 1. Initializes DiaSession.
+        /// 2. Assists in Unit Testing.
+        /// </summary>
+        /// <param name="diaSession">Type name of  DiaSession class.</param>
+        /// <param name="diaNavigationData">Type name of DiaNavigationData class.</param>
+        internal static void Initialize(string diaSession, string diaNavigationData)
+        {
+            DiaSessionOperations.Initialize(diaSession, diaNavigationData);
         }
     }
 
