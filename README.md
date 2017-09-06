@@ -4,7 +4,7 @@ Welcome to the "MSTest V2" repository, the evolution of the Microsoft Test Frame
  - in the Create Unit Tests wizard (Visual Studio 2017 Preview 4 onwards)
  - in the Create IntelliTest wizard (Visual Studio 2017 Preview 4 onwards)
 
-This is a fully supported, open source and cross-platform implementation of the MSTest test framework with which to write tests targeting .NET Framework, .NET Core and ASP.NET Core on Windows, Linux, and Mac. You can read more about MSTest V2 [here](https://blogs.msdn.microsoft.com/visualstudioalm/2017/02/25/mstest-v2-now-and-ahead/). 
+This is a fully supported, open source and cross-platform implementation of the MSTest test framework with which to write tests targeting .NET Framework, .NET Core and ASP.NET Core on Windows, Linux, and Mac. You can read more about MSTest V2 [here](https://blogs.msdn.microsoft.com/visualstudioalm/2017/02/25/mstest-v2-now-and-ahead/). For API documentation refer [here](https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.testtools.unittesting).
 
 ### Build status
 |            |Debug |Release |
