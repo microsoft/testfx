@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (string.IsNullOrEmpty(param))
             {
-                throw new ArgumentException(parameterName, message);
+                throw new ArgumentException(message, parameterName);
             }
         }
     }
