@@ -7,6 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
@@ -17,7 +18,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         internal UnitTestDiscoverer()
         {
             this.assemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
+            this.TestMethodFilter = new TestMethodFilter();
         }
+
+        /// <summary>
+        /// Gets or sets method filter for filtering tests
+        /// </summary>
+        private TestMethodFilter TestMethodFilter { get; set; }
 
         /// <summary>
         /// Discovers the tests available from the provided sources.
@@ -25,16 +32,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <param name="sources"> The sources. </param>
         /// <param name="logger"> The logger. </param>
         /// <param name="discoverySink"> The discovery Sink. </param>
-        /// <param name="runSettings"> The run settings. </param>
+        /// <param name="discoveryContext"> The discovery context. </param>
         internal void DiscoverTests(
             IEnumerable<string> sources,
             IMessageLogger logger,
             ITestCaseDiscoverySink discoverySink,
-            IRunSettings runSettings)
+            IDiscoveryContext discoveryContext)
         {
             foreach (var source in sources)
             {
-                this.DiscoverTestsInSource(source, logger, discoverySink, runSettings);
+                this.DiscoverTestsInSource(source, logger, discoverySink, discoveryContext);
             }
         }
 
@@ -44,16 +51,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <param name="source"> The source. </param>
         /// <param name="logger"> The logger. </param>
         /// <param name="discoverySink"> The discovery Sink. </param>
-        /// <param name="runSettings"> The run settings. </param>
+        /// <param name="discoveryContext"> The discovery context. </param>
         internal virtual void DiscoverTestsInSource(
             string source,
             IMessageLogger logger,
             ITestCaseDiscoverySink discoverySink,
-            IRunSettings runSettings)
+            IDiscoveryContext discoveryContext)
         {
             ICollection<string> warnings;
 
-            var testElements = this.assemblyEnumeratorWrapper.GetTests(source, runSettings, out warnings);
+            var testElements = this.assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out warnings);
 
             // log the warnings
             foreach (var warning in warnings)
@@ -76,10 +83,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 testElements.Count,
                 source);
 
-            this.SendTestCases(source, testElements, discoverySink);
+            this.SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
         }
 
-        internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink)
+        internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext discoveryContext, IMessageLogger logger)
         {
             var shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
 
@@ -91,11 +98,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                     navigationSessions.Add(source, PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source));
                 }
 
+                // Get filter expression and skip discovery in case filter expression has parsing error.
+                bool filterHasError = false;
+                ITestCaseFilterExpression filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, logger, out filterHasError);
+                if (filterHasError)
+                {
+                    return;
+                }
+
                 foreach (var testElement in testElements)
                 {
-                    object testNavigationSession;
                     var testCase = testElement.ToTestCase();
 
+                    // Filter tests based on test case filters
+                    if (filterExpression != null && filterExpression.MatchTestCase(testCase, (p) => this.TestMethodFilter.PropertyValueProvider(testCase, p)) == false)
+                    {
+                        continue;
+                    }
+
+                    object testNavigationSession;
                     if (shouldCollectSourceInformation)
                     {
                         string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;

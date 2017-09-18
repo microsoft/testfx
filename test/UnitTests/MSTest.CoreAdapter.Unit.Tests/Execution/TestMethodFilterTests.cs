@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System.Collections.Generic;
     using System.Reflection;
 
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -132,6 +132,38 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(false, filterHasError);
         }
 
+        /// <summary>
+        /// GetFilterExpression should return valid test case filter expression if DiscoveryContext has GetTestCaseFilter.
+        /// </summary>
+        [TestMethod]
+        public void GetFilterExpressionForDiscoveryContextWithGetTestCaseFilterReturnsValidTestCaseFilterExpression()
+        {
+            TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
+            var dummyFilterExpression = new TestableTestCaseFilterExpression();
+            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithGetTestCaseFilter(() => dummyFilterExpression);
+            bool filterHasError;
+            var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
+
+            Assert.AreEqual(dummyFilterExpression, filterExpression);
+            Assert.AreEqual(false, filterHasError);
+        }
+
+        /// <summary>
+        /// GetFilterExpression shoould return null test case filter expression in case DiscoveryContext doesnt have GetTestCaseFilter.
+        /// </summary>
+        [TestMethod]
+        public void GetFilterExpressionForDiscoveryContextWithoutGetTestCaseFilterReturnsNullTestCaseFilterExpression()
+        {
+            TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
+            var dummyFilterExpression = new TestableTestCaseFilterExpression();
+            TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithoutGetTestCaseFilter();
+            bool filterHasError;
+            var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
+
+            Assert.AreEqual(null, filterExpression);
+            Assert.AreEqual(false, filterHasError);
+        }
+
         [TestMethod]
         public void GetFilterExpressionForRunContextGetTestCaseFilterThrowingExceptionReturnsNullWithFilterHasErrorTrue()
         {
@@ -139,6 +171,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             TestableRunContext runContext = new TestableRunContext(() => { throw new TestPlatformFormatException("DummyException"); });
             bool filterHasError;
             var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, recorder, out filterHasError);
+
+            Assert.AreEqual(null, filterExpression);
+            Assert.AreEqual(true, filterHasError);
+            Assert.AreEqual("DummyException", recorder.Message);
+            Assert.AreEqual(TestMessageLevel.Error, recorder.TestMessageLevel);
+        }
+
+        /// <summary>
+        /// GetFilterExpression should return null filter expression and filterHasError as true in case GetTestCaseFilter throws exception.
+        /// </summary>
+        [TestMethod]
+        public void GetFilterExpressionForDiscoveryContextWithGetTestCaseFilterThrowingExceptionReturnsNullWithFilterHasErrorTrue()
+        {
+            TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
+            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithGetTestCaseFilter(() => { throw new TestPlatformFormatException("DummyException"); });
+            bool filterHasError;
+            var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
 
             Assert.AreEqual(null, filterExpression);
             Assert.AreEqual(true, filterHasError);
@@ -199,6 +248,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             {
                 return this.getFilter();
             }
+        }
+
+        private class TestableDiscoveryContextWithGetTestCaseFilter : IDiscoveryContext
+        {
+            private readonly Func<ITestCaseFilterExpression> getFilter;
+
+            public TestableDiscoveryContextWithGetTestCaseFilter(Func<ITestCaseFilterExpression> getFilter)
+            {
+                this.getFilter = getFilter;
+            }
+
+            public IRunSettings RunSettings { get; }
+
+            public ITestCaseFilterExpression GetTestCaseFilter(
+                IEnumerable<string> supportedProperties,
+                Func<string, TestProperty> propertyProvider)
+            {
+                return this.getFilter();
+            }
+        }
+
+        private class TestableDiscoveryContextWithoutGetTestCaseFilter : IDiscoveryContext
+        {
+            public IRunSettings RunSettings { get; }
         }
 
         private class TestableTestCaseFilterExpression : ITestCaseFilterExpression

@@ -98,7 +98,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 var logger = (IMessageLogger)frameworkHandle;
 
                 // discover the tests
-                this.GetUnitTestDiscoverer().DiscoverTestsInSource(source, logger, discoverySink, runContext?.RunSettings);
+                this.GetUnitTestDiscoverer().DiscoverTestsInSource(source, logger, discoverySink, runContext);
                 tests.AddRange(discoverySink.Tests);
 
                 // Clear discoverSinksTests so that it just stores test for one source at one point of time
