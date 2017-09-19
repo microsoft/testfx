@@ -155,7 +155,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void GetFilterExpressionForDiscoveryContextWithoutGetTestCaseFilterReturnsNullTestCaseFilterExpression()
         {
             TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
-            var dummyFilterExpression = new TestableTestCaseFilterExpression();
             TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithoutGetTestCaseFilter();
             bool filterHasError;
             var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
