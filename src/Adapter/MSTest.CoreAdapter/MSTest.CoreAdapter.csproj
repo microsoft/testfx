@@ -50,7 +50,7 @@
     <Compile Include="Execution\TestAssemblyInfo.cs" />
     <Compile Include="Execution\TestClassInfo.cs" />
     <Compile Include="ObjectModel\TestFailedException.cs" />
-    <Compile Include="Execution\TestMethodFilter.cs" />
+    <Compile Include="TestMethodFilter.cs" />
     <Compile Include="Execution\TestMethodRunner.cs" />
     <Compile Include="Execution\TypeCache.cs" />
     <Compile Include="Execution\UnitTestRunner.cs" />

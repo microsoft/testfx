@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 return;
             }
 
-            new UnitTestDiscoverer().DiscoverTests(sources, logger, discoverySink, discoveryContext?.RunSettings);
+            new UnitTestDiscoverer().DiscoverTests(sources, logger, discoverySink, discoveryContext);
         }
 
         /// <summary>

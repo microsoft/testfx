@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-    using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
     internal class TestMethodFilter
     {
@@ -34,24 +34,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Returns ITestCaseFilterExpression for TestProperties supported by adapter.
         /// </summary>
-        /// <param name="runContext">The current context of the run.</param>
-        /// <param name="testExecutionRecorder">Handler to report test messages/start/end and results.</param>
+        /// <param name="context">The current context of the run.</param>
+        /// <param name="logger">Handler to report test messages/start/end and results.</param>
         /// <param name="filterHasError">Indicates that the filter is unsupported/has an error.</param>
         /// <returns>A filter expression.</returns>
-        internal ITestCaseFilterExpression GetFilterExpression(IRunContext runContext, IMessageLogger testExecutionRecorder, out bool filterHasError)
+        internal ITestCaseFilterExpression GetFilterExpression(IDiscoveryContext context, IMessageLogger logger, out bool filterHasError)
         {
             filterHasError = false;
             ITestCaseFilterExpression filter = null;
-            if (runContext != null)
+            if (context != null)
             {
                 try
                 {
-                    filter = runContext.GetTestCaseFilter(this.supportedProperties.Keys, this.PropertyProvider);
+                    filter = (context is IRunContext) ? this.GetTestCaseFilterFromRunContext(context as IRunContext) : this.GetTestCaseFilterFromDiscoveryContext(context);
                 }
                 catch (TestPlatformFormatException ex)
                 {
                     filterHasError = true;
-                    testExecutionRecorder.SendMessage(TestMessageLevel.Error, ex.Message);
+                    logger.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
             }
 
@@ -94,6 +94,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Gets filter expression from run context.
+        /// </summary>
+        /// <param name="context">Run context</param>
+        /// <returns>Filter expression.</returns>
+        private ITestCaseFilterExpression GetTestCaseFilterFromRunContext(IRunContext context)
+        {
+            return context.GetTestCaseFilter(this.supportedProperties.Keys, this.PropertyProvider);
+        }
+
+        /// <summary>
+        /// Gets filter expression from discovery context.
+        /// </summary>
+        /// <param name="context">Discovery context</param>
+        /// <returns>Filter expression.</returns>
+        private ITestCaseFilterExpression GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context)
+        {
+            try
+            {
+                // GetTestCaseFilter is present in DiscoveryContext but not in IDiscoveryContext interface.
+                MethodInfo methodGetTestCaseFilter = context.GetType().GetRuntimeMethod("GetTestCaseFilter", new[] { typeof(IEnumerable<string>), typeof(Func<string, TestProperty>) });
+                return (ITestCaseFilterExpression)methodGetTestCaseFilter?.Invoke(context, new object[] { this.supportedProperties.Keys, (Func<string, TestProperty>)this.PropertyProvider });
+            }
+            catch (TargetInvocationException ex)
+            {
+                throw ex.InnerException;
+            }
         }
     }
 }
