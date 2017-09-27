@@ -131,6 +131,70 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void TestMethodInfoInvokeAsyncShouldHandleThrowAssertInconclusive()
+        {
+            DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => { throw new UTF.AssertInconclusiveException(); });
+            var asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod");
+
+            var method = new TestMethodInfo(
+                asyncMethodInfo,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            var result = method.Invoke(null);
+
+            Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, result.Outcome);
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeAsyncShouldHandleAssertInconclusive()
+        {
+            DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => { UTF.Assert.Inconclusive(); });
+            var asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod");
+
+            var method = new TestMethodInfo(
+                asyncMethodInfo,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            var result = method.Invoke(null);
+
+            Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, result.Outcome);
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldHandleThrowAssertInconclusive()
+        {
+            DummyTestClass.TestMethodBody = (d) => { throw new UTF.AssertInconclusiveException(); };
+            var asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod");
+
+            var method = new TestMethodInfo(
+                asyncMethodInfo,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            var result = method.Invoke(null);
+
+            Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, result.Outcome);
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldHandleAssertInconclusive()
+        {
+            DummyTestClass.TestMethodBody = (d) => { UTF.Assert.Inconclusive(); };
+            var asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyTestMethod");
+
+            var method = new TestMethodInfo(
+                asyncMethodInfo,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            var result = method.Invoke(null);
+
+            Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, result.Outcome);
+        }
+
+        [TestMethodV1]
         public void TestMethodInfoInvokeShouldListenForDebugAndTraceLogsWhenEnabled()
         {
             this.testMethodOptions.CaptureDebugTraces = true;

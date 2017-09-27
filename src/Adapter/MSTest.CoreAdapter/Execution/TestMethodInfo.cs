@@ -231,7 +231,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                     if (result.Outcome != TestTools.UnitTesting.UnitTestOutcome.Passed)
                     {
-                        if (ex.InnerException != null && ex.InnerException is AssertInconclusiveException)
+                        if (ex is UTF.AssertInconclusiveException || ex.InnerException is UTF.AssertInconclusiveException)
                         {
                             result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Inconclusive;
                         }
@@ -317,7 +317,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // attribute's Verify method) is an AssertInconclusiveException. If so, set
                 // the test outcome to Inconclusive.
                 result.TestFailureException = new TestFailedException(
-                    exceptionFromVerify is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed,
+                    exceptionFromVerify is UTF.AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed,
                                               exceptionFromVerify.TryGetMessage(),
                                               realException.TryGetStackTraceInformation());
                 return false;
