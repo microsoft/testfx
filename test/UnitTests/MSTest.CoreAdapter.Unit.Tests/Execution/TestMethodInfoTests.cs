@@ -166,10 +166,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestMethodInfoInvokeShouldHandleThrowAssertInconclusive()
         {
             DummyTestClass.TestMethodBody = (d) => { throw new UTF.AssertInconclusiveException(); };
-            var asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod");
+            var dummyMethodInfo = typeof(DummyTestClass).GetMethod("DummyTestMethod");
 
             var method = new TestMethodInfo(
-                asyncMethodInfo,
+                dummyMethodInfo,
                 this.testClassInfo,
                 this.testMethodOptions);
 
@@ -182,10 +182,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestMethodInfoInvokeShouldHandleAssertInconclusive()
         {
             DummyTestClass.TestMethodBody = (d) => { UTF.Assert.Inconclusive(); };
-            var asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyTestMethod");
+            var dummyMethodInfo = typeof(DummyTestClass).GetMethod("DummyTestMethod");
 
             var method = new TestMethodInfo(
-                asyncMethodInfo,
+                dummyMethodInfo,
                 this.testClassInfo,
                 this.testMethodOptions);
 
