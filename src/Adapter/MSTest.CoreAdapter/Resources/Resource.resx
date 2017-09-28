@@ -296,4 +296,7 @@
   <data name="UTA_CleanupStackTrace" xml:space="preserve">
     <value>TestCleanup Stack Trace</value>
   </data>
+  <data name="DiscoveryWarning" xml:space="preserve">
+    <value>[MSTest][Discovery][{0}] {1}</value>
+  </data>
 </root>
