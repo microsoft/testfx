@@ -125,6 +125,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [MSTest][Discovery][{0}] {1}.
+        /// </summary>
+        internal static string DiscoveryWarning {
+            get {
+                return ResourceManager.GetString("DiscoveryWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}: {1}.
         /// </summary>
         internal static string EnumeratorLoadTypeErrorFormat {

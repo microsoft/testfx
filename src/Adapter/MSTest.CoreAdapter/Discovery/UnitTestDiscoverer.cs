@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 {
     using System.Collections.Generic;
+    using System.Globalization;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -69,7 +70,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                     "MSTestDiscoverer: Warning during discovery from {0}. {1} ",
                     source,
                     warning);
-                logger.SendMessage(TestMessageLevel.Warning, warning);
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
+                logger.SendMessage(TestMessageLevel.Warning, message);
             }
 
             // No tests found => nothing to do
