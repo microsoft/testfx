@@ -243,7 +243,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             catch (FormatException ex)
             {
                 // if the version is ".NETPortable,Version=v4.5,Profile=Profile259", then above code will throw exception.
-                EqtTrace.Info(string.Format("AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{0}' due to error '{1}':", version, ex.Message));
+                EqtTrace.Warning(string.Format("AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{0}' due to error '{1}':", version, ex.Message));
             }
 
             return defaultVersion;
