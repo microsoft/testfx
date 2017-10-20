@@ -10,6 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Reflection;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
@@ -107,6 +108,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             return sources;
+        }
+
+        /// <inheritdoc />
+        public int GetParallelizationLevel(string source)
+        {
+            // Parallelization is not supported on Universal Platform (yet).
+            return -1;
+        }
+
+        /// <inheritdoc />
+        public TestParallelizationMode GetParallelizationMode(string source)
+        {
+            // Parallelization is not supported on Universal Platform (yet).
+            return TestParallelizationMode.None;
         }
 
         /// <summary>

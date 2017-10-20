@@ -63,6 +63,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public int? Priority { get; set; }
 
         /// <summary>
+        /// Gets or sets if this test method should not execute in parallel.
+        /// </summary>
+        public bool DoNotParallelize { get; set; }
+
+        /// <summary>
         /// Gets or sets the deployment items for the test method.
         /// </summary>
         public KeyValuePair<string, string>[] DeploymentItems { get; set; }
@@ -116,6 +121,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             if (this.DeploymentItems != null && this.DeploymentItems.Length > 0)
             {
                 testCase.SetPropertyValue(TestAdapter.Constants.DeploymentItemsProperty, this.DeploymentItems);
+            }
+
+            // Set the Do not parallelize state if present
+            if (this.DoNotParallelize)
+            {
+                testCase.SetPropertyValue(
+                    TestAdapter.Constants.DoNotParallelizeProperty,
+                    this.DoNotParallelize);
             }
 
             return testCase;

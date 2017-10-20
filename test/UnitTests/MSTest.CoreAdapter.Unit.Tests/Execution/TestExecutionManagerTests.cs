@@ -152,7 +152,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual("PassingTest  Passed", this.frameworkHandle.ResultsList[0]);
             StringAssert.Contains(
                 this.frameworkHandle.ResultsList[1],
-                "FailingTest  Failed\r\n  Message: Assert.Fail failed. \r\n  StackTrace:\r\n   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestExecutionManagerTests.DummyTestClass.FailingTest()");
+                "FailingTest  Failed\r\n  Message: Assert.Fail failed. \r\n  StackTrace:\n   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestExecutionManagerTests.DummyTestClass.FailingTest()");
         }
 
         [TestMethodV1]

@@ -331,6 +331,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
+        /// Get the parallelization behavior for a test method.
+        /// </summary>
+        /// <param name="testMethod">Test method.</param>
+        /// <returns>True if test method should not run in parallel.</returns>
+        internal bool IsDoNotParallelizeSet(MemberInfo testMethod)
+        {
+            return this.GetCustomAttributes(testMethod, typeof(DoNotParallelizeAttribute)).Any()
+                   || this.GetCustomAttributes(testMethod.DeclaringType.GetTypeInfo(), typeof(DoNotParallelizeAttribute)).Any();
+        }
+
+        /// <summary>
         /// Gets custom attributes at the class and assembly for a method.
         /// </summary>
         /// <param name="attributeProvider">Method Info or Member Info or a Type</param>

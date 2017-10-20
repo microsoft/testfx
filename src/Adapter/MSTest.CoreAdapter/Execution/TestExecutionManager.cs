@@ -4,18 +4,22 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// Class responsible for execution of tests at assembly level and sending tests via framework handle
@@ -183,6 +187,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
         }
 
+        private static bool MatchTestFilter(ITestCaseFilterExpression filterExpression, TestCase test, TestMethodFilter testMethodFilter)
+        {
+            if (filterExpression != null && filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)) == false)
+            {
+                // Skip test if not fitting filter criteria.
+                return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Execute the parameter tests present in parameter source
         /// </summary>
@@ -195,10 +210,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             Debug.Assert(!string.IsNullOrEmpty(source), "Source cannot be empty");
 
-            source = isDeploymentDone
-                         ? Path.Combine(
-                             PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory(),
-                             Path.GetFileName(source)) : source;
+            if (isDeploymentDone)
+            {
+                source = Path.Combine(PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory(), Path.GetFileName(source));
+            }
 
             using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle))
             {
@@ -207,7 +222,63 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     new object[] { MSTestSettings.CurrentSettings }) as UnitTestRunner;
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
-                this.ExecuteTestsWithTestRunner(tests, runContext, frameworkHandle, source, testRunner);
+                // Default test set is filtered based on user provided filter criteria
+                IEnumerable<TestCase> testset = Enumerable.Empty<TestCase>();
+                var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
+                if (!filterHasError)
+                {
+                    testset = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
+                }
+
+                // Create test sets for execution, we can execute them in parallel based on parallel settings
+                IEnumerable<IGrouping<bool, TestCase>> testsets = Enumerable.Empty<IGrouping<bool, TestCase>>();
+                var parallelLevel = PlatformServiceProvider.Instance.TestSource.GetParallelizationLevel(source);
+                if (parallelLevel <= 0)
+                {
+                    this.ExecuteTestsWithTestRunner(testset, runContext, frameworkHandle, source, testRunner);
+                }
+                else
+                {
+                    // Parallelization is enabled. Let's do further classification for sets.
+                    var parallelMode = PlatformServiceProvider.Instance.TestSource.GetParallelizationMode(source);
+                    var logger = (IMessageLogger)frameworkHandle;
+                    logger.SendMessage(TestMessageLevel.Informational, $"MSTestExecutor: Parallel Configuration. Level = {parallelLevel}, Mode = {parallelMode}");
+                    switch (parallelMode)
+                    {
+                        case TestParallelizationMode.MethodLevel:
+                            // There will be testsets: parallel and not-parallel
+                            testsets = testset.GroupBy(t => t.GetPropertyValue<bool>(TestAdapter.Constants.DoNotParallelizeProperty, false));
+                            break;
+                        case TestParallelizationMode.ClassLevel:
+                            break;
+                    }
+
+                    // Chunk the sets into further groups based on parallel level
+                    var queue = new ConcurrentQueue<TestCase>(testsets.First(g => g.Key == false));
+                    var tasks = new List<Task>();
+                    for (int i = 0; i < parallelLevel; i++)
+                    {
+                        tasks.Add(Task.Factory.StartNew(
+                            () =>
+                                {
+                                    while (!queue.IsEmpty)
+                                    {
+                                        if (queue.TryDequeue(out TestCase test))
+                                        {
+                                            this.ExecuteTestsWithTestRunner(new[] { test }, runContext, frameworkHandle, source, testRunner);
+                                        }
+                                    }
+                                },
+                        CancellationToken.None,     // TODO add support for cancellation
+                        TaskCreationOptions.LongRunning,
+                        TaskScheduler.Default));
+                    }
+
+                    Task.WaitAll(tasks.ToArray());
+
+                    // Queue the non parallel set
+                    this.ExecuteTestsWithTestRunner(testsets.First(g => g.Key), runContext, frameworkHandle, source, testRunner);
+                }
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                     "Executed tests belonging to source {0}",
@@ -228,59 +299,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var startTime = DateTimeOffset.MinValue;
             var endTime = DateTimeOffset.MinValue;
 
-            bool filterHasError;
-            var filterExpression = this.TestMethodFilter.GetFilterExpression(
-                runContext,
-                testExecutionRecorder,
-                out filterHasError);
-
-            if (!filterHasError)
+            foreach (var currentTest in tests)
             {
-                foreach (var currentTest in tests)
+                // Send previous test result.
+                this.SendTestResults(test, unitTestResult, startTime, endTime, testExecutionRecorder);
+
+                if (this.cancellationToken != null && this.cancellationToken.Canceled)
                 {
-                    // Skip test if not fitting filter criteria.
-                    if (filterExpression != null && filterExpression.MatchTestCase(
-                            currentTest,
-                            (p) => this.TestMethodFilter.PropertyValueProvider(currentTest, p)) == false)
-                    {
-                        continue;
-                    }
-
-                    // Send previous test result.
-                    this.SendTestResults(test, unitTestResult, startTime, endTime, testExecutionRecorder);
-
-                    if (this.cancellationToken != null && this.cancellationToken.Canceled)
-                    {
-                        break;
-                    }
-
-                    var unitTestElement = currentTest.ToUnitTestElement(source);
-                    testExecutionRecorder.RecordStart(currentTest);
-
-                    startTime = DateTimeOffset.Now;
-
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                        "Executing test {0}",
-                        unitTestElement.TestMethod.Name);
-
-                    // this is done so that appropriate values of testcontext properties are set at source level
-                    // and are merged with session level parameters
-                    var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
-
-                    if (this.sessionParameters != null && this.sessionParameters.Count > 0)
-                    {
-                        sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
-                    }
-
-                    unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
-
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                        "Executed test {0}",
-                        unitTestElement.TestMethod.Name);
-
-                    endTime = DateTimeOffset.Now;
-                    test = currentTest;
+                    break;
                 }
+
+                var unitTestElement = currentTest.ToUnitTestElement(source);
+                testExecutionRecorder.RecordStart(currentTest);
+
+                startTime = DateTimeOffset.Now;
+
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                    "Executing test {0}",
+                    unitTestElement.TestMethod.Name);
+
+                // this is done so that appropriate values of testcontext properties are set at source level
+                // and are merged with session level parameters
+                var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
+
+                if (this.sessionParameters != null && this.sessionParameters.Count > 0)
+                {
+                    sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
+                }
+
+                unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
+
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                    "Executed test {0}",
+                    unitTestElement.TestMethod.Name);
+
+                endTime = DateTimeOffset.Now;
+                test = currentTest;
             }
 
             IList<string> warnings = null;

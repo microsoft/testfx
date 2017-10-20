@@ -48,12 +48,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         private Dictionary<string, TestClassInfo> classInfoCache;
 
+        private object assemblyInfoSyncObject;
+        private object classInfoSyncObject;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="TypeCache"/> class.
         /// </summary>
         internal TypeCache()
             : this(new ReflectHelper())
         {
+            this.assemblyInfoSyncObject = new object();
+            this.classInfoSyncObject = new object();
         }
 
         /// <summary>
@@ -170,23 +175,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var typeName = testMethod.FullClassName;
 
             TestClassInfo classInfo;
-            if (!this.classInfoCache.TryGetValue(typeName, out classInfo))
+            lock (this.classInfoSyncObject)
             {
-                // Load the class type
-                Type type = this.LoadType(typeName, testMethod.AssemblyName);
-
-                if (type == null)
+                if (!this.classInfoCache.TryGetValue(typeName, out classInfo))
                 {
-                    // This means the class containing the test method could not be found.
-                    // Return null so we return a not found result.
-                    return null;
+                    // Load the class type
+                    Type type = this.LoadType(typeName, testMethod.AssemblyName);
+
+                    if (type == null)
+                    {
+                        // This means the class containing the test method could not be found.
+                        // Return null so we return a not found result.
+                        return null;
+                    }
+
+                    // Get the classInfo
+                    classInfo = this.CreateClassInfo(type, testMethod);
+
+                    // Use the full type name for the cache.
+                    this.classInfoCache.Add(typeName, classInfo);
                 }
-
-                // Get the classInfo
-                classInfo = this.CreateClassInfo(type, testMethod);
-
-                // Use the full type name for the cache.
-                this.classInfoCache.Add(typeName, classInfo);
             }
 
             return classInfo;
@@ -348,61 +356,64 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private TestAssemblyInfo GetAssemblyInfo(Type type)
         {
             var assembly = type.GetTypeInfo().Assembly;
-
             TestAssemblyInfo assemblyInfo;
-            if (this.testAssemblyInfoCache.TryGetValue(assembly, out assemblyInfo))
+
+            lock (this.assemblyInfoSyncObject)
             {
-                return assemblyInfo;
-            }
-
-            var assemblyInitializeType = typeof(AssemblyInitializeAttribute);
-            var assemblyCleanupType = typeof(AssemblyCleanupAttribute);
-
-            assemblyInfo = new TestAssemblyInfo();
-
-            var types = new AssemblyEnumerator().GetTypes(assembly, assembly.FullName, null);
-
-            foreach (var t in types)
-            {
-                if (t == null)
+                if (this.testAssemblyInfoCache.TryGetValue(assembly, out assemblyInfo))
                 {
-                    continue;
+                    return assemblyInfo;
                 }
 
-                try
+                var assemblyInitializeType = typeof(AssemblyInitializeAttribute);
+                var assemblyCleanupType = typeof(AssemblyCleanupAttribute);
+
+                assemblyInfo = new TestAssemblyInfo();
+
+                var types = new AssemblyEnumerator().GetTypes(assembly, assembly.FullName, null);
+
+                foreach (var t in types)
                 {
-                    // Only examine test classes for test attributes
-                    if (!this.reflectionHelper.IsAttributeDefined(t, typeof(TestClassAttribute), inherit: true))
+                    if (t == null)
                     {
                         continue;
                     }
-                }
-                catch (Exception ex)
-                {
-                    // If we fail to discover type from an assembly, then do not abort. Pick the next type.
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
-                        "TypeCache: Exception occured while checking whether type {0} is a test class or not. {1}",
-                        t.FullName,
-                        ex);
 
-                    continue;
+                    try
+                    {
+                        // Only examine test classes for test attributes
+                        if (!this.reflectionHelper.IsAttributeDefined(t, typeof(TestClassAttribute), inherit: true))
+                        {
+                            continue;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // If we fail to discover type from an assembly, then do not abort. Pick the next type.
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
+                            "TypeCache: Exception occured while checking whether type {0} is a test class or not. {1}",
+                            t.FullName,
+                            ex);
+
+                        continue;
+                    }
+
+                    // Enumerate through all methods and identify the Assembly Init and cleanup methods.
+                    foreach (var methodInfo in t.GetTypeInfo().DeclaredMethods)
+                    {
+                        if (this.IsAssemblyOrClassInitializeMethod(methodInfo, assemblyInitializeType))
+                        {
+                            assemblyInfo.AssemblyInitializeMethod = methodInfo;
+                        }
+                        else if (this.IsAssemblyOrClassCleanupMethod(methodInfo, assemblyCleanupType))
+                        {
+                            assemblyInfo.AssemblyCleanupMethod = methodInfo;
+                        }
+                    }
                 }
 
-                // Enumerate through all methods and identify the Assembly Init and cleanup methods.
-                foreach (var methodInfo in t.GetTypeInfo().DeclaredMethods)
-                {
-                    if (this.IsAssemblyOrClassInitializeMethod(methodInfo, assemblyInitializeType))
-                    {
-                        assemblyInfo.AssemblyInitializeMethod = methodInfo;
-                    }
-                    else if (this.IsAssemblyOrClassCleanupMethod(methodInfo, assemblyCleanupType))
-                    {
-                        assemblyInfo.AssemblyCleanupMethod = methodInfo;
-                    }
-                }
+                this.testAssemblyInfoCache.Add(assembly, assemblyInfo);
             }
-
-            this.testAssemblyInfoCache.Add(assembly, assemblyInfo);
 
             return assemblyInfo;
         }

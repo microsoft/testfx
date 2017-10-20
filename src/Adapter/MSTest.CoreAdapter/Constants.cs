@@ -42,6 +42,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register("MSTestDiscoverer.DeploymentItems", DeploymentItemsLabel, typeof(KeyValuePair<string, string>[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
+        internal static readonly TestProperty DoNotParallelizeProperty = TestProperty.Register("MSTestDiscovererv2.DoNotParallelize", DoNotParallelizeLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
+
         #endregion
 
         #region Private Constants
@@ -56,6 +58,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         private const string TestCategoryLabel = "TestCategory";
         private const string PriorityLabel = "Priority";
         private const string DeploymentItemsLabel = "DeploymentItems";
+        private const string DoNotParallelizeLabel = "DoNotParallelize";
 
         #endregion
     }

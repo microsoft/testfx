@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 {
     using System.Collections.Generic;
     using System.Reflection;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// This platform service is responsible for any data or operations to validate
@@ -31,5 +32,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// <param name="sources"> Sources given to the adapter.  </param>
         /// <returns> Sources that contains tests. </returns>
         IEnumerable<string> GetTestSources(IEnumerable<string> sources);
+
+        /// <summary>
+        /// Gets the parallelization level.
+        /// </summary>
+        /// <param name="source"> The source. </param>
+        /// <returns> The level of parallelization. </returns>
+        int GetParallelizationLevel(string source);
+
+        /// <summary>
+        /// Gets the mode of parallelization.
+        /// </summary>
+        /// <param name="source"> Test source. </param>
+        /// <returns> Parallelization mode for the source. </returns>
+        TestParallelizationMode GetParallelizationMode(string source);
     }
 }
