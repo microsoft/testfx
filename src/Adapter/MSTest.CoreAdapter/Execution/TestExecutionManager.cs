@@ -233,11 +233,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Create test sets for execution, we can execute them in parallel based on parallel settings
                 IEnumerable<IGrouping<bool, TestCase>> testsets = Enumerable.Empty<IGrouping<bool, TestCase>>();
                 var parallelLevel = PlatformServiceProvider.Instance.TestSource.GetParallelizationLevel(source);
-                if (parallelLevel <= 0)
+                if (parallelLevel < 0)
                 {
-                    this.ExecuteTestsWithTestRunner(testsToRun, runContext, frameworkHandle, source, testRunner);
+                    // Todo: This needs to be set to processor count when set to 0 from runsettings.
+                    parallelLevel = MSTestSettings.CurrentSettings.TestParallelizationLevel;
                 }
-                else
+
+                if (parallelLevel >= 0)
                 {
                     // Parallelization is enabled. Let's do further classification for sets.
                     var parallelMode = PlatformServiceProvider.Instance.TestSource.GetParallelizationMode(source);
@@ -269,15 +271,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         {
                             tasks.Add(Task.Factory.StartNew(
                                 () =>
+                                {
+                                    while (!queue.IsEmpty)
                                     {
-                                        while (!queue.IsEmpty)
+                                        if (queue.TryDequeue(out IEnumerable<TestCase> testSet))
                                         {
-                                            if (queue.TryDequeue(out IEnumerable<TestCase> testSet))
-                                            {
-                                                this.ExecuteTestsWithTestRunner(testSet, runContext, frameworkHandle, source, testRunner);
-                                            }
+                                            this.ExecuteTestsWithTestRunner(testSet, runContext, frameworkHandle, source, testRunner);
                                         }
-                                    },
+                                    }
+                                },
                             CancellationToken.None,
                             TaskCreationOptions.LongRunning,
                             TaskScheduler.Default));
@@ -291,6 +293,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     {
                         this.ExecuteTestsWithTestRunner(nonparallelizableTestSet, runContext, frameworkHandle, source, testRunner);
                     }
+                }
+                else
+                {
+                    this.ExecuteTestsWithTestRunner(testsToRun, runContext, frameworkHandle, source, testRunner);
                 }
 
                 this.RunCleanup(frameworkHandle, testRunner);
