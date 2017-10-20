@@ -280,6 +280,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     this.ExecuteTestsWithTestRunner(testsets.First(g => g.Key), runContext, frameworkHandle, source, testRunner);
                 }
 
+                this.RunCleanup(frameworkHandle, testRunner);
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                     "Executed tests belonging to source {0}",
                     source);
@@ -293,17 +294,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             string source,
             UnitTestRunner testRunner)
         {
-            TestCase test = null;
-            UnitTestResult[] unitTestResult = null;
-
-            var startTime = DateTimeOffset.MinValue;
-            var endTime = DateTimeOffset.MinValue;
-
             foreach (var currentTest in tests)
             {
-                // Send previous test result.
-                this.SendTestResults(test, unitTestResult, startTime, endTime, testExecutionRecorder);
-
                 if (this.cancellationToken != null && this.cancellationToken.Canceled)
                 {
                     break;
@@ -312,7 +304,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 var unitTestElement = currentTest.ToUnitTestElement(source);
                 testExecutionRecorder.RecordStart(currentTest);
 
-                startTime = DateTimeOffset.Now;
+                var startTime = DateTimeOffset.Now;
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                     "Executing test {0}",
@@ -327,43 +319,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
                 }
 
-                unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
+                var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                     "Executed test {0}",
                     unitTestElement.TestMethod.Name);
 
-                endTime = DateTimeOffset.Now;
-                test = currentTest;
-            }
+                var endTime = DateTimeOffset.Now;
 
-            IList<string> warnings = null;
-            try
+                this.SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
+            }
+        }
+
+        private void RunCleanup(
+            ITestExecutionRecorder testExecutionRecorder,
+            UnitTestRunner testRunner)
+        {
+            // All cleanups (Class and Assembly) run at the end of test execution. Failures in these cleanup
+            // methods will be reported as Warnings.
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing cleanup methods.");
+            var cleanupResult = testRunner.RunCleanup();
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed cleanup methods.");
+            if (cleanupResult != null)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing cleanup methods.");
-                var cleanupResult = testRunner.RunCleanup();
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed cleanup methods.");
+                IList<string> warnings = cleanupResult.Warnings;
 
-                if (cleanupResult != null)
-                {
-                    warnings = cleanupResult.Warnings;
-
-                    if (unitTestResult?.Length > 0)
-                    {
-                        var lastResult = unitTestResult[unitTestResult.Length - 1];
-                        lastResult.StandardOut += cleanupResult.StandardOut;
-                        lastResult.StandardError += cleanupResult.StandardError;
-                        lastResult.DebugTrace += cleanupResult.DebugTrace;
-                    }
-                }
+                // Do not attach the standard output and error messages to any test result. It is not
+                // guaranteed that a test method of same class would have run last. We will end up
+                // adding stdout to test method of another class.
+                this.LogWarnings(testExecutionRecorder, warnings);
             }
-            finally
-            {
-                // Send last test result
-                this.SendTestResults(test, unitTestResult, startTime, endTime, testExecutionRecorder);
-            }
-
-            this.LogWarnings(testExecutionRecorder, warnings);
         }
 
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]
