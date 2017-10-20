@@ -223,11 +223,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
                 // Default test set is filtered based on user provided filter criteria
-                IEnumerable<TestCase> testset = Enumerable.Empty<TestCase>();
+                IEnumerable<TestCase> testsToRun = Enumerable.Empty<TestCase>();
                 var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
                 if (!filterHasError)
                 {
-                    testset = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
+                    testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
                 }
 
                 // Create test sets for execution, we can execute them in parallel based on parallel settings
@@ -235,7 +235,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 var parallelLevel = PlatformServiceProvider.Instance.TestSource.GetParallelizationLevel(source);
                 if (parallelLevel <= 0)
                 {
-                    this.ExecuteTestsWithTestRunner(testset, runContext, frameworkHandle, source, testRunner);
+                    this.ExecuteTestsWithTestRunner(testsToRun, runContext, frameworkHandle, source, testRunner);
                 }
                 else
                 {
@@ -243,41 +243,54 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     var parallelMode = PlatformServiceProvider.Instance.TestSource.GetParallelizationMode(source);
                     var logger = (IMessageLogger)frameworkHandle;
                     logger.SendMessage(TestMessageLevel.Informational, $"MSTestExecutor: Parallel Configuration. Level = {parallelLevel}, Mode = {parallelMode}");
-                    switch (parallelMode)
-                    {
-                        case TestParallelizationMode.MethodLevel:
-                            // There will be testsets: parallel and not-parallel
-                            testsets = testset.GroupBy(t => t.GetPropertyValue<bool>(TestAdapter.Constants.DoNotParallelizeProperty, false));
-                            break;
-                        case TestParallelizationMode.ClassLevel:
-                            break;
-                    }
+
+                    // Parallel and not parallel sets.
+                    testsets = testsToRun.GroupBy(t => t.GetPropertyValue<bool>(TestAdapter.Constants.DoNotParallelizeProperty, false));
 
                     // Chunk the sets into further groups based on parallel level
-                    var queue = new ConcurrentQueue<TestCase>(testsets.First(g => g.Key == false));
-                    var tasks = new List<Task>();
-                    for (int i = 0; i < parallelLevel; i++)
+                    ConcurrentQueue<IEnumerable<TestCase>> queue = null;
+                    var parallelizableTestSet = testsets.FirstOrDefault(g => g.Key == false);
+                    var nonparallelizableTestSet = testsets.FirstOrDefault(g => g.Key == true);
+
+                    if (parallelizableTestSet != null)
                     {
-                        tasks.Add(Task.Factory.StartNew(
-                            () =>
-                                {
-                                    while (!queue.IsEmpty)
+                        switch (parallelMode)
+                        {
+                            case TestParallelizationMode.MethodLevel:
+                                queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }).AsEnumerable<IEnumerable<TestCase>>());
+                                break;
+                            case TestParallelizationMode.ClassLevel:
+                                queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.TestClassNameProperty) as string));
+                                break;
+                        }
+
+                        var tasks = new List<Task>();
+                        for (int i = 0; i < parallelLevel; i++)
+                        {
+                            tasks.Add(Task.Factory.StartNew(
+                                () =>
                                     {
-                                        if (queue.TryDequeue(out TestCase test))
+                                        while (!queue.IsEmpty)
                                         {
-                                            this.ExecuteTestsWithTestRunner(new[] { test }, runContext, frameworkHandle, source, testRunner);
+                                            if (queue.TryDequeue(out IEnumerable<TestCase> testSet))
+                                            {
+                                                this.ExecuteTestsWithTestRunner(testSet, runContext, frameworkHandle, source, testRunner);
+                                            }
                                         }
-                                    }
-                                },
-                        CancellationToken.None,     // TODO add support for cancellation
-                        TaskCreationOptions.LongRunning,
-                        TaskScheduler.Default));
+                                    },
+                            CancellationToken.None,
+                            TaskCreationOptions.LongRunning,
+                            TaskScheduler.Default));
+                        }
+
+                        Task.WaitAll(tasks.ToArray());
                     }
 
-                    Task.WaitAll(tasks.ToArray());
-
                     // Queue the non parallel set
-                    this.ExecuteTestsWithTestRunner(testsets.First(g => g.Key), runContext, frameworkHandle, source, testRunner);
+                    if (nonparallelizableTestSet != null)
+                    {
+                        this.ExecuteTestsWithTestRunner(nonparallelizableTestSet, runContext, frameworkHandle, source, testRunner);
+                    }
                 }
 
                 this.RunCleanup(frameworkHandle, testRunner);
