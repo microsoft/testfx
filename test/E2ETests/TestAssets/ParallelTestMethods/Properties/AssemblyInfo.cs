@@ -38,4 +38,4 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 // Parallel configuration
 [assembly: TestParallelizationMode(TestParallelizationMode.MethodLevel)]
-[assembly: TestParallelizationLevel(2)]
+[assembly: TestParallelizationLevel(3)]

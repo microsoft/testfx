@@ -3,6 +3,7 @@
 
 namespace ParallelTestMethods
 {
+    using System.Threading;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -17,6 +18,7 @@ namespace ParallelTestMethods
         [TestMethod]
         public void SimpleTest12()
         {
+            Thread.Sleep(1000);
             Assert.Fail();
         }
     }

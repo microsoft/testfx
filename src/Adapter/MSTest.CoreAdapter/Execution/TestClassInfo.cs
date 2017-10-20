@@ -23,6 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private MethodInfo classInitializeMethod;
         private MethodInfo testCleanupMethod;
         private MethodInfo testInitializeMethod;
+        private object testClassExecuteSyncObject;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TestClassInfo"/> class.
@@ -51,6 +52,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
             this.Parent = parent;
             this.ClassAttribute = classAttribute;
+            this.testClassExecuteSyncObject = new object();
         }
 
         /// <summary>
@@ -228,20 +230,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 throw new NullReferenceException(Resource.TestContextIsNull);
             }
 
-            // If class initialization is not done, then do it.
-            if (!this.IsClassInitializeExecuted)
+            lock (this.testClassExecuteSyncObject)
             {
-                try
+                // If class initialization is not done, then do it.
+                if (!this.IsClassInitializeExecuted)
                 {
-                    this.ClassInitializeMethod.InvokeAsSynchronousTask(null, testContext);
-                }
-                catch (Exception ex)
-                {
-                    this.ClassInitializationException = ex;
-                }
-                finally
-                {
-                    this.IsClassInitializeExecuted = true;
+                    try
+                    {
+                        this.ClassInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.ClassInitializationException = ex;
+                    }
+                    finally
+                    {
+                        this.IsClassInitializeExecuted = true;
+                    }
                 }
             }
 
@@ -295,36 +300,39 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return null;
             }
 
-            try
+            lock (this.testClassExecuteSyncObject)
             {
-                this.ClassCleanupMethod.InvokeAsSynchronousTask(null);
-
-                return null;
-            }
-            catch (Exception exception)
-            {
-                var realException = exception.InnerException ?? exception;
-
-                string errorMessage;
-
-                // special case AssertFailedException to trim off part of the stack trace
-                if (realException is AssertFailedException ||
-                    realException is AssertInconclusiveException)
+                try
                 {
-                    errorMessage = realException.Message;
-                }
-                else
-                {
-                    errorMessage = StackTraceHelper.GetExceptionMessage(realException);
-                }
+                    this.ClassCleanupMethod.InvokeAsSynchronousTask(null);
 
-                return string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-                    this.ClassType.Name,
-                    this.ClassCleanupMethod.Name,
-                    errorMessage,
-                    StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                    return null;
+                }
+                catch (Exception exception)
+                {
+                    var realException = exception.InnerException ?? exception;
+
+                    string errorMessage;
+
+                    // special case AssertFailedException to trim off part of the stack trace
+                    if (realException is AssertFailedException ||
+                        realException is AssertInconclusiveException)
+                    {
+                        errorMessage = realException.Message;
+                    }
+                    else
+                    {
+                        errorMessage = StackTraceHelper.GetExceptionMessage(realException);
+                    }
+
+                    return string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.UTA_ClassCleanupMethodWasUnsuccesful,
+                        this.ClassType.Name,
+                        this.ClassCleanupMethod.Name,
+                        errorMessage,
+                        StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                }
             }
         }
     }

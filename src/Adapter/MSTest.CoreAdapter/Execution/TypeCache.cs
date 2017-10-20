@@ -57,8 +57,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         internal TypeCache()
             : this(new ReflectHelper())
         {
-            this.assemblyInfoSyncObject = new object();
-            this.classInfoSyncObject = new object();
         }
 
         /// <summary>
@@ -70,6 +68,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.reflectionHelper = reflectionHelper;
             this.testAssemblyInfoCache = new Dictionary<Assembly, TestAssemblyInfo>();
             this.classInfoCache = new Dictionary<string, TestClassInfo>(StringComparer.Ordinal);
+            this.assemblyInfoSyncObject = new object();
+            this.classInfoSyncObject = new object();
         }
 
         /// <summary>

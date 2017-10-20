@@ -20,12 +20,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private MethodInfo assemblyCleanupMethod;
 
         private MethodInfo assemblyInitializeMethod;
+        private object assemblyInfoExecuteSyncObject;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TestAssemblyInfo"/> class.
         /// </summary>
         internal TestAssemblyInfo()
         {
+            this.assemblyInfoExecuteSyncObject = new object();
         }
 
         /// <summary>
@@ -124,20 +126,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 throw new NullReferenceException(Resource.TestContextIsNull);
             }
 
-            // If assembly initialization is not done, then do it.
-            if (!this.IsAssemblyInitializeExecuted)
+            lock (this.assemblyInfoExecuteSyncObject)
             {
-                try
+                // If assembly initialization is not done, then do it.
+                if (!this.IsAssemblyInitializeExecuted)
                 {
-                    this.AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
-                }
-                catch (Exception ex)
-                {
-                    this.AssemblyInitializationException = ex;
-                }
-                finally
-                {
-                    this.IsAssemblyInitializeExecuted = true;
+                    try
+                    {
+                        this.AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.AssemblyInitializationException = ex;
+                    }
+                    finally
+                    {
+                        this.IsAssemblyInitializeExecuted = true;
+                    }
                 }
             }
 
@@ -193,36 +198,39 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return null;
             }
 
-            try
+            lock (this.assemblyInfoExecuteSyncObject)
             {
-                this.AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
-
-                return null;
-            }
-            catch (Exception ex)
-            {
-                var realException = ex.InnerException ?? ex;
-
-                string errorMessage;
-
-                // special case AssertFailedException to trim off part of the stack trace
-                if (realException is AssertFailedException ||
-                    realException is AssertInconclusiveException)
+                try
                 {
-                    errorMessage = realException.Message;
-                }
-                else
-                {
-                    errorMessage = StackTraceHelper.GetExceptionMessage(realException);
-                }
+                    this.AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
 
-                return string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
-                    this.AssemblyCleanupMethod.DeclaringType.Name,
-                    this.AssemblyCleanupMethod.Name,
-                    errorMessage,
-                    StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    var realException = ex.InnerException ?? ex;
+
+                    string errorMessage;
+
+                    // special case AssertFailedException to trim off part of the stack trace
+                    if (realException is AssertFailedException ||
+                        realException is AssertInconclusiveException)
+                    {
+                        errorMessage = realException.Message;
+                    }
+                    else
+                    {
+                        errorMessage = StackTraceHelper.GetExceptionMessage(realException);
+                    }
+
+                    return string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
+                        this.AssemblyCleanupMethod.DeclaringType.Name,
+                        this.AssemblyCleanupMethod.Name,
+                        errorMessage,
+                        StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                }
             }
         }
     }

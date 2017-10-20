@@ -3,6 +3,7 @@
 
 namespace ParallelTestMethods
 {
+    using System.Threading;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -17,6 +18,7 @@ namespace ParallelTestMethods
         [TestMethod]
         public void SimpleTest22()
         {
+            Thread.Sleep(1000);
             Assert.Fail();
         }
 
@@ -24,6 +26,7 @@ namespace ParallelTestMethods
         [DoNotParallelize]
         public void IsolatedTest()
         {
+            Thread.Sleep(1000);
             Assert.IsTrue(true);
         }
     }
