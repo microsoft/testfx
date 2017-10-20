@@ -25,6 +25,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </summary>
         public IList<TestResult> SkippedTests { get; private set; }
 
+        public double ElapsedTimeInRunningTests { get; private set; }
+
         public RunEventsHandler()
         {
             this.PassedTests = new List<TestResult>();
@@ -75,6 +77,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
                     }
                 }
             }
+
+            this.ElapsedTimeInRunningTests = testRunCompleteArgs.ElapsedTimeInRunningTests.TotalMilliseconds;
         }
 
         public void HandleTestRunStatsChange(TestRunChangedEventArgs testRunChangedArgs)

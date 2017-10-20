@@ -1,9 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace ParallelTestMethods
+namespace ParallelMethodsTestProject
 {
-    using System;
     using System.Threading;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -56,13 +55,14 @@ namespace ParallelTestMethods
         [TestMethod]
         public void SimpleTest21()
         {
+            Thread.Sleep(Constants.WaitTimeInMS);
             Assert.AreEqual(0, 0);
         }
 
         [TestMethod]
         public void SimpleTest22()
         {
-            Thread.Sleep(1000);
+            Thread.Sleep(Constants.WaitTimeInMS);
             Assert.Fail();
         }
 
@@ -70,7 +70,7 @@ namespace ParallelTestMethods
         [DoNotParallelize]
         public void IsolatedTest()
         {
-            Thread.Sleep(1000);
+            Thread.Sleep(Constants.WaitTimeInMS);
             Assert.IsTrue(true);
         }
     }
