@@ -331,6 +331,41 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
+        /// Gets the parallelization level set on an assembly.
+        /// </summary>
+        /// <param name="assembly"> The test asembly. </param>
+        /// <returns> The parallelization level if set. -1 otherwise. </returns>
+        internal int GetParallelizationLevel(Assembly assembly)
+        {
+            var parallelizationLevelAttribute = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestParallelizationLevelAttribute)).OfType<TestParallelizationLevelAttribute>().FirstOrDefault();
+
+            if (parallelizationLevelAttribute != null)
+            {
+                return parallelizationLevelAttribute.ParallelizationLevel;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Gets the parallelization mode set on an assembly.
+        /// </summary>
+        /// <param name="assembly"> The test assembly. </param>
+        /// <returns> The parallelization mode for this assembly if set. TestParallelizationMode.MethodLevel if not.</returns>
+        internal TestParallelizationMode GetParallelizationMode(Assembly assembly)
+        {
+            var parallelizationModeAttribute = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestParallelizationModeAttribute)).OfType<TestParallelizationModeAttribute>().FirstOrDefault();
+
+            if (parallelizationModeAttribute != null)
+            {
+                return parallelizationModeAttribute.TestParallelizationMode;
+            }
+
+            // Default to highest degree of parallelization - Method Level.
+            return TestParallelizationMode.MethodLevel;
+        }
+
+        /// <summary>
         /// Get the parallelization behavior for a test method.
         /// </summary>
         /// <param name="testMethod">Test method.</param>
@@ -339,6 +374,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         {
             return this.GetCustomAttributes(testMethod, typeof(DoNotParallelizeAttribute)).Any()
                    || this.GetCustomAttributes(testMethod.DeclaringType.GetTypeInfo(), typeof(DoNotParallelizeAttribute)).Any();
+        }
+
+        /// <summary>
+        /// Get the parallelization behavior for a test assembly.
+        /// </summary>
+        /// <param name="assembly">The test assembly.</param>
+        /// <returns>True if test assembly should not run in parallel.</returns>
+        internal bool IsDoNotParallelizeSet(Assembly assembly)
+        {
+            return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute)).Any();
         }
 
         /// <summary>

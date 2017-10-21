@@ -66,52 +66,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             return sources;
         }
-
-        /// <inheritdoc />
-        public int GetParallelizationLevel(string source)
-        {
-            var inAssemblyParallelizationLevel = -1;
-
-            var customAttribute = this.GetCustomAttributeFromAssembly(source, typeof(TestParallelizationLevelAttribute));
-
-            var parallelizationLevelAttribute = (TestParallelizationLevelAttribute)customAttribute;
-            if (parallelizationLevelAttribute != null)
-            {
-                inAssemblyParallelizationLevel = parallelizationLevelAttribute.ParallelizationLevel;
-            }
-
-            if (inAssemblyParallelizationLevel == 0)
-            {
-                inAssemblyParallelizationLevel = Environment.ProcessorCount;
-            }
-
-            return inAssemblyParallelizationLevel;
-        }
-
-        /// <inheritdoc />
-        public TestParallelizationMode GetParallelizationMode(string source)
-        {
-            // TODO we should retrieve all assembly level properties for the execution at once
-            var inAssemblyParallelizationMode = TestParallelizationMode.ClassLevel;
-            var customAttribute = this.GetCustomAttributeFromAssembly(source, typeof(TestParallelizationModeAttribute));
-            var parallelizationModeAttribute = (TestParallelizationModeAttribute)customAttribute;
-
-            if (parallelizationModeAttribute != null)
-            {
-                inAssemblyParallelizationMode = parallelizationModeAttribute.TestParallelizationMode;
-            }
-
-            return inAssemblyParallelizationMode;
-        }
-
-        private object GetCustomAttributeFromAssembly(string source, Type type)
-        {
-            var asm = Assembly.LoadFrom(source);
-
-            var customAttribute = asm.GetCustomAttribute(type);
-
-            return customAttribute;
-        }
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

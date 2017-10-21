@@ -48,6 +48,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             this.EnableBaseClassTestMethodsFromOtherAssemblies = true;
             this.ForcedLegacyMode = false;
             this.TestSettingsFile = null;
+            this.TestParallelizationLevel = -1;
         }
 
         /// <summary>
@@ -119,6 +120,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
 
         /// <summary>
+        /// Gets the level of parallelization to be used for a run.
+        /// </summary>
+        public int TestParallelizationLevel { get; private set; }
+
+        /// <summary>
         /// Populate settings based on existing settings object.
         /// </summary>
         /// <param name="settings">The existing settings object.</param>
@@ -129,6 +135,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
             CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
             CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
+            CurrentSettings.TestParallelizationLevel = settings.TestParallelizationLevel;
         }
 
         /// <summary>
@@ -244,6 +251,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             //     <CaptureTraceOutput>true</CaptureTraceOutput>
             //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
             //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
+            //     <TestParallelizationLevel>2</TestParallelizationLevel>
             // </MSTestV2>
             //
             // (or)
@@ -315,6 +323,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                 if (!string.IsNullOrEmpty(fileName))
                                 {
                                     settings.TestSettingsFile = fileName;
+                                }
+
+                                break;
+                            }
+
+                        case "TESTPARALLELIZATIONLEVEL":
+                            {
+                                if (int.TryParse(reader.ReadInnerXml(), out int parallelLevel))
+                                {
+                                    if (parallelLevel == 0)
+                                    {
+                                        settings.TestParallelizationLevel = Environment.ProcessorCount;
+                                    }
+                                    else
+                                    {
+                                        settings.TestParallelizationLevel = parallelLevel;
+                                    }
                                 }
 
                                 break;

@@ -110,20 +110,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return sources;
         }
 
-        /// <inheritdoc />
-        public int GetParallelizationLevel(string source)
-        {
-            // Parallelization is not supported on Universal Platform (yet).
-            return -1;
-        }
-
-        /// <inheritdoc />
-        public TestParallelizationMode GetParallelizationMode(string source)
-        {
-            // Parallelization is not supported on Universal Platform (yet).
-            return TestParallelizationMode.None;
-        }
-
         /// <summary>
         /// Checks if given list of sources contains any ".appx" source.
         /// </summary>

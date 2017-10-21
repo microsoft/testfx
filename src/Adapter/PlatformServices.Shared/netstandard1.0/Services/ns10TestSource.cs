@@ -49,18 +49,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             return sources;
         }
-
-        /// <inheritdoc />
-        public int GetParallelizationLevel(string source)
-        {
-            return -1;
-        }
-
-        /// <inheritdoc />
-        public TestParallelizationMode GetParallelizationMode(string source)
-        {
-            return TestParallelizationMode.None;
-        }
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

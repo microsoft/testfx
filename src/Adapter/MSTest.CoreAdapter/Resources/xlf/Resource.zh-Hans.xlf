@@ -306,6 +306,11 @@
         <target state="new">[MSTest][Discovery][{0}] {1}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="TestParallelizationBanner">
+        <source>MSTest Executor: Test Parallelization enabled. Parallel Level {0}, Parallel Mode {1}</source>
+        <target state="new">MSTest Executor: Test Parallelization enabled. Parallel Level {0}, Parallel Mode {1}</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
