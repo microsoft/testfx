@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resource {
@@ -220,6 +220,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string TestNotFound {
             get {
                 return ResourceManager.GetString("TestNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MSTest Executor: Test Parallelization enabled. Parallel Level {0}, Parallel Mode {1}.
+        /// </summary>
+        internal static string TestParallelizationBanner {
+            get {
+                return ResourceManager.GetString("TestParallelizationBanner", resourceCulture);
             }
         }
         

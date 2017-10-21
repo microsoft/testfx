@@ -332,7 +332,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                             {
                                 if (int.TryParse(reader.ReadInnerXml(), out int parallelLevel))
                                 {
-                                    settings.TestParallelizationLevel = parallelLevel;
+                                    if (parallelLevel == 0)
+                                    {
+                                        settings.TestParallelizationLevel = Environment.ProcessorCount;
+                                    }
+                                    else
+                                    {
+                                        settings.TestParallelizationLevel = parallelLevel;
+                                    }
                                 }
 
                                 break;

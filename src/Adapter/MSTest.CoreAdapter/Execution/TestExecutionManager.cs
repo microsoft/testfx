@@ -230,21 +230,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
                 }
 
-                // Create test sets for execution, we can execute them in parallel based on parallel settings
-                IEnumerable<IGrouping<bool, TestCase>> testsets = Enumerable.Empty<IGrouping<bool, TestCase>>();
-                var parallelLevel = PlatformServiceProvider.Instance.TestSource.GetParallelizationLevel(source);
-                if (parallelLevel < 0)
+                var sourceSettingsProvider = isolationHost.CreateInstanceForType(
+                    typeof(TestAssemblySettingsProvider),
+                    null) as TestAssemblySettingsProvider;
+
+                var sourceSettings = sourceSettingsProvider.GetSettings(source);
+                var parallelLevel = sourceSettings.ParallelLevel;
+                var parallelMode = sourceSettings.ParallelMode;
+
+                if (MSTestSettings.CurrentSettings.TestParallelizationLevel > 0)
                 {
-                    // Todo: This needs to be set to processor count when set to 0 from runsettings.
+                    // The runsetings value takes precedence over an assembly level setting. Reset the level.
                     parallelLevel = MSTestSettings.CurrentSettings.TestParallelizationLevel;
                 }
 
-                if (parallelLevel >= 0)
+                if (parallelLevel > 0 && sourceSettings.CanParallelizeAssembly)
                 {
                     // Parallelization is enabled. Let's do further classification for sets.
-                    var parallelMode = PlatformServiceProvider.Instance.TestSource.GetParallelizationMode(source);
                     var logger = (IMessageLogger)frameworkHandle;
-                    logger.SendMessage(TestMessageLevel.Informational, $"MSTestExecutor: Parallel Configuration. Level = {parallelLevel}, Mode = {parallelMode}");
+                    logger.SendMessage(
+                        TestMessageLevel.Informational,
+                        string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, parallelLevel, parallelMode));
+
+                    // Create test sets for execution, we can execute them in parallel based on parallel settings
+                    IEnumerable<IGrouping<bool, TestCase>> testsets = Enumerable.Empty<IGrouping<bool, TestCase>>();
 
                     // Parallel and not parallel sets.
                     testsets = testsToRun.GroupBy(t => t.GetPropertyValue<bool>(TestAdapter.Constants.DoNotParallelizeProperty, false));
