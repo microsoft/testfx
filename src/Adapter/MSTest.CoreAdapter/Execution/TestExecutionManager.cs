@@ -230,6 +230,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
                 }
 
+                // this is done so that appropriate values of testcontext properties are set at source level
+                // and are merged with session level parameters
+                var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
+
+                if (this.sessionParameters != null && this.sessionParameters.Count > 0)
+                {
+                    sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
+                }
+
                 var sourceSettingsProvider = isolationHost.CreateInstanceForType(
                     typeof(TestAssemblySettingsProvider),
                     null) as TestAssemblySettingsProvider;
@@ -286,7 +295,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                     {
                                         if (queue.TryDequeue(out IEnumerable<TestCase> testSet))
                                         {
-                                            this.ExecuteTestsWithTestRunner(testSet, runContext, frameworkHandle, source, testRunner);
+                                            this.ExecuteTestsWithTestRunner(testSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
                                         }
                                     }
                                 },
@@ -301,12 +310,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     // Queue the non parallel set
                     if (nonparallelizableTestSet != null)
                     {
-                        this.ExecuteTestsWithTestRunner(nonparallelizableTestSet, runContext, frameworkHandle, source, testRunner);
+                        this.ExecuteTestsWithTestRunner(nonparallelizableTestSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
                     }
                 }
                 else
                 {
-                    this.ExecuteTestsWithTestRunner(testsToRun, runContext, frameworkHandle, source, testRunner);
+                    this.ExecuteTestsWithTestRunner(testsToRun, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
                 }
 
                 this.RunCleanup(frameworkHandle, testRunner);
@@ -322,6 +331,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             IRunContext runContext,
             ITestExecutionRecorder testExecutionRecorder,
             string source,
+            IDictionary<string, object> sourceLevelParameters,
             UnitTestRunner testRunner)
         {
             foreach (var currentTest in tests)
@@ -339,15 +349,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                     "Executing test {0}",
                     unitTestElement.TestMethod.Name);
-
-                // this is done so that appropriate values of testcontext properties are set at source level
-                // and are merged with session level parameters
-                var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
-
-                if (this.sessionParameters != null && this.sessionParameters.Count > 0)
-                {
-                    sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
-                }
 
                 var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
 
