@@ -240,7 +240,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 if (MSTestSettings.CurrentSettings.TestParallelizationLevel > 0)
                 {
-                    // The runsetings value takes precedence over an assembly level setting. Reset the level.
+                    // The runsettings value takes precedence over an assembly level setting. Reset the level.
                     parallelLevel = MSTestSettings.CurrentSettings.TestParallelizationLevel;
                 }
 
@@ -258,13 +258,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     // Parallel and not parallel sets.
                     testsets = testsToRun.GroupBy(t => t.GetPropertyValue<bool>(TestAdapter.Constants.DoNotParallelizeProperty, false));
 
-                    // Chunk the sets into further groups based on parallel level
-                    ConcurrentQueue<IEnumerable<TestCase>> queue = null;
                     var parallelizableTestSet = testsets.FirstOrDefault(g => g.Key == false);
                     var nonparallelizableTestSet = testsets.FirstOrDefault(g => g.Key == true);
 
                     if (parallelizableTestSet != null)
                     {
+                        ConcurrentQueue<IEnumerable<TestCase>> queue = null;
+
+                        // Chunk the sets into further groups based on parallel level
                         switch (parallelMode)
                         {
                             case TestParallelizationMode.MethodLevel:
@@ -309,6 +310,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 this.RunCleanup(frameworkHandle, testRunner);
+
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                     "Executed tests belonging to source {0}",
                     source);

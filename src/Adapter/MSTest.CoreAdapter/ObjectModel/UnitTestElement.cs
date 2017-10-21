@@ -63,7 +63,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public int? Priority { get; set; }
 
         /// <summary>
-        /// Gets or sets if this test method should not execute in parallel.
+        /// Gets or sets a value indicating whether this test method should not execute in parallel.
         /// </summary>
         public bool DoNotParallelize { get; set; }
 

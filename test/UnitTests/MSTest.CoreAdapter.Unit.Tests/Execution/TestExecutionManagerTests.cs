@@ -152,7 +152,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual("PassingTest  Passed", this.frameworkHandle.ResultsList[0]);
             StringAssert.Contains(
                 this.frameworkHandle.ResultsList[1],
-                "FailingTest  Failed\r\n  Message: Assert.Fail failed. \r\n  StackTrace:\n   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestExecutionManagerTests.DummyTestClass.FailingTest()");
+                "FailingTest  Failed\r\n  Message: Assert.Fail failed. \r\n  StackTrace:\r\n   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestExecutionManagerTests.DummyTestClass.FailingTest()");
         }
 
         [TestMethodV1]
@@ -220,7 +220,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
 
             Assert.AreEqual("LoadAssembly", this.callers[0], "Cleanup should be called after execution.");
-            Assert.AreEqual("Cleanup", this.callers[1], "Cleanup should be called after execution.");
+            Assert.AreEqual("Cleanup", this.callers.LastOrDefault(), "Cleanup should be called after execution.");
         }
 
         [TestMethodV1]
@@ -255,7 +255,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             testablePlatformService.MockFileOperations.Verify(
                 fo => fo.LoadAssembly(It.Is<string>(s => s.StartsWith("C:\\temp")), It.IsAny<bool>()),
-                Times.Once);
+                Times.AtLeastOnce);
         }
 
         [TestMethodV1]
