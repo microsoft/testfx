@@ -5,7 +5,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 {
     using System.Collections.Generic;
     using System.Reflection;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// This platform service is responsible for any data or operations to validate
