@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
     using System;
+    using System.Security;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
@@ -21,6 +22,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.reflectHelper = reflectHelper;
         }
 
+        /// <summary>
+        /// Returns object to be used for controlling lifetime, null means infinite lifetime.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="object"/>.
+        /// </returns>
+        [SecurityCritical]
         public override object InitializeLifetimeService()
         {
             return null;

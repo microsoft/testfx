@@ -42,7 +42,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register("MSTestDiscoverer.DeploymentItems", DeploymentItemsLabel, typeof(KeyValuePair<string, string>[]), TestPropertyAttributes.Hidden, typeof(TestCase));
 
-        internal static readonly TestProperty DoNotParallelizeProperty = TestProperty.Register("MSTestDiscovererv2.DoNotParallelize", DoNotParallelizeLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
+        internal static readonly TestProperty DoNotParallelizeProperty = TestProperty.Register("MSTestDiscoverer.DoNotParallelize", DoNotParallelizeLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
 
         #endregion
 

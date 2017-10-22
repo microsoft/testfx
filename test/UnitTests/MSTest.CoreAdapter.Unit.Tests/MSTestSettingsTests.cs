@@ -5,13 +5,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 {
     extern alias FrameworkV1;
 
+    using System;
     using System.Xml;
-
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-
     using Moq;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -189,6 +188,65 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, false);
+        }
+
+        [TestMethod]
+        public void TestParallelizationLevelShouldBeNegativeByDefault()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(-1, adapterSettings.TestParallelizationLevel);
+        }
+
+        [TestMethod]
+        public void TestParallelizationLevelShouldBeNegativeWhenNotInt()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <TestParallelizationLevel>GoneFishing</TestParallelizationLevel>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(-1, adapterSettings.TestParallelizationLevel);
+        }
+
+        [TestMethod]
+        public void TestParallelizationLevelShouldBeConsumedFromRunSettingsWhenSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <TestParallelizationLevel>2</TestParallelizationLevel>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(2, adapterSettings.TestParallelizationLevel);
+        }
+
+        [TestMethod]
+        public void TestParallelizationLevelShouldBeSetToProcessorCountWhenSetToZero()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <TestParallelizationLevel>0</TestParallelizationLevel>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(Environment.ProcessorCount, adapterSettings.TestParallelizationLevel);
         }
 
         #endregion

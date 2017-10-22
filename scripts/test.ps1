@@ -157,6 +157,11 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 	
 		Write-Verbose "$vstestPath $testContainers $additionalArguments /logger:trx"
 		& $vstestPath $testContainers $additionalArguments /logger:trx
+
+		if ($lastExitCode -ne 0) 
+		{
+		    throw "Tests failed."
+	    }
 	}
 	
 	if($netCoreTestContainers.Count -gt 0)
@@ -171,6 +176,11 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 		{
 			Write-Error "Unable to find dotnet.exe. Test aborted."
 		}
+
+		if ($lastExitCode -ne 0) 
+		{
+		    throw "Tests failed."
+	    }
 	}
 }
 

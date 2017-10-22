@@ -203,7 +203,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethod]
-        public void GetTestFromMethodShouldInitiateAsyncTypeNameCorrectly()
+        public void GetTestFromMethodShouldInitializeAsyncTypeNameCorrectly()
         {
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
@@ -253,6 +253,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             Assert.IsNotNull(testElement);
             CollectionAssert.AreEqual(testCategories, testElement.TestCategory);
+        }
+
+        [TestMethod]
+        public void GetTestFromMethodShouldSetDoNotParallelize()
+        {
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
+
+            // Setup mocks
+            this.mockReflectHelper.Setup(rh => rh.GetCustomAttributes(It.IsAny<MemberInfo>(), typeof(UTF.DoNotParallelizeAttribute))).Returns(new[] { new UTF.DoNotParallelizeAttribute() });
+
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
+
+            Assert.IsNotNull(testElement);
+            Assert.IsTrue(testElement.DoNotParallelize);
         }
 
         [TestMethod]
