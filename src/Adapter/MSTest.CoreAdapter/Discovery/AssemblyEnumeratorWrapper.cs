@@ -88,16 +88,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 }
                 catch (Exception e)
                 {
-                    warnings.Add(e.Message);
+                    var winrtFailureMessage = string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.TestAssembly_WinRTAssemblyDiscoveryFailure,
+                        fullFilePath,
+                        e.Message);
+                    warnings.Add(winrtFailureMessage);
                     return null;
                 }
 
-                warnings.Add(ex.Message);
+                var message = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.TestAssembly_AssemblyDiscoveryFailure,
+                    fullFilePath,
+                    ex.Message);
+                warnings.Add(message);
                 return null;
             }
             catch (ReflectionTypeLoadException ex)
             {
-                warnings.Add(ex.Message);
+                var message = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.TestAssembly_AssemblyDiscoveryFailure,
+                    fullFilePath,
+                    ex.Message);
+                warnings.Add(message);
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
                     "MSPhoneTestDiscoverer.TryGetTests: Failed to discover tests from {0}. Reason:{1}",
                     assemblyFileName,
@@ -129,6 +144,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     "MSTestDiscoverer.TryGetTests: Failed to discover tests from {0}. Reason:{1}",
                     assemblyFileName,
                     ex);
+                var message = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.TestAssembly_AssemblyDiscoveryFailure,
+                    fullFilePath,
+                    ex.Message);
                 warnings.Add(ex.Message);
                 return null;
             }
