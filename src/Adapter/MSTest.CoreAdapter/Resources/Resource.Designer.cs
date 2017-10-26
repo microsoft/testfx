@@ -206,7 +206,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to discover tests from assembly located at {0}. Reason:{1}.
+        ///   Looks up a localized string similar to Failed to discover tests from assembly {0}. Reason:{1}.
         /// </summary>
         internal static string TestAssembly_AssemblyDiscoveryFailure {
             get {
@@ -220,15 +220,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string TestAssembly_FileDoesNotExist {
             get {
                 return ResourceManager.GetString("TestAssembly_FileDoesNotExist", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to discover tests from WinRT assembly located at {0}. Reason:{1}.
-        /// </summary>
-        internal static string TestAssembly_WinRTAssemblyDiscoveryFailure {
-            get {
-                return ResourceManager.GetString("TestAssembly_WinRTAssemblyDiscoveryFailure", resourceCulture);
             }
         }
         

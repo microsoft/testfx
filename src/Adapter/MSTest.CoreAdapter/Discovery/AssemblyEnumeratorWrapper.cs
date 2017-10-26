@@ -90,8 +90,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 {
                     var winrtFailureMessage = string.Format(
                         CultureInfo.CurrentCulture,
-                        Resource.TestAssembly_WinRTAssemblyDiscoveryFailure,
-                        fullFilePath,
+                        Resource.TestAssembly_AssemblyDiscoveryFailure,
+                        assemblyFileName,
                         e.Message);
                     warnings.Add(winrtFailureMessage);
                     return null;
@@ -149,7 +149,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     Resource.TestAssembly_AssemblyDiscoveryFailure,
                     fullFilePath,
                     ex.Message);
-                warnings.Add(ex.Message);
+                warnings.Add(message);
                 return null;
             }
         }

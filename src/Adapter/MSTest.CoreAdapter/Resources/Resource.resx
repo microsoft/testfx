@@ -311,9 +311,6 @@
     <comment>`Workers` is a setting name that shouldn't be localized.</comment>
   </data>
   <data name="TestAssembly_AssemblyDiscoveryFailure" xml:space="preserve">
-    <value>Failed to discover tests from assembly located at {0}. Reason:{1}</value>
-  </data>
-  <data name="TestAssembly_WinRTAssemblyDiscoveryFailure" xml:space="preserve">
-    <value>Failed to discover tests from WinRT assembly located at {0}. Reason:{1}</value>
+    <value>Failed to discover tests from assembly {0}. Reason:{1}</value>
   </data>
 </root>
