@@ -144,11 +144,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     "MSTestDiscoverer.TryGetTests: Failed to discover tests from {0}. Reason:{1}",
                     assemblyFileName,
                     ex);
-                var message = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.TestAssembly_AssemblyDiscoveryFailure,
-                    fullFilePath,
-                    ex.Message);
+                var message = ex is FileNotFoundException fileNotFoundEx
+                    ? fileNotFoundEx.Message
+                    : string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.TestAssembly_AssemblyDiscoveryFailure,
+                        fullFilePath,
+                        ex.Message);
                 warnings.Add(message);
                 return null;
             }
