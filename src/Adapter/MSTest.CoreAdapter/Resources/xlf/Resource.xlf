@@ -202,16 +202,6 @@
         <target state="translated">Unable to get default constructor for class {0}.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTA_TestContextLoadError">
-        <source>Unable to find property {0}.TestContext. Error:{1}.</source>
-        <target state="translated">Unable to find property {0}.TestContext. Error:{1}.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_TestContextTypeMismatchLoadError">
-        <source>The {0}.TestContext has incorrect type.</source>
-        <target state="translated">The {0}.TestContext has incorrect type.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.</source>
         <target state="translated">Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.</target>

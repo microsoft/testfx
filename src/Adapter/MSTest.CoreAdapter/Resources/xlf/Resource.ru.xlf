@@ -156,11 +156,6 @@
         <target state="translated">Не удалось создать экземпляр класса {0}. Ошибка: {1}.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTA_TestContextTypeMismatchLoadError">
-        <source>The {0}.TestContext has incorrect type.</source>
-        <target state="translated">Для свойства {0}.TestContext указан неправильный тип.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DebugTraceBanner">
         <source>Debug Trace:</source>
         <target state="translated">Трассировка отладки:</target>
@@ -239,11 +234,6 @@
       <trans-unit id="UTA_NoDefaultConstructor">
         <source>Unable to get default constructor for class {0}.</source>
         <target state="translated">Не удается получить конструктор по умолчанию для класса {0}.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_TestContextLoadError">
-        <source>Unable to find property {0}.TestContext. Error:{1}.</source>
-        <target state="translated">Не удается найти свойство {0}.TestContext. Ошибка: {1}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="EnumeratorLoadTypeErrorFormat">

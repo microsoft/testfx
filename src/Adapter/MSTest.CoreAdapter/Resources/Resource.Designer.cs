@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resource {
@@ -531,29 +531,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to find property {0}.TestContext. Error:{1}..
-        /// </summary>
-        internal static string UTA_TestContextLoadError {
-            get {
-                return ResourceManager.GetString("UTA_TestContextLoadError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unable to set TestContext property for the class {0}. Error: {1}..
         /// </summary>
         internal static string UTA_TestContextSetError {
             get {
                 return ResourceManager.GetString("UTA_TestContextSetError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The {0}.TestContext has incorrect type..
-        /// </summary>
-        internal static string UTA_TestContextTypeMismatchLoadError {
-            get {
-                return ResourceManager.GetString("UTA_TestContextTypeMismatchLoadError", resourceCulture);
             }
         }
         
