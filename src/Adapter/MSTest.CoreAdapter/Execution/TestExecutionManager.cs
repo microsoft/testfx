@@ -222,10 +222,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     new object[] { MSTestSettings.CurrentSettings }) as UnitTestRunner;
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
-                // Default test set is filtered based on user provided filter criteria
+                // Default test set is filtered tests based on user provided filter criteria
                 IEnumerable<TestCase> testsToRun = Enumerable.Empty<TestCase>();
                 var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
-                if (!filterHasError)
+                if (!filterHasError && filterExpression != null)
                 {
                     testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
                 }
@@ -278,7 +278,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         switch (parallelMode)
                         {
                             case TestParallelizationMode.MethodLevel:
-                                queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }).AsEnumerable<IEnumerable<TestCase>>());
+                                queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }));
                                 break;
                             case TestParallelizationMode.ClassLevel:
                                 queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.TestClassNameProperty) as string));
