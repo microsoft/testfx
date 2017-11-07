@@ -88,7 +88,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         {
             var expected = new Version("4.5");
 
-            var version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".Framework,Version=v4.5");
+            var version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETFramework,Version=v4.5");
 
             Assert.AreEqual(expected.Major, version.Major);
             Assert.AreEqual(expected.Minor, version.Minor);
