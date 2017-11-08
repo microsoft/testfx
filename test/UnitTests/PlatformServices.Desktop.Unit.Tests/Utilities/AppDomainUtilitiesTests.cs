@@ -72,6 +72,28 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             Assert.IsNull(setup.GetConfigurationBytes());
         }
 
+        [TestMethod]
+        public void GetTargetFrameworkVersionFromVersionStringShouldReturnDefaultVersionIfversionIsPortable()
+        {
+            var expected = new Version();
+
+            var version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETPortable,Version=v4.5,Profile=Profile259");
+
+            Assert.AreEqual(expected.Major, version.Major);
+            Assert.AreEqual(expected.Minor, version.Minor);
+        }
+
+        [TestMethod]
+        public void GetTargetFrameworkVersionFromVersionStringShouldReturnCurrectVersion()
+        {
+            var expected = new Version("4.5");
+
+            var version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETFramework,Version=v4.5");
+
+            Assert.AreEqual(expected.Major, version.Major);
+            Assert.AreEqual(expected.Minor, version.Minor);
+        }
+
         #region Testable Implementations
 
         internal class TestableXmlUtilities : XmlUtilities
