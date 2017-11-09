@@ -230,12 +230,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// </summary>
         /// <param name="version">Target framework string</param>
         /// <returns>Framework Version</returns>
-        private static Version GetTargetFrameworkVersionFromVersionString(string version)
+        internal static Version GetTargetFrameworkVersionFromVersionString(string version)
         {
-            if (version.Length > PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1)
+            try
             {
-                string versionPart = version.Substring(PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1);
-                return new Version(versionPart);
+                if (version.Length > PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1)
+                {
+                    string versionPart = version.Substring(PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1);
+                    return new Version(versionPart);
+                }
+            }
+            catch (FormatException ex)
+            {
+                // if the version is ".NETPortable,Version=v4.5,Profile=Profile259", then above code will throw exception.
+                EqtTrace.Warning(string.Format("AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{0}' due to error '{1}':", version, ex.Message));
             }
 
             return defaultVersion;
