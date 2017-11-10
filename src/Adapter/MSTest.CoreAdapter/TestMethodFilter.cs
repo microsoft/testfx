@@ -46,7 +46,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             {
                 try
                 {
-                    filter = (context is IRunContext) ? this.GetTestCaseFilterFromRunContext(context as IRunContext) : this.GetTestCaseFilterFromDiscoveryContext(context);
+                    filter = (context is IRunContext) ? this.GetTestCaseFilterFromRunContext(context as IRunContext) : this.GetTestCaseFilterFromDiscoveryContext(context, logger);
                 }
                 catch (TestPlatformFormatException ex)
                 {
@@ -96,6 +96,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             return null;
         }
 
+        private static object SafeInvoke<T>(Func<T> action, IMessageLogger logger)
+        {
+            try
+            {
+                return action.Invoke();
+            }
+            catch (Exception ex)
+            {
+                logger.SendMessage(TestMessageLevel.Warning, ex.Message);
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Gets filter expression from run context.
         /// </summary>
@@ -110,14 +124,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// Gets filter expression from discovery context.
         /// </summary>
         /// <param name="context">Discovery context</param>
+        /// <param name="logger">Handler to report error messages.</param>
         /// <returns>Filter expression.</returns>
-        private ITestCaseFilterExpression GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context)
+        private ITestCaseFilterExpression GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context, IMessageLogger logger)
         {
             try
             {
                 // GetTestCaseFilter is present in DiscoveryContext but not in IDiscoveryContext interface.
                 MethodInfo methodGetTestCaseFilter = context.GetType().GetRuntimeMethod("GetTestCaseFilter", new[] { typeof(IEnumerable<string>), typeof(Func<string, TestProperty>) });
-                return (ITestCaseFilterExpression)methodGetTestCaseFilter?.Invoke(context, new object[] { this.supportedProperties.Keys, (Func<string, TestProperty>)this.PropertyProvider });
+                return SafeInvoke(() => methodGetTestCaseFilter?.Invoke(context, new object[] { this.supportedProperties.Keys, (Func<string, TestProperty>)this.PropertyProvider }), logger) as ITestCaseFilterExpression;
             }
             catch (TargetInvocationException ex)
             {
