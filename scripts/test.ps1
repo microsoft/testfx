@@ -161,7 +161,7 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 		if ($lastExitCode -ne 0) 
 		{
 		    throw "Tests failed."
-	    }
+		}
 	}
 	
 	if($netCoreTestContainers.Count -gt 0)
@@ -180,7 +180,7 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 		if ($lastExitCode -ne 0) 
 		{
 		    throw "Tests failed."
-	    }
+		}
 	}
 }
 
