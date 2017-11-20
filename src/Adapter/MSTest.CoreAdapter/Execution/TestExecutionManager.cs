@@ -247,13 +247,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 var parallelWorkers = sourceSettings.Workers;
                 var parallelScope = sourceSettings.Scope;
 
-                if (MSTestSettings.CurrentSettings.ParallelizationWorkers > 0)
+                if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
                 {
                     // The runsettings value takes precedence over an assembly level setting. Reset the level.
-                    parallelWorkers = MSTestSettings.CurrentSettings.ParallelizationWorkers;
+                    parallelWorkers = MSTestSettings.CurrentSettings.ParallelizationWorkers.Value;
                 }
 
-                if (parallelWorkers > 0 && sourceSettings.CanParallelizeAssembly)
+                if (MSTestSettings.CurrentSettings.ParallelizationScope.HasValue)
+                {
+                    // The runsettings value takes precedence over an assembly level setting. Reset the level.
+                    parallelScope = MSTestSettings.CurrentSettings.ParallelizationScope.Value;
+                }
+
+                if (!MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0)
                 {
                     // Parallelization is enabled. Let's do further classification for sets.
                     var logger = (IMessageLogger)frameworkHandle;

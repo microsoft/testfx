@@ -4,9 +4,12 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 {
     using System;
+    using System.Globalization;
     using System.IO;
     using System.Xml;
+    using System.Xml.Linq;
 
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -29,6 +32,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </summary>
         public const string SettingsNameAlias = "MSTestV2";
 
+        private const string ParallelizeSettingsName = "Parallelize";
+
         /// <summary>
         /// Member variable for Adapter settings
         /// </summary>
@@ -38,10 +43,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// Member variable for RunConfiguration settings
         /// </summary>
         private static RunConfigurationSettings runConfigurationSettings;
-
-        private const int DefaultParallelWorkers = 0;
-        
-        private const ExecutionScope DefaultExecutionScope = ExecutionScope.ClassLevel;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MSTestSettings"/> class.
@@ -53,7 +54,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             this.EnableBaseClassTestMethodsFromOtherAssemblies = true;
             this.ForcedLegacyMode = false;
             this.TestSettingsFile = null;
-            this.ParallelizationWorkers = -1;
+            this.DisableParallelization = false;
         }
 
         /// <summary>
@@ -135,6 +136,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public ExecutionScope? ParallelizationScope { get; private set; }
 
         /// <summary>
+        /// Gets a value indicating whether the assembly can be parallelized.
+        /// </summary>
+        /// <remarks>
+        /// This is also re-used to disable parallelization on format errors
+        /// </remarks>
+        public bool DisableParallelization { get; private set; }
+
+        /// <summary>
         /// Populate settings based on existing settings object.
         /// </summary>
         /// <param name="settings">The existing settings object.</param>
@@ -147,6 +156,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
             CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
             CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
+            CurrentSettings.DisableParallelization = settings.DisableParallelization;
         }
 
         /// <summary>
@@ -172,7 +182,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             if (aliasSettings != null)
             {
                 CurrentSettings = aliasSettings;
-                return;
             }
             else
             {
@@ -181,11 +190,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 if (settings != null)
                 {
                     CurrentSettings = settings;
-                    return;
                 }
-
-                CurrentSettings = new MSTestSettings();
+                else
+                {
+                    CurrentSettings = new MSTestSettings();
+                }
             }
+
+            SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings);
         }
 
         /// <summary>
@@ -366,8 +378,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         private static void SetParallelSettings(XmlReader reader, MSTestSettings settings)
         {
+            reader.Read();
             if (!reader.IsEmptyElement)
             {
+                // Read the first child.
                 reader.Read();
 
                 while (reader.NodeType == XmlNodeType.Element)
@@ -377,16 +391,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                     {
                         case "WORKERS":
                             {
-                                if (int.TryParse(reader.ReadInnerXml(), out int parallelWorkers))
+                                var value = reader.ReadInnerXml();
+                                if (int.TryParse(value, out int parallelWorkers))
                                 {
                                     if (parallelWorkers == 0)
                                     {
                                         settings.ParallelizationWorkers = Environment.ProcessorCount;
                                     }
-                                    else
+                                    else if (parallelWorkers > 0)
                                     {
                                         settings.ParallelizationWorkers = parallelWorkers;
                                     }
+                                    else
+                                    {
+                                        throw new AdapterSettingsException(
+                                        string.Format(
+                                            CultureInfo.CurrentCulture,
+                                            Resource.InvalidParallelWorkersValue,
+                                            value));
+                                    }
+                                }
+                                else
+                                {
+                                    throw new AdapterSettingsException(
+                                        string.Format(
+                                            CultureInfo.CurrentCulture,
+                                            Resource.InvalidParallelWorkersValue,
+                                            value));
                                 }
 
                                 break;
@@ -394,9 +425,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
                         case "SCOPE":
                             {
-                                if (Enum.TryParse(reader.ReadInnerXml(), out ExecutionScope scope))
+                                var value = reader.ReadInnerXml();
+                                if (Enum.TryParse(value, out ExecutionScope scope))
                                 {
                                     settings.ParallelizationScope = scope;
+                                }
+                                else
+                                {
+                                    throw new AdapterSettingsException(
+                                        string.Format(
+                                            CultureInfo.CurrentCulture,
+                                            Resource.InvalidParallelScopeValue,
+                                            value,
+                                            string.Join(", ", Enum.GetNames(typeof(ExecutionScope)))));
                                 }
 
                                 break;
@@ -404,24 +445,43 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
                         default:
                             {
-                                reader.Skip();
-                                break;
+                                throw new AdapterSettingsException(
+                                    string.Format(
+                                        CultureInfo.CurrentCulture,
+                                        Resource.InvalidSettingsXmlElement,
+                                        ParallelizeSettingsName,
+                                        reader.Name));
                             }
                     }
                 }
             }
 
             // If any of these properties are not set, resort to the defaults.
-            if(!settings.ParallelizationWorkers.HasValue)
+            if (!settings.ParallelizationWorkers.HasValue)
             {
-                settings.ParallelizationWorkers = DefaultParallelWorkers;
+                settings.ParallelizationWorkers = Environment.ProcessorCount;
             }
 
-            if(!settings.ParallelizationScope.HasValue)
+            if (!settings.ParallelizationScope.HasValue)
             {
-                settings.ParallelizationScope = DefaultExecutionScope;
+                settings.ParallelizationScope = ExecutionScope.ClassLevel;
             }
         }
 
+        private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings)
+        {
+            var runconfigElement = XDocument.Parse(runsettingsXml)?.Element("RunSettings")?.Element("RunConfiguration");
+
+            if (runconfigElement == null)
+            {
+                return;
+            }
+
+            var disableParallelizationString = runconfigElement.Element("DisableParallelization")?.Value;
+            if (bool.TryParse(disableParallelizationString, out bool disableParallelization))
+            {
+                settings.DisableParallelization = disableParallelization;
+            }
+        }
     }
 }

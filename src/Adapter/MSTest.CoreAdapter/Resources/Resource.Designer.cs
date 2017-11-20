@@ -152,6 +152,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; specified for &apos;Scope&apos;. Supported scopes are {1}..
+        /// </summary>
+        internal static string InvalidParallelScopeValue {
+            get {
+                return ResourceManager.GetString("InvalidParallelScopeValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; specified for &apos;Workers&apos;. The value should be a non-negative integer..
+        /// </summary>
+        internal static string InvalidParallelWorkersValue {
+            get {
+                return ResourceManager.GetString("InvalidParallelWorkersValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid settings &apos;{0}&apos;. Unexpected XmlAttribute: &apos;{1}&apos;..
         /// </summary>
         internal static string InvalidSettingsXmlAttribute {
