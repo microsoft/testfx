@@ -335,34 +335,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// </summary>
         /// <param name="assembly"> The test asembly. </param>
         /// <returns> The parallelization level if set. -1 otherwise. </returns>
-        internal int GetParallelizationLevel(Assembly assembly)
+        internal ParallelizeAttribute GetParallelizeAttribute(Assembly assembly)
         {
-            var parallelizationLevelAttribute = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestParallelizationLevelAttribute)).OfType<TestParallelizationLevelAttribute>().FirstOrDefault();
-
-            if (parallelizationLevelAttribute != null)
-            {
-                return parallelizationLevelAttribute.ParallelizationLevel;
-            }
-
-            return -1;
-        }
-
-        /// <summary>
-        /// Gets the parallelization mode set on an assembly.
-        /// </summary>
-        /// <param name="assembly"> The test assembly. </param>
-        /// <returns> The parallelization mode for this assembly if set. TestParallelizationMode.MethodLevel if not.</returns>
-        internal TestParallelizationMode GetParallelizationMode(Assembly assembly)
-        {
-            var parallelizationModeAttribute = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(TestParallelizationModeAttribute)).OfType<TestParallelizationModeAttribute>().FirstOrDefault();
-
-            if (parallelizationModeAttribute != null)
-            {
-                return parallelizationModeAttribute.TestParallelizationMode;
-            }
-
-            // Default to highest degree of parallelization - Method Level.
-            return TestParallelizationMode.MethodLevel;
+            return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ParallelizeAttribute)).OfType<ParallelizeAttribute>().FirstOrDefault();
         }
 
         /// <summary>

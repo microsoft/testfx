@@ -4,8 +4,7 @@
 // Parallel configuration
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[assembly: TestParallelizationMode(TestParallelizationMode.MethodLevel)]
-[assembly: TestParallelizationLevel(2)]
+[assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
 
 namespace ParallelMethodsTestProject
 {

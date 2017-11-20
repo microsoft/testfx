@@ -244,22 +244,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     null) as TestAssemblySettingsProvider;
 
                 var sourceSettings = sourceSettingsProvider.GetSettings(source);
-                var parallelLevel = sourceSettings.ParallelLevel;
-                var parallelMode = sourceSettings.ParallelMode;
+                var parallelWorkers = sourceSettings.Workers;
+                var parallelScope = sourceSettings.Scope;
 
-                if (MSTestSettings.CurrentSettings.TestParallelizationLevel > 0)
+                if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
                 {
                     // The runsettings value takes precedence over an assembly level setting. Reset the level.
-                    parallelLevel = MSTestSettings.CurrentSettings.TestParallelizationLevel;
+                    parallelWorkers = MSTestSettings.CurrentSettings.ParallelizationWorkers.Value;
                 }
 
-                if (parallelLevel > 0 && sourceSettings.CanParallelizeAssembly)
+                if (MSTestSettings.CurrentSettings.ParallelizationScope.HasValue)
+                {
+                    // The runsettings value takes precedence over an assembly level setting. Reset the level.
+                    parallelScope = MSTestSettings.CurrentSettings.ParallelizationScope.Value;
+                }
+
+                if (!MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0)
                 {
                     // Parallelization is enabled. Let's do further classification for sets.
                     var logger = (IMessageLogger)frameworkHandle;
                     logger.SendMessage(
                         TestMessageLevel.Informational,
-                        string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, parallelLevel, parallelMode));
+                        string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, parallelWorkers, parallelScope));
 
                     // Create test sets for execution, we can execute them in parallel based on parallel settings
                     IEnumerable<IGrouping<bool, TestCase>> testsets = Enumerable.Empty<IGrouping<bool, TestCase>>();
@@ -275,18 +281,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         ConcurrentQueue<IEnumerable<TestCase>> queue = null;
 
                         // Chunk the sets into further groups based on parallel level
-                        switch (parallelMode)
+                        switch (parallelScope)
                         {
-                            case TestParallelizationMode.MethodLevel:
+                            case ExecutionScope.MethodLevel:
                                 queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }));
                                 break;
-                            case TestParallelizationMode.ClassLevel:
+                            case ExecutionScope.ClassLevel:
                                 queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.TestClassNameProperty) as string));
                                 break;
                         }
 
                         var tasks = new List<Task>();
-                        for (int i = 0; i < parallelLevel; i++)
+                        for (int i = 0; i < parallelWorkers; i++)
                         {
                             tasks.Add(Task.Factory.StartNew(
                                 () =>

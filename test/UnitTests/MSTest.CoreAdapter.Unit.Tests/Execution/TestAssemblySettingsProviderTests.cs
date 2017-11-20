@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
-        public void GetSettingsShouldSetParallelLevelToNegativeByDefault()
+        public void GetSettingsShouldSetParallelWorkersToNegativeByDefault()
         {
             // Arrange.
             this.testablePlatformServiceProvider
@@ -59,11 +59,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var settings = this.testAssemblySettingProvider.GetSettings("Foo");
 
             // Assert.
-            Assert.AreEqual(-1, settings.ParallelLevel);
+            Assert.AreEqual(-1, settings.Workers);
         }
 
         [TestMethod]
-        public void GetSettingsShouldSetParallelLevel()
+        public void GetSettingsShouldSetParallelWorkers()
         {
             // Arrange.
             this.testablePlatformServiceProvider
@@ -72,18 +72,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 .Returns(Assembly.GetExecutingAssembly());
             this.testablePlatformServiceProvider
                 .MockReflectionOperations
-                .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.TestParallelizationLevelAttribute)))
-                .Returns(new[] { new UTF.TestParallelizationLevelAttribute(10) });
+                .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.ParallelizeAttribute)))
+                .Returns(new[] { new UTF.ParallelizeAttribute { Workers = 10 } });
 
             // Act.
             var settings = this.testAssemblySettingProvider.GetSettings("Foo");
 
             // Assert.
-            Assert.AreEqual(10, settings.ParallelLevel);
+            Assert.AreEqual(10, settings.Workers);
         }
 
         [TestMethod]
-        public void GetSettingsShouldSetParallelLevelToProcessorCountIfZero()
+        public void GetSettingsShouldSetParallelWorkersToProcessorCountIfZero()
         {
             // Arrange.
             this.testablePlatformServiceProvider
@@ -92,18 +92,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 .Returns(Assembly.GetExecutingAssembly());
             this.testablePlatformServiceProvider
                 .MockReflectionOperations
-                .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.TestParallelizationLevelAttribute)))
-                .Returns(new[] { new UTF.TestParallelizationLevelAttribute(0) });
+                .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.ParallelizeAttribute)))
+                .Returns(new[] { new UTF.ParallelizeAttribute { Workers = 0 } });
 
             // Act.
             var settings = this.testAssemblySettingProvider.GetSettings("Foo");
 
             // Assert.
-            Assert.AreEqual(Environment.ProcessorCount, settings.ParallelLevel);
+            Assert.AreEqual(Environment.ProcessorCount, settings.Workers);
         }
 
         [TestMethod]
-        public void GetSettingsShouldSetParallelModeToMethodLevelByDefault()
+        public void GetSettingsShouldSetParallelScopeToClassLevelByDefault()
         {
             // Arrange.
             this.testablePlatformServiceProvider
@@ -115,11 +115,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var settings = this.testAssemblySettingProvider.GetSettings("Foo");
 
             // Assert.
-            Assert.AreEqual(UTF.TestParallelizationMode.MethodLevel, settings.ParallelMode);
+            Assert.AreEqual(UTF.ExecutionScope.ClassLevel, settings.Scope);
         }
 
         [TestMethod]
-        public void GetSettingsShouldSetParallelMode()
+        public void GetSettingsShouldSetParallelScope()
         {
             // Arrange.
             this.testablePlatformServiceProvider
@@ -128,14 +128,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 .Returns(Assembly.GetExecutingAssembly());
             this.testablePlatformServiceProvider
                 .MockReflectionOperations
-                .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.TestParallelizationModeAttribute)))
-                .Returns(new[] { new UTF.TestParallelizationModeAttribute(UTF.TestParallelizationMode.ClassLevel) });
+                .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.ParallelizeAttribute)))
+                .Returns(new[] { new UTF.ParallelizeAttribute { Scope = UTF.ExecutionScope.MethodLevel } });
 
             // Act.
             var settings = this.testAssemblySettingProvider.GetSettings("Foo");
 
             // Assert.
-            Assert.AreEqual(UTF.TestParallelizationMode.ClassLevel, settings.ParallelMode);
+            Assert.AreEqual(UTF.ExecutionScope.MethodLevel, settings.Scope);
         }
 
         [TestMethod]

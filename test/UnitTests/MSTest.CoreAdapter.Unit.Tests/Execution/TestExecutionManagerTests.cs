@@ -363,6 +363,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #endregion
 
+        #region SendTestResults tests
+
         [TestMethodV1]
         public void SendTestResultsShouldFillInDataRowIndexIfTestIsDataDriven()
         {
@@ -373,6 +375,53 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(this.frameworkHandle.TestDisplayNameList[0], "DummyTest (Data Row 0)");
             Assert.AreEqual(this.frameworkHandle.TestDisplayNameList[1], "DummyTest (Data Row 1)");
         }
+
+        #endregion
+
+        #region Parallel tests
+
+        [TestMethodV1]
+        public void RunTestsForTestShouldRunTestsInParallelWhenEnabledInRunsettings()
+        {
+            var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
+
+            TestCase[] tests = new[] { testCase };
+            this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                         @"<RunSettings> 
+                                            <TestRunParameters>
+                                              <Parameter name=""webAppUrl"" value=""http://localhost"" />
+                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
+                                              </TestRunParameters>
+                                            </RunSettings>");
+
+            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+            CollectionAssert.Contains(
+                DummyTestClass.TestContextProperties.ToList(),
+                new KeyValuePair<string, object>("webAppUrl", "http://localhost"));
+        }
+
+        [TestMethodV1]
+        public void RunTestsForTestShouldRunTestsByMethodLevelWhenSpecified()
+        {
+        }
+
+        [TestMethodV1]
+        public void RunTestsForTestShouldRunTestsWithSpecifiedNumberOfWorkers()
+        {
+        }
+
+        [TestMethodV1]
+        public void RunTestsForTestShouldNotRunTestsInParallelWhenDisabled()
+        {
+        }
+
+        [TestMethodV1]
+        public void RunTestsForTestShouldRunNonParallelizableTestsAtTheEnd()
+        {
+        }
+
+        #endregion
 
         #region private methods
 

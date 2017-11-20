@@ -9,15 +9,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     [Serializable]
     internal class TestAssemblySettings
     {
+        public TestAssemblySettings()
+        {
+            this.Workers = -1;
+        }
+
         /// <summary>
         /// Gets or sets the parallelization level.
         /// </summary>
-        internal int ParallelLevel { get; set; }
+        internal int Workers { get; set; }
 
         /// <summary>
         /// Gets or sets the mode of parallelization.
         /// </summary>
-        internal TestParallelizationMode ParallelMode { get; set; }
+        internal ExecutionScope Scope { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the assembly can be parallelized.

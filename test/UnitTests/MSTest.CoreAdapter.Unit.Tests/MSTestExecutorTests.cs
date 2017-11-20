@@ -71,6 +71,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
+        public void RunTestsShouldReportErrorAndBailOutOnSettingsException()
+        {
+            var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
+            TestCase[] tests = new[] { testCase };
+            string runSettingxml =
+            @"<RunSettings>   
+			        <MSTest>   
+				        <Parallelize>
+				          <Scope>Pond</Scope>
+				        </Parallelize>
+			        </MSTest>
+		    </RunSettings>";
+            this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+            this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+
+            // Act.
+            this.mstestExecutor.RunTests(tests, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
+
+            // Assert.
+            this.mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
+            this.mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
+        }
+
+        [TestMethod]
         public void RunTestsWithSourcesShouldNotExecuteTestsIfTestSettingsIsGiven()
         {
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
@@ -88,6 +112,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             // Test should not start if TestSettings is given.
             this.mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void RunTestsWithSourcesShouldReportErrorAndBailOutOnSettingsException()
+        {
+            var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
+            string runSettingxml =
+            @"<RunSettings>   
+			        <MSTest>   
+				        <Parallelize>
+				          <Scope>Pond</Scope>
+				        </Parallelize>
+			        </MSTest>
+		    </RunSettings>";
+            this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+            this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+
+            // Act.
+            this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
+
+            // Assert.
+            this.mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
+            this.mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
         }
 
         [TestMethod]
