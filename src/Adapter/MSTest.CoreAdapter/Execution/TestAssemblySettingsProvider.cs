@@ -41,14 +41,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             // Load the source.
             var testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
 
-            testAssemblySettings.ParallelLevel = this.reflectHelper.GetParallelizationLevel(testAssembly);
+            var parallelizeAttribute = this.reflectHelper.GetParallelizeAttribute(testAssembly);
 
-            if (testAssemblySettings.ParallelLevel == 0)
+            if (parallelizeAttribute != null)
             {
-                testAssemblySettings.ParallelLevel = Environment.ProcessorCount;
-            }
+                testAssemblySettings.Workers = parallelizeAttribute.Workers;
+                testAssemblySettings.Scope = parallelizeAttribute.Scope;
 
-            testAssemblySettings.ParallelMode = this.reflectHelper.GetParallelizationMode(testAssembly);
+                if (testAssemblySettings.Workers == 0)
+                {
+                    testAssemblySettings.Workers = Environment.ProcessorCount;
+                }
+            }
 
             testAssemblySettings.CanParallelizeAssembly = !this.reflectHelper.IsDoNotParallelizeSet(testAssembly);
 

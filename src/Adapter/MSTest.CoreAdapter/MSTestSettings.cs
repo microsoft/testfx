@@ -11,6 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// Adapter Settings for the run
@@ -38,6 +39,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </summary>
         private static RunConfigurationSettings runConfigurationSettings;
 
+        private const int DefaultParallelWorkers = 0;
+        
+        private const ExecutionScope DefaultExecutionScope = ExecutionScope.ClassLevel;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MSTestSettings"/> class.
         /// </summary>
@@ -48,7 +53,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             this.EnableBaseClassTestMethodsFromOtherAssemblies = true;
             this.ForcedLegacyMode = false;
             this.TestSettingsFile = null;
-            this.TestParallelizationLevel = -1;
+            this.ParallelizationWorkers = -1;
         }
 
         /// <summary>
@@ -120,9 +125,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
 
         /// <summary>
-        /// Gets the level of parallelization to be used for a run.
+        /// Gets the number of threads/workers to be used for parallelization.
         /// </summary>
-        public int TestParallelizationLevel { get; private set; }
+        public int? ParallelizationWorkers { get; private set; }
+
+        /// <summary>
+        /// Gets the scope of parallelization.
+        /// </summary>
+        public ExecutionScope? ParallelizationScope { get; private set; }
 
         /// <summary>
         /// Populate settings based on existing settings object.
@@ -135,7 +145,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
             CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
             CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
-            CurrentSettings.TestParallelizationLevel = settings.TestParallelizationLevel;
+            CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
+            CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
         }
 
         /// <summary>
@@ -251,7 +262,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             //     <CaptureTraceOutput>true</CaptureTraceOutput>
             //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
             //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
-            //     <TestParallelizationLevel>2</TestParallelizationLevel>
+            //     <Parallelize>
+            //        <Workers>4</Workers>
+            //        <Scope>TestClass</Scope>
+            //     </Parallelize>
             // </MSTestV2>
             //
             // (or)
@@ -328,19 +342,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                 break;
                             }
 
-                        case "TESTPARALLELIZATIONLEVEL":
+                        case "PARALLELIZE":
                             {
-                                if (int.TryParse(reader.ReadInnerXml(), out int parallelLevel))
-                                {
-                                    if (parallelLevel == 0)
-                                    {
-                                        settings.TestParallelizationLevel = Environment.ProcessorCount;
-                                    }
-                                    else
-                                    {
-                                        settings.TestParallelizationLevel = parallelLevel;
-                                    }
-                                }
+                                SetParallelSettings(reader.ReadSubtree(), settings);
+                                reader.SkipToNextElement();
 
                                 break;
                             }
@@ -358,5 +363,65 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
             return settings;
         }
+
+        private static void SetParallelSettings(XmlReader reader, MSTestSettings settings)
+        {
+            if (!reader.IsEmptyElement)
+            {
+                reader.Read();
+
+                while (reader.NodeType == XmlNodeType.Element)
+                {
+                    string elementName = reader.Name.ToUpperInvariant();
+                    switch (elementName)
+                    {
+                        case "WORKERS":
+                            {
+                                if (int.TryParse(reader.ReadInnerXml(), out int parallelWorkers))
+                                {
+                                    if (parallelWorkers == 0)
+                                    {
+                                        settings.ParallelizationWorkers = Environment.ProcessorCount;
+                                    }
+                                    else
+                                    {
+                                        settings.ParallelizationWorkers = parallelWorkers;
+                                    }
+                                }
+
+                                break;
+                            }
+
+                        case "SCOPE":
+                            {
+                                if (Enum.TryParse(reader.ReadInnerXml(), out ExecutionScope scope))
+                                {
+                                    settings.ParallelizationScope = scope;
+                                }
+
+                                break;
+                            }
+
+                        default:
+                            {
+                                reader.Skip();
+                                break;
+                            }
+                    }
+                }
+            }
+
+            // If any of these properties are not set, resort to the defaults.
+            if(!settings.ParallelizationWorkers.HasValue)
+            {
+                settings.ParallelizationWorkers = DefaultParallelWorkers;
+            }
+
+            if(!settings.ParallelizationScope.HasValue)
+            {
+                settings.ParallelizationScope = DefaultExecutionScope;
+            }
+        }
+
     }
 }
