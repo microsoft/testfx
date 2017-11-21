@@ -292,6 +292,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         }
 
                         var tasks = new List<Task>();
+
+                        if (SynchronizationContext.Current == null)
+                        {
+                            // Sets a default synchronization context.
+                            SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+                        }
+
                         for (int i = 0; i < parallelWorkers; i++)
                         {
                             tasks.Add(Task.Factory.StartNew(
@@ -307,7 +314,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                 },
                             CancellationToken.None,
                             TaskCreationOptions.LongRunning,
-                            TaskScheduler.Default));
+                            TaskScheduler.FromCurrentSynchronizationContext()));
                         }
 
                         Task.WaitAll(tasks.ToArray());

@@ -682,6 +682,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
+        [TestMethodV1]
+        public void RunTestsForTestShouldRunTestsInTheParentDomainsApartmentState()
+        {
+            var testCase1 = this.GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");
+            var testCase2 = this.GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod2");
+            var testCase3 = this.GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod3");
+            var testCase4 = this.GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod4");
+
+            ////testCase3.SetPropertyValue(MSTest.TestAdapter.Constants.DoNotParallelizeProperty, true);
+            testCase4.SetPropertyValue(MSTest.TestAdapter.Constants.DoNotParallelizeProperty, true);
+
+            TestCase[] tests = new[] { testCase1, testCase2, testCase3, testCase4 };
+            this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                         @"<RunSettings> 
+                                              <MSTest>
+                                                 <Parallelize>
+                                                   <Workers>3</Workers>
+                                                   <Scope>MethodLevel</Scope>
+                                                 </Parallelize>
+                                              </MSTest>
+                                            </RunSettings>");
+
+            try
+            {
+                MSTestSettings.PopulateSettings(this.runContext);
+                this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+                Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.Count);
+                Assert.AreEqual(Thread.CurrentThread.GetApartmentState(), DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.ToArray()[0]);
+            }
+            finally
+            {
+                DummyTestClassWithDoNotParallelizeMethods.Cleanup();
+            }
+        }
+
         #endregion
 
         #region private methods
@@ -811,19 +847,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
-                if (!threadIds.Contains(Thread.CurrentThread.ManagedThreadId))
-                {
-                    threadIds.Add(Thread.CurrentThread.ManagedThreadId);
-                }
+                threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
 
             [UTF.TestMethod]
             public void TestMethod2()
             {
-                if (!threadIds.Contains(Thread.CurrentThread.ManagedThreadId))
-                {
-                    threadIds.Add(Thread.CurrentThread.ManagedThreadId);
-                }
+                threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
 
@@ -848,19 +878,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
-                if (!threadIds.Contains(Thread.CurrentThread.ManagedThreadId))
-                {
-                    threadIds.Add(Thread.CurrentThread.ManagedThreadId);
-                }
+                threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
 
             [UTF.TestMethod]
             public void TestMethod2()
             {
-                if (!threadIds.Contains(Thread.CurrentThread.ManagedThreadId))
-                {
-                    threadIds.Add(Thread.CurrentThread.ManagedThreadId);
-                }
+                threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
 
@@ -885,10 +909,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
-                if (!threadIds.Contains(Thread.CurrentThread.ManagedThreadId))
-                {
-                    threadIds.Add(Thread.CurrentThread.ManagedThreadId);
-                }
+                threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
 
@@ -897,6 +918,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             private static HashSet<int> parallelizableTestsThreadIds = new HashSet<int>();
             private static HashSet<int> unParallelizableTestsThreadIds = new HashSet<int>();
+            private static HashSet<ApartmentState> threadApartmentStates = new HashSet<ApartmentState>();
+            private static bool isFirstUnParallelizedTestRunTimeSet = false;
 
             public static HashSet<int> ParallelizableTestsThreadIds
             {
@@ -914,23 +937,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 }
             }
 
+            public static HashSet<ApartmentState> ThreadApartmentStates
+            {
+                get
+                {
+                    return threadApartmentStates;
+                }
+            }
+
             public static DateTime LastParallelizableTestRun { get; set; }
 
-            public static DateTime? FirstUnParallelizableTestRun { get; set; }
+            public static DateTime FirstUnParallelizableTestRun { get; set; }
 
             public static void Cleanup()
             {
                 parallelizableTestsThreadIds.Clear();
                 unParallelizableTestsThreadIds.Clear();
+                threadApartmentStates.Clear();
+                isFirstUnParallelizedTestRunTimeSet = false;
             }
 
             [UTF.TestMethod]
             public void TestMethod1()
             {
-                if (!parallelizableTestsThreadIds.Contains(Thread.CurrentThread.ManagedThreadId))
-                {
-                    parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
-                }
+                parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
                 LastParallelizableTestRun = DateTime.Now;
             }
@@ -938,10 +969,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod2()
             {
-                if (!parallelizableTestsThreadIds.Contains(Thread.CurrentThread.ManagedThreadId))
-                {
-                    parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
-                }
+                parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
                 LastParallelizableTestRun = DateTime.Now;
             }
@@ -950,30 +979,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.DoNotParallelize]
             public void TestMethod3()
             {
-                if (!FirstUnParallelizableTestRun.HasValue)
+                if (!isFirstUnParallelizedTestRunTimeSet)
                 {
                     FirstUnParallelizableTestRun = DateTime.Now;
                 }
 
-                if (!unParallelizableTestsThreadIds.Contains(Thread.CurrentThread.ManagedThreadId))
-                {
-                    unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
-                }
+                unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
             }
 
             [UTF.TestMethod]
             [UTF.DoNotParallelize]
             public void TestMethod4()
             {
-                if (!FirstUnParallelizableTestRun.HasValue)
+                if (!isFirstUnParallelizedTestRunTimeSet)
                 {
                     FirstUnParallelizableTestRun = DateTime.Now;
                 }
 
-                if (!unParallelizableTestsThreadIds.Contains(Thread.CurrentThread.ManagedThreadId))
-                {
-                    unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
-                }
+                unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
             }
         }
 
