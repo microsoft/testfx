@@ -12,8 +12,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -60,6 +62,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestCleanup()
         {
             PlatformServiceProvider.Instance = null;
+            MSTestSettings.Reset();
         }
 
         #region RunTests on a list of tests
@@ -383,42 +386,300 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestsForTestShouldRunTestsInParallelWhenEnabledInRunsettings()
         {
-            var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
+            var testCase11 = this.GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
+            var testCase12 = this.GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
+            var testCase21 = this.GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod1");
+            var testCase22 = this.GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod2");
 
-            TestCase[] tests = new[] { testCase };
+            TestCase[] tests = new[] { testCase11, testCase12, testCase21, testCase22 };
             this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                          @"<RunSettings> 
-                                            <TestRunParameters>
-                                              <Parameter name=""webAppUrl"" value=""http://localhost"" />
-                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
-                                              </TestRunParameters>
+                                              <MSTest>
+                                                 <Parallelize>
+                                                   <Workers>2</Workers>
+                                                 </Parallelize>
+                                              </MSTest>
                                             </RunSettings>");
 
-            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+            try
+            {
+                MSTestSettings.PopulateSettings(this.runContext);
+                this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
 
-            CollectionAssert.Contains(
-                DummyTestClass.TestContextProperties.ToList(),
-                new KeyValuePair<string, object>("webAppUrl", "http://localhost"));
+                Assert.AreEqual(1, DummyTestClassForParallelize.ThreadIds.Count);
+                Assert.AreEqual(1, DummyTestClassForParallelize2.ThreadIds.Count);
+
+                var allThreadIds = new HashSet<int>(DummyTestClassForParallelize.ThreadIds);
+                allThreadIds.UnionWith(DummyTestClassForParallelize2.ThreadIds);
+                Assert.AreEqual(2, allThreadIds.Count);
+            }
+            finally
+            {
+                DummyTestClassForParallelize.Cleanup();
+                DummyTestClassForParallelize2.Cleanup();
+            }
         }
 
         [TestMethodV1]
         public void RunTestsForTestShouldRunTestsByMethodLevelWhenSpecified()
         {
+            var testCase11 = this.GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
+            var testCase12 = this.GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
+
+            TestCase[] tests = new[] { testCase11, testCase12 };
+            this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                         @"<RunSettings> 
+                                              <MSTest>
+                                                 <Parallelize>
+                                                   <Workers>2</Workers>
+                                                   <Scope>MethodLevel</Scope>
+                                                 </Parallelize>
+                                              </MSTest>
+                                            </RunSettings>");
+
+            try
+            {
+                MSTestSettings.PopulateSettings(this.runContext);
+                this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+                Assert.AreEqual(2, DummyTestClassForParallelize.ThreadIds.Count);
+            }
+            finally
+            {
+                DummyTestClassForParallelize.Cleanup();
+            }
         }
 
         [TestMethodV1]
         public void RunTestsForTestShouldRunTestsWithSpecifiedNumberOfWorkers()
         {
+            var testCase1 = this.GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
+            var testCase2 = this.GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod1");
+            var testCase3 = this.GetTestCase(typeof(DummyTestClassForParallelize3), "TestMethod1");
+
+            TestCase[] tests = new[] { testCase1, testCase2, testCase3 };
+            this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                         @"<RunSettings> 
+                                              <MSTest>
+                                                 <Parallelize>
+                                                   <Workers>3</Workers>
+                                                 </Parallelize>
+                                              </MSTest>
+                                            </RunSettings>");
+
+            try
+            {
+                MSTestSettings.PopulateSettings(this.runContext);
+                this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+                var allThreadIds = new HashSet<int>(DummyTestClassForParallelize.ThreadIds);
+                allThreadIds.UnionWith(DummyTestClassForParallelize2.ThreadIds);
+                allThreadIds.UnionWith(DummyTestClassForParallelize3.ThreadIds);
+
+                Assert.AreEqual(3, allThreadIds.Count);
+            }
+            finally
+            {
+                DummyTestClassForParallelize.Cleanup();
+                DummyTestClassForParallelize2.Cleanup();
+                DummyTestClassForParallelize3.Cleanup();
+            }
         }
 
         [TestMethodV1]
-        public void RunTestsForTestShouldNotRunTestsInParallelWhenDisabled()
+        public void RunTestsForTestShouldNotRunTestsInParallelWhenDisabledFromRunsettings()
         {
+            var testCase1 = this.GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
+            var testCase2 = this.GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
+
+            TestCase[] tests = new[] { testCase1, testCase2 };
+            this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                         @"<RunSettings> 
+                                              <RunConfiguration>
+                                                 <DisableParallelization>true</DisableParallelization>
+                                              </RunConfiguration>
+                                            </RunSettings>");
+
+            try
+            {
+                MSTestSettings.PopulateSettings(this.runContext);
+                var testablePlatformService = this.SetupTestablePlatformService();
+                testablePlatformService.SetupMockReflectionOperations();
+
+                var originalReflectionOperation = new ReflectionOperations();
+
+                testablePlatformService.MockReflectionOperations.Setup(
+                    ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
+                    Returns((Assembly asm, Type type) =>
+                    {
+                        if (type.FullName.Equals(typeof(UTF.ParallelizeAttribute).FullName))
+                        {
+                            return new object[] { new UTF.ParallelizeAttribute { Workers = 10, Scope = UTF.ExecutionScope.MethodLevel } };
+                        }
+
+                         return originalReflectionOperation.GetCustomAttributes(asm, type);
+                    });
+
+                testablePlatformService.MockReflectionOperations.Setup(
+                    ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
+                    Returns((MemberInfo memberInfo, bool inherit) =>
+                    {
+                        return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
+                    });
+
+                this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+                Assert.AreEqual(1, DummyTestClassForParallelize.ThreadIds.Count);
+            }
+            finally
+            {
+                DummyTestClassForParallelize.Cleanup();
+            }
         }
 
         [TestMethodV1]
-        public void RunTestsForTestShouldRunNonParallelizableTestsAtTheEnd()
+        public void RunTestsForTestShouldNotRunTestsInParallelWhenDisabledFromSource()
         {
+            var testCase1 = this.GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
+            var testCase2 = this.GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
+
+            TestCase[] tests = new[] { testCase1, testCase2 };
+            this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                         @"<RunSettings> 
+                                              <MSTest>
+                                                 <Parallelize>
+                                                   <Workers>2</Workers>
+                                                   <Scope>MethodLevel</Scope>
+                                                 </Parallelize>
+                                              </MSTest>
+                                            </RunSettings>");
+
+            try
+            {
+                MSTestSettings.PopulateSettings(this.runContext);
+                var testablePlatformService = this.SetupTestablePlatformService();
+                testablePlatformService.SetupMockReflectionOperations();
+
+                var originalReflectionOperation = new ReflectionOperations();
+
+                testablePlatformService.MockReflectionOperations.Setup(
+                    ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
+                    Returns((Assembly asm, Type type) =>
+                    {
+                        if (type.FullName.Equals(typeof(UTF.DoNotParallelizeAttribute).FullName))
+                        {
+                            return new object[] { new UTF.DoNotParallelizeAttribute() };
+                        }
+
+                        return originalReflectionOperation.GetCustomAttributes(asm, type);
+                    });
+
+                testablePlatformService.MockReflectionOperations.Setup(
+                    ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
+                    Returns((MemberInfo memberInfo, bool inherit) =>
+                    {
+                        return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
+                    });
+
+                this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+                Assert.AreEqual(1, DummyTestClassForParallelize.ThreadIds.Count);
+            }
+            finally
+            {
+                DummyTestClassForParallelize.Cleanup();
+            }
+        }
+
+        [TestMethodV1]
+        public void RunTestsForTestShouldRunNonParallelizableTestsSeparately()
+        {
+            var testCase1 = this.GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");
+            var testCase2 = this.GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod2");
+            var testCase3 = this.GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod3");
+            var testCase4 = this.GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod4");
+
+            testCase3.SetPropertyValue(MSTest.TestAdapter.Constants.DoNotParallelizeProperty, true);
+            testCase4.SetPropertyValue(MSTest.TestAdapter.Constants.DoNotParallelizeProperty, true);
+
+            TestCase[] tests = new[] { testCase1, testCase2, testCase3, testCase4 };
+            this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                         @"<RunSettings> 
+                                              <MSTest>
+                                                 <Parallelize>
+                                                   <Workers>2</Workers>
+                                                   <Scope>MethodLevel</Scope>
+                                                 </Parallelize>
+                                              </MSTest>
+                                            </RunSettings>");
+
+            try
+            {
+                MSTestSettings.PopulateSettings(this.runContext);
+                this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+                Assert.AreEqual(2, DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count);
+                Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.UnParallelizableTestsThreadIds.Count);
+                Assert.IsTrue(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun < DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun);
+            }
+            finally
+            {
+                DummyTestClassWithDoNotParallelizeMethods.Cleanup();
+            }
+        }
+
+        [TestMethodV1]
+        public void RunTestsForTestShouldPreferParallelSettingsFromRunSettingsOverAssemblyLevelAttributes()
+        {
+            var testCase1 = this.GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
+            var testCase2 = this.GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
+
+            TestCase[] tests = new[] { testCase1, testCase2 };
+            this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                         @"<RunSettings> 
+                                              <MSTest>
+                                                 <Parallelize>
+                                                   <Workers>2</Workers>
+                                                   <Scope>MethodLevel</Scope>
+                                                 </Parallelize>
+                                              </MSTest>
+                                            </RunSettings>");
+
+            try
+            {
+                MSTestSettings.PopulateSettings(this.runContext);
+                var testablePlatformService = this.SetupTestablePlatformService();
+                testablePlatformService.SetupMockReflectionOperations();
+
+                var originalReflectionOperation = new ReflectionOperations();
+
+                testablePlatformService.MockReflectionOperations.Setup(
+                    ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
+                    Returns((Assembly asm, Type type) =>
+                    {
+                        if (type.FullName.Equals(typeof(UTF.ParallelizeAttribute).FullName))
+                        {
+                            return new object[] { new UTF.ParallelizeAttribute { Workers = 1 } };
+                        }
+
+                        return originalReflectionOperation.GetCustomAttributes(asm, type);
+                    });
+
+                testablePlatformService.MockReflectionOperations.Setup(
+                    ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
+                    Returns((MemberInfo memberInfo, bool inherit) =>
+                    {
+                        return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
+                    });
+
+                this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+                Assert.AreEqual(2, DummyTestClassForParallelize.ThreadIds.Count);
+            }
+            finally
+            {
+                DummyTestClassForParallelize.Cleanup();
+            }
         }
 
         #endregion
@@ -526,6 +787,193 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod()
             {
+            }
+        }
+
+        [UTF.TestClass]
+        private class DummyTestClassForParallelize
+        {
+            private static HashSet<int> threadIds = new HashSet<int>();
+
+            public static HashSet<int> ThreadIds
+            {
+                get
+                {
+                    return threadIds;
+                }
+            }
+
+            public static void Cleanup()
+            {
+                threadIds.Clear();
+            }
+
+            [UTF.TestMethod]
+            public void TestMethod1()
+            {
+                if (!threadIds.Contains(Thread.CurrentThread.ManagedThreadId))
+                {
+                    threadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                }
+            }
+
+            [UTF.TestMethod]
+            public void TestMethod2()
+            {
+                if (!threadIds.Contains(Thread.CurrentThread.ManagedThreadId))
+                {
+                    threadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                }
+            }
+        }
+
+        [UTF.TestClass]
+        private class DummyTestClassForParallelize2
+        {
+            private static HashSet<int> threadIds = new HashSet<int>();
+
+            public static HashSet<int> ThreadIds
+            {
+                get
+                {
+                    return threadIds;
+                }
+            }
+
+            public static void Cleanup()
+            {
+                threadIds.Clear();
+            }
+
+            [UTF.TestMethod]
+            public void TestMethod1()
+            {
+                if (!threadIds.Contains(Thread.CurrentThread.ManagedThreadId))
+                {
+                    threadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                }
+            }
+
+            [UTF.TestMethod]
+            public void TestMethod2()
+            {
+                if (!threadIds.Contains(Thread.CurrentThread.ManagedThreadId))
+                {
+                    threadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                }
+            }
+        }
+
+        [UTF.TestClass]
+        private class DummyTestClassForParallelize3
+        {
+            private static HashSet<int> threadIds = new HashSet<int>();
+
+            public static HashSet<int> ThreadIds
+            {
+                get
+                {
+                    return threadIds;
+                }
+            }
+
+            public static void Cleanup()
+            {
+                threadIds.Clear();
+            }
+
+            [UTF.TestMethod]
+            public void TestMethod1()
+            {
+                if (!threadIds.Contains(Thread.CurrentThread.ManagedThreadId))
+                {
+                    threadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                }
+            }
+        }
+
+        [UTF.TestClass]
+        private class DummyTestClassWithDoNotParallelizeMethods
+        {
+            private static HashSet<int> parallelizableTestsThreadIds = new HashSet<int>();
+            private static HashSet<int> unParallelizableTestsThreadIds = new HashSet<int>();
+
+            public static HashSet<int> ParallelizableTestsThreadIds
+            {
+                get
+                {
+                    return parallelizableTestsThreadIds;
+                }
+            }
+
+            public static HashSet<int> UnParallelizableTestsThreadIds
+            {
+                get
+                {
+                    return unParallelizableTestsThreadIds;
+                }
+            }
+
+            public static DateTime LastParallelizableTestRun { get; set; }
+
+            public static DateTime? FirstUnParallelizableTestRun { get; set; }
+
+            public static void Cleanup()
+            {
+                parallelizableTestsThreadIds.Clear();
+                unParallelizableTestsThreadIds.Clear();
+            }
+
+            [UTF.TestMethod]
+            public void TestMethod1()
+            {
+                if (!parallelizableTestsThreadIds.Contains(Thread.CurrentThread.ManagedThreadId))
+                {
+                    parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                }
+
+                LastParallelizableTestRun = DateTime.Now;
+            }
+
+            [UTF.TestMethod]
+            public void TestMethod2()
+            {
+                if (!parallelizableTestsThreadIds.Contains(Thread.CurrentThread.ManagedThreadId))
+                {
+                    parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                }
+
+                LastParallelizableTestRun = DateTime.Now;
+            }
+
+            [UTF.TestMethod]
+            [UTF.DoNotParallelize]
+            public void TestMethod3()
+            {
+                if (!FirstUnParallelizableTestRun.HasValue)
+                {
+                    FirstUnParallelizableTestRun = DateTime.Now;
+                }
+
+                if (!unParallelizableTestsThreadIds.Contains(Thread.CurrentThread.ManagedThreadId))
+                {
+                    unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                }
+            }
+
+            [UTF.TestMethod]
+            [UTF.DoNotParallelize]
+            public void TestMethod4()
+            {
+                if (!FirstUnParallelizableTestRun.HasValue)
+                {
+                    FirstUnParallelizableTestRun = DateTime.Now;
+                }
+
+                if (!unParallelizableTestsThreadIds.Contains(Thread.CurrentThread.ManagedThreadId))
+                {
+                    unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+                }
             }
         }
 

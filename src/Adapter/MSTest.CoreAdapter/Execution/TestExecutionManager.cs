@@ -225,7 +225,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Default test set is filtered tests based on user provided filter criteria
                 IEnumerable<TestCase> testsToRun = Enumerable.Empty<TestCase>();
                 var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
-                if (!filterHasError && filterExpression != null)
+                if (!filterHasError)
                 {
                     testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
                 }
