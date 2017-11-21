@@ -9,7 +9,7 @@ This is a fully supported, open source and cross-platform implementation of the 
 ### Build status
 |            |Debug |Release |
 |:----------:|:----------------:|:------------------:|
-|**master**  |[![Build Status](https://ci.dot.net/buildStatus/icon?job=Private/Microsoft_testfx/master/Microsoft_testfx_Debug)](https://ci.dot.net/job/Private/job/Microsoft_testfx/job/master/job/Microsoft_testfx_Debug)|[![Build Status](https://ci.dot.net/buildStatus/icon?job=Private/Microsoft_testfx/master/Microsoft_testfx_Release)](https://ci.dot.net/job/Private/job/Microsoft_testfx/job/master/job/Microsoft_testfx_Release)|
+|**master**  |[![Build Status](https://ci.dot.net/buildStatus/icon?job=Microsoft_testfx/master/Debug)](https://ci.dot.net/job/Microsoft_testfx/job/master/job/Debug)|[![Build Status](https://ci.dot.net/buildStatus/icon?job=Microsoft_testfx/master/Release)](https://ci.dot.net/job/Microsoft_testfx/job/master/job/Release)|
 
 ### Latest Builds
 |            | Framework | Adapter |
