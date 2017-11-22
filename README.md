@@ -1,4 +1,4 @@
-﻿### Microsoft Test Framework "MSTest V2"
+### Microsoft Test Framework "MSTest V2"
 Welcome to the "MSTest V2" repository, the evolution of the Microsoft Test Framework and Adapter. "MSTest V2" is currently in use in a variety of scenarios including:
  - in the relevant in-box unit test project templates (Visual Studio 2017 Preview 4 onwards)
  - in the Create Unit Tests wizard (Visual Studio 2017 Preview 4 onwards)
@@ -34,6 +34,9 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ### License
 testfx platform is licensed under the [MIT license](https://github.com/Microsoft/testfx/blob/master/LICENSE)
+
+### Issue Tracking
+Please see [issue tracking](https://github.com/Microsoft/testfx-docs/blob/master/issuetracking.md) for a description of the workflow we use to process issues.
 
 ### Roadmap
 For details on our planned features and future direction please refer to our [roadmap](https://github.com/Microsoft/testfx-docs/blob/master/roadmap.md).
