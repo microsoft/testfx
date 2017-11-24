@@ -292,6 +292,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         }
 
                         var tasks = new List<Task>();
+
                         for (int i = 0; i < parallelWorkers; i++)
                         {
                             tasks.Add(Task.Factory.StartNew(

@@ -242,7 +242,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MSTest Executor: Test Parallelization enabled. Parallel Level {0}, Parallel Mode {1}.
+        ///   Looks up a localized string similar to MSTest Executor: Test Parallelization enabled. Workers: {0}, Scope: {1}..
         /// </summary>
         internal static string TestParallelizationBanner {
             get {
