@@ -144,44 +144,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
-        public void GetTestMethodInfoShouldThrowIfTestContextHasATypeMismatch()
-        {
-            string className = typeof(DummyTestClassWithIncorrectTestContextType).FullName;
-            var testMethod = new TestMethod("M", className, "A", isAsync: false);
-
-            Action action = () =>
-                this.typeCache.GetTestMethodInfo(
-                    testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
-                    false);
-
-            var exception = ActionUtility.PerformActionAndReturnException(action);
-
-            Assert.IsNotNull(exception);
-            Assert.IsTrue(exception is TypeInspectionException);
-            StringAssert.StartsWith(exception.Message, string.Format("The {0}.TestContext has incorrect type.", className));
-        }
-
-        [TestMethodV1]
-        public void GetTestMethodInfoShouldThrowIfTestContextHasMultipleAmbiguousTestContextProperties()
-        {
-            string className = typeof(DummyTestClassWithMultipleTestContextProperties).FullName;
-            var testMethod = new TestMethod("M", className, "A", isAsync: false);
-
-            Action action = () =>
-                this.typeCache.GetTestMethodInfo(
-                    testMethod,
-                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
-                    false);
-
-            var exception = ActionUtility.PerformActionAndReturnException(action);
-
-            Assert.IsNotNull(exception);
-            Assert.IsTrue(exception is TypeInspectionException);
-            StringAssert.StartsWith(exception.Message, string.Format("Unable to find property {0}.TestContext. Error:{1}.", className, "Ambiguous match found."));
-        }
-
-        [TestMethodV1]
         public void GetTestMethodInfoShouldSetTestContextIfPresent()
         {
             var type = typeof(DummyTestClassWithTestMethods);
@@ -198,6 +160,83 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.IsNotNull(testMethodInfo);
             Assert.IsNotNull(testMethodInfo.Parent.TestContextProperty);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoShouldSetTestContextWithAnyNameIfPresent()
+        {
+            var type = typeof(DummyTestClassWithTestContext2);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.mockReflectHelper.Setup(
+                rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
+
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                                        testMethod,
+                                        new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                                        false);
+
+            Assert.IsNotNull(testMethodInfo);
+            Assert.IsNotNull(testMethodInfo.Parent.TestContextProperty);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoShouldSetTestContextFromBaseClassIfPresent()
+        {
+            var type = typeof(DummyTestClassWithTestContextInBase);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.mockReflectHelper.Setup(
+                rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
+
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                                        testMethod,
+                                        new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                                        false);
+
+            Assert.IsNotNull(testMethodInfo);
+            Assert.IsNotNull(testMethodInfo.Parent.TestContextProperty);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoShouldPickTheFirstTestContextPropertyWhenMultiplePresent()
+        {
+            var type = typeof(DummyTestClassWithMultipleTestContext);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.mockReflectHelper.Setup(
+                rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
+
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                                        testMethod,
+                                        new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                                        false);
+
+            Assert.IsNotNull(testMethodInfo);
+            Assert.IsNotNull(testMethodInfo.Parent.TestContextProperty);
+            Assert.AreEqual("TC2", testMethodInfo.Parent.TestContextProperty.Name);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoShouldSetTestContextToNullIfIncorrctTypeIsDefined()
+        {
+            var type = typeof(DummyTestClassWithIncorrectTestContextType);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.mockReflectHelper.Setup(
+                rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
+
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                                    testMethod,
+                                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                                    false);
+
+            Assert.IsNotNull(testMethodInfo);
+            Assert.IsNull(testMethodInfo.Parent.TestContextProperty);
         }
 
         [TestMethodV1]
@@ -1252,19 +1291,40 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
+        [UTF.TestClass]
         private class DummyTestClassWithIncorrectTestContextType
         {
             // This is TP.TF type.
             public virtual int TestContext { get; set; }
+
+            [UTF.TestMethod]
+            public void TestMethod()
+            {
+            }
         }
 
-        private class DummyTestClassWithTestContextProperty : DummyTestClassWithIncorrectTestContextType
+        [UTF.TestClass]
+        private class DummyTestClassWithTestContext2
         {
-            public new string TestContext { get; set; }
+            public UTFExtension.TestContext TC { get; set; }
+
+            [UTF.TestMethod]
+            public void TestMethod()
+            {
+            }
         }
 
-        private class DummyTestClassWithMultipleTestContextProperties : DummyTestClassWithTestContextProperty
+        [UTF.TestClass]
+        private class DummyTestClassWithTestContextInBase : DummyTestClassWithTestContext2
         {
+        }
+
+        [UTF.TestClass]
+        private class DummyTestClassWithMultipleTestContext : DummyTestClassWithTestContext2
+        {
+            public UTFExtension.TestContext TC2 { get; set; }
+
+            public UTFExtension.TestContext TC3 { get; set; }
         }
 
         [UTF.TestClass]

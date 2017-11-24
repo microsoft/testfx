@@ -237,12 +237,6 @@
   <data name="UTA_NoDefaultConstructor" xml:space="preserve">
     <value>Unable to get default constructor for class {0}.</value>
   </data>
-  <data name="UTA_TestContextLoadError" xml:space="preserve">
-    <value>Unable to find property {0}.TestContext. Error:{1}.</value>
-  </data>
-  <data name="UTA_TestContextTypeMismatchLoadError" xml:space="preserve">
-    <value>The {0}.TestContext has incorrect type.</value>
-  </data>
   <data name="UTA_TestInitializeAndCleanupMethodHasWrongSignature" xml:space="preserve">
     <value>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.</value>
   </data>

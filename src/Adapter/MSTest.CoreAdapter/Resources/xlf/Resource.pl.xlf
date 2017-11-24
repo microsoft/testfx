@@ -156,11 +156,6 @@
         <target state="translated">Nie można utworzyć wystąpienia klasy {0}. Błąd: {1}.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="UTA_TestContextTypeMismatchLoadError">
-        <source>The {0}.TestContext has incorrect type.</source>
-        <target state="translated">Właściwość {0}.TestContext ma niepoprawny typ.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="DebugTraceBanner">
         <source>Debug Trace:</source>
         <target state="translated">Śledzenie debugowania:</target>
@@ -239,11 +234,6 @@
       <trans-unit id="UTA_NoDefaultConstructor">
         <source>Unable to get default constructor for class {0}.</source>
         <target state="translated">Nie można pobrać domyślnego konstruktora dla klasy {0}.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_TestContextLoadError">
-        <source>Unable to find property {0}.TestContext. Error:{1}.</source>
-        <target state="translated">Nie można odnaleźć właściwości {0}.TestContext. Błąd:{1}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="EnumeratorLoadTypeErrorFormat">

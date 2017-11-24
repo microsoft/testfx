@@ -24,11 +24,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     internal class TypeCache : MarshalByRefObject
     {
         /// <summary>
-        /// Test context property name
-        /// </summary>
-        private const string TestContextPropertyName = "TestContext";
-
-        /// <summary>
         /// Predefined test Attribute names.
         /// </summary>
         private static readonly string[] PredefinedNames = new string[] { "Priority", "TestCategory", "Owner" };
@@ -310,29 +305,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns> The <see cref="PropertyInfo"/> for TestContext property. Null if not defined. </returns>
         private PropertyInfo ResolveTestContext(Type classType)
         {
-            try
-            {
-                var testContextProperty = classType.GetRuntimeProperty(TestContextPropertyName);
-                if (testContextProperty == null)
-                {
-                    // that's okay may be the property was not defined
-                    return null;
-                }
-
-                // check if testContextProperty is of correct type
-                if (!testContextProperty.PropertyType.FullName.Equals(typeof(TestContext).FullName, StringComparison.Ordinal))
-                {
-                    var errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestContextTypeMismatchLoadError, classType.FullName);
-                    throw new TypeInspectionException(errorMessage);
-                }
-
-                return testContextProperty;
-            }
-            catch (AmbiguousMatchException ex)
-            {
-                var errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestContextLoadError, classType.FullName, ex.Message);
-                throw new TypeInspectionException(errorMessage);
-            }
+            return classType.
+                            GetRuntimeProperties().
+                            Where(p => p != null && p.PropertyType.FullName.Equals(typeof(TestContext).FullName, StringComparison.Ordinal)).
+                            FirstOrDefault();
         }
 
         #endregion
