@@ -683,6 +683,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        [Ignore]
         public void RunTestsForTestShouldRunTestsInTheParentDomainsApartmentState()
         {
             var testCase1 = this.GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");
