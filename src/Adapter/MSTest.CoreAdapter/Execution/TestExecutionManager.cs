@@ -27,16 +27,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         private TestRunCancellationToken cancellationToken;
 
-        /// <summary>
-        /// Dictionary for test run parameters
-        /// </summary>
-        private IDictionary<string, object> sessionParameters;
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Justification = "Need to over-write the keys in dictionary.")]
         public TestExecutionManager()
         {
             this.TestMethodFilter = new TestMethodFilter();
-            this.sessionParameters = new Dictionary<string, object>();
         }
 
         /// <summary>
@@ -66,9 +59,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.cancellationToken = runCancellationToken;
 
             var isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
-
-            // Placing this after deployment since we need information post deployment that we pass in as properties.
-            this.CacheSessionParameters(runContext, frameworkHandle);
 
             // Execute the tests
             this.ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
@@ -106,9 +96,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
-
-            // Placing this after deployment since we need information post deployment that we pass in as properties.
-            this.CacheSessionParameters(runContext, frameworkHandle);
 
             // Run tests.
             this.ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
@@ -236,6 +223,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             if (!filterHasError)
             {
+                var sessionParameters = this.GetSessionParameters(runContext, testExecutionRecorder);
+
                 foreach (var currentTest in tests)
                 {
                     // Skip test if not fitting filter criteria.
@@ -267,9 +256,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     // and are merged with session level parameters
                     var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
 
-                    if (this.sessionParameters != null && this.sessionParameters.Count > 0)
+                    if (sessionParameters != null && sessionParameters.Count > 0)
                     {
-                        sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
+                        sourceLevelParameters = sourceLevelParameters.Concat(sessionParameters).ToDictionary(x => x.Key, x => x.Value);
                     }
 
                     unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
@@ -313,26 +302,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]
-        private void CacheSessionParameters(IRunContext runContext, ITestExecutionRecorder testExecutionRecorder)
+        private IDictionary<string, object> GetSessionParameters(IRunContext runContext, ITestExecutionRecorder testExecutionRecorder)
         {
             if (!string.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))
             {
                 try
                 {
-                    var testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
-                    if (testRunParameters != null)
-                    {
-                        foreach (var kvp in testRunParameters)
-                        {
-                            this.sessionParameters.Add(kvp);
-                        }
-                    }
+                    return RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
                 }
                 catch (Exception ex)
                 {
                     testExecutionRecorder.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
             }
+
+            return new Dictionary<string, object>();
         }
 
         /// <summary>
