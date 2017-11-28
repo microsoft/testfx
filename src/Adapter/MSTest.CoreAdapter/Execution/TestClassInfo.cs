@@ -230,22 +230,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 throw new NullReferenceException(Resource.TestContextIsNull);
             }
 
-            lock (this.testClassExecuteSyncObject)
+            // If class initialization is not done, then do it.
+            if (!this.IsClassInitializeExecuted)
             {
-                // If class initialization is not done, then do it.
-                if (!this.IsClassInitializeExecuted)
+                // Aquiring a lock is usually a costly operation which does not need to be
+                // performed every time if the class init is already executed.
+                lock (this.testClassExecuteSyncObject)
                 {
-                    try
+                    // Perform a check again.
+                    if (!this.IsClassInitializeExecuted)
                     {
-                        this.ClassInitializeMethod.InvokeAsSynchronousTask(null, testContext);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.ClassInitializationException = ex;
-                    }
-                    finally
-                    {
-                        this.IsClassInitializeExecuted = true;
+                        try
+                        {
+                            this.ClassInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.ClassInitializationException = ex;
+                        }
+                        finally
+                        {
+                            this.IsClassInitializeExecuted = true;
+                        }
                     }
                 }
             }
