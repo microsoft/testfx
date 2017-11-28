@@ -225,10 +225,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Default test set is filtered tests based on user provided filter criteria
                 IEnumerable<TestCase> testsToRun = Enumerable.Empty<TestCase>();
                 var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
-                if (!filterHasError)
+                if (filterHasError)
                 {
-                    testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
+                    // Bail out without processing everything else below.
+                    return;
                 }
+
+                testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
 
                 // this is done so that appropriate values of testcontext properties are set at source level
                 // and are merged with session level parameters
@@ -300,6 +303,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                 {
                                     while (!queue.IsEmpty)
                                     {
+                                        if (this.cancellationToken != null && this.cancellationToken.Canceled)
+                                        {
+                                            // if a cancellation has been requested, do not queue any more test runs.
+                                            break;
+                                        }
+
                                         if (queue.TryDequeue(out IEnumerable<TestCase> testSet))
                                         {
                                             this.ExecuteTestsWithTestRunner(testSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);

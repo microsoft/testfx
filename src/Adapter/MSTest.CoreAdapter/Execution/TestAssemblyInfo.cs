@@ -126,22 +126,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 throw new NullReferenceException(Resource.TestContextIsNull);
             }
 
-            lock (this.assemblyInfoExecuteSyncObject)
+            // If assembly initialization is not done, then do it.
+            if (!this.IsAssemblyInitializeExecuted)
             {
-                // If assembly initialization is not done, then do it.
-                if (!this.IsAssemblyInitializeExecuted)
+                // Aquiring a lock is usually a costly operation which does not need to be
+                // performed every time if the assembly init is already executed.
+                lock (this.assemblyInfoExecuteSyncObject)
                 {
-                    try
+                    // Perform a check again.
+                    if (!this.IsAssemblyInitializeExecuted)
                     {
-                        this.AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.AssemblyInitializationException = ex;
-                    }
-                    finally
-                    {
-                        this.IsAssemblyInitializeExecuted = true;
+                        try
+                        {
+                            this.AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                        }
+                        catch (Exception ex)
+                        {
+                            this.AssemblyInitializationException = ex;
+                        }
+                        finally
+                        {
+                            this.IsAssemblyInitializeExecuted = true;
+                        }
                     }
                 }
             }

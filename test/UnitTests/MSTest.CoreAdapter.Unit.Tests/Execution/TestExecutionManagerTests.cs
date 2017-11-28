@@ -682,6 +682,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
+        // This is tracked by https://github.com/Microsoft/testfx/issues/320.
         [TestMethodV1]
         [Ignore]
         public void RunTestsForTestShouldRunTestsInTheParentDomainsApartmentState()
@@ -848,12 +849,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
+                // Ensures stability.
+                System.Threading.Thread.Sleep(200);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
 
             [UTF.TestMethod]
             public void TestMethod2()
             {
+                // Ensures stability.
+                System.Threading.Thread.Sleep(200);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
