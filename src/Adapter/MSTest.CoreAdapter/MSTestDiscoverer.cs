@@ -7,6 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -46,7 +47,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             }
 
             // Populate the runsettings.
-            MSTestSettings.PopulateSettings(discoveryContext);
+            try
+            {
+                MSTestSettings.PopulateSettings(discoveryContext);
+            }
+            catch (AdapterSettingsException ex)
+            {
+                logger.SendMessage(TestMessageLevel.Error, ex.Message);
+                return;
+            }
 
             // Scenarios that include testsettings or forcing a run via the legacy adapter are currently not supported in MSTestAdapter.
             if (MSTestSettings.IsLegacyScenario(logger))

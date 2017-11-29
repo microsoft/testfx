@@ -25,6 +25,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
         }
 
+        public void SetupHost()
+        {
+            // Do nothing.
+        }
+
         /// <summary>
         /// Creates an instance of a given type in the test source host.
         /// </summary>

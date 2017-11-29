@@ -18,8 +18,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
         private const string TestAssetsFolder = "TestAssets";
         private const string ArtifactsFolder = "artifacts";
         private const string PackagesFolder = "packages";
-        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.15.0.1";
-        private const string VstestConsoleRelativePath = @"tools\net46\vstest.console.exe";
+        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.15.5.0";
+        private const string VstestConsoleRelativePath = @"tools\net451\vstest.console.exe";
 
         private static VsTestConsoleWrapper vsTestConsoleWrapper;
         private DiscoveryEventsHandler discoveryEventsHandler;
@@ -160,11 +160,10 @@ namespace Microsoft.MSTestV2.CLIAutomation
         {
             foreach (var test in passedTests)
             {
-                var testFound = this.runEventsHandler.PassedTests.Where(
-                    p => p.TestCase.FullyQualifiedName.Equals(test)
-                         || p.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test))
-                         || p.DisplayName.Equals(test)).ToList();
-                Assert.IsTrue(testFound.Count > 0, "Test {0} does not appear in passed tests list.", test);
+                var testFound = this.runEventsHandler.PassedTests.Any(
+                    p => test.Equals(p.TestCase?.FullyQualifiedName)
+                         || test.Equals(p.DisplayName));
+                Assert.IsTrue(testFound, "Test {0} does not appear in passed tests list.", test);
             }
         }
 
@@ -181,15 +180,15 @@ namespace Microsoft.MSTestV2.CLIAutomation
         {
             foreach (var test in failedTests)
             {
-                var testFound = this.runEventsHandler.FailedTests.Where(f => f.TestCase.FullyQualifiedName.Equals(test) ||
-                           f.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
+                var testFound = this.runEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName) ||
+                           test.Equals(f.DisplayName));
                 Assert.IsNotNull(testFound, "Test {0} does not appear in failed tests list.", test);
 
                 // Skipping this check for x64 as of now. https://github.com/Microsoft/testfx/issues/60 should fix this.
                 if (source.IndexOf("x64") == -1)
                 {
                     // Verify stack information as well.
-                    Assert.IsTrue(testFound.First().ErrorStackTrace.Contains(GetTestMethodName(test)), "No stack trace for failed test: {0}", test);
+                    Assert.IsTrue(testFound.ErrorStackTrace.Contains(GetTestMethodName(test)), "No stack trace for failed test: {0}", test);
                 }
             }
         }
@@ -203,10 +202,17 @@ namespace Microsoft.MSTestV2.CLIAutomation
         {
             foreach (var test in skippedTests)
             {
-                var testFound = this.runEventsHandler.SkippedTests.Where(s => s.TestCase.FullyQualifiedName.Equals(test) ||
-                           s.TestCase.FullyQualifiedName.Equals(GetTestMethodName(test)));
-                Assert.IsNotNull(testFound, "Test {0} does not appear in skipped tests list.", test);
+                var testFound = this.runEventsHandler.SkippedTests.Any(s => test.Equals(s.TestCase.FullyQualifiedName) ||
+                           test.Equals(s.DisplayName));
+                Assert.IsTrue(testFound, "Test {0} does not appear in skipped tests list.", test);
             }
+        }
+
+        public void ValidateTestRunTime(int thresholdTime)
+        {
+            Assert.IsTrue(
+                this.runEventsHandler.ElapsedTimeInRunningTests >= 0 && this.runEventsHandler.ElapsedTimeInRunningTests < thresholdTime,
+                $"Test Run was expected to not exceed {thresholdTime} but it took {this.runEventsHandler.ElapsedTimeInRunningTests}");
         }
 
         /// <summary>
