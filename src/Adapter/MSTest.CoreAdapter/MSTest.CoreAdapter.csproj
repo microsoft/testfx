@@ -49,6 +49,9 @@
     <Compile Include="Execution\StackTraceHelper.cs" />
     <Compile Include="Execution\TestAssemblyInfo.cs" />
     <Compile Include="Execution\TestClassInfo.cs" />
+    <Compile Include="Execution\TestAssemblySettingsProvider.cs" />
+    <Compile Include="ObjectModel\AdapterSettingsException.cs" />
+    <Compile Include="ObjectModel\TestAssemblySettings.cs" />
     <Compile Include="ObjectModel\TestFailedException.cs" />
     <Compile Include="TestMethodFilter.cs" />
     <Compile Include="Execution\TestMethodRunner.cs" />
@@ -112,6 +115,9 @@
     <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.11.0.0\lib\portable-net45+win8+wpa81+wp8\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
       <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Collections.Concurrent">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETPortable\v4.5\System.Collections.Concurrent.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

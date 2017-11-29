@@ -197,6 +197,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
+        public void DiscoveryShouldReportAndBailOutOnSettingsException()
+        {
+            string runSettingxml =
+            @"<RunSettings>   
+			        <MSTest>   
+				        <Parallelize>
+				          <Scope>Pond</Scope>
+				        </Parallelize>
+			        </MSTest>
+		    </RunSettings>";
+            this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+            this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+            this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
+
+            var source = Assembly.GetExecutingAssembly().Location;
+            this.discoverer.DiscoverTests(new List<string> { source }, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
+
+            // Assert.
+            this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
+            this.mockMessageLogger.Verify(fh => fh.SendMessage(TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
+        }
+
+        [TestMethod]
         public void AreValidSourcesShouldThrowIfPlatformsValidSourceExtensionsIsNull()
         {
             this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);

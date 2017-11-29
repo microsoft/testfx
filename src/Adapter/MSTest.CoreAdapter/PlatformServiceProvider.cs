@@ -156,7 +156,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             TestPlatform.ObjectModel.Adapter.IRunSettings runSettings,
             TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle)
         {
-            return new TestSourceHost(source, runSettings, frameworkHandle);
+            var testSourceHost = new TestSourceHost(source, runSettings, frameworkHandle);
+            testSourceHost.SetupHost();
+
+            return testSourceHost;
         }
 
         /// <summary>
