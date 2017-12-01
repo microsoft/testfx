@@ -227,8 +227,8 @@
         <note></note>
       </trans-unit>
       <trans-unit id="LegacyScenariosNotSupportedWarning">
-        <source>Warning : A testsettings file or a runsettings with a ForcedLegacyMode set to true is not supported with the MSTest V2 Adapter.</source>
-        <target state="translated">Uwaga: plik testsettings ani plik runsettings z parametrem ForcedLegacyMode o wartości true nie jest obsługiwany przez adapter MSTest 2.</target>
+        <source>Warning : A vsmdi file, testsettings file or a runsettings file with a ForcedLegacyMode set to true is not supported with the MSTest V2 Adapter.</source>
+        <target state="new">Uwaga: plik testsettings ani plik runsettings z parametrem ForcedLegacyMode o wartości true nie jest obsługiwany przez adapter MSTest 2.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="Common_MustBeGreaterThanZero">
