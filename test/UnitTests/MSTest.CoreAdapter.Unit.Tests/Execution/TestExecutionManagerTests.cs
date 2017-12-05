@@ -620,8 +620,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
                 Assert.AreEqual(2, DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count);
                 Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.UnParallelizableTestsThreadIds.Count);
-                Console.WriteLine("DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun : ", DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun);
-                Console.WriteLine("DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun : ", DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun);
+                Console.WriteLine("DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun : {0}", DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun.TimeOfDay.TotalMilliseconds);
+                Console.WriteLine("DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun : {0}", DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun.TimeOfDay.TotalMilliseconds);
+                Console.WriteLine("String timings : {0}  Gaapp  {1} ", DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun, DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun);
                 Assert.IsTrue(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun < DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun);
             }
             finally
@@ -972,7 +973,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
                 LastParallelizableTestRun = DateTime.Now;
-                Console.WriteLine("TestMethod1 : ", LastParallelizableTestRun);
+                Console.WriteLine("TestMethod1 : {0}", LastParallelizableTestRun.ToString());
             }
 
             [UTF.TestMethod]
@@ -982,7 +983,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
                 LastParallelizableTestRun = DateTime.Now;
-                Console.WriteLine("TestMethod2 : ", LastParallelizableTestRun);
+                Console.WriteLine("TestMethod2 : {0}", LastParallelizableTestRun.ToString());
             }
 
             [UTF.TestMethod]
@@ -992,7 +993,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 if (!isFirstUnParallelizedTestRunTimeSet)
                 {
                     FirstUnParallelizableTestRun = DateTime.Now;
-                    Console.WriteLine("TestMethod3 : ", FirstUnParallelizableTestRun);
+                    Console.WriteLine("TestMethod3 : {0}", FirstUnParallelizableTestRun.ToString());
                 }
 
                 unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
@@ -1006,7 +1007,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 if (!isFirstUnParallelizedTestRunTimeSet)
                 {
                     FirstUnParallelizableTestRun = DateTime.Now;
-                    Console.WriteLine("TestMethod3 : ", FirstUnParallelizableTestRun);
+                    Console.WriteLine("TestMethod4 : {0}", FirstUnParallelizableTestRun.ToString());
                 }
 
                 unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
