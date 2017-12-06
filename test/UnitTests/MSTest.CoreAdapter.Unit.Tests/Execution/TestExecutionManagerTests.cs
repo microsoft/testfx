@@ -620,7 +620,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
                 Assert.AreEqual(2, DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count);
                 Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.UnParallelizableTestsThreadIds.Count);
-                Assert.IsTrue(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun < DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun);
+                Assert.IsTrue(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun.TimeOfDay.TotalMilliseconds < DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun.TimeOfDay.TotalMilliseconds);
             }
             finally
             {
