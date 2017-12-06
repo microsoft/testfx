@@ -1011,6 +1011,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsTrue(MSTestSettings.IsLegacyScenario(this.mockMessageLogger.Object));
         }
 
+        [TestMethod]
+        public void LegacyScenariosNotSupportedWarningIsPrintedWhenVsmdiFileIsGiven()
+        {
+            string runSettingxml =
+            @"<RunSettings>   
+               <MSTest>   
+                <SettingsFile>DummyPath\\vsmdiFile.vsmdi</SettingsFile> 
+               </MSTest>
+          </RunSettings>";
+            this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+            this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+            MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+            Assert.IsTrue(MSTestSettings.IsLegacyScenario(this.mockMessageLogger.Object));
+            this.mockMessageLogger.Verify(logger => logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning), Times.Once);
+        }
+
         #endregion
     }
 }

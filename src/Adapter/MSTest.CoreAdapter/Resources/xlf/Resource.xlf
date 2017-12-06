@@ -282,8 +282,8 @@
         <note></note>
       </trans-unit>
       <trans-unit id="LegacyScenariosNotSupportedWarning">
-        <source>Warning : A testsettings file or a runsettings with a ForcedLegacyMode set to true is not supported with the MSTest V2 Adapter.</source>
-        <target state="translated">Warning : A testsettings file or a runsettings with a ForcedLegacyMode set to true is not supported with the MSTest V2 Adapter.</target>
+        <source>Warning : A testsettings file, a runsettings file with a ForcedLegacyMode set to true or a vsmdi file is not supported with the MSTest V2 Adapter.</source>
+        <target state="new">Warning : A testsettings file or a runsettings with a ForcedLegacyMode set to true is not supported with the MSTest V2 Adapter.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestContextMessageBanner">
