@@ -325,9 +325,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             // Trigger another Run
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
 
-            CollectionAssert.Contains(
-                DummyTestClass.TestContextProperties.ToList(),
-                new KeyValuePair<string, object>("webAppUrl", "http://updatedLocalHost"));
+            Assert.AreEqual(DummyTestClass.TestContextProperties["webAppUrl"], "http://updatedLocalHost");
         }
 
         #endregion
