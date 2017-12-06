@@ -623,7 +623,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [Ignore]
         [TestMethodV1]
         public void RunTestsForTestShouldRunNonParallelizableTestsSeparately()
         {
