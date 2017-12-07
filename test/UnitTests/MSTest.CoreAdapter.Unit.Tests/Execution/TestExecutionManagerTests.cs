@@ -296,6 +296,38 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             testablePlatformService.MockSettingsProvider.Verify(sp => sp.GetProperties(It.IsAny<string>()), Times.Once);
         }
 
+        [TestMethodV1]
+        public void RunTestsShouldClearSessionParametersAcrossRuns()
+        {
+            var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
+
+            TestCase[] tests = new[] { testCase };
+            this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                         @"<RunSettings> 
+                                            <TestRunParameters>
+                                              <Parameter name=""webAppUrl"" value=""http://localhost"" />
+                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
+                                              </TestRunParameters>
+                                            </RunSettings>");
+
+            // Trigger First Run
+            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+            // Update runsettings to have different values for similar keys
+            this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                             @"<RunSettings> 
+                                            <TestRunParameters>
+                                              <Parameter name=""webAppUrl"" value=""http://updatedLocalHost"" />
+                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
+                                              </TestRunParameters>
+                                            </RunSettings>");
+
+            // Trigger another Run
+            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+            Assert.AreEqual(DummyTestClass.TestContextProperties["webAppUrl"], "http://updatedLocalHost");
+        }
+
         #endregion
 
         #region Run Tests on Sources
@@ -620,7 +652,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
                 Assert.AreEqual(2, DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count);
                 Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.UnParallelizableTestsThreadIds.Count);
-                Assert.IsTrue(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun.TimeOfDay.TotalMilliseconds < DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun.TimeOfDay.TotalMilliseconds);
+                Assert.IsTrue(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun.TimeOfDay.TotalMilliseconds <= DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun.TimeOfDay.TotalMilliseconds);
             }
             finally
             {

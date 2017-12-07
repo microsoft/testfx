@@ -408,6 +408,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     var testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
                     if (testRunParameters != null)
                     {
+                        // Clear sessionParameters to prevent key collisions of test run parameters in case
+                        // "Keep Test Execution Engine Alive" is selected in VS.
+                        this.sessionParameters.Clear();
                         foreach (var kvp in testRunParameters)
                         {
                             this.sessionParameters.Add(kvp);
