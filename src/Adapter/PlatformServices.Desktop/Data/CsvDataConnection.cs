@@ -22,6 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
     {
         // Template used to map from a filename to a DB connection string
         private const string CsvConnectionTemplate = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Persist Security Info=False;Extended Properties=\"text;HDR=YES;FMT=Delimited\"";
+        private const string CsvConnectionTemplate64 = "Provider=Microsoft.Ace.OLEDB.12.0;Data Source={0};Persist Security Info=False;Extended Properties=\"text;HDR=YES;FMT=Delimited\"";
 
         private string fileName;
 
@@ -93,7 +94,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             using (OleDbCommand command = new OleDbCommand())
             {
                 // We have to use the name of the folder which contains the CSV file in the connection string
-                connection.ConnectionString = string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate, Path.GetDirectoryName(fullPath));
+                // If target platform is x64, then use CsvConnectionTemplate64 connection string.
+                if (IntPtr.Size == 8)
+                {
+                    connection.ConnectionString = string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate64, Path.GetDirectoryName(fullPath));
+                }
+                else
+                {
+                    connection.ConnectionString = string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate, Path.GetDirectoryName(fullPath));
+                }
+
                 WriteDiagnostics("Connection String: {0}", connection.ConnectionString);
 
                 // We have to open the connection now, before we try to quote
