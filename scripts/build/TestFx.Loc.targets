@@ -29,15 +29,15 @@
     <CreateItem Include="@(ResxResources)" AdditionalMetadata="Language=%(ResxLang.Identity)">
       <Output ItemName="LocResourceFile" TaskParameter="Include"/>
     </CreateItem>
-    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool\0.1.3\tools\xlftool.exe update -Resx %(LocResourceFile.Identity) -Xlf $(ResourceDirectory)\xlf\%(LocResourceFile.Filename).%(LocResourceFile.Language).xlf" />
-    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool\0.1.3\tools\xlftool.exe update -Resx %(ResxResources.Identity) -Xlf $(ResourceDirectory)\xlf\%(ResxResources.Filename).xlf" />
+    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool.0.1.3\tools\xlftool.exe update -Resx %(LocResourceFile.Identity) -Xlf $(ResourceDirectory)\xlf\%(LocResourceFile.Filename).%(LocResourceFile.Language).xlf" />
+    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool.0.1.3\tools\xlftool.exe update -Resx %(ResxResources.Identity) -Xlf $(ResourceDirectory)\xlf\%(ResxResources.Filename).xlf" />
   </Target>
 
   <Target Name="CreateLocalizeResx" Condition="'$(IsLocalizedBuild)' == 'true'">
     <CreateItem Include="@(ResxResources)" AdditionalMetadata="Language=%(ResxLang.Identity)">
       <Output ItemName="LocResourceFile" TaskParameter="Include"/>
     </CreateItem>
-    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool\0.1.3\tools\xlftool.exe  writeTarget -Xlf $(ResourceDirectory)\xlf\%(LocResourceFile.Filename).%(LocResourceFile.Language).xlf -Resx $(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx -verbose" />
+    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool.0.1.3\tools\xlftool.exe  writeTarget -Xlf $(ResourceDirectory)\xlf\%(LocResourceFile.Filename).%(LocResourceFile.Language).xlf -Resx $(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx -verbose" />
     <ItemGroup>
       <EmbeddedResource Include="$(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx" />
     </ItemGroup>
@@ -45,7 +45,7 @@
   
   <!-- Localization for documentation files. -->
   <Target Name="CopyLocalizedXmls" BeforeTargets="BeforeBuild" Condition="$(LocDocumentationSubPath) != ''">
-    <Exec Command="xcopy /Y /I /S /E $(TestFxPackagesRoot)MSTest.Internal.TestFx.Localized.Documentation\1.0.0-build-20170420-1\contentFiles\any\any\$(LocDocumentationSubPath) $(OutDir)" />
+    <Exec Command="xcopy /Y /I /S /E $(TestFxPackagesRoot)MSTest.Internal.TestFx.Localized.Documentation.1.0.0-build-20170420-1\contentFiles\any\any\$(LocDocumentationSubPath) $(OutDir)" />
   </Target>
 
   <!-- Localization for vsix files.-->
