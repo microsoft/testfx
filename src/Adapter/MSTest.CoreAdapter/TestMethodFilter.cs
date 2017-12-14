@@ -119,10 +119,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 MethodInfo methodGetTestCaseFilter = context.GetType().GetRuntimeMethod("GetTestCaseFilter", new[] { typeof(IEnumerable<string>), typeof(Func<string, TestProperty>) });
                 return (ITestCaseFilterExpression)methodGetTestCaseFilter?.Invoke(context, new object[] { this.supportedProperties.Keys, (Func<string, TestProperty>)this.PropertyProvider });
             }
-            catch (TargetInvocationException ex)
+            catch (Exception ex)
             {
-                throw ex.InnerException;
+                // In case of UWP .Net Native Tool Chain compilation. Invoking methods via Reflection doesn't work, hence discovery always fails.
+                // Hence throwing exception only if it is of type TestPlatformFormatException
+                if (ex.InnerException is TestPlatformFormatException)
+                {
+                    throw ex.InnerException;
+                }
             }
+
+            return null;
         }
     }
 }
