@@ -63,7 +63,17 @@ namespace MSTestAdapter.Smoke.E2ETests
         [TestMethod]
         public void NothingShouldRunInParallel()
         {
-            this.InvokeVsTestForExecution(new string[] { DoNotParallelizeTestAssembly });
+            const string RunSetting =
+            @"<RunSettings>   
+                <MSTest>
+    		        <Parallelize>
+      			        <Workers>4</Workers>
+      			        <Scope>ClassLevel</Scope>
+    		        </Parallelize>
+  	            </MSTest>  
+            </RunSettings>";
+
+            this.InvokeVsTestForExecution(new string[] { DoNotParallelizeTestAssembly }, RunSetting);
 
             // DoNotParallelize set for Assemblly
             // There are a total of 2 classes - C1 (3 tests), C2(3 tests) with a sleep of TestMethodWaitTimeInMS.
@@ -75,8 +85,7 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "DoNotParallelizeTestProject.UnitTest1.SimpleTest13",
                 "DoNotParallelizeTestProject.UnitTest2.SimpleTest21");
 
-            this.ValidateFailedTests(
-                MethodParallelTestAssembly,
+            this.ValidateFailedTestsContain(
                 "DoNotParallelizeTestProject.UnitTest1.SimpleTest12",
                 "DoNotParallelizeTestProject.UnitTest2.SimpleTest22");
         }
