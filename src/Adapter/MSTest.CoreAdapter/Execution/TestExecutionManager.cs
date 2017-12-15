@@ -268,7 +268,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     var logger = (IMessageLogger)frameworkHandle;
                     logger.SendMessage(
                         TestMessageLevel.Informational,
-                        string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, parallelWorkers, parallelScope));
+                        string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
 
                     // Create test sets for execution, we can execute them in parallel based on parallel settings
                     IEnumerable<IGrouping<bool, TestCase>> testsets = Enumerable.Empty<IGrouping<bool, TestCase>>();
