@@ -11,6 +11,7 @@ namespace MSTestAdapter.Smoke.E2ETests
     {
         private const string ClassParallelTestAssembly = "ParallelClassesTestProject.dll";
         private const string MethodParallelTestAssembly = "ParallelMethodsTestProject.dll";
+        private const string DoNotParallelizeTestAssembly = "DoNotParallelizeTestProject.dll";
         private const int TestMethodWaitTimeInMS = 1000;
         private const int OverheadTimeInMS = 2500;
 
@@ -57,6 +58,27 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "ParallelClassesTestProject.UnitTest1.SimpleTest12",
                 "ParallelClassesTestProject.UnitTest2.SimpleTest22",
                 "ParallelClassesTestProject.UnitTest3.SimpleTest32");
+        }
+
+        [TestMethod]
+        public void NothingShouldRunInParallel()
+        {
+            this.InvokeVsTestForExecution(new string[] { DoNotParallelizeTestAssembly });
+
+            // DoNotParallelize set for Assemblly
+            // There are a total of 2 classes - C1 (3 tests), C2(3 tests) with a sleep of TestMethodWaitTimeInMS.
+            // So this should not exceed 5 * TestMethodWaitTimeInMS seconds + 2.5 seconds overhead.
+            this.ValidateTestRunTime((5 * TestMethodWaitTimeInMS) + OverheadTimeInMS);
+
+            this.ValidatePassedTestsContain(
+                "DoNotParallelizeTestProject.UnitTest1.SimpleTest11",
+                "DoNotParallelizeTestProject.UnitTest1.SimpleTest13",
+                "DoNotParallelizeTestProject.UnitTest2.SimpleTest21");
+
+            this.ValidateFailedTests(
+                MethodParallelTestAssembly,
+                "DoNotParallelizeTestProject.UnitTest1.SimpleTest12",
+                "DoNotParallelizeTestProject.UnitTest2.SimpleTest22");
         }
     }
 }
