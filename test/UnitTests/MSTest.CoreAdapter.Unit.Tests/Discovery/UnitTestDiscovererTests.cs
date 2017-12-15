@@ -339,6 +339,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Never);
         }
 
+        /// <summary>
+        /// Send test cases should not send any test cases if filter parsing error.
+        /// </summary>
+        [TestMethodV1]
+        public void SendTestCasesShouldSendAllTestCasesIfTestPlatformFormatExceptionNotThrown()
+        {
+            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithGetTestCaseFilter(() => { throw new NotImplementedException("DummyException"); });
+
+            var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", false));
+            var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));
+            var testElements = new List<UnitTestElement> { test1, test2 };
+
+            // Action
+            this.unitTestDiscoverer.SendTestCases(Source, testElements, this.mockTestCaseDiscoverySink.Object, discoveryContext, this.mockMessageLogger.Object);
+
+            // Assert.
+            this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
+            this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Once);
+        }
+
         private void SetupNavigation(string source, UnitTestElement test, string className, string methodName)
         {
             var testNavigationData = new DummyNavigationData("DummyFileName.cs", 1, 10);
