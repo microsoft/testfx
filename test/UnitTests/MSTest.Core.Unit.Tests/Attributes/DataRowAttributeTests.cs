@@ -9,7 +9,6 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
     using System.Linq;
     using System.Reflection;
     using Assert = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using ClassInitialize = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute;
     using CollectionAssert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using DataRowAttribute = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute;
     using TestClass = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
