@@ -69,7 +69,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 if (data != null)
                 {
-                    return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data));
+                    return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", (IEnumerable<object>)data));
                 }
             }
 
