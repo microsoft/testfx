@@ -63,6 +63,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             int currentAppDomainId = dummyclass.AppDomainId;
 
             TestSourceHost sut = new TestSourceHost(Assembly.GetExecutingAssembly().Location, null, null);
+            sut.SetupHost();
 
             // Execute
             var expectedObject = sut.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
@@ -83,7 +84,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         /// Leaving the test running till then.
         /// </summary>
         [TestMethod]
-        public void CreateInstanceForTypeShouldSetNewDomainsAppBaseToTestSourceLocationForFullCLRTests()
+        public void SetupHostShouldSetNewDomainsAppBaseToTestSourceLocationForFullCLRTests()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -96,6 +97,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                     .Returns(".NETFramework,Version=v4.5.1");
 
                 // Act
+                sourceHost.Object.SetupHost();
                 var expectedObject =
                     sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
@@ -109,7 +111,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         }
 
         [TestMethod]
-        public void CreateInstanceForTypeShouldSetNewDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
+        public void SetupHostShouldSetNewDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -122,6 +124,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 sourceHost.Setup(tsh => tsh.GetTargetFrameworkVersionString(location)).Returns(".NETCore,Version=v5.0");
 
                 // Act
+                sourceHost.Object.SetupHost();
                 var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
                 // Assert
@@ -143,7 +146,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             testableAppDomain.Setup(ad => ad.CreateDomain(It.IsAny<string>(), It.IsAny<Evidence>(), It.IsAny<AppDomainSetup>())).Returns(AppDomain.CurrentDomain);
             testableAppDomain.Setup(ad => ad.Unload(It.IsAny<AppDomain>())).Throws(new CannotUnloadAppDomainException());
             var sourceHost = new TestSourceHost(typeof(DesktopTestSourceHostTests).Assembly.Location, null, frameworkHandle.Object, testableAppDomain.Object);
-            sourceHost.CreateInstanceForType(typeof(DesktopTestSourceHostTests), null);
+            sourceHost.SetupHost();
 
             // Act
             sourceHost.Dispose();

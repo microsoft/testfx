@@ -1,4 +1,4 @@
-﻿### Microsoft Test Framework "MSTest V2"
+### Microsoft Test Framework "MSTest V2"
 Welcome to the "MSTest V2" repository, the evolution of the Microsoft Test Framework and Adapter. "MSTest V2" is currently in use in a variety of scenarios including:
  - in the relevant in-box unit test project templates (Visual Studio 2017 Preview 4 onwards)
  - in the Create Unit Tests wizard (Visual Studio 2017 Preview 4 onwards)
@@ -9,7 +9,7 @@ This is a fully supported, open source and cross-platform implementation of the 
 ### Build status
 |            |Debug |Release |
 |:----------:|:----------------:|:------------------:|
-|**master**  |[![Build Status](https://ci.dot.net/buildStatus/icon?job=Private/Microsoft_testfx/master/Microsoft_testfx_Debug)](https://ci.dot.net/job/Private/job/Microsoft_testfx/job/master/job/Microsoft_testfx_Debug)|[![Build Status](https://ci.dot.net/buildStatus/icon?job=Private/Microsoft_testfx/master/Microsoft_testfx_Release)](https://ci.dot.net/job/Private/job/Microsoft_testfx/job/master/job/Microsoft_testfx_Release)|
+|**master**  |[![Build Status](https://ci.dot.net/buildStatus/icon?job=Microsoft_testfx/master/Debug)](https://ci.dot.net/job/Microsoft_testfx/job/master/job/Debug)|[![Build Status](https://ci.dot.net/buildStatus/icon?job=Microsoft_testfx/master/Release)](https://ci.dot.net/job/Microsoft_testfx/job/master/job/Release)|
 
 ### Latest Builds
 |            | Framework | Adapter |
@@ -34,6 +34,9 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 ### License
 testfx platform is licensed under the [MIT license](https://github.com/Microsoft/testfx/blob/master/LICENSE)
+
+### Issue Tracking
+Please see [issue tracking](https://github.com/Microsoft/testfx-docs/blob/master/issuetracking.md) for a description of the workflow we use to process issues.
 
 ### Roadmap
 For details on our planned features and future direction please refer to our [roadmap](https://github.com/Microsoft/testfx-docs/blob/master/roadmap.md).

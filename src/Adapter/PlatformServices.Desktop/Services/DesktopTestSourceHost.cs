@@ -63,16 +63,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Creates an instance of a given type in the test source host.
+        /// Setup the isolation host.
         /// </summary>
-        /// <param name="type"> The type that needs to be created in the host. </param>
-        /// <param name="args">The arguments to pass to the constructor.
-        /// This array of arguments must match in number, order, and type the parameters of the constructor to invoke.
-        /// Pass in null for a constructor with no arguments.
-        /// </param>
-        /// <returns> An instance of the type created in the host. </returns>
-        /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
-        public object CreateInstanceForType(Type type, object[] args)
+        public void SetupHost()
         {
             List<string> resolutionPaths = this.GetResolutionPaths(this.sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
 
@@ -117,8 +110,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         }
                     }
                 }
-
-                return Activator.CreateInstance(type, args);
             }
 
             var appDomainSetup = new AppDomainSetup();
@@ -200,13 +191,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     }
                 }
             }
+        }
 
-            var enumerator = AppDomainUtilities.CreateInstance(
+        /// <summary>
+        /// Creates an instance of a given type in the test source host.
+        /// </summary>
+        /// <param name="type"> The type that needs to be created in the host. </param>
+        /// <param name="args">The arguments to pass to the constructor.
+        /// This array of arguments must match in number, order, and type the parameters of the constructor to invoke.
+        /// Pass in null for a constructor with no arguments.
+        /// </param>
+        /// <returns> An instance of the type created in the host. </returns>
+        /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
+        public object CreateInstanceForType(Type type, object[] args)
+        {
+            // Honour DisableAppDomain setting if it is present in runsettings
+            if (this.runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
+            {
+                return Activator.CreateInstance(type, args);
+            }
+
+            return AppDomainUtilities.CreateInstance(
                 this.domain,
                 type,
                 args);
-
-            return enumerator;
         }
 
         /// <summary>

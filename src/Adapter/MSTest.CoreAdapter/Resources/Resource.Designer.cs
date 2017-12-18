@@ -125,6 +125,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [MSTest][Discovery][{0}] {1}.
+        /// </summary>
+        internal static string DiscoveryWarning {
+            get {
+                return ResourceManager.GetString("DiscoveryWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}: {1}.
         /// </summary>
         internal static string EnumeratorLoadTypeErrorFormat {
@@ -139,6 +148,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string Execution_Test_Timeout {
             get {
                 return ResourceManager.GetString("Execution_Test_Timeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; specified for &apos;Scope&apos;. Supported scopes are {1}..
+        /// </summary>
+        internal static string InvalidParallelScopeValue {
+            get {
+                return ResourceManager.GetString("InvalidParallelScopeValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; specified for &apos;Workers&apos;. The value should be a non-negative integer..
+        /// </summary>
+        internal static string InvalidParallelWorkersValue {
+            get {
+                return ResourceManager.GetString("InvalidParallelWorkersValue", resourceCulture);
             }
         }
         
@@ -161,7 +188,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning : A testsettings file or a runsettings with a ForcedLegacyMode set to true is not supported with the MSTest V2 Adapter..
+        ///   Looks up a localized string similar to Warning : A testsettings file, a runsettings file with a ForcedLegacyMode set to true or a vsmdi file is not supported with the MSTest V2 Adapter..
         /// </summary>
         internal static string LegacyScenariosNotSupportedWarning {
             get {
@@ -211,6 +238,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string TestNotFound {
             get {
                 return ResourceManager.GetString("TestNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MSTest Executor: Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})..
+        /// </summary>
+        internal static string TestParallelizationBanner {
+            get {
+                return ResourceManager.GetString("TestParallelizationBanner", resourceCulture);
             }
         }
         

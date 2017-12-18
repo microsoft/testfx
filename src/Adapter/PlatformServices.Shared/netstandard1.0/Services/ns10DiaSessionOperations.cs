@@ -17,7 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private static Type typeDiaNavigationData;
 
         /// <summary>
-        /// Initializes static members of the <see cref="FileOperations"/> class.
+        /// Initializes static members of the <see cref="DiaSessionOperations"/> class.
         /// </summary>
         /// <remarks>Initializes DiaSession.</remarks>
         static DiaSessionOperations()

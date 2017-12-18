@@ -4,21 +4,25 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 {
     extern alias FrameworkV1;
+    extern alias FrameworkV2;
 
+    using System;
     using System.Xml;
-
+    using global::MSTestAdapter.TestUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-
     using Moq;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
     public class MSTestSettingsTests
@@ -189,6 +193,285 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, false);
+        }
+
+        [TestMethod]
+        public void ParallelizationSettingsShouldNotBeSetByDefault()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.IsFalse(adapterSettings.ParallelizationWorkers.HasValue);
+            Assert.IsFalse(adapterSettings.ParallelizationScope.HasValue);
+        }
+
+        [TestMethod]
+        public void GetSettingsShouldThrowIfParallelizationWorkersIsNotInt()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize>
+                            <Workers>GoneFishing</Workers>
+                        </Parallelize>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(typeof(AdapterSettingsException).FullName, exception.GetType().FullName);
+            StringAssert.Contains(exception.Message, "Invalid value 'GoneFishing' specified for 'Workers'. The value should be a non-negative integer.");
+        }
+
+        [TestMethod]
+        public void GetSettingsShouldThrowIfParallelizationWorkersIsNegative()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize>
+                            <Workers>-1</Workers>
+                        </Parallelize>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(typeof(AdapterSettingsException).FullName, exception.GetType().FullName);
+            StringAssert.Contains(exception.Message, "Invalid value '-1' specified for 'Workers'. The value should be a non-negative integer.");
+        }
+
+        [TestMethod]
+        public void ParallelizationWorkersShouldBeConsumedFromRunSettingsWhenSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize>
+                            <Workers>2</Workers>
+                        </Parallelize>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(2, adapterSettings.ParallelizationWorkers);
+        }
+
+        [TestMethod]
+        public void ParallelizationWorkersShouldBeSetToProcessorCountWhenSetToZero()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize>
+                            <Workers>0</Workers>
+                        </Parallelize>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(Environment.ProcessorCount, adapterSettings.ParallelizationWorkers);
+        }
+
+        [TestMethod]
+        public void ParallelizationSettingsShouldBeSetToDefaultsWhenNotSet()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize>
+                        </Parallelize>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(Environment.ProcessorCount, adapterSettings.ParallelizationWorkers);
+            Assert.AreEqual(UTF.ExecutionScope.ClassLevel, adapterSettings.ParallelizationScope);
+        }
+
+        [TestMethod]
+        public void ParallelizationSettingsShouldBeSetToDefaultsOnAnEmptyParalleizeSetting()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize/>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(Environment.ProcessorCount, adapterSettings.ParallelizationWorkers);
+            Assert.AreEqual(UTF.ExecutionScope.ClassLevel, adapterSettings.ParallelizationScope);
+        }
+
+        [TestMethod]
+        public void ParallelizationSettingsShouldBeConsumedFromRunSettingsWhenSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize>
+                            <Workers>127</Workers>
+                            <Scope>MethodLevel</Scope>
+                        </Parallelize>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(127, adapterSettings.ParallelizationWorkers);
+            Assert.AreEqual(UTF.ExecutionScope.MethodLevel, adapterSettings.ParallelizationScope);
+        }
+
+        [TestMethod]
+        public void GetSettingsShouldThrowIfParallelizationScopeIsNotValid()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize>
+                            <Scope>JustParallelizeWillYou</Scope>
+                        </Parallelize>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(typeof(AdapterSettingsException).FullName, exception.GetType().FullName);
+            StringAssert.Contains(exception.Message, "Invalid value 'JustParallelizeWillYou' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel.");
+        }
+
+        [TestMethod]
+        public void ParallelizationScopeShouldBeConsumedFromRunSettingsWhenSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize>
+                            <Scope>MethodLevel</Scope>
+                        </Parallelize>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(UTF.ExecutionScope.MethodLevel, adapterSettings.ParallelizationScope);
+        }
+
+        [TestMethod]
+        public void GetSettingsShouldThrowWhenParallelizeHasInvalidElements()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize>
+                            <Hola>Hi</Hola>
+                        </Parallelize>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(typeof(AdapterSettingsException).FullName, exception.GetType().FullName);
+            StringAssert.Contains(exception.Message, "Invalid settings 'Parallelize'. Unexpected XmlElement: 'Hola'.");
+        }
+
+        [TestMethod]
+        public void GetSettingsShouldBeAbleToReadAfterParallelizationSettings()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize>
+                        </Parallelize>
+                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.IsNotNull(adapterSettings.TestSettingsFile);
+        }
+
+        [TestMethod]
+        public void GetSettingsShouldBeAbleToReadAfterParallelizationSettingsWithData()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize>
+                            <Workers>127</Workers>
+                            <Scope>MethodLevel</Scope>
+                        </Parallelize>
+                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.IsNotNull(adapterSettings.TestSettingsFile);
+            Assert.AreEqual(127, adapterSettings.ParallelizationWorkers);
+            Assert.AreEqual(UTF.ExecutionScope.MethodLevel, adapterSettings.ParallelizationScope);
+        }
+
+        [TestMethod]
+        public void GetSettingsShouldBeAbleToReadAfterParallelizationSettingsOnEmptyParallelizationNode()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <Parallelize/>
+                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.IsNotNull(adapterSettings.TestSettingsFile);
+        }
+
+        [TestMethod]
+        public void DisableParallelizationShouldBeFalseByDefault()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                  </RunSettings>";
+
+            this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+            this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+            MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+
+            Assert.IsFalse(MSTestSettings.CurrentSettings.DisableParallelization);
+        }
+
+        [TestMethod]
+        public void DisableParallelizationShouldBeConsumedFromRunSettingsWhenSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <RunConfiguration>
+                        <DisableParallelization>True</DisableParallelization>
+                    </RunConfiguration>
+                  </RunSettings>";
+
+            this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+            this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+            MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+
+            Assert.IsTrue(MSTestSettings.CurrentSettings.DisableParallelization);
         }
 
         #endregion
@@ -726,6 +1009,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
             MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
             Assert.IsTrue(MSTestSettings.IsLegacyScenario(this.mockMessageLogger.Object));
+        }
+
+        [TestMethod]
+        public void LegacyScenariosNotSupportedWarningIsPrintedWhenVsmdiFileIsGiven()
+        {
+            string runSettingxml =
+            @"<RunSettings>   
+               <MSTest>   
+                <SettingsFile>DummyPath\\vsmdiFile.vsmdi</SettingsFile> 
+               </MSTest>
+          </RunSettings>";
+            this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+            this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+            MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+            Assert.IsTrue(MSTestSettings.IsLegacyScenario(this.mockMessageLogger.Object));
+            this.mockMessageLogger.Verify(logger => logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning), Times.Once);
         }
 
         #endregion

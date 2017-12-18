@@ -64,6 +64,7 @@
     <Compile Include="Discovery\UnitTestDiscovererTests.cs" />
     <Compile Include="Execution\LogMessageListenerTests.cs" />
     <Compile Include="Execution\TestAssemblyInfoTests.cs" />
+    <Compile Include="Execution\TestAssemblySettingsProviderTests.cs" />
     <Compile Include="Execution\TestCaseDiscoverySinkTests.cs" />
     <Compile Include="Execution\TestClassInfoTests.cs" />
     <Compile Include="Execution\TestExecutionManagerTests.cs" />
