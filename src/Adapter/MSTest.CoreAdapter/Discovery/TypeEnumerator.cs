@@ -128,6 +128,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
             testElement.TestCategory = this.reflectHelper.GetCategories(method);
 
+            testElement.DoNotParallelize = this.reflectHelper.IsDoNotParallelizeSet(method);
+
             var traits = this.reflectHelper.GetTestPropertiesAsTraits(method);
 
             var ownerTrait = this.reflectHelper.GetTestOwnerAsTraits(method);

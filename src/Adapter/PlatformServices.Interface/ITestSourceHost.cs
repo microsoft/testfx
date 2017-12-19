@@ -12,6 +12,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
     public interface ITestSourceHost : IDisposable
     {
         /// <summary>
+        /// Sets up the isolation host.
+        /// </summary>
+        void SetupHost();
+
+        /// <summary>
         /// Creates an instance of a given type in the test source host.
         /// </summary>
         /// <param name="type"> The type that needs to be created in the host. </param>

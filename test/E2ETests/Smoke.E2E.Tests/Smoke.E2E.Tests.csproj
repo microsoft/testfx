@@ -39,7 +39,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssertExtensibilityTests.cs" />
+    <Compile Include="DataSourceTests.cs" />
     <Compile Include="DesktopCSharpCLITests.cs" />
+    <Compile Include="ParallelExecutionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DynamicDataExtensibilityTests.cs" />
     <Compile Include="TestDataSourceExtensibilityTests.cs" />

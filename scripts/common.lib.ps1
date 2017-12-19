@@ -7,7 +7,7 @@
 # Global Variables
 #
 $global:msbuildVersion = "15.0"
-$global:nugetVersion = "3.6.0-beta1"
+$global:nugetVersion = "4.5.0"
 $global:vswhereVersion = "2.0.2"
 $global:nugetUrl = "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/NuGet.exe"
 
@@ -126,8 +126,17 @@ function Locate-VsInstallPath($hasVsixExtension ="false"){
   Write-Verbose "$vswhere -latest -products * -requires $requiredPackageIds -property installationPath"
   try
   {
-    $vsInstallPath =  & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
-  }catch [System.Management.Automation.MethodInvocationException]
+       if ($Official)
+	   {
+           $vsInstallPath = & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
+       }
+       else
+	   {
+           # Allow using pre release versions of VS for dev builds
+           $vsInstallPath = & $vswhere -latest -prerelease -products * -requires $requiredPackageIds -property installationPath
+       }
+  }
+  catch [System.Management.Automation.MethodInvocationException]
   {
     Write-Error "Failed to find VS installation with requirements : $requiredPackageIds."
   }

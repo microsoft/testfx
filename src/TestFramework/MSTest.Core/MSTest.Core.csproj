@@ -35,7 +35,10 @@
     <LocDocumentationSubPath>Core</LocDocumentationSubPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Attributes\DoNotParallelizeAttribute.cs" />
     <Compile Include="Attributes\DynamicDataAttribute.cs" />
+    <Compile Include="Attributes\ParallelizeAttribute.cs" />
+    <Compile Include="Attributes\ExecutionScope.cs" />
     <Compile Include="Interfaces\ITestDataSource.cs" />
     <Compile Include="Interfaces\ITestMethod.cs" />
     <Compile Include="Internal\Helper.cs" />
