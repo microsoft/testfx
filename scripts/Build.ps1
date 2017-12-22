@@ -24,7 +24,7 @@ Param(
   
   [Parameter(Mandatory=$false)]
   [Alias("fvp")]
-  [System.String] $FileVersionPrefix = "14.0",
+  [System.String] $FileVersionPrefix = "15.6",
 
   [Parameter(Mandatory=$false)]
   [Alias("fvs")]
