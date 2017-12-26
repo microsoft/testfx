@@ -7,7 +7,8 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
     extern alias FrameworkV2;
 
     using System.Linq;
-
+    using System.Reflection;
+    using Assert = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using DataRowAttribute = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute;
     using TestClass = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
@@ -16,6 +17,9 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
     [TestClass]
     public class DataRowAttributeTests
     {
+        private DummyTestClass dummyTestClass;
+        private MethodInfo testMethodInfo;
+
         [TestMethod]
         public void ConstructorShouldSetDataPassed()
         {
@@ -54,6 +58,28 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             var dataRow = new DataRowAttribute("mercury");
 
             CollectionAssert.AreEqual(new object[] { "mercury" }, dataRow.GetData(null).FirstOrDefault());
+        }
+
+        [TestMethod]
+        public void GetDisplayNameShouldReturnAppropriateName()
+        {
+            var dataRowAttribute = new DataRowAttribute(null);
+
+            this.dummyTestClass = new DummyTestClass();
+            this.testMethodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
+
+            var data = new string[] { "First", "Second", null };
+            var data1 = new string[] { null, "First", "Second" };
+            var data2 = new string[] { "First", null, "Second" };
+
+            var displayName = dataRowAttribute.GetDisplayName(this.testMethodInfo, data);
+            Assert.AreEqual("DataRowTestMethod (First,Second,)", displayName);
+
+            displayName = dataRowAttribute.GetDisplayName(this.testMethodInfo, data1);
+            Assert.AreEqual("DataRowTestMethod (,First,Second)", displayName);
+
+            displayName = dataRowAttribute.GetDisplayName(this.testMethodInfo, data2);
+            Assert.AreEqual("DataRowTestMethod (First,,Second)", displayName);
         }
     }
 }
