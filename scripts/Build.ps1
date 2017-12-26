@@ -23,12 +23,10 @@ Param(
   [System.String] $VersionSuffix = "dev",
   
   [Parameter(Mandatory=$false)]
-  [Alias("fvp")]
-  [System.String] $FileVersionPrefix = "15.6",
+  [System.String] $BuildVersionPrefix  = "14.0",
 
   [Parameter(Mandatory=$false)]
-  [Alias("fvs")]
-  [System.String] $FileVersionSuffix = "99.99",
+  [System.String] $BuildVersionSuffix = "99.99",
   
   [Parameter(Mandatory=$false)]
   [System.String] $Target = "Build",
@@ -82,7 +80,7 @@ $TFB_Configuration = $Configuration
 $TFB_FrameworkVersion = $FrameworkVersion
 $TFB_AdapterVersion = $AdapterVersion
 $TFB_VersionSuffix = $VersionSuffix
-$TFB_FileVersion = if ($FileVersionSuffix -ne '') { $FileVersionPrefix + "." + $FileVersionSuffix } else { $FileVersionPrefix }
+$TFB_BuildVersion = if ($BuildVersionSuffix -ne '') { $BuildVersionPrefix + "." + $BuildVersionSuffix } else { $BuildVersionPrefix }
 $TFB_SkipRestore = $SkipRestore
 $TFB_Clean = $Clean
 $TFB_ClearPackageCache = $ClearPackageCache
@@ -258,8 +256,8 @@ function Invoke-Build([string] $solution, $hasVsixExtension = "false")
   $solutionFailureLog = Join-Path -path $solutionDir -childPath "msbuild.err"
 
 	Write-Log "    Building $solution..."
-	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_FileVersion $solutionPath"
-	& $msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_FileVersion $solutionPath
+	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath"
+	& $msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath
   
 	if ($lastExitCode -ne 0) {
 		throw "Build failed with an exit code of '$lastExitCode'."
