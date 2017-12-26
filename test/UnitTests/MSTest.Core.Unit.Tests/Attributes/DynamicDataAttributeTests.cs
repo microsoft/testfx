@@ -139,7 +139,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             Assert.AreEqual("TestMethod1 (value1,value2,)", displayName);
 
             displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data1);
-            Assert.AreEqual("TestMethod1 ()", displayName);
+            Assert.AreEqual("TestMethod1 (,value1,value2)", displayName);
 
             displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data2);
             Assert.AreEqual("TestMethod1 (value1,,value2)", displayName);
@@ -228,6 +228,17 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
         [DynamicData("NullProperty")]
         public void TestMethod4()
+        {
+        }
+
+        /// <summary>
+        /// DataRow test method 1.
+        /// </summary>
+        [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        [DataRow("First", "Second", null)]
+        [DataRow(null, "First", "Second")]
+        [DataRow("First", null, "Second")]
+        public void DataRowTestMethod()
         {
         }
     }
