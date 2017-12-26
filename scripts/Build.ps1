@@ -26,7 +26,7 @@ Param(
   [System.String] $BuildVersionPrefix  = "14.0",
 
   [Parameter(Mandatory=$false)]
-  [System.String] $BuildVersionSuffix = "99.99",
+  [System.String] $BuildVersionSuffix = "9999.99",
   
   [Parameter(Mandatory=$false)]
   [System.String] $Target = "Build",
@@ -80,7 +80,7 @@ $TFB_Configuration = $Configuration
 $TFB_FrameworkVersion = $FrameworkVersion
 $TFB_AdapterVersion = $AdapterVersion
 $TFB_VersionSuffix = $VersionSuffix
-$TFB_BuildVersion = if ($BuildVersionSuffix -ne '') { $BuildVersionPrefix + "." + $BuildVersionSuffix } else { $BuildVersionPrefix }
+$TFB_BuildVersion = $BuildVersionPrefix + "." + $BuildVersionSuffix
 $TFB_SkipRestore = $SkipRestore
 $TFB_Clean = $Clean
 $TFB_ClearPackageCache = $ClearPackageCache
