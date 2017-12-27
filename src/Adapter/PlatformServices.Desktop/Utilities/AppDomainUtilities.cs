@@ -86,14 +86,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             if (File.Exists(testSourcePath))
             {
-                AppDomain appDomain = null;
+                AppDomain domain = null;
+                IAppDomain appdomain = new AppDomainWrapper();
 
                 try
                 {
-                    appDomain = AppDomain.CreateDomain("Framework Version String Domain", null, appDomainSetup);
+                    domain = appdomain.CreateDomain("Framework Version String Domain", null, appDomainSetup);
 
                     // Wire the eqttrace logs in this domain to the current domain.
-                    EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
+                    EqtTrace.SetupRemoteEqtTraceListeners(domain);
 
                     // Add an assembly resolver to resolve ObjectModel or any Test Platform dependencies.
                     // Not moving to IMetaDataImport APIs because the time taken for this operation is <20 ms and
@@ -104,13 +105,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     resolutionPaths.Add(Path.GetDirectoryName(testSourcePath));
 
                     AppDomainUtilities.CreateInstance(
-                        appDomain,
+                        domain,
                         assemblyResolverType,
                         new object[] { resolutionPaths });
 
                     var assemblyLoadWorker =
                         (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(
-                        appDomain,
+                        domain,
                         typeof(AssemblyLoadWorker),
                         null);
 
@@ -125,9 +126,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 }
                 finally
                 {
-                    if (appDomain != null)
+                    if (domain != null)
                     {
-                        AppDomain.Unload(appDomain);
+                        appdomain.Unload(domain);
                     }
                 }
             }
