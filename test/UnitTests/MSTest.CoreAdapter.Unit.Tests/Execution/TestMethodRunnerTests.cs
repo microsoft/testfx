@@ -516,9 +516,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var results = testMethodRunner.RunTestMethod();
 
             // check for datarowIndex
-            Assert.AreEqual(results[0].DatarowIndex, 0);
-            Assert.AreEqual(results[1].DatarowIndex, 1);
-            Assert.AreEqual(results[2].DatarowIndex, 2);
+            Assert.AreEqual(results[0].DatarowIndex, -1);
+            Assert.AreEqual(results[1].DatarowIndex, 0);
+            Assert.AreEqual(results[2].DatarowIndex, 1);
+            Assert.AreEqual(results[3].DatarowIndex, 2);
+        }
+
+        [TestMethodV1]
+        public void RunTestMethodShouldReturnParentResultForDataDrivenTests()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult());
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
+
+            UTF.DataSourceAttribute dataSourceAttribute = new UTF.DataSourceAttribute("DummyConnectionString", "DummyTableName");
+
+            var attribs = new Attribute[] { dataSourceAttribute };
+
+            // Setup mocks
+            this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+            this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, this.testContextImplementation)).Returns(new object[] { 1, 2, 3 });
+
+            var results = testMethodRunner.RunTestMethod();
+
+            // check for parent result
+            Assert.AreEqual(4, results.Length);
+            Assert.AreEqual(results[0].ExecutionId, results[1].ParentExecId);
         }
 
         [TestMethodV1]
@@ -543,9 +565,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var results = testMethodRunner.RunTestMethod();
 
             // check for datarowIndex as only DataSource Tests are Run
-            Assert.AreEqual(results[0].DatarowIndex, 0);
-            Assert.AreEqual(results[1].DatarowIndex, 1);
-            Assert.AreEqual(results[2].DatarowIndex, 2);
+            Assert.AreEqual(results[0].DatarowIndex, -1);
+            Assert.AreEqual(results[1].DatarowIndex, 0);
+            Assert.AreEqual(results[2].DatarowIndex, 1);
+            Assert.AreEqual(results[3].DatarowIndex, 2);
         }
 
         [TestMethodV1]
@@ -568,7 +591,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
 
             var results = testMethodRunner.RunTestMethod();
-            Assert.AreEqual(results[0].DisplayName, "DataRowTestDisplayName");
+            Assert.AreEqual(results[1].DisplayName, "DataRowTestDisplayName");
         }
 
         [TestMethodV1]
@@ -590,7 +613,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
 
             var results = testMethodRunner.RunTestMethod();
-            Assert.AreEqual(results[0].DisplayName, "DummyTestMethod (2,DummyString)");
+            Assert.AreEqual(results[1].DisplayName, "DummyTestMethod (2,DummyString)");
         }
 
         [TestMethodV1]
@@ -613,8 +636,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
 
             var results = testMethodRunner.RunTestMethod();
-            CollectionAssert.Contains(results[0].ResultFiles.ToList(), "C:\\temp.txt");
             CollectionAssert.Contains(results[1].ResultFiles.ToList(), "C:\\temp.txt");
+            CollectionAssert.Contains(results[2].ResultFiles.ToList(), "C:\\temp.txt");
         }
 
         #region Test data

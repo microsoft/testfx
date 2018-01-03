@@ -238,6 +238,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         }
                         else
                         {
+                            var parentResultWatch = new Stopwatch();
+                            parentResultWatch.Start();
+                            var parentResult = new UTF.TestResult
+                            {
+                                Outcome = UTF.UnitTestOutcome.InProgress,
+                                ExecutionId = Guid.NewGuid()
+                            };
+                            results.Add(parentResult);
+
                             try
                             {
                                 int rowIndex = 0;
@@ -259,9 +268,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                     }
 
                                     currentResult.DatarowIndex = rowIndex++;
+                                    currentResult.ExecutionId = Guid.NewGuid();
+                                    currentResult.ParentExecId = parentResult.ExecutionId;
                                     watch.Stop();
                                     currentResult.Duration = watch.Elapsed;
 
+                                    parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, currentResult.Outcome);
                                     results.Add(currentResult);
                                 }
                             }
@@ -270,6 +282,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                 this.testContext.SetDataConnection(null);
                                 this.testContext.SetDataRow(null);
                             }
+
+                            parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, UTF.UnitTestOutcome.Passed);
+                            parentResultWatch.Stop();
+                            parentResult.Duration = parentResultWatch.Elapsed;
                         }
                     }
                     catch (Exception ex)
@@ -279,7 +295,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         failedResult.Outcome = UTF.UnitTestOutcome.Error;
                         failedResult.TestFailureException = ex;
                         failedResult.Duration = watch.Elapsed;
-                        results.Add(failedResult);
+                        results = new List<UTF.TestResult>() { failedResult };
                     }
                 }
                 else
@@ -288,6 +304,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                     if (testDataSources != null && testDataSources.Length > 0)
                     {
+                        var parentResultWatch = new Stopwatch();
+                        parentResultWatch.Start();
+                        var parentResult = new UTF.TestResult
+                        {
+                            Outcome = UTF.UnitTestOutcome.InProgress,
+                            ExecutionId = Guid.NewGuid()
+                        };
+                        results.Add(parentResult);
+
                         foreach (var testDataSource in testDataSources)
                         {
                             foreach (var data in testDataSource.GetData(this.testMethodInfo.MethodInfo))
@@ -304,10 +329,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                 }
 
                                 currentResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
+                                currentResult.ParentExecId = parentResult.ExecutionId;
+
+                                parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, currentResult.Outcome);
                                 results.Add(currentResult);
                                 this.testMethodInfo.SetArguments(null);
                             }
                         }
+
+                        parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, UTF.UnitTestOutcome.Passed);
+                        parentResultWatch.Stop();
+                        parentResult.Duration = parentResultWatch.Elapsed;
                     }
                     else
                     {
@@ -332,25 +364,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             if (results != null && results.Count > 0)
             {
-                // aggregate for data driven tests
-                UTF.UnitTestOutcome aggregateOutcome = UTF.UnitTestOutcome.Passed;
-
-                foreach (var result in results)
-                {
-                    if (result.Outcome != UTF.UnitTestOutcome.Passed)
-                    {
-                        if (aggregateOutcome != UTF.UnitTestOutcome.Failed)
-                        {
-                            if (result.Outcome == UTF.UnitTestOutcome.Failed
-                                || aggregateOutcome != UTF.UnitTestOutcome.Timeout)
-                            {
-                                aggregateOutcome = result.Outcome;
-                            }
-                        }
-                    }
-                }
-
-                this.testContext.SetOutcome(aggregateOutcome);
+                this.testContext.SetOutcome(results.First().Outcome);
             }
             else
             {

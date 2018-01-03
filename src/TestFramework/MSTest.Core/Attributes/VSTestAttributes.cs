@@ -412,6 +412,16 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public string TestContextMessages { get; set; }
 
         /// <summary>
+        /// Gets or sets the execution id of the result.
+        /// </summary>
+        public Guid ExecutionId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the parent execution id of the result.
+        /// </summary>
+        public Guid ParentExecId { get; set; }
+
+        /// <summary>
         /// Gets or sets the duration of test execution.
         /// </summary>
         public TimeSpan Duration { get; set; }
