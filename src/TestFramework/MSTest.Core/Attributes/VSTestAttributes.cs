@@ -422,6 +422,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public Guid ParentExecId { get; set; }
 
         /// <summary>
+        /// Gets or sets the inner results count of the result.
+        /// </summary>
+        public int InnerResultsCount { get; set; }
+
+        /// <summary>
         /// Gets or sets the duration of test execution.
         /// </summary>
         public TimeSpan Duration { get; set; }

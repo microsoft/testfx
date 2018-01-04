@@ -272,9 +272,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                     currentResult.ParentExecId = parentResult.ExecutionId;
                                     watch.Stop();
                                     currentResult.Duration = watch.Elapsed;
+                                    results.Add(currentResult);
 
                                     parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, currentResult.Outcome);
-                                    results.Add(currentResult);
+                                    parentResult.InnerResultsCount++;
                                 }
                             }
                             finally
@@ -330,9 +331,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                                 currentResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
                                 currentResult.ParentExecId = parentResult.ExecutionId;
+                                results.Add(currentResult);
 
                                 parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, currentResult.Outcome);
-                                results.Add(currentResult);
+                                parentResult.InnerResultsCount++;
                                 this.testMethodInfo.SetArguments(null);
                             }
                         }
