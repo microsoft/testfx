@@ -78,10 +78,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             // Also validate that we give a warning when this happens.
             Assert.IsNotNull(this.warnings);
-            var message = string.Format(
+            var innerMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.TestAssembly_FileDoesNotExist,
                 assemblyName);
+            var message = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.TestAssembly_AssemblyDiscoveryFailure,
+                assemblyName,
+                innerMessage);
             CollectionAssert.Contains(this.warnings.ToList(), message);
         }
 
