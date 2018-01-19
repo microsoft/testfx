@@ -50,7 +50,7 @@ $TFT_Pattern = $Pattern
 $TFT_Parallel = $Parallel
 $TFT_All = $All
 $TestFramework = ".NETCoreApp,Version=v1.0"
-$VSTestConsoleRelativePath = "Microsoft.TestPlatform.15.0.1\tools\net46\vstest.console.exe"
+$VSTestConsoleRelativePath = "Microsoft.TestPlatform.15.5.0\tools\net451\vstest.console.exe"
 
 #
 # Prints help text for the switches this script supports.
@@ -186,8 +186,8 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 
 function Get-VSTestPath
 {
-	$vsInstallPath = Locate-VsInstallPath
-	$vstestPath = Join-Path -path $vsInstallPath "Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
+	$packagesPath = Locate-PackagesPath
+	$vstestPath = Join-Path -path $packagesPath -childPath $VSTestConsoleRelativePath
 	return Resolve-Path -path $vstestPath
 }
 	
