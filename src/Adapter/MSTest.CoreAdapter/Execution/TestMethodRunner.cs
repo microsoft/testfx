@@ -261,13 +261,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                         };
                                     }
 
-                                    rowIndex++;
                                     watch.Stop();
                                     foreach (var testResult in testResults)
                                     {
                                         testResult.DatarowIndex = rowIndex;
                                         testResult.Duration = watch.Elapsed;
                                     }
+
+                                    rowIndex++;
 
                                     results.AddRange(testResults);
                                 }
