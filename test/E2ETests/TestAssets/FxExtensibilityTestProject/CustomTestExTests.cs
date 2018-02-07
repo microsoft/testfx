@@ -1,6 +1,5 @@
 ﻿namespace FxExtensibilityTestProject
 {
-    using System;
     using System.Collections.Generic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -13,6 +12,15 @@
         {
             customTestMethod1ExecutionCount++;
             Assert.AreNotEqual(3, customTestMethod1ExecutionCount);
+        }
+
+        [IterativeTestMethod(3)]
+        [DataRow("A")]
+        [DataRow("B")]
+        [DataRow("C")]
+        public void CustomTestMethod2(string value)
+        {
+            Assert.AreEqual("B", value);
         }
 
         private static int customTestClass1ExecutionCount;

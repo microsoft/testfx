@@ -25,8 +25,27 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "CustomTestClass1 - Execution number 4",
                 "CustomTestClass1 - Execution number 5");
             this.ValidateFailedTestsContain(
+                TestAssembly,
                 "CustomTestMethod1 - Execution number 3",
                 "CustomTestClass1 - Execution number 3");
+        }
+
+        [TestMethod]
+        public void ExecuteCustomTestExtensibilityWithTestDataTests()
+        {
+            this.InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~CustomTestExTests.CustomTestMethod2");
+            this.ValidatePassedTests(
+                "CustomTestMethod2 (B)",
+                "CustomTestMethod2 (B)",
+                "CustomTestMethod2 (B)");
+            this.ValidateFailedTests(
+                TestAssembly,
+                "CustomTestMethod2 (A)",
+                "CustomTestMethod2 (A)",
+                "CustomTestMethod2 (A)",
+                "CustomTestMethod2 (C)",
+                "CustomTestMethod2 (C)",
+                "CustomTestMethod2 (C)");
         }
     }
 }
