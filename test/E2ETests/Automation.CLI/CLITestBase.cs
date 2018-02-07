@@ -160,7 +160,6 @@ namespace Microsoft.MSTestV2.CLIAutomation
         {
             foreach (var test in passedTests)
             {
-                var x = string.Join(", ", this.runEventsHandler.PassedTests.Select(_ => _.DisplayName));
                 var testFound = this.runEventsHandler.PassedTests.Any(
                     p => test.Equals(p.TestCase?.FullyQualifiedName)
                          || test.Equals(p.DisplayName));
