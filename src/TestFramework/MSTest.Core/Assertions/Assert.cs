@@ -37,10 +37,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             get
             {
-               if (that == null)
-               {
-                   that = new Assert();
-               }
+                if (that == null)
+                {
+                    that = new Assert();
+                }
 
                 return that;
             }
@@ -2057,6 +2057,42 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <code>
         /// AssertFailedException
         /// </code>
+        /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/> or when the parameter does not match the <paramref name="paramName"/>.
+        /// </summary>
+        /// <param name="paramName">
+        /// The name of the parameter that causes this exception.
+        /// </param>
+        /// <param name="action">
+        /// Delegate to code to be tested and which is expected to throw exception.
+        /// </param>
+        /// <typeparam name="T">
+        /// Type of exception expected to be thrown.
+        /// </typeparam>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/> or when the parameter does not match the <paramref name="paramName"/>.
+        /// </exception>
+        /// <returns>
+        /// The exception that was thrown.
+        /// </returns>
+        public static T ThrowsException<T>(string paramName, Action action)
+            where T : ArgumentException
+        {
+            var exception = ThrowsException<T>(action, string.Empty, null);
+
+            if (exception.ParamName != paramName)
+            {
+                HandleFail("Assert.ThrowsException", FrameworkMessages.InvalidParameterName, paramName, exception.ParamName);
+            }
+
+            return exception;
+        }
+
+        /// <summary>
+        /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
+        /// and throws
+        /// <code>
+        /// AssertFailedException
+        /// </code>
         /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
         /// </summary>
         /// <param name="action">
@@ -2173,6 +2209,42 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             where T : Exception
         {
             return await ThrowsExceptionAsync<T>(action, message, null);
+        }
+
+        /// <summary>
+        /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
+        /// and throws
+        /// <code>
+        /// AssertFailedException
+        /// </code>
+        /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/> or when the parameter does not match the <paramref name="paramName"/>.
+        /// </summary>
+        /// <param name="paramName">
+        /// The name of the parameter that causes this exception.
+        /// </param>
+        /// <param name="action">
+        /// Delegate to code to be tested and which is expected to throw exception.
+        /// </param>
+        /// <typeparam name="T">
+        /// Type of exception expected to be thrown.
+        /// </typeparam>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
+        /// </exception>
+        /// <returns>
+        /// The <see cref="Task"/> executing the delegate.
+        /// </returns>
+        public static async Task<T> ThrowsExceptionAsync<T>(string paramName, Func<Task> action)
+            where T : ArgumentException
+        {
+            var exception = await ThrowsExceptionAsync<T>(action, string.Empty, null);
+
+            if (exception.ParamName != paramName)
+            {
+                HandleFail("Assert.ThrowsException", FrameworkMessages.InvalidParameterName, paramName, exception.ParamName);
+            }
+
+            return exception;
         }
 
         /// <summary>

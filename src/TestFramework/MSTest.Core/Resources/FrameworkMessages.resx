@@ -192,8 +192,8 @@
   <data name="InternalObjectNotValid" xml:space="preserve">
     <value>The internal object referenced is no longer valid.</value>
   </data>
-  <data name="InvalidParameterToAssert" xml:space="preserve">
-    <value>The parameter '{0}' is invalid. {1}.</value>
+  <data name="InvalidParameterName" xml:space="preserve">
+    <value>The parameter name of the exception is incorrect. Expected: '{0}'. Actual: '{1}'.</value>
   </data>
   <data name="IsInstanceOfFailMsg" xml:space="preserve">
     <value>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>

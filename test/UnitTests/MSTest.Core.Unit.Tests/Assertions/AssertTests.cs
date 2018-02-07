@@ -61,6 +61,59 @@ namespace UnitTestFramework.Tests
             StringAssert.Contains(ex.Message, "Assert.ThrowsException failed. Threw exception FormatException, but exception ArgumentException was expected.");
         }
 
+        [TestMethod]
+        public void ThrowsExceptionWithParameterNameShouldThrowAssertionOnNoException()
+        {
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.ThrowsException<ArgumentException>("foobar", () => { }));
+
+            Assert.IsNotNull(ex);
+            Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), ex.GetType());
+            StringAssert.Contains(ex.Message, "Assert.ThrowsException failed. No exception thrown. ArgumentException exception was expected.");
+        }
+
+        [TestMethod]
+        public void ThrowsExceptionWithParameterNameShouldThrowAssertionOnWrongException()
+        {
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.ThrowsException<ArgumentException>(
+                "foobar",
+                 () =>
+                 {
+                     throw new FormatException();
+                 }));
+
+            Assert.IsNotNull(ex);
+            Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), ex.GetType());
+            StringAssert.Contains(ex.Message, "Assert.ThrowsException failed. Threw exception FormatException, but exception ArgumentException was expected.");
+        }
+
+        [TestMethod]
+        public void ThrowsExceptionWithParameterNameShouldThrowAssertionOnWrongParameterName()
+        {
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.ThrowsException<ArgumentException>(
+                "foobar",
+                 () =>
+                 {
+                     throw new ArgumentException("Message", "barfoo");
+                 }));
+
+            Assert.IsNotNull(ex);
+            Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), ex.GetType());
+            StringAssert.Contains(ex.Message, "The parameter name of the exception is incorrect. Expected: 'foobar'. Actual: 'barfoo'.");
+        }
+
+        [TestMethod]
+        public void ThrowsExceptionShouldNotThrowAssertionOnRightExceptionAndParameterName()
+        {
+            var ex = TestFrameworkV2.Assert.ThrowsException<ArgumentException>(
+                "foobar",
+                () =>
+                {
+                    throw new ArgumentException("Message", "foobar");
+                });
+
+            Assert.IsNotNull(ex);
+        }
+
         #endregion
 
         #region ThrowsExceptionAsync tests.
@@ -225,6 +278,83 @@ namespace UnitTestFramework.Tests
             Assert.IsNotNull(innerException);
             Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), innerException.GetType());
             StringAssert.Contains(innerException.Message, "Assert.ThrowsException failed. Threw exception FormatException, but exception ArgumentException was expected. Happily ever after. The End.");
+        }
+
+        [TestMethod]
+        public void ThrowsExceptionAsyncWithParameterNameShouldThrowAssertionOnNoException()
+        {
+            Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
+                "foobar",
+                async () =>
+                {
+                    await Task.Delay(5);
+                });
+            var ex = ActionUtility.PerformActionAndReturnException(() => t.Wait());
+
+            Assert.IsNotNull(ex);
+
+            var innerException = ex.InnerException;
+
+            Assert.IsNotNull(innerException);
+            Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), innerException.GetType());
+            StringAssert.Contains(innerException.Message, "Assert.ThrowsException failed. No exception thrown. ArgumentException exception was expected.");
+        }
+
+        [TestMethod]
+        public void ThrowsExceptionAsyncWithParameterNameShouldThrowAssertionOnWrongException()
+        {
+            Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
+                "foobar",
+                async () =>
+                {
+                    await Task.Delay(5);
+                    throw new FormatException();
+                });
+            var ex = ActionUtility.PerformActionAndReturnException(() => t.Wait());
+
+            Assert.IsNotNull(ex);
+
+            var innerException = ex.InnerException;
+
+            Assert.IsNotNull(innerException);
+            Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), innerException.GetType());
+            StringAssert.Contains(innerException.Message, "Assert.ThrowsException failed. Threw exception FormatException, but exception ArgumentException was expected.");
+        }
+
+        [TestMethod]
+        public void ThrowsExceptionAsyncWithParameterNameShouldThrowAssertionOnWrongParameterName()
+        {
+            Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
+                "foobar",
+                async () =>
+                {
+                    await Task.Delay(5);
+                    throw new ArgumentException("Message", "barfoo");
+                });
+            var ex = ActionUtility.PerformActionAndReturnException(() => t.Wait());
+
+            Assert.IsNotNull(ex);
+
+            var innerException = ex.InnerException;
+
+            Assert.IsNotNull(innerException);
+            Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), innerException.GetType());
+            StringAssert.Contains(innerException.Message, "The parameter name of the exception is incorrect. Expected: 'foobar'. Actual: 'barfoo'.");
+        }
+
+        [TestMethod]
+        public async Task ThrowsExceptionAsyncShouldNotThrowAssertionOnRightExceptionAndParameterName()
+        {
+            Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
+                "foobar",
+                async () =>
+                {
+                    await Task.Delay(5);
+                    throw new ArgumentException("Message", "foobar");
+                });
+
+            // Should not throw an exception.
+            await t;
         }
 
         #endregion
