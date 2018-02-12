@@ -30,6 +30,15 @@ namespace UnitTestFramework.Tests
         }
 
         [TestFrameworkV1.TestMethod]
+        public void EqualsShouldReturnFalseIfEachObjectHasDefaultDataValue()
+        {
+            TestFrameworkV2.GenericParameterHelper firstObject = new TestFrameworkV2.GenericParameterHelper();
+            TestFrameworkV2.GenericParameterHelper secondObject = new TestFrameworkV2.GenericParameterHelper();
+
+            TestFrameworkV1.Assert.IsFalse(firstObject.Equals(secondObject));
+        }
+
+        [TestFrameworkV1.TestMethod]
         public void EqualsShouldReturnTrueIfTwoObjectHasSameDataValue()
         {
             TestFrameworkV2.GenericParameterHelper objectToCompare = new TestFrameworkV2.GenericParameterHelper(10);

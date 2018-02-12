@@ -24,6 +24,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public class GenericParameterHelper : IComparable, IEnumerable
     {
         #region Private Fields
+        private static readonly Random Randomizer = new Random();
         private int data;
         private IList ienumerableStore;
 
@@ -40,8 +41,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </remarks>
         public GenericParameterHelper()
         {
-            Random randomizer = new Random();
-            this.Data = randomizer.Next();
+            this.Data = Randomizer.Next();
         }
 
         /// <summary>
