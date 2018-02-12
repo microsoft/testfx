@@ -127,11 +127,6 @@
         <target state="translated">The internal object referenced is no longer valid.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="InvalidParameterToAssert">
-        <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">The parameter '{0}' is invalid. {1}.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
         <target state="translated">{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
@@ -280,6 +275,11 @@ Stack Trace: {4}</target>
       <trans-unit id="DynamicDataValueNull">
         <source>Value returned by property or method {0} shouldn't be null.</source>
         <target state="new">Value returned by property or method {0} shouldn't be null.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidParameterName">
+        <source>The parameter name of the exception is incorrect. Expected: '{0}'. Actual: '{1}'.</source>
+        <target state="new">The parameter name of the exception is incorrect. Expected: '{0}'. Actual: '{1}'.</target>
         <note></note>
       </trans-unit>
     </body>
