@@ -1924,7 +1924,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
         /// </exception>
         /// <returns>
-        /// The type of exception expected to be thrown.
+        /// The exception that was thrown.
         /// </returns>
         public static T ThrowsException<T>(Action action)
             where T : Exception
@@ -1954,7 +1954,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
         /// </exception>
         /// <returns>
-        /// The type of exception expected to be thrown.
+        /// The exception that was thrown.
         /// </returns>
         public static T ThrowsException<T>(Action action, string message)
             where T : Exception
@@ -1980,7 +1980,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
         /// </exception>
         /// <returns>
-        /// The type of exception expected to be thrown.
+        /// The exception that was thrown.
         /// </returns>
         public static T ThrowsException<T>(Func<object> action)
             where T : Exception
@@ -2010,7 +2010,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
         /// </exception>
         /// <returns>
-        /// The type of exception expected to be thrown.
+        /// The exception that was thrown.
         /// </returns>
         public static T ThrowsException<T>(Func<object> action, string message)
             where T : Exception
@@ -2043,7 +2043,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="T"/>.
         /// </exception>
         /// <returns>
-        /// The type of exception expected to be thrown.
+        /// The exception that was thrown.
         /// </returns>
         public static T ThrowsException<T>(Func<object> action, string message, params object[] parameters)
             where T : Exception
@@ -2076,7 +2076,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
         /// </exception>
         /// <returns>
-        /// The type of exception expected to be thrown.
+        /// The exception that was thrown.
         /// </returns>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public static T ThrowsException<T>(Action action, string message, params object[] parameters)

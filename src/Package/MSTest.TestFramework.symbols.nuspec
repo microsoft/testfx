@@ -22,7 +22,7 @@
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
     <licenseUrl>http://www.microsoft.com/web/webpi/eula/net_library_eula_enu.htm</licenseUrl>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
-    <copyright>Copyright © Microsoft Corporation</copyright>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework </tags>
   </metadata>
   <files>
