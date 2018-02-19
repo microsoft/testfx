@@ -103,9 +103,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Gets a value indicating whether is class initialize executed.
+        /// Gets a value indicating whether class initialize has executed.
         /// </summary>
         public bool IsClassInitializeExecuted { get; internal set; }
+
+        /// <summary>
+        /// Gets a value indicating whether class cleanup has executed.
+        /// </summary>
+        public bool IsClassCleanupExecuted { get; private set; }
 
         /// <summary>
         /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
@@ -306,40 +311,52 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return null;
             }
 
-            lock (this.testClassExecuteSyncObject)
+            if (this.IsClassInitializeExecuted)
             {
-                try
+                lock (this.testClassExecuteSyncObject)
                 {
-                    this.ClassCleanupMethod.InvokeAsSynchronousTask(null);
-
-                    return null;
-                }
-                catch (Exception exception)
-                {
-                    var realException = exception.InnerException ?? exception;
-
-                    string errorMessage;
-
-                    // special case AssertFailedException to trim off part of the stack trace
-                    if (realException is AssertFailedException ||
-                        realException is AssertInconclusiveException)
+                    if (this.IsClassInitializeExecuted)
                     {
-                        errorMessage = realException.Message;
-                    }
-                    else
-                    {
-                        errorMessage = StackTraceHelper.GetExceptionMessage(realException);
-                    }
+                        try
+                        {
+                            this.ClassCleanupMethod.InvokeAsSynchronousTask(null);
 
-                    return string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-                        this.ClassType.Name,
-                        this.ClassCleanupMethod.Name,
-                        errorMessage,
-                        StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                            return null;
+                        }
+                        catch (Exception exception)
+                        {
+                            var realException = exception.InnerException ?? exception;
+
+                            string errorMessage;
+
+                            // special case AssertFailedException to trim off part of the stack trace
+                            if (realException is AssertFailedException ||
+                                realException is AssertInconclusiveException)
+                            {
+                                errorMessage = realException.Message;
+                            }
+                            else
+                            {
+                                errorMessage = StackTraceHelper.GetExceptionMessage(realException);
+                            }
+
+                            return string.Format(
+                                CultureInfo.CurrentCulture,
+                                Resource.UTA_ClassCleanupMethodWasUnsuccesful,
+                                this.ClassType.Name,
+                                this.ClassCleanupMethod.Name,
+                                errorMessage,
+                                StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                        }
+                        finally
+                        {
+                            this.IsClassCleanupExecuted = true;
+                        }
+                    }
                 }
             }
+
+            return null;
         }
     }
 }
