@@ -14,7 +14,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System.Reflection;
     using System.Text;
     using System.Xml;
-
     using global::MSTestAdapter.TestUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -27,6 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using TestContextV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestContext;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -253,6 +253,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
                 .Returns(Assembly.GetExecutingAssembly());
 
+            DummyTestClassWithCleanupMethods.ClassInitMethodBody = () =>
+            {
+            };
+
             this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
 
             var assemblyCleanupCount = 0;
@@ -392,6 +396,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             public static Action ClassCleanupMethodBody { get; set; }
 
+            public static Action ClassInitMethodBody { get; set; }
+
             [UTF.AssemblyCleanup]
             public static void AssemblyCleanup()
             {
@@ -405,6 +411,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public static void ClassCleanup()
             {
                 ClassCleanupMethodBody.Invoke();
+            }
+
+            [UTF.ClassInitialize]
+            public static void ClassInit(UTFExtension.TestContext context)
+            {
+                if (ClassInitMethodBody != null)
+                {
+                    ClassInitMethodBody.Invoke();
+                }
             }
 
             [UTF.TestMethod]

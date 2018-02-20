@@ -108,11 +108,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public bool IsClassInitializeExecuted { get; internal set; }
 
         /// <summary>
-        /// Gets a value indicating whether class cleanup has executed.
-        /// </summary>
-        public bool IsClassCleanupExecuted { get; private set; }
-
-        /// <summary>
         /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
         /// </summary>
         public Exception ClassInitializationException { get; internal set; }
@@ -313,7 +308,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             lock (this.testClassExecuteSyncObject)
             {
-                if (this.IsClassInitializeExecuted)
+                if (this.IsClassInitializeExecuted || this.ClassInitializeMethod == null)
                 {
                     try
                     {
@@ -345,10 +340,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                             this.ClassCleanupMethod.Name,
                             errorMessage,
                             StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
-                    }
-                    finally
-                    {
-                        this.IsClassCleanupExecuted = true;
                     }
                 }
             }
