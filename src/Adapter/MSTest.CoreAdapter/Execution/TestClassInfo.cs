@@ -311,47 +311,44 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return null;
             }
 
-            if (this.IsClassInitializeExecuted)
+            lock (this.testClassExecuteSyncObject)
             {
-                lock (this.testClassExecuteSyncObject)
+                if (this.IsClassInitializeExecuted)
                 {
-                    if (this.IsClassInitializeExecuted)
+                    try
                     {
-                        try
+                        this.ClassCleanupMethod.InvokeAsSynchronousTask(null);
+
+                        return null;
+                    }
+                    catch (Exception exception)
+                    {
+                        var realException = exception.InnerException ?? exception;
+
+                        string errorMessage;
+
+                        // special case AssertFailedException to trim off part of the stack trace
+                        if (realException is AssertFailedException ||
+                            realException is AssertInconclusiveException)
                         {
-                            this.ClassCleanupMethod.InvokeAsSynchronousTask(null);
-
-                            return null;
+                            errorMessage = realException.Message;
                         }
-                        catch (Exception exception)
+                        else
                         {
-                            var realException = exception.InnerException ?? exception;
-
-                            string errorMessage;
-
-                            // special case AssertFailedException to trim off part of the stack trace
-                            if (realException is AssertFailedException ||
-                                realException is AssertInconclusiveException)
-                            {
-                                errorMessage = realException.Message;
-                            }
-                            else
-                            {
-                                errorMessage = StackTraceHelper.GetExceptionMessage(realException);
-                            }
-
-                            return string.Format(
-                                CultureInfo.CurrentCulture,
-                                Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-                                this.ClassType.Name,
-                                this.ClassCleanupMethod.Name,
-                                errorMessage,
-                                StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                            errorMessage = StackTraceHelper.GetExceptionMessage(realException);
                         }
-                        finally
-                        {
-                            this.IsClassCleanupExecuted = true;
-                        }
+
+                        return string.Format(
+                            CultureInfo.CurrentCulture,
+                            Resource.UTA_ClassCleanupMethodWasUnsuccesful,
+                            this.ClassType.Name,
+                            this.ClassCleanupMethod.Name,
+                            errorMessage,
+                            StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                    }
+                    finally
+                    {
+                        this.IsClassCleanupExecuted = true;
                     }
                 }
             }

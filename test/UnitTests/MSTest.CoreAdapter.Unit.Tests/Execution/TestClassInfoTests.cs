@@ -124,6 +124,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
+        public void TestClassInfoClassCleanupMethodShouldInvokeWhenTestClassInitializedIsCalled()
+        {
+            this.testClassInfo.ClassCleanupMethod = this.testClassType.GetMethods().First();
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
+
+            this.testClassInfo.RunClassInitialize(this.testContext);
+            var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
+
+            Assert.AreEqual(null, ret);
+            Assert.AreEqual(true, this.testClassInfo.IsClassCleanupExecuted);
+        }
+
+        [TestMethod]
         public void TestClassInfoHasExecutableCleanupMethodShouldReturnFalseIfClassDoesNotHaveCleanupMethod()
         {
             Assert.IsFalse(this.testClassInfo.HasExecutableCleanupMethod);
