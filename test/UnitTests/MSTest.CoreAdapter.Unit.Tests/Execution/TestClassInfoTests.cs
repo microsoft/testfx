@@ -362,9 +362,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Inconclusive("Test Inconclusive.");
 
             this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
-            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
-
-            this.testClassInfo.RunClassInitialize(this.testContext);
 
             StringAssert.StartsWith(
                 this.testClassInfo.RunClassCleanup(),
@@ -377,9 +374,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClass.ClassCleanupMethodBody = () => { throw new ArgumentException("Argument Exception"); };
 
             this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
-            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
-
-            this.testClassInfo.RunClassInitialize(this.testContext);
 
             StringAssert.StartsWith(
                 this.testClassInfo.RunClassCleanup(),
