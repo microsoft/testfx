@@ -346,10 +346,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Fail("Test Failure.");
 
-            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
             this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
-
-            this.testClassInfo.RunClassInitialize(this.testContext);
 
             StringAssert.StartsWith(
                 this.testClassInfo.RunClassCleanup(),
