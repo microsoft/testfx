@@ -253,10 +253,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
                 .Returns(Assembly.GetExecutingAssembly());
 
-            DummyTestClassWithCleanupMethods.ClassInitMethodBody = () =>
-            {
-            };
-
             this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
 
             var assemblyCleanupCount = 0;
@@ -396,8 +392,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             public static Action ClassCleanupMethodBody { get; set; }
 
-            public static Action ClassInitMethodBody { get; set; }
-
             [UTF.AssemblyCleanup]
             public static void AssemblyCleanup()
             {
@@ -411,15 +405,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public static void ClassCleanup()
             {
                 ClassCleanupMethodBody.Invoke();
-            }
-
-            [UTF.ClassInitialize]
-            public static void ClassInit(UTFExtension.TestContext context)
-            {
-                if (ClassInitMethodBody != null)
-                {
-                    ClassInitMethodBody.Invoke();
-                }
             }
 
             [UTF.TestMethod]
