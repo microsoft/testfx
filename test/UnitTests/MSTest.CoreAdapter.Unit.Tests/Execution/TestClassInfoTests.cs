@@ -307,6 +307,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
+        public void RunClassCleanupShouldInvokeIfClassCleanupMethod()
+        {
+           var classcleanupCallCount = 0;
+            DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
+            Assert.IsNull(this.testClassInfo.RunClassCleanup());
+            Assert.AreEqual(1, classcleanupCallCount);
+        }
+
+        [TestMethod]
         public void RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
         {
             DummyTestClass.ClassInitializeMethodBody = (tc) => { Assert.AreEqual(tc, this.testContext); };
