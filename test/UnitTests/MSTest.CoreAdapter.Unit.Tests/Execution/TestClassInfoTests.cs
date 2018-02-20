@@ -362,7 +362,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Inconclusive("Test Inconclusive.");
 
             this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
-
             StringAssert.StartsWith(
                 this.testClassInfo.RunClassCleanup(),
                 "Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: Assert.Inconclusive failed. Test Inconclusive.. Stack Trace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails>");
@@ -374,7 +373,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClass.ClassCleanupMethodBody = () => { throw new ArgumentException("Argument Exception"); };
 
             this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
-
             StringAssert.StartsWith(
                 this.testClassInfo.RunClassCleanup(),
                 "Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: System.ArgumentException: Argument Exception. Stack Trace:     at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions>");
