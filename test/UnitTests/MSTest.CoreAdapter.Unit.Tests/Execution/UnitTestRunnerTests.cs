@@ -14,7 +14,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System.Reflection;
     using System.Text;
     using System.Xml;
-
     using global::MSTestAdapter.TestUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;

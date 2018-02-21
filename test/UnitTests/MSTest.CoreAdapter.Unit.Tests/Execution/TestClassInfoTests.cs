@@ -112,6 +112,37 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
+        public void TestClassInfoClassCleanupMethodShouldNotInvokeWhenNoTestClassInitializedIsCalled()
+        {
+            var classcleanupCallCount = 0;
+            DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+
+            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
+
+            var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
+
+            Assert.AreEqual(null, ret);
+            Assert.AreEqual(0, classcleanupCallCount);
+        }
+
+        [TestMethod]
+        public void TestClassInfoClassCleanupMethodShouldInvokeWhenTestClassInitializedIsCalled()
+        {
+            var classcleanupCallCount = 0;
+            DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+
+            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
+
+            this.testClassInfo.RunClassInitialize(this.testContext);
+            var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
+
+            Assert.AreEqual(null, ret);
+            Assert.AreEqual(1, classcleanupCallCount);
+        }
+
+        [TestMethod]
         public void TestClassInfoHasExecutableCleanupMethodShouldReturnFalseIfClassDoesNotHaveCleanupMethod()
         {
             Assert.IsFalse(this.testClassInfo.HasExecutableCleanupMethod);
@@ -276,6 +307,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
+        public void RunClassCleanupShouldInvokeIfClassCleanupMethod()
+        {
+           var classcleanupCallCount = 0;
+            DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
+            Assert.IsNull(this.testClassInfo.RunClassCleanup());
+            Assert.AreEqual(1, classcleanupCallCount);
+        }
+
+        [TestMethod]
         public void RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
         {
             DummyTestClass.ClassInitializeMethodBody = (tc) => { Assert.AreEqual(tc, this.testContext); };
@@ -301,23 +342,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
-        public void RunClassCleanupShouldInvokeIfClassCleanupMethod()
-        {
-            var classcleanupCallCount = 0;
-            DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
-
-            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
-
-            Assert.IsNull(this.testClassInfo.RunClassCleanup());
-            Assert.AreEqual(1, classcleanupCallCount);
-        }
-
-        [TestMethod]
         public void RunClassCleanupShouldReturnAssertFailureExceptionDetails()
         {
             DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Fail("Test Failure.");
 
             this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
+
             StringAssert.StartsWith(
                 this.testClassInfo.RunClassCleanup(),
                 "Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: Assert.Fail failed. Test Failure.. Stack Trace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassCleanupShouldReturnAssertFailureExceptionDetails>");
