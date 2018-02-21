@@ -56,7 +56,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
         /// </summary>
         /// <param name="dynamicDataSourceName">
-        /// The type in which the test data is declared (as property or in method).
+        /// The name of method or property having test data.
         /// </param>
         /// <param name="dynamicDataDeclaringType">
         /// The declaring type of property or method having data.
