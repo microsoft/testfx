@@ -70,6 +70,16 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             this.dynamicDataDeclaringType = dynamicDataDeclaringType;
         }
 
+        /// <summary>
+        /// Gets or sets the name of method used to customize the display name in test results.
+        /// </summary>
+        public string DynamicDisplayName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the declaring type used to customize the display name in test results.
+        /// </summary>
+        public Type DynamicDisplayNameDeclaringType { get; set; }
+
         /// <inheritdoc />
         public IEnumerable<object[]> GetData(MethodInfo methodInfo)
         {
@@ -131,7 +141,33 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <inheritdoc />
         public string GetDisplayName(MethodInfo methodInfo, object[] data)
         {
-            if (data != null)
+            if (this.DynamicDisplayName != null)
+            {
+                var dynamicDisplayNameDeclaringType = this.DynamicDisplayNameDeclaringType ?? methodInfo.DeclaringType;
+
+                var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(this.DynamicDisplayName);
+                if (method == null)
+                {
+                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, this.DynamicDisplayName));
+                }
+
+                var parameters = method.GetParameters();
+                if (parameters.Length != 2 ||
+                    parameters[0].ParameterType != typeof(MethodInfo) ||
+                    parameters[1].ParameterType != typeof(object[]) ||
+                    method.ReturnType != typeof(string))
+                {
+                    throw new ArgumentNullException(
+                        string.Format(
+                            FrameworkMessages.DynamicDataDisplayName,
+                            this.DynamicDisplayName,
+                            typeof(string).Name,
+                            string.Join(", ", typeof(MethodInfo).Name, typeof(object[]).Name)));
+                }
+
+                return method.Invoke(null, new object[] { methodInfo, data }) as string;
+            }
+            else if (data != null)
             {
                 return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data.AsEnumerable()));
             }
