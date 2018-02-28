@@ -23,9 +23,10 @@ function Locate-PdbConverterTool
 {
     $pdbConverter = Join-Path -path $TF_PACKAGES_DIR -ChildPath "Pdb2Pdb.$PdbConverterToolVersion\tools\Pdb2Pdb.exe"
 
-       if (!(Test-Path -path $pdbConverter)) {
+    if (!(Test-Path -path $pdbConverter)) 
+    {
        throw "Unable to locate Pdb2Pdb converter exe in path '$pdbConverter'."
-   }
+    }
 
     Write-Verbose "Pdb2Pdb converter path is : $pdbConverter"
     return $pdbConverter
@@ -34,7 +35,7 @@ function Locate-PdbConverterTool
 
 function ConvertPortablePdbToWindowsPdb
 {	
-	    foreach($TF_PortablePdb in $TF_PortablePdbs)
+    foreach($TF_PortablePdb in $TF_PortablePdbs)
     {
         $portablePdbs += Join-Path -path $TF_OUT_DIR\$Configuration -childPath $TF_PortablePdb
     }
