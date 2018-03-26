@@ -28,6 +28,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
         object CreateInstanceForType(Type type, object[] args);
 
+        /// <summary>
+        /// Modifies properties of the isolation host that was created using SetupHost().
+        /// For instance, this can be used to change properties like appbase,framework version etc of the created appdomain.
+        /// </summary>
         void ModifyHostProperties();
     }
 }

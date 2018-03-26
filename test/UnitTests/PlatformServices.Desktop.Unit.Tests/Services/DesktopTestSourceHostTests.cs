@@ -150,6 +150,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
                 // Act
                 sourceHost.Object.SetupHost();
+                sourceHost.Object.ModifyHostProperties();
                 var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
                 // Assert

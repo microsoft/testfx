@@ -93,15 +93,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recurive assembly resolution
             // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
             EqtTrace.SetupRemoteEqtTraceListeners(this.domain);
-
-            ////this.domain.Load(typeof(TestSourceHost).Assembly.GetName());
-            ////Type type = typeof(Proxy);
-
-             ////var value = (Proxy)this.domain.CreateInstanceAndUnwrap(
-             ////   type.Assembly.FullName,
-             ////   type.FullName);
-
-             ////var assembly = value.GetAssembly(typeof(TestSourceHost).Assembly.Location);
         }
 
         /// <summary>
@@ -387,23 +378,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
     }
-
-////#pragma warning disable SA1402 // File may only contain a single class
-////    public class Proxy : MarshalByRefObject
-////#pragma warning restore SA1402 // File may only contain a single class
-////    {
-////        public Assembly GetAssembly(string assemblyPath)
-////        {
-////            try
-////            {
-////                return Assembly.LoadFrom(assemblyPath);
-////            }
-////            catch (Exception)
-////            {
-////                return null;
-////            }
-////        }
-////    }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }
