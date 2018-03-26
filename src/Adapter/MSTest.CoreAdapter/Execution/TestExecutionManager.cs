@@ -220,6 +220,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 var testRunner = isolationHost.CreateInstanceForType(
                     typeof(UnitTestRunner),
                     new object[] { MSTestSettings.CurrentSettings }) as UnitTestRunner;
+                isolationHost.ModifyHostProperties();
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
                 // Default test set is filtered tests based on user provided filter criteria

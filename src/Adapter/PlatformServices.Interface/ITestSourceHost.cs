@@ -27,5 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// <returns> An instance of the type created in the host. </returns>
         /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
         object CreateInstanceForType(Type type, object[] args);
+
+        void ModifyHostProperties();
     }
 }

@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Reflection;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -39,6 +40,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private string currentDirectory = null;
         private IAppDomain appDomain;
 
+        private string frameworkVersionString;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="TestSourceHost"/> class.
         /// </summary>
@@ -67,77 +70,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         public void SetupHost()
         {
-            List<string> resolutionPaths = this.GetResolutionPaths(this.sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
-
-            // Check if user specified any runsettings
-            MSTestAdapterSettings adapterSettings = MSTestSettingsProvider.Settings;
-
-            if (resolutionPaths != null && resolutionPaths.Count > 0)
-            {
-                if (EqtTrace.IsInfoEnabled)
-                {
-                    EqtTrace.Info("TestSourceHost: Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths.ToArray()));
-                }
-
-                // Adding adapter folder to resolution paths
-                if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)))
-                {
-                    resolutionPaths.Add(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location));
-                }
-
-                // Adding extensions folder to resolution paths
-                if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)))
-                {
-                    resolutionPaths.Add(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location));
-                }
-            }
-
-            // Honour DisableAppDomain setting if it is present in runsettings
-            if (this.runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
-            {
-                if (adapterSettings != null)
-                {
-                    try
-                    {
-                        this.assemblyResolver = new AssemblyResolver(resolutionPaths);
-                        this.assemblyResolver.AddSearchDirectoriesFromRunSetting(adapterSettings.GetDirectoryListWithRecursiveProperty(null));
-                    }
-                    catch (Exception exception)
-                    {
-                        if (EqtTrace.IsErrorEnabled)
-                        {
-                            EqtTrace.Error(exception);
-                        }
-                    }
-                }
-            }
-
             var appDomainSetup = new AppDomainSetup();
 
-            // The below logic of preferential setting the appdomains appbase is needed because:
-            // 1. We set this to the location of the test source if it is built for Full CLR  -> Ideally this needs to be done in all situations.
-            // 2. We set this to the location where the current adapter is being picked up from for UWP and .Net Core scenarios -> This needs to be
-            //    different especially for UWP because we use the desktop adapter(from %temp%\VisualStudioTestExplorerExtensions) itself for test discovery
-            //    in IDE scenarios. If the app base is set to the test source location, discovery will not work because we drop the
-            //    UWP platform service assembly at the test source location and since CLR starts looking for assemblies from the app base location,
-            //    there would be a mismatch of platform service assemblies during discovery.
-            var frameworkVersionString = this.GetTargetFrameworkVersionString(this.sourceFileName);
-            if (frameworkVersionString.Contains(PlatformServices.Constants.DotNetFrameWorkStringPrefix))
-            {
-                appDomainSetup.ApplicationBase = Path.GetDirectoryName(this.sourceFileName)
-                                                 ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
-            }
-            else
-            {
-                appDomainSetup.ApplicationBase = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
-            }
+            this.frameworkVersionString = this.GetTargetFrameworkVersionString(this.sourceFileName);
 
             if (EqtTrace.IsInfoEnabled)
             {
                 EqtTrace.Info("TestSourceHost: Creating app-domain for source {0} with application base path {1}.", this.sourceFileName, appDomainSetup.ApplicationBase);
             }
 
-            AppDomainUtilities.SetAppDomainFrameworkVersionBasedOnTestSource(appDomainSetup, frameworkVersionString);
+            AppDomainUtilities.SetAppDomainFrameworkVersionBasedOnTestSource(appDomainSetup, this.frameworkVersionString);
+
+            // Temporarily set appbase to the location from where adapter should be picked up from. We will later reset this to test source location
+            // once adapter gets loaded in the child app domain.
+            appDomainSetup.ApplicationBase = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
 
             var configFile = this.GetConfigFileForTestSource(this.sourceFileName);
             AppDomainUtilities.SetConfigurationFile(appDomainSetup, configFile);
@@ -148,49 +94,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
             EqtTrace.SetupRemoteEqtTraceListeners(this.domain);
 
-            // Add an assembly resolver...
-            Type assemblyResolverType = typeof(AssemblyResolver);
+            ////this.domain.Load(typeof(TestSourceHost).Assembly.GetName());
+            ////Type type = typeof(Proxy);
 
-            if (EqtTrace.IsInfoEnabled)
-            {
-                EqtTrace.Info("TestSourceHost: assemblyenumerator location: {0} , fullname: {1} ", assemblyResolverType.Assembly.Location, assemblyResolverType.FullName);
-            }
+             ////var value = (Proxy)this.domain.CreateInstanceAndUnwrap(
+             ////   type.Assembly.FullName,
+             ////   type.FullName);
 
-            var resolver = AppDomainUtilities.CreateInstance(
-                this.domain,
-                assemblyResolverType,
-                new object[] { resolutionPaths });
-
-            if (EqtTrace.IsInfoEnabled)
-            {
-                EqtTrace.Info(
-                    "TestSourceHost: resolver type: {0} , resolve type assembly: {1} ",
-                    resolver.GetType().FullName,
-                    resolver.GetType().Assembly.Location);
-            }
-
-            this.assemblyResolver = (AssemblyResolver)resolver;
-
-            if (adapterSettings != null)
-            {
-                try
-                {
-                    var additionalSearchDirectories =
-                        adapterSettings.GetDirectoryListWithRecursiveProperty(appDomainSetup.ApplicationBase);
-                    if (additionalSearchDirectories?.Count > 0)
-                    {
-                        this.assemblyResolver.AddSearchDirectoriesFromRunSetting(
-                            adapterSettings.GetDirectoryListWithRecursiveProperty(appDomainSetup.ApplicationBase));
-                    }
-                }
-                catch (Exception exception)
-                {
-                    if (EqtTrace.IsErrorEnabled)
-                    {
-                        EqtTrace.Error(exception);
-                    }
-                }
-            }
+             ////var assembly = value.GetAssembly(typeof(TestSourceHost).Assembly.Location);
         }
 
         /// <summary>
@@ -261,6 +172,117 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.ResetContext();
 
             GC.SuppressFinalize(this);
+        }
+
+        public void ModifyHostProperties()
+        {
+            ////this.domain.SetData("APPBASE", Path.GetDirectoryName(this.sourceFileName));
+
+            // After adapter has been loaded, reset appdomains appbase.
+            // The below logic of preferential setting the appdomains appbase is needed because:
+            // 1. We set this to the location of the test source if it is built for Full CLR  -> Ideally this needs to be done in all situations.
+            // 2. We set this to the location where the current adapter is being picked up from for UWP and .Net Core scenarios -> This needs to be
+            //    different especially for UWP because we use the desktop adapter(from %temp%\VisualStudioTestExplorerExtensions) itself for test discovery
+            //    in IDE scenarios. If the app base is set to the test source location, discovery will not work because we drop the
+            //    UWP platform service assembly at the test source location and since CLR starts looking for assemblies from the app base location,
+            //    there would be a mismatch of platform service assemblies during discovery.
+            if (this.frameworkVersionString.Contains(PlatformServices.Constants.DotNetFrameWorkStringPrefix))
+            {
+                this.domain.SetData("APPBASE", Path.GetDirectoryName(this.sourceFileName) ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location));
+            }
+            else
+            {
+                this.domain.SetData("APPBASE", Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location));
+            }
+
+            List<string> resolutionPaths = this.GetResolutionPaths(this.sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
+
+            // Check if user specified any runsettings
+            MSTestAdapterSettings adapterSettings = MSTestSettingsProvider.Settings;
+
+            if (resolutionPaths != null && resolutionPaths.Count > 0)
+            {
+                if (EqtTrace.IsInfoEnabled)
+                {
+                    EqtTrace.Info("TestSourceHost: Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths.ToArray()));
+                }
+
+                // Adding adapter folder to resolution paths
+                if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)))
+                {
+                    resolutionPaths.Add(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location));
+                }
+
+                // Adding extensions folder to resolution paths
+                if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)))
+                {
+                    resolutionPaths.Add(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location));
+                }
+            }
+
+            // Honour DisableAppDomain setting if it is present in runsettings
+            if (this.runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
+            {
+                if (adapterSettings != null)
+                {
+                    try
+                    {
+                        this.assemblyResolver = new AssemblyResolver(resolutionPaths);
+                        this.assemblyResolver.AddSearchDirectoriesFromRunSetting(adapterSettings.GetDirectoryListWithRecursiveProperty(null));
+                    }
+                    catch (Exception exception)
+                    {
+                        if (EqtTrace.IsErrorEnabled)
+                        {
+                            EqtTrace.Error(exception);
+                        }
+                    }
+                }
+            }
+
+            // Add an assembly resolver...
+            Type assemblyResolverType = typeof(AssemblyResolver);
+
+            if (EqtTrace.IsInfoEnabled)
+            {
+                EqtTrace.Info("TestSourceHost: assemblyenumerator location: {0} , fullname: {1} ", assemblyResolverType.Assembly.Location, assemblyResolverType.FullName);
+            }
+
+            var resolver = AppDomainUtilities.CreateInstance(
+                this.domain,
+                assemblyResolverType,
+                new object[] { resolutionPaths });
+
+            if (EqtTrace.IsInfoEnabled)
+            {
+                EqtTrace.Info(
+                    "TestSourceHost: resolver type: {0} , resolve type assembly: {1} ",
+                    resolver.GetType().FullName,
+                    resolver.GetType().Assembly.Location);
+            }
+
+            this.assemblyResolver = (AssemblyResolver)resolver;
+
+            if (adapterSettings != null)
+            {
+                try
+                {
+                    var additionalSearchDirectories =
+                        adapterSettings.GetDirectoryListWithRecursiveProperty(this.domain.SetupInformation.ApplicationBase);
+                    if (additionalSearchDirectories?.Count > 0)
+                    {
+                        this.assemblyResolver.AddSearchDirectoriesFromRunSetting(
+                            adapterSettings.GetDirectoryListWithRecursiveProperty(this.domain.SetupInformation.ApplicationBase));
+                    }
+                }
+                catch (Exception exception)
+                {
+                    if (EqtTrace.IsErrorEnabled)
+                    {
+                        EqtTrace.Error(exception);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -365,6 +387,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
     }
+
+////#pragma warning disable SA1402 // File may only contain a single class
+////    public class Proxy : MarshalByRefObject
+////#pragma warning restore SA1402 // File may only contain a single class
+////    {
+////        public Assembly GetAssembly(string assemblyPath)
+////        {
+////            try
+////            {
+////                return Assembly.LoadFrom(assemblyPath);
+////            }
+////            catch (Exception)
+////            {
+////                return null;
+////            }
+////        }
+////    }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

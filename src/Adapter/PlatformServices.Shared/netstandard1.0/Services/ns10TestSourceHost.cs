@@ -53,6 +53,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             // Do nothing.
         }
+
+        public void ModifyHostProperties()
+        {
+            // Do nothing.
+        }
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

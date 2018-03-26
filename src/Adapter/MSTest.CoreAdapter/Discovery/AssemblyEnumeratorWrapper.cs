@@ -162,6 +162,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             {
                 var assemblyEnumerator =
                     isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings }) as AssemblyEnumerator;
+                isolationHost.ModifyHostProperties();
                 return assemblyEnumerator.EnumerateAssembly(fullFilePath, out warnings);
             }
         }
