@@ -76,33 +76,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     fullFilePath,
                     ex);
 
-                // Loading a WinPRT dll on the phone produces a
-                // FileNotFoundException. We check if we get FileNotFoundException
-                // in spite of the dll existing and try and load the dll from the full path in this case.
-                try
-                {
-                    if (PlatformServiceProvider.Instance.FileOperations.DoesFileExist(assemblyFileName))
-                    {
-                        var assembly = Assembly.Load(new AssemblyName(assemblyFileName));
-                    }
-                }
-                catch (Exception e)
-                {
-                    var winrtFailureMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.TestAssembly_AssemblyDiscoveryFailure,
-                        assemblyFileName,
-                        e.Message);
-                    warnings.Add(winrtFailureMessage);
-                    return null;
-                }
-
                 var message = string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.TestAssembly_AssemblyDiscoveryFailure,
                     fullFilePath,
                     ex.Message);
                 warnings.Add(message);
+
                 return null;
             }
             catch (ReflectionTypeLoadException ex)
