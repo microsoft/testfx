@@ -167,8 +167,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         public void ModifyHostProperties()
         {
-            ////this.domain.SetData("APPBASE", Path.GetDirectoryName(this.sourceFileName));
-
             // After adapter has been loaded, reset appdomains appbase.
             // The below logic of preferential setting the appdomains appbase is needed because:
             // 1. We set this to the location of the test source if it is built for Full CLR  -> Ideally this needs to be done in all situations.
