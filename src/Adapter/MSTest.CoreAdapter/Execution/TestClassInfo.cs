@@ -103,7 +103,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Gets a value indicating whether is class initialize executed.
+        /// Gets a value indicating whether class initialize has executed.
         /// </summary>
         public bool IsClassInitializeExecuted { get; internal set; }
 
@@ -306,7 +306,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return null;
             }
 
-            lock (this.testClassExecuteSyncObject)
+            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod == null)
             {
                 try
                 {
@@ -340,6 +340,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
                 }
             }
+
+            return null;
         }
     }
 }

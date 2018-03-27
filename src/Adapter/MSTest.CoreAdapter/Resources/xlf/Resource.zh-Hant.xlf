@@ -228,8 +228,8 @@
       </trans-unit>
       <trans-unit id="LegacyScenariosNotSupportedWarning">
         <source>Warning : A testsettings file, a runsettings file with a ForcedLegacyMode set to true or a vsmdi file is not supported with the MSTest V2 Adapter.</source>
-        <target state="new">警告: MSTest V2 配接器不支援 testsettings 檔案，也不支援 ForcedLegacyMode 設為 true 的 runsettings。</target>
-        <note></note>
+        <target state="translated">警告: MSTest V2 配接器不支援 testsettings 檔案、ForcedLegacyMode 設為 true 的 runsettings 或 vsmdi 檔案。</target>
+        <note />
       </trans-unit>
       <trans-unit id="Common_MustBeGreaterThanZero">
         <source>The parameter must be greater than zero.</source>
@@ -308,23 +308,23 @@
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>MSTest Executor: Test Parallelization enabled for {0} (Workers: {1}, Scope: {2}).</source>
-        <target state="new">MSTest Executor: Test Parallelization enabled. Parallel Level {0}, Parallel Mode {1}</target>
-        <note></note>
+        <target state="translated">MSTest 執行程式: 已為 {0} 啟用平行測試。(Workers: {1}，Scope: {2})。</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="new">Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</target>
+        <target state="translated">為 'Scope' 指定的值 '{0}' 無效。支援的範圍為 {1}。</target>
         <note>'Scope' is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
-        <target state="new">Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</target>
+        <target state="translated">為 'Workers' 的值 '{0}' 無效。值應為非負整數。</target>
         <note>`Workers` is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="TestAssembly_AssemblyDiscoveryFailure">
         <source>Failed to discover tests from assembly {0}. Reason:{1}</source>
-        <target state="new">Failed to discover tests from assembly {0}. Reason:{1}</target>
-        <note></note>
+        <target state="translated">無法從組件 {0} 中探索測試。原因:{1}</target>
+        <note />
       </trans-unit>
     </body>
   </file>

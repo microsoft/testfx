@@ -228,8 +228,8 @@
       </trans-unit>
       <trans-unit id="LegacyScenariosNotSupportedWarning">
         <source>Warning : A testsettings file, a runsettings file with a ForcedLegacyMode set to true or a vsmdi file is not supported with the MSTest V2 Adapter.</source>
-        <target state="new">Aviso: um arquivo testsettings ou um runsettings com ForcedLegacyMode configurado como true não tem suporte com o MSTest V2 Adapter.</target>
-        <note></note>
+        <target state="translated">Aviso: um arquivo testsettings ou runsettings com ForcedLegacyMode definido como true ou um arquivo vsmdi não é compatível com o MSTest V2 Adapter.</target>
+        <note />
       </trans-unit>
       <trans-unit id="Common_MustBeGreaterThanZero">
         <source>The parameter must be greater than zero.</source>
@@ -308,23 +308,23 @@
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>MSTest Executor: Test Parallelization enabled for {0} (Workers: {1}, Scope: {2}).</source>
-        <target state="new">MSTest Executor: Test Parallelization enabled. Parallel Level {0}, Parallel Mode {1}</target>
-        <note></note>
+        <target state="translated">MSTest Executor: paralelização de teste habilitada para {0} (Workers: {1}, Scope: {2}).</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="new">Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</target>
+        <target state="translated">Valor inválido '{0}' especificado para 'Scope'. Os escopos compatíveis são {1}.</target>
         <note>'Scope' is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
-        <target state="new">Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</target>
+        <target state="translated">Valor inválido '{0}' especificado para 'Workers'. O valor deve ser um inteiro não negativo.</target>
         <note>`Workers` is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="TestAssembly_AssemblyDiscoveryFailure">
         <source>Failed to discover tests from assembly {0}. Reason:{1}</source>
-        <target state="new">Failed to discover tests from assembly {0}. Reason:{1}</target>
-        <note></note>
+        <target state="translated">Falha ao descobrir testes por meio do assembly {0}. Motivo: {1}</target>
+        <note />
       </trans-unit>
     </body>
   </file>
