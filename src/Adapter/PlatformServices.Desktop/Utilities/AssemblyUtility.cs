@@ -182,7 +182,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="assemblyPath"> Path to assembly to get dependencies for. </param>
         /// <param name="configFile"> Config file to use while trying to resolve dependencies. </param>
         /// <param name="warnings"> The warnings. </param>
-        /// <returns> The <see cref="string[]"/>. </returns>
+        /// <returns> The <see cref="T:string[]"/>. </returns>
         internal virtual string[] GetFullPathToDependentAssemblies(string assemblyPath, string configFile, out IList<string> warnings)
         {
             Debug.Assert(!string.IsNullOrEmpty(assemblyPath), "assemblyPath");
@@ -244,7 +244,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <summary>
         /// Gets the resolution paths for app domain creation.
         /// </summary>
-        /// <returns> The <see cref="IList"/> of resolution paths. </returns>
+        /// <returns> The <see cref="IList{T}"/> of resolution paths. </returns>
         internal IList<string> GetResolutionPaths()
         {
             // Use dictionary to ensure we get a list of unique paths, but keep a list as the

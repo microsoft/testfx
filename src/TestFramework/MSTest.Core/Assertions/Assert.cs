@@ -2334,6 +2334,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The converted string.
         /// </returns>
+        [SuppressMessage("ReSharper", "RedundantToStringCall", Justification = "We are ensuring ToString() isn't overloaded in a way to misbehave")]
         internal static string ReplaceNulls(object input)
         {
             // Use the localized "(null)" string for null values.
