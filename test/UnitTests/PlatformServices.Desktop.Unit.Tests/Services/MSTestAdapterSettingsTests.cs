@@ -255,6 +255,51 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         }
 
         #endregion
+
+        #region DeployTestSourceDependencies tests
+
+        [TestMethod]
+        public void DeployTestSourceDependenciesIsEnabledByDefault()
+        {
+            string runSettingxml =
+                @"<MSTestV2>
+                  </MSTestV2>";
+            StringReader stringReader = new StringReader(runSettingxml);
+            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            reader.Read();
+            MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
+            Assert.AreEqual(true, adapterSettings.DeployTestSourceDependencies);
+        }
+
+        [TestMethod]
+        public void DeployTestSourceDependenciesWhenFalse()
+        {
+            string runSettingxml =
+                @"<MSTestV2>
+                     <DeployTestSourceDependencies>False</DeployTestSourceDependencies>
+                  </MSTestV2>";
+            StringReader stringReader = new StringReader(runSettingxml);
+            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            reader.Read();
+            MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
+            Assert.AreEqual(false, adapterSettings.DeployTestSourceDependencies);
+        }
+
+        [TestMethod]
+        public void DeployTestSourceDependenciesWhenTrue()
+        {
+            string runSettingxml =
+                @"<MSTestV2>
+                     <DeployTestSourceDependencies>True</DeployTestSourceDependencies>
+                  </MSTestV2>";
+            StringReader stringReader = new StringReader(runSettingxml);
+            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            reader.Read();
+            MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
+            Assert.AreEqual(true, adapterSettings.DeployTestSourceDependencies);
+        }
+
+        #endregion
     }
 
     public class TestableMSTestAdapterSettings : MSTestAdapterSettings

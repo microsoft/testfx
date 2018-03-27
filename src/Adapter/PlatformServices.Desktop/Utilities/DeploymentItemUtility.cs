@@ -7,6 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
 
@@ -91,14 +92,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 return false;
             }
 
-            if (sourcePath.IndexOfAny(System.IO.Path.GetInvalidPathChars()) != -1 ||
-                relativeOutputDirectory.IndexOfAny(System.IO.Path.GetInvalidPathChars()) != -1)
+            if (sourcePath.IndexOfAny(Path.GetInvalidPathChars()) != -1 ||
+                relativeOutputDirectory.IndexOfAny(Path.GetInvalidPathChars()) != -1)
             {
                 warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItemContainsInvalidCharacters, sourcePath, relativeOutputDirectory);
                 return false;
             }
 
-            if (System.IO.Path.IsPathRooted(relativeOutputDirectory))
+            if (Path.IsPathRooted(relativeOutputDirectory))
             {
                 warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItemOutputDirectoryMustBeRelative, relativeOutputDirectory);
                 return false;
@@ -123,18 +124,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         internal IList<DeploymentItem> GetDeploymentItems(IEnumerable<TestCase> tests)
         {
             List<DeploymentItem> allDeploymentItems = new List<DeploymentItem>();
-
             foreach (var test in tests)
             {
                 KeyValuePair<string, string>[] items = this.GetDeploymentItems(test);
-
                 if (items == null || items.Length == 0)
                 {
                     continue;
                 }
 
                 IList<DeploymentItem> deploymentItemsToBeAdded = this.FromKeyValuePairs(items);
-
                 foreach (var deploymentItemToBeAdded in deploymentItemsToBeAdded)
                 {
                     this.AddDeploymentItem(allDeploymentItems, deploymentItemToBeAdded);

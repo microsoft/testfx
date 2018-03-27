@@ -10,14 +10,14 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
     using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
-
+    using System.Xml;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
     using Moq;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -143,7 +143,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                     testCase.Source,
                     this.mockRunContext.Object,
                     this.mocktestExecutionRecorder.Object,
-                    ref testRunDirectories));
+                    testRunDirectories));
         }
 
         [TestMethod]
@@ -169,7 +169,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                     testCase.Source,
                     this.mockRunContext.Object,
                     this.mocktestExecutionRecorder.Object,
-                    ref testRunDirectories));
+                    testRunDirectories));
 
             // Assert.
             string warning;
@@ -216,7 +216,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                     testCase.Source,
                     this.mockRunContext.Object,
                     this.mocktestExecutionRecorder.Object,
-                    ref testRunDirectories));
+                    testRunDirectories));
 
             // Assert.
             string warning;
@@ -255,7 +255,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                     testCase.Source,
                     this.mockRunContext.Object,
                     this.mocktestExecutionRecorder.Object,
-                    ref testRunDirectories));
+                    testRunDirectories));
 
             // Assert.
             string warning;
@@ -296,7 +296,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                     testCase.Source,
                     this.mockRunContext.Object,
                     this.mocktestExecutionRecorder.Object,
-                    ref testRunDirectories));
+                    testRunDirectories));
 
             // Assert.
             string warning;
@@ -339,6 +339,8 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                 .Returns(new string[] { });
             this.mockFileUtility.Setup(
                 fu => fu.AddFilesFromDirectory(DefaultDeploymentItemPath, It.IsAny<bool>())).Returns(directoryContentFiles);
+            this.mockFileUtility.Setup(
+                fu => fu.AddFilesFromDirectory(DefaultDeploymentItemPath, It.IsAny<Func<string, bool>>(), It.IsAny<bool>())).Returns(directoryContentFiles);
             this.mockAssemblyUtility.Setup(
                 au => au.GetSatelliteAssemblies(It.IsAny<string>()))
                 .Returns(new List<string> { });
@@ -350,7 +352,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                     testCase.Source,
                     this.mockRunContext.Object,
                     this.mocktestExecutionRecorder.Object,
-                    ref testRunDirectories));
+                    testRunDirectories));
 
             // Assert.
             string warning;
@@ -362,6 +364,43 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                     It.IsAny<string>(),
                     out warning),
                 Times.Once);
+        }
+
+        [TestMethod]
+        public void FileUtilityTests()
+        {
+        }
+
+        [TestMethod]
+        public void DeployTestRunSourceOptionShouldDeployAllFilesAndDirectoriesPresentInSourceDirectory()
+        {
+            // Setup
+            TestRunDirectories testRunDirectories;
+            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out testRunDirectories);
+            string runSettingxml = @"<DeployTestSourceDependencies>False</DeployTestSourceDependencies>";
+            StringReader stringReader = new StringReader(runSettingxml);
+            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
+            mstestSettingsProvider.Load(reader);
+
+            // Setup mocks.
+            this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
+            this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
+            List<string> directoryContentFiles = new List<string> { "dummy1.txt", "dummy2.txt" };
+            this.mockFileUtility.Setup(fu => fu.AddFilesFromDirectory(DefaultDeploymentItemPath, It.IsAny<Func<string, bool>>(), It.IsAny<bool>())).Returns(directoryContentFiles);
+            this.mockAssemblyUtility.Setup(au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings)).Returns(new string[] { });
+            this.mockAssemblyUtility.Setup(au => au.GetSatelliteAssemblies(It.IsAny<string>())).Returns(new List<string> { });
+
+            // Act
+            Assert.IsTrue(
+                this.deploymentUtility.Deploy(
+                    new List<TestCase> { testCase },
+                    testCase.Source,
+                    this.mockRunContext.Object,
+                    this.mocktestExecutionRecorder.Object,
+                    testRunDirectories));
+
+            // Validate
         }
 
         [TestMethod]
@@ -395,7 +434,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                     testCase.Source,
                     this.mockRunContext.Object,
                     this.mocktestExecutionRecorder.Object,
-                    ref testRunDirectories));
+                    testRunDirectories));
 
             // Assert.
             var sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
@@ -452,7 +491,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                     testCase.Source,
                     this.mockRunContext.Object,
                     this.mocktestExecutionRecorder.Object,
-                    ref testRunDirectories));
+                    testRunDirectories));
 
             // Assert.
             this.mockFileUtility.Verify(
