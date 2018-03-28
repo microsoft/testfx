@@ -10,6 +10,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
     using System.Linq;
     using System.Xml;
     using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     public class CLITestBase
@@ -59,7 +60,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </summary>
         /// <param name="sources">List of test assemblies.</param>
         /// <param name="runSettings">Run settings for execution.</param>
-        public void InvokeVsTestForExecution(string[] sources, string runSettings = "")
+        /// <param name="testCaseFilter">Test Case filter for execution.</param>
+        public void InvokeVsTestForExecution(string[] sources, string runSettings = "", string testCaseFilter = null)
         {
             for (var iterator = 0; iterator < sources.Length; iterator++)
             {
@@ -74,7 +76,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
             // this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
             vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(this.GetTestAdapterPath(), "*TestAdapter.dll"));
-            vsTestConsoleWrapper.RunTests(sources, runSettingXml, this.runEventsHandler);
+            vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, this.runEventsHandler);
         }
 
         /// <summary>
