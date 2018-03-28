@@ -43,7 +43,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Gets the set of sources (dll's/exe's) that contain tests. If a source is a package(appx), return the file(dll/exe) that contains tests from it.
         /// </summary>
         /// <param name="sources"> Sources given to the adapter.  </param>
-        /// <returns> Sources that contains tests. <see cref="IEnumerable"/>. </returns>
+        /// <returns> Sources that contains tests. <see cref="IEnumerable{T}"/>. </returns>
         public IEnumerable<string> GetTestSources(IEnumerable<string> sources)
         {
             return sources;
