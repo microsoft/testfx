@@ -247,22 +247,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                     watch.Start();
 
                                     this.testContext.SetDataRow(dataRow);
-                                    UTF.TestResult currentResult;
+                                    UTF.TestResult[] testResults;
 
                                     try
                                     {
-                                        currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
+                                        testResults = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo);
                                     }
                                     catch (Exception ex)
                                     {
-                                        currentResult = new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) };
+                                        testResults = new[]
+                                        {
+                                            new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) }
+                                        };
                                     }
 
-                                    currentResult.DatarowIndex = rowIndex++;
                                     watch.Stop();
-                                    currentResult.Duration = watch.Elapsed;
+                                    foreach (var testResult in testResults)
+                                    {
+                                        testResult.DatarowIndex = rowIndex;
+                                        testResult.Duration = watch.Elapsed;
+                                    }
 
-                                    results.Add(currentResult);
+                                    rowIndex++;
+
+                                    results.AddRange(testResults);
                                 }
                             }
                             finally
@@ -293,18 +301,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                             foreach (var data in testDataSource.GetData(this.testMethodInfo.MethodInfo))
                             {
                                 this.testMethodInfo.SetArguments(data);
-                                UTF.TestResult currentResult;
+                                UTF.TestResult[] testResults;
                                 try
                                 {
-                                    currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
+                                    testResults = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo);
                                 }
                                 catch (Exception ex)
                                 {
-                                    currentResult = new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) };
+                                    testResults = new[]
+                                    {
+                                        new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) }
+                                    };
                                 }
 
-                                currentResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
-                                results.Add(currentResult);
+                                foreach (var testResult in testResults)
+                                {
+                                    testResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
+                                }
+
+                                results.AddRange(testResults);
                                 this.testMethodInfo.SetArguments(null);
                             }
                         }
@@ -313,7 +328,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     {
                         try
                         {
-                            results.Add(this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0]);
+                            results.AddRange(this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo));
                         }
                         catch (Exception ex)
                         {

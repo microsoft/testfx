@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace UnitTestFramework.Tests
+namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
 {
     extern alias FrameworkV1;
     extern alias FrameworkV2;

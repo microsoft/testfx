@@ -36,7 +36,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="method"> The method. </param>
         /// <param name="type"> The type. </param>
         /// <param name="warnings"> The warnings. </param>
-        /// <returns> The <see cref="KeyValuePair"/> of deployment items. </returns>
+        /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/> of deployment items. </returns>
         public KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings)
         {
             return null;

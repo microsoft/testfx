@@ -110,6 +110,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// Gets filter expression from discovery context.
         /// </summary>
         /// <param name="context">Discovery context</param>
+        /// <param name="logger">The logger to log exception messages too.</param>
         /// <returns>Filter expression.</returns>
         private ITestCaseFilterExpression GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context, IMessageLogger logger)
         {
