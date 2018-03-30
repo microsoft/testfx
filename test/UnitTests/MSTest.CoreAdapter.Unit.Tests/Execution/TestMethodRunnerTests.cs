@@ -408,9 +408,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void RunTestMethodForMultipleResultsReturnMultipleResults()
+        {
+            var testMethodAttributeMock = new Mock<UTF.TestMethodAttribute>();
+            testMethodAttributeMock.Setup(_ => _.Execute(It.IsAny<UTF.ITestMethod>())).Returns(new[]
+            {
+                new UTF.TestResult { Outcome = UTF.UnitTestOutcome.Passed },
+                new UTF.TestResult { Outcome = UTF.UnitTestOutcome.Failed }
+            });
+
+            var localTestMethodOptions = new TestMethodOptions
+            {
+                Timeout = 200,
+                Executor = testMethodAttributeMock.Object,
+                TestContext = this.testContextImplementation,
+                ExpectedException = null
+            };
+
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, localTestMethodOptions, null);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual(2, results.Length);
+            Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
+            Assert.AreEqual(AdapterTestOutcome.Failed, results[1].Outcome);
+        }
+
+        [TestMethodV1]
         public void RunTestMethodForPassingTestThrowingExceptionShouldReturnUnitTestResultWithPassedOutcome()
         {
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo,  this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             var results = testMethodRunner.Execute();

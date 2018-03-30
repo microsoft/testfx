@@ -139,7 +139,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <param name="assembly">The reflected assembly.</param>
         /// <param name="assemblyFileName">The file name of the assembly.</param>
         /// <param name="warningMessages">Contains warnings if any, that need to be passed back to the caller.</param>
-        /// <returns><Gets the types defined in the provided assembly.</returns>
+        /// <returns>Gets the types defined in the provided assembly.</returns>
         internal Type[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string> warningMessages)
         {
             var types = new List<Type>();
