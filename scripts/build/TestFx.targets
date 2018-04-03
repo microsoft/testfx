@@ -86,7 +86,7 @@
     <TFBuildNumber Condition=" '$(TFBuildNumber)' == '' ">0.1</TFBuildNumber>
     <MajorVersion>14.0</MajorVersion>
     <AssemblyVersion>$(MajorVersion).0.0</AssemblyVersion>
-    <BuildVersion>$(MajorVersion).$(TFBuildNumber)</BuildVersion>
+    <BuildVersion Condition=" '$(BuildVersion)' == '' ">$(MajorVersion).$(TFBuildNumber)</BuildVersion>
   </PropertyGroup>
   <ItemGroup>
     <AssemblyVersionAttribute Include="System.Reflection.AssemblyVersionAttribute">

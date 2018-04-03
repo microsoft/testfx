@@ -101,7 +101,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Gets a value indicating whether is class initialize executed.
+        /// Gets a value indicating whether class initialize has executed.
         /// </summary>
         public bool IsClassInitializeExecuted { get; internal set; }
 
@@ -295,37 +295,40 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return null;
             }
 
-            try
+            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod == null)
             {
-                this.ClassCleanupMethod.InvokeAsSynchronousTask(null);
-
-                return null;
-            }
-            catch (Exception exception)
-            {
-                var realException = exception.InnerException ?? exception;
-
-                string errorMessage;
-
-                // special case AssertFailedException to trim off part of the stack trace
-                if (realException is AssertFailedException ||
-                    realException is AssertInconclusiveException)
+                try
                 {
-                    errorMessage = realException.Message;
+                    this.ClassCleanupMethod.InvokeAsSynchronousTask(null);
                 }
-                else
+                catch (Exception exception)
                 {
-                    errorMessage = StackTraceHelper.GetExceptionMessage(realException);
-                }
+                    var realException = exception.InnerException ?? exception;
 
-                return string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-                    this.ClassType.Name,
-                    this.ClassCleanupMethod.Name,
-                    errorMessage,
-                    StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                    string errorMessage;
+
+                    // special case AssertFailedException to trim off part of the stack trace
+                    if (realException is AssertFailedException ||
+                        realException is AssertInconclusiveException)
+                    {
+                        errorMessage = realException.Message;
+                    }
+                    else
+                    {
+                        errorMessage = StackTraceHelper.GetExceptionMessage(realException);
+                    }
+
+                    return string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.UTA_ClassCleanupMethodWasUnsuccesful,
+                        this.ClassType.Name,
+                        this.ClassCleanupMethod.Name,
+                        errorMessage,
+                        StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                }
             }
+
+            return null;
         }
     }
 }

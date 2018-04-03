@@ -30,7 +30,7 @@ function Set_BuildNumber()
     Write-Verbose("Build number used: " + $buildNumber)
     
     # This sets the build number.
-    Write-Host("##vso[build.updatebuildnumber]$buildNumber")
+    Write-Host("##vso[task.setvariable variable=BuildVersionSuffix]$buildNumber")
 }
 
 Set_BuildNumber

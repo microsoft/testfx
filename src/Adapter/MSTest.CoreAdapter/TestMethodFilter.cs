@@ -46,7 +46,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             {
                 try
                 {
-                    filter = (context is IRunContext) ? this.GetTestCaseFilterFromRunContext(context as IRunContext) : this.GetTestCaseFilterFromDiscoveryContext(context);
+                    filter = (context is IRunContext) ? this.GetTestCaseFilterFromRunContext(context as IRunContext) : this.GetTestCaseFilterFromDiscoveryContext(context, logger);
                 }
                 catch (TestPlatformFormatException ex)
                 {
@@ -111,7 +111,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </summary>
         /// <param name="context">Discovery context</param>
         /// <returns>Filter expression.</returns>
-        private ITestCaseFilterExpression GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context)
+        private ITestCaseFilterExpression GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context, IMessageLogger logger)
         {
             try
             {
@@ -119,10 +119,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 MethodInfo methodGetTestCaseFilter = context.GetType().GetRuntimeMethod("GetTestCaseFilter", new[] { typeof(IEnumerable<string>), typeof(Func<string, TestProperty>) });
                 return (ITestCaseFilterExpression)methodGetTestCaseFilter?.Invoke(context, new object[] { this.supportedProperties.Keys, (Func<string, TestProperty>)this.PropertyProvider });
             }
-            catch (TargetInvocationException ex)
+            catch (Exception ex)
             {
-                throw ex.InnerException;
+                // In case of UWP .Net Native Tool Chain compilation. Invoking methods via Reflection doesn't work, hence discovery always fails.
+                // Hence throwing exception only if it is of type TargetInvocationException(i.e. Method got invoked but something went wrong in GetTestCaseFilter Method)
+                if (ex is TargetInvocationException)
+                {
+                    throw ex.InnerException;
+                }
+
+                logger.SendMessage(TestMessageLevel.Warning, ex.Message);
             }
+
+            return null;
         }
     }
 }

@@ -76,41 +76,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     fullFilePath,
                     ex);
 
-                // Loading a WinPRT dll on the phone produces a
-                // FileNotFoundException. We check if we get FileNotFoundException
-                // in spite of the dll existing and try and load the dll from the full path in this case.
-                try
-                {
-                    if (PlatformServiceProvider.Instance.FileOperations.DoesFileExist(assemblyFileName))
-                    {
-                        var assembly = Assembly.Load(new AssemblyName(assemblyFileName));
-                    }
-                }
-                catch (Exception e)
-                {
-                    warnings.Add(e.Message);
-                    return null;
-                }
-
-                warnings.Add(ex.Message);
-                return null;
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                warnings.Add(ex.Message);
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
-                    "MSPhoneTestDiscoverer.TryGetTests: Failed to discover tests from {0}. Reason:{1}",
-                    assemblyFileName,
-                    ex);
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("Exceptions thrown from the Loader :");
-
-                if (ex.LoaderExceptions != null)
-                {
-                    foreach (var loaderEx in ex.LoaderExceptions)
-                    {
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("{0}", loaderEx);
-                    }
-                }
+                var message = string.Format(
+                    CultureInfo.CurrentCulture,
+                    "Failed to discover tests from assembly {0}. Reason:{1}",
+                    fullFilePath,
+                    ex.Message);
+                warnings.Add(message);
 
                 return null;
             }
