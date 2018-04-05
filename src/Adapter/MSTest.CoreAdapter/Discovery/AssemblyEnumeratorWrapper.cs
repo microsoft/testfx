@@ -140,9 +140,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         {
             using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null))
             {
-                var assemblyEnumerator =
-                    isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings }) as AssemblyEnumerator;
-                isolationHost.ModifyHostProperties();
+                // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain, then reset the domain's appbase
+                // to point to test source location
+                var assemblyEnumerator = isolationHost.CreateInstanceForAdapterTypeAndUpdateAppBase(
+                    typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings }) as AssemblyEnumerator;
                 return assemblyEnumerator.EnumerateAssembly(fullFilePath, out warnings);
             }
         }

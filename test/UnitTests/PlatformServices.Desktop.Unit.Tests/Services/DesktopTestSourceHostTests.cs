@@ -108,7 +108,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         /// Leaving the test running till then.
         /// </summary>
         [TestMethod]
-        public void ModifyHostPropertiesShouldSetDomainsAppBaseToTestSourceLocationForFullCLRTestss()
+        public void CreateInstanceForAdapterTypeAndUpdateAppBaseShouldSetDomainsAppBaseToTestSourceLocationForFullCLRTestss()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -122,9 +122,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
                 // Act
                 sourceHost.Object.SetupHost();
-                sourceHost.Object.ModifyHostProperties();
+                ////sourceHost.Object.ModifyHostProperties();
                 var expectedObject =
-                    sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
+                    sourceHost.Object.CreateInstanceForAdapterTypeAndUpdateAppBase(typeof(DummyClass), null) as DummyClass;
 
                 // Assert
                 Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
@@ -136,7 +136,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         }
 
         [TestMethod]
-        public void ModifyHostPropertiesShouldSetDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
+        public void CreateInstanceForAdapterTypeAndUpdateAppBaseShouldSetDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -150,8 +150,8 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
                 // Act
                 sourceHost.Object.SetupHost();
-                sourceHost.Object.ModifyHostProperties();
-                var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
+                ////sourceHost.Object.ModifyHostProperties();
+                var expectedObject = sourceHost.Object.CreateInstanceForAdapterTypeAndUpdateAppBase(typeof(DummyClass), null) as DummyClass;
 
                 // Assert
                 Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
