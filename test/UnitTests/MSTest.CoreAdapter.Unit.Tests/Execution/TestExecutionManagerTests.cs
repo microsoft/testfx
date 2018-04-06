@@ -148,14 +148,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             List<string> expectedTestCaseStartList = new List<string>() { "PassingTest", "FailingTest" };
             List<string> expectedTestCaseEndList = new List<string>() { "PassingTest:Passed", "FailingTest:Failed" };
-            List<string> expectedResultList = new List<string>() { "PassingTest  Passed", "FailingTest  Failed\r\n  Message: (null)" };
+            List<string> expectedResultList = new List<string>() { "PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail failed." };
 
             CollectionAssert.AreEqual(expectedTestCaseStartList, this.frameworkHandle.TestCaseStartList);
             CollectionAssert.AreEqual(expectedTestCaseEndList, this.frameworkHandle.TestCaseEndList);
-            Assert.AreEqual("PassingTest  Passed", this.frameworkHandle.ResultsList[0]);
-            StringAssert.Contains(
-                this.frameworkHandle.ResultsList[1],
-                "FailingTest  Failed\r\n  Message: Assert.Fail failed. \r\n  StackTrace:\r\n   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestExecutionManagerTests.DummyTestClass.FailingTest()");
+            Assert.AreEqual(expectedResultList[0], this.frameworkHandle.ResultsList[0]);
+            StringAssert.Contains(this.frameworkHandle.ResultsList[1], expectedResultList[1]);
         }
 
         [TestMethodV1]

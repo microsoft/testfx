@@ -41,7 +41,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// </summary>
         /// <param name="type"> The type. </param>
         /// <param name="warnings"> The warnings. </param>
-        /// <returns> The <see cref="IList"/> of deployment items on a class. </returns>
+        /// <returns> The <see cref="IList{T}"/> of deployment items on a class. </returns>
         internal IList<DeploymentItem> GetClassLevelDeploymentItems(Type type, ICollection<string> warnings)
         {
             if (!this.classLevelDeploymentItems.ContainsKey(type))
@@ -61,7 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// </summary> <param name="method"> The method. </param>
         /// <param name="classLevelDeploymentItems"> The class level deployment items. </param>
         /// <param name="warnings"> The warnings. </param>
-        /// <returns> The <see cref="KeyValuePair"/>.of deployment item information. </returns>
+        /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>.of deployment item information. </returns>
         internal KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, IList<DeploymentItem> classLevelDeploymentItems, ICollection<string> warnings)
         {
             var testLevelDeploymentItems = this.GetDeploymentItems(this.reflectionUtility.GetCustomAttributes(method, typeof(DeploymentItemAttribute)), warnings);
@@ -206,7 +206,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// Returns the deployment items defined on the test
         /// </summary>
         /// <param name="testCase"> The test Case. </param>
-        /// <returns> The <see cref="KeyValuePair"/>. </returns>
+        /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>. </returns>
         private KeyValuePair<string, string>[] GetDeploymentItems(TestCase testCase)
         {
             return
