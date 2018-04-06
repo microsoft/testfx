@@ -83,7 +83,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         }
 
         [TestMethod]
-        public void GetDisplayNameShouldReturnAppropriateNameWithDataRowDisplayName()
+        public void GetDisplayNameShouldReturnSpecifiedDisplayName()
         {
             var dataRowAttribute = new DataRowAttribute(null);
             dataRowAttribute.DisplayName = "DataRowTestWithDisplayName";

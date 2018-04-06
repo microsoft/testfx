@@ -73,12 +73,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Gets or sets the name of method used to customize the display name in test results.
         /// </summary>
-        public string DynamicDisplayName { get; set; }
+        public string DynamicDataDisplayName { get; set; }
 
         /// <summary>
         /// Gets or sets the declaring type used to customize the display name in test results.
         /// </summary>
-        public Type DynamicDisplayNameDeclaringType { get; set; }
+        public Type DynamicDataDisplayNameDeclaringType { get; set; }
 
         /// <inheritdoc />
         public IEnumerable<object[]> GetData(MethodInfo methodInfo)
@@ -141,26 +141,27 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <inheritdoc />
         public string GetDisplayName(MethodInfo methodInfo, object[] data)
         {
-            if (this.DynamicDisplayName != null)
+            if (this.DynamicDataDisplayName != null)
             {
-                var dynamicDisplayNameDeclaringType = this.DynamicDisplayNameDeclaringType ?? methodInfo.DeclaringType;
+                var dynamicDisplayNameDeclaringType = this.DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
 
-                var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(this.DynamicDisplayName);
+                var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(this.DynamicDataDisplayName);
                 if (method == null)
                 {
-                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, this.DynamicDisplayName));
+                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, this.DynamicDataDisplayName));
                 }
 
                 var parameters = method.GetParameters();
                 if (parameters.Length != 2 ||
                     parameters[0].ParameterType != typeof(MethodInfo) ||
                     parameters[1].ParameterType != typeof(object[]) ||
-                    method.ReturnType != typeof(string))
+                    method.ReturnType != typeof(string) ||
+                    !method.IsStatic)
                 {
                     throw new ArgumentNullException(
                         string.Format(
                             FrameworkMessages.DynamicDataDisplayName,
-                            this.DynamicDisplayName,
+                            this.DynamicDataDisplayName,
                             typeof(string).Name,
                             string.Join(", ", typeof(MethodInfo).Name, typeof(object[]).Name)));
                 }
