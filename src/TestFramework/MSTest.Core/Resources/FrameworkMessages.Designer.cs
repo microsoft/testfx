@@ -260,7 +260,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Method {0} must match the expected signature: {1} {0}({2})..
+        ///   Looks up a localized string similar to Method {0} must match the expected signature: public static {1} {0}({2})..
         /// </summary>
         internal static string DynamicDataDisplayName {
             get {

@@ -213,6 +213,20 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         }
 
         [TestFrameworkV1.TestMethod]
+        public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodPrivate()
+        {
+            Action action = () =>
+            {
+                var data = new object[] { 1, 2, 3 };
+
+                this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNamePrivate";
+                var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            };
+
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        }
+
+        [TestFrameworkV1.TestMethod]
         public void GetDisplayNameShouldThrowExceptionWithMissingDynamicDataDisplayNameMethod()
         {
             Action action = () =>
@@ -432,6 +446,23 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [DataRow("First", null, "Second")]
         public void DataRowTestMethod()
         {
+        }
+
+        /// <summary>
+        /// Custom display name method that is private.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        private static string GetDynamicDataDisplayNamePrivate(MethodInfo methodInfo, object[] data)
+        {
+            throw new InvalidOperationException();
         }
     }
 

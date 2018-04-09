@@ -156,7 +156,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     parameters[0].ParameterType != typeof(MethodInfo) ||
                     parameters[1].ParameterType != typeof(object[]) ||
                     method.ReturnType != typeof(string) ||
-                    !method.IsStatic)
+                    !method.IsStatic ||
+                    !method.IsPublic)
                 {
                     throw new ArgumentNullException(
                         string.Format(
