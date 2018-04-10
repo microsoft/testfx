@@ -13,8 +13,8 @@
  </PropertyGroup>
 
   <ImportGroup>
-    <Import Project="$(RootDirectory)\packages\Microbuild.Core\$(MicrobuildVersion)\build\Microbuild.Core.props" />
-    <Import Project="$(RootDirectory)\packages\Microbuild.Core\$(MicrobuildVersion)\build\Microbuild.Core.targets" />
+    <Import Project="$(RootDirectory)\packages\Microbuild.Core.$(MicrobuildVersion)\build\Microbuild.Core.props" />
+    <Import Project="$(RootDirectory)\packages\Microbuild.Core.$(MicrobuildVersion)\build\Microbuild.Core.targets" />
   </ImportGroup>
 
   <Target Name="SignNugetPackages">
