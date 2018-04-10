@@ -108,7 +108,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         /// Leaving the test running till then.
         /// </summary>
         [TestMethod]
-        public void CreateInstanceForAdapterTypeAndUpdateAppBaseShouldSetDomainsAppBaseToTestSourceLocationForFullCLRTestss()
+        public void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolverShouldSetDomainsAppBaseToTestSourceLocationForFullCLRTestss()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -136,7 +136,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         }
 
         [TestMethod]
-        public void CreateInstanceForAdapterTypeAndUpdateAppBaseShouldSetDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
+        public void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolverShouldSetDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
