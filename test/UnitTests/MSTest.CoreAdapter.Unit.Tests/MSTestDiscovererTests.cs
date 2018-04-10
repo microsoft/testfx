@@ -70,7 +70,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         [TestMethod]
         public void MSTestDiscovererHasCategoryAttribute()
         {
-            Console.WriteLine(typeof(MSTestDiscoverer));
+            Assert.IsTrue(typeof(MSTestDiscoverer).Assembly.Location.Contains(@"MSTest.CoreAdapter.Unit.Tests\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll"));
             var attribute = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttribute(typeof(CategoryAttribute));
             Assert.IsNotNull(attribute);
             Assert.AreEqual("managed", (attribute as CategoryAttribute).Category);
