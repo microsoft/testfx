@@ -87,7 +87,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     }
                     catch (Exception)
                     {
-                        // Give up.
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
+                            "StackTraceHelper.GetStackTraceInformation: Failed to get stacktrace info.");
                     }
                 }
             }
