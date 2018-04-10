@@ -122,9 +122,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
                 // Act
                 sourceHost.Object.SetupHost();
-                ////sourceHost.Object.ModifyHostProperties();
                 var expectedObject =
-                    sourceHost.Object.CreateInstanceForAdapterTypeAndUpdateAppBase(typeof(DummyClass), null) as DummyClass;
+                    sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
+                sourceHost.Object.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
 
                 // Assert
                 Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
@@ -150,8 +150,8 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
                 // Act
                 sourceHost.Object.SetupHost();
-                ////sourceHost.Object.ModifyHostProperties();
-                var expectedObject = sourceHost.Object.CreateInstanceForAdapterTypeAndUpdateAppBase(typeof(DummyClass), null) as DummyClass;
+                var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
+                sourceHost.Object.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
 
                 // Assert
                 Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);

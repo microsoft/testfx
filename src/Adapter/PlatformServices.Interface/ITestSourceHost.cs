@@ -29,16 +29,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         object CreateInstanceForType(Type type, object[] args);
 
         /// <summary>
-        /// Creates an instance of a given adapter type in the test source host and updates domain's appbase to point to
-        /// test source location
-        /// </summary>
-        /// <param name="type"> The type that needs to be created in the host. </param>
-        /// <param name="args">The arguments to pass to the constructor.
-        /// This array of arguments must match in number, order, and type the parameters of the constructor to invoke.
-        /// Pass in null for a constructor with no arguments.
-        /// </param>
-        /// <returns> An instance of the type created in the host. </returns>
-        /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
-        object CreateInstanceForAdapterTypeAndUpdateAppBase(Type type, object[] args);
+        /// Updates child-domain's appbase to point to test source location and sets up
+        /// Assembly resolver for both parent and child appdomain
+        void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
     }
 }

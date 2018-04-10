@@ -29,12 +29,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Assembly resolver used in the current app-domain
         /// </summary>
-        private AssemblyResolver assemblyResolverParentDomain;
+        private AssemblyResolver parentDomainAssemblyResolver;
 
         /// <summary>
         /// Assembly resolver used in the new child app-domain created for discovery/execution
         /// </summary>
-        private AssemblyResolver assemblyResolverChildDomain;
+        private AssemblyResolver childDomainAssemblyResolver;
 
         private List<string> cachedResolutionPaths;
 
@@ -128,39 +128,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Creates an instance of a given type in the test source host and updates domain's appbase to point to
-        /// test source location. Also sets up assembly resolver for the app domains.
-        /// </summary>
-        /// <param name="type"> The type that needs to be created in the host. </param>
-        /// <param name="args">The arguments to pass to the constructor.
-        /// This array of arguments must match in number, order, and type the parameters of the constructor to invoke.
-        /// Pass in null for a constructor with no arguments.
-        /// </param>
-        /// <returns> An instance of the type created in the host. </returns>
-        /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
-        public object CreateInstanceForAdapterTypeAndUpdateAppBase(Type type, object[] args)
-        {
-            var instance = this.CreateInstanceForType(type, args);
-            this.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
-
-            return instance;
-        }
-
-        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()
         {
-            if (this.assemblyResolverParentDomain != null)
+            if (this.parentDomainAssemblyResolver != null)
             {
-                this.assemblyResolverParentDomain.Dispose();
-                this.assemblyResolverParentDomain = null;
+                this.parentDomainAssemblyResolver.Dispose();
+                this.parentDomainAssemblyResolver = null;
             }
 
-            if (this.assemblyResolverChildDomain != null)
+            if (this.childDomainAssemblyResolver != null)
             {
-                this.assemblyResolverChildDomain.Dispose();
-                this.assemblyResolverChildDomain = null;
+                this.childDomainAssemblyResolver.Dispose();
+                this.childDomainAssemblyResolver = null;
             }
 
             if (this.domain != null)
@@ -198,7 +179,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             GC.SuppressFinalize(this);
         }
 
-        internal void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver()
+        /// <summary>
+        /// Updates child-domain's appbase to point to test source location and sets up
+        /// Assembly resolver for both parent and child appdomain
+        /// </summary>
+        public void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver()
         {
             List<string> resolutionPaths = this.GetResolutionPaths(this.sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
 
@@ -225,15 +210,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 }
             }
 
-            // Honour DisableAppDomain setting if it is present in runsettings
+            // Case when DisableAppDomain setting is present in runsettings and no child-appdomain is created
             if (this.runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
             {
                 if (adapterSettings != null)
                 {
                     try
                     {
-                        this.assemblyResolverParentDomain = new AssemblyResolver(resolutionPaths);
-                        this.assemblyResolverParentDomain.AddSearchDirectoriesFromRunSetting(adapterSettings.GetDirectoryListWithRecursiveProperty(null));
+                        this.parentDomainAssemblyResolver = new AssemblyResolver(resolutionPaths);
+                        this.parentDomainAssemblyResolver.AddSearchDirectoriesFromRunSetting(adapterSettings.GetDirectoryListWithRecursiveProperty(null));
                     }
                     catch (Exception exception)
                     {
@@ -244,7 +229,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     }
                 }
             }
-            else
+
+            // Case when Child-appdomain was created successfully, update appbase and set assembly resolver on it
+            else if (this.domain != null)
             {
                 // After adapter has been loaded, reset appdomains appbase.
                 // The below logic of preferential setting the appdomains appbase is needed because:
@@ -284,7 +271,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         resolver.GetType().Assembly.Location);
                 }
 
-                this.assemblyResolverChildDomain = (AssemblyResolver)resolver;
+                this.childDomainAssemblyResolver = (AssemblyResolver)resolver;
 
                 if (adapterSettings != null)
                 {
@@ -294,7 +281,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                             adapterSettings.GetDirectoryListWithRecursiveProperty(this.domain.SetupInformation.ApplicationBase);
                         if (additionalSearchDirectories?.Count > 0)
                         {
-                            this.assemblyResolverChildDomain.AddSearchDirectoriesFromRunSetting(
+                            this.childDomainAssemblyResolver.AddSearchDirectoriesFromRunSetting(
                                 adapterSettings.GetDirectoryListWithRecursiveProperty(this.domain.SetupInformation.ApplicationBase));
                         }
                     }
@@ -306,6 +293,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         }
                     }
                 }
+            }
+
+            // Log error when child-appdomain was expected to be created but wasn't created.
+            else
+            {
+                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, "TestSourceHost.AppDomain: Failed to update domain's appbase and setup assembly resolver");
             }
         }
 
