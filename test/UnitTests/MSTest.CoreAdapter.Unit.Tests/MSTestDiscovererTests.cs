@@ -64,7 +64,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         {
             DefaultExecutorUriAttribute attribute = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(DefaultExecutorUriAttribute)).Cast<DefaultExecutorUriAttribute>().First();
             Assert.IsNotNull(attribute);
-            Assert.AreEqual("executor://MSTestAdapter/v3", attribute.ExecutorUri);
+            Assert.AreEqual("executor://MSTestAdapter/v2", attribute.ExecutorUri);
         }
 
         [TestMethod]

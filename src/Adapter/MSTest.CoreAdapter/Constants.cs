@@ -16,7 +16,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <summary>
         /// Uri of the MSTest executor.
         /// </summary>
-        internal const string ExecutorUriString = "executor://MSTestAdapter/v3";
+        internal const string ExecutorUriString = "executor://MSTestAdapter/v2";
 
         /// <summary>
         /// The name of test run parameters node in the runsettings.
