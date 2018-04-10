@@ -8,8 +8,8 @@
   <PropertyGroup>
     <RootDirectory>$(MSBuildThisFileDirectory)..\..\..\</RootDirectory>
     <BuildConfiguration Condition="'$(BuildConfiguration)' == ''">Release</BuildConfiguration>
-    <NugetPkgDirectory Condition="'$(NugetPkgDirectory)' == ''">$(RootDirectory)artifacts\$(BuildConfiguration)\packages</NugetPkgDirectory>
-    <IntermediatesDirectory Condition="'$(IntermediatesDirectory)' == ''">$(RootDirectory)artifacts\obj\$(BuildConfiguration)\packages</IntermediatesDirectory>
+    <NugetPkgDirectory Condition="'$(NugetPkgDirectory)' == ''">$(RootDirectory)artifacts\$(BuildConfiguration)\MSTestPackages</NugetPkgDirectory>
+    <IntermediatesDirectory Condition="'$(IntermediatesDirectory)' == ''">$(RootDirectory)artifacts\obj\$(BuildConfiguration)\MSTestPackages</IntermediatesDirectory>
  </PropertyGroup>
 
   <ImportGroup>
