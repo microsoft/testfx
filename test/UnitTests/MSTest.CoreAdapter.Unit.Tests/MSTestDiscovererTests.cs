@@ -7,6 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Linq;
     using System.Reflection;
 
@@ -64,6 +65,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             DefaultExecutorUriAttribute attribute = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(DefaultExecutorUriAttribute)).Cast<DefaultExecutorUriAttribute>().First();
             Assert.IsNotNull(attribute);
             Assert.AreEqual("executor://MSTestAdapter/v2", attribute.ExecutorUri);
+        }
+
+        [TestMethod]
+        public void MSTestDiscovererHasCategoryAttribute()
+        {
+            var attribute = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttribute(typeof(CategoryAttribute));
+            Assert.IsNotNull(attribute);
+            Assert.AreEqual("managed", (attribute as CategoryAttribute).Category);
         }
 
         [TestMethod]
