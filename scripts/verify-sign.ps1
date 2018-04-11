@@ -9,6 +9,8 @@ Param(
     [System.String] $Configuration = "Debug"
 )
 
+. $PSScriptRoot\common.lib.ps1
+
 #
 # Variables
 #
@@ -17,7 +19,6 @@ $rootDirectory = (Get-Item (Split-Path $MyInvocation.MyCommand.Path)).Parent.Ful
 #
 # Signing configuration
 #
-# Authenticode signature details
 Write-Verbose "Setup build configuration."
 $TPB_Configuration = $Configuration
 
@@ -25,19 +26,8 @@ function Verify-NugetPackages
 {
     Write-Log "Verify-NugetPackages: Start"
 
-    $toolsDirectory = Join-Path $rootDirectory "tools" 
+    $nugetInstallPath = Locate-NuGet
 
-    # Move acquiring nuget.exe to external dependencies once Nuget.Commandline for 4.6.1 is available.
-    $nugetInstallDir = Join-Path $toolsDirectory "nuget"
-    $nugetInstallPath = Join-Path $nugetInstallDir "nuget.exe"
-
-    if(![System.IO.File]::Exists($nugetInstallPath)) 
-    {
-        # Create the directory for nuget.exe if it does not exist
-        New-Item -ItemType Directory -Force -Path $nugetInstallDir
-        Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v4.6.1/nuget.exe -OutFile $nugetInstallPath
-    }
-    
 	Write-Log "Using nuget.exe installed at $nugetInstallPath"
     
     $artifactsDirectory = Join-Path $rootDirectory "artifacts"
