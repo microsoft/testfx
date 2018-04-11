@@ -75,7 +75,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             foreach (var attribute in attributes)
             {
-                data += attribute.ToString();
+                if (attribute is CategoryAttribute)
+                {
+                    data += attribute + " value: " + (attribute as CategoryAttribute)?.Category;
+                }
             }
 
             throw new Exception(data);
