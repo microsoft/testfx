@@ -71,14 +71,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         public void MSTestDiscovererHasCategoryAttribute()
         {
             var attributes = typeof(MSTestDiscoverer).GetCustomAttributes();
-            IList<string> data = new List<string>();
+            string data = null;
 
             foreach (var attribute in attributes)
             {
-                data.Add(attribute.ToString());
+                data += attribute.ToString();
             }
 
-            throw new Exception(data.ToString());
+            throw new Exception(data);
 
             /*
             Attribute attribute = typeof(MSTestDiscoverer).GetCustomAttribute(typeof(System.ComponentModel.CategoryAttribute));
