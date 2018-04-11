@@ -70,17 +70,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         [TestMethod]
         public void MSTestDiscovererHasCategoryAttribute()
         {
-            var count = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes().Count();
-            var path2 = typeof(MSTestDiscoverer).GetTypeInfo().Assembly.Location;
-            var path = typeof(MSTestDiscoverer).Assembly.Location;
-
-            throw new Exception(path + "    " + count + "    " + path2);
-
-            /*
-            CategoryAttribute attribute = typeof(MSTestDiscoverer).GetCustomAttributes(typeof(CategoryAttribute)).Cast<CategoryAttribute>().First();
+            Attribute attribute = typeof(MSTestDiscoverer).GetCustomAttribute(typeof(System.ComponentModel.CategoryAttribute));
             Assert.IsNotNull(attribute);
-            Assert.AreEqual("managed", attribute.Category);
-            */
+            Assert.AreEqual("managed", (attribute as System.ComponentModel.CategoryAttribute)?.Category);
         }
 
         [TestMethod]
