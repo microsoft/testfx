@@ -42,11 +42,6 @@
         <target state="translated">这两个集合包含相同的元素。{0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="InvalidParameterToAssert">
-        <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">参数“{0}”无效。{1}。</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AreNotEqualDeltaFailMsg">
         <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
         <target state="translated">预期值 &lt;{1}&gt; 和实际值 &lt;{2}&gt; 之间的差应大于 &lt;{3}&gt;。{0}</target>
@@ -281,6 +276,11 @@ Stack Trace: {4}</source>
         <source>Value returned by property or method {0} shouldn't be null.</source>
         <target state="translated">属性或方法 {0} 返回的值不能为 null。</target>
         <note />
+      </trans-unit>
+      <trans-unit id="InvalidParameterName">
+        <source>The parameter name of the exception is incorrect. Expected: '{0}'. Actual: '{1}'.</source>
+        <target state="new">The parameter name of the exception is incorrect. Expected: '{0}'. Actual: '{1}'.</target>
+        <note></note>
       </trans-unit>
     </body>
   </file>

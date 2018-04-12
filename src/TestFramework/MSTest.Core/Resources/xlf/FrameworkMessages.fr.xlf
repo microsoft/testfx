@@ -42,11 +42,6 @@
         <target state="translated">Les deux collections contiennent les mêmes éléments. {0}</target>
         <note />
       </trans-unit>
-      <trans-unit id="InvalidParameterToAssert">
-        <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">Le paramètre '{0}' n'est pas valide. {1}.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AreNotEqualDeltaFailMsg">
         <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
         <target state="translated">Différence attendue supérieure à &lt;{3}&gt; comprise entre la valeur attendue &lt;{1}&gt; et la valeur réelle &lt;{2}&gt;. {0}</target>
@@ -281,6 +276,11 @@ Trace de la pile : {4}</target>
         <source>Value returned by property or method {0} shouldn't be null.</source>
         <target state="translated">La valeur retournée par la propriété ou la méthode {0} ne doit pas être Null.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="InvalidParameterName">
+        <source>The parameter name of the exception is incorrect. Expected: '{0}'. Actual: '{1}'.</source>
+        <target state="new">The parameter name of the exception is incorrect. Expected: '{0}'. Actual: '{1}'.</target>
+        <note></note>
       </trans-unit>
     </body>
   </file>

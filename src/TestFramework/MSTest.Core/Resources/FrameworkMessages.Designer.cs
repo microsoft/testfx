@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class FrameworkMessages {
@@ -350,11 +350,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The parameter &apos;{0}&apos; is invalid. {1}..
+        ///   Looks up a localized string similar to The parameter name of the exception is incorrect. Expected: &apos;{0}&apos;. Actual: &apos;{1}&apos;..
         /// </summary>
-        internal static string InvalidParameterToAssert {
+        internal static string InvalidParameterName {
             get {
-                return ResourceManager.GetString("InvalidParameterToAssert", resourceCulture);
+                return ResourceManager.GetString("InvalidParameterName", resourceCulture);
             }
         }
         
