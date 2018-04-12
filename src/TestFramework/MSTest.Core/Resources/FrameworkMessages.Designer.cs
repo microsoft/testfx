@@ -260,6 +260,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Method {0} must match the expected signature: public static {1} {0}({2})..
+        /// </summary>
+        internal static string DynamicDataDisplayName {
+            get {
+                return ResourceManager.GetString("DynamicDataDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;..
         /// </summary>
         internal static string DynamicDataIEnumerableNull {

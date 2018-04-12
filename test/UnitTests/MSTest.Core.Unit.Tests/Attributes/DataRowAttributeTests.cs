@@ -81,5 +81,20 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
             displayName = dataRowAttribute.GetDisplayName(this.testMethodInfo, data2);
             Assert.AreEqual("DataRowTestMethod (First,,Second)", displayName);
         }
+
+        [TestMethod]
+        public void GetDisplayNameShouldReturnSpecifiedDisplayName()
+        {
+            var dataRowAttribute = new DataRowAttribute(null);
+            dataRowAttribute.DisplayName = "DataRowTestWithDisplayName";
+
+            this.dummyTestClass = new DummyTestClass();
+            this.testMethodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
+
+            var data = new string[] { "First", "Second", null };
+
+            var displayName = dataRowAttribute.GetDisplayName(this.testMethodInfo, data);
+            Assert.AreEqual("DataRowTestWithDisplayName", displayName);
+        }
     }
 }

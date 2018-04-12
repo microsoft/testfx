@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Gets the display name corresponding to test data row for displaying in TestResults.
         /// </summary>
         /// <param name="methodInfo">
-        /// The method Info of test method.
+        /// The method info of test method.
         /// </param>
         /// <param name="data">
         /// The test data which is passed to test method.
