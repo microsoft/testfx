@@ -60,7 +60,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         public void GetDataShouldReadDataFromPropertyInDifferntClass()
         {
             var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
-            this.dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty", typeof(DummyTestClass));
+            this.dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty2", typeof(DummyTestClass2));
             var data = this.dynamicDataAttribute.GetData(methodInfo);
             Assert.IsTrue(data is IEnumerable<object[]>);
             Assert.IsTrue(data.ToList().Count == 2);
@@ -80,7 +80,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         public void GetDataShouldReadDataFromMethodInDifferentClass()
         {
             var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
-            this.dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod", typeof(DummyTestClass), DynamicDataSourceType.Method);
+            this.dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod2", typeof(DummyTestClass2), DynamicDataSourceType.Method);
             var data = this.dynamicDataAttribute.GetData(methodInfo);
             Assert.IsTrue(data is IEnumerable<object[]>);
             Assert.IsTrue(data.ToList().Count == 2);
@@ -119,6 +119,125 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
 
             var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
             Assert.AreEqual("TestMethod1 (1,2,3)", displayName);
+        }
+
+        [TestFrameworkV1.TestMethod]
+        public void GetDisplayNameShouldReturnDisplayNameWithDynamicDataDisplayName()
+        {
+            var data = new object[] { 1, 2, 3 };
+
+            this.dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName";
+            var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            Assert.AreEqual("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters", displayName);
+        }
+
+        [TestFrameworkV1.TestMethod]
+        public void GetDisplayNameShouldReturnDisplayNameWithDynamicDataDisplayNameInDifferentClass()
+        {
+            var data = new object[] { 1, 2, 3 };
+
+            this.dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName2";
+            this.dynamicDataAttribute.DynamicDataDisplayNameDeclaringType = typeof(DummyTestClass2);
+            var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            Assert.AreEqual("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters", displayName);
+        }
+
+        [TestFrameworkV1.TestMethod]
+        public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodMissingParameters()
+        {
+            Action action = () =>
+            {
+                var data = new object[] { 1, 2, 3 };
+
+                this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithMissingParameters";
+                var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            };
+
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        }
+
+        [TestFrameworkV1.TestMethod]
+        public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidReturnType()
+        {
+            Action action = () =>
+            {
+                var data = new object[] { 1, 2, 3 };
+
+                this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidReturnType";
+                var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            };
+
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        }
+
+        [TestFrameworkV1.TestMethod]
+        public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidFirstParameterType()
+        {
+            Action action = () =>
+            {
+                var data = new object[] { 1, 2, 3 };
+
+                this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidFirstParameterType";
+                var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            };
+
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        }
+
+        [TestFrameworkV1.TestMethod]
+        public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidSecondParameterType()
+        {
+            Action action = () =>
+            {
+                var data = new object[] { 1, 2, 3 };
+
+                this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidSecondParameterType";
+                var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            };
+
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        }
+
+        [TestFrameworkV1.TestMethod]
+        public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodNonStatic()
+        {
+            Action action = () =>
+            {
+                var data = new object[] { 1, 2, 3 };
+
+                this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameNonStatic";
+                var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            };
+
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        }
+
+        [TestFrameworkV1.TestMethod]
+        public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodPrivate()
+        {
+            Action action = () =>
+            {
+                var data = new object[] { 1, 2, 3 };
+
+                this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNamePrivate";
+                var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            };
+
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        }
+
+        [TestFrameworkV1.TestMethod]
+        public void GetDisplayNameShouldThrowExceptionWithMissingDynamicDataDisplayNameMethod()
+        {
+            Action action = () =>
+            {
+                var data = new object[] { 1, 2, 3 };
+
+                this.dynamicDataAttribute.DynamicDataDisplayName = "MissingCustomDynamicDataDisplayName";
+                var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            };
+
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
 
         [TestFrameworkV1.TestMethod]
@@ -196,6 +315,93 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         }
 
         /// <summary>
+        /// The custom display name method.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetCustomDynamicDataDisplayName(MethodInfo methodInfo, object[] data)
+        {
+            return string.Format("DynamicDataTestWithDisplayName {0} with {1} parameters", methodInfo.Name, data.Length);
+        }
+
+        /// <summary>
+        /// Custom display name method with missing parameters.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetDynamicDataDisplayNameWithMissingParameters()
+        {
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Custom display name method with invalid return type.
+        /// </summary>
+        public static void GetDynamicDataDisplayNameWithInvalidReturnType()
+        {
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Custom display name method with invalid first parameter type.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetDynamicDataDisplayNameWithInvalidFirstParameterType(string methodInfo, object[] data)
+        {
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Custom display name method with invalid second parameter.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetDynamicDataDisplayNameWithInvalidSecondParameterType(MethodInfo methodInfo, string data)
+        {
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Custom display name method that is not static.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public string GetDynamicDataDisplayNameNonStatic(MethodInfo methodInfo, object[] data)
+        {
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
         /// The test method 1.
         /// </summary>
         [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
@@ -240,6 +446,65 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [DataRow("First", null, "Second")]
         public void DataRowTestMethod()
         {
+        }
+
+        /// <summary>
+        /// Custom display name method that is private.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        private static string GetDynamicDataDisplayNamePrivate(MethodInfo methodInfo, object[] data)
+        {
+            throw new InvalidOperationException();
+        }
+    }
+
+    public class DummyTestClass2
+    {
+        /// <summary>
+        /// Gets the reusable test data property.
+        /// </summary>
+        public static IEnumerable<object[]> ReusableTestDataProperty2
+        {
+            get
+            {
+                return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
+            }
+        }
+
+        /// <summary>
+        /// The reusable test data method.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="IEnumerable"/>.
+        /// </returns>
+        public static IEnumerable<object[]> ReusableTestDataMethod2()
+        {
+            return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
+        }
+
+        /// <summary>
+        /// The custom display name method.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetCustomDynamicDataDisplayName2(MethodInfo methodInfo, object[] data)
+        {
+            return string.Format("DynamicDataTestWithDisplayName {0} with {1} parameters", methodInfo.Name, data.Length);
         }
     }
 }

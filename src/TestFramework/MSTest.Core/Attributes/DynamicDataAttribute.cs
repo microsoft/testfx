@@ -56,7 +56,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
         /// </summary>
         /// <param name="dynamicDataSourceName">
-        /// The type in which the test data is declared (as property or in method).
+        /// The name of method or property having test data.
         /// </param>
         /// <param name="dynamicDataDeclaringType">
         /// The declaring type of property or method having data.
@@ -69,6 +69,16 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             this.dynamicDataDeclaringType = dynamicDataDeclaringType;
         }
+
+        /// <summary>
+        /// Gets or sets the name of method used to customize the display name in test results.
+        /// </summary>
+        public string DynamicDataDisplayName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the declaring type used to customize the display name in test results.
+        /// </summary>
+        public Type DynamicDataDisplayNameDeclaringType { get; set; }
 
         /// <inheritdoc />
         public IEnumerable<object[]> GetData(MethodInfo methodInfo)
@@ -131,7 +141,35 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <inheritdoc />
         public string GetDisplayName(MethodInfo methodInfo, object[] data)
         {
-            if (data != null)
+            if (this.DynamicDataDisplayName != null)
+            {
+                var dynamicDisplayNameDeclaringType = this.DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
+
+                var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(this.DynamicDataDisplayName);
+                if (method == null)
+                {
+                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, this.DynamicDataDisplayName));
+                }
+
+                var parameters = method.GetParameters();
+                if (parameters.Length != 2 ||
+                    parameters[0].ParameterType != typeof(MethodInfo) ||
+                    parameters[1].ParameterType != typeof(object[]) ||
+                    method.ReturnType != typeof(string) ||
+                    !method.IsStatic ||
+                    !method.IsPublic)
+                {
+                    throw new ArgumentNullException(
+                        string.Format(
+                            FrameworkMessages.DynamicDataDisplayName,
+                            this.DynamicDataDisplayName,
+                            typeof(string).Name,
+                            string.Join(", ", typeof(MethodInfo).Name, typeof(object[]).Name)));
+                }
+
+                return method.Invoke(null, new object[] { methodInfo, data }) as string;
+            }
+            else if (data != null)
             {
                 return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data.AsEnumerable()));
             }

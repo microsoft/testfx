@@ -7,7 +7,7 @@
 # Global Variables
 #
 $global:msbuildVersion = "15.0"
-$global:nugetVersion = "4.5.0"
+$global:nugetVersion = "4.6.1"
 $global:vswhereVersion = "2.0.2"
 $global:nugetUrl = "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/NuGet.exe"
 
