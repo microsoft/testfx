@@ -67,17 +67,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.AreEqual("executor://MSTestAdapter/v2", attribute.ExecutorUri);
         }
 
-        /*
-        // Commenting as it is failing in PR, but constantly passing on local, & any NAR machine. Needs to be revisied, or removed.
-        // https://ci.dot.net/job/Microsoft_testfx/job/master/job/Debug_prtest/342/console
         [TestMethod]
         public void MSTestDiscovererHasCategoryAttribute()
         {
-            Attribute attribute = typeof(MSTestDiscoverer).GetCustomAttribute(typeof(CategoryAttribute));
-            Assert.IsNotNull(attribute);
-            Assert.AreEqual("managed", (attribute as CategoryAttribute)?.Category);
+            throw new Exception(typeof(CategoryAttribute).Assembly.Location);
         }
-        */
 
         [TestMethod]
         public void MSTestDiscovererHasXapAsFileExtension()
