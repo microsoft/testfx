@@ -31,8 +31,20 @@ def branch = GithubBranchName
          // Move to latest VS(15.6) machines
         Utilities.setMachineAffinity(newJob, 'Windows_NT', 'Windows.10.Amd64.ClientRS3.DevEx.Open')
 
+        // Archive trx files for logs
+        Utilities.addArchival(newJob, '**/TestResults/**/*.trx', '', true, false)
+
         // This call performs remaining common job setup on the newly created job.
         Utilities.standardJobSetup(newJob, project, isPR, "*/${branch}")
+
+        // Specifying save duration for logs
+        newJob.with {
+          logRotator {
+             artifactDaysToKeep(30)
+             daysToKeep(30)
+             artifactNumToKeep(200)
+             numToKeep(200)
+        }
 
         if (isPR) {
             Utilities.addGithubPRTriggerForBranch(newJob, branch, "Windows / ${configuration} Build")
