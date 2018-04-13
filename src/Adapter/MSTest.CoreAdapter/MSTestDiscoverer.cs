@@ -21,7 +21,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     [FileExtension(".appx")]
     [FileExtension(".dll")]
     [FileExtension(".exe")]
-    [Category("managed")]
     public class MSTestDiscoverer : ITestDiscoverer
     {
         /// <summary>

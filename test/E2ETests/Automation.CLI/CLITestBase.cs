@@ -99,15 +99,6 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <param name="discoveredTestsList">List of tests expected to be discovered.</param>
         public void ValidateDiscoveredTests(params string[] discoveredTestsList)
         {
-            string testdata = null;
-            foreach (var test in this.discoveryEventsHandler.Tests)
-            {
-                testdata += test + "    ";
-            }
-
-            throw new Exception(testdata + "    " + this.discoveryEventsHandler.Tests.Count());
-
-            /*
             foreach (var test in discoveredTestsList)
             {
                 var flag = this.discoveryEventsHandler.Tests.Contains(test)
@@ -117,7 +108,6 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
             // Make sure only expected number of tests are discovered and not more.
             Assert.AreEqual(discoveredTestsList.Length, this.discoveryEventsHandler.Tests.Count);
-            */
         }
 
         /// <summary>
