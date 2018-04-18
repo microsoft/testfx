@@ -67,9 +67,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Sometimes the stacktrace can be null, but the inner stacktrace
                 // contains information. We are not interested in null stacktraces
                 // so we simply ignore this case
-                if (curException.StackTrace != null)
+                try
                 {
-                    stackTraces.Push(curException.StackTrace);
+                    if (curException.StackTrace != null)
+                    {
+                        stackTraces.Push(curException.StackTrace);
+                    }
+                }
+                catch (Exception e)
+                {
+                    // curException.StackTrace can throw exception, Although MSDN doc doesn't say that.
+                    try
+                    {
+                        // try to get stacktrace
+                        if (e.StackTrace != null)
+                        {
+                            stackTraces.Push(e.StackTrace);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
+                            "StackTraceHelper.GetStackTraceInformation: Failed to get stacktrace info.");
+                    }
                 }
             }
 
