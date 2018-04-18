@@ -212,7 +212,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             // Case when DisableAppDomain setting is present in runsettings and no child-appdomain is created
-            if ()
+            if (this.AppDomainCreationDisabledInRunSettings())
             {
                 if (adapterSettings != null)
                 {
