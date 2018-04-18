@@ -75,32 +75,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         public void SetupHost()
         {
-            if (this.runSettings == null || !MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
+            if (this.AppDomainCreationDisabledInRunSettings())
             {
-                var appDomainSetup = new AppDomainSetup();
-
-                this.targetFrameworkVersion = this.GetTargetFrameworkVersionString(this.sourceFileName);
-
-                if (EqtTrace.IsInfoEnabled)
-                {
-                    EqtTrace.Info("TestSourceHost: Creating app-domain for source {0} with application base path {1}.", this.sourceFileName, appDomainSetup.ApplicationBase);
-                }
-
-                AppDomainUtilities.SetAppDomainFrameworkVersionBasedOnTestSource(appDomainSetup, this.targetFrameworkVersion);
-
-                // Temporarily set appbase to the location from where adapter should be picked up from. We will later reset this to test source location
-                // once adapter gets loaded in the child app domain.
-                appDomainSetup.ApplicationBase = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
-
-                var configFile = this.GetConfigFileForTestSource(this.sourceFileName);
-                AppDomainUtilities.SetConfigurationFile(appDomainSetup, configFile);
-
-                this.domain = this.appDomain.CreateDomain("TestSourceHost: Enumering assembly", null, appDomainSetup);
-
-                // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recurive assembly resolution
-                // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
-                EqtTrace.SetupRemoteEqtTraceListeners(this.domain);
+                return;
             }
+
+            // Setup app-domain
+            var appDomainSetup = new AppDomainSetup();
+
+            this.targetFrameworkVersion = this.GetTargetFrameworkVersionString(this.sourceFileName);
+
+            if (EqtTrace.IsInfoEnabled)
+            {
+                EqtTrace.Info("TestSourceHost: Creating app-domain for source {0} with application base path {1}.", this.sourceFileName, appDomainSetup.ApplicationBase);
+            }
+
+            AppDomainUtilities.SetAppDomainFrameworkVersionBasedOnTestSource(appDomainSetup, this.targetFrameworkVersion);
+
+            // Temporarily set appbase to the location from where adapter should be picked up from. We will later reset this to test source location
+            // once adapter gets loaded in the child app domain.
+            appDomainSetup.ApplicationBase = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
+
+            var configFile = this.GetConfigFileForTestSource(this.sourceFileName);
+            AppDomainUtilities.SetConfigurationFile(appDomainSetup, configFile);
+
+            this.domain = this.appDomain.CreateDomain("TestSourceHost: Enumering assembly", null, appDomainSetup);
+
+            // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recurive assembly resolution
+            // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
+            EqtTrace.SetupRemoteEqtTraceListeners(this.domain);
+
         }
 
         /// <summary>
@@ -116,15 +120,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public object CreateInstanceForType(Type type, object[] args)
         {
             // Honour DisableAppDomain setting if it is present in runsettings
-            if (this.runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
+            if (this.AppDomainCreationDisabledInRunSettings())
             {
                 return Activator.CreateInstance(type, args);
             }
 
-            return AppDomainUtilities.CreateInstance(
-                this.domain,
-                type,
-                args);
+            return AppDomainUtilities.CreateInstance(this.domain, type, args);
         }
 
         /// <summary>
@@ -211,7 +212,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             // Case when DisableAppDomain setting is present in runsettings and no child-appdomain is created
-            if (this.runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
+            if ()
             {
                 if (adapterSettings != null)
                 {
@@ -402,6 +403,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 Environment.CurrentDirectory = this.currentDirectory;
             }
+        }
+
+        private bool AppDomainCreationDisabledInRunSettings()
+        {
+            if (this.runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 
