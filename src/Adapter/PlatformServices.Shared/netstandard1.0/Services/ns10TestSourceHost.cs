@@ -53,6 +53,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             // Do nothing.
         }
+
+        /// <summary>
+        /// Updates child-domain's appbase to point to test source location and sets up
+        /// Assembly resolver for both parent and child appdomain
+        /// </summary>
+        public void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver()
+        {
+            // Do nothing.
+        }
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

@@ -196,6 +196,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
+        public void TestTimeoutShouldBeConsumedFromRunSettingsWhenSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <TestTimeout>4000</TestTimeout>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(adapterSettings.TestTimeout, 4000);
+        }
+
+        [TestMethod]
+        public void TestTimeoutShouldBeSetToZeroIfNotSpecifiedInRunSettings()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.AreEqual(adapterSettings.TestTimeout, 0);
+        }
+
+        [TestMethod]
         public void ParallelizationSettingsShouldNotBeSetByDefault()
         {
             string runSettingxml =
@@ -524,7 +553,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                         actualReader.Read();
                         observedxml = actualReader.ReadOuterXml();
                     }
-                 });
+                });
 
             MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
             Assert.AreEqual(expectedrunSettingxml, observedxml);
