@@ -55,10 +55,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Updates child-domain's appbase to point to test source location and sets up
-        /// Assembly resolver for both parent and child appdomain
+        /// Updates child-domain's appbase to point to test source location
         /// </summary>
-        public void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver()
+        public void UpdateAppBaseToTestSourceLocation()
         {
             // Do nothing.
         }

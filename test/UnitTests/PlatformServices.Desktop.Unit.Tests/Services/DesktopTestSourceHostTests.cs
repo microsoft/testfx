@@ -108,7 +108,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         /// Leaving the test running till then.
         /// </summary>
         [TestMethod]
-        public void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolverShouldSetDomainsAppBaseToTestSourceLocationForFullCLRTestss()
+        public void UpdateAppBaseToTestSourceLocationShouldSetDomainsAppBaseToTestSourceLocationForFullCLRTestss()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -124,7 +124,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 sourceHost.Object.SetupHost();
                 var expectedObject =
                     sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
-                sourceHost.Object.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
+                sourceHost.Object.UpdateAppBaseToTestSourceLocation();
 
                 // Assert
                 Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
@@ -136,7 +136,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         }
 
         [TestMethod]
-        public void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolverShouldSetDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
+        public void UpdateAppBaseToTestSourceLocationShouldSetDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -151,7 +151,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 // Act
                 sourceHost.Object.SetupHost();
                 var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
-                sourceHost.Object.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
+                sourceHost.Object.UpdateAppBaseToTestSourceLocation();
 
                 // Assert
                 Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
