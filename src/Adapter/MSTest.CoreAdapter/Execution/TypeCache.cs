@@ -286,7 +286,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             foreach (var methodInfo in classType.GetTypeInfo().DeclaredMethods)
             {
                 // Update test initialize/cleanup method
-                this.UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, isBase: false, instanceMethods: instanceMethods,  testInitializeAttributeType: testInitializeAttributeType, testCleanupAttributeType: testCleanupAttributeType);
+                this.UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, isBase: false, instanceMethods: instanceMethods, testInitializeAttributeType: testInitializeAttributeType, testCleanupAttributeType: testCleanupAttributeType);
 
                 if (this.IsAssemblyOrClassInitializeMethod(methodInfo, classInitializeAttributeType))
                 {
@@ -634,6 +634,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             Debug.Assert(methodInfo != null, "TestMethod should be non-null");
             var timeoutAttribute = this.reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
+            var globalTimeout = MSTestSettings.CurrentSettings.TestTimeout;
 
             if (timeoutAttribute != null)
             {
@@ -644,6 +645,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 return timeoutAttribute.Timeout;
+            }
+            else if (globalTimeout > 0)
+            {
+                return globalTimeout;
             }
 
             return TestMethodInfo.TimeoutWhenNotSet;

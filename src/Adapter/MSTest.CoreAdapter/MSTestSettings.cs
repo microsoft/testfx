@@ -55,6 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             this.ForcedLegacyMode = false;
             this.TestSettingsFile = null;
             this.DisableParallelization = false;
+            this.TestTimeout = 0;
         }
 
         /// <summary>
@@ -144,6 +145,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public bool DisableParallelization { get; private set; }
 
         /// <summary>
+        ///  Gets specified global test case timeout
+        /// </summary>
+        public int TestTimeout { get; private set; }
+
+        /// <summary>
         /// Populate settings based on existing settings object.
         /// </summary>
         /// <param name="settings">The existing settings object.</param>
@@ -157,6 +163,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
             CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
             CurrentSettings.DisableParallelization = settings.DisableParallelization;
+            CurrentSettings.TestTimeout = settings.TestTimeout;
         }
 
         /// <summary>
@@ -274,6 +281,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             //     <CaptureTraceOutput>true</CaptureTraceOutput>
             //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
             //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
+            //     <TestTimeout>5000<TestTimeout>
             //     <Parallelize>
             //        <Workers>4</Workers>
             //        <Scope>TestClass</Scope>
@@ -358,6 +366,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                             {
                                 SetParallelSettings(reader.ReadSubtree(), settings);
                                 reader.SkipToNextElement();
+
+                                break;
+                            }
+
+                        case "TESTTIMEOUT":
+                            {
+                                if (int.TryParse(reader.ReadInnerXml(), out int testTimeout) && testTimeout > 0)
+                                {
+                                    settings.TestTimeout = testTimeout;
+                                }
 
                                 break;
                             }

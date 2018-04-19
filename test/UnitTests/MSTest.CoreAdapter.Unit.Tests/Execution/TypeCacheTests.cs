@@ -54,6 +54,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void Cleanup()
         {
             PlatformServiceProvider.Instance = null;
+            MSTestSettings.Reset();
         }
 
         #region GetTestMethodInfo tests
@@ -813,6 +814,81 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     testMethod.Name);
 
             Assert.AreEqual(expectedMessage, exception.Message);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoWhenTimeoutAttributeNotSetShouldReturnTestMethodInfoWithGlobalTimeout()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <TestTimeout>4000</TestTimeout>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+
+            var type = typeof(DummyTestClassWithTestMethods);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
+
+            Assert.AreEqual(4000, testMethodInfo.TestMethodOptions.Timeout);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoWhenTimeoutAttributeSetShouldReturnTimeoutBasedOnAtrributeEvenIfGlobalTimeoutSet()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <TestTimeout>4000</TestTimeout>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+
+            var type = typeof(DummyTestClassWithTestMethods);
+            var methodInfo = type.GetMethod("TestMethodWithTimeout");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(methodInfo, typeof(UTF.TimeoutAttribute), false))
+               .Returns(true);
+
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
+
+            Assert.AreEqual(10, testMethodInfo.TestMethodOptions.Timeout);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoForInvalidGLobalTimeoutShouldReturnTestMethodInfoWithTimeoutZero()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <TestTimeout>30.5</TestTimeout>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+
+            var type = typeof(DummyTestClassWithTestMethods);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
+
+            Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
         }
 
         [TestMethodV1]
