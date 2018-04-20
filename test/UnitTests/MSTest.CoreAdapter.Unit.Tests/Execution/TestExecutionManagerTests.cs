@@ -506,7 +506,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 allThreadIds.UnionWith(DummyTestClassForParallelize2.ThreadIds);
                 allThreadIds.UnionWith(DummyTestClassForParallelize3.ThreadIds);
 
-                // Assert.AreEqual(3, allThreadIds.Count);
+                Assert.AreEqual(3, allThreadIds.Count);
             }
             finally
             {
