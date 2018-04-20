@@ -217,9 +217,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle))
             {
+                // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
                 var testRunner = isolationHost.CreateInstanceForType(
                     typeof(UnitTestRunner),
                     new object[] { MSTestSettings.CurrentSettings }) as UnitTestRunner;
+
+                // After loading adapter reset the chils-domain's appbase to point to test source location
+                isolationHost.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
+
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
                 // Default test set is filtered tests based on user provided filter criteria

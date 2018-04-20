@@ -27,5 +27,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// <returns> An instance of the type created in the host. </returns>
         /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
         object CreateInstanceForType(Type type, object[] args);
+
+        /// <summary>
+        /// Updates child-domain's appbase to point to test source location and sets up
+        /// Assembly resolver for both parent and child appdomain
+        /// </summary>
+        void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
     }
 }
