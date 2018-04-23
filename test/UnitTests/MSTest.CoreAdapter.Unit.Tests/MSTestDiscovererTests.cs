@@ -67,13 +67,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.AreEqual("executor://MSTestAdapter/v2", attribute.ExecutorUri);
         }
 
-        /*[TestMethod]
+        [TestMethod]
         public void MSTestDiscovererHasCategoryAttribute()
         {
             var attribute = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttribute(typeof(CategoryAttribute));
             Assert.IsNotNull(attribute);
             Assert.AreEqual("managed", (attribute as CategoryAttribute).Category);
-        }*/
+        }
 
         [TestMethod]
         public void MSTestDiscovererHasXapAsFileExtension()
