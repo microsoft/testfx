@@ -110,11 +110,7 @@
     <EmbeddedResource Include="Properties\Extension.UWP.rd.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MSTest.Core\MSTest.Core.csproj">
-      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
-      <Name>MSTest.Core</Name>
-      <Private>False</Private>
-    </ProjectReference>
+    <ProjectReference Include="..\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
   <Import Project="..\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">

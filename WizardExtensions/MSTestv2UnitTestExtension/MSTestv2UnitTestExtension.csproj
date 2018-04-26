@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\</TestFxRoot>
   </PropertyGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.Templates.targets" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -87,5 +87,5 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Templates.targets" />
 </Project>

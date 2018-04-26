@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
   </PropertyGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.Templates.targets" />
   <PropertyGroup>
     <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -71,7 +71,7 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Templates.targets" />
   <PropertyGroup>
     <PreBuildEvent>
       IF EXIST "$(ProjectDir)ProjectTemplates\CSharp\Windows UAP\UWP.zip" DEL /q /s "$(ProjectDir)ProjectTemplates\CSharp\Windows UAP\UWP.zip"

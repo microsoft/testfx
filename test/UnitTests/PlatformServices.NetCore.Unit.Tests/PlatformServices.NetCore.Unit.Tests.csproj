@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
     <FrameworkIdentifier>NetCore</FrameworkIdentifier>
@@ -9,7 +9,6 @@
     <RootNamespace>MSTestAdapter.PlatformServices.NetCore.UnitTests</RootNamespace>
     <AssemblyName>MSTestAdapter.PlatformServices.NetCore.UnitTests</AssemblyName>
     <TargetFramework>netcoreapp1.0</TargetFramework>
-    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">$(PackageTargetFallback);portable-net45+win8+wpa81+wp8</PackageTargetFallback>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\MSTest.CoreAdapter.TestUtilities\ActionUtility.cs" Link="ActionUtility.cs" />
@@ -50,10 +49,6 @@
     <Folder Include="Services\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
-  </ItemGroup>
-  
   <!-- Workaround for https://github.com/dotnet/sdk/issues/364 -->
   <Target Name="WorkAroundPackageAndProjectReferenceConflict" BeforeTargets="ResolveLockFileReferences">
     <ItemGroup>
@@ -63,8 +58,6 @@
   <!-- Workaround for https://github.com/dotnet/sdk/issues/1020 
        We should have a ProjectReference For MSTest.CoreAdapter with ReferenceOutputAssembly="false"-->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="xcopy /Y /I $(TargetDir)..\..\MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll $(TargetDir)" />
-      <Exec Command="xcopy /Y /I $(TargetDir)..\..\MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb $(TargetDir)" />
   </Target>
 
 </Project>
