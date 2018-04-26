@@ -9,6 +9,7 @@
     <RootNamespace>MSTest.Extensibility.Samples</RootNamespace>
     <AssemblyName>MSTest.Extensibility.Samples</AssemblyName>
     <TargetFrameworks>net452</TargetFrameworks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
