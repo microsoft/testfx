@@ -11,6 +11,9 @@
     <TargetFrameworks>netstandard1.3;net45</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="GlobalSuppressions.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj" />
     <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj" />
     <ProjectReference Include="..\PlatformServices.Interface\PlatformServices.Interface.csproj" />

@@ -24,11 +24,17 @@
     <IntermediatePath Condition="$(IntermediatePath) == ''">$(TestFxRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\obj\</IntermediatePath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
+    <TFBuildNumber Condition=" '$(TFBuildNumber)' == '' ">0.1</TFBuildNumber>
+    <MajorVersion>14.0</MajorVersion>
+    <AssemblyVersion>$(MajorVersion).0.0</AssemblyVersion>
+    <BuildVersion Condition=" '$(BuildVersion)' == '' ">$(MajorVersion).$(TFBuildNumber)</BuildVersion>
+    <FileVersion>$(BuildVersion)</FileVersion>
+    <InformationalVersion>$(BuildVersion)</InformationalVersion>
+
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
 
     <!-- Disable default inclusion of .resx file. We generate files in the Resources directory only
