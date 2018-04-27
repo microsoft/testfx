@@ -9,7 +9,6 @@
     <RootNamespace>Automation.CLI</RootNamespace>
     <AssemblyName>Automation.CLI</AssemblyName>
     <TargetFrameworks>net46</TargetFrameworks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Runtime" />

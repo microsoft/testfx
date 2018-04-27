@@ -10,7 +10,6 @@
     <RootNamespace>SampleFrameworkExtensions</RootNamespace>
     <AssemblyName>SampleFrameworkExtensions</AssemblyName>
     <TargetFrameworks>net45</TargetFrameworks>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
