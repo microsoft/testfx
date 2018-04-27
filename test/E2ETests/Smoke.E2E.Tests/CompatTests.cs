@@ -3,16 +3,18 @@
 
 namespace MSTestAdapter.Smoke.E2ETests
 {
-    using Microsoft.MSTestV2.CLIAutomation;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    extern alias FrameworkV1;
 
-    [TestClass]
+    using Microsoft.MSTestV2.CLIAutomation;
+    using TestFrameworkV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
+
+    [TestFrameworkV1.TestClass]
     public class CompatTests : CLITestBase
     {
         private const string OldAdapterTestProject = "CompatTests\\CompatTestProject.dll";
         private const string LatestAdapterTestProject = "DesktopTestProjectx86Debug.dll";
 
-        [TestMethod]
+        [TestFrameworkV1.TestMethod]
         public void DiscoverCompatTests()
         {
             this.InvokeVsTestForDiscovery(new string[] { OldAdapterTestProject, LatestAdapterTestProject });
@@ -28,7 +30,7 @@ namespace MSTestAdapter.Smoke.E2ETests
             this.ValidateDiscoveredTests(listOfTests);
         }
 
-        [TestMethod]
+        [TestFrameworkV1.TestMethod]
         public void RunAllCompatTests()
         {
             this.InvokeVsTestForExecution(new string[] { OldAdapterTestProject, LatestAdapterTestProject });

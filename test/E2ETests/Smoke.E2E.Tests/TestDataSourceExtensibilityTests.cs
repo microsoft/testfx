@@ -3,15 +3,17 @@
 
 namespace MSTestAdapter.Smoke.E2ETests
 {
-    using Microsoft.MSTestV2.CLIAutomation;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    extern alias FrameworkV1;
 
-    [TestClass]
+    using Microsoft.MSTestV2.CLIAutomation;
+    using TestFrameworkV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
+
+    [TestFrameworkV1.TestClass]
     public class TestDataSourceExtensibilityTests : CLITestBase
     {
         private const string TestAssembly = "FxExtensibilityTestProject.dll";
 
-        [TestMethod]
+        [TestFrameworkV1.TestMethod]
         public void ExecuteTestDataSourceExtensibilityTests()
         {
             this.InvokeVsTestForExecution(new string[] { TestAssembly });

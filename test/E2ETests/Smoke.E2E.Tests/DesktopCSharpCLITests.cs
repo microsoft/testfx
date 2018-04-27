@@ -3,10 +3,12 @@
 
 namespace Microsoft.MSTestV2.Smoke.E2ETests
 {
-    using Microsoft.MSTestV2.CLIAutomation;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    extern alias FrameworkV1;
 
-    [TestClass]
+    using Microsoft.MSTestV2.CLIAutomation;
+    using TestFrameworkV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
+
+    [TestFrameworkV1.TestClass]
     public class DesktopCSharpCLITests : CLITestBase
     {
         private const string X86DebugTestProject = "DesktopTestProjectx86Debug.dll";
@@ -20,56 +22,56 @@ namespace Microsoft.MSTestV2.Smoke.E2ETests
                 </RunConfiguration>  
             </RunSettings>";
 
-        [TestMethod]
+        [TestFrameworkV1.TestMethod]
         public void DiscoverTestsx86Debug()
         {
             string[] sources = { X86DebugTestProject };
             this.DoDiscoveryAndValidateDiscoveredTests(sources);
         }
 
-        [TestMethod]
+        [TestFrameworkV1.TestMethod]
         public void DiscoverTestsx64Debug()
         {
             string[] sources = { X64DebugTestProject };
             this.DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
         }
 
-        [TestMethod]
+        [TestFrameworkV1.TestMethod]
         public void DiscoverTestsx86Release()
         {
             string[] sources = { X86ReleaseTestProject };
             this.DoDiscoveryAndValidateDiscoveredTests(sources);
         }
 
-        [TestMethod]
+        [TestFrameworkV1.TestMethod]
         public void DiscoverTestsx64Release()
         {
             string[] sources = { X64ReleaseTestProject };
             this.DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
         }
 
-        [TestMethod]
+        [TestFrameworkV1.TestMethod]
         public void RunAllTestsx86Debug()
         {
             string[] sources = { X86DebugTestProject };
             this.RunAllTestsAndValidateResults(sources);
         }
 
-        [TestMethod]
+        [TestFrameworkV1.TestMethod]
         public void RunAllTestsx64Debug()
         {
             string[] sources = { X64DebugTestProject };
             this.RunAllTestsAndValidateResults(sources, RunSetting);
         }
 
-        [TestMethod]
+        [TestFrameworkV1.TestMethod]
         public void RunAllTestsx86Release()
         {
             string[] sources = { X86ReleaseTestProject };
             this.RunAllTestsAndValidateResults(sources);
         }
 
-        [TestMethod]
+        [TestFrameworkV1.TestMethod]
         public void RunAllTestsx64Release()
         {
             string[] sources = { X64ReleaseTestProject };
