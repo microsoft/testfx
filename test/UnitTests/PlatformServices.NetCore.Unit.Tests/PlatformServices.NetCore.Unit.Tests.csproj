@@ -58,6 +58,8 @@
   <!-- Workaround for https://github.com/dotnet/sdk/issues/1020 
        We should have a ProjectReference For MSTest.CoreAdapter with ReferenceOutputAssembly="false"-->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /Y /I $(TargetDir)..\..\MSTest.CoreAdapter\netstandard1.3\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll $(TargetDir)" />
+    <Exec Command="xcopy /Y /I $(TargetDir)..\..\MSTest.CoreAdapter\netstandard1.3\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb $(TargetDir)" />
   </Target>
 
 </Project>
