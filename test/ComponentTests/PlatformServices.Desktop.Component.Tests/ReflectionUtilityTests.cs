@@ -42,7 +42,6 @@ namespace PlatformServices.Desktop.ComponentTests
             var testAssetPath =
                 Path.Combine(
                     Directory.GetParent(Directory.GetParent(Directory.GetParent(currentAssemblyPath).FullName).FullName).FullName,
-                    "artifacts",
                     "TestAssets");
             this.testAsset = Assembly.ReflectionOnlyLoadFrom(Path.Combine(testAssetPath, "TestProjectForDiscovery.dll"));
 

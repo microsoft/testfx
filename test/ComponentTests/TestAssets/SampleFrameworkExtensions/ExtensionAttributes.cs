@@ -9,7 +9,8 @@ namespace SampleFrameworkExtensions
 
     public sealed class DurationAttribute : TestPropertyAttribute
     {
-        public DurationAttribute(string duration) : base("Duration", duration)
+        public DurationAttribute(string duration)
+            : base("Duration", duration)
         {
             this.Duration = duration;
         }

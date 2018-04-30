@@ -4,7 +4,8 @@
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\</TestFxRoot>
     <RepoRoot>..\..\</RepoRoot>
   </PropertyGroup>
-
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props') and $(FrameworkIdentifier) != 'NetCore'" />
+  <!-- Import props/targets with $(RepoRoot) since msbuild takes the relative path based on settings.targets and not with respect to the project. -->
   <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <Import Project="$(RepoRoot)packages\microsoft.vssdk.buildtools.15.0.26201\build\Microsoft.VSSDK.BuildTools.props" Condition=" $(IsVsixProj) == 'true' and Exists('$(RepoRoot)packages\microsoft.vssdk.buildtools.15.0.26201\build\Microsoft.VSSDK.BuildTools.props')" />
 
@@ -23,44 +24,6 @@
     <OutputPath Condition="$(OutputPath) == ''">$(TestFxRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\</OutputPath>
     <IntermediatePath Condition="$(IntermediatePath) == ''">$(TestFxRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\obj\</IntermediatePath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-
-    <TFBuildNumber Condition=" '$(TFBuildNumber)' == '' ">0.1</TFBuildNumber>
-    <MajorVersion>14.0</MajorVersion>
-    <AssemblyVersion>$(MajorVersion).0.0</AssemblyVersion>
-    <BuildVersion Condition=" '$(BuildVersion)' == '' ">$(MajorVersion).$(TFBuildNumber)</BuildVersion>
-    <FileVersion>$(BuildVersion)</FileVersion>
-    <InformationalVersion>$(BuildVersion)</InformationalVersion>
-
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
-    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
-
-    <!-- Disable default inclusion of .resx file. We generate files in the Resources directory only
-         if localization is enabled, default inclusion ends up including the generated files by default. -->
-    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
-
-    <!-- .NetStandardLibrary1.6.0 brings in dependencies which are supported in UWP,
-    any higher version will bring in dependencies which are not supported by current UWP version -->
-    <NetStandardImplicitPackageVersion>1.6.0</NetStandardImplicitPackageVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>TRACE;DEBUG;CODE_ANALYSIS</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
 
   <PropertyGroup>

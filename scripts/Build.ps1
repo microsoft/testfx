@@ -294,16 +294,19 @@ function Create-NugetPackages
     $stagingDir = Join-Path $env:TF_OUT_DIR $TFB_Configuration
     $packageOutDir = Join-Path $stagingDir "MSTestPackages"
     $tfSrcPackageDir = Join-Path $env:TF_SRC_DIR "Package"
+    $tfSrcNugetPropsDir = Join-Path $env:TF_SRC_DIR "Adapter\Build"
 
     # Copy over the nuspecs to the staging directory
     if($TFB_Official)
     {
-        $nuspecFiles = @("MSTest.TestAdapter.Dotnet.nuspec", "MSTest.TestAdapter.nuspec", "MSTest.TestAdapter.symbols.nuspec", "MSTest.TestFramework.nuspec", "MSTest.TestFramework.symbols.nuspec", "MSTest.Internal.TestFx.Documentation.nuspec")
+        $nuspecFiles = @("MSTest.TestAdapter.nuspec", "MSTest.TestAdapter.symbols.nuspec", "MSTest.TestFramework.nuspec", "MSTest.TestFramework.symbols.nuspec", "MSTest.Internal.TestFx.Documentation.nuspec")
     }
     else
     {
-        $nuspecFiles = @("MSTest.TestAdapter.Enu.nuspec","MSTest.TestFramework.enu.nuspec", "MSTest.TestAdapter.Dotnet.nuspec")
+        $nuspecFiles = @("MSTest.TestAdapter.Enu.nuspec","MSTest.TestFramework.enu.nuspec")
     }
+
+   Copy-Item -Path $tfSrcNugetPropsDir -Recurse -Destination $stagingDir -Container -Force
 
     foreach ($file in $nuspecFiles) {
         Copy-Item $tfSrcPackageDir\$file $stagingDir -Force
