@@ -154,7 +154,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
                 // Assert
-                Assert.AreEqual(typeof(DesktopTestSourceHostTests).Assembly.Location, expectedObject.AppDomainAppBase);
+                Assert.AreEqual(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location), expectedObject.AppDomainAppBase);
             }
             finally
             {
