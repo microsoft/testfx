@@ -282,6 +282,11 @@ Trace de la pile : {4}</target>
         <target state="translated">La valeur retournée par la propriété ou la méthode {0} ne doit pas être Null.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataDisplayName">
+        <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
+        <target state="translated">La méthode {0} doit correspondre à la signature attendue : public static {1} {0}({2}).</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

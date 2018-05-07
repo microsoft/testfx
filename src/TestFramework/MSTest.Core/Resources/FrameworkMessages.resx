@@ -283,4 +283,7 @@ Stack Trace: {4}</value>
   <data name="DynamicDataValueNull" xml:space="preserve">
     <value>Value returned by property or method {0} shouldn't be null.</value>
   </data>
+  <data name="DynamicDataDisplayName" xml:space="preserve">
+    <value>Method {0} must match the expected signature: public static {1} {0}({2}).</value>
+  </data>
 </root>

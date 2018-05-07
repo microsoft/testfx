@@ -78,13 +78,37 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             Assert.AreNotEqual(currentAppDomainId, newAppDomainId);
         }
 
+        [TestMethod]
+        public void SetupHostShouldSetNewDomainsAppBaseToAdapterLocation()
+        {
+            // Arrange
+            DummyClass dummyclass = new DummyClass();
+
+            var location = typeof(TestSourceHost).Assembly.Location;
+            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, null, null) { CallBase = true };
+
+            try
+            {
+                // Act
+                sourceHost.Object.SetupHost();
+                var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
+
+                // Assert
+                Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
+            }
+            finally
+            {
+                sourceHost.Object.Dispose();
+            }
+        }
+
         /// <summary>
         /// This test should ideally be choosing a different path for the test source. Currently both the test source and the adapter
         /// are in the same location. However when we move to run these tests with the V2 itself, then this would be valid.
         /// Leaving the test running till then.
         /// </summary>
         [TestMethod]
-        public void SetupHostShouldSetNewDomainsAppBaseToTestSourceLocationForFullCLRTests()
+        public void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolverShouldSetDomainsAppBaseToTestSourceLocationForFullCLRTestss()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -100,6 +124,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 sourceHost.Object.SetupHost();
                 var expectedObject =
                     sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
+                sourceHost.Object.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
 
                 // Assert
                 Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
@@ -111,7 +136,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         }
 
         [TestMethod]
-        public void SetupHostShouldSetNewDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
+        public void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolverShouldSetDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -126,6 +151,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 // Act
                 sourceHost.Object.SetupHost();
                 var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
+                sourceHost.Object.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
 
                 // Assert
                 Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);

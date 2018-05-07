@@ -282,6 +282,11 @@ Stack Trace: {4}</source>
         <target state="translated">속성 또는 메서드 {0}에 의해 반환된 값은 null일 수 없습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataDisplayName">
+        <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
+        <target state="translated">메서드 {0}은(는) 다음 예상 시그니처와 일치해야 합니다. 공용 정적 {1} {0}({2}).</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

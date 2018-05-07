@@ -39,6 +39,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssertExtensibilityTests.cs" />
+    <Compile Include="CompatTests.cs" />
+    <Compile Include="CustomTestExecutionExtensibilityTests.cs" />
     <Compile Include="DataSourceTests.cs" />
     <Compile Include="DesktopCSharpCLITests.cs" />
     <Compile Include="ParallelExecutionTests.cs" />

@@ -256,26 +256,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                     watch.Start();
 
                                     this.testContext.SetDataRow(dataRow);
-                                    UTF.TestResult currentResult;
+                                    UTF.TestResult[] testResults;
 
                                     try
                                     {
-                                        currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
+                                        testResults = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo);
                                     }
                                     catch (Exception ex)
                                     {
-                                        currentResult = new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) };
+                                        testResults = new[]
+                                        {
+                                            new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) }
+                                        };
+                                    }
+                                  
+                                    watch.Stop();
+                                    foreach (var testResult in testResults)
+                                    {
+                                        testResult.DatarowIndex = rowIndex;
+                                        testResult.ExecutionId = Guid.NewGuid();
+                                        testResult.ParentExecId = parentResult.ExecutionId;
+                                        testResult.Duration = watch.Elapsed;
+                                        
+                                        parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, testResult.Outcome);
+                                        parentResult.InnerResultsCount++;
                                     }
 
-                                    currentResult.DatarowIndex = rowIndex++;
-                                    currentResult.ExecutionId = Guid.NewGuid();
-                                    currentResult.ParentExecId = parentResult.ExecutionId;
-                                    watch.Stop();
-                                    currentResult.Duration = watch.Elapsed;
-                                    results.Add(currentResult);
+                                    rowIndex++;
 
-                                    parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, currentResult.Outcome);
-                                    parentResult.InnerResultsCount++;
+                                    results.AddRange(testResults);
                                 }
                             }
                             finally
@@ -319,22 +328,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                             foreach (var data in testDataSource.GetData(this.testMethodInfo.MethodInfo))
                             {
                                 this.testMethodInfo.SetArguments(data);
-                                UTF.TestResult currentResult;
+                                UTF.TestResult[] testResults;
                                 try
                                 {
-                                    currentResult = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0];
+                                    testResults = this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo);
                                 }
                                 catch (Exception ex)
                                 {
-                                    currentResult = new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) };
+                                    testResults = new[]
+                                    {
+                                        new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) }
+                                    };
                                 }
 
-                                currentResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
-                                currentResult.ParentExecId = parentResult.ExecutionId;
-                                results.Add(currentResult);
-
-                                parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, currentResult.Outcome);
-                                parentResult.InnerResultsCount++;
+                                foreach (var testResult in testResults)
+                                {
+                                    testResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
+                                    testResult.ParentExecId = parentResult.ExecutionId;
+                                    parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, testResult.Outcome);
+                                    parentResult.InnerResultsCount++;
+                                }
+                                
+                                results.AddRange(testResults);
+                                
                                 this.testMethodInfo.SetArguments(null);
                             }
                         }
@@ -347,7 +363,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     {
                         try
                         {
-                            results.Add(this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo)[0]);
+                            results.AddRange(this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo));
                         }
                         catch (Exception ex)
                         {

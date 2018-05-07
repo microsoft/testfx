@@ -76,33 +76,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     fullFilePath,
                     ex);
 
-                // Loading a WinPRT dll on the phone produces a
-                // FileNotFoundException. We check if we get FileNotFoundException
-                // in spite of the dll existing and try and load the dll from the full path in this case.
-                try
-                {
-                    if (PlatformServiceProvider.Instance.FileOperations.DoesFileExist(assemblyFileName))
-                    {
-                        var assembly = Assembly.Load(new AssemblyName(assemblyFileName));
-                    }
-                }
-                catch (Exception e)
-                {
-                    var winrtFailureMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.TestAssembly_AssemblyDiscoveryFailure,
-                        assemblyFileName,
-                        e.Message);
-                    warnings.Add(winrtFailureMessage);
-                    return null;
-                }
-
                 var message = string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.TestAssembly_AssemblyDiscoveryFailure,
                     fullFilePath,
                     ex.Message);
                 warnings.Add(message);
+
                 return null;
             }
             catch (ReflectionTypeLoadException ex)
@@ -160,8 +140,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         {
             using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null))
             {
-                var assemblyEnumerator =
-                    isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings }) as AssemblyEnumerator;
+                // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
+                var assemblyEnumerator = isolationHost.CreateInstanceForType(
+                    typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings }) as AssemblyEnumerator;
+
+                // After loading adapter reset the child-domain's appbase to point to test source location
+                isolationHost.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
+
                 return assemblyEnumerator.EnumerateAssembly(fullFilePath, out warnings);
             }
         }

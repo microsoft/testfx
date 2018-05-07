@@ -282,6 +282,11 @@ Rastreamento de Pilha: {4}</target>
         <target state="translated">O valor retornado pela propriedade ou o método {0} não deve ser nulo null.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataDisplayName">
+        <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
+        <target state="translated">O método {0} deve corresponder à assinatura esperada: public static {1} {0}({2}).</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

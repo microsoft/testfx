@@ -282,6 +282,11 @@ Stack Trace: {4}</source>
         <target state="translated">属性或方法 {0} 返回的值不能为 null。</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataDisplayName">
+        <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
+        <target state="translated">方法 {0} 必须匹配预期签名: public static {1} {0}({2})。</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

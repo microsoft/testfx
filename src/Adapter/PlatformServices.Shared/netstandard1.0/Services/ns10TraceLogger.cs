@@ -17,7 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="format"> The format. </param>
         /// <param name="args"> The args. </param>
-        /// <exception cref="NotImplementedException"> This is currently not implemented. </exception>
+        /// <exception cref="System.NotImplementedException"> This is currently not implemented. </exception>
         public void LogError(string format, params object[] args)
         {
             // Do Nothing.
@@ -28,7 +28,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="format"> The format. </param>
         /// <param name="args"> The args. </param>
-        /// <exception cref="NotImplementedException"> This is currently not implemented. </exception>
+        /// <exception cref="System.NotImplementedException"> This is currently not implemented. </exception>
         public void LogWarning(string format, params object[] args)
         {
             // Do Nothing.
@@ -39,7 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="format"> The format. </param>
         /// <param name="args"> The args. </param>
-        /// <exception cref="NotImplementedException"> This is currently not implemented. </exception>
+        /// <exception cref="System.NotImplementedException"> This is currently not implemented. </exception>
         public void LogInfo(string format, params object[] args)
         {
             // Do Nothing.

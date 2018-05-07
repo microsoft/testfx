@@ -282,6 +282,11 @@ Seguimiento de la pila: {4}</target>
         <target state="translated">El valor devuelto por la propiedad o el método {0} no debe ser nulo.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataDisplayName">
+        <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
+        <target state="translated">El método {0} debe coincidir con la signatura esperada: {1} {0}({2}) estática pública.</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

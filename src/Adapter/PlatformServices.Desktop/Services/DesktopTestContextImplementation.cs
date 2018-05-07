@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// <summary>
     /// Internal implementation of TestContext exposed to the user.
     /// The virtual string properties of the TestContext are retreived from the property dictionary
-    /// like GetProperty<string>("TestName") or GetProperty<string>("FullyQualifiedTestClassName");
+    /// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName");
     /// </summary>
     public class TestContextImplementation : UTF.TestContext, ITestContext
     {

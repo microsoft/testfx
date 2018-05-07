@@ -282,6 +282,11 @@ Trasování zásobníku: {4}</target>
         <target state="translated">Hodnota vrácená vlastností nebo metodou {0} by neměla být null.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataDisplayName">
+        <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
+        <target state="translated">Metoda {0} musí odpovídat očekávanému podpisu: public static {1} {0}({2}).</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

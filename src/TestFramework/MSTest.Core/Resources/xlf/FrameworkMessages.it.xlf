@@ -282,6 +282,11 @@ Analisi dello stack: {4}</target>
         <target state="translated">Il valore restituito dalla proprietà o dal metodo {0} non deve essere Null.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataDisplayName">
+        <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
+        <target state="translated">Il metodo {0} deve corrispondere alla firma prevista: public static {1} {0}({2}).</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
