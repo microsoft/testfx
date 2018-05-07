@@ -54,16 +54,7 @@ namespace PlatformServices.Desktop.ComponentTests
                 </MSTestV2>
              </RunSettings>";
 
-            var mockRunSettings = new Mock<IRunSettings>();
-            mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-
-            StringReader stringReader = new StringReader(runSettingxml);
-            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
-            reader.ReadToFollowing("MSTestV2");
-            mstestSettingsProvider.Load(reader);
-
-            this.testSourceHost = new TestSourceHost(this.testSource, mockRunSettings.Object, null);
+            this.testSourceHost = new TestSourceHost(this.testSource, this.GetMockedIRunSettings(runSettingxml).Object, null);
             this.testSourceHost.SetupHost();
 
             // Loading TestProjectForAssemblyResolution.dll should not throw.
@@ -88,16 +79,7 @@ namespace PlatformServices.Desktop.ComponentTests
                 </MSTestV2>
              </RunSettings>";
 
-            var mockRunSettings = new Mock<IRunSettings>();
-            mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-
-            StringReader stringReader = new StringReader(runSettingxml);
-            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
-            reader.ReadToFollowing("MSTestV2");
-            mstestSettingsProvider.Load(reader);
-
-            this.testSourceHost = new TestSourceHost(this.testSource, mockRunSettings.Object, null);
+            this.testSourceHost = new TestSourceHost(this.testSource, this.GetMockedIRunSettings(runSettingxml).Object, null);
 
             this.testSourceHost.SetupHost();
 
@@ -118,6 +100,20 @@ namespace PlatformServices.Desktop.ComponentTests
 
             // Check that child-appdomain is now unloaded.
             Assert.IsNull(this.testSourceHost.AppDomain);
+        }
+
+        private Mock<IRunSettings> GetMockedIRunSettings(string runSettingxml)
+        {
+            var mockRunSettings = new Mock<IRunSettings>();
+            mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+
+            StringReader stringReader = new StringReader(runSettingxml);
+            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
+            reader.ReadToFollowing("MSTestV2");
+            mstestSettingsProvider.Load(reader);
+
+            return mockRunSettings;
         }
     }
 }
