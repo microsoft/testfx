@@ -429,9 +429,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             var results = testMethodRunner.Execute();
-            Assert.AreEqual(2, results.Length);
-            Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
-            Assert.AreEqual(AdapterTestOutcome.Failed, results[1].Outcome);
+            Assert.AreEqual(3, results.Length);
+
+            // results[0] is parent result.
+            Assert.AreEqual(AdapterTestOutcome.Passed, results[1].Outcome);
+            Assert.AreEqual(AdapterTestOutcome.Failed, results[2].Outcome);
         }
 
         [TestMethodV1]
@@ -543,9 +545,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var results = testMethodRunner.RunTestMethod();
 
             // check for datarowIndex
-            Assert.AreEqual(results[0].DatarowIndex, 0);
-            Assert.AreEqual(results[1].DatarowIndex, 1);
-            Assert.AreEqual(results[2].DatarowIndex, 2);
+            // 1st is parent result.
+            Assert.AreEqual(results[0].DatarowIndex, -1);
+            Assert.AreEqual(results[1].DatarowIndex, 0);
+            Assert.AreEqual(results[2].DatarowIndex, 1);
+            Assert.AreEqual(results[3].DatarowIndex, 2);
         }
 
         [TestMethodV1]
@@ -570,9 +574,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var results = testMethodRunner.RunTestMethod();
 
             // check for datarowIndex as only DataSource Tests are Run
-            Assert.AreEqual(results[0].DatarowIndex, 0);
-            Assert.AreEqual(results[1].DatarowIndex, 1);
-            Assert.AreEqual(results[2].DatarowIndex, 2);
+            // 1st is parent result.
+            Assert.AreEqual(results[0].DatarowIndex, -1);
+            Assert.AreEqual(results[1].DatarowIndex, 0);
+            Assert.AreEqual(results[2].DatarowIndex, 1);
+            Assert.AreEqual(results[3].DatarowIndex, 2);
         }
 
         [TestMethodV1]
@@ -640,8 +646,80 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
 
             var results = testMethodRunner.RunTestMethod();
-            CollectionAssert.Contains(results[0].ResultFiles.ToList(), "C:\\temp.txt");
             CollectionAssert.Contains(results[1].ResultFiles.ToList(), "C:\\temp.txt");
+            CollectionAssert.Contains(results[2].ResultFiles.ToList(), "C:\\temp.txt");
+        }
+
+        [TestMethodV1]
+        public void RunTestMethodShouldReturnParentResultForDataDrivenTests()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult());
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
+
+            UTF.DataSourceAttribute dataSourceAttribute = new UTF.DataSourceAttribute("DummyConnectionString", "DummyTableName");
+
+            var attribs = new Attribute[] { dataSourceAttribute };
+
+            // Setup mocks
+            this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+            this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, this.testContextImplementation)).Returns(new object[] { 1, 2, 3 });
+
+            var results = testMethodRunner.RunTestMethod();
+
+            // check for parent result
+            Assert.AreEqual(4, results.Length);
+            Assert.AreEqual(results[0].ExecutionId, results[1].ParentExecId);
+         }
+
+        [TestMethodV1]
+        public void RunTestMethodShouldNotReturnParentResultForNonDataDrivenTests()
+        {
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult());
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
+
+            UTF.DataSourceAttribute dataSourceAttribute = new UTF.DataSourceAttribute("DummyConnectionString", "DummyTableName");
+
+            var attribs = new Attribute[] { dataSourceAttribute };
+
+            // Setup mocks
+            this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+            this.testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, this.testContextImplementation)).Returns(new object[] { 1 });
+
+            var results = testMethodRunner.RunTestMethod();
+
+            // Parent result should not exist.
+            Assert.AreEqual(1, results.Length);
+            Assert.AreEqual(Guid.Empty, results[0].ParentExecId);
+        }
+
+        [TestMethodV1]
+        public void RunTestMethodShouldSetParentResultOutcomeProperly()
+        {
+            var testMethodAttributeMock = new Mock<UTF.TestMethodAttribute>();
+            testMethodAttributeMock.Setup(_ => _.Execute(It.IsAny<UTF.ITestMethod>())).Returns(new[]
+            {
+                new UTF.TestResult { Outcome = UTF.UnitTestOutcome.Passed },
+                new UTF.TestResult { Outcome = UTF.UnitTestOutcome.Failed }
+            });
+
+            var localTestMethodOptions = new TestMethodOptions
+            {
+                Timeout = 200,
+                Executor = testMethodAttributeMock.Object,
+                TestContext = this.testContextImplementation,
+                ExpectedException = null
+            };
+
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, localTestMethodOptions, null);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
+
+            var results = testMethodRunner.Execute();
+            Assert.AreEqual(3, results.Length);
+
+            // Parent result should show proper aggregate outcome.
+            Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
+            Assert.AreEqual(AdapterTestOutcome.Passed, results[1].Outcome);
+            Assert.AreEqual(AdapterTestOutcome.Failed, results[2].Outcome);
         }
 
         #region Test data

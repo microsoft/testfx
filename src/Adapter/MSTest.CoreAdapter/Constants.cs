@@ -44,6 +44,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         internal static readonly TestProperty DoNotParallelizeProperty = TestProperty.Register("MSTestDiscoverer.DoNotParallelize", DoNotParallelizeLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
 
+        internal static readonly TestProperty ExecutionIdProperty = TestProperty.Register("ExecutionId", ExecutionIdLabel, typeof(Guid), TestPropertyAttributes.Hidden, typeof(TestResult));
+
+        internal static readonly TestProperty ParentExecIdProperty = TestProperty.Register("ParentExecId", ParentExecIdLabel, typeof(Guid), TestPropertyAttributes.Hidden, typeof(TestResult));
+
+        internal static readonly TestProperty InnerResultsCountProperty = TestProperty.Register("InnerResultsCount", InnerResultsCountLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestResult));
+
         #endregion
 
         #region Private Constants
@@ -59,6 +65,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         private const string PriorityLabel = "Priority";
         private const string DeploymentItemsLabel = "DeploymentItems";
         private const string DoNotParallelizeLabel = "DoNotParallelize";
+        private const string ExecutionIdLabel = "ExecutionId";
+        private const string ParentExecIdLabel = "ParentExecId";
+        private const string InnerResultsCountLabel = "InnerResultsCount";
 
         #endregion
     }

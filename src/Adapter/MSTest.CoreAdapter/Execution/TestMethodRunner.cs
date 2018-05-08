@@ -216,6 +216,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             List<UTF.TestResult> results = new List<UTF.TestResult>();
 
+            // Parent result. Added in properties bag only when results are greater than 1.
+            var parentResultWatch = new Stopwatch();
+            parentResultWatch.Start();
+            var parentResult = new UTF.TestResult
+            {
+                Outcome = UTF.UnitTestOutcome.InProgress,
+                ExecutionId = Guid.NewGuid()
+            };
+
             if (this.testMethodInfo.TestMethodOptions.Executor != null)
             {
                 UTF.DataSourceAttribute[] dataSourceAttribute = this.testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
@@ -373,7 +382,45 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 results.Add(new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Unknown, TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult) });
             }
 
+            // Adds parent result info in results if required.
+            parentResultWatch.Stop();
+            parentResult.Duration = parentResultWatch.Elapsed;
+            results = this.UpdateResultsWithParentInfo(results, parentResult);
+
             return results.ToArray().ToUnitTestResults();
+        }
+
+        /// <summary>
+        /// Updates given resutls with parent info if results are greater than 1.
+        /// Add parent results as first result in updated result.
+        /// </summary>
+        /// <param name="results">Results.</param>
+        /// <param name="parentResult">Parent results.</param>
+        /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
+        private List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results, UTF.TestResult parentResult)
+        {
+            // Add parent result only when results are greater than 1.
+            if (results.Count <= 1)
+            {
+                return results;
+            }
+
+            // UpdatedResults contain parent result at first position and results contains parent info.
+            var updatedResults = new List<UTF.TestResult>();
+            updatedResults.Add(parentResult);
+
+            parentResult.ExecutionId = Guid.NewGuid();
+            foreach (var result in results)
+            {
+                result.ExecutionId = Guid.NewGuid();
+                result.ParentExecId = parentResult.ExecutionId;
+                parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, result.Outcome);
+                parentResult.InnerResultsCount++;
+
+                updatedResults.Add(result);
+            }
+
+            return updatedResults;
         }
     }
 }
