@@ -15,6 +15,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
     using Moq;
 
@@ -56,6 +57,32 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         }
 
         [TestMethod]
+        public void GetResolutionPathsShouldAddAdapterFolderPath()
+        {
+            // Setup
+            TestSourceHost sut = new TestSourceHost(null, null, null);
+
+            // Execute
+            List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
+
+            // Assert
+            Assert.AreEqual(result.Contains(typeof(TestSourceHost).Assembly.Location), false);
+        }
+
+        [TestMethod]
+        public void GetResolutionPathsShouldAddTestPlatformFolderPath()
+        {
+            // Setup
+            TestSourceHost sut = new TestSourceHost(null, null, null);
+
+            // Execute
+            List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
+
+            // Assert
+            Assert.AreEqual(result.Contains(typeof(AssemblyHelper).Assembly.Location), false);
+        }
+
+        [TestMethod]
         public void CreateInstanceForTypeShouldCreateTheTypeInANewAppDomain()
         {
             // Setup
@@ -79,7 +106,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         }
 
         [TestMethod]
-        public void SetupHostShouldSetNewDomainsAppBaseToAdapterLocation()
+        public void SetupHostShouldSetChildDomainsAppBaseToAdapterLocation()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -102,13 +129,69 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             }
         }
 
+        [TestMethod]
+        public void SetupHostShouldHaveParentDomainsAppBaseSetToTestSourceLocation()
+        {
+            // Arrange
+            DummyClass dummyclass = new DummyClass();
+            string runSettingxml =
+            @"<RunSettings>   
+                <RunConfiguration>  
+                    <DisableAppDomain>True</DisableAppDomain>   
+                </RunConfiguration>  
+            </RunSettings>";
+
+            var location = typeof(TestSourceHost).Assembly.Location;
+            var mockRunSettings = new Mock<IRunSettings>();
+            mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+
+            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, mockRunSettings.Object, null) { CallBase = true };
+
+            try
+            {
+                // Act
+                sourceHost.Object.SetupHost();
+                var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
+
+                // Assert
+                Assert.AreEqual(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location), expectedObject.AppDomainAppBase);
+            }
+            finally
+            {
+                sourceHost.Object.Dispose();
+            }
+        }
+
+        [TestMethod]
+        public void SetupHostShouldSetResolutionsPaths()
+        {
+            // Arrange
+            DummyClass dummyclass = new DummyClass();
+
+            var location = typeof(TestSourceHost).Assembly.Location;
+            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, null, null) { CallBase = true };
+
+            try
+            {
+                // Act
+                sourceHost.Object.SetupHost();
+
+                // Assert
+                sourceHost.Verify(sh => sh.GetResolutionPaths(location, It.IsAny<bool>()), Times.Once);
+            }
+            finally
+            {
+                sourceHost.Object.Dispose();
+            }
+        }
+
         /// <summary>
         /// This test should ideally be choosing a different path for the test source. Currently both the test source and the adapter
         /// are in the same location. However when we move to run these tests with the V2 itself, then this would be valid.
         /// Leaving the test running till then.
         /// </summary>
         [TestMethod]
-        public void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolverShouldSetDomainsAppBaseToTestSourceLocationForFullCLRTestss()
+        public void UpdateAppBaseToTestSourceLocationShouldSetDomainsAppBaseToTestSourceLocationForFullCLRTestss()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -124,7 +207,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 sourceHost.Object.SetupHost();
                 var expectedObject =
                     sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
-                sourceHost.Object.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
+                sourceHost.Object.UpdateAppBaseToTestSourceLocation();
 
                 // Assert
                 Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
@@ -136,7 +219,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         }
 
         [TestMethod]
-        public void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolverShouldSetDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
+        public void UpdateAppBaseToTestSourceLocationShouldSetDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -151,7 +234,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 // Act
                 sourceHost.Object.SetupHost();
                 var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
-                sourceHost.Object.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
+                sourceHost.Object.UpdateAppBaseToTestSourceLocation();
 
                 // Assert
                 Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
