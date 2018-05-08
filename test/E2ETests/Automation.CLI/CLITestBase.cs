@@ -141,6 +141,16 @@ namespace Microsoft.MSTestV2.CLIAutomation
         }
 
         /// <summary>
+        /// Validates the count of failed tests.
+        /// </summary>
+        /// <param name="expectedFailedTestsCount">Expected failed tests count.</param>
+        public void ValidateFailedTestsCount(int expectedFailedTestsCount)
+        {
+            // Make sure only expected number of tests failed and not more.
+            Assert.AreEqual(expectedFailedTestsCount, this.runEventsHandler.FailedTests.Count);
+        }
+
+        /// <summary>
         /// Validates if the test results have the specified set of skipped tests.
         /// </summary>
         /// <param name="skippedTests">The set of skipped tests.</param>
