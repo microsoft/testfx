@@ -215,6 +215,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             Debug.Assert(this.testMethodInfo.TestMethod != null, "Test method should not be null.");
 
             List<UTF.TestResult> results = new List<UTF.TestResult>();
+            var isDataDriven = false;
 
             // Parent result. Added in properties bag only when results are greater than 1.
             var parentResultWatch = new Stopwatch();
@@ -230,6 +231,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 UTF.DataSourceAttribute[] dataSourceAttribute = this.testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
                 if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
                 {
+                    isDataDriven = true;
                     Stopwatch watch = new Stopwatch();
                     watch.Start();
 
@@ -305,6 +307,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                     if (testDataSources != null && testDataSources.Length > 0)
                     {
+                        isDataDriven = true;
                         foreach (var testDataSource in testDataSources)
                         {
                             foreach (var data in testDataSource.GetData(this.testMethodInfo.MethodInfo))
@@ -354,40 +357,50 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 this.testMethodInfo.TestMethodName);
             }
 
-            if (results != null && results.Count > 0)
-            {
-                // aggregate for data driven tests
-                UTF.UnitTestOutcome aggregateOutcome = UTF.UnitTestOutcome.Passed;
-
-                foreach (var result in results)
-                {
-                    if (result.Outcome != UTF.UnitTestOutcome.Passed)
-                    {
-                        if (aggregateOutcome != UTF.UnitTestOutcome.Failed)
-                        {
-                            if (result.Outcome == UTF.UnitTestOutcome.Failed
-                                || aggregateOutcome != UTF.UnitTestOutcome.Timeout)
-                            {
-                                aggregateOutcome = result.Outcome;
-                            }
-                        }
-                    }
-                }
-
-                this.testContext.SetOutcome(aggregateOutcome);
-            }
-            else
-            {
-                this.testContext.SetOutcome(UTF.UnitTestOutcome.Unknown);
-                results.Add(new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Unknown, TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult) });
-            }
-
-            // Adds parent result info in results if required.
             parentResultWatch.Stop();
             parentResult.Duration = parentResultWatch.Elapsed;
-            results = this.UpdateResultsWithParentInfo(results, parentResult);
+
+            // Get aggregate outcome.
+            var aggregateOutcome = this.GetAggregateOutcome(results);
+            this.testContext.SetOutcome(aggregateOutcome);
+
+            // Set a result in case no result is present.
+            if (!results.Any())
+            {
+                results.Add(new UTF.TestResult() { Outcome = aggregateOutcome, TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult) });
+            }
+
+            // In case of data driven, set parent info in results.
+            if (isDataDriven)
+            {
+                parentResult.Outcome = aggregateOutcome;
+                results = this.UpdateResultsWithParentInfo(results, parentResult);
+            }
 
             return results.ToArray().ToUnitTestResults();
+        }
+
+        /// <summary>
+        /// Gets aggregate outcome.
+        /// </summary>
+        /// <param name="results">Results.</param>
+        /// <returns>Aggregate outcome.</returns>
+        private UTF.UnitTestOutcome GetAggregateOutcome(List<UTF.TestResult> results)
+        {
+            // In case results are not present, set outcome as unknown.
+            if (!results.Any())
+            {
+                return UTF.UnitTestOutcome.Unknown;
+            }
+
+            // Get aggregate outcome.
+            var aggregateOutcome = results[0].Outcome;
+            foreach (var result in results)
+            {
+                UnitTestOutcomeExtensions.GetMoreImportantOutcome(aggregateOutcome, result.Outcome);
+            }
+
+            return aggregateOutcome;
         }
 
         /// <summary>
@@ -399,22 +412,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
         private List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results, UTF.TestResult parentResult)
         {
-            // Add parent result only when results are greater than 1.
-            if (results.Count <= 1)
+            // Return results in case there are no results.
+            if (!results.Any())
             {
                 return results;
             }
 
-            // UpdatedResults contain parent result at first position and results contains parent info.
+            // UpdatedResults contain parent result at first position and remaining results has parent info updated.
             var updatedResults = new List<UTF.TestResult>();
             updatedResults.Add(parentResult);
 
-            parentResult.ExecutionId = Guid.NewGuid();
             foreach (var result in results)
             {
                 result.ExecutionId = Guid.NewGuid();
                 result.ParentExecId = parentResult.ExecutionId;
-                parentResult.Outcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(parentResult.Outcome, result.Outcome);
                 parentResult.InnerResultsCount++;
 
                 updatedResults.Add(result);
