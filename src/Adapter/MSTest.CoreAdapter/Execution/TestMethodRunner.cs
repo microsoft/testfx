@@ -397,7 +397,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var aggregateOutcome = results[0].Outcome;
             foreach (var result in results)
             {
-                UnitTestOutcomeExtensions.GetMoreImportantOutcome(aggregateOutcome, result.Outcome);
+                aggregateOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(aggregateOutcome, result.Outcome);
             }
 
             return aggregateOutcome;
