@@ -134,9 +134,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </remarks>
         public void ValidateFailedTests(string source, params string[] failedTests)
         {
-            // Make sure only expected number of tests failed and not more.
-            Assert.AreEqual(failedTests.Length, this.runEventsHandler.FailedTests.Count);
-
+            this.ValidateFailedTestsCount(failedTests.Length);
             this.ValidateFailedTestsContain(source, failedTests);
         }
 
