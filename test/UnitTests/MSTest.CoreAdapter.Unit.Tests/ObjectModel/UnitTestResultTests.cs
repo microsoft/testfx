@@ -155,6 +155,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
         }
 
         [TestMethod]
+        public void ToTestResultForUniTestResultWithParentInfoShouldReturnTestResultWithParentInfo()
+        {
+            var executionId = Guid.NewGuid();
+            var parentExecId = Guid.NewGuid();
+            var innerResultsCount = 5;
+
+            UnitTestResult result = new UnitTestResult()
+            {
+                ExecutionId = executionId,
+                ParentExecId = parentExecId,
+                InnerResultsCount = innerResultsCount
+            };
+            TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false);
+
+            Assert.AreEqual(executionId, testresult.GetPropertyValue(MSTest.TestAdapter.Constants.ExecutionIdProperty));
+            Assert.AreEqual(parentExecId, testresult.GetPropertyValue(MSTest.TestAdapter.Constants.ParentExecIdProperty));
+            Assert.AreEqual(innerResultsCount, testresult.GetPropertyValue(MSTest.TestAdapter.Constants.InnerResultsCountProperty));
+        }
+
+        [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomePassedShouldReturnTestOutcomePassed()
         {
             var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Passed, false);
