@@ -284,8 +284,8 @@ Stack Trace: {4}</source>
       </trans-unit>
       <trans-unit id="DynamicDataDisplayName">
         <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
-        <target state="new">Method {0} must match the expected signature: {1} {0}({2}).</target>
-        <note></note>
+        <target state="translated">メソッド {0} は必要なシグネチャと一致しなければなりません: public static {1} {0}({2})。</target>
+        <note />
       </trans-unit>
     </body>
   </file>

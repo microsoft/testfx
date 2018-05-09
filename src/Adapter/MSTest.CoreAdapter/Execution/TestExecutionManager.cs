@@ -223,7 +223,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     new object[] { MSTestSettings.CurrentSettings }) as UnitTestRunner;
 
                 // After loading adapter reset the chils-domain's appbase to point to test source location
-                isolationHost.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
+                isolationHost.UpdateAppBaseToTestSourceLocation();
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
