@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.IO;
     using System.Linq;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -20,6 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     [FileExtension(".appx")]
     [FileExtension(".dll")]
     [FileExtension(".exe")]
+    [Category("managed")]
     public class MSTestDiscoverer : ITestDiscoverer
     {
         /// <summary>

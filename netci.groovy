@@ -28,7 +28,8 @@ def branch = GithubBranchName
             }
         }
 
-        Utilities.setMachineAffinity(newJob, 'Windows_NT', 'latest-or-auto-dev15-0')       
+         // Move to latest VS(15.6) machines
+        Utilities.setMachineAffinity(newJob, 'Windows_NT', 'latest-or-auto-dev15-0')
 
         // This call performs remaining common job setup on the newly created job.
         Utilities.standardJobSetup(newJob, project, isPR, "*/${branch}")
