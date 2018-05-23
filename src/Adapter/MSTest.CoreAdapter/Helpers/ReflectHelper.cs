@@ -121,7 +121,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 Debug.Assert(attribute != null, "ReflectHeler.DefinesAttributeDerivedFrom: internal error: wrong value in the attrs dictionary.");
 
                 Type attributeType = attribute.GetType();
-                if (attributeType.GetTypeInfo().IsSubclassOf(baseAttributeType))
+                if (attributeType.GetTypeInfo().IsSubclassOf(baseAttributeType) || typeof(ITestDataSource).GetTypeInfo().IsAssignableFrom(attributeType.GetTypeInfo()))
                 {
                     return true;
                 }
