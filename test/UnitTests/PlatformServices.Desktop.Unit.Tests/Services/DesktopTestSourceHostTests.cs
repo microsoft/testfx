@@ -280,17 +280,17 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             var mockRunSettings = new Mock<IRunSettings>();
             mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
-            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, mockRunSettings.Object, null) { CallBase = true };
+            Mock<TestSourceHost> testSourceHost = new Mock<TestSourceHost>(location, mockRunSettings.Object, null) { CallBase = true };
 
             try
             {
                 // Act
-                sourceHost.Object.SetupHost();
-                Assert.IsNull(sourceHost.Object.AppDomain);
+                testSourceHost.Object.SetupHost();
+                Assert.IsNull(testSourceHost.Object.AppDomain);
             }
             finally
             {
-                sourceHost.Object.Dispose();
+                testSourceHost.Object.Dispose();
             }
         }
 
@@ -310,17 +310,17 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             var mockRunSettings = new Mock<IRunSettings>();
             mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
-            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, mockRunSettings.Object, null) { CallBase = true };
+            Mock<TestSourceHost> testSourceHost = new Mock<TestSourceHost>(location, mockRunSettings.Object, null) { CallBase = true };
 
             try
             {
                 // Act
-                sourceHost.Object.SetupHost();
-                Assert.IsNotNull(sourceHost.Object.AppDomain);
+                testSourceHost.Object.SetupHost();
+                Assert.IsNotNull(testSourceHost.Object.AppDomain);
             }
             finally
             {
-                sourceHost.Object.Dispose();
+                testSourceHost.Object.Dispose();
             }
         }
     }

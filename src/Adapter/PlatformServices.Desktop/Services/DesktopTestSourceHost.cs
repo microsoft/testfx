@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.SetContext(sourceFileName);
 
             // Set isAppDomainCreationDisabled flag
-            this.AppDomainCreationDisabledInRunSettings();
+            this.isAppDomainCreationDisabled = (this.runSettings != null) && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml);
         }
 
         internal AppDomain AppDomain
@@ -352,17 +352,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             Environment.CurrentDirectory = this.currentDirectory;
         }
-    }
-
-    private void AppDomainCreationDisabledInRunSettings()
-    {
-        if (this.runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
-        {
-                this.isAppDomainCreationDisabled = true;
-                return;
-        }
-
-         this.isAppDomainCreationDisabled = false;
     }
 
     private void AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(AssemblyResolver assemblyResolver, string baseDirectory)
