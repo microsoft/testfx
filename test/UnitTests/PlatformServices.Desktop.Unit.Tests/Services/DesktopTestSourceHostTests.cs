@@ -263,6 +263,36 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             // Assert
             frameworkHandle.VerifySet(fh => fh.EnableShutdownAfterTestRun = true);
         }
+
+        [TestMethod]
+        public void NoAppDomainShouldGetCreatedWhenDisableAppDomainIsSetToTrue()
+        {
+            // Arrange
+            DummyClass dummyclass = new DummyClass();
+            string runSettingxml =
+            @"<RunSettings>   
+                <RunConfiguration>  
+                    <DisableAppDomain>True</DisableAppDomain>   
+                </RunConfiguration>  
+            </RunSettings>";
+
+            var location = typeof(TestSourceHost).Assembly.Location;
+            var mockRunSettings = new Mock<IRunSettings>();
+            mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+
+            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, mockRunSettings.Object, null) { CallBase = true };
+
+            try
+            {
+                // Act
+                sourceHost.Object.SetupHost();
+                Assert.IsNull(sourceHost.Object.AppDomain);
+            }
+            finally
+            {
+                sourceHost.Object.Dispose();
+            }
+        }
     }
 
     public class DummyClass : MarshalByRefObject

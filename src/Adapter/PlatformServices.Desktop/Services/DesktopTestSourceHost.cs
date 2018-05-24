@@ -359,6 +359,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         if (this.runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
         {
                 this.isAppDomainCreationDisabled = true;
+                return;
         }
 
          this.isAppDomainCreationDisabled = false;
