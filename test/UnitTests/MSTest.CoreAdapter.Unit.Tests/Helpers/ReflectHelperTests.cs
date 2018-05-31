@@ -306,7 +306,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                 Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, false)).
                 Returns(attribs);
 
-            Assert.IsTrue(rh.DoesAttributeImplement(mockMemberInfo.Object, typeof(UTF.ITestDataSource), false));
+            Assert.IsTrue(rh.HasAttributeImplementingInterface(mockMemberInfo.Object, typeof(UTF.ITestDataSource), false));
         }
 
         [TestMethod]
@@ -320,7 +320,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                 Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, false)).
                 Returns(attribs);
 
-            Assert.IsFalse(rh.DoesAttributeImplement(mockMemberInfo.Object, typeof(UTF.ITestDataSource), false));
+            Assert.IsFalse(rh.HasAttributeImplementingInterface(mockMemberInfo.Object, typeof(UTF.ITestDataSource), false));
         }
 
         [TestMethod]
@@ -333,7 +333,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                 Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, false)).
                 Returns((object[])null);
 
-            Assert.IsFalse(rh.DoesAttributeImplement(mockMemberInfo.Object, typeof(UTF.ITestDataSource), false));
+            Assert.IsFalse(rh.HasAttributeImplementingInterface(mockMemberInfo.Object, typeof(UTF.ITestDataSource), false));
         }
     }
 

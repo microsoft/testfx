@@ -51,7 +51,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 return false;
             }
 
-            var ignoreParameters = this.reflectHelper.DoesAttributeImplement(testMethodInfo, typeof(ITestDataSource), true);
+            var ignoreParameters = this.reflectHelper.HasAttributeImplementingInterface(testMethodInfo, typeof(ITestDataSource), true);
 
             // Todo: Decide wheter parameter count matters.
             // The isGenericMethod check below id to verify that there are no closed generic methods slipping through.

@@ -136,8 +136,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <param name="memberInfo">The member info.</param>
         /// <param name="interfaceType">The interface type.</param>
         /// <param name="inherit">Should look at inheritance tree.</param>
-        /// <returns>An object derived from Attribute that corresponds to the instance of found attribute.</returns>
-        public virtual bool DoesAttributeImplement(MemberInfo memberInfo, Type interfaceType, bool inherit)
+        /// <returns>Returns bool specifying whether class/member has attribute which implements given interface.</returns>
+        public virtual bool HasAttributeImplementingInterface(MemberInfo memberInfo, Type interfaceType, bool inherit)
         {
             if (memberInfo == null)
             {
@@ -152,10 +152,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             // Get all attributes on the member.
             Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
 
-            // Try to find the attribute that is derived from baseAttrType.
+            // Try to find the attribute that implements interfaceType.
             foreach (object attribute in attributes.Values)
             {
-                Debug.Assert(attribute != null, "ReflectHeler.DoesAttributeImplement: internal error: wrong value in the attrs dictionary.");
+                Debug.Assert(attribute != null, "ReflectHelper.HasAttributeImplementingInterface: internal error: wrong value in the attrs dictionary.");
 
                 Type attributeType = attribute.GetType();
                 if (interfaceType.GetTypeInfo().IsAssignableFrom(attributeType.GetTypeInfo()))
