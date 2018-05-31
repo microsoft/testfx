@@ -294,6 +294,47 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             Assert.IsTrue(rh.IsAttributeDefined(mockMemberInfo.Object, typeof(TestableExtendedTestMethod), true));
         }
+
+        [TestMethod]
+        public void DoesAttributeImplementShouldReturnTrueIfAttributeOnMemberImplementsSpecifiedInterface()
+        {
+            var rh = new ReflectHelper();
+            var mockMemberInfo = new Mock<MemberInfo>();
+            var attribs = new Attribute[] { new UTF.DataRowAttribute("Dummy"), new UTF.TestCategoryAttribute("Category") };
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, false)).
+                Returns(attribs);
+
+            Assert.IsTrue(rh.DoesAttributeImplement(mockMemberInfo.Object, typeof(UTF.ITestDataSource), false));
+        }
+
+        [TestMethod]
+        public void DoesAttributeImplementShouldReturnFalseIfAttributeOnMemberDoesNotImplementSpecifiedInterface()
+        {
+            var rh = new ReflectHelper();
+            var mockMemberInfo = new Mock<MemberInfo>();
+            var attribs = new Attribute[] { new UTF.DescriptionAttribute("Dummy") };
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, false)).
+                Returns(attribs);
+
+            Assert.IsFalse(rh.DoesAttributeImplement(mockMemberInfo.Object, typeof(UTF.ITestDataSource), false));
+        }
+
+        [TestMethod]
+        public void DoesAttributeImplementShouldReturnFalseIfThereIsNoAttributeOnMember()
+        {
+            var rh = new ReflectHelper();
+            var mockMemberInfo = new Mock<MemberInfo>();
+
+            this.testablePlatformServiceProvider.MockReflectionOperations.
+                Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, false)).
+                Returns((object[])null);
+
+            Assert.IsFalse(rh.DoesAttributeImplement(mockMemberInfo.Object, typeof(UTF.ITestDataSource), false));
+        }
     }
 
     #region Dummy Implmentations

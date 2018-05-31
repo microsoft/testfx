@@ -121,7 +121,44 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 Debug.Assert(attribute != null, "ReflectHeler.DefinesAttributeDerivedFrom: internal error: wrong value in the attrs dictionary.");
 
                 Type attributeType = attribute.GetType();
-                if (attributeType.GetTypeInfo().IsSubclassOf(baseAttributeType) || typeof(ITestDataSource).GetTypeInfo().IsAssignableFrom(attributeType.GetTypeInfo()))
+                if (attributeType.GetTypeInfo().IsSubclassOf(baseAttributeType))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true when specified class/member has attribute which implements specific interface.
+        /// </summary>
+        /// <param name="memberInfo">The member info.</param>
+        /// <param name="interfaceType">The interface type.</param>
+        /// <param name="inherit">Should look at inheritance tree.</param>
+        /// <returns>An object derived from Attribute that corresponds to the instance of found attribute.</returns>
+        public virtual bool DoesAttributeImplement(MemberInfo memberInfo, Type interfaceType, bool inherit)
+        {
+            if (memberInfo == null)
+            {
+                throw new ArgumentNullException(nameof(memberInfo));
+            }
+
+            if (interfaceType == null)
+            {
+                throw new ArgumentNullException(nameof(interfaceType));
+            }
+
+            // Get all attributes on the member.
+            Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
+
+            // Try to find the attribute that is derived from baseAttrType.
+            foreach (object attribute in attributes.Values)
+            {
+                Debug.Assert(attribute != null, "ReflectHeler.DoesAttributeImplement: internal error: wrong value in the attrs dictionary.");
+
+                Type attributeType = attribute.GetType();
+                if (interfaceType.GetTypeInfo().IsAssignableFrom(attributeType.GetTypeInfo()))
                 {
                     return true;
                 }
