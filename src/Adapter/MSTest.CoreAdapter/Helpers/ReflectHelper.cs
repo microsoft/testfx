@@ -152,15 +152,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             // Get all attributes on the member.
             Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
 
-            // Try to find the attribute that implements interfaceType.
-            foreach (object attribute in attributes.Values)
+            if (attributes != null)
             {
-                Debug.Assert(attribute != null, "ReflectHelper.HasAttributeImplementingInterface: internal error: wrong value in the attrs dictionary.");
-
-                Type attributeType = attribute.GetType();
-                if (interfaceType.GetTypeInfo().IsAssignableFrom(attributeType.GetTypeInfo()))
+                // Try to find the attribute that implements interfaceType.
+                foreach (object attribute in attributes.Values)
                 {
-                    return true;
+                    Debug.Assert(attribute != null, "ReflectHelper.HasAttributeImplementingInterface: internal error: wrong value in the attrs dictionary.");
+
+                    Type attributeType = attribute.GetType();
+                    if (interfaceType.GetTypeInfo().IsAssignableFrom(attributeType.GetTypeInfo()))
+                    {
+                        return true;
+                    }
                 }
             }
 

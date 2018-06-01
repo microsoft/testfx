@@ -296,7 +296,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
-        public void DoesAttributeImplementShouldReturnTrueIfAttributeOnMemberImplementsSpecifiedInterface()
+        public void HasAttributeImplementingInterfaceShouldReturnTrueIfAttributeOnMemberImplementsSpecifiedInterface()
         {
             var rh = new ReflectHelper();
             var mockMemberInfo = new Mock<MemberInfo>();
@@ -310,7 +310,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
-        public void DoesAttributeImplementShouldReturnFalseIfAttributeOnMemberDoesNotImplementSpecifiedInterface()
+        public void HasAttributeImplementingInterfaceShouldReturnFalseIfAttributeOnMemberDoesNotImplementSpecifiedInterface()
         {
             var rh = new ReflectHelper();
             var mockMemberInfo = new Mock<MemberInfo>();
@@ -324,7 +324,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
-        public void DoesAttributeImplementShouldReturnFalseIfThereIsNoAttributeOnMember()
+        public void HasAttributeImplementingInterfaceShouldReturnFalseIfThereIsNoAttributeOnMember()
         {
             var rh = new ReflectHelper();
             var mockMemberInfo = new Mock<MemberInfo>();
