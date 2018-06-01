@@ -880,7 +880,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public void TestMethod1()
             {
                 // Ensures stability.
-                System.Threading.Thread.Sleep(200);
+                System.Threading.Thread.Sleep(500);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
 
@@ -888,7 +888,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public void TestMethod2()
             {
                 // Ensures stability.
-                System.Threading.Thread.Sleep(200);
+                System.Threading.Thread.Sleep(500);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
