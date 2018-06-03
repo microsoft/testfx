@@ -23,14 +23,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             var isAsync = (testCase.GetPropertyValue(Constants.AsyncTestProperty) as bool?) ?? false;
             var testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
 
-            TestMethod testMethod = new TestMethod(testCase.DisplayName, testClassName, source, isAsync);
+            // method name from fully qualified name, feels hacky
+            var parts = testCase.FullyQualifiedName.Split('.');
+            var methodName = parts[parts.Length - 1];
+            TestMethod testMethod = new TestMethod(methodName, testClassName, source, isAsync);
 
             UnitTestElement testElement = new UnitTestElement(testMethod)
-                                        {
-                                            IsAsync = isAsync,
-                                            TestCategory = testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[],
-                                            Priority = testCase.GetPropertyValue(Constants.PriorityProperty) as int?
-                                        };
+            {
+                IsAsync = isAsync,
+                TestCategory = testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[],
+                Priority = testCase.GetPropertyValue(Constants.PriorityProperty) as int?
+            };
 
             return testElement;
         }

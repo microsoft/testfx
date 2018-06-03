@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
@@ -153,6 +153,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 method,
                 this.type,
                 warnings);
+
+            // get DisplayName from TestMethodAttribute
+            var myAttribute = method.GetCustomAttributes(false)
+                                    .OfType<TestMethodAttribute>()
+                                    .FirstOrDefault();
+
+            var testMethodAttribute = myAttribute as TestMethodAttribute;
+
+            testElement.DisplayName = testMethodAttribute.DisplayName ?? method.Name;
 
             return testElement;
         }
