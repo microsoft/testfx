@@ -263,6 +263,66 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             // Assert
             frameworkHandle.VerifySet(fh => fh.EnableShutdownAfterTestRun = true);
         }
+
+        [TestMethod]
+        public void NoAppDomainShouldGetCreatedWhenDisableAppDomainIsSetToTrue()
+        {
+            // Arrange
+            DummyClass dummyclass = new DummyClass();
+            string runSettingxml =
+            @"<RunSettings>   
+                <RunConfiguration>  
+                    <DisableAppDomain>True</DisableAppDomain>   
+                </RunConfiguration>  
+            </RunSettings>";
+
+            var location = typeof(TestSourceHost).Assembly.Location;
+            var mockRunSettings = new Mock<IRunSettings>();
+            mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+
+            Mock<TestSourceHost> testSourceHost = new Mock<TestSourceHost>(location, mockRunSettings.Object, null) { CallBase = true };
+
+            try
+            {
+                // Act
+                testSourceHost.Object.SetupHost();
+                Assert.IsNull(testSourceHost.Object.AppDomain);
+            }
+            finally
+            {
+                testSourceHost.Object.Dispose();
+            }
+        }
+
+        [TestMethod]
+        public void AppDomainShouldGetCreatedWhenDisableAppDomainIsSetToFalse()
+        {
+            // Arrange
+            DummyClass dummyclass = new DummyClass();
+            string runSettingxml =
+            @"<RunSettings>   
+                <RunConfiguration>  
+                    <DisableAppDomain>False</DisableAppDomain>   
+                </RunConfiguration>  
+            </RunSettings>";
+
+            var location = typeof(TestSourceHost).Assembly.Location;
+            var mockRunSettings = new Mock<IRunSettings>();
+            mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+
+            Mock<TestSourceHost> testSourceHost = new Mock<TestSourceHost>(location, mockRunSettings.Object, null) { CallBase = true };
+
+            try
+            {
+                // Act
+                testSourceHost.Object.SetupHost();
+                Assert.IsNotNull(testSourceHost.Object.AppDomain);
+            }
+            finally
+            {
+                testSourceHost.Object.Dispose();
+            }
+        }
     }
 
     public class DummyClass : MarshalByRefObject
