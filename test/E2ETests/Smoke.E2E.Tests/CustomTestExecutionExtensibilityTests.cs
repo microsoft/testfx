@@ -38,7 +38,10 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "CustomTestMethod2 (B)",
                 "CustomTestMethod2 (B)",
                 "CustomTestMethod2 (B)");
-            this.ValidateFailedTests(
+
+            // Parent results should fail and thus failed count should be 7.
+            this.ValidateFailedTestsCount(7);
+            this.ValidateFailedTestsContain(
                 TestAssembly,
                 "CustomTestMethod2 (A)",
                 "CustomTestMethod2 (A)",
