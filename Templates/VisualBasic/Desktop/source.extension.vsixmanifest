@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="MSTestDesktopVB.Microsoft.c6c7fff6-20cb-405d-9ad4-a60a6d0c55d9" Version="15.0.27708.00" Language="en-US" Publisher="Microsoft" />
+    <Identity Id="MSTestDesktopVB.Microsoft.c6c7fff6-20cb-405d-9ad4-a60a6d0c55d9" Version="15.0.27805.00" Language="en-US" Publisher="Microsoft" />
     <DisplayName>MSTest V2 Templates for Visual Basic</DisplayName>
     <Description xml:space="preserve">Provides Visual Studio project template for MSTest V2(Visual Basic).</Description>
     <License>DesktopTemplateLicense.rtf</License>
