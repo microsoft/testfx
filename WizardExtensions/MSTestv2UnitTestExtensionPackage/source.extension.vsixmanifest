@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="MSTestV2UnitTestExtensionPackage.Microsoft.632139eb-968c-47ce-8667-f0898f00833f" Version="15.0.27708.00" Language="en-US" Publisher="Microsoft" />
+    <Identity Id="MSTestV2UnitTestExtensionPackage.Microsoft.632139eb-968c-47ce-8667-f0898f00833f" Version="15.0.27805.00" Language="en-US" Publisher="Microsoft" />
     <DisplayName>MSTest V2 Create Unit Test Extension</DisplayName>
     <Description xml:space="preserve">Allows developers to create unit test using MSTest V2.</Description>
     <License>CreateUnitTestExtensionLicense.rtf</License>
