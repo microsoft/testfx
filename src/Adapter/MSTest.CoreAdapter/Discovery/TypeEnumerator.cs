@@ -161,7 +161,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
             var testMethodAttribute = myAttribute as TestMethodAttribute;
 
-            testElement.DisplayName = testMethodAttribute.DisplayName ?? method.Name;
+            testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
 
             return testElement;
         }
