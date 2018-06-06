@@ -47,6 +47,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
                 unitTestResult.DisplayName = testResults[i].DisplayName;
                 unitTestResult.DatarowIndex = testResults[i].DatarowIndex;
                 unitTestResult.ResultFiles = testResults[i].ResultFiles;
+                unitTestResult.ExecutionId = testResults[i].ExecutionId;
+                unitTestResult.ParentExecId = testResults[i].ParentExecId;
+                unitTestResult.InnerResultsCount = testResults[i].InnerResultsCount;
                 unitTestResults[i] = unitTestResult;
             }
 
