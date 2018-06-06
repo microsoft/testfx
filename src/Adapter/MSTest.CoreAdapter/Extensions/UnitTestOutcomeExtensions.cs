@@ -61,7 +61,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <returns> Outcome which has higher importance.</returns>
         internal static UTF.UnitTestOutcome GetMoreImportantOutcome(this UTF.UnitTestOutcome outcome1, UTF.UnitTestOutcome outcome2)
         {
-            return outcome1 < outcome2 ? outcome1 : outcome2;
+            var unitTestOutcome1 = outcome1.ToUnitTestOutcome();
+            var unitTestOutcome2 = outcome2.ToUnitTestOutcome();
+            return unitTestOutcome1 < unitTestOutcome2 ? outcome1 : outcome2;
         }
     }
 }
