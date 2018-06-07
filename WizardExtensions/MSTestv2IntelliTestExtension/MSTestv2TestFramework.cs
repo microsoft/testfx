@@ -103,8 +103,8 @@ namespace MSTestv2IntelliTestExtension
             get
             {
                 return Indexable.Two(
-                    new ShortReferenceAssemblyName(ShortAssemblyName.FromName("MSTest.TestAdapter"), "1.3.0", AssemblyReferenceType.NugetReference),
-                    new ShortReferenceAssemblyName(ShortAssemblyName.FromName("MSTest.TestFramework"), "1.3.0", AssemblyReferenceType.NugetReference));
+                    new ShortReferenceAssemblyName(ShortAssemblyName.FromName("MSTest.TestAdapter"), "1.3.2", AssemblyReferenceType.NugetReference),
+                    new ShortReferenceAssemblyName(ShortAssemblyName.FromName("MSTest.TestFramework"), "1.3.2", AssemblyReferenceType.NugetReference));
             }
         }
 
