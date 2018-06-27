@@ -4,11 +4,13 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 {
     using System.Diagnostics;
+    using System.Globalization;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     internal static class MethodInfoExtensions
@@ -143,6 +145,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// </param>
         internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object classInstance, params object[] parameters)
         {
+            if (methodInfo.GetParameters() != null && parameters == null)
+            {
+                string errorMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.UTA_TestMethodExpectedParameters);
+                throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, errorMessage);
+            }
+
             var task = methodInfo.Invoke(classInstance, parameters) as Task;
 
             // If methodInfo is an Async method, wait for returned task
