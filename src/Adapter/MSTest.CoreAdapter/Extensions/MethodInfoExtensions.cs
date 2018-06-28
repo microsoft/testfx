@@ -145,12 +145,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// </param>
         internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object classInstance, params object[] parameters)
         {
-            if (methodInfo.GetParameters() != null && parameters == null)
+            var methodParameters = methodInfo.GetParameters();
+
+            // check if testmethod expected parameter values but no testdata was provided,
+            // throw error with appropriate message.
+            if (methodParameters != null && methodParameters.Length > 0 && parameters == null)
             {
-                string errorMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_TestMethodExpectedParameters);
-                throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, errorMessage);
+                throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, Resource.UTA_TestMethodExpectedParameters);
             }
 
             var task = methodInfo.Invoke(classInstance, parameters) as Task;
