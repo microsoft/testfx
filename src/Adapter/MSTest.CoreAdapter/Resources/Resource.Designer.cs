@@ -188,7 +188,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning : A testsettings file, a runsettings file with a ForcedLegacyMode set to true or a vsmdi file is not supported with the MSTest V2 Adapter..
+        ///   Looks up a localized string similar to Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter..
         /// </summary>
         internal static string LegacyScenariosNotSupportedWarning {
             get {
