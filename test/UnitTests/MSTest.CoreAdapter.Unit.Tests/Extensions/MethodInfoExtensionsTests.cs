@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
     using System;
     using System.Reflection;
     using System.Threading.Tasks;
-    using global::MSTestAdapter.TestUtilities;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -380,9 +380,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         {
             var dummyTestClass = new DummyTestClass2();
             var dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
-
-            Action action = () => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, null);
-            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFailedException));
+            try
+            {
+                // Should throw exception of type TestFailedException
+                dummyMethod.InvokeAsSynchronousTask(dummyTestClass, null);
+            }
+            catch (TestFailedException ex)
+            {
+                Assert.AreEqual(ex.Outcome, UnitTestOutcome.Error);
+                Assert.AreEqual(ex.TryGetMessage(), Resource.UTA_TestMethodExpectedParameters);
+            }
         }
 
         [TestMethod]
