@@ -23,7 +23,8 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "CompatTestProject.UnitTest1.SkippingTest",
                 "SampleUnitTestProject.UnitTest1.PassingTest",
                 "SampleUnitTestProject.UnitTest1.FailingTest",
-                "SampleUnitTestProject.UnitTest1.SkippingTest"
+                "SampleUnitTestProject.UnitTest1.SkippingTest",
+                "SampleUnitTestProject.UnitTest1.DataDrivenTestWithParameters"
             };
             this.ValidateDiscoveredTests(listOfTests);
         }
@@ -35,7 +36,8 @@ namespace MSTestAdapter.Smoke.E2ETests
 
             this.ValidatePassedTestsContain(
                 "CompatTestProject.UnitTest1.PassingTest",
-                 "SampleUnitTestProject.UnitTest1.PassingTest");
+                 "SampleUnitTestProject.UnitTest1.PassingTest",
+                 "SampleUnitTestProject.UnitTest1.DataDrivenTestWithParameters");
 
             this.ValidateFailedTestsContain(
                 "CompatTestProject.UnitTest1.FailingTest",

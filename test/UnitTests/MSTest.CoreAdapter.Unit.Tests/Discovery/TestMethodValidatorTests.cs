@@ -162,6 +162,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             Assert.IsTrue(this.testMethodValidator.IsValidTestMethod(methodInfo, this.type, this.warnings));
         }
 
+        [TestMethod]
+        public void IsValidTestMethodShouldReturnFalseForMethodsWhichAreNotDataDrivenButHaveParameters()
+        {
+            this.SetupTestMethod();
+            this.mockReflectHelper.Setup(rh => rh.HasAttributeImplementingInterface(It.IsAny<MemberInfo>(), typeof(UTF.ITestDataSource), It.IsAny<bool>())).Returns(false);
+            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithParameters");
+
+            var expectedWarning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorIncorrectTestMethodSignature, this.type.FullName, "MethodWithParameters");
+
+            Assert.IsFalse(this.testMethodValidator.IsValidTestMethod(methodInfo, this.type, this.warnings));
+            Assert.AreEqual(expectedWarning, this.warnings[0]);
+        }
+
+        [TestMethod]
+        public void IsValidTestMethodShouldReturnTrueForMethodsWhichAreDataDrivenAndHaveParameters()
+        {
+            this.SetupTestMethod();
+            this.mockReflectHelper.Setup(rh => rh.HasAttributeImplementingInterface(It.IsAny<MemberInfo>(), typeof(UTF.ITestDataSource), It.IsAny<bool>())).Returns(true);
+            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithParameters");
+
+            Assert.IsTrue(this.testMethodValidator.IsValidTestMethod(methodInfo, this.type, this.warnings));
+        }
+
         private void SetupTestMethod()
         {
             this.mockReflectHelper.Setup(
@@ -202,6 +225,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         public void MethodWithVoidReturnType()
+        {
+        }
+
+        public void MethodWithParameters(string dummyParam)
         {
         }
 

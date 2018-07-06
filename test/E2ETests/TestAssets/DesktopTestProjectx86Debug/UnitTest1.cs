@@ -34,5 +34,17 @@ namespace SampleUnitTestProject
         public void SkippingTest()
         {
         }
+
+        [TestMethod]
+        public void MethodWithParameters(string param)
+        {
+        }
+
+        [DataRow("Hello")]
+        [TestMethod]
+        public void DataDrivenTestWithParameters(string param)
+        {
+
+        }
     }
 }

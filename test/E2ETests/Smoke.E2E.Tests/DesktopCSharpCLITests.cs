@@ -79,14 +79,14 @@ namespace Microsoft.MSTestV2.Smoke.E2ETests
         private void DoDiscoveryAndValidateDiscoveredTests(string[] sources, string runSettings = "")
         {
             this.InvokeVsTestForDiscovery(sources, runSettings);
-            var listOfTests = new string[] { "SampleUnitTestProject.UnitTest1.PassingTest", "SampleUnitTestProject.UnitTest1.FailingTest", "SampleUnitTestProject.UnitTest1.SkippingTest" };
+            var listOfTests = new string[] { "SampleUnitTestProject.UnitTest1.PassingTest", "SampleUnitTestProject.UnitTest1.FailingTest", "SampleUnitTestProject.UnitTest1.SkippingTest", "SampleUnitTestProject.UnitTest1.DataDrivenTestWithParameters" };
             this.ValidateDiscoveredTests(listOfTests);
         }
 
         private void RunAllTestsAndValidateResults(string[] sources, string runSettings = "")
         {
             this.InvokeVsTestForExecution(sources, runSettings);
-            this.ValidatePassedTests("SampleUnitTestProject.UnitTest1.PassingTest");
+            this.ValidatePassedTests("SampleUnitTestProject.UnitTest1.PassingTest", "SampleUnitTestProject.UnitTest1.DataDrivenTestWithParameters");
             this.ValidateFailedTests(sources[0], "SampleUnitTestProject.UnitTest1.FailingTest");
             this.ValidateSkippedTests("SampleUnitTestProject.UnitTest1.SkippingTest");
         }

@@ -131,6 +131,46 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
+        /// Returns true when specified class/member has attribute which implements specific interface.
+        /// </summary>
+        /// <param name="memberInfo">The member info.</param>
+        /// <param name="interfaceType">The interface type.</param>
+        /// <param name="inherit">Should look at inheritance tree.</param>
+        /// <returns>Returns bool specifying whether class/member has attribute which implements given interface.</returns>
+        public virtual bool HasAttributeImplementingInterface(MemberInfo memberInfo, Type interfaceType, bool inherit)
+        {
+            if (memberInfo == null)
+            {
+                throw new ArgumentNullException(nameof(memberInfo));
+            }
+
+            if (interfaceType == null)
+            {
+                throw new ArgumentNullException(nameof(interfaceType));
+            }
+
+            // Get all attributes on the member.
+            Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
+
+            if (attributes != null)
+            {
+                // Try to find the attribute that implements interfaceType.
+                foreach (object attribute in attributes.Values)
+                {
+                    Debug.Assert(attribute != null, "ReflectHelper.HasAttributeImplementingInterface: internal error: wrong value in the attrs dictionary.");
+
+                    Type attributeType = attribute.GetType();
+                    if (interfaceType.GetTypeInfo().IsAssignableFrom(attributeType.GetTypeInfo()))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Resolves the expected exception attribute. The function will try to
         /// get all the expected exception attributes defined for a testMethod.
         /// </summary>
