@@ -603,6 +603,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?.
+        /// </summary>
+        internal static string UTA_TestMethodExpectedParameters {
+            get {
+                return ResourceManager.GetString("UTA_TestMethodExpectedParameters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test method {0}.{1} threw exception: 
         ///{2}.
         /// </summary>

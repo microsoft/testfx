@@ -313,4 +313,7 @@
   <data name="TestAssembly_AssemblyDiscoveryFailure" xml:space="preserve">
     <value>Failed to discover tests from assembly {0}. Reason:{1}</value>
   </data>
+  <data name="UTA_TestMethodExpectedParameters" xml:space="preserve">
+    <value>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</value>
+  </data>
 </root>
