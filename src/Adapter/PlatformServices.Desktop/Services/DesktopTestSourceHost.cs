@@ -120,7 +120,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
                 EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating app-domain for source {0} with application base path {1}.", this.sourceFileName, appDomainSetup.ApplicationBase);
 
-                string domainName = string.Format("TestSourceHost: Enumering source ({0})", this.sourceFileName);
+                string domainName = string.Format("TestSourceHost: Enumerating source ({0})", this.sourceFileName);
                 this.domain = this.appDomain.CreateDomain(domainName, null, appDomainSetup);
 
                 // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recurive assembly resolution
