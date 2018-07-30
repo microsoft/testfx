@@ -326,6 +326,11 @@
         <target state="translated">Nepovedlo se zjistit testy ze sestavení {0}. Důvod:{1}</target>
         <note />
       </trans-unit>
+      <trans-unit id="UTA_TestMethodExpectedParameters">
+        <source>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</source>
+        <target state="new">Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

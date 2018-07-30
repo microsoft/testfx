@@ -76,6 +76,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public string ErrorStackTrace { get; internal set; }
 
         /// <summary>
+        /// Gets the execution id of the result
+        /// </summary>
+        public Guid ExecutionId { get; internal set; }
+
+        /// <summary>
+        /// Gets the parent execution id of the result
+        /// </summary>
+        public Guid ParentExecId { get; internal set; }
+
+        /// <summary>
+        /// Gets the inner results count of the result
+        /// </summary>
+        public int InnerResultsCount { get; internal set; }
+
+        /// <summary>
         /// Gets the duration of the result
         /// </summary>
         public TimeSpan Duration { get; internal set; }
@@ -148,6 +163,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                                             StartTime = startTime,
                                             EndTime = endTime
             };
+
+            testResult.SetPropertyValue<Guid>(Constants.ExecutionIdProperty, this.ExecutionId);
+            testResult.SetPropertyValue<Guid>(Constants.ParentExecIdProperty, this.ParentExecId);
+            testResult.SetPropertyValue<int>(Constants.InnerResultsCountProperty, this.InnerResultsCount);
 
             if (!string.IsNullOrEmpty(this.StandardOut))
             {

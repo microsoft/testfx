@@ -1011,7 +1011,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
-        public void IsLegacyScenarioReturnsTrueWhenForcedLegacyModeIsSetToTrue()
+        public void IsLegacyScenarioReturnsFalseWhenForcedLegacyModeIsSetToTrue()
         {
             string runSettingxml =
             @"<RunSettings>   
@@ -1022,7 +1022,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
             MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
-            Assert.IsTrue(MSTestSettings.IsLegacyScenario(this.mockMessageLogger.Object));
+            Assert.IsFalse(MSTestSettings.IsLegacyScenario(this.mockMessageLogger.Object));
         }
 
         [TestMethod]
