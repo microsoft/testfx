@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="MSTestV2IntelliTestExtensionPackage.Microsoft.935a8bb8-364d-46ce-a02f-fbb74f2d9188" Version="15.0.27708.00" Language="en-US" Publisher="Microsoft" />
+    <Identity Id="MSTestV2IntelliTestExtensionPackage.Microsoft.935a8bb8-364d-46ce-a02f-fbb74f2d9188" Version="15.0.27805.00" Language="en-US" Publisher="Microsoft" />
     <DisplayName>MSTest V2 IntelliTest Extension</DisplayName>
     <Description xml:space="preserve">Allows developers to generate IntelliTest using MSTest V2.</Description>
     <License>IntelliTestExtensionLicense.rtf</License>
