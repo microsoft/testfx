@@ -90,7 +90,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// The ignore attribute.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class IgnoreAttribute : Attribute
+    public class IgnoreAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="IgnoreAttribute"/> class.
