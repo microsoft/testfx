@@ -62,9 +62,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Runs a single test.
         /// </summary>
         /// <param name="testMethod"> The test Method. </param>
-        /// <param name="testRunParameters"> The test Run Parameters. </param>
+        /// <param name="testContextProperties"> The test context properties. </param>
         /// <returns> The <see cref="UnitTestResult"/>. </returns>
-        internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object> testRunParameters)
+        internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object> testContextProperties)
         {
             if (testMethod == null)
             {
@@ -75,7 +75,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 using (var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture))
                 {
-                    var properties = new Dictionary<string, object>(testRunParameters);
+                    var properties = new Dictionary<string, object>(testContextProperties);
                     var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
                     testContext.SetOutcome(TestTools.UnitTesting.UnitTestOutcome.InProgress);
 
