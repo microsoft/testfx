@@ -20,11 +20,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     [TestClass]
     public class TcmTestPropertiesProviderTests
     {
-        private const string PropertiesJsonWithDuplicateNamedTestCases = "{ \"TestPlanId\":1, \"TestRunId\":4, \"BuildConfigurationId\":0, \"BuildDirectory\":\"C:\\\\deployment\", \"BuildFlavor\":null, \"BuildNumber\":\"4\", \"BuildPlatform\":null, \"BuildUri\":\"vstfs:///Build/Build/4\", \"TfsServerCollectionUrl\":\"http://server/tfs/DefaultCollection/\", \"TeamProject\":\"teamproject\", \"IsInLabEnvironment\":false, \"LabEnvironment\":null, \"TestCases\":[{\"FullyQualifiedName\":\"PassingTest\",\"Source\":\"unittestproject1.dll\",\"TestCaseId\":1311,\"TestPointId\":11,\"TestConfigurationId\":1,\"TestConfigurationName\":\"Windows 10\"},{\"FullyQualifiedName\":\"PassingTest\",\"Source\":\"unittestproject1.dll\",\"TestCaseId\":1312,\"TestPointId\":12,\"TestConfigurationId\":2,\"TestConfigurationName\":\"Windows 8\"},{\"FullyQualifiedName\":\"PassingTest2\",\"Source\":\"unittestproject2.dll\",\"TestCaseId\":1313,\"TestPointId\":13,\"TestConfigurationId\":2,\"TestConfigurationName\":\"Windows 8\"}]}";
-
-        private const string TestParam = "testparam";
-        private const string TestValue = "testvalue";
-
         private TestProperty[] tcmKnownProperties = new TestProperty[]
         {
             TestAdapterConstants.TestRunIdProperty,
@@ -55,7 +50,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIdIsZero()
         {
             var testCase = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
-            var propertiesValue = new object[] { 32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 0, 54, "sample configuration name", 345 };
+            var propertiesValue = new object[]
+            {
+                32, 534, 5, "sample build directory", "sample build flavor",
+                "132456", "sample build platform", "http://sampleBuildUri/",
+                "http://samplecollectionuri/", "sample team project", false,
+                0, 54, "sample configuration name", 345
+            };
             this.SetTestCaseProperties(testCase, propertiesValue);
 
             var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
@@ -66,7 +67,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void GetTcmPropertiesShouldGetAllPropertiesFromTestCase()
         {
             var testCase = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
-            var propertiesValue = new object[] { 32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 1401, 54, "sample configuration name", 345 };
+            var propertiesValue = new object[]
+            {
+                32, 534, 5, "sample build directory", "sample build flavor",
+                "132456", "sample build platform", "http://sampleBuildUri/",
+                "http://samplecollectionuri/", "sample team project", false,
+                1401, 54, "sample configuration name", 345
+            };
             this.SetTestCaseProperties(testCase, propertiesValue);
 
             var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
@@ -79,14 +86,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             // Verify 1st call.
             var testCase1 = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
-            var propertiesValue1 = new object[] { 32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 1401, 54, "sample configuration name", 345 };
+            var propertiesValue1 = new object[]
+            {
+                32, 534, 5, "sample build directory", "sample build flavor",
+                "132456", "sample build platform", "http://sampleBuildUri/",
+                "http://samplecollectionuri/", "sample team project", false,
+                1401, 54, "sample configuration name", 345
+            };
             this.SetTestCaseProperties(testCase1, propertiesValue1);
             var tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
             this.VerifyTcmProperties(tcmProperties1, testCase1);
 
             // Verify 2nd call.
             var testCase2 = new TestCase("PassingTestFomTestCase2", new Uri("http://sampleUri2/"), "unittestproject2.dll");
-            var propertiesValue2 = new object[] { 33, 535, 6, "sample build directory 2", "sample build flavor 2", "132457", "sample build platform 2", "http://sampleBuildUri2/", "http://samplecollectionuri2/", "sample team project", true, 1403, 55, "sample configuration name 2", 346 };
+            var propertiesValue2 = new object[]
+            {
+                33, 535, 6, "sample build directory 2", "sample build flavor 2",
+                "132457", "sample build platform 2", "http://sampleBuildUri2/",
+                "http://samplecollectionuri2/", "sample team project", true,
+                1403, 55, "sample configuration name 2", 346
+            };
             this.SetTestCaseProperties(testCase2, propertiesValue2);
             var tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
             this.VerifyTcmProperties(tcmProperties2, testCase2);
@@ -97,21 +116,39 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             // Verify 1st call.
             var testCase1 = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
-            var propertiesValue1 = new object[] { 32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 1401, 54, "sample configuration name", 345 };
+            var propertiesValue1 = new object[]
+            {
+                32, 534, 5, "sample build directory", "sample build flavor",
+                "132456", "sample build platform", "http://sampleBuildUri/",
+                "http://samplecollectionuri/", "sample team project", false,
+                1401, 54, "sample configuration name", 345
+            };
             this.SetTestCaseProperties(testCase1, propertiesValue1);
             var tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
             this.VerifyTcmProperties(tcmProperties1, testCase1);
 
             // Verify 2nd call.
             var testCase2 = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
-            var propertiesValue2 = new object[] { 33, 535, 6, "sample build directory 2", "sample build flavor 2", "132457", "sample build platform 2", "http://sampleBuildUri2/", "http://samplecollectionuri2/", "sample team project", true, 1403, 55, "sample configuration name 2", 346 };
+            var propertiesValue2 = new object[]
+            {
+                33, 535, 6, "sample build directory 2", "sample build flavor 2",
+                "132457", "sample build platform 2", "http://sampleBuildUri2/",
+                "http://samplecollectionuri2/", "sample team project", true,
+                1403, 55, "sample configuration name 2", 346
+            };
             this.SetTestCaseProperties(testCase2, propertiesValue2);
             var tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
             this.VerifyTcmProperties(tcmProperties2, testCase2);
 
             // Verify 3rd call.
             var testCase3 = new TestCase("PassingTestFomTestCase2", new Uri("http://sampleUri/"), "unittestproject2.dll");
-            var propertiesValue3 = new object[] { 34, 536, 7, "sample build directory 3", "sample build flavor 3", "132458", "sample build platform 3", "http://sampleBuildUri3/", "http://samplecollectionuri3/", "sample team project2", true, 1404, 55, "sample configuration name 3", 347 };
+            var propertiesValue3 = new object[]
+            {
+                34, 536, 7, "sample build directory 3", "sample build flavor 3",
+                "132458", "sample build platform 3", "http://sampleBuildUri3/",
+                "http://samplecollectionuri3/", "sample team project2", true,
+                1404, 55, "sample configuration name 3", 347
+            };
             this.SetTestCaseProperties(testCase3, propertiesValue3);
             var tcmProperties3 = TcmTestPropertiesProvider.GetTcmProperties(testCase3);
             this.VerifyTcmProperties(tcmProperties3, testCase3);

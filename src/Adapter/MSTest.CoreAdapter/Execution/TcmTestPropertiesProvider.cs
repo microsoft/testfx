@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             var tcmProperties = new Dictionary<TestPlatformObjectModel.TestProperty, object>();
 
-            // Return empty proeprties when testCase is null or when test case id is zero.
+            // Return empty properties when testCase is null or when test case id is zero.
             if (testCase == null ||
                 testCase.GetPropertyValue<int>(Constants.TestCaseIdProperty, default(int)) == 0)
             {
