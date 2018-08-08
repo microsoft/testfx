@@ -27,6 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using Ignore = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute;
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    using TestAdapterConstants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
@@ -47,6 +48,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         private List<string> callers;
 
         private TestExecutionManager TestExecutionManager { get; set; }
+
+        private TestProperty[] tcmKnownProperties = new TestProperty[]
+        {
+            TestAdapterConstants.TestRunIdProperty,
+            TestAdapterConstants.TestPlanIdProperty,
+            TestAdapterConstants.BuildConfigurationIdProperty,
+            TestAdapterConstants.BuildDirectoryProperty,
+            TestAdapterConstants.BuildFlavorProperty,
+            TestAdapterConstants.BuildNumberProperty,
+            TestAdapterConstants.BuildPlatformProperty,
+            TestAdapterConstants.BuildUriProperty,
+            TestAdapterConstants.TfsServerCollectionUrlProperty,
+            TestAdapterConstants.TfsTeamProjectProperty,
+            TestAdapterConstants.IsInLabEnvironmentProperty,
+            TestAdapterConstants.TestCaseIdProperty,
+            TestAdapterConstants.TestConfigurationIdProperty,
+            TestAdapterConstants.TestConfigurationNameProperty,
+            TestAdapterConstants.TestPointIdProperty
+        };
 
         [TestInitialize]
         public void TestInit()
@@ -278,6 +298,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             CollectionAssert.Contains(
                 DummyTestClass.TestContextProperties.ToList(),
                 new KeyValuePair<string, object>("webAppUrl", "http://localhost"));
+        }
+
+        [TestMethodV1]
+        public void RunTestsForTestShouldPassInTcmPropertiesAsPropertiesToTheTest()
+        {
+            var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
+            var propertiesValue = new object[] { 32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 1401, 54, "sample configuration name", 345 };
+            this.SetTestCaseProperties(testCase, propertiesValue);
+
+            TestCase[] tests = new[] { testCase };
+
+            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+            this.VerifyTcmProperties(DummyTestClass.TestContextProperties, testCase);
         }
 
         [TestMethodV1]
@@ -804,6 +838,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
 
             this.callers.Add(caller);
+        }
+
+        private void VerifyTcmProperties(IDictionary<string, object> tcmProperties, TestCase testCase)
+        {
+            foreach (var property in this.tcmKnownProperties)
+            {
+                Assert.AreEqual(testCase.GetPropertyValue(property), tcmProperties[property.Id]);
+            }
+        }
+
+        private void SetTestCaseProperties(TestCase testCase, object[] propertiesValue)
+        {
+            var tcmKnownPropertiesEnumerator = this.tcmKnownProperties.GetEnumerator();
+
+            var propertiesValueEnumerator = propertiesValue.GetEnumerator();
+            while (tcmKnownPropertiesEnumerator.MoveNext() && propertiesValueEnumerator.MoveNext())
+            {
+                var property = tcmKnownPropertiesEnumerator.Current;
+                var value = propertiesValueEnumerator.Current;
+                testCase.SetPropertyValue(property as TestProperty, value);
+            }
         }
 
         #endregion
