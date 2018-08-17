@@ -371,7 +371,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     "Executing test {0}",
                     unitTestElement.TestMethod.Name);
 
-                var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, sourceLevelParameters);
+                // Run single test passing test context properties to it.
+                var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
+                var testContextProperties = this.GetTestContextProperties(tcmProperties, sourceLevelParameters);
+                var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                     "Executed test {0}",
@@ -381,6 +384,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 this.SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
             }
+        }
+
+        /// <summary>
+        /// Get test context properties.
+        /// </summary>
+        /// <param name="tcmProperties">Tcm properties.</param>
+        /// <param name="sourceLevelParameters">Source level parameters.</param>
+        /// <returns>Test context properties.</returns>
+        private IDictionary<string, object> GetTestContextProperties(IDictionary<TestProperty, object> tcmProperties, IDictionary<string, object> sourceLevelParameters)
+        {
+            var testContextProperties = new Dictionary<string, object>();
+
+            // Add tcm properties.
+            foreach (var propertyPair in tcmProperties)
+            {
+                testContextProperties[propertyPair.Key.Id] = propertyPair.Value;
+            }
+
+            // Add source level parameters.
+            foreach (var propertyPair in sourceLevelParameters)
+            {
+                testContextProperties[propertyPair.Key] = propertyPair.Value;
+            }
+
+            return testContextProperties;
         }
 
         private void RunCleanup(
