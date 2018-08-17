@@ -130,8 +130,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             UnitTestResult[] result = null;
 
             string ignoreMessage = null;
-            var isIgnoreAttributeOnClass = this.reflectHelper.IsAttributeDefined(this.testMethodInfo.Parent.ClassType, typeof(UTF.IgnoreAttribute), false);
-            var isIgnoreAttributeOnMethod = this.reflectHelper.IsAttributeDefined(this.testMethodInfo.TestMethod, typeof(UTF.IgnoreAttribute), false);
+            var isIgnoreAttributeOnClass = this.reflectHelper.IsAttributeDefined(this.testMethodInfo.Parent.ClassType, typeof(UTF.IgnoreAttribute), false) || this.reflectHelper.HasAttributeDerivedFrom(this.testMethodInfo.Parent.ClassType, typeof(UTF.IgnoreAttribute), false);
+            var isIgnoreAttributeOnMethod = this.reflectHelper.IsAttributeDefined(this.testMethodInfo.TestMethod, typeof(UTF.IgnoreAttribute), false) || this.reflectHelper.HasAttributeDerivedFrom(this.testMethodInfo.TestMethod, typeof(UTF.IgnoreAttribute), false);
 
             if (isIgnoreAttributeOnClass)
             {
