@@ -120,6 +120,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void RunTestsForSubclassedIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
+        {
+            var testCase = this.GetTestCase(typeof(DummyTestClass), "SubclassedIgnoredAttributeTest", ignore: true);
+            TestCase[] tests = new[] { testCase };
+
+            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, this.cancellationToken);
+
+            Assert.AreEqual("SubclassedIgnoredAttributeTest", this.frameworkHandle.TestCaseStartList[0]);
+            Assert.AreEqual("SubclassedIgnoredAttributeTest:Skipped", this.frameworkHandle.TestCaseEndList[0]);
+            Assert.AreEqual("SubclassedIgnoredAttributeTest  Skipped", this.frameworkHandle.ResultsList[0]);
+        }
+
+        [TestMethodV1]
         public void RunTestsForASingleTestShouldSendSingleResult()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -838,6 +851,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             [UTF.Ignore]
             public void IgnoredTest()
+            {
+                UTF.Assert.Fail();
+            }
+
+            private class SubclassedIgnoreAttribute : UTF.IgnoreAttribute
+            {
+            }
+
+            [UTF.TestMethod]
+            [SubclassedIgnoreAttribute]
+            public void SubclassedIgnoredAttributeTest()
             {
                 UTF.Assert.Fail();
             }
