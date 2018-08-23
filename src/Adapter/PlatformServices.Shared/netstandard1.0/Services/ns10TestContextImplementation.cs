@@ -29,6 +29,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private static readonly string TestNameLabel = "TestName";
 
         /// <summary>
+        /// List of result files associated with the test
+        /// </summary>
+        private IList<string> testResultFiles;
+
+        /// <summary>
         /// Properties
         /// </summary>
         private IDictionary<string, object> properties;
@@ -61,6 +66,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.properties = new Dictionary<string, object>(properties);
             this.stringWriter = writer;
             this.InitializeProperties();
+
+            this.testResultFiles = new List<string>();
         }
 
         #region TestContext impl
@@ -129,6 +136,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 return this as UTF.TestContext;
             }
+        }
+
+        public override void AddResultFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                throw new ArgumentException("The parameter should not be null or empty.", "fileName");
+            }
+
+            // TODO: Update below line to call Path.GetFullPath(fileName); once GetFullPath method is available
+            this.testResultFiles.Add(fileName);
         }
 
         /// <summary>
