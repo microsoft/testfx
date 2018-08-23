@@ -18,13 +18,14 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     using UnitTestOutcome = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 #endif
 
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
     using Moq;
+    using MSTestAdapter.TestUtilities;
     using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
@@ -267,6 +268,78 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             this.testContextImplementation.ClearDiagnosticMessages();
 
             Assert.AreEqual(string.Empty, stringWriter.ToString());
+        }
+
+        [TestMethod]
+        public void AddResultFileShouldAddFiletoResultsFiles()
+        {
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+
+            this.testContextImplementation.AddResultFile("C:\\files\\myfile.txt");
+            var resultFile = this.testContextImplementation.GetResultFiles();
+
+            CollectionAssert.Contains(resultFile.ToList(), "C:\\files\\myfile.txt");
+        }
+
+        [TestMethod]
+        public void AddResultFileShouldThrowIfFileNameIsNull()
+        {
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+
+            var exception = ActionUtility.PerformActionAndReturnException(() => this.testContextImplementation.AddResultFile(null));
+
+            Assert.AreEqual(typeof(ArgumentException), exception.GetType());
+            StringAssert.Contains(exception.Message, "The parameter should not be null or empty.");
+        }
+
+        [TestMethod]
+        public void AddResultFileShouldThrowIfFileNameIsEmpty()
+        {
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+
+            var exception = ActionUtility.PerformActionAndReturnException(() => this.testContextImplementation.AddResultFile(string.Empty));
+
+            Assert.AreEqual(typeof(ArgumentException), exception.GetType());
+            StringAssert.Contains(exception.Message, "The parameter should not be null or empty.");
+        }
+
+        [TestMethod]
+        public void AddResultFileShouldAddMultipleFilestoResultsFiles()
+        {
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+
+            this.testContextImplementation.AddResultFile("C:\\files\\file1.txt");
+            this.testContextImplementation.AddResultFile("C:\\files\\files2.html");
+
+            var resultsFiles = this.testContextImplementation.GetResultFiles();
+
+            CollectionAssert.Contains(resultsFiles.ToList(), "C:\\files\\file1.txt");
+            CollectionAssert.Contains(resultsFiles.ToList(), "C:\\files\\files2.html");
+        }
+
+        [TestMethod]
+        public void GetResultFilesShouldReturnNullIfNoAddedResultFiles()
+        {
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+
+            var resultFile = this.testContextImplementation.GetResultFiles();
+
+            Assert.IsNull(resultFile, "No added result files");
+        }
+
+        [TestMethod]
+        public void GetResultFilesShouldReturnListOfAddedResultFiles()
+        {
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+
+            this.testContextImplementation.AddResultFile("C:\\files\\myfile.txt");
+            this.testContextImplementation.AddResultFile("C:\\files\\myfile2.txt");
+
+            var resultFiles = this.testContextImplementation.GetResultFiles();
+
+            Assert.IsTrue(resultFiles.Count > 0, "GetResultFiles returned added elements");
+            CollectionAssert.Contains(resultFiles.ToList(), "C:\\files\\myfile.txt");
+            CollectionAssert.Contains(resultFiles.ToList(), "C:\\files\\myfile2.txt");
         }
     }
 
