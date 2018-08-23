@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-
+    using System.Linq;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
@@ -138,6 +138,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
+        /// <summary>
+        /// Adds a file name to the list in TestResult.ResultFileNames
+        /// </summary>
+        /// <param name="fileName">
+        /// The file Name.
+        /// </param>
         public override void AddResultFile(string fileName)
         {
             if (string.IsNullOrEmpty(fileName))
@@ -146,6 +152,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             // TODO: Update below line to call Path.GetFullPath(fileName); once GetFullPath method is available
+            // this.testResultFiles.Add(Path.GetFullPath(fileName));
             this.testResultFiles.Add(fileName);
         }
 
@@ -191,12 +198,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Returning null as this feature is not supported in ASP .net and UWP
+        /// Result files attached
         /// </summary>
-        /// <returns>List of result files. Null presently.</returns>
+        /// <returns>List of result files generated in run.</returns>
         public IList<string> GetResultFiles()
         {
-            return null;
+            if (this.testResultFiles.Count == 0)
+            {
+                return null;
+            }
+
+            IList<string> results = this.testResultFiles.ToList();
+
+            this.testResultFiles.Clear();
+
+            return results;
         }
 
         /// <summary>
