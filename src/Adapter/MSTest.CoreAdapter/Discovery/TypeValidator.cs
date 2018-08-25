@@ -43,10 +43,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     (this.reflectHelper.IsAttributeDefined(type, typeof(TestClassAttribute), false) ||
                     this.reflectHelper.HasAttributeDerivedFrom(type, typeof(TestClassAttribute), false)))
             {
-                var isPublic = type.GetTypeInfo().IsPublic || (type.GetTypeInfo().IsNested && type.GetTypeInfo().IsNestedPublic);
-
                 // non-public class
-                if (!isPublic)
+                if (type.GetTypeInfo().IsNotPublic ||
+                    (type.GetTypeInfo().IsNested && type.GetTypeInfo().IsNestedPrivate))
+                {
+                    return false;
+                }
+
+                // nested non-public class
+                if (type.GetTypeInfo().IsNested && !type.GetTypeInfo().IsNestedPublic)
                 {
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
                     warnings.Add(warning);
