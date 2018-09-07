@@ -7,7 +7,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props') and $(FrameworkIdentifier) != 'NetCore'" />
   <!-- Import props/targets with $(RepoRoot) since msbuild takes the relative path based on settings.targets and not with respect to the project. -->
   <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
-  <Import Project="$(RepoRoot)packages\microsoft.vssdk.buildtools.15.0.26201\build\Microsoft.VSSDK.BuildTools.props" Condition=" $(IsVsixProj) == 'true' and Exists('$(RepoRoot)packages\microsoft.vssdk.buildtools.15.0.26201\build\Microsoft.VSSDK.BuildTools.props')" />
+  <Import Project="$(RepoRoot)packages\microsoft.vssdk.buildtools.15.8.3247\build\Microsoft.VSSDK.BuildTools.props" Condition=" $(IsVsixProj) == 'true' and Exists('$(RepoRoot)packages\microsoft.vssdk.buildtools.15.8.3247\build\Microsoft.VSSDK.BuildTools.props')" />
 
   <PropertyGroup>
     <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
