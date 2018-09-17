@@ -80,12 +80,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethod]
-        public void IsValidTestClassShouldNotReportWarningForNonPublicTestClasses()
+        public void IsValidTestClassShouldReportWarningForNonPublicTestClasses()
         {
             this.SetupTestClass();
             this.typeValidator.IsValidTestClass(typeof(InternalTestClass), this.warnings);
-            Assert.AreEqual(0, this.warnings.Count);
-            CollectionAssert.DoesNotContain(this.warnings, string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(InternalTestClass).FullName));
+            Assert.AreEqual(1, this.warnings.Count);
+            CollectionAssert.Contains(this.warnings, string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(InternalTestClass).FullName));
         }
 
         [TestMethod]
