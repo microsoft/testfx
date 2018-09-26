@@ -182,8 +182,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     {
     }
 
-    #region Description attributes
-
     /// <summary>
     /// Test Owner
     /// </summary>
@@ -234,14 +232,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// Description of the test
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class DescriptionAttribute : TestPropertyAttribute
+    public sealed class DescriptionAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DescriptionAttribute"/> class to describe a test.
         /// </summary>
         /// <param name="description">The description.</param>
         public DescriptionAttribute(string description)
-            : base("Description", description)
         {
             this.Description = description;
         }
@@ -256,14 +253,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// CSS Project Structure URI
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class CssProjectStructureAttribute : TestPropertyAttribute
+    public sealed class CssProjectStructureAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CssProjectStructureAttribute"/> class for CSS Project Structure URI.
         /// </summary>
         /// <param name="cssProjectStructure">The CSS Project Structure URI.</param>
         public CssProjectStructureAttribute(string cssProjectStructure)
-            : base("CssProjectStructure", cssProjectStructure)
         {
             this.CssProjectStructure = cssProjectStructure;
         }
@@ -278,14 +274,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// CSS Iteration URI
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class CssIterationAttribute : TestPropertyAttribute
+    public sealed class CssIterationAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CssIterationAttribute"/> class for CSS Iteration URI.
         /// </summary>
         /// <param name="cssIteration">The CSS Iteration URI.</param>
         public CssIterationAttribute(string cssIteration)
-            : base("CssIteration", cssIteration)
         {
             this.CssIteration = cssIteration;
         }
@@ -300,14 +295,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// WorkItem attribute; used to specify a work item associated with this test.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public sealed class WorkItemAttribute : TestPropertyAttribute
+    public sealed class WorkItemAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="WorkItemAttribute"/> class for the WorkItem Attribute.
         /// </summary>
         /// <param name="id">The Id to a work item.</param>
         public WorkItemAttribute(int id)
-            : base("WorkItem", id.ToString(CultureInfo.CurrentCulture))
         {
             this.Id = id;
         }
@@ -317,8 +311,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         public int Id { get; private set; }
     }
-
-    #endregion
 
     /// <summary>
     /// Timeout attribute; used to specify the timeout of a unit test.
