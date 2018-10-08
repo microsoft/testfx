@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private TestExecutionManager TestExecutionManager { get; set; }
 
-        private TestProperty[] tcmKnownProperties = new TestProperty[]
+        private readonly TestProperty[] tcmKnownProperties = new TestProperty[]
         {
             TestAdapterConstants.TestRunIdProperty,
             TestAdapterConstants.TestPlanIdProperty,
@@ -417,11 +417,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             int testsCount = 0;
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location, Assembly.GetExecutingAssembly().Location };
-            TestableTestExecutionManager testableTestExecutionmanager = new TestableTestExecutionManager();
-
-            testableTestExecutionmanager.ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) =>
+            TestableTestExecutionManager testableTestExecutionmanager = new TestableTestExecutionManager
             {
-                testsCount += tests.Count();
+                ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) =>
+                {
+                    testsCount += tests.Count();
+                }
             };
 
             testableTestExecutionmanager.RunTests(sources, this.runContext, this.frameworkHandle, this.cancellationToken);
@@ -792,8 +793,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var methodInfo = typeOfClass.GetMethod(testName);
             var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName, Assembly.GetExecutingAssembly().FullName, isAsync: false);
-            UnitTestElement element = new UnitTestElement(testMethod);
-            element.Ignored = ignore;
+            UnitTestElement element = new UnitTestElement(testMethod)
+            {
+                Ignored = ignore
+            };
             return element.ToTestCase();
         }
 
