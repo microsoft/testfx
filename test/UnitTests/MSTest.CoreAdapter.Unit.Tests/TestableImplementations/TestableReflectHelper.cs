@@ -41,7 +41,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
             }
         }
 
-        internal override Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo, Type type)
+        internal override Attribute[] GetCustomAttributeForAssembly(Assembly assembly, Type type)
         {
             var hashcode = MemberTypes.All.GetHashCode() + type.FullName.GetHashCode();
 

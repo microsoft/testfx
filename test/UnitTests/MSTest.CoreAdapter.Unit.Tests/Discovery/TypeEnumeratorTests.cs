@@ -247,7 +247,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             var testCategories = new string[] { "foo", "bar" };
 
             // Setup mocks
-            this.mockReflectHelper.Setup(rh => rh.GetCategories(methodInfo)).Returns(testCategories);
+            this.mockReflectHelper.Setup(rh => rh.GetCategories(methodInfo, typeof(DummyTestClass))).Returns(testCategories);
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 

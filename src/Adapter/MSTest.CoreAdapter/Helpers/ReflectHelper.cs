@@ -313,10 +313,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// Get categories applied to the test method
         /// </summary>
         /// <param name="categoryAttributeProvider">The member to inspect.</param>
+        /// <param name="owningType">The reflected type that owns <paramref name="categoryAttributeProvider"/>.</param>
         /// <returns>Categories defined.</returns>
-        internal virtual string[] GetCategories(MemberInfo categoryAttributeProvider)
+        internal virtual string[] GetCategories(MemberInfo categoryAttributeProvider, Type owningType)
         {
-            var categories = this.GetCustomAttributesRecursively(categoryAttributeProvider, typeof(TestCategoryBaseAttribute));
+            var categories = this.GetCustomAttributesRecursively(categoryAttributeProvider, owningType, typeof(TestCategoryBaseAttribute));
             List<string> testCategories = new List<string>();
 
             if (categories != null)
@@ -344,11 +345,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// Get the parallelization behavior for a test method.
         /// </summary>
         /// <param name="testMethod">Test method.</param>
+        /// <param name="owningType">The type that owns <paramref name="testMethod"/>.</param>
         /// <returns>True if test method should not run in parallel.</returns>
-        internal bool IsDoNotParallelizeSet(MemberInfo testMethod)
+        internal bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType)
         {
             return this.GetCustomAttributes(testMethod, typeof(DoNotParallelizeAttribute)).Any()
-                   || this.GetCustomAttributes(testMethod.DeclaringType.GetTypeInfo(), typeof(DoNotParallelizeAttribute)).Any();
+                   || this.GetCustomAttributes(owningType.GetTypeInfo(), typeof(DoNotParallelizeAttribute)).Any();
         }
 
         /// <summary>
@@ -365,19 +367,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// Gets custom attributes at the class and assembly for a method.
         /// </summary>
         /// <param name="attributeProvider">Method Info or Member Info or a Type</param>
+        /// <param name="owningType">The type that owns <paramref name="attributeProvider"/>.</param>
         /// <param name="type"> What type of CustomAttribute you need. For instance: TestCategory, Owner etc.,</param>
         /// <returns>The categories of the specified type on the method. </returns>
-        internal IEnumerable<object> GetCustomAttributesRecursively(MemberInfo attributeProvider, Type type)
+        internal IEnumerable<object> GetCustomAttributesRecursively(MemberInfo attributeProvider, Type owningType, Type type)
         {
             var categories = this.GetCustomAttributes(attributeProvider, typeof(TestCategoryBaseAttribute));
             if (categories != null)
             {
-                categories = categories.Concat(this.GetCustomAttributes(attributeProvider.DeclaringType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
+                categories = categories.Concat(this.GetCustomAttributes(owningType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
             }
 
             if (categories != null)
             {
-                categories = categories.Concat(this.GetCustomAttributeForAssembly(attributeProvider, typeof(TestCategoryBaseAttribute))).ToArray();
+                categories = categories.Concat(this.GetCustomAttributeForAssembly(owningType.GetTypeInfo().Assembly, typeof(TestCategoryBaseAttribute))).ToArray();
             }
 
             if (categories != null)
@@ -389,18 +392,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
-        /// Gets the custom attributes on the assembly of a member info
+        /// Gets the custom attributes on an assembly
         /// NOTE: having it as separate virtual method, so that we can extend it for testing.
         /// </summary>
-        /// <param name="memberInfo">The member to inspect.</param>
+        /// <param name="assembly">The assembly to inspect.</param>
         /// <param name="type">The attribute type to find.</param>
         /// <returns>Custom attributes defined.</returns>
-        internal virtual Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo, Type type)
+        internal virtual Attribute[] GetCustomAttributeForAssembly(Assembly assembly, Type type)
         {
             return
                 PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
-                    memberInfo.DeclaringType.GetTypeInfo().Assembly,
-                    type).OfType<Attribute>().ToArray();
+                    assembly, type).OfType<Attribute>().ToArray();
         }
 
         /// <summary>

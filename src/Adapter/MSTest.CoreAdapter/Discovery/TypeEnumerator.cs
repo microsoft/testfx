@@ -126,9 +126,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var asyncTypeName = method.GetAsyncTypeName();
             testElement.AsyncTypeName = asyncTypeName;
 
-            testElement.TestCategory = this.reflectHelper.GetCategories(method);
+            testElement.TestCategory = this.reflectHelper.GetCategories(method, this.type);
 
-            testElement.DoNotParallelize = this.reflectHelper.IsDoNotParallelizeSet(method);
+            testElement.DoNotParallelize = this.reflectHelper.IsDoNotParallelizeSet(method, this.type);
 
             var traits = this.reflectHelper.GetTestPropertiesAsTraits(method);
 
