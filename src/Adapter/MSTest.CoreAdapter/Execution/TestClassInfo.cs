@@ -50,6 +50,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.TestContextProperty = testContextProperty;
             this.BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
             this.BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
+            this.BaseClassInitializeMethodsQueue = new Queue<MethodInfo>();
+            this.BaseClassCleanupMethodsQueue = new Queue<MethodInfo>();
             this.Parent = parent;
             this.ClassAttribute = classAttribute;
             this.testClassExecuteSyncObject = new object();
@@ -108,6 +110,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public bool IsClassInitializeExecuted { get; internal set; }
 
         /// <summary>
+        /// Gets a value indicating whether base class initialize has been executed.
+        /// </summary>
+        public bool IsBaseClassInitializeExecuted { get; internal set; }
+
+        /// <summary>
         /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
         /// </summary>
         public Exception ClassInitializationException { get; internal set; }
@@ -156,6 +163,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return true;
             }
         }
+
+        /// <summary>
+        /// Gets a queue of test initialize methods to call for this type.
+        /// </summary>
+        public Queue<MethodInfo> BaseClassInitializeMethodsQueue { get; private set; }
+
+        /// <summary>
+        /// Gets a queue of class cleanup methods to call for this type.
+        /// </summary>
+        public Queue<MethodInfo> BaseClassCleanupMethodsQueue { get; private set; }
 
         /// <summary>
         /// Gets the test initialize method.
@@ -219,10 +236,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public void RunClassInitialize(TestContext testContext)
         {
-            // If no class initialize return
-            if (this.ClassInitializeMethod == null)
+            // If no class initialize and no base class initialize, return
+            if (this.ClassInitializeMethod is null)
             {
-                return;
+                if (this.BaseClassInitializeMethodsQueue.Count == 0)
+                {
+                    return;
+                }
             }
 
             if (testContext == null)
@@ -230,8 +250,37 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 throw new NullReferenceException(Resource.TestContextIsNull);
             }
 
-            // If class initialization is not done, then do it.
-            if (!this.IsClassInitializeExecuted)
+            MethodInfo initializeMethod = null;
+            try
+            {
+                // ClassInitialize methods for base classes are called in reverse order of discovery
+                // Base -> Child TestClass
+                var baseClassInitializeStack = new Stack<MethodInfo>(this.BaseClassInitializeMethodsQueue);
+                while (baseClassInitializeStack.Count > 0)
+                {
+                    initializeMethod = baseClassInitializeStack.Pop();
+                    if (initializeMethod.GetCustomAttribute<ClassInitializeAttribute>().InheritanceBehavior == ClassInitializeInheritance.OnceBeforeAnyDerivedClasses)
+                    {
+                        if (!this.IsBaseClassInitializeExecuted)
+                        {
+                            initializeMethod?.InvokeAsSynchronousTask(null, testContext);
+                            this.IsBaseClassInitializeExecuted = true;
+                        }
+                    }
+                    else if (initializeMethod.GetCustomAttribute<ClassInitializeAttribute>().InheritanceBehavior == ClassInitializeInheritance.BeforeEachDerivedClass)
+                    {
+                        // do something before each derived class
+                        initializeMethod?.InvokeAsSynchronousTask(null, testContext);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                this.ClassInitializationException = ex;
+            }
+
+            // If class initialization is not done and class initialize method is not null, then do it.
+            if (!this.IsClassInitializeExecuted && this.classInitializeMethod != null)
             {
                 // Aquiring a lock is usually a costly operation which does not need to be
                 // performed every time if the class init is already executed.
@@ -271,15 +320,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var realException = this.ClassInitializationException.InnerException ?? this.ClassInitializationException;
 
             var outcome = UnitTestOutcome.Failed;
-            string errorMessage = null;
-            StackTraceInformation exceptionStackTraceInfo = null;
-            if (!realException.TryGetUnitTestAssertException(out outcome, out errorMessage, out exceptionStackTraceInfo))
+            if (!realException.TryGetUnitTestAssertException(out outcome, out string errorMessage, out StackTraceInformation exceptionStackTraceInfo))
             {
                 errorMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.UTA_ClassInitMethodThrows,
                     this.ClassType.FullName,
-                    this.ClassInitializeMethod.Name,
+                    this.ClassInitializeMethod?.Name ?? initializeMethod.Name,
                     realException.GetType().ToString(),
                     StackTraceHelper.GetExceptionMessage(realException));
 
@@ -298,7 +345,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>
         /// Any exception that can be thrown as part of a class cleanup as warning messages.
         /// </returns>
-        [SuppressMessageAttribute("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public string RunClassCleanup()
         {
             if (this.ClassCleanupMethod == null)

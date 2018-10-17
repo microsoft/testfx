@@ -308,6 +308,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         // Update test initialize/cleanup method from base type.
                         this.UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, instanceMethods, testInitializeAttributeType, testCleanupAttributeType);
                     }
+
+                    if (this.IsAssemblyOrClassInitializeMethod(methodInfo, classInitializeAttributeType))
+                    {
+                        if (methodInfo.GetCustomAttribute<ClassInitializeAttribute>().InheritanceBehavior == ClassInitializeInheritance.None)
+                        {
+                            // if the ClassInitializeInheritance is None, means
+                            // it will pick only the derived class initalize method
+                            break;
+                        }
+
+                        // update class initialize queue with new method
+                        classInfo.BaseClassInitializeMethodsQueue.Enqueue(methodInfo);
+                    }
+
+                    // else if (this.IsAssemblyOrClassCleanupMethod(methodInfo, classCleanupAttributeType))
+                    // {
+                    //    // don't do nothing for now
+                    // }
                 }
 
                 baseType = baseType.GetTypeInfo().BaseType;

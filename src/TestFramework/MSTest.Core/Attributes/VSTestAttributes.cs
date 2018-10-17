@@ -26,6 +26,29 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     }
 
     /// <summary>
+    /// Enumeration for class initialize, that can be used with the <see cref="ClassInitializeAttribute"/> class.
+    /// Defines the behavior of the ClassInitialize methods of base classes.
+    /// The type of the enumeration must match
+    /// </summary>
+    public enum ClassInitializeInheritance
+    {
+        /// <summary>
+        /// None.
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Once before any of the derived classes.
+        /// </summary>
+        OnceBeforeAnyDerivedClasses,
+
+        /// <summary>
+        /// Before each derived class.
+        /// </summary>
+        BeforeEachDerivedClass
+    }
+
+    /// <summary>
     /// The test class attribute.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
@@ -156,6 +179,20 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class ClassInitializeAttribute : Attribute
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClassInitializeAttribute"/> class.
+        /// ClassInitializeAttribute
+        /// </summary>
+        /// <param name="inheritanceBehavior">none</param>
+        public ClassInitializeAttribute(ClassInitializeInheritance inheritanceBehavior = ClassInitializeInheritance.None)
+        {
+            this.InheritanceBehavior = inheritanceBehavior;
+        }
+
+        /// <summary>
+        /// Gets InheritanceBehavior
+        /// </summary>
+        public ClassInitializeInheritance InheritanceBehavior { get; private set; }
     }
 
     /// <summary>

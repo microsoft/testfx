@@ -463,6 +463,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void GetTestMethodInfoShouldCacheBaseClassInitializeAttributes()
+        {
+            var type = typeof(DummyDerivedTestClassWithInitializeMethods);
+            var baseType = typeof(DummyTestClassWithInitializeMethods);
+            var classInitialize = new UTF.ClassInitializeAttribute(UTF.ClassInitializeInheritance.OnceBeforeAnyDerivedClasses);
+
+            var testMethod = new TestMethod("TestMehtod", type.FullName, "A", false);
+
+            this.mockReflectHelper.Setup(
+                rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
+
+            this.mockReflectHelper.Setup(
+               rh => rh.IsAttributeDefined(baseType.GetMethod("AssemblyInit"), classInitialize.GetType(), false)).Returns(true);
+
+            this.mockReflectHelper.Setup(
+               rh => rh.IsAttributeDefined(type.GetMethod("ClassInit"), typeof(UTF.ClassInitializeAttribute), false)).Returns(true);
+
+            this.typeCache.GetTestMethodInfo(
+                testMethod,
+                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                false);
+
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitializeMethodsQueue.Count);
+        }
+
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheClassCleanupAttribute()
         {
             var type = typeof(DummyTestClassWithCleanupMethods);
@@ -1346,6 +1373,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         private class DummyTestClassWithInitializeMethods
         {
+            [UTF.ClassInitialize(UTF.ClassInitializeInheritance.OnceBeforeAnyDerivedClasses)]
             public static void AssemblyInit(UTFExtension.TestContext tc)
             {
             }
@@ -1370,6 +1398,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         private class DummyDerivedTestClassWithInitializeMethods : DummyTestClassWithInitializeMethods
         {
+            public static void ClassInit(UTFExtension.TestContext tc)
+            {
+            }
+
             public void TestMehtod()
             {
             }
