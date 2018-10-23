@@ -45,22 +45,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
             // Get attributes defined on the member from the cache.
             Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
-            if (attributes == null)
-            {
-                // If we could not obtain all attributes from cache, just get the one we need.
-                var specificAttributes = GetCustomAttributes(memberInfo, attributeType, inherit);
-                var requiredAttributeQualifiedName = attributeType.AssemblyQualifiedName;
-
-                return specificAttributes.Any(a => string.Equals(a.GetType().AssemblyQualifiedName, requiredAttributeQualifiedName));
-            }
 
             string nameToFind = attributeType.AssemblyQualifiedName;
+
+            if (attributes is null)
+            {
+                // If we could not obtain all attributes from cache, just get the one we need.
+                var customAttributes = GetCustomAttributes(memberInfo, attributeType, inherit);
+
+                return customAttributes.Any(a => string.Equals(a.GetType().AssemblyQualifiedName, nameToFind));
+            }
+
             if (attributes.ContainsKey(nameToFind))
             {
                 return true;
             }
 
-            return false;
+            return attributes.Any(a =>
+                    string.Equals(a.Value.GetType().GetTypeInfo().BaseType.AssemblyQualifiedName, nameToFind));
         }
 
         /// <summary>
