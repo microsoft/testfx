@@ -14,17 +14,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj" />
-    <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="11.0.1" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.11.0.1\lib\netstandard1.0\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+  <ItemGroup>
+    <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj" />
+    <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>
