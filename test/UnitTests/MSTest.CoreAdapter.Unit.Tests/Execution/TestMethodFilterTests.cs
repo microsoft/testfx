@@ -194,7 +194,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(TestMessageLevel.Error, recorder.TestMessageLevel);
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         internal class DummyTestClassWithTestMethods
         {
             public UTFExtension.TestContext TestContext { get; set; }
@@ -281,6 +281,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private class DummyTestClassAttribute : UTF.TestClassAttribute
+        {
         }
     }
 }

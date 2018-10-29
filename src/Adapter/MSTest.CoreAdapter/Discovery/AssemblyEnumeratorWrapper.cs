@@ -145,7 +145,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings }) as AssemblyEnumerator;
 
                 // After loading adapter reset the child-domain's appbase to point to test source location
-                isolationHost.UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
+                isolationHost.UpdateAppBaseToTestSourceLocation();
 
                 return assemblyEnumerator.EnumerateAssembly(fullFilePath, out warnings);
             }

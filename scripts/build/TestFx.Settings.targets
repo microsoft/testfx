@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
-  <Import Project="$(RepoRoot)packages\microsoft.vssdk.buildtools.15.0.26201\build\Microsoft.VSSDK.BuildTools.props" Condition=" $(IsVsixProj) == 'true' and Exists('$(RepoRoot)packages\microsoft.vssdk.buildtools.15.0.26201\build\Microsoft.VSSDK.BuildTools.props')" />
+  <Import Project="$(RepoRoot)packages\microsoft.vssdk.buildtools.15.8.3247\build\Microsoft.VSSDK.BuildTools.props" Condition=" $(IsVsixProj) == 'true' and Exists('$(RepoRoot)packages\microsoft.vssdk.buildtools.15.8.3247\build\Microsoft.VSSDK.BuildTools.props')" />
 
   <PropertyGroup>
     <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>

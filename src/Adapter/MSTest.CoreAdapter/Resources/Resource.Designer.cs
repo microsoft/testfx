@@ -188,7 +188,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning : A testsettings file, a runsettings file with a ForcedLegacyMode set to true or a vsmdi file is not supported with the MSTest V2 Adapter..
+        ///   Looks up a localized string similar to Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter..
         /// </summary>
         internal static string LegacyScenariosNotSupportedWarning {
             get {
@@ -599,6 +599,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string UTA_TestInitializeAndCleanupMethodHasWrongSignature {
             get {
                 return ResourceManager.GetString("UTA_TestInitializeAndCleanupMethodHasWrongSignature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?.
+        /// </summary>
+        internal static string UTA_TestMethodExpectedParameters {
+            get {
+                return ResourceManager.GetString("UTA_TestMethodExpectedParameters", resourceCulture);
             }
         }
         

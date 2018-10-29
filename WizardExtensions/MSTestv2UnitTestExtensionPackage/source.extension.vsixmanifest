@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="MSTestV2UnitTestExtensionPackage.Microsoft.632139eb-968c-47ce-8667-f0898f00833f" Version="15.0.27010.00" Language="en-US" Publisher="Microsoft" />
+    <Identity Id="MSTestV2UnitTestExtensionPackage.Microsoft.632139eb-968c-47ce-8667-f0898f00833f" Version="15.0.27805.00" Language="en-US" Publisher="Microsoft" />
     <DisplayName>MSTest V2 Create Unit Test Extension</DisplayName>
     <Description xml:space="preserve">Allows developers to create unit test using MSTest V2.</Description>
     <License>CreateUnitTestExtensionLicense.rtf</License>
     <PackageId>Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.UnitTest</PackageId>
   </Metadata>
-  <Installation AllUsers="true">
+  <Installation AllUsers="true" SystemComponent="true">
     <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[15.0]" />
     <InstallationTarget Version="[15.0]" Id="Microsoft.VisualStudio.Enterprise" />
     <InstallationTarget Version="[15.0]" Id="Microsoft.VisualStudio.Community" />

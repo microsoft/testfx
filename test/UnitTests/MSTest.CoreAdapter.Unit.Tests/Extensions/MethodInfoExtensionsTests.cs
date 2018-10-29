@@ -10,7 +10,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
     using System;
     using System.Reflection;
     using System.Threading.Tasks;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
@@ -363,12 +365,41 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
                 return true;
             };
 
+            var methodInfo = typeof(DummyTestClass).GetMethod("PublicMethod");
+
             var dummyTestClass = new DummyTestClass2();
             var dummyMethod = typeof(DummyTestClass2).GetMethod("DummyMethod");
 
             dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
 
             Assert.IsTrue(testMethodCalled);
+        }
+
+        [TestMethod]
+        public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButWereNotProvided()
+        {
+            var dummyTestClass = new DummyTestClass2();
+            var dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
+            try
+            {
+                // Should throw exception of type TestFailedException
+                dummyMethod.InvokeAsSynchronousTask(dummyTestClass, null);
+            }
+            catch (TestFailedException ex)
+            {
+                Assert.AreEqual(ex.Outcome, UnitTestOutcome.Error);
+                Assert.AreEqual(ex.TryGetMessage(), Resource.UTA_TestMethodExpectedParameters);
+            }
+        }
+
+        [TestMethod]
+        public void InvokeAsSynchronousShouldNotThrowIfParametersWereExpectedAndWereProvided()
+        {
+            var dummyTestClass = new DummyTestClass2();
+            var dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
+
+            Action action = () => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
+            action();
         }
 
         #endregion
@@ -389,6 +420,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             public async Task DummyAsyncMethod(int x, int y)
             {
                 await DummyAsyncMethodBody(x, y);
+            }
+
+            public void PublicMethodWithParameters(int x, int y)
+            {
+                Assert.IsNotNull(x);
+                Assert.IsNotNull(y);
             }
         }
 

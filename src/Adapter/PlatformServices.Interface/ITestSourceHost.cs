@@ -29,9 +29,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         object CreateInstanceForType(Type type, object[] args);
 
         /// <summary>
-        /// Updates child-domain's appbase to point to test source location and sets up
-        /// Assembly resolver for both parent and child appdomain
+        /// Updates child-domain's appbase to point to test source location
         /// </summary>
-        void UpdateAppBaseToTestSourceLocationAndSetupAssemblyResolver();
+        void UpdateAppBaseToTestSourceLocation();
     }
 }
