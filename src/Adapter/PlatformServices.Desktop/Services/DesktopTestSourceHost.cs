@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.SetContext(sourceFileName);
 
             // Set isAppDomainCreationDisabled flag
-            this.AppDomainCreationDisabledInRunSettings();
+            this.isAppDomainCreationDisabled = (this.runSettings != null) && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml);
         }
 
         internal AppDomain AppDomain
@@ -120,7 +120,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
                 EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating app-domain for source {0} with application base path {1}.", this.sourceFileName, appDomainSetup.ApplicationBase);
 
-                string domainName = string.Format("TestSourceHost: Enumering source ({0})", this.sourceFileName);
+                string domainName = string.Format("TestSourceHost: Enumerating source ({0})", this.sourceFileName);
                 this.domain = this.appDomain.CreateDomain(domainName, null, appDomainSetup);
 
                 // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recurive assembly resolution
@@ -352,16 +352,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             Environment.CurrentDirectory = this.currentDirectory;
         }
-    }
-
-    private void AppDomainCreationDisabledInRunSettings()
-    {
-        if (this.runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml))
-        {
-                this.isAppDomainCreationDisabled = true;
-        }
-
-         this.isAppDomainCreationDisabled = false;
     }
 
     private void AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(AssemblyResolver assemblyResolver, string baseDirectory)

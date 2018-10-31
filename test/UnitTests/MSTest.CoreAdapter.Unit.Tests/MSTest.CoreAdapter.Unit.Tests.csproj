@@ -67,6 +67,7 @@
     <Compile Include="Execution\TestAssemblySettingsProviderTests.cs" />
     <Compile Include="Execution\TestCaseDiscoverySinkTests.cs" />
     <Compile Include="Execution\TestClassInfoTests.cs" />
+    <Compile Include="Execution\TcmTestPropertiesProviderTests.cs" />
     <Compile Include="Execution\TestExecutionManagerTests.cs" />
     <Compile Include="Execution\TestMethodFilterTests.cs" />
     <Compile Include="Execution\TestMethodInfoTests.cs" />

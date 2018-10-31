@@ -172,6 +172,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         }
 
         [TestMethod]
+        public void ToUnitTestResultsForTestResultShouldSetParentInfo()
+        {
+            var executionId = Guid.NewGuid();
+            var parentExecId = Guid.NewGuid();
+            var innerResultsCount = 5;
+
+            var results = new[]
+            {
+                new UTF.TestResult()
+                {
+                    ExecutionId = executionId,
+                    ParentExecId = parentExecId,
+                    InnerResultsCount = innerResultsCount
+                }
+            };
+
+            var convertedResults = results.ToUnitTestResults();
+
+            Assert.AreEqual(executionId, convertedResults[0].ExecutionId);
+            Assert.AreEqual(parentExecId, convertedResults[0].ParentExecId);
+            Assert.AreEqual(innerResultsCount, convertedResults[0].InnerResultsCount);
+        }
+
+        [TestMethod]
         public void ToUnitTestResultsShouldHaveResultsFileProvidedToTestResult()
         {
             var results = new[] { new UTF.TestResult() { ResultFiles = new List<string>() { "DummyFile.txt" } } };

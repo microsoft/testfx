@@ -39,12 +39,4 @@
     </ItemGroup>
   </Target>
 
-  <!-- This is required because an empty resource folder is left even though the files within are cleaned up. -->
-  <Target Name="CleanupMSTestV2ResourceFolders" AfterTargets="AfterClean" Condition="$(EnableMSTestV2CopyResources) == 'true'" DependsOnTargets="GetMSTestV2CultureHierarchy">
-    <ItemGroup>
-       <ResourceDirectories Include="$(TargetDir)%(CurrentUICultureHierarchy.Identity)" />
-    </ItemGroup>
-    <!-- RemoveDir does not throw if the folder does not exist. Continue on error - In any case do not fail build if this task fails(Warn and move on).-->
-    <RemoveDir Directories="@(ResourceDirectories)" ContinueOnError="true"/>
-  </Target>
 </Project>

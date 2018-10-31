@@ -285,7 +285,7 @@
     <value>The test method {0}.{1} has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.</value>
   </data>
   <data name="LegacyScenariosNotSupportedWarning" xml:space="preserve">
-    <value>Warning : A testsettings file, a runsettings file with a ForcedLegacyMode set to true or a vsmdi file is not supported with the MSTest V2 Adapter.</value>
+    <value>Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.</value>
   </data>
   <data name="TestContextMessageBanner" xml:space="preserve">
     <value>TestContext Messages:</value>
@@ -312,5 +312,8 @@
   </data>
   <data name="TestAssembly_AssemblyDiscoveryFailure" xml:space="preserve">
     <value>Failed to discover tests from assembly {0}. Reason:{1}</value>
+  </data>
+  <data name="UTA_TestMethodExpectedParameters" xml:space="preserve">
+    <value>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</value>
   </data>
 </root>

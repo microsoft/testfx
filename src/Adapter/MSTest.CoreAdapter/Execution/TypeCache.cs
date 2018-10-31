@@ -36,20 +36,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Helper for reflection API's.
         /// </summary>
-        private ReflectHelper reflectionHelper;
+        private readonly ReflectHelper reflectionHelper;
 
         /// <summary>
         /// Assembly info cache
         /// </summary>
-        private Dictionary<Assembly, TestAssemblyInfo> testAssemblyInfoCache;
+        private readonly Dictionary<Assembly, TestAssemblyInfo> testAssemblyInfoCache;
 
         /// <summary>
         /// ClassInfo cache
         /// </summary>
-        private Dictionary<string, TestClassInfo> classInfoCache;
+        private readonly Dictionary<string, TestClassInfo> classInfoCache;
 
-        private object assemblyInfoSyncObject;
-        private object classInfoSyncObject;
+        private readonly object assemblyInfoSyncObject;
+        private readonly object classInfoSyncObject;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TypeCache"/> class.
@@ -174,9 +174,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             var typeName = testMethod.FullClassName;
 
-            TestClassInfo classInfo;
-
-            if (!this.classInfoCache.TryGetValue(typeName, out classInfo))
+            if (!this.classInfoCache.TryGetValue(typeName, out TestClassInfo classInfo))
             {
                 // Aquiring a lock is usually a costly operation which does not need to be
                 // performed every time if the type is found in the cache.
@@ -363,9 +361,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private TestAssemblyInfo GetAssemblyInfo(Type type)
         {
             var assembly = type.GetTypeInfo().Assembly;
-            TestAssemblyInfo assemblyInfo;
 
-            if (!this.testAssemblyInfoCache.TryGetValue(assembly, out assemblyInfo))
+            if (!this.testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo assemblyInfo))
             {
                 // Aquiring a lock is usually a costly operation which does not need to be
                 // performed every time if the assembly is found in the cache.
@@ -713,8 +710,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return false;
             }
 
-            object existingValue;
-            if (testContext.TryGetPropertyValue(propertyName, out existingValue))
+            if (testContext.TryGetPropertyValue(propertyName, out object existingValue))
             {
                 // Do not add to the test context because it would conflict with an already existing value.
                 // We were at one point reporting a warning here. However with extensibility centered around TestProperty where

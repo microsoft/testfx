@@ -346,7 +346,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region Dummmy implementations
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClass
         {
             public UTFExtension.TestContext TestContext { get; set; }
@@ -358,7 +358,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithInitializeMethods
         {
             public static Action AssemblyInitializeMethodBody { get; set; }
@@ -410,6 +410,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public void TestMethod()
             {
             }
+        }
+
+        private class DummyTestClassAttribute : UTF.TestClassAttribute
+        {
         }
 
         #endregion
