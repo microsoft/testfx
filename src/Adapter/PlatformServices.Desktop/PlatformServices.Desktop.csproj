@@ -61,7 +61,6 @@
     <Compile Include="Friends.cs" />
     <Compile Include="Services\MSTestAdapterSettings.cs" />
     <Compile Include="Utilities\AppDomainWrapper.cs" />
-    <Compile Include="Utilities\DeploymentResult.cs" />
     <Compile Include="Utilities\IAppDomain.cs" />
     <Compile Include="Utilities\SequentialIntPermutation.cs" />
     <Compile Include="Resources\Resource.Designer.cs">
