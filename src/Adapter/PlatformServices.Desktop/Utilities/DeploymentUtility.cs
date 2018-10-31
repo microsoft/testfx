@@ -171,7 +171,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     this.deploymentItemUtility.AddDeploymentItem(deploymentItems, satelliteItem);
                 }
             }
-            else if (File.Exists(testSource))
+            else
             {
                 EqtTrace.Info("Adding the test source directory to the deploymentitems list");
                 this.deploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
