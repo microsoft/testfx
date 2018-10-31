@@ -17,12 +17,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     {
         private AssemblyUtility assemblyUtility;
 
-        internal FileUtility()
+        public FileUtility()
         {
             this.assemblyUtility = new AssemblyUtility();
         }
 
-        internal virtual void CreateDirectoryIfNotExists(string directory)
+        public virtual void CreateDirectoryIfNotExists(string directory)
         {
             Debug.Assert(!string.IsNullOrEmpty(directory), "directory");
 
@@ -37,7 +37,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// </summary>
         /// <param name="fileName"> The file Name. </param>
         /// <returns> The fileName devoid of any invalid characters. </returns>
-        internal string ReplaceInvalidFileNameCharacters(string fileName)
+        public string ReplaceInvalidFileNameCharacters(string fileName)
         {
             Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
 
@@ -52,9 +52,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="parentDirectoryName">The directory where to check.</param>
         /// <param name="originalDirectoryName">The original directory (that we would add [1],[2],.. in the end of if needed) name to check.</param>
         /// <returns>A unique directory name.</returns>
-        internal virtual string GetNextIterationDirectoryName(
-            string parentDirectoryName,
-            string originalDirectoryName)
+        public virtual string GetNextIterationDirectoryName(string parentDirectoryName, string originalDirectoryName)
         {
             Debug.Assert(!string.IsNullOrEmpty(parentDirectoryName), "parentDirectoryName");
             Debug.Assert(!string.IsNullOrEmpty(originalDirectoryName), "originalDirectoryName");
@@ -99,7 +97,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// throw on error when specified to abort the run on error.
         /// </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        internal virtual string CopyFileOverwrite(string source, string destination, out string warning)
+        public virtual string CopyFileOverwrite(string source, string destination, out string warning)
         {
             Debug.Assert(!string.IsNullOrEmpty(source), "source should not be null.");
             Debug.Assert(!string.IsNullOrEmpty(destination), "destination should not be null.");
@@ -122,7 +120,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             catch (Exception e)
             {
                 warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToCopyWithOverwrite, source, destination, e.GetType(), e.GetExceptionMessage());
-
                 return string.Empty;
             }
         }
@@ -137,7 +134,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="relativeDestination">Destination relative to the root of deployment dir.</param>
         /// <param name="sourceFile">Original file of destinationFile, i.e. the file copied to deployment dir.</param>
         /// <param name="destToSource">destToSource map.</param>
-        internal string FindAndDeployPdb(string destinationFile, string relativeDestination, string sourceFile, Dictionary<string, string> destToSource)
+        public string FindAndDeployPdb(string destinationFile, string relativeDestination, string sourceFile, Dictionary<string, string> destToSource)
         {
             Debug.Assert(!string.IsNullOrEmpty(destinationFile), "destination should not be null or empty.");
             Debug.Assert(!string.IsNullOrEmpty(relativeDestination), "relative destination path should not be null or empty.");
@@ -161,8 +158,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             try
             {
                 pdbDestination = Path.Combine(Path.GetDirectoryName(destinationFile), Path.GetFileName(pdbSource));
-                relativePdbDestination = Path.Combine(
-                    Path.GetDirectoryName(relativeDestination), Path.GetFileName(pdbDestination));
+                relativePdbDestination = Path.Combine(Path.GetDirectoryName(relativeDestination), Path.GetFileName(pdbDestination));
             }
             catch (ArgumentException ex)
             {
@@ -196,7 +192,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return null;
         }
 
-        internal virtual List<string> AddFilesFromDirectory(string directoryPath, bool ignoreIOExceptions)
+        public virtual List<string> AddFilesFromDirectory(string directoryPath, bool ignoreIOExceptions)
+        {
+            return this.AddFilesFromDirectory(directoryPath, null, ignoreIOExceptions);
+        }
+
+        public virtual List<string> AddFilesFromDirectory(string directoryPath, Func<string, bool> ignoreDirectory, bool ignoreIOExceptions)
         {
             var fileContents = new List<string>();
 
@@ -215,7 +216,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             foreach (var subDirectoryPath in this.GetDirectoriesInADirectory(directoryPath))
             {
-                var subDirectoryContents = this.AddFilesFromDirectory(subDirectoryPath, true);
+                if (ignoreDirectory != null && ignoreDirectory(subDirectoryPath))
+                {
+                    continue;
+                }
+
+                var subDirectoryContents = this.AddFilesFromDirectory(subDirectoryPath, ignoreDirectory, true);
                 if (subDirectoryContents?.Count > 0)
                 {
                     fileContents.AddRange(subDirectoryContents);
@@ -225,7 +231,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return fileContents;
         }
 
-        internal string TryConvertPathToRelative(string path, string rootDir)
+        public string TryConvertPathToRelative(string path, string rootDir)
         {
             Debug.Assert(!string.IsNullOrEmpty(path), "path should not be null or empty.");
             Debug.Assert(!string.IsNullOrEmpty(rootDir), "rootDir should not be null or empty.");
@@ -244,10 +250,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// </summary>
         /// <param name="filePath">The root directory to clear.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        internal virtual void DeleteDirectories(string filePath)
+        public virtual void DeleteDirectories(string filePath)
         {
-            Debug.Assert(filePath != null, "filePath");
-
+            Validate.IsFalse(string.IsNullOrWhiteSpace(filePath), "Invalid filePath provided");
             try
             {
                 var root = new DirectoryInfo(filePath);
@@ -259,27 +264,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
         }
 
-        internal virtual bool DoesDirectoryExist(string deploymentDirectory)
+        public virtual bool DoesDirectoryExist(string deploymentDirectory)
         {
             return Directory.Exists(deploymentDirectory);
         }
 
-        internal virtual bool DoesFileExist(string testSource)
+        public virtual bool DoesFileExist(string testSource)
         {
             return File.Exists(testSource);
         }
 
-        internal virtual void SetAttributes(string path, FileAttributes fileAttributes)
+        public virtual void SetAttributes(string path, FileAttributes fileAttributes)
         {
             File.SetAttributes(path, fileAttributes);
         }
 
-        internal virtual string[] GetFilesInADirectory(string directoryPath)
+        public virtual string[] GetFilesInADirectory(string directoryPath)
         {
             return Directory.GetFiles(directoryPath);
         }
 
-        internal virtual string[] GetDirectoriesInADirectory(string directoryPath)
+        public virtual string[] GetDirectoriesInADirectory(string directoryPath)
         {
             return Directory.GetDirectories(directoryPath);
         }

@@ -32,28 +32,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         private FileUtility fileUtility;
         private AssemblyUtility assemblyUtility;
 
-        internal DeploymentUtility()
+        public DeploymentUtility()
             : this(new DeploymentItemUtility(new ReflectionUtility()), new AssemblyUtility(), new FileUtility())
         {
         }
 
-        internal DeploymentUtility(
-            DeploymentItemUtility deploymentItemUtility,
-            AssemblyUtility assemblyUtility,
-            FileUtility fileUtility)
+        public DeploymentUtility(DeploymentItemUtility deploymentItemUtility, AssemblyUtility assemblyUtility, FileUtility fileUtility)
         {
             this.deploymentItemUtility = deploymentItemUtility;
             this.assemblyUtility = assemblyUtility;
             this.fileUtility = fileUtility;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "4#", Justification = "Used internally.")]
-        internal bool Deploy(IEnumerable<TestCase> tests, string source, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, ref TestRunDirectories testRunDirectories)
+        public bool Deploy(IEnumerable<TestCase> tests, string source, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, TestRunDirectories runDirectories)
         {
             IList<DeploymentItem> deploymentItems = this.deploymentItemUtility.GetDeploymentItems(tests);
 
             // we just deploy source if there are no deployment items for current source but there are deployment items for other sources
-            return this.Deploy(source, runContext, testExecutionRecorder, deploymentItems, ref testRunDirectories);
+            return this.Deploy(source, runContext, testExecutionRecorder, deploymentItems, runDirectories);
         }
 
         /// <summary>
@@ -61,10 +57,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// </summary>
         /// <param name="runContext">The run context.</param>
         /// <returns>TestRunDirectories instance.</returns>
-        internal TestRunDirectories CreateDeploymentDirectories(IRunContext runContext)
+        public TestRunDirectories CreateDeploymentDirectories(IRunContext runContext)
         {
-            var tempDirectory = this.GetTestResultsDirectory(runContext);
-            var rootDeploymentDirectory = this.GetRootDeploymentDirectory(tempDirectory);
+            var resultsDirectory = this.GetTestResultsDirectory(runContext);
+            var rootDeploymentDirectory = this.GetRootDeploymentDirectory(resultsDirectory);
 
             var result = new TestRunDirectories(rootDeploymentDirectory);
             var inDirectory = result.InDirectory;
@@ -121,13 +117,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "5#", Justification = "Used internally.")]
-        private bool Deploy(string source, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, IList<DeploymentItem> deploymentItems, ref TestRunDirectories testRunDirectories)
+        private bool Deploy(string source, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, IList<DeploymentItem> deploymentItems, TestRunDirectories runDirectories)
         {
+            ValidateArg.NotNull(runDirectories, "runDirectories");
             if (EqtTrace.IsInfoEnabled)
             {
                 EqtTrace.Info("MSTestExecutor: Found that deployment items for source {0} are: ", source);
-
                 foreach (var item in deploymentItems)
                 {
                     EqtTrace.Info("MSTestExecutor: SourcePath: - {0}", item.SourcePath);
@@ -135,18 +130,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
 
             // Do the deployment.
-            IEnumerable<string> warnings;
-
-            var runDirectories = testRunDirectories ?? this.CreateDeploymentDirectories(runContext);
-
-            ValidateArg.NotNull(runDirectories, "runDirectories");
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: Using deployment directory {0} for source {1}.", runDirectories.OutDirectory, source);
-
-            this.Deploy(new List<DeploymentItem>(deploymentItems), source, runDirectories.OutDirectory, out warnings);
+            var warnings = this.Deploy(new List<DeploymentItem>(deploymentItems), source, runDirectories.OutDirectory, this.GetTestResultsDirectory(runContext));
 
             // Log warnings
             LogWarnings(testExecutionRecorder, warnings);
-
             return deploymentItems != null && deploymentItems.Count > 0;
         }
 
@@ -156,27 +144,37 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="deploymentItems">The deployment item.</param>
         /// <param name="testSource">The test source.</param>
         /// <param name="deploymentDirectory">The deployment directory.</param>
-        /// <param name="deploymentWarnings">Warnings.</param>
+        /// <param name="resultsDirectory">Root results directory</param>
+        /// <returns>Returns a list of deployment warnings</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        private void Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, out IEnumerable<string> deploymentWarnings)
+        private IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory)
         {
-            Debug.Assert(!string.IsNullOrEmpty(deploymentDirectory), "Deployment directory is null/empty");
-            Debug.Assert(this.fileUtility.DoesDirectoryExist(deploymentDirectory), "Deployment directory " + deploymentDirectory + " does not exist");
-            Debug.Assert(!string.IsNullOrEmpty(testSource), "TestSource directory is null/empty");
-            Debug.Assert(this.fileUtility.DoesFileExist(testSource), "TestSource " + testSource + " does not exist.");
+            Validate.IsFalse(string.IsNullOrWhiteSpace(deploymentDirectory), "Deployment directory is null or empty");
+            Validate.IsTrue(this.fileUtility.DoesDirectoryExist(deploymentDirectory), $"Deployment directory {deploymentDirectory} does not exist");
+            Validate.IsFalse(string.IsNullOrWhiteSpace(testSource), "TestSource directory is null/empty");
+            Validate.IsTrue(this.fileUtility.DoesFileExist(testSource), $"TestSource {testSource} does not exist.");
 
             testSource = Path.GetFullPath(testSource);
-
             var warnings = new List<string>();
 
-            // Get the referenced assemblies.
-            this.ProcessNewStorage(testSource, deploymentItems, warnings);
-
-            // Get the satellite assemblies
-            var satelliteItems = this.GetSatellites(deploymentItems, testSource, warnings);
-            foreach (var satelliteItem in satelliteItems)
+            if (MSTestSettingsProvider.Settings.DeployTestSourceDependencies)
             {
-                this.deploymentItemUtility.AddDeploymentItem(deploymentItems, satelliteItem);
+                EqtTrace.Info("Adding the references and satellite assemblies to the deploymentitems list");
+
+                // Get the referenced assemblies.
+                this.ProcessNewStorage(testSource, deploymentItems, warnings);
+
+                // Get the satellite assemblies
+                var satelliteItems = this.GetSatellites(deploymentItems, testSource, warnings);
+                foreach (var satelliteItem in satelliteItems)
+                {
+                    this.deploymentItemUtility.AddDeploymentItem(deploymentItems, satelliteItem);
+                }
+            }
+            else
+            {
+                EqtTrace.Info("Adding the test source directory to the deploymentitems list");
+                this.deploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
             }
 
             // Maps relative to Out dir destination -> source and used to determine if there are conflicted items.
@@ -185,7 +183,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             // Copy the deployment items. (As deployment item can correspond to directories as well, so each deployment item may map to n files)
             foreach (var deploymentItem in deploymentItems)
             {
-                Debug.Assert(deploymentItem != null, "deploymentItem should not be null.");
+                ValidateArg.NotNull(deploymentItem, "deploymentItem should not be null.");
 
                 // Validate the output directory.
                 if (!this.IsOutputDirectoryValid(deploymentItem, deploymentDirectory, warnings))
@@ -194,8 +192,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 }
 
                 // Get the files corresponding to this deployment item
-                bool itemIsDirectory;
-                var deploymentItemFiles = this.GetFullPathToFilesCorrespondingToDeploymentItem(deploymentItem, testSource, warnings, out itemIsDirectory);
+                var deploymentItemFiles = this.GetFullPathToFilesCorrespondingToDeploymentItem(deploymentItem, testSource, resultsDirectory, warnings, out bool itemIsDirectory);
                 if (deploymentItemFiles == null)
                 {
                     continue;
@@ -213,8 +210,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     filesToDeploy.Add(deploymentItemFile);
 
                     // Find dependencies of test deployment items and deploy them at the same time as master file.
-                    if (deploymentItem.OriginType == DeploymentItemOriginType.PerTestDeployment
-                           &&
+                    if (deploymentItem.OriginType == DeploymentItemOriginType.PerTestDeployment &&
                         this.assemblyUtility.IsAssemblyExtension(Path.GetExtension(deploymentItemFile)))
                     {
                         this.AddDependenciesOfDeploymentItem(deploymentItemFile, filesToDeploy, warnings);
@@ -264,8 +260,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                             destToSource.Add(relativeDestination, fileToDeploy);
 
                             // Now, finally we can copy the file...
-                            string warning;
-                            destination = this.fileUtility.CopyFileOverwrite(fileToDeploy, destination, out warning);
+                            destination = this.fileUtility.CopyFileOverwrite(fileToDeploy, destination, out string warning);
                             if (!string.IsNullOrEmpty(warning))
                             {
                                 warnings.Add(warning);
@@ -298,7 +293,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 } // foreach itemFile.
             }
 
-            deploymentWarnings = warnings;
+            return warnings;
         }
 
         private void AddDependenciesOfDeploymentItem(string deploymentItemFile, IList<string> filesToDeploy, IList<string> warnings)
@@ -362,54 +357,49 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// </summary>
         /// <param name="deploymentItem">Deployment Item.</param>
         /// <param name="testSource">The test source.</param>
+        /// <param name="resultsDirectory">Results directory which should be skipped for deployment</param>
         /// <param name="warnings">Warnings.</param>
         /// <param name="isDirectory">Is this a directory.</param>
         /// <returns>Paths to items to deploy.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        private string[] GetFullPathToFilesCorrespondingToDeploymentItem(DeploymentItem deploymentItem, string testSource, IList<string> warnings, out bool isDirectory)
+        private string[] GetFullPathToFilesCorrespondingToDeploymentItem(DeploymentItem deploymentItem, string testSource, string resultsDirectory, IList<string> warnings, out bool isDirectory)
         {
             Debug.Assert(deploymentItem != null, "deploymentItem should not be null.");
             Debug.Assert(!string.IsNullOrEmpty(testSource), "testsource should not be null or empty.");
 
             try
             {
-                string directory;
-                isDirectory = this.IsDeploymentItemSourceADirectory(deploymentItem, testSource, out directory);
-
+                isDirectory = this.IsDeploymentItemSourceADirectory(deploymentItem, testSource, out string directory);
                 if (isDirectory)
                 {
-                    return this.fileUtility.AddFilesFromDirectory(directory, false).ToArray();
+                    return this.fileUtility.AddFilesFromDirectory(
+                        directory, (deployDirectory) => string.Equals(deployDirectory, resultsDirectory, StringComparison.OrdinalIgnoreCase), false).ToArray();
                 }
 
-                string fileName;
-                if (!this.IsDeploymentItemSourceAFile(deploymentItem.SourcePath, testSource, out fileName))
+                if (this.IsDeploymentItemSourceAFile(deploymentItem.SourcePath, testSource, out string fileName))
                 {
-                    // If file/directory is not found, then try removing the prefix and see if it is present.
-                    string fileOrDirNameOnly =
-                        Path.GetFileName(
-                            deploymentItem.SourcePath.TrimEnd(
-                                new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }));
-                    if (!this.IsDeploymentItemSourceAFile(fileOrDirNameOnly, testSource, out fileName))
-                    {
-                        string message = string.Format(CultureInfo.CurrentCulture, Resource.CannotFindFile, fileName);
-                        throw new FileNotFoundException(message, fileName);
-                    }
+                    return new[] { fileName };
                 }
 
-                return new[] { fileName };
+                // If file/directory is not found, then try removing the prefix and see if it is present.
+                string fileOrDirNameOnly = Path.GetFileName(deploymentItem.SourcePath.TrimEnd(
+                            new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }));
+                if (this.IsDeploymentItemSourceAFile(fileOrDirNameOnly, testSource, out fileName))
+                {
+                    return new[] { fileName };
+                }
+
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.CannotFindFile, fileName);
+                throw new FileNotFoundException(message, fileName);
             }
             catch (Exception e)
             {
                 warnings.Add(string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.DeploymentErrorFailedToGetFileForDeploymentItem,
-                    deploymentItem,
-                    e.GetType(),
-                    e.Message));
-
-                isDirectory = false;
-                return null;
+                    CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToGetFileForDeploymentItem, deploymentItem, e.GetType(), e.Message));
             }
+
+            isDirectory = false;
+            return null;
         }
 
         private bool IsDeploymentItemSourceAFile(string deploymentItemSourcePath, string testSource, out string file)
@@ -631,15 +621,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <returns>The test results directory.</returns>
         private string GetTestResultsDirectory(IRunContext runContext)
         {
-            var tempDirectory = (!string.IsNullOrEmpty(runContext?.TestRunDirectory)) ?
+            var resultsDirectory = (!string.IsNullOrEmpty(runContext?.TestRunDirectory)) ?
                 runContext.TestRunDirectory : null;
 
-            if (string.IsNullOrEmpty(tempDirectory))
+            if (string.IsNullOrEmpty(resultsDirectory))
             {
-                tempDirectory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), TestRunDirectories.DefaultDeploymentRootDirectory));
+                resultsDirectory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), TestRunDirectories.DefaultDeploymentRootDirectory));
             }
 
-            return tempDirectory;
+            return resultsDirectory;
         }
 
         /// <summary>

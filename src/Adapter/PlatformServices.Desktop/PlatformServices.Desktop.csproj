@@ -59,6 +59,7 @@
     <Compile Include="Deployment\TestRunDirectories.cs" />
     <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Friends.cs" />
+    <Compile Include="Services\MSTestAdapterSettings.cs" />
     <Compile Include="Utilities\AppDomainWrapper.cs" />
     <Compile Include="Utilities\IAppDomain.cs" />
     <Compile Include="Utilities\SequentialIntPermutation.cs" />
@@ -77,7 +78,7 @@
     <Compile Include="Services\DesktopReflectionOperations.cs" />
     <Compile Include="Services\DesktopThreadOperations.cs" />
     <Compile Include="Services\DesktopFileOperations.cs" />
-    <Compile Include="Services\DesktopSettingsProvider.cs" />
+    <Compile Include="Services\MSTestSettingsProvider.cs" />
     <Compile Include="Services\DesktopTestDataSource.cs" />
     <Compile Include="Services\DesktopTestDeployment.cs" />
     <Compile Include="Services\DesktopTestSource.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="Utilities\IAssemblyUtility.cs" />
     <Compile Include="Utilities\RandomIntPermutation.cs" />
     <Compile Include="Utilities\ReflectionUtility.cs" />
+    <Compile Include="Utilities\Validate.cs" />
     <Compile Include="Utilities\VSInstallationUtilities.cs" />
     <Compile Include="Utilities\XmlUtilities.cs" />
   </ItemGroup>
