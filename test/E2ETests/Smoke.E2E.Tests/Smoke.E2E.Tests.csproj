@@ -42,6 +42,7 @@
     <Compile Include="CompatTests.cs" />
     <Compile Include="CustomTestExecutionExtensibilityTests.cs" />
     <Compile Include="DataSourceTests.cs" />
+    <Compile Include="DeploymentTests.cs" />
     <Compile Include="DesktopCSharpCLITests.cs" />
     <Compile Include="ParallelExecutionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
