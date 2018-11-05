@@ -1236,7 +1236,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region dummy implementations
 
-        [UTF.TestClass]
+        [DummyTestClass]
         internal class DummyTestClassWithTestMethods
         {
             public UTFExtension.TestContext TestContext { get; set; }
@@ -1308,7 +1308,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         internal class DerivedTestClass : BaseTestClass
         {
         }
@@ -1343,7 +1343,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithInitializeMethods
         {
             public static void AssemblyInit(UTFExtension.TestContext tc)
@@ -1355,7 +1355,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithCleanupMethods
         {
             public static void AssemblyCleanup()
@@ -1367,7 +1367,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyDerivedTestClassWithInitializeMethods : DummyTestClassWithInitializeMethods
         {
             public void TestMehtod()
@@ -1375,7 +1375,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyDerivedTestClassWithCleanupMethods : DummyTestClassWithCleanupMethods
         {
             public void TestMehtod()
@@ -1383,7 +1383,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithInitAndCleanupMethods
         {
             public static void AssemblyInit(UTFExtension.TestContext tc)
@@ -1399,7 +1399,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithIncorrectInitializeMethods
         {
             public static void TestInit(int i)
@@ -1411,7 +1411,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithIncorrectCleanupMethods
         {
             public static void TestCleanup(int i)
@@ -1423,7 +1423,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithIncorrectTestMethodSignatures
         {
             public static void TestMethod()
@@ -1432,6 +1432,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         private class DerivedTestMethodAttribute : UTF.TestMethodAttribute
+        {
+        }
+
+        private class DummyTestClassAttribute : UTF.TestClassAttribute
         {
         }
 
