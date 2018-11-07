@@ -281,7 +281,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             //     <CaptureTraceOutput>true</CaptureTraceOutput>
             //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
             //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
-            //     <TestTimeout>5000<TestTimeout>
+            //     <TestTimeout>5000</TestTimeout>
             //     <Parallelize>
             //        <Workers>4</Workers>
             //        <Scope>TestClass</Scope>

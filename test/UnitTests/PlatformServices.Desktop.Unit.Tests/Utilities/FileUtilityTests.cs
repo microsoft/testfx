@@ -6,6 +6,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
     extern alias FrameworkV1;
 
     using System;
+    using System.IO;
     using System.Linq;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
     using Moq;
@@ -93,6 +94,87 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             Array.Copy(allFiles, 0, expectedFiles, 0, 6);
 
             CollectionAssert.AreEqual(expectedFiles, files);
+        }
+
+        [TestMethod]
+        public void AddFilesWithIgnoreDirectory()
+        {
+            // Setup
+            var allFiles = new string[]
+                               {
+                                   "c:\\MainClock\\Results\\tickmain.trx", "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
+                                   "c:\\MainClock\\tickmain.txt", "c:\\MainClock\\tock.tick.txt",
+                                   "c:\\MainClock\\Folder1\\tick.txt", "c:\\MainClock\\Folder1\\tock.tick.txt",
+                                   "c:\\MainClock\\Folder2\\backup\\Data.csv",
+                               };
+
+            this.fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
+            {
+                var directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select((file) => Path.GetDirectoryName(file)).Distinct();
+                return directories.ToArray();
+            });
+
+            this.fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
+            {
+                return allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray();
+            });
+
+            // Act
+            var files = this.fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", (directory) => directory.Contains("Results"), false);
+
+            // Validate
+            foreach (var sourceFile in allFiles)
+            {
+                Console.WriteLine($"File to validate {sourceFile}");
+                if (sourceFile.Contains("Results"))
+                {
+                    Assert.IsFalse(files.Any((file) => file.Contains("Results")), $"{sourceFile} returned in the list from AddFilesFromDirectory");
+                }
+                else
+                {
+                    Assert.IsTrue(files.Any((file) => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)), $"{sourceFile} not returned in the list from AddFilesFromDirectory");
+                }
+            }
+        }
+
+        [TestMethod]
+        public void AddFilesWithNoIgnoreDirectory()
+        {
+            // Setup
+            var allFiles = new string[]
+                               {
+                                   "c:\\MainClock\\Results\\tickmain.trx", "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
+                                   "c:\\MainClock\\tickmain.txt", "c:\\MainClock\\tock.tick.txt",
+                                   "c:\\MainClock\\Folder1\\tick.txt", "c:\\MainClock\\Folder1\\tock.tick.txt",
+                                   "c:\\MainClock\\Folder2\\backup\\Data.csv",
+                               };
+
+            this.fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
+            {
+                var directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select((file) => Path.GetDirectoryName(file)).Distinct();
+                return directories.ToArray();
+            });
+
+            this.fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
+            {
+                return allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray();
+            });
+
+            // Act
+            var files = this.fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", false);
+
+            // Validate
+            foreach (var sourceFile in allFiles)
+            {
+                Assert.IsTrue(files.Any((file) => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)), $"{sourceFile} not returned in the list from AddFilesFromDirectory");
+            }
+        }
+
+        private static bool IsFileUnderDirectory(string directory, string fileName)
+        {
+            string fileDirectory = Path.GetDirectoryName(fileName);
+            return fileDirectory.StartsWith(directory, StringComparison.OrdinalIgnoreCase) &&
+                   !directory.Equals(fileDirectory, StringComparison.OrdinalIgnoreCase);
         }
 
         private void SetupMockFileAPIs(string[] files)
