@@ -467,7 +467,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var type = typeof(DummyDerivedTestClassWithInitializeMethods);
             var baseType = typeof(DummyTestClassWithInitializeMethods);
-            var classInitialize = new UTF.ClassInitializeAttribute(UTF.ClassInitializeInheritance.OnceBeforeAnyDerivedClasses);
 
             var testMethod = new TestMethod("TestMehtod", type.FullName, "A", false);
 
@@ -475,7 +474,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
 
             this.mockReflectHelper.Setup(
-               rh => rh.IsAttributeDefined(baseType.GetMethod("AssemblyInit"), classInitialize.GetType(), false)).Returns(true);
+               rh => rh.IsAttributeDefined(baseType.GetMethod("AssemblyInit"), typeof(UTF.ClassInitializeAttribute), false)).Returns(true);
 
             this.mockReflectHelper.Setup(
                rh => rh.IsAttributeDefined(type.GetMethod("ClassInit"), typeof(UTF.ClassInitializeAttribute), false)).Returns(true);
@@ -511,6 +510,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void GetTestMethodInfoShouldCacheBaseClassCleanupAttributes()
+        {
+            var type = typeof(DummyDerivedTestClassWithCleanupMethods);
+            var baseType = typeof(DummyTestClassWithCleanupMethods);
+
+            var testMethod = new TestMethod("TestMehtod", type.FullName, "A", false);
+
+            this.mockReflectHelper.Setup(
+                rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
+
+            this.mockReflectHelper.Setup(
+               rh => rh.IsAttributeDefined(baseType.GetMethod("AssemblyCleanup"), typeof(UTF.ClassCleanupAttribute), false)).Returns(true);
+
+            this.mockReflectHelper.Setup(
+               rh => rh.IsAttributeDefined(type.GetMethod("ClassCleanup"), typeof(UTF.ClassCleanupAttribute), false)).Returns(true);
+
+            this.typeCache.GetTestMethodInfo(
+                testMethod,
+                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                false);
+
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassCleanupMethodsQueue.Count);
+        }
+
+        [TestMethodV1]
         public void GetTestMethodInfoShouldCacheClassInitAndCleanupAttribute()
         {
             var type = typeof(DummyTestClassWithInitAndCleanupMethods);
@@ -532,6 +557,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.AreEqual(type.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
             Assert.AreEqual(type.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoShouldCacheBaseClassInitAndCleanupAttributes()
+        {
+            var baseType = typeof(DummyBaseTestClassWithInitAndCleanupMethods);
+            var type = typeof(DummyTestClassWithInitAndCleanupMethods);
+            var testMethod = new TestMethod("TestInitOrCleanup", type.FullName, "A", isAsync: false);
+
+            this.mockReflectHelper.Setup(
+                rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
+
+            this.mockReflectHelper.Setup(
+               rh => rh.IsAttributeDefined(baseType.GetMethod("ClassInit"), typeof(UTF.ClassInitializeAttribute), false)).Returns(true);
+            this.mockReflectHelper.Setup(
+                rh => rh.IsAttributeDefined(baseType.GetMethod("ClassCleanup"), typeof(UTF.ClassCleanupAttribute), false)).Returns(true);
+
+            this.mockReflectHelper.Setup(
+                rh => rh.IsAttributeDefined(type.GetMethod("AssemblyInit"), typeof(UTF.ClassInitializeAttribute), false)).Returns(true);
+            this.mockReflectHelper.Setup(
+                rh => rh.IsAttributeDefined(type.GetMethod("AssemblyCleanup"), typeof(UTF.ClassCleanupAttribute), false)).Returns(true);
+
+            this.typeCache.GetTestMethodInfo(
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
+
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
+            Assert.AreEqual(type.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
+            Assert.AreEqual(type.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
+
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitializeMethodsQueue.Count);
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassCleanupMethodsQueue.Count);
+
+            Assert.AreEqual(true, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitializeMethodsQueue.Contains(baseType.GetMethod("ClassInit")));
+            Assert.AreEqual(true, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassCleanupMethodsQueue.Contains(baseType.GetMethod("ClassCleanup")));
         }
 
         [TestMethodV1]
@@ -1410,13 +1471,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [UTF.TestClass]
         private class DummyDerivedTestClassWithCleanupMethods : DummyTestClassWithCleanupMethods
         {
+            public static void ClassCleanup()
+            {
+            }
+
             public void TestMehtod()
             {
             }
         }
 
         [UTF.TestClass]
-        private class DummyTestClassWithInitAndCleanupMethods
+        private class DummyBaseTestClassWithInitAndCleanupMethods
+        {
+            [UTF.ClassInitialize(UTF.ClassInitializeInheritance.OnceBeforeAnyDerivedClasses)]
+            public static void ClassInit(UTFExtension.TestContext tc)
+            {
+            }
+
+            public static void ClassCleanup()
+            {
+            }
+        }
+
+        [UTF.TestClass]
+        private class DummyTestClassWithInitAndCleanupMethods : DummyBaseTestClassWithInitAndCleanupMethods
         {
             public static void AssemblyInit(UTFExtension.TestContext tc)
             {

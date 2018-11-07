@@ -321,11 +321,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         // update class initialize queue with new method
                         classInfo.BaseClassInitializeMethodsQueue.Enqueue(methodInfo);
                     }
-
-                    // else if (this.IsAssemblyOrClassCleanupMethod(methodInfo, classCleanupAttributeType))
-                    // {
-                    //    // don't do nothing for now
-                    // }
+                    else if (this.IsAssemblyOrClassCleanupMethod(methodInfo, classCleanupAttributeType))
+                    {
+                        // update class cleanup queue with new method
+                        classInfo.BaseClassCleanupMethodsQueue.Enqueue(methodInfo);
+                    }
                 }
 
                 baseType = baseType.GetTypeInfo().BaseType;

@@ -127,6 +127,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
+        public void TestClassInfoClassCleanupMethodShouldNotInvokeBaseClassCleanupMethodsWhenNoTestClassInitializedIsCalled()
+        {
+            var classcleanupCallCount = 0;
+            DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+
+            this.testClassInfo.BaseClassCleanupMethodsQueue.Enqueue(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitDerivedClassMethod");
+
+            var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
+
+            Assert.AreEqual(null, ret);
+            Assert.AreEqual(0, classcleanupCallCount);
+        }
+
+        [TestMethod]
+        public void TestClassInfoClassCleanupMethodShouldInvokeBaseClassCleanupMethodOnlyWhenBaseTestClassInitializedIsCalled()
+        {
+            var classcleanupCallCount = 0;
+            DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+
+            this.testClassInfo.BaseClassCleanupMethodsQueue.Enqueue(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
+            this.testClassInfo.BaseClassInitializeMethodsQueue.Enqueue(typeof(DummyDerivedTestClass).GetMethod("InitDerivedClassMethod"));
+
+            var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
+
+            Assert.AreEqual(null, ret);
+            Assert.AreEqual(1, classcleanupCallCount);
+        }
+
+        [TestMethod]
         public void TestClassInfoClassCleanupMethodShouldInvokeWhenTestClassInitializedIsCalled()
         {
             var classcleanupCallCount = 0;
@@ -137,6 +167,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             this.testClassInfo.RunClassInitialize(this.testContext);
             var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
+
+            Assert.AreEqual(null, ret);
+            Assert.AreEqual(1, classcleanupCallCount);
+        }
+
+        [TestMethod]
+        public void TestClassInfoClassCleanupMethodShouldInvokeBaseClassCleanupMethodWhenTestClassInitializedIsCalled()
+        {
+            var classcleanupCallCount = 0;
+            DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+
+            this.testClassInfo.BaseClassCleanupMethodsQueue.Enqueue(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
+
+            this.testClassInfo.RunClassInitialize(this.testContext);
+            var ret = this.testClassInfo.RunClassCleanup();
 
             Assert.AreEqual(null, ret);
             Assert.AreEqual(1, classcleanupCallCount);

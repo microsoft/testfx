@@ -269,8 +269,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     }
                     else if (initializeMethod.GetCustomAttribute<ClassInitializeAttribute>().InheritanceBehavior == ClassInitializeInheritance.BeforeEachDerivedClass)
                     {
-                        // do something before each derived class
                         initializeMethod?.InvokeAsSynchronousTask(null, testContext);
+                        this.IsBaseClassInitializeExecuted = true;
                     }
                 }
             }
@@ -348,16 +348,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public string RunClassCleanup()
         {
-            if (this.ClassCleanupMethod == null)
+            if (this.ClassCleanupMethod is null)
             {
-                return null;
+                if (this.BaseClassCleanupMethodsQueue.Count == 0)
+                {
+                    return null;
+                }
             }
 
-            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod == null)
+            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null || this.IsBaseClassInitializeExecuted)
             {
+                var classCleanupMethod = this.classCleanupMethod;
                 try
                 {
-                    this.ClassCleanupMethod.InvokeAsSynchronousTask(null);
+                    classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    var baseClassCleanupQueue = new Queue<MethodInfo>(this.BaseClassCleanupMethodsQueue);
+                    while (baseClassCleanupQueue.Count > 0)
+                    {
+                        classCleanupMethod = baseClassCleanupQueue.Dequeue();
+                        classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    }
 
                     return null;
                 }
