@@ -24,9 +24,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="securityInfo">Evidence that establishes the identity of the code that runs in the application domain. Pass null to use the evidence of the current application domain.</param>
         /// <param name="info">An object that contains application domain initialization information.</param>
         /// <returns>The newly created application domain.</returns>
-        AppDomain CreateDomain(
-            string friendlyName,
-            Evidence securityInfo,
-            AppDomainSetup info);
+        AppDomain CreateDomain(string friendlyName, Evidence securityInfo, AppDomainSetup info);
     }
 }

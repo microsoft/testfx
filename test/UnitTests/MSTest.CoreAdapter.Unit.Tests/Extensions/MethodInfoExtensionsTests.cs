@@ -75,6 +75,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         }
 
         [TestMethod]
+        public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnTrueForTestMethodsWithoutAsync()
+        {
+            var methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticNonAsyncTaskMethodWithTC");
+            Assert.IsTrue(methodInfo.HasCorrectClassOrAssemblyInitializeSignature());
+        }
+
+        [TestMethod]
         public void HasCorrectClassOrAssemblyInitializeSignatureShouldReturnFalseForAsyncTestMethodsWithNonTaskReturnTypes()
         {
             var methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticAsyncVoidMethodWithTC");
@@ -128,6 +135,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         }
 
         [TestMethod]
+        public void HasCorrectClassOrAssemblyCleanupSignatureShouldReturnTrueForTestMethodsWithoutAsync()
+        {
+            var methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticNonAsyncTaskMethod");
+            Assert.IsTrue(methodInfo.HasCorrectClassOrAssemblyCleanupSignature());
+        }
+
+        [TestMethod]
         public void HasCorrectClassOrAssemblyCleanupSignatureShouldReturnFalseForAsyncTestMethodsWithNonTaskReturnTypes()
         {
             var methodInfo = typeof(DummyTestClass).GetMethod("PublicStaticAsyncVoidMethod");
@@ -177,6 +191,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnTrueForAsyncTestMethods()
         {
             var methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncTaskMethod");
+            Assert.IsTrue(methodInfo.HasCorrectTestInitializeOrCleanupSignature());
+        }
+
+        [TestMethod]
+        public void HasCorrectTestInitializeOrCleanupSignatureShouldReturnTrueForTestMethodsWithoutAsync()
+        {
+            var methodInfo = typeof(DummyTestClass).GetMethod("PublicNonAsyncTaskMethod");
             Assert.IsTrue(methodInfo.HasCorrectTestInitializeOrCleanupSignature());
         }
 
@@ -248,6 +269,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         }
 
         [TestMethod]
+        public void HasCorrectTestMethodSignatureShouldReturnTrueForTaskTestMethodsWithoutAsync()
+        {
+            var methodInfo = typeof(DummyTestClass).GetMethod("PublicNonAsyncTaskMethod");
+            Assert.IsTrue(methodInfo.HasCorrectTestMethodSignature(false));
+        }
+
+        [TestMethod]
         public void HasCorrectTestMethodSignatureShouldReturnFalseForAsyncTestMethodsWithNonTaskReturnTypes()
         {
             var methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncVoidMethod");
@@ -294,6 +322,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         public void IsVoidOrTaskReturnTypeShouldReturnTrueForAsyncTaskMethods()
         {
             var methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncTaskMethod");
+            Assert.IsTrue(methodInfo.IsVoidOrTaskReturnType());
+        }
+
+        [TestMethod]
+        public void IsVoidOrTaskReturnTypeShouldReturnTrueForTaskMethodsWithoutAsync()
+        {
+            var methodInfo = typeof(DummyTestClass).GetMethod("PublicNonAsyncTaskMethod");
             Assert.IsTrue(methodInfo.IsVoidOrTaskReturnType());
         }
 
@@ -453,6 +488,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
                 await Task.FromResult(true);
             }
 
+            public static Task PublicStaticNonAsyncTaskMethodWithTC(UTFExtension.TestContext tc)
+            {
+                return Task.FromResult(true);
+            }
+
             public static async void PublicStaticAsyncVoidMethodWithTC(UTFExtension.TestContext tc)
             {
                 await Task.FromResult(true);
@@ -471,6 +511,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             public static async void PublicStaticAsyncVoidMethod()
             {
                 await Task.FromResult(true);
+            }
+
+            public static Task PublicStaticNonAsyncTaskMethod()
+            {
+                return Task.FromResult(true);
             }
 
             public void PublicMethod()
@@ -500,6 +545,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             public async void PublicAsyncVoidMethod()
             {
                 await Task.FromResult(true);
+            }
+
+            public Task PublicNonAsyncTaskMethod()
+            {
+                return Task.FromResult(true);
             }
 
             [UTF.Timeout(-11)]
