@@ -172,7 +172,7 @@
     <value>{0}: {1}</value>
   </data>
   <data name="TypeLoadFailed" xml:space="preserve">
-    <value>Unable to load types '{1}' from the test source '{0}'. Some or all of the tests in this source may not be discovered.</value>
+    <value>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered. {1}</value>
   </data>
   <data name="UTA_ErrorGenericTestMethod" xml:space="preserve">
     <value>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</value>
