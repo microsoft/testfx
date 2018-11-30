@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var endTime = DateTimeOffset.Now;
 
             // Act
-            var testResult = result.ToTestResult(testCase, startTime, endTime, mapInconclusiveToFailed: false);
+            var testResult = result.ToTestResult(testCase, startTime, endTime, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
 
             // Validate
             Assert.AreEqual(testCase, testResult.TestCase);
@@ -87,7 +87,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 StandardOut = "DummyOutput"
             };
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, mapInconclusiveToFailed: false);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
             Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
         }
 
@@ -99,7 +99,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 DebugTrace = "DummyDebugTrace"
             };
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, mapInconclusiveToFailed: false);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
             Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("\n\nDebug Trace:\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
         }
     }

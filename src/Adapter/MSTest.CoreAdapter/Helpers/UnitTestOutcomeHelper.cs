@@ -15,8 +15,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// </summary>
         /// <param name="unitTestOutcome"> The unit Test Outcome. </param>
         /// <param name="mapInconclusiveToFailed">Should map inconclusive to failed.</param>
+        /// <param name="mapNotRunnableToFailed">Should map not runnable to failed</param>
         /// <returns>The Test platforms outcome.</returns>
-        internal static TestOutcome ToTestOutcome(UnitTestOutcome unitTestOutcome, bool mapInconclusiveToFailed)
+        internal static TestOutcome ToTestOutcome(UnitTestOutcome unitTestOutcome, bool mapInconclusiveToFailed, bool mapNotRunnableToFailed)
         {
             switch (unitTestOutcome)
             {
@@ -29,7 +30,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                     return TestOutcome.Failed;
 
                 case UnitTestOutcome.NotRunnable:
-                    return TestOutcome.None;
+                    {
+                        if (mapNotRunnableToFailed)
+                        {
+                            return TestOutcome.Failed;
+                        }
+
+                        return TestOutcome.None;
+                    }
 
                 case UnitTestOutcome.Ignored:
                     return TestOutcome.Skipped;

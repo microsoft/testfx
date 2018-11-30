@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             var endTime = DateTimeOffset.Now;
 
             // Act
-            var testResult = result.ToTestResult(testCase, startTime, endTime, false);
+            var testResult = result.ToTestResult(testCase, startTime, endTime, false, false);
 
             // Validate
             Assert.AreEqual(testCase, testResult.TestCase);
@@ -87,7 +87,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
                 StandardOut = "DummyOutput"
             };
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false, false);
             Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
         }
 
@@ -99,7 +99,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
                 StandardError = "DummyError"
             };
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false, false);
             Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("DummyError") && m.Category.Equals("StdErrMsgs")));
         }
 
@@ -111,7 +111,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
                 DebugTrace = "DummyDebugTrace"
             };
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false, false);
             Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("\n\nDebug Trace:\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
         }
 
@@ -123,7 +123,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
                 TestContextMessages = "KeepMovingForward"
             };
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false, false);
             Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("\n\nTestContext Messages:\nKeepMovingForward") && m.Category.Equals("StdOutMsgs")));
         }
 
@@ -135,7 +135,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
                 ResultFiles = new List<string>() { "dummy://DummyFile.txt" }
             };
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false, false);
 
             Assert.AreEqual(testresult.Attachments.Count, 1);
             Assert.AreEqual(testresult.Attachments[0].Attachments[0].Description, "dummy://DummyFile.txt");
@@ -149,7 +149,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
                 ResultFiles = null
             };
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false, false);
 
             Assert.AreEqual(testresult.Attachments.Count, 0);
         }
@@ -168,7 +168,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
                 InnerResultsCount = innerResultsCount
             };
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, false, false);
 
             Assert.AreEqual(executionId, testresult.GetPropertyValue(MSTest.TestAdapter.Constants.ExecutionIdProperty));
             Assert.AreEqual(parentExecId, testresult.GetPropertyValue(MSTest.TestAdapter.Constants.ParentExecIdProperty));
@@ -178,71 +178,78 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomePassedShouldReturnTestOutcomePassed()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Passed, false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Passed, false, false);
             Assert.AreEqual(TestOutcome.Passed, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeFailedShouldReturnTestOutcomeFailed()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Failed, false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Failed, false, false);
             Assert.AreEqual(TestOutcome.Failed, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeErrorShouldReturnTestOutcomeFailed()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Error, false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Error, false, false);
             Assert.AreEqual(TestOutcome.Failed, resultOutcome);
         }
 
         [TestMethod]
-        public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeNone()
+        public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeNoneWhenNotSpecified()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, false, false);
             Assert.AreEqual(TestOutcome.None, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeTimeoutShouldReturnTestOutcomeFailed()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Timeout, false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Timeout, false, false);
             Assert.AreEqual(TestOutcome.Failed, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeIgnoredShouldReturnTestOutcomeSkipped()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Ignored, false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Ignored, false, false);
             Assert.AreEqual(TestOutcome.Skipped, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeSkipped()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Inconclusive, false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Inconclusive, false, false);
             Assert.AreEqual(TestOutcome.Skipped, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeFailedWhenSpecifiedSo()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Inconclusive, true);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Inconclusive, true, false);
             Assert.AreEqual(TestOutcome.Failed, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotFoundShouldReturnTestOutcomeNotFound()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotFound, false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotFound, false, false);
             Assert.AreEqual(TestOutcome.NotFound, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeInProgressShouldReturnTestOutcomeNone()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.InProgress, false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.InProgress, false, false);
             Assert.AreEqual(TestOutcome.None, resultOutcome);
+        }
+
+        [TestMethod]
+        public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailedWhenSpecifiedSo()
+        {
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, false, true);
+            Assert.AreEqual(TestOutcome.Failed, resultOutcome);
         }
     }
 }

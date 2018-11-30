@@ -161,7 +161,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     continue;
                 }
 
-                var testResult = unitTestResult.ToTestResult(test, startTime, endTime, MSTestSettings.CurrentSettings.MapInconclusiveToFailed);
+                var testResult = unitTestResult.ToTestResult(test, startTime, endTime, MSTestSettings.CurrentSettings.MapInconclusiveToFailed, MSTestSettings.CurrentSettings.MapNotRunnableToFailed);
 
                 if (unitTestResult.DatarowIndex >= 0)
                 {

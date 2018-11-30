@@ -22,63 +22,63 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomePassedShouldReturnTestOutcomePassed()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Passed, mapInconclusiveToFailed: false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Passed, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
             Assert.AreEqual(TestOutcome.Passed, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeFailedShouldReturnTestOutcomeFailed()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Failed, mapInconclusiveToFailed: false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Failed, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
             Assert.AreEqual(TestOutcome.Failed, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeErrorShouldReturnTestOutcomeFailed()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Error, mapInconclusiveToFailed: false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Error, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
             Assert.AreEqual(TestOutcome.Failed, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeNone()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, mapInconclusiveToFailed: false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
             Assert.AreEqual(TestOutcome.None, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeTimeoutShouldReturnTestOutcomeFailed()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Timeout, mapInconclusiveToFailed: false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Timeout, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
             Assert.AreEqual(TestOutcome.Failed, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeIgnoredShouldReturnTestOutcomeSkipped()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Ignored, mapInconclusiveToFailed: false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Ignored, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
             Assert.AreEqual(TestOutcome.Skipped, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeSkipped()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Inconclusive, mapInconclusiveToFailed: false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Inconclusive, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
             Assert.AreEqual(TestOutcome.Skipped, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotFoundShouldReturnTestOutcomeNotFound()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotFound, mapInconclusiveToFailed: false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotFound, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
             Assert.AreEqual(TestOutcome.NotFound, resultOutcome);
         }
 
         [TestMethod]
         public void UniTestHelperToTestOutcomeForUnitTestOutcomeInProgressShouldReturnTestOutcomeNone()
         {
-            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.InProgress, mapInconclusiveToFailed: false);
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.InProgress, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
             Assert.AreEqual(TestOutcome.None, resultOutcome);
         }
     }
