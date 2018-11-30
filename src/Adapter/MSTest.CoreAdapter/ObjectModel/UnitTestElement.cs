@@ -94,6 +94,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
             testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
 
+            // Set declaring type if present so the correct method info can be retrieved
+            if (this.TestMethod.DeclaringClassFullName != null)
+            {
+                testCase.SetPropertyValue(TestAdapter.Constants.DeclaringClassNameProperty, this.TestMethod.DeclaringClassFullName);
+            }
+
             // Many of the tests will not be async, so there is no point in sending extra data
             if (this.IsAsync)
             {

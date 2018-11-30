@@ -85,6 +85,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
         }
 
         [TestMethodV1]
+        public void ToTestCaseShouldSetDeclaringClassNameIfPresent()
+        {
+            this.testMethod.DeclaringClassFullName = null;
+            var testCase = this.unitTestElement.ToTestCase();
+
+            Assert.IsNull(testCase.GetPropertyValue(Constants.DeclaringClassNameProperty));
+
+            this.testMethod.DeclaringClassFullName = "DC";
+            testCase = this.unitTestElement.ToTestCase();
+
+            Assert.AreEqual("DC", testCase.GetPropertyValue(Constants.DeclaringClassNameProperty));
+        }
+
+        [TestMethodV1]
         public void ToTestCaseShouldSetIsAsyncProperty()
         {
             this.unitTestElement.IsAsync = true;
