@@ -260,7 +260,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to load types from the test source &apos;{0}&apos;. Some or all of the tests in this source may not be discovered. {1}.
+        ///   Looks up a localized string similar to {1}
+        ///Unable to load types from the test source &apos;{0}&apos;. Some or all of the tests in this source may not be discovered..
         /// </summary>
         internal static string TypeLoadFailed {
             get {
