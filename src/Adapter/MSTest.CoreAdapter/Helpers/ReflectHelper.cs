@@ -380,7 +380,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
             if (categories != null)
             {
-                categories = categories.Concat(this.GetCustomAttributeForAssembly(owningType.GetTypeInfo().Assembly, typeof(TestCategoryBaseAttribute))).ToArray();
+                categories = categories.Concat(this.GetCustomAttributeForAssembly(owningType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
             }
 
             if (categories != null)
@@ -392,17 +392,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
-        /// Gets the custom attributes on an assembly
+        /// Gets the custom attributes on the assembly of a member info
         /// NOTE: having it as separate virtual method, so that we can extend it for testing.
         /// </summary>
-        /// <param name="assembly">The assembly to inspect.</param>
+        /// <param name="memberInfo">The member to inspect.</param>
         /// <param name="type">The attribute type to find.</param>
         /// <returns>Custom attributes defined.</returns>
-        internal virtual Attribute[] GetCustomAttributeForAssembly(Assembly assembly, Type type)
+        internal virtual Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo, Type type)
         {
             return
                 PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
-                    assembly, type).OfType<Attribute>().ToArray();
+                    memberInfo.Module.Assembly, type).OfType<Attribute>().ToArray();
         }
 
         /// <summary>
