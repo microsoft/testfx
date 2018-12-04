@@ -61,8 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 return true;
             }
 
-            return attributes.Any(a =>
-                    string.Equals(a.Value.GetType().GetTypeInfo().BaseType.AssemblyQualifiedName, nameToFind));
+            return false;
         }
 
         /// <summary>
