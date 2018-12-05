@@ -389,8 +389,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                         try
                         {
-                            // Only examine test classes for test attributes
-                            if (!this.reflectionHelper.IsAttributeDefined(t, typeof(TestClassAttribute), inherit: true))
+                            // Only examine classes which are TestClass or derives from TestClass attribute
+                            if (!this.reflectionHelper.IsAttributeDefined(t, typeof(TestClassAttribute), inherit: true) &&
+                                !this.reflectionHelper.HasAttributeDerivedFrom(t, typeof(TestClassAttribute), true))
                             {
                                 continue;
                             }
