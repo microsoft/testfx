@@ -868,7 +868,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region Dummy implementation
 
-        [UTF.TestClass]
+        [DummyTestClass]
         internal class DummyTestClass
         {
             public static IDictionary<string, object> TestContextProperties
@@ -901,7 +901,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithCleanupMethods
         {
             [UTF.ClassCleanup]
@@ -916,7 +916,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassForParallelize
         {
             private static HashSet<int> threadIds = new HashSet<int>();
@@ -951,7 +951,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassForParallelize2
         {
             private static HashSet<int> threadIds = new HashSet<int>();
@@ -982,7 +982,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassForParallelize3
         {
             private static HashSet<int> threadIds = new HashSet<int>();
@@ -1007,7 +1007,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithDoNotParallelizeMethods
         {
             private static HashSet<int> parallelizableTestsThreadIds = new HashSet<int>();
@@ -1094,6 +1094,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
                 threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
             }
+        }
+
+        private class DummyTestClassAttribute : UTF.TestClassAttribute
+        {
         }
 
         #endregion

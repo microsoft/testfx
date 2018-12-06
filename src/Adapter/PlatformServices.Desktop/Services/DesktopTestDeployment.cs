@@ -140,8 +140,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 return false;
             }
 
-            var isDeploymentDone = false;
-
             using (new SuspendCodeCoverage())
             {
                 // Group the tests by source
@@ -153,7 +151,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 foreach (var group in testsBySource)
                 {
                     // do the deployment
-                    isDeploymentDone = this.deploymentUtility.Deploy(@group.Tests, @group.Source, runContext, frameworkHandle, ref runDirectories) || isDeploymentDone;
+                    this.deploymentUtility.Deploy(@group.Tests, @group.Source, runContext, frameworkHandle, RunDirectories);
                 }
 
                 // Update the runDirectories

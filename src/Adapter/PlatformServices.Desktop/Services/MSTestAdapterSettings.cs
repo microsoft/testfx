@@ -1,81 +1,17 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.Xml;
-
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
-    using ISettingsProvider = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ISettingsProvider;
-
-#pragma warning disable SA1649 // File name must match first type name
-
-    /// <summary>
-    /// Class to read settings from the runsettings xml for the desktop.
-    /// </summary>
-    public class MSTestSettingsProvider : ISettingsProvider
-#pragma warning restore SA1649 // File name must match first type name
-    {
-        /// <summary>
-        /// Member variable for Adapter settings
-        /// </summary>
-        private static MSTestAdapterSettings settings;
-
-        /// <summary>
-        /// Gets settings provided to the adapter.
-        /// </summary>
-        public static MSTestAdapterSettings Settings
-        {
-            get
-            {
-                if (settings == null)
-                {
-                    settings = new MSTestAdapterSettings();
-                }
-
-                return settings;
-            }
-        }
-
-        /// <summary>
-        /// Load the settings from the reader.
-        /// </summary>
-        /// <param name="reader">Reader to load the settings from.</param>
-        public void Load(XmlReader reader)
-        {
-            ValidateArg.NotNull<XmlReader>(reader, "reader");
-
-            settings = MSTestAdapterSettings.ToSettings(reader);
-        }
-
-        public IDictionary<string, object> GetProperties(string source)
-        {
-            return TestDeployment.GetDeploymentInformation(source);
-        }
-
-        /// <summary>
-        /// Reset the settings to its default.
-        /// Used for testing purposes.
-        /// </summary>
-        internal static void Reset()
-        {
-            settings = null;
-        }
-    }
-
-    /// <summary>
-    /// Adapter Settings for the run
-    /// </summary>
-#pragma warning disable SA1402
     public class MSTestAdapterSettings
-#pragma warning restore SA1402
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MSTestAdapterSettings"/> class.
@@ -84,6 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             this.DeleteDeploymentDirectoryAfterTestRunIsComplete = true;
             this.DeploymentEnabled = true;
+            this.DeployTestSourceDependencies = true;
             this.SearchDirectories = new List<RecursiveDirectoryPath>();
         }
 
@@ -98,6 +35,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public bool DeleteDeploymentDirectoryAfterTestRunIsComplete { get; private set; }
 
         /// <summary>
+        /// Gets a value indicating whether the test source references are to deployed
+        /// </summary>
+        public bool DeployTestSourceDependencies { get; private set; }
+
+        /// <summary>
         ///  Gets list of paths recursive or non recursive paths.
         /// </summary>
         protected List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
@@ -107,7 +49,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="reader">Reader to load the settings from.</param>
         /// <returns>An instance of the <see cref="MSTestAdapterSettings"/> class</returns>
-        [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity", Justification = "Reviewed. Suppression is OK here.")]
         public static MSTestAdapterSettings ToSettings(XmlReader reader)
         {
             ValidateArg.NotNull<XmlReader>(reader, "reader");
@@ -116,6 +57,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             //
             // <MSTestV2>
             //     <DeploymentEnabled>true</DeploymentEnabled>
+            //     <DeployTestSourceDependencies>true</DeployTestSourceDependencies>
             //     <DeleteDeploymentDirectoryAfterTestRunIsComplete>true</DeleteDeploymentDirectoryAfterTestRunIsComplete>
             //     <AssemblyResolution>
             //          <Directory path= "% HOMEDRIVE %\direvtory "includeSubDirectories = "true" />
@@ -146,6 +88,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                                 if (bool.TryParse(reader.ReadInnerXml(), out result))
                                 {
                                     settings.DeploymentEnabled = result;
+                                }
+
+                                break;
+                            }
+
+                        case "DEPLOYTESTSOURCEDEPENDENCIES":
+                            {
+                                if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                {
+                                    settings.DeployTestSourceDependencies = result;
                                 }
 
                                 break;
