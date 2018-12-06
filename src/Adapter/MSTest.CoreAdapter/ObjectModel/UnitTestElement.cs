@@ -78,6 +78,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         internal string AsyncTypeName { get; set; }
 
         /// <summary>
+        /// Gets or sets the test properties for the test method.
+        /// </summary>
+        internal Dictionary<TestProperty, object> Properties { get; set; } = new Dictionary<TestProperty, object>();
+
+        /// <summary>
         /// Convert the UnitTestElement instance to an Object Model testCase instance.
         /// </summary>
         /// <returns> An instance of <see cref="TestCase"/>. </returns>
@@ -115,6 +120,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             if (this.Traits != null)
             {
                 testCase.Traits.AddRange(this.Traits);
+            }
+
+            foreach (var kvp in this.Properties)
+            {
+                testCase.SetPropertyValue(kvp.Key, kvp.Value);
             }
 
             // The list of items to deploy before running this test.

@@ -149,6 +149,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
         }
 
         [TestMethodV1]
+        public void ToTestCaseShouldSetPropertiesIfPresent()
+        {
+            this.unitTestElement.Properties.Add(Constants.CssIterationProperty, 12);
+            this.unitTestElement.Properties.Add(Constants.CssProjectStructureProperty, "ProjectStructure");
+            this.unitTestElement.Properties.Add(Constants.DescriptionProperty, "I am a dummy test");
+            this.unitTestElement.Properties.Add(Constants.WorkItemProperty, 12323);
+
+            var testCase = this.unitTestElement.ToTestCase();
+
+            Assert.AreEqual("12", testCase.GetPropertyValue(Constants.CssIterationProperty));
+            Assert.AreEqual("ProjectStructure", testCase.GetPropertyValue(Constants.CssProjectStructureProperty));
+            Assert.AreEqual("I am a dummy test", testCase.GetPropertyValue(Constants.DescriptionProperty));
+            Assert.AreEqual(12323, testCase.GetPropertyValue(Constants.WorkItemProperty));
+        }
+
+        [TestMethodV1]
         public void ToTestCaseShouldSetDeploymentItemPropertyIfPresent()
         {
             this.unitTestElement.DeploymentItems = null;
