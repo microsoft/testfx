@@ -77,10 +77,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         internal string AsyncTypeName { get; set; }
 
-        /// <summary>
-        /// Gets or sets the test properties for the test method.
-        /// </summary>
-        internal Dictionary<TestProperty, object> Properties { get; set; } = new Dictionary<TestProperty, object>();
+        internal string CssIteration { get; set; }
+
+        internal string CssProjectStructure { get; set; }
+
+        internal string Description { get; set; }
+
+        internal int? WorkItem { get; set; }
 
         /// <summary>
         /// Convert the UnitTestElement instance to an Object Model testCase instance.
@@ -122,9 +125,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 testCase.Traits.AddRange(this.Traits);
             }
 
-            foreach (var kvp in this.Properties)
+            if (!string.IsNullOrEmpty(this.CssIteration))
             {
-                testCase.SetPropertyValue(kvp.Key, kvp.Value);
+                testCase.SetPropertyValue(TestAdapter.Constants.CssIterationProperty, this.CssIteration);
+            }
+
+            if (!string.IsNullOrEmpty(this.CssProjectStructure))
+            {
+                testCase.SetPropertyValue(TestAdapter.Constants.CssProjectStructureProperty, this.CssProjectStructure);
+            }
+
+            if (!string.IsNullOrEmpty(this.Description))
+            {
+                testCase.SetPropertyValue(TestAdapter.Constants.DescriptionProperty, this.Description);
+            }
+
+            if (this.WorkItem != null)
+            {
+                testCase.SetPropertyValue(TestAdapter.Constants.WorkItemProperty, this.WorkItem.Value);
             }
 
             // The list of items to deploy before running this test.

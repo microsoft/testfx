@@ -151,10 +151,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
         [TestMethodV1]
         public void ToTestCaseShouldSetPropertiesIfPresent()
         {
-            this.unitTestElement.Properties.Add(Constants.CssIterationProperty, "12");
-            this.unitTestElement.Properties.Add(Constants.CssProjectStructureProperty, "ProjectStructure");
-            this.unitTestElement.Properties.Add(Constants.DescriptionProperty, "I am a dummy test");
-            this.unitTestElement.Properties.Add(Constants.WorkItemProperty, 12323);
+            this.unitTestElement.CssIteration = "12";
+            this.unitTestElement.CssProjectStructure = "ProjectStructure";
+            this.unitTestElement.Description = "I am a dummy test";
+            this.unitTestElement.WorkItem = 12323;
 
             var testCase = this.unitTestElement.ToTestCase();
 

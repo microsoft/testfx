@@ -151,25 +151,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var cssIteration = this.reflectHelper.GetCustomAttribute(method, typeof(CssIterationAttribute)) as CssIterationAttribute;
             if (cssIteration != null)
             {
-                testElement.Properties.Add(Constants.CssIterationProperty, cssIteration.CssIteration);
+                testElement.CssIteration = cssIteration.CssIteration;
             }
 
             var cssProjectStructure = this.reflectHelper.GetCustomAttribute(method, typeof(CssProjectStructureAttribute)) as CssProjectStructureAttribute;
             if (cssProjectStructure != null)
             {
-                testElement.Properties.Add(Constants.CssProjectStructureProperty, cssProjectStructure.CssProjectStructure);
+                testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
             }
 
             var descriptionAttribute = this.reflectHelper.GetCustomAttribute(method, typeof(DescriptionAttribute)) as DescriptionAttribute;
             if (descriptionAttribute != null)
             {
-                testElement.Properties.Add(Constants.DescriptionProperty, descriptionAttribute.Description);
+                testElement.Description = descriptionAttribute.Description;
             }
 
             var workItemAttribute = this.reflectHelper.GetCustomAttribute(method, typeof(WorkItemAttribute)) as WorkItemAttribute;
             if (workItemAttribute != null)
             {
-                testElement.Properties.Add(Constants.WorkItemProperty, workItemAttribute.Id);
+                testElement.WorkItem = workItemAttribute.Id;
             }
 
             // Get Deployment items if any.

@@ -355,7 +355,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
-            Assert.AreEqual("Dummy description", testElement.Properties[MSTest.TestAdapter.Constants.DescriptionProperty]);
+            Assert.AreEqual("Dummy description", testElement.Description);
         }
 
         [TestMethod]
@@ -368,7 +368,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
-            Assert.AreEqual(2, testElement.Properties[MSTest.TestAdapter.Constants.WorkItemProperty]);
+            Assert.AreEqual(2, testElement.WorkItem);
         }
 
         [TestMethod]
@@ -381,7 +381,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
-            Assert.AreEqual("234", testElement.Properties[MSTest.TestAdapter.Constants.CssIterationProperty]);
+            Assert.AreEqual("234", testElement.CssIteration);
         }
 
         [TestMethod]
@@ -394,7 +394,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
-            Assert.AreEqual("ProjectStructure123", testElement.Properties[MSTest.TestAdapter.Constants.CssProjectStructureProperty]);
+            Assert.AreEqual("ProjectStructure123", testElement.CssProjectStructure);
         }
 
         [TestMethod]
