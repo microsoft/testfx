@@ -355,7 +355,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
-            Assert.AreEqual("Dummy Description", testElement.Properties[MSTest.TestAdapter.Constants.DescriptionProperty]);
+            Assert.AreEqual("Dummy description", testElement.Properties[MSTest.TestAdapter.Constants.DescriptionProperty]);
         }
 
         [TestMethod]
