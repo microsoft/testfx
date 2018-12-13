@@ -83,7 +83,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
         internal string Description { get; set; }
 
-        internal int? WorkItem { get; set; }
+        internal int[] WorkItemIds { get; set; }
 
         /// <summary>
         /// Convert the UnitTestElement instance to an Object Model testCase instance.
@@ -140,9 +140,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 testCase.SetPropertyValue(TestAdapter.Constants.DescriptionProperty, this.Description);
             }
 
-            if (this.WorkItem != null)
+            if (this.WorkItemIds != null)
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.WorkItemProperty, this.WorkItem.Value);
+                testCase.SetPropertyValue(TestAdapter.Constants.WorkItemIdsProperty, this.WorkItemIds);
             }
 
             // The list of items to deploy before running this test.

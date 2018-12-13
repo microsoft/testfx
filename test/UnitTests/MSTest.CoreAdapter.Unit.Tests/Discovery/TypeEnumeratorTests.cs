@@ -359,16 +359,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethod]
-        public void GetTestFromMethodShouldSetWorkItem()
+        public void GetTestFromMethodShouldSetWorkItemIds()
         {
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
             TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
             var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-            this.mockReflectHelper.Setup(rh => rh.GetCustomAttribute(methodInfo, typeof(UTF.WorkItemAttribute))).Returns(new UTF.WorkItemAttribute(2));
+            this.mockReflectHelper.Setup(rh => rh.GetCustomAttributes(methodInfo, typeof(UTF.WorkItemAttribute))).Returns(new UTF.WorkItemAttribute[] { new UTF.WorkItemAttribute(123), new UTF.WorkItemAttribute(345) });
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
-            Assert.AreEqual(2, testElement.WorkItem);
+            CollectionAssert.AreEqual(new int[] { 123, 345 }, testElement.WorkItemIds);
         }
 
         [TestMethod]

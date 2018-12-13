@@ -154,14 +154,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             this.unitTestElement.CssIteration = "12";
             this.unitTestElement.CssProjectStructure = "ProjectStructure";
             this.unitTestElement.Description = "I am a dummy test";
-            this.unitTestElement.WorkItem = 12323;
+            this.unitTestElement.WorkItemIds = new int[] { 2312, 22332 };
 
             var testCase = this.unitTestElement.ToTestCase();
 
             Assert.AreEqual("12", testCase.GetPropertyValue(Constants.CssIterationProperty));
             Assert.AreEqual("ProjectStructure", testCase.GetPropertyValue(Constants.CssProjectStructureProperty));
             Assert.AreEqual("I am a dummy test", testCase.GetPropertyValue(Constants.DescriptionProperty));
-            Assert.AreEqual(12323, testCase.GetPropertyValue(Constants.WorkItemProperty));
+            CollectionAssert.AreEqual(new int[] { 2312, 22332 }, testCase.GetPropertyValue(Constants.WorkItemIdsProperty) as int[]);
         }
 
         [TestMethodV1]

@@ -32,7 +32,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         internal static readonly TestProperty DescriptionProperty = TestProperty.Register("Description", DescriptionLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
-        internal static readonly TestProperty WorkItemProperty = TestProperty.Register("WorkItem", WorkItemLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
+        internal static readonly TestProperty WorkItemIdsProperty = TestProperty.Register("WorkItemIds", WorkItemIdsLabel, typeof(int), TestPropertyAttributes.Hidden, typeof(TestCase));
 
         internal static readonly TestProperty CssIterationProperty = TestProperty.Register("CssIteration", CssIterationLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
@@ -109,7 +109,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         private const string DescriptionLabel = "Description";
         private const string CssIterationLabel = "CssIteration";
         private const string CssProjectStructureLabel = "CssProjectStructure";
-        private const string WorkItemLabel = "WorkItem";
+        private const string WorkItemIdsLabel = "WorkItemIds";
 
         private const string TestRunId = "__Tfs_TestRunId__";
         private const string TestPlanId = "__Tfs_TestPlanId__";

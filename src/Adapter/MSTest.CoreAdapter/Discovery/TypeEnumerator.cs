@@ -166,10 +166,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 testElement.Description = descriptionAttribute.Description;
             }
 
-            var workItemAttribute = this.reflectHelper.GetCustomAttribute(method, typeof(WorkItemAttribute)) as WorkItemAttribute;
-            if (workItemAttribute != null)
+            var workItemAttributeArray = this.reflectHelper.GetCustomAttributes(method, typeof(WorkItemAttribute)) as WorkItemAttribute[];
+            if (workItemAttributeArray != null)
             {
-                testElement.WorkItem = workItemAttribute.Id;
+                testElement.WorkItemIds = workItemAttributeArray.Select(x => x.Id).ToArray();
             }
 
             // Get Deployment items if any.
