@@ -70,6 +70,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <returns> List of Valid Tests. </returns>
         internal Collection<UnitTestElement> GetTests(ICollection<string> warnings)
         {
+            bool foundDuplicateTests = false;
+            var foundTests = new HashSet<string>();
             var tests = new Collection<UnitTestElement>();
 
             // Test class is already valid. Verify methods.
@@ -85,11 +87,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
                 if (this.testMethodValidator.IsValidTestMethod(method, this.type, warnings))
                 {
+                    foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.Name);
                     tests.Add(this.GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings));
                 }
             }
 
-            return tests;
+            if (!foundDuplicateTests)
+            {
+                return tests;
+            }
+
+            // Remove duplicate test methods by taking the first one of each name
+            // that is declared closest to the test class in the hierarchy.
+            var inheritanceDepths = new Dictionary<string, int>();
+            var currentType = this.type;
+            int currentDepth = 0;
+
+            while (currentType != null)
+            {
+                inheritanceDepths[currentType.FullName] = currentDepth;
+                ++currentDepth;
+                currentType = currentType.GetTypeInfo().BaseType;
+            }
+
+            return new Collection<UnitTestElement>(
+                tests.GroupBy(
+                    t => t.TestMethod.Name,
+                    (_, elements) =>
+                        elements.OrderBy(t => inheritanceDepths[t.TestMethod.DeclaringClassFullName ?? t.TestMethod.FullClassName]).First())
+                    .ToList());
         }
 
         /// <summary>
