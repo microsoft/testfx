@@ -77,12 +77,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         internal string AsyncTypeName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the Css Iteration for the test method.
+        /// </summary>
         internal string CssIteration { get; set; }
 
+        /// <summary>
+        /// Gets or sets the Css Project Structure for the test method.
+        /// </summary>
         internal string CssProjectStructure { get; set; }
 
+        /// <summary>
+        /// Gets or sets the Description for the test method.
+        /// </summary>
         internal string Description { get; set; }
 
+        /// <summary>
+        /// Gets or sets the Work Item Ids for the test method.
+        /// </summary>
         internal int[] WorkItemIds { get; set; }
 
         /// <summary>
