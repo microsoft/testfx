@@ -368,7 +368,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
-            CollectionAssert.AreEqual(new int[] { 123, 345 }, testElement.WorkItemIds);
+            CollectionAssert.AreEqual(new string[] { "123", "345" }, testElement.WorkItemIds);
         }
 
         [TestMethod]

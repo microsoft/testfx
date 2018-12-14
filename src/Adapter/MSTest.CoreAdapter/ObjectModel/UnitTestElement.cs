@@ -95,7 +95,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <summary>
         /// Gets or sets the Work Item Ids for the test method.
         /// </summary>
-        internal int[] WorkItemIds { get; set; }
+        internal string[] WorkItemIds { get; set; }
 
         /// <summary>
         /// Convert the UnitTestElement instance to an Object Model testCase instance.

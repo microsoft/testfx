@@ -169,7 +169,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var workItemAttributeArray = this.reflectHelper.GetCustomAttributes(method, typeof(WorkItemAttribute)) as WorkItemAttribute[];
             if (workItemAttributeArray != null)
             {
-                testElement.WorkItemIds = workItemAttributeArray.Select(x => x.Id).ToArray();
+                testElement.WorkItemIds = workItemAttributeArray.Select(x => x.Id.ToString()).ToArray();
             }
 
             // Get Deployment items if any.
