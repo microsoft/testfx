@@ -417,6 +417,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
+        /// Gets the first custom attribute of the provided type on a memberInfo
+        /// </summary>
+        /// <param name="attributeProvider"> The member to reflect on. </param>
+        /// <param name="type"> The attribute type. </param>
+        /// <returns>Attribute defined.</returns>
+        internal virtual Attribute GetCustomAttribute(MemberInfo attributeProvider, Type type)
+        {
+            var attribute = GetCustomAttributes(attributeProvider, type, true);
+
+            if (attribute == null || attribute.Length != 1)
+            {
+                return null;
+            }
+
+            return attribute[0];
+        }
+
+        /// <summary>
         /// KeyValue pairs that are provided by TestOwnerAttribute of the given test method.
         /// </summary>
         /// <param name="ownerAttributeProvider">The member to inspect.</param>
