@@ -128,7 +128,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
 
             IEnumerable<object[]> enumerable = obj as IEnumerable<object[]>;
-            if (enumerable == null)
+
+            if (enumerable == null || !enumerable.Any())
             {
                 throw new ArgumentNullException(
                     string.Format(
