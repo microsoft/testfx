@@ -14,10 +14,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// Converts the parameter unitTestOutcome to testOutcome
         /// </summary>
         /// <param name="unitTestOutcome"> The unit Test Outcome. </param>
-        /// <param name="mapInconclusiveToFailed">Should map inconclusive to failed.</param>
-        /// <param name="mapNotRunnableToFailed">Should map not runnable to failed</param>
+        /// <param name="currentSettings">Current MSTest settings</param>
         /// <returns>The Test platforms outcome.</returns>
-        internal static TestOutcome ToTestOutcome(UnitTestOutcome unitTestOutcome, bool mapInconclusiveToFailed, bool mapNotRunnableToFailed)
+        internal static TestOutcome ToTestOutcome(UnitTestOutcome unitTestOutcome, MSTestSettings currentSettings)
         {
             switch (unitTestOutcome)
             {
@@ -31,7 +30,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
                 case UnitTestOutcome.NotRunnable:
                     {
-                        if (mapNotRunnableToFailed)
+                        if (currentSettings.MapNotRunnableToFailed)
                         {
                             return TestOutcome.Failed;
                         }
@@ -44,7 +43,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
                 case UnitTestOutcome.Inconclusive:
                     {
-                        if (mapInconclusiveToFailed)
+                        if (currentSettings.MapInconclusiveToFailed)
                         {
                             return TestOutcome.Failed;
                         }

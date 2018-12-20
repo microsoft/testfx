@@ -10,6 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System;
     using System.Linq;
     using System.Reflection;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -64,8 +65,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var startTime = DateTimeOffset.Now;
             var endTime = DateTimeOffset.Now;
 
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
             // Act
-            var testResult = result.ToTestResult(testCase, startTime, endTime, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
+            var testResult = result.ToTestResult(testCase, startTime, endTime, adapterSettings);
 
             // Validate
             Assert.AreEqual(testCase, testResult.TestCase);
@@ -87,7 +96,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 StandardOut = "DummyOutput"
             };
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
+            string runSettingxml =
+               @"<RunSettings>
+                    <MSTestV2>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
             Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
         }
 
@@ -99,7 +116,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 DebugTrace = "DummyDebugTrace"
             };
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, mapInconclusiveToFailed: false, mapNotRunnableToFailed: false);
+            string runSettingxml =
+               @"<RunSettings>
+                    <MSTestV2>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+            var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
             Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("\n\nDebug Trace:\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
         }
     }
