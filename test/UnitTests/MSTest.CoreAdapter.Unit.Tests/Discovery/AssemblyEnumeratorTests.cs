@@ -151,7 +151,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             Assert.AreEqual(1, this.warnings.Count);
             CollectionAssert.Contains(
                 this.warnings.ToList(),
-                string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, "DummyAssembly", string.Empty));
+                string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, "DummyAssembly", "System.Exception: DummyLoaderException\r\n"));
 
             this.testablePlatformServiceProvider.MockTraceLogger.Verify(tl => tl.LogWarning("{0}", exceptions[0]), Times.Once);
         }

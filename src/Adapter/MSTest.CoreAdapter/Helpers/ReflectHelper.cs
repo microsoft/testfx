@@ -72,7 +72,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <returns>True if the specified attribute is defined on the type.</returns>
         public virtual bool IsAttributeDefined(Type type, Type attributeType, bool inherit)
         {
-            return this.IsAttributeDefined(type.GetTypeInfo(), attributeType, inherit);
+            var memberInfo = (MemberInfo)type.GetTypeInfo();
+            return this.IsAttributeDefined(memberInfo, attributeType, inherit);
         }
 
         /// <summary>
@@ -84,7 +85,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <returns>An object derived from Attribute that corresponds to the instance of found attribute.</returns>
         public virtual bool HasAttributeDerivedFrom(Type type, Type baseAttributeType, bool inherit)
         {
-            return this.HasAttributeDerivedFrom(type.GetTypeInfo(), baseAttributeType, inherit);
+            var memberInfo = (MemberInfo)type.GetTypeInfo();
+            return this.HasAttributeDerivedFrom(memberInfo, baseAttributeType, inherit);
         }
 
         /// <summary>
@@ -412,6 +414,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         internal virtual Attribute[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
         {
             return GetCustomAttributes(attributeProvider, type, true);
+        }
+
+        /// <summary>
+        /// Gets the first custom attribute of the provided type on a memberInfo
+        /// </summary>
+        /// <param name="attributeProvider"> The member to reflect on. </param>
+        /// <param name="type"> The attribute type. </param>
+        /// <returns>Attribute defined.</returns>
+        internal virtual Attribute GetCustomAttribute(MemberInfo attributeProvider, Type type)
+        {
+            var attribute = GetCustomAttributes(attributeProvider, type, true);
+
+            if (attribute == null || attribute.Length != 1)
+            {
+                return null;
+            }
+
+            return attribute[0];
         }
 
         /// <summary>
