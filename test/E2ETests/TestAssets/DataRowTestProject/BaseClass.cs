@@ -9,9 +9,9 @@ namespace DataRowTestProject
     public class BaseClass
     {
         [TestMethod]
-        [DataRow("cherry")]
-        [DataRow("banana")]
-        [DataRow("Apple")]
+        [DataRow("BaseString1")]
+        [DataRow("BaseString2")]
+        [DataRow("BaseString3")]
         public virtual void DataRowTestMethod(string a)
         {
             Assert.IsTrue(true);

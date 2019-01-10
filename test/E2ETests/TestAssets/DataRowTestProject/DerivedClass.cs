@@ -9,8 +9,8 @@ namespace DataRowTestProject
     public class DerivedClass : BaseClass
     {
         [TestMethod]
-        [DataRow("orange")]
-        [DataRow("pineapple")]
+        [DataRow("DerivedString1")]
+        [DataRow("DerivedString2")]
         public override void DataRowTestMethod(string a)
         {
             Assert.IsTrue(true);
