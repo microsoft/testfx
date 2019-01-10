@@ -422,6 +422,58 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethod]
+        public void GetTestFromMethodShouldSetDescription()
+        {
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
+            this.mockReflectHelper.Setup(rh => rh.GetCustomAttribute(methodInfo, typeof(UTF.DescriptionAttribute))).Returns(new UTF.DescriptionAttribute("Dummy description"));
+
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
+
+            Assert.AreEqual("Dummy description", testElement.Description);
+        }
+
+        [TestMethod]
+        public void GetTestFromMethodShouldSetWorkItemIds()
+        {
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
+            this.mockReflectHelper.Setup(rh => rh.GetCustomAttributes(methodInfo, typeof(UTF.WorkItemAttribute))).Returns(new UTF.WorkItemAttribute[] { new UTF.WorkItemAttribute(123), new UTF.WorkItemAttribute(345) });
+
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
+
+            CollectionAssert.AreEqual(new string[] { "123", "345" }, testElement.WorkItemIds);
+        }
+
+        [TestMethod]
+        public void GetTestFromMethodShouldSetCssIteration()
+        {
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
+            this.mockReflectHelper.Setup(rh => rh.GetCustomAttribute(methodInfo, typeof(UTF.CssIterationAttribute))).Returns(new UTF.CssIterationAttribute("234"));
+
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
+
+            Assert.AreEqual("234", testElement.CssIteration);
+        }
+
+        [TestMethod]
+        public void GetTestFromMethodShouldSetCssProjectStructure()
+        {
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
+            this.mockReflectHelper.Setup(rh => rh.GetCustomAttribute(methodInfo, typeof(UTF.CssProjectStructureAttribute))).Returns(new UTF.CssProjectStructureAttribute("ProjectStructure123"));
+
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
+
+            Assert.AreEqual("ProjectStructure123", testElement.CssProjectStructure);
+        }
+
+        [TestMethod]
         public void GetTestFromMethodShouldSetDeploymentItemsToNullIfNotPresent()
         {
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);

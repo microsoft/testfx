@@ -51,6 +51,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             this.CaptureDebugTraces = true;
             this.MapInconclusiveToFailed = false;
+            this.MapNotRunnableToFailed = false;
             this.EnableBaseClassTestMethodsFromOtherAssemblies = true;
             this.ForcedLegacyMode = false;
             this.TestSettingsFile = null;
@@ -122,6 +123,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public bool MapInconclusiveToFailed { get; private set; }
 
         /// <summary>
+        /// Gets a value indicating whether a not runnable result be mapped to failed test.
+        /// </summary>
+        public bool MapNotRunnableToFailed { get; private set; }
+
+        /// <summary>
         /// Gets a value indicating whether to enable discovery of test methods from base classes in a different assembly from the inheriting test class.
         /// </summary>
         public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
@@ -159,6 +165,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             CurrentSettings.ForcedLegacyMode = settings.ForcedLegacyMode;
             CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
             CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
+            CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
             CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
             CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
             CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
@@ -280,6 +287,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             // <MSTestV2>
             //     <CaptureTraceOutput>true</CaptureTraceOutput>
             //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
+            //     <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
             //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
             //     <TestTimeout>5000</TestTimeout>
             //     <Parallelize>
@@ -345,6 +353,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                 if (bool.TryParse(reader.ReadInnerXml(), out result))
                                 {
                                     settings.MapInconclusiveToFailed = result;
+                                }
+
+                                break;
+                            }
+
+                        case "MAPNOTRUNNABLETOFAILED":
+                            {
+                                if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                {
+                                    settings.MapNotRunnableToFailed = result;
                                 }
 
                                 break;
