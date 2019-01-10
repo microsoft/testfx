@@ -14,7 +14,7 @@ namespace MSTestAdapter.Smoke.E2ETests
         [TestMethod]
         public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerviedClassHasDataRows()
         {
-            this.InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~DerivedClass");
+            this.InvokeVsTestForExecution(new string[] { TestAssembly });
 
             this.ValidatePassedTestsContain(
                 "DataRowTestMethod (BaseString1)",
