@@ -287,6 +287,11 @@ Stack Trace: {4}</source>
         <target state="translated">메서드 {0}은(는) 다음 예상 시그니처와 일치해야 합니다. 공용 정적 {1} {0}({2}).</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataIEnumerableEmpty">
+        <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
+        <target state="new">Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -109,7 +109,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
                 this.dynamicDataAttribute.GetData(methodInfo);
             };
 
-            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentException));
         }
 
         [TestFrameworkV1.TestMethod]
@@ -317,13 +317,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         }
 
         /// <summary>
-        /// Gets the wrong test data property.
+        /// Gets the wrong test data property i.e. Property returning something other than
+        /// expected data type of IEnumerable<object[]>
         /// </summary>
-        public static IEnumerable<object[]> WrongDataTypeProperty
+        public static string WrongDataTypeProperty
         {
             get
             {
-                return null;
+                return "Dummy";
             }
         }
 
