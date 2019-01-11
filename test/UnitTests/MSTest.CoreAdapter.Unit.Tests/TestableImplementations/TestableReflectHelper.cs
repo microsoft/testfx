@@ -33,7 +33,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
             var hashcode = type.FullName.GetHashCode() + memberTypes.GetHashCode();
             if (this.customAttributes.ContainsKey(hashcode))
             {
-                this.customAttributes[hashcode].Concat(values);
+                this.customAttributes[hashcode] = this.customAttributes[hashcode].Concat(values).ToArray();
             }
             else
             {
