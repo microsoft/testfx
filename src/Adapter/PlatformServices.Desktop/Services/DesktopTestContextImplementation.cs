@@ -122,7 +122,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             get
             {
-                return this.properties as IDictionary<string, object>;
+                return this.properties;
             }
         }
 
