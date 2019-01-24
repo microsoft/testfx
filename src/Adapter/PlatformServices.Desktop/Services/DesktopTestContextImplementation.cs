@@ -118,11 +118,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <inheritdoc/>
-        public override IDictionary Properties
+        public override IDictionary<string, object> Properties
         {
             get
             {
-                return this.properties as IDictionary;
+                return this.properties as IDictionary<string, object>;
             }
         }
 
