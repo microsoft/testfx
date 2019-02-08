@@ -303,7 +303,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
                 else
                 {
-                    UTF.ITestDataSource[] testDataSources = this.testMethodInfo.GetAttributes<Attribute>(true)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
+                    UTF.ITestDataSource[] testDataSources = this.testMethodInfo.GetAttributes<Attribute>(false)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
 
                     if (testDataSources != null && testDataSources.Length > 0)
                     {
