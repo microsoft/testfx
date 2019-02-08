@@ -59,10 +59,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             Assert.IsNotNull(this.testContextImplementation.Properties);
 
             CollectionAssert.Contains(
-                this.testContextImplementation.Properties.ToList(),
+                ((IDictionary<string, object>)this.testContextImplementation.Properties).ToList(),
                 new KeyValuePair<string, object>("FullyQualifiedTestClassName", "A.C.M"));
             CollectionAssert.Contains(
-                this.testContextImplementation.Properties.ToList(),
+                ((IDictionary<string, object>)this.testContextImplementation.Properties).ToList(),
                 new KeyValuePair<string, object>("TestName", "M"));
         }
 
@@ -115,8 +115,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
 
-            CollectionAssert.Contains(this.testContextImplementation.Properties.ToList(), property1);
-            CollectionAssert.Contains(this.testContextImplementation.Properties.ToList(), property2);
+            var propertyList = ((IDictionary<string, object>)this.testContextImplementation.Properties).ToList();
+            CollectionAssert.Contains(propertyList, property1);
+            CollectionAssert.Contains(propertyList, property2);
         }
 
         [TestMethod]
@@ -158,11 +159,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         public void AddPropertyShouldAddPropertiesToThePropertyBag()
         {
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
-
             this.testContextImplementation.AddProperty("SomeNewProperty", "SomeValue");
 
             CollectionAssert.Contains(
-                this.testContextImplementation.Properties.ToList(),
+                ((IDictionary<string, object>)this.testContextImplementation.Properties).ToList(),
                 new KeyValuePair<string, object>("SomeNewProperty", "SomeValue"));
         }
 
