@@ -59,10 +59,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             Assert.IsNotNull(this.testContextImplementation.Properties);
 
             CollectionAssert.Contains(
-                ((IDictionary<string, object>)this.testContextImplementation.Properties).ToList(),
+                this.testContextImplementation.Properties,
                 new KeyValuePair<string, object>("FullyQualifiedTestClassName", "A.C.M"));
             CollectionAssert.Contains(
-                ((IDictionary<string, object>)this.testContextImplementation.Properties).ToList(),
+                this.testContextImplementation.Properties,
                 new KeyValuePair<string, object>("TestName", "M"));
         }
 
@@ -115,9 +115,8 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
 
-            var propertyList = ((IDictionary<string, object>)this.testContextImplementation.Properties).ToList();
-            CollectionAssert.Contains(propertyList, property1);
-            CollectionAssert.Contains(propertyList, property2);
+            CollectionAssert.Contains(this.testContextImplementation.Properties, property1);
+            CollectionAssert.Contains(this.testContextImplementation.Properties, property2);
         }
 
         [TestMethod]
@@ -162,7 +161,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             this.testContextImplementation.AddProperty("SomeNewProperty", "SomeValue");
 
             CollectionAssert.Contains(
-                ((IDictionary<string, object>)this.testContextImplementation.Properties).ToList(),
+                this.testContextImplementation.Properties,
                 new KeyValuePair<string, object>("SomeNewProperty", "SomeValue"));
         }
 
