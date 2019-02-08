@@ -19,30 +19,67 @@
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10FileOperations.cs" Link="Services\ns10FileOperations.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs" Link="Services\ns10DiaSessionOperations.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs" Link="Services\ns10ReflectionOperations.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10SettingsProvider.cs" Link="Services\ns10SettingsProvider.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs" Link="Services\ns10TestContextImplementation.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs" Link="Services\ns10TestDataSource.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestDeployment.cs" Link="Services\ns10TestDeployment.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestSource.cs" Link="Services\ns10TestSource.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestSourceHost.cs" Link="Services\ns10TestSourceHost.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" Link="Services\ns10ThreadOperations.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TraceLogger.cs" Link="Services\ns10TraceLogger.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Extensions\ns13ExceptionExtensions.cs" Link="Extensions\ns13ExceptionExtensions.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13DeploymentItem.cs" Link="Deployment\ns13DeploymentItem.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13TestRunDirectories.cs" Link="Deployment\ns13TestRunDirectories.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs" Link="Resources\Resource.Designer.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13MSTestAdapterSettings.cs" Link="Services\ns13MSTestAdapterSettings.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13SettingsProvider.cs" Link="Services\ns13SettingsProvider.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TestContextPropertyStrings.cs" Link="Services\ns13TestContextPropertyStrings.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TestDeployment.cs" Link="Services\ns13TestDeployment.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs" Link="Services\ns13TraceListener.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListenerManager.cs" Link="Services\ns13TraceListenerManager.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentItemUtility.cs" Link="Utilities\ns13DeploymentItemUtility.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentUtilityBase.cs" Link="Utilities\ns13DeploymentUtilityBase.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs" Link="Utilities\ns13FileUtility.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13Validate.cs" Link="Utilities\ns13Validate.cs" />
+    <Compile Include="Deployment\AssemblyLoadWorker.cs" />
     <Compile Include="Friends.cs" />
+    <Compile Include="Utilities\AssemblyUtility.cs" />
+    <Compile Include="Utilities\DeploymentUtility.cs" />
+    <Compile Include="Utilities\RecursiveDirectoryPath.cs" />
+    <Compile Include="Utilities\ReflectionUtility.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="11.0.0" />
+    <EmbeddedResource Include="..\PlatformServices.Shared\netstandard1.3\Resources\Resource.resx" Link="Resources\Resource.resx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="15.0.0" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PlatformServices.Interface\PlatformServices.Interface.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
-    <Folder Include="Services\" />
+    <Folder Include="Extensions\" />
+    <Folder Include="Resources\xlf\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.cs.xlf" Link="Resources\xlf\Resource.cs.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.de.xlf" Link="Resources\xlf\Resource.de.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.es.xlf" Link="Resources\xlf\Resource.es.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.fr.xlf" Link="Resources\xlf\Resource.fr.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.it.xlf" Link="Resources\xlf\Resource.it.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.ja.xlf" Link="Resources\xlf\Resource.ja.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.ko.xlf" Link="Resources\xlf\Resource.ko.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.pl.xlf" Link="Resources\xlf\Resource.pl.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.pt-BR.xlf" Link="Resources\xlf\Resource.pt-BR.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.ru.xlf" Link="Resources\xlf\Resource.ru.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.tr.xlf" Link="Resources\xlf\Resource.tr.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.xlf" Link="Resources\xlf\Resource.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.zh-Hans.xlf" Link="Resources\xlf\Resource.zh-Hans.xlf" />
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.zh-Hant.xlf" Link="Resources\xlf\Resource.zh-Hant.xlf" />
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

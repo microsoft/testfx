@@ -7,6 +7,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
     using System.Diagnostics;
     using System.Globalization;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// Specifies type of deployment item origin, where the item comes from.
     /// </summary>

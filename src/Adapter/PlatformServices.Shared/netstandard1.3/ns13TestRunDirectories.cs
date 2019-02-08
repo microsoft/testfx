@@ -7,6 +7,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
     using System.Diagnostics;
     using System.IO;
 
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+
     /// <summary>
     /// The test run directories.
     /// </summary>

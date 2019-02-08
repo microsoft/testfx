@@ -44,6 +44,36 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Extensions\ns13ExceptionExtensions.cs">
+      <Link>Extensions\ns13ExceptionExtensions.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13DeploymentItem.cs">
+      <Link>Utilities\ns13DeploymentItem.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13TestRunDirectories.cs">
+      <Link>Deployment\ns13TestRunDirectories.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
+      <Link>Resources\Resource.Designer.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13MSTestAdapterSettings.cs">
+      <Link>Services\ns13MSTestAdapterSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TestContextPropertyStrings.cs">
+      <Link>Services\ns13TestContextPropertyStrings.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentItemUtility.cs">
+      <Link>Utilities\ns13DeploymentItemUtility.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentUtilityBase.cs">
+      <Link>Utilities\ns13DeploymentUtilityBase.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs">
+      <Link>Utilities\ns13FileUtility.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13Validate.cs">
+      <Link>Utilities\ns13Validate.cs</Link>
+    </Compile>
     <Compile Include="AssemblyResolver.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Data\CsvDataConnection.cs" />
@@ -55,19 +85,10 @@
     <Compile Include="Data\TestDataConnectionSql.cs" />
     <Compile Include="Data\XmlDataConnection.cs" />
     <Compile Include="Deployment\AssemblyLoadWorker.cs" />
-    <Compile Include="Deployment\DeploymentItem.cs" />
-    <Compile Include="Deployment\TestRunDirectories.cs" />
-    <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Friends.cs" />
-    <Compile Include="Services\MSTestAdapterSettings.cs" />
     <Compile Include="Utilities\AppDomainWrapper.cs" />
     <Compile Include="Utilities\IAppDomain.cs" />
     <Compile Include="Utilities\SequentialIntPermutation.cs" />
-    <Compile Include="Resources\Resource.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resource.resx</DependentUpon>
-    </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs">
       <Link>Services\ns13TraceListener.cs</Link>
     </Compile>
@@ -88,13 +109,10 @@
     <Compile Include="Services\DesktopTestContextImplementation.cs" />
     <Compile Include="Utilities\AppDomainUtilities.cs" />
     <Compile Include="Utilities\AssemblyUtility.cs" />
-    <Compile Include="Utilities\DeploymentItemUtility.cs" />
     <Compile Include="Utilities\DeploymentUtility.cs" />
-    <Compile Include="Utilities\FileUtility.cs" />
     <Compile Include="Utilities\IAssemblyUtility.cs" />
     <Compile Include="Utilities\RandomIntPermutation.cs" />
     <Compile Include="Utilities\ReflectionUtility.cs" />
-    <Compile Include="Utilities\Validate.cs" />
     <Compile Include="Utilities\VSInstallationUtilities.cs" />
     <Compile Include="Utilities\XmlUtilities.cs" />
   </ItemGroup>
@@ -116,14 +134,53 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.cs.xlf">
+      <Link>Resources\xlf\Resource.cs.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.de.xlf">
+      <Link>Resources\xlf\Resource.de.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.es.xlf">
+      <Link>Resources\xlf\Resource.es.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.fr.xlf">
+      <Link>Resources\xlf\Resource.fr.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.it.xlf">
+      <Link>Resources\xlf\Resource.it.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.ja.xlf">
+      <Link>Resources\xlf\Resource.ja.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.ko.xlf">
+      <Link>Resources\xlf\Resource.ko.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.pl.xlf">
+      <Link>Resources\xlf\Resource.pl.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.pt-BR.xlf">
+      <Link>Resources\xlf\Resource.pt-BR.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.ru.xlf">
+      <Link>Resources\xlf\Resource.ru.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.tr.xlf">
+      <Link>Resources\xlf\Resource.tr.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.xlf">
+      <Link>Resources\xlf\Resource.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.zh-Hans.xlf">
+      <Link>Resources\xlf\Resource.zh-Hans.xlf</Link>
+    </None>
+    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.zh-Hant.xlf">
+      <Link>Resources\xlf\Resource.zh-Hant.xlf</Link>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Resource.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-      <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</CustomToolNamespace>
+    <EmbeddedResource Include="..\PlatformServices.Shared\netstandard1.3\Resources\Resource.resx">
+      <Link>Resources\Resource.resx</Link>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />

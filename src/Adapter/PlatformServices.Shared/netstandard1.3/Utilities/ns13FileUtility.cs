@@ -13,6 +13,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+    #pragma warning disable SA1649 // File name must match first type name
+
     internal class FileUtility
     {
         private AssemblyUtility assemblyUtility;
