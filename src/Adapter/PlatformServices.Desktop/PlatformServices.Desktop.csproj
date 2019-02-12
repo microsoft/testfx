@@ -143,49 +143,5 @@
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.cs.xlf">
-      <Link>Resources\xlf\Resource.cs.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.de.xlf">
-      <Link>Resources\xlf\Resource.de.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.es.xlf">
-      <Link>Resources\xlf\Resource.es.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.fr.xlf">
-      <Link>Resources\xlf\Resource.fr.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.it.xlf">
-      <Link>Resources\xlf\Resource.it.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.ja.xlf">
-      <Link>Resources\xlf\Resource.ja.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.ko.xlf">
-      <Link>Resources\xlf\Resource.ko.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.pl.xlf">
-      <Link>Resources\xlf\Resource.pl.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.pt-BR.xlf">
-      <Link>Resources\xlf\Resource.pt-BR.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.ru.xlf">
-      <Link>Resources\xlf\Resource.ru.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.tr.xlf">
-      <Link>Resources\xlf\Resource.tr.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.xlf">
-      <Link>Resources\xlf\Resource.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.zh-Hans.xlf">
-      <Link>Resources\xlf\Resource.zh-Hans.xlf</Link>
-    </None>
-    <None Include="..\PlatformServices.Shared\netstandard1.3\Resources\xlf\Resource.zh-Hant.xlf">
-      <Link>Resources\xlf\Resource.zh-Hant.xlf</Link>
-    </None>
-  </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

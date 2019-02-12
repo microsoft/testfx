@@ -117,10 +117,14 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodPass.</remarks>
         public void ValidatePassedTests(params string[] passedTests)
         {
-            // Make sure only expected number of tests passed and not more.
-            Assert.AreEqual(passedTests.Length, this.runEventsHandler.PassedTests.Count);
-
+            this.ValidatePassedTestsCount(passedTests.Length);
             this.ValidatePassedTestsContain(passedTests);
+        }
+
+        public void ValidatePassedTestsCount(int expectedPassedTestsCount)
+        {
+            // Make sure only expected number of tests passed and not more.
+            Assert.AreEqual(expectedPassedTestsCount, this.runEventsHandler.PassedTests.Count);
         }
 
         /// <summary>
