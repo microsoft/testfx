@@ -14,6 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -49,8 +50,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             testSource = Path.GetFullPath(testSource);
             var warnings = new List<string>();
 
-            EqtTrace.Info("Adding the test source directory to the deploymentitems list");
-            this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
+            string errorMessage;
+            if (!this.DeploymentItemUtility.IsValidDeploymentItem(testSource, string.Empty, out errorMessage))
+            {
+                warnings.Add(errorMessage);
+            }
+            else
+            {
+                EqtTrace.Info("Adding the test source directory to the deploymentitems list");
+                this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
+            }
 
             // Maps relative to Out dir destination -> source and used to determine if there are conflicted items.
             var destToSource = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -76,88 +85,81 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 var fullPathToDeploymentItemSource = this.GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSource);
 
                 // Note: source is already rooted.
-                foreach (var deploymentItemFile in deploymentItemFiles)
+                foreach (var fileToDeploy in deploymentItemFiles)
                 {
-                    Debug.Assert(Path.IsPathRooted(deploymentItemFile), "File " + deploymentItemFile + " is not rooted");
+                    Debug.Assert(Path.IsPathRooted(fileToDeploy), "File " + fileToDeploy + " is not rooted");
 
-                    // List of files to deploy, by default, just itemFile.
-                    var filesToDeploy = new List<string>(1);
-                    filesToDeploy.Add(deploymentItemFile);
+                    Debug.Assert(Path.IsPathRooted(fileToDeploy), "File " + fileToDeploy + " is not rooted");
 
-                    foreach (var fileToDeploy in filesToDeploy)
+                    // Ignore the test platform files.
+                    var tempFile = Path.GetFileName(fileToDeploy);
+                    var assemblyName = Path.GetFileName(this.GetType().GetTypeInfo().Assembly.Location);
+                    if (tempFile.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
                     {
-                        Debug.Assert(Path.IsPathRooted(fileToDeploy), "File " + fileToDeploy + " is not rooted");
+                        continue;
+                    }
 
-                        // Ignore the test platform files.
-                        var tempFile = Path.GetFileName(fileToDeploy);
-                        var assemblyName = Path.GetFileName(this.GetType().GetTypeInfo().Assembly.Location);
-                        if (tempFile.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            continue;
-                        }
+                    string relativeDestination;
+                    if (itemIsDirectory)
+                    {
+                        // Deploy into subdirectory of deployment (Out) dir.
+                        Debug.Assert(fileToDeploy.StartsWith(fullPathToDeploymentItemSource, StringComparison.Ordinal), "Somehow source is outside original dir.");
+                        relativeDestination = this.FileUtility.TryConvertPathToRelative(fileToDeploy, fullPathToDeploymentItemSource);
+                    }
+                    else
+                    {
+                        // Deploy just to the deployment (Out) dir.
+                        relativeDestination = Path.GetFileName(fileToDeploy);
+                    }
 
-                        string relativeDestination;
-                        if (itemIsDirectory)
-                        {
-                            // Deploy into subdirectory of deployment (Out) dir.
-                            Debug.Assert(fileToDeploy.StartsWith(fullPathToDeploymentItemSource, StringComparison.Ordinal), "Somehow source is outside original dir.");
-                            relativeDestination = this.FileUtility.TryConvertPathToRelative(fileToDeploy, fullPathToDeploymentItemSource);
-                        }
-                        else
-                        {
-                            // Deploy just to the deployment (Out) dir.
-                            relativeDestination = Path.GetFileName(fileToDeploy);
-                        }
+                    relativeDestination = Path.Combine(deploymentItem.RelativeOutputDirectory, relativeDestination);  // Ignores empty arg1.
+                    var destination = Path.Combine(deploymentDirectory, relativeDestination);
+                    try
+                    {
+                        destination = Path.GetFullPath(destination);
+                    }
+                    catch (Exception e)
+                    {
+                        var warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToAccessFile, destination, e.GetType(), e.Message);
+                        warnings.Add(warning);
 
-                        relativeDestination = Path.Combine(deploymentItem.RelativeOutputDirectory, relativeDestination);  // Ignores empty arg1.
-                        var destination = Path.Combine(deploymentDirectory, relativeDestination);
-                        try
+                        continue;
+                    }
+
+                    if (!destToSource.ContainsKey(relativeDestination))
+                    {
+                        destToSource.Add(relativeDestination, fileToDeploy);
+
+                        // Now, finally we can copy the file...
+                        destination = this.FileUtility.CopyFileOverwrite(fileToDeploy, destination, out string warning);
+                        if (!string.IsNullOrEmpty(warning))
                         {
-                            destination = Path.GetFullPath(destination);
-                        }
-                        catch (Exception e)
-                        {
-                            var warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToAccessFile, destination, e.GetType(), e.Message);
                             warnings.Add(warning);
+                        }
 
+                        if (string.IsNullOrEmpty(destination))
+                        {
                             continue;
                         }
 
-                        if (!destToSource.ContainsKey(relativeDestination))
-                        {
-                            destToSource.Add(relativeDestination, fileToDeploy);
+                        // We clear the attributes so that e.g. you can write to the copies of files originally under SCC.
+                        this.FileUtility.SetAttributes(destination, FileAttributes.Normal);
 
-                            // Now, finally we can copy the file...
-                            destination = this.FileUtility.CopyFileOverwrite(fileToDeploy, destination, out string warning);
-                            if (!string.IsNullOrEmpty(warning))
-                            {
-                                warnings.Add(warning);
-                            }
-
-                            if (string.IsNullOrEmpty(destination))
-                            {
-                                continue;
-                            }
-
-                            // We clear the attributes so that e.g. you can write to the copies of files originally under SCC.
-                            this.FileUtility.SetAttributes(destination, FileAttributes.Normal);
-
-                            // Deploy PDB for line number info in stack trace.
-                            this.FileUtility.FindAndDeployPdb(destination, relativeDestination, fileToDeploy, destToSource);
-                        }
-                        else if (
-                            !string.Equals(
-                                fileToDeploy,
-                                destToSource[relativeDestination],
-                                StringComparison.OrdinalIgnoreCase))
-                        {
-                            EqtTrace.WarningIf(
-                                EqtTrace.IsWarningEnabled,
-                                "Conflict during copiyng file: '{0}' and '{1}' are from different origins although they might be the same.",
-                                fileToDeploy,
-                                destToSource[relativeDestination]);
-                        }
-                    } // foreach fileToDeploy.
+                        // Deploy PDB for line number info in stack trace.
+                        this.FileUtility.FindAndDeployPdb(destination, relativeDestination, fileToDeploy, destToSource);
+                    }
+                    else if (
+                        !string.Equals(
+                            fileToDeploy,
+                            destToSource[relativeDestination],
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        EqtTrace.WarningIf(
+                            EqtTrace.IsWarningEnabled,
+                            "Conflict during copiyng file: '{0}' and '{1}' are from different origins although they might be the same.",
+                            fileToDeploy,
+                            destToSource[relativeDestination]);
+                    }
                 } // foreach itemFile.
             }
 

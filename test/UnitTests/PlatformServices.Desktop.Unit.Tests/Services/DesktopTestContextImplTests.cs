@@ -14,6 +14,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     using System.Linq;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
     using Moq;
     using MSTestAdapter.TestUtilities;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;

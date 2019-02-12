@@ -5,11 +5,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
 #pragma warning disable SA1649 // File name must match first type name
 
+    /// <summary>
+    /// Test Context Property Names.
+    /// </summary>
     internal static class TestContextPropertyStrings
     {
-        /// <summary>
-        /// Test Context Property Names.
-        /// </summary>
             public static readonly string TestRunDirectory = "TestRunDirectory";
             public static readonly string DeploymentDirectory = "DeploymentDirectory";
             public static readonly string ResultsDirectory = "ResultsDirectory";

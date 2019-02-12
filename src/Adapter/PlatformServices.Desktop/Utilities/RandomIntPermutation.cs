@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
     /// <summary>
     /// Permutation of integers from 0 to (numberOfObjects - 1), in random order and in the end all values are returned.

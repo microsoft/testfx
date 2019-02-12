@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
     using System;
     using System.Diagnostics;
     using System.Globalization;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
