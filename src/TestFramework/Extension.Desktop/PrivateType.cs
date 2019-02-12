@@ -208,6 +208,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 catch (TargetInvocationException e)
                 {
                     Debug.Assert(e.InnerException != null, "Inner Exception should not be null.");
+                    if (e.InnerException != null)
+                    {
+                        throw e.InnerException;
+                    }
+
                     throw;
                 }
             }
@@ -508,6 +513,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             catch (TargetInvocationException e)
             {
                 Debug.Assert(e.InnerException != null, "Inner Exception should not be null.");
+                if (e.InnerException != null)
+                {
+                    throw e.InnerException;
+                }
+
                 throw;
             }
         }
