@@ -11,7 +11,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System.Linq;
     using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 

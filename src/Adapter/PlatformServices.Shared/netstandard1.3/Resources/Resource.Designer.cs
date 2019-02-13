@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources {
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
     using System;
     using System.Reflection;
 

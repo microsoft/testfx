@@ -7,7 +7,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
     using Assert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;

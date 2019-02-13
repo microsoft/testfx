@@ -14,7 +14,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -81,6 +80,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return result;
         }
 
+        /// <summary>
+        /// Does the deployment of parameter deployment items & the testSource to the parameter directory.
+        /// </summary>
+        /// <param name="deploymentItems">The deployment item.</param>
+        /// <param name="testSource">The test source.</param>
+        /// <param name="deploymentDirectory">The deployment directory.</param>
+        /// <param name="resultsDirectory">Root results directory</param>
+        /// <returns>Returns a list of deployment warnings</returns>
         public abstract IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory);
 
         internal string GetConfigFile(string testSource)

@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
     using System.Diagnostics.CodeAnalysis;
+    using System.Security;
 
     /// <summary>
     /// Mstest settings in runsettings look like this
@@ -20,6 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </summary>
     [Serializable]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1603:DocumentationMustContainValidXml", Justification = "Reviewed. Suppression is OK here.")]
+#pragma warning disable SA1649 // File name must match first type name
     public class RecursiveDirectoryPath : MarshalByRefObject
     {
         /// <summary>
@@ -44,5 +46,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Gets a value indicating whether to include sub directories.
         /// </summary>
         public bool IncludeSubDirectories { get; private set; }
+
+        /// <summary>
+        /// Returns object to be used for controlling lifetime, null means infinite lifetime.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="object"/>.
+        /// </returns>
+        [SecurityCritical]
+        public override object InitializeLifetimeService()
+        {
+            return null;
+        }
     }
 }
