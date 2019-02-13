@@ -883,7 +883,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestCategory("Foo")]
             public void PassingTest()
             {
-                TestContextProperties = this.TestContext.Properties;
+                TestContextProperties = this.TestContext.Properties as IDictionary<string, object>;
             }
 
             [UTF.TestMethod]

@@ -59,10 +59,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             Assert.IsNotNull(this.testContextImplementation.Properties);
 
             CollectionAssert.Contains(
-                this.testContextImplementation.Properties.ToList(),
+                this.testContextImplementation.Properties,
                 new KeyValuePair<string, object>("FullyQualifiedTestClassName", "A.C.M"));
             CollectionAssert.Contains(
-                this.testContextImplementation.Properties.ToList(),
+                this.testContextImplementation.Properties,
                 new KeyValuePair<string, object>("TestName", "M"));
         }
 
@@ -115,8 +115,8 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
 
-            CollectionAssert.Contains(this.testContextImplementation.Properties.ToList(), property1);
-            CollectionAssert.Contains(this.testContextImplementation.Properties.ToList(), property2);
+            CollectionAssert.Contains(this.testContextImplementation.Properties, property1);
+            CollectionAssert.Contains(this.testContextImplementation.Properties, property2);
         }
 
         [TestMethod]
@@ -158,11 +158,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         public void AddPropertyShouldAddPropertiesToThePropertyBag()
         {
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
-
             this.testContextImplementation.AddProperty("SomeNewProperty", "SomeValue");
 
             CollectionAssert.Contains(
-                this.testContextImplementation.Properties.ToList(),
+                this.testContextImplementation.Properties,
                 new KeyValuePair<string, object>("SomeNewProperty", "SomeValue"));
         }
 

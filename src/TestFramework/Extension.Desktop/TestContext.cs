@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Data;
     using System.Data.Common;
@@ -19,7 +20,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Gets test properties for a test.
         /// </summary>
-        public abstract IDictionary<string, object> Properties { get; }
+        public abstract IDictionary Properties { get; }
 
         /// <summary>
         /// Gets the current data row when test is used for data driven testing.
