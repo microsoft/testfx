@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
@@ -115,11 +116,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// An System.Collections.IDictionary object that contains key/value pairs that
         ///  represent the test properties.
         /// </returns>
-        public override IDictionary<string, object> Properties
+        public override IDictionary Properties
         {
             get
             {
-                return this.properties as IDictionary<string, object>;
+                return this.properties as IDictionary;
             }
         }
 
