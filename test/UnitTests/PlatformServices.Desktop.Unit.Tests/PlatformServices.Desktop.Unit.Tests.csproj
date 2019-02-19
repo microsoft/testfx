@@ -55,6 +55,18 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10DeploymentItemTests.cs">
+      <Link>Deployment\ns10DeploymentItemTests.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10TestRunDirectoriesTests.cs">
+      <Link>Deployment\ns10TestRunDirectoriesTests.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\Extensions\ns10ExceptionExtensionsTests.cs">
+      <Link>Extensions\ns10ExceptionExtensionsTests.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\Utilities\ns10FileUtilityTests.cs">
+      <Link>Utilities\ns10FileUtilityTests.cs</Link>
+    </Compile>
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerManagerTests.cs">
       <Link>Services\ns13TraceListenerManagerTests.cs</Link>
     </Compile>
@@ -63,9 +75,6 @@
     </Compile>
     <Compile Include="AssemblyResolverTests.cs" />
     <Compile Include="Deployment\AssemblyLoadWorkerTests.cs" />
-    <Compile Include="Deployment\DeploymentItemTests.cs" />
-    <Compile Include="Deployment\TestRunDirectoriesTests.cs" />
-    <Compile Include="Extensions\ExceptionExtensionsTests.cs" />
     <Compile Include="Services\MSTestAdapterSettingsTests.cs" />
     <Compile Include="Services\DesktopReflectionOperationsTests.cs" />
     <Compile Include="Services\DesktopThreadOperationsTests.cs" />
@@ -80,7 +89,6 @@
     <Compile Include="Services\DesktopFileOperationsTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\DeploymentUtilityTests.cs" />
-    <Compile Include="Utilities\FileUtilityTests.cs" />
     <Compile Include="Utilities\ReflectionUtilityTests.cs" />
     <Compile Include="Utilities\VSInstallationUtilitiesTests.cs" />
     <Compile Include="Utilities\XmlUtilitiesTests.cs" />

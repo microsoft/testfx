@@ -52,7 +52,7 @@
       <Link>Extensions\ns13ExceptionExtensions.cs</Link>
     </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13DeploymentItem.cs">
-      <Link>Utilities\ns13DeploymentItem.cs</Link>
+      <Link>Deployment\ns13DeploymentItem.cs</Link>
     </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13TestRunDirectories.cs">
       <Link>Deployment\ns13TestRunDirectories.cs</Link>

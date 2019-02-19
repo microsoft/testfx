@@ -1,20 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
+namespace MSTestAdapter.PlatformServices.Tests.Utilities
 {
+#if NETCOREAPP1_0
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
     extern alias FrameworkV1;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+#endif
 
     using System;
     using System.IO;
     using System.Linq;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
     using Moq;
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+
+#pragma warning disable SA1649 // File name must match first type name
 
     [TestClass]
     public class FileUtilityTests
@@ -42,7 +49,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             Assert.AreEqual("galaxy__far_far_away", this.fileUtility.Object.ReplaceInvalidFileNameCharacters(fileName));
         }
 
-        #region AddFilesFromDirectory tests
+#region AddFilesFromDirectory tests
 
         [TestMethod]
         public void AddFilesInADirectoryShouldReturnAllTopLevelFilesInADirectory()
@@ -201,6 +208,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             });
         }
 
-        #endregion
+#endregion
     }
 }
