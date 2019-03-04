@@ -84,7 +84,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
             string configFile = null;
 
-            if (this.FileUtility.DoesFileExist(testSource + TestAssemblyConfigFileExtension))
+            var assemblyConfigFile = testSource + TestAssemblyConfigFileExtension;
+            if (this.FileUtility.DoesFileExist(assemblyConfigFile))
             {
                 // Path to config file cannot be bad: storage is already checked, and extension is valid.
                 configFile = testSource + TestAssemblyConfigFileExtension;
