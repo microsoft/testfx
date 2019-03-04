@@ -45,8 +45,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\TestContextPropertyStrings.cs">
-      <Link>Services\TestContextPropertyStrings.cs</Link>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs">
+      <Link>ns10RecursiveDirectoryPath.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs">
+      <Link>Services\ns10MSTestSettingsProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextPropertyStrings.cs">
+      <Link>Services\ns10TestContextPropertyStrings.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Utilities\ns10Validate.cs">
+      <Link>Utilities\ns10Validate.cs</Link>
     </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Extensions\ns13ExceptionExtensions.cs">
       <Link>Extensions\ns13ExceptionExtensions.cs</Link>
@@ -66,6 +75,9 @@
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13MSTestAdapterSettings.cs">
       <Link>Services\ns13MSTestAdapterSettings.cs</Link>
     </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TestDeployment.cs">
+      <Link>Services\ns13TestDeployment.cs</Link>
+    </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentItemUtility.cs">
       <Link>Utilities\ns13DeploymentItemUtility.cs</Link>
     </Compile>
@@ -74,9 +86,6 @@
     </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs">
       <Link>Utilities\ns13FileUtility.cs</Link>
-    </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13Validate.cs">
-      <Link>Utilities\ns13Validate.cs</Link>
     </Compile>
     <Compile Include="AssemblyResolver.cs" />
     <Compile Include="Constants.cs" />
@@ -103,20 +112,17 @@
     <Compile Include="Services\DesktopReflectionOperations.cs" />
     <Compile Include="Services\DesktopThreadOperations.cs" />
     <Compile Include="Services\DesktopFileOperations.cs" />
-    <Compile Include="Services\MSTestSettingsProvider.cs" />
     <Compile Include="Services\DesktopTestDataSource.cs" />
-    <Compile Include="Services\DesktopTestDeployment.cs" />
     <Compile Include="Services\DesktopTestSource.cs" />
     <Compile Include="Services\DesktopTestSourceHost.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RecursiveDirectoryPathDesktop.cs" />
     <Compile Include="Services\DesktopTestContextImplementation.cs" />
     <Compile Include="Utilities\AppDomainUtilities.cs" />
-    <Compile Include="Utilities\AssemblyUtilityDesktop.cs" />
-    <Compile Include="Utilities\DeploymentUtilityDesktop.cs" />
+    <Compile Include="Utilities\DesktopAssemblyUtility.cs" />
+    <Compile Include="Utilities\DesktopDeploymentUtility.cs" />
     <Compile Include="Utilities\IAssemblyUtility.cs" />
     <Compile Include="Utilities\RandomIntPermutation.cs" />
-    <Compile Include="Utilities\ReflectionUtilityDesktop.cs" />
+    <Compile Include="Utilities\DesktopReflectionUtility.cs" />
     <Compile Include="Utilities\VSInstallationUtilities.cs" />
     <Compile Include="Utilities\XmlUtilities.cs" />
   </ItemGroup>

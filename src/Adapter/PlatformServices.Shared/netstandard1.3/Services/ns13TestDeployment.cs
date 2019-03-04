@@ -140,20 +140,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 return false;
             }
 
-            // Group the tests by source
-            var testsBySource = from test in tests
-                                group test by test.Source into testGroup
-                                select new { Source = testGroup.Key, Tests = testGroup };
-
-            var runDirectories = RunDirectories;
-            foreach (var group in testsBySource)
+#if !NETSTANDARD1_5
+            using (new SuspendCodeCoverage())
+#endif
             {
-                // do the deployment
-                this.deploymentUtility.Deploy(@group.Tests, @group.Source, runContext, frameworkHandle, RunDirectories);
-            }
+                // Group the tests by source
+                var testsBySource = from test in tests
+                                    group test by test.Source into testGroup
+                                    select new { Source = testGroup.Key, Tests = testGroup };
 
-            // Update the runDirectories
-            RunDirectories = runDirectories;
+                var runDirectories = RunDirectories;
+                foreach (var group in testsBySource)
+                {
+                    // do the deployment
+                    this.deploymentUtility.Deploy(@group.Tests, @group.Source, runContext, frameworkHandle, RunDirectories);
+                }
+
+                // Update the runDirectories
+                RunDirectories = runDirectories;
+            }
 
             return true;
         }
@@ -222,4 +227,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return true;
         }
     }
+
+#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

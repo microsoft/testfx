@@ -41,9 +41,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 return null;
             }
 
-            bool shouldGetAllAttributes = type == null;
-
-            if (shouldGetAllAttributes)
+            if (type == null)
             {
                 return memberInfo.GetCustomAttributes(inherit).ToArray();
             }
@@ -55,7 +53,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
         internal object[] GetCustomAttributes(Assembly assembly, Type type)
         {
-                return assembly.GetCustomAttributes(type).ToArray<object>();
+            return assembly.GetCustomAttributes(type).ToArray<object>();
         }
     }
 }

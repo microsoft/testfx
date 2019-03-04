@@ -80,16 +80,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return result;
         }
 
-        /// <summary>
-        /// Does the deployment of parameter deployment items & the testSource to the parameter directory.
-        /// </summary>
-        /// <param name="deploymentItems">The deployment item.</param>
-        /// <param name="testSource">The test source.</param>
-        /// <param name="deploymentDirectory">The deployment directory.</param>
-        /// <param name="resultsDirectory">Root results directory</param>
-        /// <returns>Returns a list of deployment warnings</returns>
-        public abstract IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory);
-
         internal string GetConfigFile(string testSource)
         {
             string configFile = null;
@@ -111,7 +101,170 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return configFile;
         }
 
+        /// <summary>
+        /// Does the deployment of parameter deployment items & the testSource to the parameter directory.
+        /// </summary>
+        /// <param name="deploymentItems">The deployment item.</param>
+        /// <param name="testSource">The test source.</param>
+        /// <param name="deploymentDirectory">The deployment directory.</param>
+        /// <param name="resultsDirectory">Root results directory</param>
+        /// <returns>Returns a list of deployment warnings</returns>
+        protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory)
+        {
+            Validate.IsFalse(string.IsNullOrWhiteSpace(deploymentDirectory), "Deployment directory is null or empty");
+            Validate.IsTrue(this.FileUtility.DoesDirectoryExist(deploymentDirectory), $"Deployment directory {deploymentDirectory} does not exist");
+            Validate.IsFalse(string.IsNullOrWhiteSpace(testSource), "TestSource directory is null/empty");
+            Validate.IsTrue(this.FileUtility.DoesFileExist(testSource), $"TestSource {testSource} does not exist.");
+
+            testSource = Path.GetFullPath(testSource);
+            var warnings = new List<string>();
+
+            if (MSTestSettingsProvider.Settings.DeployTestSourceDependencies)
+            {
+                EqtTrace.Info("Adding the references and satellite assemblies to the deploymentitems list");
+
+                // Get the referenced assemblies.
+                this.ProcessNewStorage(testSource, deploymentItems, warnings);
+
+                // Get the satellite assemblies
+                var satelliteItems = this.GetSatellites(deploymentItems, testSource, warnings);
+                foreach (var satelliteItem in satelliteItems)
+                {
+                    this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, satelliteItem);
+                }
+            }
+            else
+            {
+                EqtTrace.Info("Adding the test source directory to the deploymentitems list");
+                this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
+            }
+
+            // Maps relative to Out dir destination -> source and used to determine if there are conflicted items.
+            var destToSource = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            // Copy the deployment items. (As deployment item can correspond to directories as well, so each deployment item may map to n files)
+            foreach (var deploymentItem in deploymentItems)
+            {
+                ValidateArg.NotNull(deploymentItem, "deploymentItem should not be null.");
+
+                // Validate the output directory.
+                if (!this.IsOutputDirectoryValid(deploymentItem, deploymentDirectory, warnings))
+                {
+                    continue;
+                }
+
+                // Get the files corresponding to this deployment item
+                var deploymentItemFiles = this.GetFullPathToFilesCorrespondingToDeploymentItem(deploymentItem, testSource, resultsDirectory, warnings, out bool itemIsDirectory);
+                if (deploymentItemFiles == null)
+                {
+                    continue;
+                }
+
+                var fullPathToDeploymentItemSource = this.GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSource);
+
+                // Note: source is already rooted.
+                foreach (var deploymentItemFile in deploymentItemFiles)
+                {
+                    Debug.Assert(Path.IsPathRooted(deploymentItemFile), "File " + deploymentItemFile + " is not rooted");
+
+                    // List of files to deploy, by default, just itemFile.
+                    var filesToDeploy = new List<string>(1);
+                    filesToDeploy.Add(deploymentItemFile);
+
+                    // Find dependencies of test deployment items and deploy them at the same time as master file.
+                    if (deploymentItem.OriginType == DeploymentItemOriginType.PerTestDeployment &&
+                        this.AssemblyUtility.IsAssemblyExtension(Path.GetExtension(deploymentItemFile)))
+                    {
+                        this.AddDependenciesOfDeploymentItem(deploymentItemFile, filesToDeploy, warnings);
+                    }
+
+                    foreach (var fileToDeploy in filesToDeploy)
+                    {
+                        Debug.Assert(Path.IsPathRooted(fileToDeploy), "File " + fileToDeploy + " is not rooted");
+
+                        // Ignore the test platform files.
+                        var tempFile = Path.GetFileName(fileToDeploy);
+                        var assemblyName = Path.GetFileName(this.GetType().GetTypeInfo().Assembly.Location);
+                        if (tempFile.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        string relativeDestination;
+                        if (itemIsDirectory)
+                        {
+                            // Deploy into subdirectory of deployment (Out) dir.
+                            Debug.Assert(fileToDeploy.StartsWith(fullPathToDeploymentItemSource, StringComparison.Ordinal), "Somehow source is outside original dir.");
+                            relativeDestination = this.FileUtility.TryConvertPathToRelative(fileToDeploy, fullPathToDeploymentItemSource);
+                        }
+                        else
+                        {
+                            // Deploy just to the deployment (Out) dir.
+                            relativeDestination = Path.GetFileName(fileToDeploy);
+                        }
+
+                        relativeDestination = Path.Combine(deploymentItem.RelativeOutputDirectory, relativeDestination);  // Ignores empty arg1.
+                        var destination = Path.Combine(deploymentDirectory, relativeDestination);
+                        try
+                        {
+                            destination = Path.GetFullPath(destination);
+                        }
+                        catch (Exception e)
+                        {
+                            var warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToAccessFile, destination, e.GetType(), e.Message);
+                            warnings.Add(warning);
+
+                            continue;
+                        }
+
+                        if (!destToSource.ContainsKey(relativeDestination))
+                        {
+                            destToSource.Add(relativeDestination, fileToDeploy);
+
+                            // Now, finally we can copy the file...
+                            destination = this.FileUtility.CopyFileOverwrite(fileToDeploy, destination, out string warning);
+                            if (!string.IsNullOrEmpty(warning))
+                            {
+                                warnings.Add(warning);
+                            }
+
+                            if (string.IsNullOrEmpty(destination))
+                            {
+                                continue;
+                            }
+
+                            // We clear the attributes so that e.g. you can write to the copies of files originally under SCC.
+                            this.FileUtility.SetAttributes(destination, FileAttributes.Normal);
+
+                            // Deploy PDB for line number info in stack trace.
+                            this.FileUtility.FindAndDeployPdb(destination, relativeDestination, fileToDeploy, destToSource);
+                        }
+                        else if (
+                            !string.Equals(
+                                fileToDeploy,
+                                destToSource[relativeDestination],
+                                StringComparison.OrdinalIgnoreCase))
+                        {
+                            EqtTrace.WarningIf(
+                                EqtTrace.IsWarningEnabled,
+                                "Conflict during copiyng file: '{0}' and '{1}' are from different origins although they might be the same.",
+                                fileToDeploy,
+                                destToSource[relativeDestination]);
+                        }
+                    } // foreach fileToDeploy.
+                } // foreach itemFile.
+            }
+
+            return warnings;
+        }
+
         protected abstract string GetRootDeploymentDirectory(string baseDirectory);
+
+        protected abstract void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings);
+
+        protected abstract IEnumerable<DeploymentItem> GetSatellites(IEnumerable<DeploymentItem> deploymentItems, string testSource, IList<string> warnings);
+
+        protected abstract void AddDependenciesOfDeploymentItem(string deploymentItemFile, IList<string> filesToDeploy, IList<string> warnings);
 
         /// <summary>
         /// Get files corresponding to parameter deployment item.
