@@ -1,8 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Tests.Services
+namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 {
+#if NETCOREAPP1_0
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
+    extern alias FrameworkV1;
+    extern alias FrameworkV2;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+#endif
 
     using System;
     using System.Collections.Generic;
@@ -14,11 +26,11 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
     using TestUtilities;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using System.Reflection;
-
     [TestClass]
+#pragma warning disable SA1649 // File name must match first type name
     public class MSTestAdapterSettingsTests
+
+#pragma warning restore SA1649 // File name must match first type name
     {
         [TestCleanup]
         public void Cleanup()
@@ -26,7 +38,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             MSTestSettingsProvider.Reset();
         }
 
-        #region ResolveEnvironmentVariableAndReturnFullPathIfExist tests.
+#region ResolveEnvironmentVariableAndReturnFullPathIfExist tests.
 
         [TestMethod]
         public void ResolveEnvironmentVariableShouldResolvePathWhenPassedAbsolutePath()
@@ -61,7 +73,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
         }
 
-        /* [TestMethod]
+        [TestMethod]
         public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePathWithoutDot()
         {
             string path = @"MsTest\Adapter";
@@ -75,7 +87,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
 
             Assert.IsNotNull(result);
             Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
-        } */
+        }
 
         [TestMethod]
         public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePathWithDot()
@@ -93,17 +105,16 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
         }
 
-        /* [TestMethod]
+        [TestMethod]
         public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePath()
         {
-            //System.Diagnostics.Debugger.Launch();
             string path = @"\MsTest\Adapter";
             string baseDirectory = @"C:\unitTesting";
 
             // instead of returning "C:\unitTesting\MsTest\Adapter", it will return "(Drive from where test is running):\MsTest\Adapter",
             // because path is starting with "\"
             // this is how Path.GetFullPath works
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            string currentDirectory = Directory.GetCurrentDirectory();
             string currentDrive = currentDirectory.Split('\\').First() + "\\";
             string expectedResult = Path.Combine(currentDrive, @"MsTest\Adapter");
 
@@ -114,7 +125,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
 
             Assert.IsNotNull(result);
             Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
-        } */
+        }
 
         [TestMethod]
         public void ResolveEnvironmentVariableShouldResolvePathWhenPassedNetworkPath()
@@ -144,9 +155,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             Assert.IsNull(result);
         }
 
-        #endregion
+#endregion
 
-        #region GetDirectoryListWithRecursiveProperty tests.
+#region GetDirectoryListWithRecursiveProperty tests.
 
         [TestMethod]
         public void GetDirectoryListWithRecursivePropertyShouldReadRunSettingCorrectly()
@@ -172,9 +183,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             }
         }
 
-        #endregion
+#endregion
 
-        #region ToSettings tests.
+#region ToSettings tests.
 
         [TestMethod]
         public void ToSettingsShouldNotThrowExceptionWhenRunSettingsXmlUnderTagMSTestv2IsWrong()
@@ -219,9 +230,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(SettingsException));
         }
 
-        #endregion
+#endregion
 
-        #region DeploymentEnabled tests.
+#region DeploymentEnabled tests.
 
         [TestMethod]
         public void DeploymentEnabledIsByDefaultTrueWhenNotSpecified()
@@ -250,9 +261,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             Assert.AreEqual(false, adapterSettings.DeploymentEnabled);
         }
 
-        #endregion
+#endregion
 
-        #region DeployTestSourceDependencies tests
+#region DeployTestSourceDependencies tests
 
         [TestMethod]
         public void DeployTestSourceDependenciesIsEnabledByDefault()
@@ -295,7 +306,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             Assert.AreEqual(true, adapterSettings.DeployTestSourceDependencies);
         }
 
-        #endregion
+#endregion
     }
 
     public class TestableMSTestAdapterSettings : MSTestAdapterSettings

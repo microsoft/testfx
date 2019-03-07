@@ -1,11 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
+namespace MSTestAdapter.PlatformServices.Tests.Utilities
 {
+    extern alias FrameworkV2Extension;
+
+#if NETCOREAPP1_0
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
     extern alias FrameworkV1;
     extern alias FrameworkV2;
-    extern alias FrameworkV2DesktopExtension;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestFrameworkV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+#endif
 
     using System.Collections.Generic;
     using System.Linq;
@@ -18,17 +31,14 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
 
     using Moq;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-    using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestFrameworkV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
-    using TestFrameworkV2Extension = FrameworkV2DesktopExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestFrameworkV2Extension = FrameworkV2Extension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
+    // using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    // using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     [TestClass]
+#pragma warning disable SA1649 // File name must match first type name
     public class DeploymentItemUtilityTests
+#pragma warning restore SA1649 // File name must match first type name
     {
         internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register(
             "MSTestDiscoverer.DeploymentItems",
@@ -52,7 +62,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             this.warnings = new List<string>();
         }
 
-        #region GetClassLevelDeploymentItems tests
+#region GetClassLevelDeploymentItems tests
 
         [TestMethod]
         public void GetClassLevelDeploymentItemsShouldReturnEmptyListWhenNoDeploymentItems()
@@ -72,7 +82,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                             this.defaultDeploymentItemPath,
                             this.defaultDeploymentItemOutputDirectory)
                     };
-            this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests), kvpArray);
+            this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), kvpArray);
 
             var deploymentItems = this.deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), this.warnings);
             var expectedDeploymentItems = new DeploymentItem[]
@@ -96,7 +106,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                                                        this.defaultDeploymentItemPath + "\\temp2",
                                                        this.defaultDeploymentItemOutputDirectory)
                                                };
-            this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests), deploymentItemAttributes);
+            this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
             var deploymentItems =
                 this.deploymentItemUtility.GetClassLevelDeploymentItems(
@@ -128,7 +138,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                                                        this.defaultDeploymentItemPath,
                                                        this.defaultDeploymentItemOutputDirectory)
                                                };
-            this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests), deploymentItemAttributes);
+            this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
             var deploymentItems =
                 this.deploymentItemUtility.GetClassLevelDeploymentItems(
@@ -157,7 +167,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                                                        null,
                                                        this.defaultDeploymentItemOutputDirectory)
                                                };
-            this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests), deploymentItemAttributes);
+            this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
             var deploymentItems = this.deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), this.warnings);
 
@@ -170,12 +180,12 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
 
             CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
             Assert.AreEqual(1, this.warnings.Count);
-            TestFrameworkV2.StringAssert.Contains(this.warnings.ToArray()[0], Resource.DeploymentItemPathCannotBeNullOrEmpty);
+            StringAssert.Contains(this.warnings.ToArray()[0], Resource.DeploymentItemPathCannotBeNullOrEmpty);
         }
 
 #endregion
 
-        #region GetDeploymentItems tests
+#region GetDeploymentItems tests
 
         [TestMethod]
         public void GetDeploymentItemsShouldReturnNullOnNoDeploymentItems()
@@ -339,9 +349,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
         }
 
-        #endregion
+#endregion
 
-        #region IsValidDeploymentItem tests
+#region IsValidDeploymentItem tests
 
         [TestMethod]
         public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsNull()
@@ -419,9 +429,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
 
             Assert.IsTrue(string.Empty.Equals(warning));
         }
-        #endregion
+#endregion
 
-        #region HasDeployItems tests
+#region HasDeployItems tests
 
         [TestMethod]
         public void HasDeployItemsShouldReturnFalseForNoDeploymentItems()
@@ -447,9 +457,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             Assert.IsTrue(this.deploymentItemUtility.HasDeploymentItems(testCase));
         }
 
-        #endregion
+#endregion
 
-        #region private methods
+#region private methods
 
         private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
         {
@@ -467,6 +477,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
                     typeof(TestFrameworkV2Extension.DeploymentItemAttribute))).Returns((object[])deploymentItemAttributes.ToArray());
         }
 
-        #endregion
+#endregion
     }
 }

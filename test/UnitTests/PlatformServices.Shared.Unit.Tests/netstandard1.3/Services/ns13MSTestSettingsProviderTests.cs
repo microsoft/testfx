@@ -3,8 +3,17 @@
 
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 {
+#if NETCOREAPP1_0
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
     extern alias FrameworkV1;
     extern alias FrameworkV2;
+
+    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+#endif
 
     using System;
     using System.IO;
@@ -15,13 +24,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 
     using MSTestAdapter.TestUtilities;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-
     [TestClass]
+#pragma warning disable SA1649 // File name must match first type name
     public class DesktopSettingsProviderTests
+#pragma warning restore SA1649 // File name must match first type name
     {
         private MSTestSettingsProvider settingsProvider;
 

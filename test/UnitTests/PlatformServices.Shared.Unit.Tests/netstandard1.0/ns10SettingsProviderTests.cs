@@ -21,13 +21,13 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     [TestClass]
     public class SettingsProviderTests
     {
-        /* [TestMethod]
+        [TestMethod]
         public void GetPropertiesShouldReturnEmptyDictionary()
         {
             MSTestSettingsProvider settings = new MSTestSettingsProvider();
 
-            Assert.AreEqual(0, settings.GetProperties(It.IsAny<string>()).Count);
-        } */
+            Assert.AreEqual(0, settings.GetProperties(null).Count);
+        }
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

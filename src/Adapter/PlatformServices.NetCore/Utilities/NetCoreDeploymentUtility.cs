@@ -32,6 +32,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
         }
 
+        public override void AddDeploymentItemsBasedOnMsTestSetting(string testSource, IList<DeploymentItem> deploymentItems, List<string> warnings)
+        {
+            EqtTrace.Info("Adding the test source directory to the deploymentitems list");
+            this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
+        }
+
         /// <summary>
         /// Get root deployment directory
         /// </summary>
@@ -46,15 +52,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return this.FileUtility.GetNextIterationDirectoryName(baseDirectory, directoryName);
         }
 
-        protected override void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings)
-        {
-        }
-
-        protected override IEnumerable<DeploymentItem> GetSatellites(IEnumerable<DeploymentItem> deploymentItems, string testSource, IList<string> warnings)
-        {
-            return null;
-        }
-
+        // Find dependencies of test deployment items. Its implemented only in full framework project as dependent files are not fetched in netcore.
         protected override void AddDependenciesOfDeploymentItem(string deploymentItemFile, IList<string> filesToDeploy, IList<string> warnings)
         {
         }

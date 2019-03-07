@@ -50,10 +50,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 return memberInfo.GetCustomAttributes(type, inherit).ToArray();
             }
         }
-
-        internal object[] GetCustomAttributes(Assembly assembly, Type type)
-        {
-            return assembly.GetCustomAttributes(type).ToArray<object>();
-        }
     }
 }

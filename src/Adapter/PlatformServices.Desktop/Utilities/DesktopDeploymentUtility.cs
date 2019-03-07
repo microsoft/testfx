@@ -33,6 +33,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
         }
 
+        public override void AddDeploymentItemsBasedOnMsTestSetting(string testSource, IList<DeploymentItem> deploymentItems, List<string> warnings)
+        {
+            if (MSTestSettingsProvider.Settings.DeployTestSourceDependencies)
+            {
+                EqtTrace.Info("Adding the references and satellite assemblies to the deploymentitems list");
+
+                // Get the referenced assemblies.
+                this.ProcessNewStorage(testSource, deploymentItems, warnings);
+
+                // Get the satellite assemblies
+                var satelliteItems = this.GetSatellites(deploymentItems, testSource, warnings);
+                foreach (var satelliteItem in satelliteItems)
+                {
+                    this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, satelliteItem);
+                }
+            }
+            else
+            {
+                EqtTrace.Info("Adding the test source directory to the deploymentitems list");
+                this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
+            }
+        }
+
         /// <summary>
         /// Get root deployment directory
         /// </summary>
@@ -48,7 +71,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        protected override void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings)
+        protected void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings)
         {
             // Add deployment items and process .config files only for storages we have not processed before.
             string errorMessage;
@@ -96,7 +119,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
         }
 
-        protected override IEnumerable<DeploymentItem> GetSatellites(IEnumerable<DeploymentItem> deploymentItems, string testSource, IList<string> warnings)
+        protected IEnumerable<DeploymentItem> GetSatellites(IEnumerable<DeploymentItem> deploymentItems, string testSource, IList<string> warnings)
         {
             List<DeploymentItem> satellites = new List<DeploymentItem>();
             foreach (DeploymentItem item in deploymentItems)

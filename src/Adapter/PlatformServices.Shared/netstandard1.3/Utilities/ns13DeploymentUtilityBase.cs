@@ -80,6 +80,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return result;
         }
 
+        /// <summary>
+        /// add deployment items based on MSTestSettingsProvider.Settings.DeployTestSourceDependencies. This property is ignored in net core.
+        /// </summary>
+        /// <param name="testSource">The test source.</param>
+        /// <param name="deploymentItems">Deployment Items.</param>
+        /// <param name="warnings">Warnings.</param>
+        public abstract void AddDeploymentItemsBasedOnMsTestSetting(string testSource, IList<DeploymentItem> deploymentItems, List<string> warnings);
+
         internal string GetConfigFile(string testSource)
         {
             string configFile = null;
@@ -120,25 +128,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             testSource = Path.GetFullPath(testSource);
             var warnings = new List<string>();
 
-            if (MSTestSettingsProvider.Settings.DeployTestSourceDependencies)
-            {
-                EqtTrace.Info("Adding the references and satellite assemblies to the deploymentitems list");
-
-                // Get the referenced assemblies.
-                this.ProcessNewStorage(testSource, deploymentItems, warnings);
-
-                // Get the satellite assemblies
-                var satelliteItems = this.GetSatellites(deploymentItems, testSource, warnings);
-                foreach (var satelliteItem in satelliteItems)
-                {
-                    this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, satelliteItem);
-                }
-            }
-            else
-            {
-                EqtTrace.Info("Adding the test source directory to the deploymentitems list");
-                this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
-            }
+            this.AddDeploymentItemsBasedOnMsTestSetting(testSource, deploymentItems, warnings);
 
             // Maps relative to Out dir destination -> source and used to determine if there are conflicted items.
             var destToSource = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -259,12 +249,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return warnings;
         }
 
+        /// <summary>
+        /// Get root deployment directory
+        /// </summary>
+        /// <param name="baseDirectory">The base directory.</param>
+        /// <returns>Root deployment directory.</returns>
         protected abstract string GetRootDeploymentDirectory(string baseDirectory);
 
-        protected abstract void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings);
-
-        protected abstract IEnumerable<DeploymentItem> GetSatellites(IEnumerable<DeploymentItem> deploymentItems, string testSource, IList<string> warnings);
-
+        // Find dependencies of test deployment items
         protected abstract void AddDependenciesOfDeploymentItem(string deploymentItemFile, IList<string> filesToDeploy, IList<string> warnings);
 
         /// <summary>
