@@ -147,9 +147,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <param name="testCase"> The test Case.  </param>
         /// <param name="startTime"> The start Time.  </param>
         /// <param name="endTime"> The end Time.  </param>
-        /// <param name="mapInconclusiveToFailed">Indication to map inconclusive tests to failed.</param>
+        /// <param name="currentSettings">Current MSTest settings.</param>
         /// <returns> The <see cref="TestResult"/>. </returns>
-        internal TestResult ToTestResult(TestCase testCase, DateTimeOffset startTime, DateTimeOffset endTime, bool mapInconclusiveToFailed)
+        internal TestResult ToTestResult(TestCase testCase, DateTimeOffset startTime, DateTimeOffset endTime, MSTestSettings currentSettings)
         {
             Debug.Assert(testCase != null, "testCase");
 
@@ -159,7 +159,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                                             Duration = this.Duration,
                                             ErrorMessage = this.ErrorMessage,
                                             ErrorStackTrace = this.ErrorStackTrace,
-                                            Outcome = UnitTestOutcomeHelper.ToTestOutcome(this.Outcome, mapInconclusiveToFailed),
+                                            Outcome = UnitTestOutcomeHelper.ToTestOutcome(this.Outcome, currentSettings),
                                             StartTime = startTime,
                                             EndTime = endTime
             };
