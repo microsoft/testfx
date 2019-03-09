@@ -6,8 +6,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.Globalization;
-    using System.Linq;
 
 #pragma warning disable SA1402 // FileMayOnlyContainASingleType
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
@@ -36,11 +34,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// None.
         /// </summary>
         None,
-
-        /// <summary>
-        /// Once before any of the derived classes.
-        /// </summary>
-        OnceBeforeAnyDerivedClasses,
 
         /// <summary>
         /// Before each derived class.

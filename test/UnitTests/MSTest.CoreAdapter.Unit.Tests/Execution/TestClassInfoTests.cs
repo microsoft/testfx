@@ -318,24 +318,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
-        public void RunClassInitializeShouldExecuteBaseClassInitializeMethodOnlyOnceBeforeAnyDerivedClassIfSetInAttribute()
-        {
-            var classInitCallCount = 0;
-
-            DummyGrandParentTestClass.ClassInitMethodBody = (tc) => classInitCallCount += 2;
-            DummyDerivedTestClass.DerivedClassInitializeMethodBody = (tc) => classInitCallCount++;
-
-            this.testClassInfo.BaseClassInitializeMethodsQueue.Enqueue(typeof(DummyGrandParentTestClass).GetMethod("InitClassMethod"));
-            this.testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitDerivedClassMethod");
-
-            this.testClassInfo.RunClassInitialize(this.testContext);
-            this.testClassInfo.IsClassInitializeExecuted = false;
-            this.testClassInfo.RunClassInitialize(this.testContext);
-
-            Assert.AreEqual(4, classInitCallCount);
-        }
-
-        [TestMethod]
         public void RunClassInitializeShouldExecuteBaseClassInitializeIfDerivedClassInitializeIsNull()
         {
             var classInitCallCount = 0;
@@ -513,7 +495,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             public UTFExtension.TestContext BaseTestContext { get; set; }
 
-            [UTF.ClassInitialize(UTF.ClassInitializeInheritance.OnceBeforeAnyDerivedClasses)]
+            [UTF.ClassInitialize(UTF.ClassInitializeInheritance.BeforeEachDerivedClass)]
             public static void InitClassMethod(UTFExtension.TestContext testContext)
             {
                 ClassInitMethodBody?.Invoke(testContext);

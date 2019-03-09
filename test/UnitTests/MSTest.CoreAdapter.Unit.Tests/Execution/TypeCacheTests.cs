@@ -1434,7 +1434,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [DummyTestClass]
         private class DummyTestClassWithInitializeMethods
         {
-            [UTF.ClassInitialize(UTF.ClassInitializeInheritance.OnceBeforeAnyDerivedClasses)]
+            [UTF.ClassInitialize(UTF.ClassInitializeInheritance.BeforeEachDerivedClass)]
             public static void AssemblyInit(UTFExtension.TestContext tc)
             {
             }
@@ -1483,7 +1483,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [DummyTestClass]
         private class DummyBaseTestClassWithInitAndCleanupMethods
         {
-            [UTF.ClassInitialize(UTF.ClassInitializeInheritance.OnceBeforeAnyDerivedClasses)]
+            [UTF.ClassInitialize(UTF.ClassInitializeInheritance.BeforeEachDerivedClass)]
             public static void ClassInit(UTFExtension.TestContext tc)
             {
             }

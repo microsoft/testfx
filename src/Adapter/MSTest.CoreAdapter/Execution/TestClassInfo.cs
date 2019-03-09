@@ -259,15 +259,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 while (baseClassInitializeStack.Count > 0)
                 {
                     initializeMethod = baseClassInitializeStack.Pop();
-                    if (initializeMethod.GetCustomAttribute<ClassInitializeAttribute>().InheritanceBehavior == ClassInitializeInheritance.OnceBeforeAnyDerivedClasses)
-                    {
-                        if (!this.IsBaseClassInitializeExecuted)
-                        {
-                            initializeMethod?.InvokeAsSynchronousTask(null, testContext);
-                            this.IsBaseClassInitializeExecuted = true;
-                        }
-                    }
-                    else if (initializeMethod.GetCustomAttribute<ClassInitializeAttribute>().InheritanceBehavior == ClassInitializeInheritance.BeforeEachDerivedClass)
+                    if (initializeMethod.GetCustomAttribute<ClassInitializeAttribute>().InheritanceBehavior
+                        is ClassInitializeInheritance.BeforeEachDerivedClass)
                     {
                         initializeMethod?.InvokeAsSynchronousTask(null, testContext);
                         this.IsBaseClassInitializeExecuted = true;
