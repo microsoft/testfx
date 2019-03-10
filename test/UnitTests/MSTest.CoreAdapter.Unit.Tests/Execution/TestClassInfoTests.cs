@@ -133,7 +133,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
 
             this.testClassInfo.BaseClassCleanupMethodsQueue.Enqueue(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
-            this.testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitDerivedClassMethod");
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitBaseClassMethod");
 
             var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
@@ -148,12 +148,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
 
             this.testClassInfo.BaseClassCleanupMethodsQueue.Enqueue(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
-            this.testClassInfo.BaseClassInitializeMethodsQueue.Enqueue(typeof(DummyDerivedTestClass).GetMethod("InitDerivedClassMethod"));
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitDerivedClassMethod");
 
-            var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
+            this.testClassInfo.RunClassInitialize(this.testContext);
+            var ret = this.testClassInfo.RunClassCleanup();
 
             Assert.AreEqual(null, ret);
-            Assert.AreEqual(1, classcleanupCallCount);
+            Assert.AreEqual(0, classcleanupCallCount);
         }
 
         [TestMethod]
@@ -179,6 +180,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
 
             this.testClassInfo.BaseClassCleanupMethodsQueue.Enqueue(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
+            this.testClassInfo.BaseClassInitializeMethodsQueue.Enqueue(typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"));
 
             this.testClassInfo.RunClassInitialize(this.testContext);
             var ret = this.testClassInfo.RunClassCleanup();

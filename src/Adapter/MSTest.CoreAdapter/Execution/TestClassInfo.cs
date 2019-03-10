@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
+    using System.Linq;
     using System.Reflection;
     using Extensions;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -48,6 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.ClassType = type;
             this.Constructor = constructor;
             this.TestContextProperty = testContextProperty;
+            this.BaseClassInitiMethodsDict = new Dictionary<MethodInfo, bool>();
             this.BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
             this.BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
             this.BaseClassInitializeMethodsQueue = new Queue<MethodInfo>();
@@ -110,9 +112,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public bool IsClassInitializeExecuted { get; internal set; }
 
         /// <summary>
-        /// Gets a value indicating whether base class initialize has been executed.
+        /// Gets a value....
         /// </summary>
-        public bool IsBaseClassInitializeExecuted { get; internal set; }
+        public Dictionary<MethodInfo, bool> BaseClassInitiMethodsDict { get; internal set; }
 
         /// <summary>
         /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
@@ -263,7 +265,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         is ClassInitializeInheritance.BeforeEachDerivedClass)
                     {
                         initializeMethod?.InvokeAsSynchronousTask(null, testContext);
-                        this.IsBaseClassInitializeExecuted = true;
+                        if (!this.BaseClassInitiMethodsDict.ContainsKey(initializeMethod))
+                        {
+                            this.BaseClassInitiMethodsDict.Add(initializeMethod, true);
+                        }
                     }
                 }
             }
@@ -349,7 +354,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
 
-            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null || this.IsBaseClassInitializeExecuted)
+            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null || this.BaseClassInitiMethodsDict.ContainsValue(true))
             {
                 var classCleanupMethod = this.classCleanupMethod;
                 try
@@ -359,7 +364,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     while (baseClassCleanupQueue.Count > 0)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        classCleanupMethod?.InvokeAsSynchronousTask(null);
+                        if (this.BaseClassInitiMethodsDict.Any(method => method.Key.DeclaringType
+                                == classCleanupMethod.DeclaringType && method.Value))
+                        {
+                            classCleanupMethod?.InvokeAsSynchronousTask(null);
+                        }
                     }
 
                     return null;
