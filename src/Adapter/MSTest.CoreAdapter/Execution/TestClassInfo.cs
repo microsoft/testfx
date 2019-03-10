@@ -112,7 +112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public bool IsClassInitializeExecuted { get; internal set; }
 
         /// <summary>
-        /// Gets a value....
+        /// Gets a dictionary of test initialize methods indicating if they have been executed.
         /// </summary>
         public Dictionary<MethodInfo, bool> BaseClassInitializeMethodsDict { get; internal set; }
 
