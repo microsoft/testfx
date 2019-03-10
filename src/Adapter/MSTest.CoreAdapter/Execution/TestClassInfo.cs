@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.ClassType = type;
             this.Constructor = constructor;
             this.TestContextProperty = testContextProperty;
-            this.BaseClassInitiMethodsDict = new Dictionary<MethodInfo, bool>();
+            this.BaseClassInitializeMethodsDict = new Dictionary<MethodInfo, bool>();
             this.BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
             this.BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
             this.BaseClassInitializeMethodsQueue = new Queue<MethodInfo>();
@@ -114,7 +114,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Gets a value....
         /// </summary>
-        public Dictionary<MethodInfo, bool> BaseClassInitiMethodsDict { get; internal set; }
+        public Dictionary<MethodInfo, bool> BaseClassInitializeMethodsDict { get; internal set; }
 
         /// <summary>
         /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
@@ -265,9 +265,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         is ClassInitializeInheritance.BeforeEachDerivedClass)
                     {
                         initializeMethod?.InvokeAsSynchronousTask(null, testContext);
-                        if (!this.BaseClassInitiMethodsDict.ContainsKey(initializeMethod))
+                        if (!this.BaseClassInitializeMethodsDict.ContainsKey(initializeMethod))
                         {
-                            this.BaseClassInitiMethodsDict.Add(initializeMethod, true);
+                            this.BaseClassInitializeMethodsDict.Add(initializeMethod, true);
                         }
                     }
                 }
@@ -354,7 +354,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
 
-            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null || this.BaseClassInitiMethodsDict.ContainsValue(true))
+            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null || this.BaseClassInitializeMethodsDict.ContainsValue(true))
             {
                 var classCleanupMethod = this.classCleanupMethod;
                 try
@@ -364,7 +364,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     while (baseClassCleanupQueue.Count > 0)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        if (this.BaseClassInitiMethodsDict.Any(method => method.Key.DeclaringType
+                        if (this.BaseClassInitializeMethodsDict.Any(method => method.Key.DeclaringType
                                 == classCleanupMethod.DeclaringType && method.Value))
                         {
                             classCleanupMethod?.InvokeAsSynchronousTask(null);
