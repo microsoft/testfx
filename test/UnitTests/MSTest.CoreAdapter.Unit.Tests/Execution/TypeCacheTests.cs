@@ -1493,7 +1493,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithInitAndCleanupMethods : DummyBaseTestClassWithInitAndCleanupMethods
         {
             public static void AssemblyInit(UTFExtension.TestContext tc)

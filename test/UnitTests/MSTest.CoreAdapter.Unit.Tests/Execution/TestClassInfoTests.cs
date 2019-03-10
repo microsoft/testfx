@@ -486,7 +486,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #endregion
 
-        [UTF.TestClass]
+        [DummyTestClass]
         public class DummyGrandParentTestClass
         {
             public static Action<object> ClassInitMethodBody { get; set; }
@@ -507,7 +507,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         public class DummyBaseTestClass : DummyGrandParentTestClass
         {
             public static Action<object> ClassInitializeMethodBody { get; set; }
@@ -528,7 +528,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         public class DummyDerivedTestClass : DummyBaseTestClass
         {
             public static Action<object> DerivedClassInitializeMethodBody { get; set; }
@@ -548,7 +548,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         public class DummyTestClass
         {
             public static Action<object> ClassInitializeMethodBody { get; set; }
@@ -566,6 +566,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             {
                 ClassCleanupMethodBody?.Invoke();
             }
+        }
+
+        private class DummyTestClassAttribute : UTF.TestClassAttribute
+        {
         }
     }
 }
