@@ -26,7 +26,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         {
             MSTestSettingsProvider settings = new MSTestSettingsProvider();
 
-            Assert.AreEqual(0, settings.GetProperties(null).Count);
+            Assert.AreEqual(0, settings.GetProperties(It.IsAny<string>()).Count);
         }
     }
 

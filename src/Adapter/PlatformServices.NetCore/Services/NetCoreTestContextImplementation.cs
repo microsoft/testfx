@@ -214,17 +214,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        /// <inheritdoc/>
-        public override void AddResultFile(string fileName)
-        {
-            if (string.IsNullOrEmpty(fileName))
-            {
-                throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, "fileName");
-            }
-
-            this.testResultFiles.Add(Path.GetFullPath(fileName));
-        }
-
         /// <summary>
         /// Set the unit-test outcome
         /// </summary>

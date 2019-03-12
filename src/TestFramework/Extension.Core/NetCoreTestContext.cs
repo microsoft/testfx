@@ -107,14 +107,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="args">the arguments</param>
         public abstract void WriteLine(string format, params object[] args);
 
-        /// <summary>
-        /// Adds a file name to the list in TestResult.ResultFileNames
-        /// </summary>
-        /// <param name="fileName">
-        /// The file Name.
-        /// </param>
-        public abstract void AddResultFile(string fileName);
-
         private T GetProperty<T>(string name)
             where T : class
         {

@@ -52,9 +52,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return this.FileUtility.GetNextIterationDirectoryName(baseDirectory, directoryName);
         }
 
-        // Find dependencies of test deployment items. Its implemented only in full framework project as dependent files are not fetched in netcore.
+        /// <summary>
+        /// Find dependencies of test deployment items
+        /// </summary>
+        /// <param name="deploymentItemFile">Deployment Item File</param>
+        /// <param name="filesToDeploy">Files to Deploy</param>
+        /// <param name="warnings">Warnings</param>
         protected override void AddDependenciesOfDeploymentItem(string deploymentItemFile, IList<string> filesToDeploy, IList<string> warnings)
         {
+            // Its implemented only in full framework project as dependent files are not fetched in netcore.
         }
 
         private bool IsDeploymentItemSourceADirectory(DeploymentItem deploymentItem, string testSource, out string resultDirectory)

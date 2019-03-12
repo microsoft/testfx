@@ -259,11 +259,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         #endregion
 
-        public override void AddResultFile(string fileName)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Helper to safely fetch a property value.
         /// </summary>

@@ -33,15 +33,15 @@
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13DeploymentItem.cs" Link="Deployment\ns13DeploymentItem.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13TestRunDirectories.cs" Link="Deployment\ns13TestRunDirectories.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13MSTestAdapterSettings.cs" Link="Services\ns13MSTestAdapterSettings.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TestContextImplementation.cs" Link="Services\ns13TestContextImplementation.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TestDeployment.cs" Link="Services\ns13TestDeployment.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TestSourceHost.cs" Link="Services\ns13TestSourceHost.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs" Link="Services\ns13TraceListener.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListenerManager.cs" Link="Services\ns13TraceListenerManager.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentItemUtility.cs" Link="Utilities\ns13DeploymentItemUtility.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentUtilityBase.cs" Link="Utilities\ns13DeploymentUtilityBase.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs" Link="Utilities\ns13FileUtility.cs" />
     <Compile Include="Friends.cs" />
+    <Compile Include="Services\NetCoreTestContextImplementation.cs" />
+    <Compile Include="Services\NetCoreTestSourceHost.cs" />
     <Compile Include="Utilities\NetCoreAssemblyUtility.cs" />
     <Compile Include="Utilities\NetCoreDeploymentUtility.cs" />
     <Compile Include="Utilities\NetCoreReflectionUtility.cs" />
@@ -74,7 +74,6 @@
 
   <ItemGroup>
     <Folder Include="Extensions\" />
-    <Folder Include="Services\" />
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>
