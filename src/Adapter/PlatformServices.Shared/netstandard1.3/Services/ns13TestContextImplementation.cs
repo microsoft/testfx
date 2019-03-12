@@ -7,6 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
 
@@ -28,6 +29,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     {
         private static readonly string FullyQualifiedTestClassNameLabel = "FullyQualifiedTestClassName";
         private static readonly string TestNameLabel = "TestName";
+
+        /// <summary>
+        /// List of result files associated with the test
+        /// </summary>
+        private IList<string> testResultFiles;
 
         /// <summary>
         /// Properties
@@ -62,6 +68,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.properties = new Dictionary<string, object>(properties);
             this.stringWriter = writer;
             this.InitializeProperties();
+            this.testResultFiles = new List<string>();
         }
 
         #region TestContext impl
@@ -78,6 +85,81 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             get
             {
                 return this.outcome;
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string TestRunDirectory
+        {
+            get
+            {
+                return this.GetStringPropertyValue(TestContextPropertyStrings.TestRunDirectory);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string DeploymentDirectory
+        {
+            get
+            {
+                return this.GetStringPropertyValue(TestContextPropertyStrings.DeploymentDirectory);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string ResultsDirectory
+        {
+            get
+            {
+                return this.GetStringPropertyValue(TestContextPropertyStrings.ResultsDirectory);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string TestRunResultsDirectory
+        {
+            get
+            {
+                return this.GetStringPropertyValue(TestContextPropertyStrings.TestRunResultsDirectory);
+            }
+        }
+
+        /// <inheritdoc/>
+        [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", Justification = "TestResultsDirectory is what we need.")]
+        public override string TestResultsDirectory
+        {
+            get
+            {
+                // In MSTest, it is actually "In\697105f7-004f-42e8-bccf-eb024870d3e9\User1", but
+                // we are setting it to "In" only because MSTest does not create this directory.
+                return this.GetStringPropertyValue(TestContextPropertyStrings.TestResultsDirectory);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string TestDir
+        {
+            get
+            {
+                return this.GetStringPropertyValue(TestContextPropertyStrings.TestDir);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string TestDeploymentDir
+        {
+            get
+            {
+                return this.GetStringPropertyValue(TestContextPropertyStrings.TestDeploymentDir);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string TestLogsDir
+        {
+            get
+            {
+                return this.GetStringPropertyValue(TestContextPropertyStrings.TestLogsDir);
             }
         }
 
@@ -130,6 +212,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 return this as UTF.TestContext;
             }
+        }
+
+        /// <inheritdoc/>
+        public override void AddResultFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, "fileName");
+            }
+
+            this.testResultFiles.Add(Path.GetFullPath(fileName));
         }
 
         /// <summary>
@@ -259,11 +352,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         #endregion
 
-        public override void AddResultFile(string fileName)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Helper to safely fetch a property value.
         /// </summary>
@@ -275,6 +363,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.properties.TryGetValue(propertyName, out propertyValue);
 
             return propertyValue;
+        }
+
+        /// <summary>
+        /// Helper to safely fetch a property value.
+        /// </summary>
+        /// <param name="propertyName">Property Name</param>
+        /// <returns>Property value</returns>
+        private string GetStringPropertyValue(string propertyName)
+        {
+            object propertyValue = null;
+            this.properties.TryGetValue(propertyName, out propertyValue);
+            return propertyValue as string;
         }
 
         /// <summary>

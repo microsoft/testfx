@@ -4,7 +4,6 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
@@ -116,11 +115,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// An System.Collections.IDictionary object that contains key/value pairs that
         ///  represent the test properties.
         /// </returns>
-        public override IDictionary Properties
+        public override IDictionary<string, object> Properties
         {
             get
             {
-                return this.properties as IDictionary;
+                return this.properties as IDictionary<string, object>;
             }
         }
 
@@ -258,11 +257,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         #endregion
-
-        public override void AddResultFile(string fileName)
-        {
-            throw new NotImplementedException();
-        }
 
         /// <summary>
         /// Helper to safely fetch a property value.
