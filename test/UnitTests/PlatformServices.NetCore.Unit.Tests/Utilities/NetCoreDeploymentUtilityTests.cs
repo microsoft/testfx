@@ -217,7 +217,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         private TestCase GetTestCaseAndTestRunDirectories(string deploymentItemPath, string defaultDeploymentItemOutputDirectoryout, out TestRunDirectories testRunDirectories)
         {
             this.GetType();
-            var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "D:\\testfx\\artifacts\\Debug\\PlatformServices.NetCore.Unit.Tests\\netcoreapp1.0\\MSTestAdapter.PlatformServices.NetCore.UnitTests.dll");
+            var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), typeof(DeploymentUtilityTests).GetTypeInfo().Assembly.Location);
             var kvpArray = new[]
                     {
                         new KeyValuePair<string, string>(
