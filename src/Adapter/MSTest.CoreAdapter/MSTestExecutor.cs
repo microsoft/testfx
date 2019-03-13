@@ -44,6 +44,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
+            // System.Diagnostics.Debugger.Launch();
             ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
             ValidateArg.NotNullOrEmpty(tests, "tests");
 
@@ -76,6 +77,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
+            // System.Diagnostics.Debugger.Launch();
             ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
             ValidateArg.NotNullOrEmpty(sources, "sources");
 

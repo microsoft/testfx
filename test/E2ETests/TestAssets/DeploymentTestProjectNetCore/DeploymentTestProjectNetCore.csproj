@@ -1,19 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\..\..\artifacts\TestAssets\netcoreapp2.1\</OutputPath>
+    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">$(PackageTargetFallback);portable-net45+win8+wpa81+wp8</PackageTargetFallback>
+    <OutputPath>..\..\..\..\artifacts\TestAssets\netcoreapp1.1\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\..\..\src\TestFramework\Extension.Core\Extension.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,5 +28,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
+  
+  <!-- Workaround for https://github.com/dotnet/sdk/issues/364 -->
+  <Target Name="WorkAroundPackageAndProjectReferenceConflict" BeforeTargets="ResolveLockFileReferences">
+    <ItemGroup>
+      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions' or '%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework'" />
+    </ItemGroup>
+  </Target>
+  
+  <!-- Workaround for https://github.com/dotnet/sdk/issues/1020 
+       We should have a ProjectReference For MSTest.CoreAdapter with ReferenceOutputAssembly="false"-->
+  <!--<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="xcopy /Y /I $(TargetDir)..\..\Debug\MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll $(TargetDir)" />
+    <Exec Command="xcopy /Y /I $(TargetDir)..\..\Debug\MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb $(TargetDir)" />
+  </Target>-->
 </Project>

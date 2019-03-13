@@ -10,7 +10,7 @@ namespace MSTestAdapter.Smoke.E2ETests
     public class DeploymentTests : CLITestBase
     {
         private const string TestAssembly = "DesktopDeployment\\DeploymentTestProject.dll";
-        private const string TestAssemblyNetCore = "netcoreapp2.1\\DeploymentTestProjectNetCore.dll";
+        private const string TestAssemblyNetCore = "netcoreapp1.1\\DeploymentTestProjectNetCore.dll";
         private const string RunSetting =
              @"<RunSettings>   
                 <MSTestV2>
