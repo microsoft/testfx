@@ -128,11 +128,20 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
 
             IEnumerable<object[]> enumerable = obj as IEnumerable<object[]>;
+
             if (enumerable == null)
             {
                 throw new ArgumentNullException(
                     string.Format(
                         FrameworkMessages.DynamicDataIEnumerableNull,
+                        this.dynamicDataSourceName,
+                        this.dynamicDataDeclaringType.FullName));
+            }
+            else if (!enumerable.Any())
+            {
+                throw new ArgumentException(
+                    string.Format(
+                        FrameworkMessages.DynamicDataIEnumerableEmpty,
                         this.dynamicDataSourceName,
                         this.dynamicDataDeclaringType.FullName));
             }

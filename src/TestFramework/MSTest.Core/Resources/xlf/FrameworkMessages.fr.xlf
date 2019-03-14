@@ -287,6 +287,11 @@ Trace de la pile : {4}</target>
         <target state="translated">La méthode {0} doit correspondre à la signature attendue : public static {1} {0}({2}).</target>
         <note />
       </trans-unit>
+      <trans-unit id="DynamicDataIEnumerableEmpty">
+        <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
+        <target state="new">Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>
