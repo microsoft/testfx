@@ -315,7 +315,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         {
                             // if the ClassInitializeInheritance is None, means
                             // it will pick only the derived class initalize method
-                            break;
+                            continue;
                         }
 
                         // update class initialize queue with new method

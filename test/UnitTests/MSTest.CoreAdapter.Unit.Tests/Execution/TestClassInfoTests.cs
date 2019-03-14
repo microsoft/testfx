@@ -303,7 +303,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
-        public void RunClassInitializeShouldExecuteBaseClassInitializeMethodBeforeEachDerivedClassIfSetInAttribute()
+        public void RunClassInitializeShouldNotExecuteBaseClassInitializeMethodIfClassInitializeHasExecuted()
         {
             var classInitCallCount = 0;
 
@@ -314,9 +314,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitDerivedClassMethod");
 
             this.testClassInfo.RunClassInitialize(this.testContext);
-            this.testClassInfo.RunClassInitialize(this.testContext);
+            this.testClassInfo.RunClassInitialize(this.testContext); // this one shouldn't run
 
-            Assert.AreEqual(5, classInitCallCount);
+            Assert.AreEqual(3, classInitCallCount);
         }
 
         [TestMethod]

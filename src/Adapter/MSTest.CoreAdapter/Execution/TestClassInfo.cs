@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.ClassType = type;
             this.Constructor = constructor;
             this.TestContextProperty = testContextProperty;
-            this.BaseClassInitializeMethodsDict = new Dictionary<MethodInfo, bool>();
+            this.ExecutedBaseClassInitializeMethods = new HashSet<MethodInfo>();
             this.BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
             this.BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
             this.BaseClassInitializeMethodsQueue = new Queue<MethodInfo>();
@@ -112,9 +112,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public bool IsClassInitializeExecuted { get; internal set; }
 
         /// <summary>
-        /// Gets a dictionary of test initialize methods indicating if they have been executed.
+        /// Gets a hash set of executed class initialize methods.
         /// </summary>
-        public Dictionary<MethodInfo, bool> BaseClassInitializeMethodsDict { get; internal set; }
+        public HashSet<MethodInfo> ExecutedBaseClassInitializeMethods { get; internal set; }
 
         /// <summary>
         /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
@@ -167,7 +167,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Gets a queue of test initialize methods to call for this type.
+        /// Gets a queue of class initialize methods to call for this type.
         /// </summary>
         public Queue<MethodInfo> BaseClassInitializeMethodsQueue { get; private set; }
 
@@ -239,12 +239,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public void RunClassInitialize(TestContext testContext)
         {
             // If no class initialize and no base class initialize, return
-            if (this.ClassInitializeMethod is null)
+            if (this.ClassInitializeMethod is null && !this.BaseClassInitializeMethodsQueue.Any())
             {
-                if (this.BaseClassInitializeMethodsQueue.Count == 0)
-                {
-                    return;
-                }
+                return;
             }
 
             if (testContext == null)
@@ -253,32 +250,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             MethodInfo initializeMethod = null;
+            string failedClassInitializeMethodName = string.Empty;
+
             try
             {
-                // ClassInitialize methods for base classes are called in reverse order of discovery
-                // Base -> Child TestClass
-                var baseClassInitializeStack = new Stack<MethodInfo>(this.BaseClassInitializeMethodsQueue);
-                while (baseClassInitializeStack.Count > 0)
+                // If class initialization is not done, we can proceed to perform
+                // base class initialization first
+                if (!this.IsClassInitializeExecuted)
                 {
-                    initializeMethod = baseClassInitializeStack.Pop();
-                    if (initializeMethod.GetCustomAttribute<ClassInitializeAttribute>().InheritanceBehavior
-                        is ClassInitializeInheritance.BeforeEachDerivedClass)
+                    // ClassInitialize methods for base classes are called in reverse order of discovery
+                    // Base -> Child TestClass
+                    var baseClassInitializeStack = new Stack<MethodInfo>(this.BaseClassInitializeMethodsQueue);
+                    while (baseClassInitializeStack.Count > 0)
                     {
+                        initializeMethod = baseClassInitializeStack.Pop();
                         initializeMethod?.InvokeAsSynchronousTask(null, testContext);
-                        if (!this.BaseClassInitializeMethodsDict.ContainsKey(initializeMethod))
-                        {
-                            this.BaseClassInitializeMethodsDict.Add(initializeMethod, true);
-                        }
+                        this.ExecutedBaseClassInitializeMethods.Add(initializeMethod);
                     }
                 }
             }
             catch (Exception ex)
             {
                 this.ClassInitializationException = ex;
+                failedClassInitializeMethodName = initializeMethod.Name;
             }
 
-            // If class initialization is not done and class initialize method is not null, then do it.
-            if (!this.IsClassInitializeExecuted && this.classInitializeMethod != null)
+            // If class initialization is not done and class initialize method is not null,
+            // and class initialization exception is null, then do it.
+            if (!this.IsClassInitializeExecuted && this.classInitializeMethod != null && this.ClassInitializationException == null)
             {
                 // Aquiring a lock is usually a costly operation which does not need to be
                 // performed every time if the class init is already executed.
@@ -294,6 +293,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         catch (Exception ex)
                         {
                             this.ClassInitializationException = ex;
+                            failedClassInitializeMethodName = this.ClassInitializeMethod.Name;
                         }
                         finally
                         {
@@ -324,7 +324,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     CultureInfo.CurrentCulture,
                     Resource.UTA_ClassInitMethodThrows,
                     this.ClassType.FullName,
-                    this.ClassInitializeMethod?.Name ?? initializeMethod.Name,
+                    failedClassInitializeMethodName,
                     realException.GetType().ToString(),
                     StackTraceHelper.GetExceptionMessage(realException));
 
@@ -346,15 +346,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public string RunClassCleanup()
         {
-            if (this.ClassCleanupMethod is null)
+            if (this.ClassCleanupMethod is null && !this.BaseClassCleanupMethodsQueue.Any())
             {
-                if (this.BaseClassCleanupMethodsQueue.Count == 0)
-                {
-                    return null;
-                }
+                return null;
             }
 
-            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null || this.BaseClassInitializeMethodsDict.ContainsValue(true))
+            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null || this.ExecutedBaseClassInitializeMethods.Any())
             {
                 var classCleanupMethod = this.classCleanupMethod;
                 try
@@ -364,8 +361,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     while (baseClassCleanupQueue.Count > 0)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        if (this.BaseClassInitializeMethodsDict.Any(method => method.Key.DeclaringType
-                                == classCleanupMethod.DeclaringType && method.Value))
+
+                        if (this.ExecutedBaseClassInitializeMethods.Any(
+                            method => method.DeclaringType == classCleanupMethod.DeclaringType))
                         {
                             classCleanupMethod?.InvokeAsSynchronousTask(null);
                         }
