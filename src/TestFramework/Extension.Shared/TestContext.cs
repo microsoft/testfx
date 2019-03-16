@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
+    using System.Threading;
 
     /// <summary>
     /// TestContext class. This class should be fully abstract and not contain any
@@ -20,6 +21,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Gets test properties for a test.
         /// </summary>
         public abstract IDictionary Properties { get; }
+
+        /// <summary>
+        /// Gets or sets the cancellation token source that is cancelled when test timesout or when cancelled the test will be aborted
+        /// </summary>
+        public CancellationTokenSource CancellationTokenSource { get; protected set; }
 
         /// <summary>
         /// Gets Fully-qualified name of the class containing the test method currently being executed
