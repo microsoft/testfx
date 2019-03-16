@@ -143,6 +143,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test &apos;{0}&apos; execution has been aborted..
+        /// </summary>
+        internal static string Execution_Test_Cancelled {
+            get {
+                return ResourceManager.GetString("Execution_Test_Cancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test &apos;{0}&apos; exceeded execution timeout period..
         /// </summary>
         internal static string Execution_Test_Timeout {
