@@ -14,6 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System.Linq;
     using System.Reflection;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -1221,7 +1222,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 PlatformServiceProvider.Instance = testablePlatformServiceProvider;
 
                 testablePlatformServiceProvider.MockThreadOperations.Setup(
-                 to => to.Execute(It.IsAny<Action>(), It.IsAny<int>())).Returns(false);
+                 to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
                 this.testMethodOptions.Timeout = 1;
                 var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
 
@@ -1256,7 +1257,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             try
             {
                 testablePlatformServiceProvider.MockThreadOperations.
-                    Setup(tho => tho.Execute(It.IsAny<Action>(), It.IsAny<int>())).
+                    Setup(tho => tho.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).
                     Returns(true).
                     Callback((Action a, int timeout) =>
                     {
