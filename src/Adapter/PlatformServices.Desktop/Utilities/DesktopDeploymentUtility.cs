@@ -61,7 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// </summary>
         /// <param name="baseDirectory">The base directory.</param>
         /// <returns>Root deployment directory.</returns>
-        protected override string GetRootDeploymentDirectory(string baseDirectory)
+        public override string GetRootDeploymentDirectory(string baseDirectory)
         {
             string dateTimeSufix = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo);
             string directoryName = string.Format(CultureInfo.CurrentCulture, Resource.TestRunName, DeploymentFolderPrefix, Environment.UserName, dateTimeSufix);

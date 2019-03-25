@@ -286,4 +286,7 @@ Stack Trace: {4}</value>
   <data name="DynamicDataDisplayName" xml:space="preserve">
     <value>Method {0} must match the expected signature: public static {1} {0}({2}).</value>
   </data>
+  <data name="DynamicDataIEnumerableEmpty" xml:space="preserve">
+    <value>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</value>
+  </data>
 </root>

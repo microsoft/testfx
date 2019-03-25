@@ -25,11 +25,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// </summary>
         internal const string DeploymentInDirectorySuffix = "In";
 
-        /// <summary>
-        /// The deployment out directory suffix.
-        /// </summary>
-        internal const string DeploymentOutDirectorySuffix = "Out";
-
         public TestRunDirectories(string rootDirectory)
         {
             Debug.Assert(!string.IsNullOrEmpty(rootDirectory), "rootDirectory");
@@ -60,7 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         {
             get
             {
-                return Path.Combine(this.RootDeploymentDirectory, DeploymentOutDirectorySuffix);
+                return Directory.GetCurrentDirectory();
             }
         }
 

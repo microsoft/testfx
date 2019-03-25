@@ -88,6 +88,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="warnings">Warnings.</param>
         public abstract void AddDeploymentItemsBasedOnMsTestSetting(string testSource, IList<DeploymentItem> deploymentItems, List<string> warnings);
 
+        /// <summary>
+        /// Get the parent test results directory where deployment will be done.
+        /// </summary>
+        /// <param name="runContext">The run context.</param>
+        /// <returns>The test results directory.</returns>
+        public string GetTestResultsDirectory(IRunContext runContext)
+        {
+            var resultsDirectory = (!string.IsNullOrEmpty(runContext?.TestRunDirectory)) ?
+                runContext.TestRunDirectory : null;
+
+            if (string.IsNullOrEmpty(resultsDirectory))
+            {
+                resultsDirectory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), TestRunDirectories.DefaultDeploymentRootDirectory));
+            }
+
+            return resultsDirectory;
+        }
+
+        /// <summary>
+        /// Get root deployment directory
+        /// </summary>
+        /// <param name="baseDirectory">The base directory.</param>
+        /// <returns>Root deployment directory.</returns>
+        public abstract string GetRootDeploymentDirectory(string baseDirectory);
+
         internal string GetConfigFile(string testSource)
         {
             string configFile = null;
@@ -248,13 +273,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             return warnings;
         }
-
-        /// <summary>
-        /// Get root deployment directory
-        /// </summary>
-        /// <param name="baseDirectory">The base directory.</param>
-        /// <returns>Root deployment directory.</returns>
-        protected abstract string GetRootDeploymentDirectory(string baseDirectory);
 
         // Find dependencies of test deployment items
         protected abstract void AddDependenciesOfDeploymentItem(string deploymentItemFile, IList<string> filesToDeploy, IList<string> warnings);
@@ -447,24 +465,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// Get the parent test results directory where deployment will be done.
-        /// </summary>
-        /// <param name="runContext">The run context.</param>
-        /// <returns>The test results directory.</returns>
-        private string GetTestResultsDirectory(IRunContext runContext)
-        {
-            var resultsDirectory = (!string.IsNullOrEmpty(runContext?.TestRunDirectory)) ?
-                runContext.TestRunDirectory : null;
-
-            if (string.IsNullOrEmpty(resultsDirectory))
-            {
-                resultsDirectory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), TestRunDirectories.DefaultDeploymentRootDirectory));
-            }
-
-            return resultsDirectory;
         }
     }
 }

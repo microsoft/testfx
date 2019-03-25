@@ -63,9 +63,6 @@
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13DeploymentItem.cs">
       <Link>Deployment\ns13DeploymentItem.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13TestRunDirectories.cs">
-      <Link>Deployment\ns13TestRunDirectories.cs</Link>
-    </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
       <Link>Resources\Resource.Designer.cs</Link>
       <AutoGen>True</AutoGen>
@@ -98,6 +95,7 @@
     <Compile Include="Data\TestDataConnectionSql.cs" />
     <Compile Include="Data\XmlDataConnection.cs" />
     <Compile Include="Deployment\AssemblyLoadWorker.cs" />
+    <Compile Include="Deployment\DesktopTestRunDirectories.cs" />
     <Compile Include="Friends.cs" />
     <Compile Include="Utilities\AppDomainWrapper.cs" />
     <Compile Include="Utilities\IAppDomain.cs" />

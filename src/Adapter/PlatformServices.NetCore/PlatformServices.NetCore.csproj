@@ -19,6 +19,7 @@
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs" Link="MarshalByRefObject.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs" Link="ns10RecursiveDirectoryPath.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs" Link="SerializableAttribute.cs" />
+    <Compile Include="Deployment\NetCoreTestRunDirectories.cs" />
     <Compile Include="Services\NetCoreFileOperations.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs" Link="Services\ns10DiaSessionOperations.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs" Link="Services\ns10MSTestSettingsProvider.cs" />
@@ -31,7 +32,6 @@
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Utilities\ns10Validate.cs" Link="Utilities\ns10Validate.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Extensions\ns13ExceptionExtensions.cs" Link="Extensions\ns13ExceptionExtensions.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13DeploymentItem.cs" Link="Deployment\ns13DeploymentItem.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13TestRunDirectories.cs" Link="Deployment\ns13TestRunDirectories.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13MSTestAdapterSettings.cs" Link="Services\ns13MSTestAdapterSettings.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TestDeployment.cs" Link="Services\ns13TestDeployment.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs" Link="Services\ns13TraceListener.cs" />

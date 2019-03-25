@@ -159,57 +159,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
                 Times.Once);
         }
 
-        [TestMethod]
-        public void DeployShouldDeployPdbWithSourceIfPdbFileIsPresentInSourceDirectory()
-        {
-            TestRunDirectories testRunDirectories;
-            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out testRunDirectories);
-
-            // Setup mocks.
-            DeploymentItem sampleDepItem = new DeploymentItem(testCase.Source);
-            IList<DeploymentItem> listOfFiles= new List<DeploymentItem> { sampleDepItem };
-            List<String> listOfFilesInDir = new List<string>() { testCase.Source };
-
-            this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
-            this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-            this.mockFileUtility.Setup(fu => fu.AddFilesFromDirectory(It.Is<string>( s => s.Contains("netcore")), It.IsAny<Func<string, bool>>(), It.IsAny<bool>())).Returns(listOfFilesInDir);
-            string warning;
-            this.mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
-                .Returns(
-                    (string x, string y, string z) =>
-                        {
-                            z = string.Empty;
-                            return y;
-                        });
-
-            // Act.
-            Assert.IsTrue(
-                this.deploymentUtility.Deploy(
-                    new List<TestCase> { testCase },
-                    testCase.Source,
-                    this.mockRunContext.Object,
-                    this.mocktestExecutionRecorder.Object,
-                    testRunDirectories));
-
-            // Assert.
-            var sourceFile = typeof(DeploymentUtilityTests).GetTypeInfo().Assembly.GetName().Name + ".dll";
-            var pdbFile = typeof(DeploymentUtilityTests).GetTypeInfo().Assembly.GetName().Name + ".pdb";
-            this.mockFileUtility.Verify(
-                fu =>
-                fu.CopyFileOverwrite(
-                    It.Is<string>(s => s.Contains(sourceFile)),
-                    Path.Combine(testRunDirectories.OutDirectory, sourceFile),
-                    out warning),
-                Times.Once);
-            this.mockFileUtility.Verify(
-                fu =>
-                fu.CopyFileOverwrite(
-                    It.Is<string>(s => s.Contains(pdbFile)),
-                    Path.Combine(testRunDirectories.OutDirectory, pdbFile),
-                    out warning),
-                Times.Once);
-        }
-
         #endregion
 
         #region private methods
