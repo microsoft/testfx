@@ -76,4 +76,11 @@
     <Folder Include="Extensions\" />
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+  
+  <!-- Workaround for https://github.com/dotnet/sdk/issues/364 -->
+  <Target Name="WorkAroundPackageAndProjectReferenceConflict" BeforeTargets="ResolveLockFileReferences">
+    <ItemGroup>
+      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions' or '%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework'" />
+    </ItemGroup>
+  </Target>
 </Project>
