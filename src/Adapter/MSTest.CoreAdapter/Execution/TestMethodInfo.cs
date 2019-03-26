@@ -689,7 +689,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     throw failure;
                 }
 
-                Debug.Assert(result != null, "no timeout, no failure result should not be null");
                 return result;
             }
             else
