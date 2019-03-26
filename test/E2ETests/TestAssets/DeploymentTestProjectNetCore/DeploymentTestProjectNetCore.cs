@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DeploymentTestProjectNetCore
 {
-    [DeploymentItem("DeploymentFile.xml")]
+    [DeploymentItem(@"..\..\..\test\E2ETests\TestAssets\DeploymentTestProjectNetCore\DeploymentFile.xml")]
     [TestClass]
     public class DeploymentTestProjectNetCore
     {
@@ -19,7 +19,7 @@ namespace DeploymentTestProjectNetCore
             Assert.IsFalse(File.Exists("EmptyDataFile.xml"));
         }
 
-        [DeploymentItem("TestCaseDeploymentFile.xml")]
+        [DeploymentItem(@"..\..\..\test\E2ETests\TestAssets\DeploymentTestProjectNetCore\TestCaseDeploymentFile.xml")]
         [TestMethod]
         public void PassIfDeclaredFilesPresent()
         {

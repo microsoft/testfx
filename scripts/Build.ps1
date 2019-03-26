@@ -225,24 +225,21 @@ function Perform-Build {
       }
     }
   }
-  Write-Log "AAAAAA"
+  
   Invoke-Build -solution "TestFx.sln"
-  Write-Log "BBBBB"
+  
   if($TFB_Templates -or $TFB_Full)
   {
-  Write-Log "CCCCC"
-	  
-	  # Invoke-Build -solution "Templates\MSTestTemplates.sln" -hasVsixExtension true
+	  Invoke-Build -solution "Templates\MSTestTemplates.sln" -hasVsixExtension true
   }
-  Write-Log "DDDDD"
   if($TFB_Wizards -or $TFB_Full)
   {
-	  # Invoke-Build -solution "WizardExtensions\WizardExtensions.sln" -hasVsixExtension true
+	  Invoke-Build -solution "WizardExtensions\WizardExtensions.sln" -hasVsixExtension true
   }
   
   if($TFB_Official)
   {
-	  # Build-vsmanprojs -hasVsixExtension true
+	  Build-vsmanprojs -hasVsixExtension true
   }
   
   Write-Log "Perform-Build: Completed. {$(Get-ElapsedTime($timer))}"

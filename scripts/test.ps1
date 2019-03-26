@@ -19,7 +19,7 @@ Param(
   [Switch] $Parallel = $false,
 
   [Parameter(Mandatory=$false)]
-  [Switch] $All = $true,
+  [Switch] $All = $false,
 
   [Parameter(Mandatory=$false)]
   [Alias("h")]

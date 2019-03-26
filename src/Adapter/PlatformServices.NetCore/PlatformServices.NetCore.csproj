@@ -76,18 +76,4 @@
     <Folder Include="Extensions\" />
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
-  
-  <!-- Workaround for https://github.com/dotnet/sdk/issues/364 -->
-  <Target Name="WorkAroundPackageAndProjectReferenceConflict" BeforeTargets="ResolveLockFileReferences">
-    <ItemGroup>
-      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions' or '%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework'" />
-    </ItemGroup>
-  </Target>
-  <!-- Workaround for https://github.com/dotnet/sdk/issues/1020 
-       We should have a ProjectReference For MSTest.CoreAdapter with ReferenceOutputAssembly="false"-->
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /Y /I $(TargetDir)..\..\MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll $(TargetDir)" />
-    <Exec Command="xcopy /Y /I $(TargetDir)..\..\MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb $(TargetDir)" />
-  </Target>
-
 </Project>
