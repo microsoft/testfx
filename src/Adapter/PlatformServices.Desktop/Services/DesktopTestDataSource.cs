@@ -13,6 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName

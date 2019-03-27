@@ -225,13 +225,14 @@ function Perform-Build {
       }
     }
   }
-  
+
   Invoke-Build -solution "TestFx.sln"
   
   if($TFB_Templates -or $TFB_Full)
   {
 	  Invoke-Build -solution "Templates\MSTestTemplates.sln" -hasVsixExtension true
   }
+  
   if($TFB_Wizards -or $TFB_Full)
   {
 	  Invoke-Build -solution "WizardExtensions\WizardExtensions.sln" -hasVsixExtension true
