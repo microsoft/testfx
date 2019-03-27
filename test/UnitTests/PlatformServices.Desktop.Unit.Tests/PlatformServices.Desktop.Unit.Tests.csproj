@@ -82,6 +82,9 @@
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13MSTestSettingsProviderTests.cs">
       <Link>Services\ns13MSTestSettingsProviderTests.cs</Link>
     </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13TestDeploymentTests.cs">
+      <Link>Services\ns13TestDeploymentTests.cs</Link>
+    </Compile>
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13DeploymentItemUtilityTests.cs">
       <Link>Utilities\ns13DeploymentItemUtilityTests.cs</Link>
     </Compile>

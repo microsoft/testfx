@@ -79,7 +79,7 @@
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netcoreapp1.0\" />
     <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp1.0\" />
 
-	<file src="PlatformServices.NetCore\netstandard1.5\zh-Hans\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\zh-Hans" />
+	  <!-- <file src="PlatformServices.NetCore\netstandard1.5\zh-Hans\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\zh-Hans" />
     <file src="PlatformServices.NetCore\netstandard1.5\zh-Hant\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\zh-Hant" />
     <file src="PlatformServices.NetCore\netstandard1.5\cs\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\cs" />
     <file src="PlatformServices.NetCore\netstandard1.5\de\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\de" />
@@ -91,7 +91,7 @@
     <file src="PlatformServices.NetCore\netstandard1.5\pl\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\pl" />
     <file src="PlatformServices.NetCore\netstandard1.5\pt-BR\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\pt" />
     <file src="PlatformServices.NetCore\netstandard1.5\ru\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\ru" />
-    <file src="PlatformServices.NetCore\netstandard1.5\tr\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\tr" />
+    <file src="PlatformServices.NetCore\netstandard1.5\tr\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\tr" /> -->
 
     <!-- UWP -->
     <file src="Build\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />

@@ -106,6 +106,7 @@
       xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" "$(DestinationPath)\netcoreapp1.1\"
       xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" "$(DestinationPath)\netcoreapp1.1\"
       xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" "$(DestinationPath)\netcoreapp1.1\"
+      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" "$(DestinationPath)\netcoreapp1.1\"
       xcopy /Y /I "$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" "$(DestinationPath)"
       xcopy /Y /I "$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" "$(DestinationPath)"
       xcopy /Y /I "$(SourcePath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" "$(DestinationPath)"

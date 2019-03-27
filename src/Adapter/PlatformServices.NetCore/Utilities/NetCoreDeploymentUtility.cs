@@ -18,8 +18,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
-#pragma warning disable SA1649 // File name must match first type name
-
     internal class DeploymentUtility : DeploymentUtilityBase
     {
         public DeploymentUtility()
@@ -32,8 +30,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
         }
 
+        /// <summary>
+        /// add deployment items based on MSTestSettingsProvider.Settings.DeployTestSourceDependencies. This property is ignored in net core.
+        /// </summary>
+        /// <param name="testSource">The test source.</param>
+        /// <param name="deploymentItems">Deployment Items.</param>
+        /// <param name="warnings">Warnings.</param>
         public override void AddDeploymentItemsBasedOnMsTestSetting(string testSource, IList<DeploymentItem> deploymentItems, List<string> warnings)
         {
+            // It should add items from bin\debug but since deployment items in netcore are run from bin\debug only, so no need to implement it
         }
 
         /// <summary>
@@ -59,22 +64,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         protected override void AddDependenciesOfDeploymentItem(string deploymentItemFile, IList<string> filesToDeploy, IList<string> warnings)
         {
             // Its implemented only in full framework project as dependent files are not fetched in netcore.
-        }
-
-        private bool IsDeploymentItemSourceADirectory(DeploymentItem deploymentItem, string testSource, out string resultDirectory)
-        {
-            resultDirectory = null;
-
-            string directory = this.GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSource);
-            directory = directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-            if (this.FileUtility.DoesDirectoryExist(directory))
-            {
-                resultDirectory = directory;
-                return true;
-            }
-
-            return false;
         }
     }
 }

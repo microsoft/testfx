@@ -14,8 +14,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#pragma warning disable SA1649 // File name must match first type name
-
     /// <summary>
     /// The deployment utility.
     /// </summary>

@@ -19,8 +19,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
     [TestClass]
     public class ReflectionOperationsTests
     {

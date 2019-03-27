@@ -26,8 +26,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     using Moq;
     using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
     [TestClass]
     public class TestContextImplementationTests
     {

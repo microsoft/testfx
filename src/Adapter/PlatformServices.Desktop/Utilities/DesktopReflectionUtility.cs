@@ -10,8 +10,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System.Linq;
     using System.Reflection;
 
-#pragma warning disable SA1649 // File name must match first type name
-
     /// <summary>
     /// Utility for reflection API's
     /// </summary>

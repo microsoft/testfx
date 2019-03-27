@@ -21,8 +21,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
     using Moq;
 
-#pragma warning disable SA1649 // File name must match first type name
-
     [TestClass]
     public class FileUtilityTests
     {

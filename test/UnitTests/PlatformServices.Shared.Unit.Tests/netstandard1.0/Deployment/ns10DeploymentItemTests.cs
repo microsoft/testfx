@@ -15,8 +15,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
-#pragma warning disable SA1649 // File name must match first type name
-
     [TestClass]
     public class DeploymentItemTests
     {

@@ -12,8 +12,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
-    #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
     public class MSTestAdapterSettings
     {
         /// <summary>

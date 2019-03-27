@@ -3,8 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
-#pragma warning disable SA1649 // File name must match first type name
-
     /// <summary>
     /// Test Context Property Names.
     /// </summary>

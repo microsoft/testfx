@@ -17,8 +17,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
     /// <summary>
     /// The test deployment.
     /// </summary>
@@ -140,6 +138,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 return false;
             }
 
+            // Object model currently does not have support for SuspendCodeCoverage. We can remove this once support is added
 #if !NETSTANDARD1_5
             using (new SuspendCodeCoverage())
 #endif

@@ -29,6 +29,7 @@
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerManagerTests.cs" Link="Services\ns13TraceListenerManagerTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerTests.cs" Link="Services\ns13TraceListenerTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13MSTestSettingsProviderTests.cs" Link="Services\ns13MSTestSettingsProviderTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13TestDeploymentTests.cs" Link="Services\ns13TestDeploymentTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13DeploymentItemUtilityTests.cs" Link="Utilities\ns13DeploymentItemUtilityTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13ReflectionUtilityTests.cs" Link="Utilities\ns13ReflectionUtilityTests.cs" />
   </ItemGroup>
@@ -51,7 +52,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\" />
     <Folder Include="Extensions\" />
   </ItemGroup>
 

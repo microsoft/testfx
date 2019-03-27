@@ -16,8 +16,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
     /// <summary>
     /// Internal implementation of TestContext exposed to the user.
     /// </summary>

@@ -5,7 +5,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Ext
 {
     using System;
     using System.Diagnostics;
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     /// <summary>
     /// Extension methods for the exception class.

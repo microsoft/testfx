@@ -6,9 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Collections.Generic;
     using System.Xml;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
     using ISettingsProvider = Interface.ISettingsProvider;
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     /// <summary>
     /// Class to read settings from the runsettings xml for the desktop.

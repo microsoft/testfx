@@ -11,17 +11,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
     /// <summary>
     /// A host that loads the test source
     /// </summary>
     public class TestSourceHost : ITestSourceHost
     {
         private string sourceFileName;
-        private IRunSettings runSettings;
-        private IFrameworkHandle frameworkHandle;
-
         private string currentDirectory = null;
 
         /// <summary>
@@ -33,8 +28,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public TestSourceHost(string sourceFileName, IRunSettings runSettings, IFrameworkHandle frameworkHandle)
         {
             this.sourceFileName = sourceFileName;
-            this.runSettings = runSettings;
-            this.frameworkHandle = frameworkHandle;
 
             // Set the environment context.
             this.SetContext(sourceFileName);
@@ -52,7 +45,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         public void Dispose()
         {
-            // Do nothing.
+            this.ResetContext();
         }
 
         /// <summary>
@@ -79,18 +72,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             // Do nothing.
         }
 
-        private string GetConfigFileForTestSource(string sourceFileName)
-        {
-            return new DeploymentUtility().GetConfigFile(sourceFileName);
-        }
-
-    /// <summary>
-    /// Sets context required for running tests.
-    /// </summary>
-    /// <param name="source">
-    /// source parameter used for setting context
-    /// </param>
-    private void SetContext(string source)
+        /// <summary>
+        /// Sets context required for running tests.
+        /// </summary>
+        /// <param name="source">
+        /// source parameter used for setting context
+        /// </param>
+        private void SetContext(string source)
         {
             if (string.IsNullOrEmpty(source))
             {

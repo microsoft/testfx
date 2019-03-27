@@ -18,8 +18,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#pragma warning disable SA1649 // File name must match first type name
-
     /// <summary>
     /// Internal implementation of TestContext exposed to the user.
     /// The virtual string properties of the TestContext are retreived from the property dictionary

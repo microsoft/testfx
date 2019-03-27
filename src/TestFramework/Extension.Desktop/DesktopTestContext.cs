@@ -12,12 +12,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
 
-#pragma warning disable SA1649 // File name must match first type name
-                              /// <summary>
-                              /// Used to store information that is provided to unit tests.
-                              /// </summary>
+    /// <summary>
+    /// Used to store information that is provided to unit tests.
+    /// </summary>
     public abstract class TestContext
-#pragma warning restore SA1649 // File name must match first type name
     {
         /// <summary>
         /// Gets test properties for a test.
