@@ -21,6 +21,7 @@ namespace MSTestAdapter.Smoke.E2ETests
 
             this.ValidateFailedTestsContain(
                 TestAssembly,
+                true,
                 "FxExtensibilityTestProject.AssertExTest.BasicFailingAssertExtensionTest",
                 "FxExtensibilityTestProject.AssertExTest.ChainedFailingAssertExtensionTest");
         }

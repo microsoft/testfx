@@ -701,7 +701,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
                 else
                 {
-                    // Cancel the token source
+                    // Cancel the token source as test has timedout
                     this.TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel();
                 }
 

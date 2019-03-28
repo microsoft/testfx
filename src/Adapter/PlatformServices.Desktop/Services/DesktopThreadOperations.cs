@@ -93,10 +93,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
             catch (ThreadStateException)
             {
-                // Catch and discard ThreadStateException. If Abort is called on a thread that has been suspended,
-                // a ThreadStateException is thrown in the thread that called Abort,
-                // and AbortRequested is added to the ThreadState property of the thread being aborted.
-                // A ThreadAbortException is not thrown in the suspended thread until Resume is called.
+                // Join was called on a thread not started
             }
 
             return false;
