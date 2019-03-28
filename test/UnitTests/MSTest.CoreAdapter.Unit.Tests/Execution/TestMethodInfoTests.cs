@@ -14,6 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System.Linq;
     using System.Reflection;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -371,6 +372,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             Mock<ITestContext> testContext = new Mock<ITestContext>();
             testContext.Setup(tc => tc.GetResultFiles()).Returns(new List<string>() { "C:\\temp.txt" });
+            var mockInnerContext = new Mock<UTFExtension.TestContext>();
+            testContext.SetupGet(tc => tc.Context).Returns(mockInnerContext.Object);
+            mockInnerContext.SetupGet(tc => tc.CancellationTokenSource).Returns(new CancellationTokenSource());
             this.testMethodOptions.TestContext = testContext.Object;
 
             var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
@@ -1221,7 +1225,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 PlatformServiceProvider.Instance = testablePlatformServiceProvider;
 
                 testablePlatformServiceProvider.MockThreadOperations.Setup(
-                 to => to.Execute(It.IsAny<Action>(), It.IsAny<int>())).Returns(false);
+                 to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
                 this.testMethodOptions.Timeout = 1;
                 var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
 
@@ -1235,16 +1239,64 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void TestMethodInfoInvokeShouldReturnTestPassedOnCompletionWithinTimeout()
         {
-            DummyTestClass.TestMethodBody = o =>
-                {
-                    /* do nothing */
-                };
-
+            DummyTestClass.TestMethodBody = o => { /* do nothing */ };
             var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
-
             var result = method.Invoke(null);
-
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldCancelTokenSourceOnTimeout()
+        {
+            var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+            this.RunWithTestablePlatformService(testablePlatformServiceProvider, () =>
+            {
+                testablePlatformServiceProvider.MockThreadOperations.CallBase = true;
+                PlatformServiceProvider.Instance = testablePlatformServiceProvider;
+
+                testablePlatformServiceProvider.MockThreadOperations.Setup(
+                 to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
+                this.testMethodOptions.Timeout = 1;
+
+                var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
+                var result = method.Invoke(null);
+
+                Assert.AreEqual(UTF.UnitTestOutcome.Timeout, result.Outcome);
+                StringAssert.Contains(result.TestFailureException.Message, "exceeded execution timeout period");
+                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not cancelled..");
+            });
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldFailOnTokenSourceCancellation()
+        {
+            var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+            this.RunWithTestablePlatformService(testablePlatformServiceProvider, () =>
+            {
+                testablePlatformServiceProvider.MockThreadOperations.CallBase = true;
+                PlatformServiceProvider.Instance = testablePlatformServiceProvider;
+
+                testablePlatformServiceProvider.MockThreadOperations.Setup(
+                 to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Callback((Action action, int timeoOut, CancellationToken cancelToken) =>
+                 {
+                     try
+                     {
+                         Task.WaitAny(new[] { Task.Delay(100000) }, cancelToken);
+                     }
+                     catch (OperationCanceledException)
+                     {
+                     }
+                 });
+
+                this.testMethodOptions.Timeout = 100000;
+                this.testContextImplementation.CancellationTokenSource.CancelAfter(100);
+                var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
+                var result = method.Invoke(null);
+
+                Assert.AreEqual(UTF.UnitTestOutcome.Timeout, result.Outcome);
+                StringAssert.Contains(result.TestFailureException.Message, "execution has been aborted");
+                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not cancelled..");
+            });
         }
 
         #endregion
@@ -1256,9 +1308,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             try
             {
                 testablePlatformServiceProvider.MockThreadOperations.
-                    Setup(tho => tho.Execute(It.IsAny<Action>(), It.IsAny<int>())).
+                    Setup(tho => tho.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).
                     Returns(true).
-                    Callback((Action a, int timeout) =>
+                    Callback((Action a, int timeout, CancellationToken token) =>
                     {
                         a.Invoke();
                     });

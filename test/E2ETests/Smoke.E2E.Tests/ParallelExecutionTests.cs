@@ -86,6 +86,8 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "DoNotParallelizeTestProject.UnitTest2.SimpleTest21");
 
             this.ValidateFailedTestsContain(
+                DoNotParallelizeTestAssembly,
+                true,
                 "DoNotParallelizeTestProject.UnitTest1.SimpleTest12",
                 "DoNotParallelizeTestProject.UnitTest2.SimpleTest22");
         }

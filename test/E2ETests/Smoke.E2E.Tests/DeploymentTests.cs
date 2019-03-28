@@ -22,7 +22,7 @@ namespace MSTestAdapter.Smoke.E2ETests
         {
             this.InvokeVsTestForExecution(new string[] { TestAssembly });
             this.ValidatePassedTestsContain("DeploymentTestProject.UnitTest1.FailIfFilePresent", "DeploymentTestProject.UnitTest1.PassIfDeclaredFilesPresent");
-            this.ValidateFailedTestsContain("DeploymentTestProject.dll", "DeploymentTestProject.UnitTest1.PassIfFilePresent");
+            this.ValidateFailedTestsContain("DeploymentTestProject.dll", true, "DeploymentTestProject.UnitTest1.PassIfFilePresent");
         }
 
         [TestMethod]
@@ -30,7 +30,7 @@ namespace MSTestAdapter.Smoke.E2ETests
         {
             this.InvokeVsTestForExecution(new string[] { TestAssembly }, RunSetting);
             this.ValidatePassedTestsContain("DeploymentTestProject.UnitTest1.PassIfFilePresent", "DeploymentTestProject.UnitTest1.PassIfDeclaredFilesPresent");
-            this.ValidateFailedTestsContain("DeploymentTestProject.dll", "DeploymentTestProject.UnitTest1.FailIfFilePresent");
+            this.ValidateFailedTestsContain("DeploymentTestProject.dll", true, "DeploymentTestProject.UnitTest1.FailIfFilePresent");
         }
     }
 }
