@@ -5,9 +5,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
     using System.Collections;
-    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
+    using System.Threading;
 
     /// <summary>
     /// Used to store information that is provided to unit tests.
@@ -20,6 +20,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public abstract IDictionary Properties { get; }
 
         #region Test run deployment directories
+
+        /// <summary>
+        /// Gets or sets the cancellation token source. This token source is cancelled when test timesout. Also when explicitly cancelled the test will be aborted
+        /// </summary>
+        public virtual CancellationTokenSource CancellationTokenSource { get; protected set; }
 
         /// <summary>
         /// Gets base directory for the test run, under which deployed files and result files are stored.

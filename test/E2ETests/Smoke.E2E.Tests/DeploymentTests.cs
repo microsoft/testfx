@@ -39,7 +39,7 @@ namespace MSTestAdapter.Smoke.E2ETests
         {
             this.InvokeVsTestForExecution(new string[] { TestAssemblyNetCore }, null);
             this.ValidatePassedTestsContain("DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.FailIfFilePresent", "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfDeclaredFilesPresent");
-            this.ValidateFailedTestsContain("DeploymentTestProjectNetCore.dll", "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfFilePresent");
+            this.ValidateFailedTestsContain("DeploymentTestProjectNetCore.dll", true, "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfFilePresent");
         }
     }
 }

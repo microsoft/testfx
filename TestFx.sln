@@ -180,6 +180,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestProjectForAssemblyResol
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataRowTestProject", "test\E2ETests\TestAssets\DataRowTestProject\DataRowTestProject.csproj", "{7FB80AAB-7123-4416-B6CD-8D3D69AA83F1}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutTestProject", "test\E2ETests\TestAssets\TimeoutTestProject\TimeoutTestProject.csproj", "{4F0B2ACF-1341-42AF-918C-669A6D5CEA2B}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeploymentTestProjectNetCore", "test\E2ETests\TestAssets\DeploymentTestProjectNetCore\DeploymentTestProjectNetCore.csproj", "{26F0B8EF-92D4-4A23-ACB4-D1B662F0EEBE}"
 EndProject
 Global
