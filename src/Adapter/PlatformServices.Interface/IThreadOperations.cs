@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface
 {
     using System;
+    using System.Threading;
 
     /// <summary>
     /// This service is responsible for any thread operations specific to a platform.
@@ -15,8 +16,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// </summary>
         /// <param name="action">The action to execute.</param>
         /// <param name="timeout">Timeout for the specified action.</param>
+        /// <param name="cancelToken">Token to cancel the execution</param>
         /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
-        bool Execute(Action action, int timeout);
+        bool Execute(Action action, int timeout, CancellationToken cancelToken);
 
         /// <summary>
         /// Execute an action with handling for Thread Aborts (if possible) so the main thread of the adapter does not die.

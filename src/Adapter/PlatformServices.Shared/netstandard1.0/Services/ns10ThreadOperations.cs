@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -20,12 +21,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="action">The action to execute.</param>
         /// <param name="timeout">Timeout for the specified action.</param>
+        /// <param name="cancelToken">Token to cancel the execution</param>
         /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
-        public bool Execute(Action action, int timeout)
+        public bool Execute(Action action, int timeout, CancellationToken cancelToken)
         {
             var executionTask = Task.Factory.StartNew(action);
-
-            if (executionTask.Wait(timeout))
+            if (executionTask.Wait(timeout, cancelToken))
             {
                 return true;
             }
