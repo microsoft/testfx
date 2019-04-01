@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\src\TestFramework\Extension.Core\Extension.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

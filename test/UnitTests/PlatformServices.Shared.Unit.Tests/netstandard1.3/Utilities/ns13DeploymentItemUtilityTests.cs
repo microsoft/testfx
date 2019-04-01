@@ -33,8 +33,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
 
     using TestFrameworkV2Extension = FrameworkV2Extension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    // using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-    // using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     [TestClass]
 #pragma warning disable SA1649 // File name must match first type name
     public class DeploymentItemUtilityTests
