@@ -45,6 +45,7 @@
     <Compile Include="Utilities\NetCoreAssemblyUtility.cs" />
     <Compile Include="Utilities\NetCoreDeploymentUtility.cs" />
     <Compile Include="Utilities\NetCoreReflectionUtility.cs" />
+    <Folder Include="Resources\" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
       <Link>Resources\Resource.Designer.cs</Link>
       <AutoGen>True</AutoGen>
