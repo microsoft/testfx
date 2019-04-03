@@ -3,7 +3,7 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Services
 {
-#if NETCOREAPP1_0
+#if NETCOREAPP1_1
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
     extern alias FrameworkV1;
@@ -35,26 +35,36 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         public void ExecuteShouldStartTheActionOnANewThread()
         {
             int actionThreadID = 0;
-            Action action = () => { actionThreadID = Thread.CurrentThread.ManagedThreadId; };
+            void action()
+            {
+                actionThreadID = Thread.CurrentThread.ManagedThreadId;
+            }
 
-            Assert.IsTrue(this.asyncOperations.Execute(action, 1000));
-
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            Assert.IsTrue(this.asyncOperations.Execute(action, 1000, tokenSource.Token));
             Assert.AreNotEqual(Thread.CurrentThread.ManagedThreadId, actionThreadID);
         }
 
         [TestMethod]
         public void ExecuteShouldReturnFalseIftheActionTimesout()
         {
-            Action action = () => { Task.Delay(100).Wait(); };
+            void action()
+            {
+                Task.Delay(100).Wait();
+            }
 
-            Assert.IsFalse(this.asyncOperations.Execute(action, 1));
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            Assert.IsFalse(this.asyncOperations.Execute(action, 1, tokenSource.Token));
         }
 
         [TestMethod]
         public void ExecuteWithAbortSafetyShouldInvokeTheAction()
         {
             var isInvoked = false;
-            Action action = () => { isInvoked = true; };
+            void action()
+            {
+                isInvoked = true;
+            }
 
             this.asyncOperations.ExecuteWithAbortSafety(action);
 

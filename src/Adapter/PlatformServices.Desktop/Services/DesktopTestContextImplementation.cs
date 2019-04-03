@@ -13,12 +13,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Globalization;
     using System.IO;
     using System.Linq;
+    using System.Threading;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
-#pragma warning disable SA1649 // File name must match first type name
 
     /// <summary>
     /// Internal implementation of TestContext exposed to the user.
@@ -82,7 +81,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.testMethod = testMethod;
             this.stringWriter = stringWriter;
             this.properties = new Dictionary<string, object>(properties);
-
+            this.CancellationTokenSource = new CancellationTokenSource();
             this.InitializeProperties();
 
             this.testResultFiles = new List<string>();
@@ -462,27 +461,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.properties[TestContextPropertyStrings.FullyQualifiedTestClassName] = this.testMethod.FullClassName;
             this.properties[TestContextPropertyStrings.TestName] = this.testMethod.Name;
         }
-    }
-
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
-#pragma warning disable SA1402 // File may only contain a single class
-
-    /// <summary>
-    /// Test Context Property Names.
-    /// </summary>
-    internal static class TestContextPropertyStrings
-#pragma warning restore SA1402 // File may only contain a single class
-    {
-        public static readonly string TestRunDirectory = "TestRunDirectory";
-        public static readonly string DeploymentDirectory = "DeploymentDirectory";
-        public static readonly string ResultsDirectory = "ResultsDirectory";
-        public static readonly string TestRunResultsDirectory = "TestRunResultsDirectory";
-        public static readonly string TestResultsDirectory = "TestResultsDirectory";
-        public static readonly string TestDir = "TestDir";
-        public static readonly string TestDeploymentDir = "TestDeploymentDir";
-        public static readonly string TestLogsDir = "TestLogsDir";
-
-        public static readonly string FullyQualifiedTestClassName = "FullyQualifiedTestClassName";
-        public static readonly string TestName = "TestName";
     }
 }

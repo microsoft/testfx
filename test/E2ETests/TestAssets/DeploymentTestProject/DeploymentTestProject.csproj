@@ -8,7 +8,7 @@
     <TargetFramework>net452</TargetFramework>
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(TestFxRoot)artifacts\TestAssets\</OutputPath>
+    <OutputPath>$(TestFxRoot)artifacts\TestAssets\\DesktopDeployment\</OutputPath>
     
   </PropertyGroup>
 
@@ -32,5 +32,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
 </Project>

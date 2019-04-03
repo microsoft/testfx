@@ -21,6 +21,8 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "CsvTestMethod (Data Row 2)");
 
             this.ValidateFailedTestsContain(
+                TestAssembly,
+                true,
                 "CsvTestMethod (Data Row 1)",
                 "CsvTestMethod (Data Row 3)");
         }
