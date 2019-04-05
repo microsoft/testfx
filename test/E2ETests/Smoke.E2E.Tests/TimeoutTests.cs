@@ -11,25 +11,39 @@ namespace MSTestAdapter.Smoke.E2ETests
     public class TimeoutTests : CLITestBase
     {
         private const string TimeoutTestAssembly = "TimeoutTestProject.dll";
+        private const string TimeoutTestAssemblyNetCore = "TimeoutTestProjectNetCore.dll";
         private const int TestMethodWaitTimeInMs = 6000;
         private const int OverheadTimeInMs = 2500;
+        private const string TimeoutFileToValidateNetCore = "TimeoutTestOutputNetCore.txt";
+        private const string TimeoutFileToValidate = "TimeoutTestOutput.txt";
 
         [TestMethod]
         public void ValidateTimeoutTests()
         {
-            this.InvokeVsTestForExecution(new string[] { TimeoutTestAssembly });
+            this.Validate(TimeoutTestAssembly, TimeoutFileToValidate);
+        }
+
+        [TestMethod]
+        public void ValidateTimeoutTestsNetCore()
+        {
+            this.Validate(TimeoutTestAssemblyNetCore, TimeoutFileToValidateNetCore);
+        }
+
+        private void Validate(string testAssembly, string fileToValidate)
+        {
+            this.InvokeVsTestForExecution(new string[] { testAssembly });
 
             this.ValidateTestRunTime(TestMethodWaitTimeInMs + OverheadTimeInMs);
 
             this.ValidateFailedTestsCount(2);
 
             this.ValidateFailedTestsContain(
-                TimeoutTestAssembly,
+                testAssembly,
                 false,
                 "TimeoutTestProject.TerimnateLongRunningTasksUsingTokenTestClass.TerimnateLongRunningTasksUsingToken",
                 "TimeoutTestProject.SelfTerminatingTestClass.SelfTerminatingTestMethod");
 
-            Assert.IsTrue(File.Exists(this.GetAssetFullPath("TimeoutTestOutput.txt")), "Unable to locate the TimeoutTestOutput.txt file");
+            Assert.IsTrue(File.Exists(this.GetAssetFullPath(fileToValidate)), "Unable to locate the TimeoutTestOutput.txt file");
         }
     }
 }
