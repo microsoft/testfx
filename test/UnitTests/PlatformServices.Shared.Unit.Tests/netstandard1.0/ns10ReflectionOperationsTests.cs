@@ -3,7 +3,7 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Services
 {
-#if NETCOREAPP1_0
+#if NETCOREAPP1_1
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
     extern alias FrameworkV1;
@@ -18,8 +18,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     using System.Collections.Generic;
     using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     [TestClass]
     public class ReflectionOperationsTests

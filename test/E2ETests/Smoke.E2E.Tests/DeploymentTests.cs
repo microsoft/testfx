@@ -9,7 +9,8 @@ namespace MSTestAdapter.Smoke.E2ETests
     [TestClass]
     public class DeploymentTests : CLITestBase
     {
-        private const string TestAssembly = "DeploymentTestProject.dll";
+        private const string TestAssembly = "DesktopDeployment\\DeploymentTestProject.dll";
+        private const string TestAssemblyNetCore = "netcoreapp1.1\\DeploymentTestProjectNetCore.dll";
         private const string RunSetting =
              @"<RunSettings>   
                 <MSTestV2>
@@ -22,7 +23,7 @@ namespace MSTestAdapter.Smoke.E2ETests
         {
             this.InvokeVsTestForExecution(new string[] { TestAssembly });
             this.ValidatePassedTestsContain("DeploymentTestProject.UnitTest1.FailIfFilePresent", "DeploymentTestProject.UnitTest1.PassIfDeclaredFilesPresent");
-            this.ValidateFailedTestsContain("DeploymentTestProject.dll", "DeploymentTestProject.UnitTest1.PassIfFilePresent");
+            this.ValidateFailedTestsContain("DeploymentTestProject.dll", true, "DeploymentTestProject.UnitTest1.PassIfFilePresent");
         }
 
         [TestMethod]
@@ -30,7 +31,15 @@ namespace MSTestAdapter.Smoke.E2ETests
         {
             this.InvokeVsTestForExecution(new string[] { TestAssembly }, RunSetting);
             this.ValidatePassedTestsContain("DeploymentTestProject.UnitTest1.PassIfFilePresent", "DeploymentTestProject.UnitTest1.PassIfDeclaredFilesPresent");
-            this.ValidateFailedTestsContain("DeploymentTestProject.dll", "DeploymentTestProject.UnitTest1.FailIfFilePresent");
+            this.ValidateFailedTestsContain("DeploymentTestProject.dll", true, "DeploymentTestProject.UnitTest1.FailIfFilePresent");
+        }
+
+        [TestMethod]
+        public void ValidateTestSourceLocationDeploymentNetCore()
+        {
+            this.InvokeVsTestForExecution(new string[] { TestAssemblyNetCore }, null);
+            this.ValidatePassedTestsContain("DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.FailIfFilePresent", "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfDeclaredFilesPresent");
+            this.ValidateFailedTestsContain("DeploymentTestProjectNetCore.dll", true, "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfFilePresent");
         }
     }
 }

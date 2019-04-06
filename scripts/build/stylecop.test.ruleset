@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <RuleSet Name="Rules for testfx tests" Description="Code analysis rules for testFx test projects." ToolsVersion="14.0">
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
     <!-- XML documentation checks are not required for test projects -->
@@ -12,5 +12,6 @@
 
     <!-- Allow interfaces to be defined after types to accomodate dummy implementations in the same test file. -->
     <Rule Id="SA1201" Action="None" />
+    <Rule Id="SA1649" Action="None" />
   </Rules>
 </RuleSet>

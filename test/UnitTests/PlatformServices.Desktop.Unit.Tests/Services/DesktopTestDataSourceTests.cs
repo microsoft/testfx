@@ -5,7 +5,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 {
     extern alias FrameworkV1;
     extern alias FrameworkV2;
-    extern alias FrameworkV2DesktopExtension;
+    extern alias FrameworkV2Extension;
 
     using System.Collections.Generic;
     using System.Data;
@@ -14,7 +14,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
     using Moq;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using DesktopTestFrameworkV2 = FrameworkV2DesktopExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
+    using DesktopTestFrameworkV2 = FrameworkV2Extension::Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestFrameworkV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
