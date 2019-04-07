@@ -4,14 +4,15 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net452</TargetFramework>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <IsPackable>false</IsPackable>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(TestFxRoot)artifacts\TestAssets\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(TestFxRoot)\src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" />
+    <ProjectReference Include="$(TestFxRoot)\src\TestFramework\Extension.Core\Extension.Core.csproj" />
     <ProjectReference Include="$(TestFxRoot)\src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 </Project>
