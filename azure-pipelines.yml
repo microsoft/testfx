@@ -1,0 +1,30 @@
+
+# Pipeline YAML for PR
+
+jobs:
+- job: Windows
+  pool:
+    vmImage: 'vs2017-win2016'
+  variables:
+    buildConfiguration: 'Release'
+
+  steps:
+
+  - task: NuGetToolInstaller@0
+    displayName: 'Pull in NuGet 4.5.1'
+    inputs:
+      versionSpec: 4.5.1
+
+  - task: BatchScript@1
+    displayName: 'Restore, Build and Package'
+    inputs:
+      filename: build.cmd
+      arguments: '-configuration $(BuildConfiguration) -Full'
+      modifyEnvironment: false
+
+  - task: BatchScript@1
+    displayName: 'Run All Tests'
+    inputs:
+      filename: test.cmd
+      arguments: '-configuration $(BuildConfiguration) -all -parallel'
+      modifyEnvironment: false
