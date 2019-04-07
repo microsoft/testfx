@@ -937,16 +937,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
-                // Ensures stability.
-                System.Threading.Thread.Sleep(500);
+                // Ensures stability.. for the thread to be not used for another testmethod
+                System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
 
             [UTF.TestMethod]
             public void TestMethod2()
             {
-                // Ensures stability.
-                System.Threading.Thread.Sleep(500);
+                // Ensures stability.. for the thread to be not used for another testmethod
+                System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
@@ -972,12 +972,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
+                // Ensures stability.. for the thread to be not used for another testmethod
+                System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
 
             [UTF.TestMethod]
             public void TestMethod2()
             {
+                // Ensures stability.. for the thread to be not used for another testmethod
+                System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
@@ -1003,6 +1007,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
+                // Ensures stability.. for the thread to be not used for another testmethod
+                System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
