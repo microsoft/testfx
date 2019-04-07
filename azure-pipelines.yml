@@ -35,3 +35,10 @@ jobs:
       filename: test.cmd
       arguments: '-configuration $(BuildConfiguration) -all -parallel'
       modifyEnvironment: false
+  
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results **\*.trx'
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '**\*.trx'
+    condition: succeededOrFailed()
