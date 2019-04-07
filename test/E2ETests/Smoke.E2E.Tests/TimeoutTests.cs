@@ -11,7 +11,7 @@ namespace MSTestAdapter.Smoke.E2ETests
     public class TimeoutTests : CLITestBase
     {
         private const string TimeoutTestAssembly = "TimeoutTestProject.dll";
-        private const string TimeoutTestAssemblyNetCore = "TimeoutTestProjectNetCore.dll";
+        private const string TimeoutTestAssemblyNetCore = "netcoreapp1.1\\TimeoutTestProjectNetCore.dll";
         private const int TestMethodWaitTimeInMs = 6000;
         private const int OverheadTimeInMs = 2500;
         private const string TimeoutFileToValidateNetCore = "TimeoutTestOutputNetCore.txt";

@@ -26,13 +26,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public bool Execute(Action action, int timeout, CancellationToken cancelToken)
         {
             var executionTask = Task.Factory.StartNew(action);
-            if (executionTask.Wait(timeout, cancelToken))
+            try
             {
-                return true;
+                if (executionTask.Wait(timeout, cancelToken))
+                {
+                    return true;
+                }
+                else
+                {
+                    // Timed out.
+                    return false;
+                }
             }
-            else
+            catch (OperationCanceledException)
             {
-                // Timed out.
+                // Task execution cancelled.
                 return false;
             }
         }
