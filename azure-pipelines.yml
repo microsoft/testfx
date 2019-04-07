@@ -14,6 +14,13 @@ jobs:
     displayName: 'Pull in NuGet 4.5.1'
     inputs:
       versionSpec: 4.5.1
+  
+  - powershell: |
+      reg DELETE "HKLM\Software\Microsoft\StrongName\Verification" /f
+      reg ADD "HKLM\Software\Microsoft\StrongName\Verification\*,*" /f
+      reg DELETE "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification" /f
+      reg ADD "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification\*,*" /f
+    displayName: 'Disable strongname validation'
 
   - task: BatchScript@1
     displayName: 'Restore, Build and Package'
