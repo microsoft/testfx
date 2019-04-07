@@ -14,7 +14,7 @@ namespace MSTestAdapter.Smoke.E2ETests
         private const string TimeoutTestAssemblyNetCore = "netcoreapp1.1\\TimeoutTestProjectNetCore.dll";
         private const int TestMethodWaitTimeInMs = 6000;
         private const int OverheadTimeInMs = 2500;
-        private const string TimeoutFileToValidateNetCore = "TimeoutTestOutputNetCore.txt";
+        private const string TimeoutFileToValidateNetCore = "netcoreapp1.1\\TimeoutTestOutputNetCore.txt";
         private const string TimeoutFileToValidate = "TimeoutTestOutput.txt";
 
         [TestMethod]
