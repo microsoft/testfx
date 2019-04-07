@@ -1008,7 +1008,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public void TestMethod1()
             {
                 // Ensures stability.. for the thread to be not used for another testmethod
-                System.Threading.Thread.Sleep(2000);
+                Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
@@ -1060,6 +1060,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
+                // Ensures stability.. for the thread to be not used for another testmethod
+                Thread.Sleep(2000);
                 parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
                 threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
@@ -1069,6 +1071,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod2()
             {
+                // Ensures stability.. for the thread to be not used for another testmethod
+                Thread.Sleep(2000);
                 parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
                 threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
