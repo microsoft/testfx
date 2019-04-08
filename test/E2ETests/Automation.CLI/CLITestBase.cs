@@ -139,7 +139,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         public void ValidateFailedTests(string source, params string[] failedTests)
         {
             this.ValidateFailedTestsCount(failedTests.Length);
-            this.ValidateFailedTestsContain(source, failedTests);
+            this.ValidateFailedTestsContain(source, true, failedTests);
         }
 
         /// <summary>
@@ -185,12 +185,13 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// Validates if the test results contains the specified set of failed tests.
         /// </summary>
         /// <param name="source">The test container.</param>
+        /// <param name="validateStackTraceInfo">Validates the existence of stack trace when set to true</param>
         /// <param name="failedTests">Set of failed tests.</param>
         /// <remarks>
         /// Provide the full test name similar to this format SampleTest.TestCode.TestMethodFailed.
         /// Also validates whether these tests have stack trace info.
         /// </remarks>
-        public void ValidateFailedTestsContain(string source, params string[] failedTests)
+        public void ValidateFailedTestsContain(string source, bool validateStackTraceInfo, params string[] failedTests)
         {
             foreach (var test in failedTests)
             {
@@ -199,7 +200,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
                 Assert.IsNotNull(testFound, "Test {0} does not appear in failed tests list.", test);
 
                 // Skipping this check for x64 as of now. https://github.com/Microsoft/testfx/issues/60 should fix this.
-                if (source.IndexOf("x64") == -1)
+                if (source.IndexOf("x64") == -1 && validateStackTraceInfo)
                 {
                     // Verify stack information as well.
                     Assert.IsTrue(testFound.ErrorStackTrace.Contains(GetTestMethodName(test)), "No stack trace for failed test: {0}", test);

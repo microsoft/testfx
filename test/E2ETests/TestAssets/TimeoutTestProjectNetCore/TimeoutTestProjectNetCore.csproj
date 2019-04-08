@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
+    <IsPackable>false</IsPackable>
+    <!--<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>-->
+    <OutputPath>$(TestFxRoot)artifacts\TestAssets\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(TestFxRoot)\src\TestFramework\Extension.Core\Extension.Core.csproj" />
+    <ProjectReference Include="$(TestFxRoot)\src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+  </ItemGroup>
+</Project>

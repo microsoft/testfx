@@ -317,4 +317,7 @@ Error: {1}</value>
   <data name="UTA_TestMethodExpectedParameters" xml:space="preserve">
     <value>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</value>
   </data>
+  <data name="Execution_Test_Cancelled" xml:space="preserve">
+    <value>Test '{0}' execution has been aborted.</value>
+  </data>
 </root>

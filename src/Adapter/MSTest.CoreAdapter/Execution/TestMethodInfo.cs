@@ -10,6 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Globalization;
     using System.Reflection;
     using System.Text;
+    using System.Threading;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -453,8 +454,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 if (cleanupStackTrace.Length > 0)
                 {
-                        cleanupStackTrace.Append(Resource.UTA_CleanupStackTrace);
-                        cleanupStackTrace.Append(Environment.NewLine);
+                    cleanupStackTrace.Append(Resource.UTA_CleanupStackTrace);
+                    cleanupStackTrace.Append(Environment.NewLine);
                 }
 
                 Exception realException = ex.GetInnerExceptionOrDefault();
@@ -668,40 +669,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             TestResult result = null;
             Exception failure = null;
 
-            Action executeAsyncAction = () =>
+            void executeAsyncAction()
+            {
+                try
                 {
-                    try
-                    {
-                        result = this.ExecuteInternal(arguments);
-                    }
-                    catch (Exception ex)
-                    {
-                        failure = ex;
-                    }
-                };
+                    result = this.ExecuteInternal(arguments);
+                }
+                catch (Exception ex)
+                {
+                    failure = ex;
+                }
+            }
 
-            if (PlatformServiceProvider.Instance.ThreadOperations.Execute(executeAsyncAction, this.TestMethodOptions.Timeout))
+            CancellationToken cancelToken = this.TestMethodOptions.TestContext.Context.CancellationTokenSource.Token;
+            if (PlatformServiceProvider.Instance.ThreadOperations.Execute(executeAsyncAction, this.TestMethodOptions.Timeout, cancelToken))
             {
                 if (failure != null)
                 {
                     throw failure;
                 }
 
-                Debug.Assert(result != null, "no timeout, no failure result should not be null");
                 return result;
             }
             else
             {
-                // Timed out
-
-                // If the method times out, then
-                //
-                // 1. If the test is stuck, then we can get CannotUnloadAppDomain exception.
-                //
-                // Which are handled as follows: -
-                //
-                // For #1, we are now restarting the execution process if adapter fails to unload app-domain.
+                // Timed out or canceled
                 string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, this.TestMethodName);
+                if (this.TestMethodOptions.TestContext.Context.CancellationTokenSource.IsCancellationRequested)
+                {
+                    errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, this.TestMethodName);
+                }
+                else
+                {
+                    // Cancel the token source as test has timedout
+                    this.TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel();
+                }
+
                 TestResult timeoutResult = new TestResult() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };
                 return timeoutResult;
             }

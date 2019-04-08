@@ -40,11 +40,11 @@
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs">
       <Link>SerializableAttribute.cs</Link>
     </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs">
+      <Link>Services\ns10DiaSessionOperations.cs</Link>
+    </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10FileOperations.cs">
       <Link>Services\ns10FileOperations.cs</Link>
-    </Compile>
-	<Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs">
-      <Link>Services\ns10DiaSessionOperations.cs</Link>
     </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs">
       <Link>Services\ns10ReflectionOperations.cs</Link>

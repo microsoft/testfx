@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <RuleSet Name="Rules for testFx source code" Description="Code analysis rules for src projects." ToolsVersion="14.0">
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
     <!-- Allow use of regions -->
@@ -6,6 +6,7 @@
 
     <!-- Do not require XML comment analysis -->
     <Rule Id="SA1652" Action="None" />
+    <Rule Id="SA1649" Action="None" />
   </Rules>
 </RuleSet>
 

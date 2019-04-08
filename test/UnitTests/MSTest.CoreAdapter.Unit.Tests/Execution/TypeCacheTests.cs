@@ -922,7 +922,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 new Dictionary<string, object>());
 
             this.typeCache.GetTestMethodInfo(testMethod, testContext, false);
-            var customProperty = testContext.Properties.FirstOrDefault(p => p.Key.Equals("WhoAmI"));
+            var customProperty = ((IDictionary<string, object>)testContext.Properties).FirstOrDefault(p => p.Key.Equals("WhoAmI"));
 
             Assert.IsNotNull(customProperty);
             Assert.AreEqual("Me", customProperty.Value);
@@ -1009,7 +1009,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             // Verify that the first value gets set.
             object value;
-            Assert.IsTrue(testContext.Properties.TryGetValue("WhoAmI", out value));
+            Assert.IsTrue(((IDictionary<string, object>)testContext.Properties).TryGetValue("WhoAmI", out value));
             Assert.AreEqual("Me", value);
         }
 
