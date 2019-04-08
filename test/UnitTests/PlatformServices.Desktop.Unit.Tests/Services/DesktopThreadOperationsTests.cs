@@ -46,6 +46,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         public void ExecuteShouldKillTheThreadExecutingAsyncOnTimeout()
         {
             ManualResetEvent timeoutMutex = new ManualResetEvent(false);
+            ManualResetEvent actionCompleted = new ManualResetEvent(false);
             var hasReachedEnd = false;
             var isThreadAbortThrown = false;
             var cancellationTokenSource = new CancellationTokenSource();
@@ -64,13 +65,18 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
                     // Resetting abort because there is a warning being thrown in the tests pane.
                     Thread.ResetAbort();
                 }
+                finally
+                {
+                    actionCompleted.Set();
+                }
             }
 
             Assert.IsFalse(this.asyncOperations.Execute(action, 1, cancellationTokenSource.Token));
             timeoutMutex.Set();
+            actionCompleted.WaitOne();
 
-            Assert.IsFalse(hasReachedEnd);
-            Assert.IsTrue(isThreadAbortThrown);
+            Assert.IsFalse(hasReachedEnd, "Execution Completed successfully");
+            Assert.IsTrue(isThreadAbortThrown, "ThreadAbortException not thrown");
         }
 
         [TestMethod]
