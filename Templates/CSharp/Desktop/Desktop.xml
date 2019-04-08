@@ -1,8 +1,0 @@
-﻿<Zips>
-  <Zip>
-  <File TargetFileName="AssemblyInfo.cs">ProjectTemplates\CSharp\Test\AssemblyInfo.cs</File>
-  <File TargetFileName="MSTestV2Desktop.vstemplate">ProjectTemplates\CSharp\Test\MSTestV2Desktop.vstemplate</File>
-  <File TargetFileName="UnitTest1.cs">ProjectTemplates\CSharp\Test\UnitTest1.cs</File>
-  <File TargetFileName="UnitTestProject.csproj">ProjectTemplates\CSharp\Test\UnitTestProject.csproj</File>
-  </Zip>
-</Zips>
