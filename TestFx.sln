@@ -151,7 +151,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BCF5
 		scripts\common.lib.ps1 = scripts\common.lib.ps1
 		scripts\SetBuildNumber.ps1 = scripts\SetBuildNumber.ps1
 		scripts\test.ps1 = scripts\test.ps1
-		scripts\UpdateTemplates.ps1 = scripts\UpdateTemplates.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{92F8E9A2-903E-4025-99BC-7DC478D5466D}"
