@@ -40,6 +40,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         internal static readonly TestProperty TestClassNameProperty = TestProperty.Register("MSTestDiscoverer.TestClassName", TestClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
+        internal static readonly TestProperty DeclaringClassNameProperty = TestProperty.Register("MSTestDiscoverer.DeclaringClassName", DeclaringClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
+
         internal static readonly TestProperty AsyncTestProperty = TestProperty.Register("MSTestDiscoverer.IsAsync", IsAsyncLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
 
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -98,6 +100,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// These Property names should not be localized.
         /// </summary>
         private const string TestClassNameLabel = "ClassName";
+        private const string DeclaringClassNameLabel = "DeclaringClassName";
         private const string IsAsyncLabel = "IsAsync";
         private const string TestCategoryLabel = "TestCategory";
         private const string PriorityLabel = "Priority";

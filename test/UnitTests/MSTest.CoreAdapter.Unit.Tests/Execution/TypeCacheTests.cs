@@ -1031,6 +1031,48 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor);
         }
 
+        [TestMethodV1]
+        public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedClassMethodOverloadByDefault()
+        {
+            var type = typeof(DerivedTestClass);
+            var methodInfo = type.GetRuntimeMethod("OverloadedTestMethod", new Type[] { });
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
+
+            Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
+            Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
+            Assert.AreEqual(this.typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
+            Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoShouldReturnTestMethodInfoForDeclaringTypeMethodOverload()
+        {
+            var baseType = typeof(BaseTestClass);
+            var type = typeof(DerivedTestClass);
+            var methodInfo = baseType.GetRuntimeMethod("OverloadedTestMethod", new Type[] { });
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false)
+            {
+                DeclaringClassFullName = baseType.FullName
+            };
+
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
+
+            // The two MethodInfo instances will have different ReflectedType properties,
+            // so cannot be compared directly. Use MethodHandle to verify it's the same.
+            Assert.AreEqual(methodInfo.MethodHandle, testMethodInfo.TestMethod.MethodHandle);
+            Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
+            Assert.AreEqual(this.typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
+            Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor);
+        }
+
         #endregion
 
         #endregion
@@ -1311,12 +1353,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [DummyTestClass]
         internal class DerivedTestClass : BaseTestClass
         {
+            [UTF.TestMethod]
+            public new void OverloadedTestMethod()
+            {
+            }
         }
 
         internal class BaseTestClass
         {
             [UTF.TestMethod]
             public void DummyTestMethod()
+            {
+            }
+
+            [UTF.TestMethod]
+            public void OverloadedTestMethod()
             {
             }
         }

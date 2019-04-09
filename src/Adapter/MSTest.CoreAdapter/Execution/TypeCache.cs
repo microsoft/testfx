@@ -606,10 +606,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private MethodInfo GetMethodInfoForTestMethod(TestMethod testMethod, TestClassInfo testClassInfo)
         {
             var methodsInClass = testClassInfo.ClassType.GetRuntimeMethods().ToArray();
+            MethodInfo testMethodInfo;
 
-            var testMethodInfo =
-                methodsInClass.Where(method => method.Name.Equals(testMethod.Name))
-                    .FirstOrDefault(method => method.HasCorrectTestMethodSignature(true));
+            if (testMethod.DeclaringClassFullName != null)
+            {
+                // Only find methods that match the given declaring name.
+                testMethodInfo =
+                    methodsInClass.Where(method => method.Name.Equals(testMethod.Name)
+                                                && method.DeclaringType.FullName.Equals(testMethod.DeclaringClassFullName)
+                                                && method.HasCorrectTestMethodSignature(true)).FirstOrDefault();
+            }
+            else
+            {
+                // Either the declaring class is the same as the test class, or
+                // the declaring class information wasn't passed in the test case.
+                // Prioritize the former while maintaining previous behavior for the latter.
+                var className = testClassInfo.ClassType.FullName;
+                testMethodInfo =
+                    methodsInClass.Where(method => method.Name.Equals(testMethod.Name) && method.HasCorrectTestMethodSignature(true))
+                        .OrderByDescending(method => method.DeclaringType.FullName.Equals(className)).FirstOrDefault();
+            }
 
             // if correct method is not found, throw appropriate
             // exception about what is wrong.
