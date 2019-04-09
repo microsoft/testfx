@@ -183,6 +183,82 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
                 "DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should not be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = false.");
         }
 
+        [TestMethod]
+        public void GetTestsShouldNotReturnHiddenTestMethods()
+        {
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyHidingTestClass), Assembly.GetExecutingAssembly().FullName);
+
+            var tests = typeEnumerator.Enumerate(out this.warnings);
+
+            Assert.IsNotNull(tests);
+            Assert.AreEqual(
+                1,
+                tests.Count(t => t.TestMethod.Name == "BaseTestMethod"),
+                "DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.");
+            Assert.AreEqual(
+                1,
+                tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"),
+                "DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.");
+            Assert.IsFalse(
+                tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyBaseTestClass).FullName),
+                "DummyHidingTestClass hides BaseTestMethod so declaring class should not be the base class");
+        }
+
+        [TestMethod]
+        public void GetTestsShouldReturnOverriddenTestMethods()
+        {
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyOverridingTestClass), Assembly.GetExecutingAssembly().FullName);
+
+            var tests = typeEnumerator.Enumerate(out this.warnings);
+
+            Assert.IsNotNull(tests);
+            Assert.AreEqual(
+                1,
+                tests.Count(t => t.TestMethod.Name == "BaseTestMethod"),
+                "DummyOverridingTestClass inherits BaseTestMethod so it should be discovered.");
+            Assert.AreEqual(
+                1,
+                tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"),
+                "DummyOverridingTestClass overrides DerivedTestMethod directly so it should always be discovered.");
+            Assert.AreEqual(
+                typeof(DummyHidingTestClass).FullName,
+                tests.Single(t => t.TestMethod.Name == "BaseTestMethod").TestMethod.DeclaringClassFullName,
+                "DummyOverridingTestClass inherits BaseTestMethod from DummyHidingTestClass specifically.");
+            Assert.IsNull(
+                tests.Single(t => t.TestMethod.Name == "DerivedTestMethod").TestMethod.DeclaringClassFullName,
+                "DummyOverridingTestClass overrides DerivedTestMethod so is the declaring class.");
+        }
+
+        [TestMethod]
+        public void GetTestsShouldNotReturnHiddenTestMethodsFromAnyLevel()
+        {
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummySecondHidingTestClass), Assembly.GetExecutingAssembly().FullName);
+
+            var tests = typeEnumerator.Enumerate(out this.warnings);
+
+            Assert.IsNotNull(tests);
+            Assert.AreEqual(
+                1,
+                tests.Count(t => t.TestMethod.Name == "BaseTestMethod"),
+                "DummySecondHidingTestClass hides BaseTestMethod so it should be discovered.");
+            Assert.AreEqual(
+                1,
+                tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"),
+                "DummySecondHidingTestClass hides DerivedTestMethod so it should be discovered.");
+            Assert.IsFalse(
+                tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyBaseTestClass).FullName),
+                "DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class");
+            Assert.IsFalse(
+                tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyHidingTestClass).FullName),
+                "DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class");
+            Assert.IsFalse(
+                tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyOverridingTestClass).FullName),
+                "DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class");
+        }
+
         #endregion
 
         #region GetTestFromMethod tests
@@ -247,7 +323,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             var testCategories = new string[] { "foo", "bar" };
 
             // Setup mocks
-            this.mockReflectHelper.Setup(rh => rh.GetCategories(methodInfo)).Returns(testCategories);
+            this.mockReflectHelper.Setup(rh => rh.GetCategories(methodInfo, typeof(DummyTestClass))).Returns(testCategories);
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
@@ -492,6 +568,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     public class DummyDerivedTestClass : DummyBaseTestClass
     {
         public void DerivedTestMethod()
+        {
+        }
+    }
+
+    public class DummyHidingTestClass : DummyBaseTestClass
+    {
+        public new virtual void BaseTestMethod()
+        {
+        }
+
+        public virtual void DerivedTestMethod()
+        {
+        }
+    }
+
+    public class DummyOverridingTestClass : DummyHidingTestClass
+    {
+        public override void DerivedTestMethod()
+        {
+        }
+    }
+
+    public class DummySecondHidingTestClass : DummyOverridingTestClass
+    {
+        public new void BaseTestMethod()
+        {
+        }
+
+        public new void DerivedTestMethod()
         {
         }
     }
