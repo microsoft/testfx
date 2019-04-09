@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
-
+    using System.Threading;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
@@ -67,6 +67,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.stringWriter = writer;
             this.InitializeProperties();
             this.testResultFiles = new List<string>();
+            this.CancellationTokenSource = new CancellationTokenSource();
         }
 
         #region TestContext impl
