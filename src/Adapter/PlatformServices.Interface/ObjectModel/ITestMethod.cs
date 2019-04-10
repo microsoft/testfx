@@ -19,7 +19,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         string FullClassName { get; }
 
         /// <summary>
-        /// Gets the declaring class full name. This will be used while getting navigation data.
+        /// Gets the declaring class full name.
+        /// This will be used for resolving overloads and while getting navigation data.
         /// </summary>
         string DeclaringClassFullName { get; }
 

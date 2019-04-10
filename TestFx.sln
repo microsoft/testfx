@@ -151,7 +151,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BCF5
 		scripts\common.lib.ps1 = scripts\common.lib.ps1
 		scripts\SetBuildNumber.ps1 = scripts\SetBuildNumber.ps1
 		scripts\test.ps1 = scripts\test.ps1
-		scripts\UpdateTemplates.ps1 = scripts\UpdateTemplates.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{92F8E9A2-903E-4025-99BC-7DC478D5466D}"
@@ -183,6 +182,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutTestProject", "test\E2ETests\TestAssets\TimeoutTestProject\TimeoutTestProject.csproj", "{4F0B2ACF-1341-42AF-918C-669A6D5CEA2B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeploymentTestProjectNetCore", "test\E2ETests\TestAssets\DeploymentTestProjectNetCore\DeploymentTestProjectNetCore.csproj", "{26F0B8EF-92D4-4A23-ACB4-D1B662F0EEBE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutTestProjectNetCore", "test\E2ETests\TestAssets\TimeoutTestProjectNetCore\TimeoutTestProjectNetCore.csproj", "{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -1116,6 +1117,30 @@ Global
 		{26F0B8EF-92D4-4A23-ACB4-D1B662F0EEBE}.Release|x64.Build.0 = Release|Any CPU
 		{26F0B8EF-92D4-4A23-ACB4-D1B662F0EEBE}.Release|x86.ActiveCfg = Release|Any CPU
 		{26F0B8EF-92D4-4A23-ACB4-D1B662F0EEBE}.Release|x86.Build.0 = Release|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Code Analysis Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Code Analysis Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Code Analysis Debug|ARM.ActiveCfg = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Code Analysis Debug|ARM.Build.0 = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Code Analysis Debug|x64.ActiveCfg = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Code Analysis Debug|x64.Build.0 = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Code Analysis Debug|x86.ActiveCfg = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Code Analysis Debug|x86.Build.0 = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Debug|ARM.Build.0 = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Debug|x64.Build.0 = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Debug|x86.Build.0 = Debug|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Release|ARM.ActiveCfg = Release|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Release|ARM.Build.0 = Release|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Release|x64.ActiveCfg = Release|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Release|x64.Build.0 = Release|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Release|x86.ActiveCfg = Release|Any CPU
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1178,6 +1203,7 @@ Global
 		{7FB80AAB-7123-4416-B6CD-8D3D69AA83F1} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
 		{4F0B2ACF-1341-42AF-918C-669A6D5CEA2B} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
 		{26F0B8EF-92D4-4A23-ACB4-D1B662F0EEBE} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
+		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}
