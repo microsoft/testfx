@@ -497,7 +497,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             public UTFExtension.TestContext BaseTestContext { get; set; }
 
-            [UTF.ClassInitialize(UTF.ClassInitializeInheritance.BeforeEachDerivedClass)]
+            [UTF.ClassInitialize(UTF.InheritanceBehavior.BeforeEachDerivedClass)]
             public static void InitClassMethod(UTFExtension.TestContext testContext)
             {
                 ClassInitMethodBody?.Invoke(testContext);
@@ -518,7 +518,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             public UTFExtension.TestContext TestContext { get; set; }
 
-            [UTF.ClassInitialize(UTF.ClassInitializeInheritance.BeforeEachDerivedClass)]
+            [UTF.ClassInitialize(UTF.InheritanceBehavior.BeforeEachDerivedClass)]
             public static void InitBaseClassMethod(UTFExtension.TestContext testContext)
             {
                 ClassInitializeMethodBody?.Invoke(testContext);

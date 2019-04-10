@@ -286,16 +286,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Update test initialize/cleanup method
                 this.UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, isBase: false, instanceMethods: instanceMethods, testInitializeAttributeType: testInitializeAttributeType, testCleanupAttributeType: testCleanupAttributeType);
 
-                if (this.IsAssemblyOrClassInitializeMethod(methodInfo, classInitializeAttributeType))
-                {
-                    // update class initialize method
-                    classInfo.ClassInitializeMethod = methodInfo;
-                }
-                else if (this.IsAssemblyOrClassCleanupMethod(methodInfo, classCleanupAttributeType))
-                {
-                    // update class cleanup method
-                    classInfo.ClassCleanupMethod = methodInfo;
-                }
+                // Update class initialize/cleanup method
+                this.UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, classInitializeAttributeType, classCleanupAttributeType);
             }
 
             var baseType = classType.GetTypeInfo().BaseType;
@@ -309,22 +301,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         this.UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, instanceMethods, testInitializeAttributeType, testCleanupAttributeType);
                     }
 
-                    if (this.IsAssemblyOrClassInitializeMethod(methodInfo, classInitializeAttributeType))
+                    if (methodInfo.IsPublic && methodInfo.IsStatic)
                     {
-                        if (methodInfo.GetCustomAttribute<ClassInitializeAttribute>().InheritanceBehavior == ClassInitializeInheritance.None)
-                        {
-                            // if the ClassInitializeInheritance is None, means
-                            // it will pick only the derived class initalize method
-                            continue;
-                        }
-
-                        // update class initialize queue with new method
-                        classInfo.BaseClassInitializeMethodsQueue.Enqueue(methodInfo);
-                    }
-                    else if (this.IsAssemblyOrClassCleanupMethod(methodInfo, classCleanupAttributeType))
-                    {
-                        // update class cleanup queue with new method
-                        classInfo.BaseClassCleanupMethodsQueue.Enqueue(methodInfo);
+                        this.UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, true, classInitializeAttributeType, classCleanupAttributeType);
                     }
                 }
 
@@ -491,6 +470,59 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         #endregion
+
+        /// <summary>
+        /// Update the classInfo if the parameter method is a classInitialize/cleanup method
+        /// </summary>
+        /// <param name="classInfo"> The Class Info. </param>
+        /// <param name="methodInfo"> The Method Info. </param>
+        /// <param name="isBase"> Flag to check whether base class needs to be validated. </param>
+        /// <param name="classInitializeAttributeType"> The Class Initialize Attribute Type. </param>
+        /// <param name="classCleanupAttributeType"> The Class Cleanup Attribute Type. </param>
+        private void UpdateInfoIfClassInitializeOrCleanupMethod(
+            TestClassInfo classInfo,
+            MethodInfo methodInfo,
+            bool isBase,
+            Type classInitializeAttributeType,
+            Type classCleanupAttributeType)
+        {
+            var isInitializeMethod = this.IsAssemblyOrClassInitializeMethod(methodInfo, classInitializeAttributeType);
+            var isCleanupMethod = this.IsAssemblyOrClassCleanupMethod(methodInfo, classCleanupAttributeType);
+
+            if (isInitializeMethod)
+            {
+                if (isBase)
+                {
+                    if (((ClassInitializeAttribute)this.reflectionHelper.GetCustomAttribute(methodInfo, classInitializeAttributeType)).InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
+                    {
+                        // update base class initialize queue with new method
+                        classInfo.BaseClassInitializeMethodsQueue.Enqueue(methodInfo);
+                    }
+                }
+                else
+                {
+                    // update class initialize method
+                    classInfo.ClassInitializeMethod = methodInfo;
+                }
+            }
+
+            if (isCleanupMethod)
+            {
+                if (isBase)
+                {
+                    if (((ClassCleanupAttribute)this.reflectionHelper.GetCustomAttribute(methodInfo, classCleanupAttributeType)).InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
+                    {
+                        // update base lass cleanup queue with new method
+                        classInfo.BaseClassCleanupMethodsQueue.Enqueue(methodInfo);
+                    }
+                }
+                else
+                {
+                    // update class cleanup method
+                    classInfo.ClassCleanupMethod = methodInfo;
+                }
+            }
+        }
 
         /// <summary>
         /// Update the classInfo if the parameter method is a testInitialize/cleanup method

@@ -24,11 +24,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     }
 
     /// <summary>
-    /// Enumeration for class initialize, that can be used with the <see cref="ClassInitializeAttribute"/> class.
-    /// Defines the behavior of the ClassInitialize methods of base classes.
+    /// Enumeration for inheritance behavior, that can be used with both the <see cref="ClassInitializeAttribute"/> class
+    /// and <see cref="ClassCleanupAttribute"/> class.
+    /// Defines the behavior of the ClassInitialize and ClassCleanup methods of base classes.
     /// The type of the enumeration must match
     /// </summary>
-    public enum ClassInitializeInheritance
+    public enum InheritanceBehavior
     {
         /// <summary>
         /// None.
@@ -177,15 +178,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// ClassInitializeAttribute
         /// </summary>
         /// <param name="inheritanceBehavior">none</param>
-        public ClassInitializeAttribute(ClassInitializeInheritance inheritanceBehavior = ClassInitializeInheritance.None)
+        public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior = InheritanceBehavior.None)
         {
             this.InheritanceBehavior = inheritanceBehavior;
         }
 
         /// <summary>
-        /// Gets InheritanceBehavior
+        /// Gets the Inheritance Behavior
         /// </summary>
-        public ClassInitializeInheritance InheritanceBehavior { get; private set; }
+        public InheritanceBehavior InheritanceBehavior { get; private set; }
     }
 
     /// <summary>
@@ -194,6 +195,20 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class ClassCleanupAttribute : Attribute
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
+        /// ClassCleanupAttribute
+        /// </summary>
+        /// <param name="inheritanceBehavior">none</param>
+        public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior = InheritanceBehavior.None)
+        {
+            this.InheritanceBehavior = inheritanceBehavior;
+        }
+
+        /// <summary>
+        /// Gets the Inheritance Behavior
+        /// </summary>
+        public InheritanceBehavior InheritanceBehavior { get; private set; }
     }
 
     /// <summary>
