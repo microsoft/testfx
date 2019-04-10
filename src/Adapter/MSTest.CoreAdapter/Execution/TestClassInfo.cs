@@ -50,10 +50,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.Constructor = constructor;
             this.TestContextProperty = testContextProperty;
             this.ExecutedBaseClassInitializeMethods = new HashSet<MethodInfo>();
+            this.BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo, MethodInfo>>();
             this.BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
             this.BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
-            this.BaseClassInitializeMethodsQueue = new Queue<MethodInfo>();
-            this.BaseClassCleanupMethodsQueue = new Queue<MethodInfo>();
             this.Parent = parent;
             this.ClassAttribute = classAttribute;
             this.testClassExecuteSyncObject = new object();
@@ -167,14 +166,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Gets a queue of class initialize methods to call for this type.
+        /// Gets a tuples' queue of class initialize/cleanup methods to call for this type.
         /// </summary>
-        public Queue<MethodInfo> BaseClassInitializeMethodsQueue { get; private set; }
-
-        /// <summary>
-        /// Gets a queue of class cleanup methods to call for this type.
-        /// </summary>
-        public Queue<MethodInfo> BaseClassCleanupMethodsQueue { get; private set; }
+        public Queue<Tuple<MethodInfo, MethodInfo>> BaseClassInitAndCleanupMethods { get; private set; }
 
         /// <summary>
         /// Gets the test initialize method.
@@ -239,7 +233,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public void RunClassInitialize(TestContext testContext)
         {
             // If no class initialize and no base class initialize, return
-            if (this.ClassInitializeMethod is null && !this.BaseClassInitializeMethodsQueue.Any())
+            if (this.ClassInitializeMethod is null && !this.BaseClassInitAndCleanupMethods.Any(p => p.Item1 != null))
             {
                 return;
             }
@@ -260,12 +254,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 {
                     // ClassInitialize methods for base classes are called in reverse order of discovery
                     // Base -> Child TestClass
-                    var baseClassInitializeStack = new Stack<MethodInfo>(this.BaseClassInitializeMethodsQueue);
+                    var baseClassInitializeStack = new Stack<Tuple<MethodInfo, MethodInfo>>(this.BaseClassInitAndCleanupMethods);
                     while (baseClassInitializeStack.Count > 0)
                     {
-                        initializeMethod = baseClassInitializeStack.Pop();
-                        initializeMethod?.InvokeAsSynchronousTask(null, testContext);
-                        this.ExecutedBaseClassInitializeMethods.Add(initializeMethod);
+                        initializeMethod = baseClassInitializeStack.Pop().Item1;
+                        if (initializeMethod != null)
+                        {
+                            initializeMethod?.InvokeAsSynchronousTask(null, testContext);
+                            this.ExecutedBaseClassInitializeMethods.Add(initializeMethod);
+                        }
                     }
                 }
             }
@@ -346,7 +343,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public string RunClassCleanup()
         {
-            if (this.ClassCleanupMethod is null && !this.BaseClassCleanupMethodsQueue.Any())
+            if (this.ClassCleanupMethod is null && !this.BaseClassInitAndCleanupMethods.Any(p => p.Item2 != null))
             {
                 return null;
             }
@@ -357,16 +354,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 try
                 {
                     classCleanupMethod?.InvokeAsSynchronousTask(null);
-                    var baseClassCleanupQueue = new Queue<MethodInfo>(this.BaseClassCleanupMethodsQueue);
+                    var baseClassCleanupQueue = new Queue<Tuple<MethodInfo, MethodInfo>>(this.BaseClassInitAndCleanupMethods);
                     while (baseClassCleanupQueue.Count > 0)
                     {
-                        classCleanupMethod = baseClassCleanupQueue.Dequeue();
-
-                        if (this.ExecutedBaseClassInitializeMethods.Any(
-                            method => method.DeclaringType == classCleanupMethod.DeclaringType))
-                        {
-                            classCleanupMethod?.InvokeAsSynchronousTask(null);
-                        }
+                        classCleanupMethod = baseClassCleanupQueue.Dequeue().Item2;
+                        classCleanupMethod?.InvokeAsSynchronousTask(null);
                     }
 
                     return null;

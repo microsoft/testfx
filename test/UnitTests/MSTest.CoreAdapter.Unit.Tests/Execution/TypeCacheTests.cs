@@ -488,7 +488,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
-            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitializeMethodsQueue.Count);
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
+            Assert.AreEqual(null, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item2);
+            Assert.AreEqual(baseType.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item1);
         }
 
         [TestMethodV1]
@@ -534,7 +536,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
-            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassCleanupMethodsQueue.Count);
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
+            Assert.AreEqual(null, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item1);
+            Assert.AreEqual(baseType.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item2);
         }
 
         [TestMethodV1]
@@ -575,10 +579,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
 
             this.mockReflectHelper.Setup(
-               rh => rh.IsAttributeDefined(baseInitializeMethod, typeof(UTF.ClassInitializeAttribute), false)).Returns(true);
+              rh => rh.IsAttributeDefined(baseInitializeMethod, typeof(UTF.ClassInitializeAttribute), false)).Returns(true);
             this.mockReflectHelper.Setup(
-                rh => rh.GetCustomAttribute(baseInitializeMethod, typeof(UTF.ClassInitializeAttribute)))
-                        .Returns(new UTF.ClassInitializeAttribute(UTF.InheritanceBehavior.BeforeEachDerivedClass));
+               rh => rh.GetCustomAttribute(baseInitializeMethod, typeof(UTF.ClassInitializeAttribute)))
+                       .Returns(new UTF.ClassInitializeAttribute(UTF.InheritanceBehavior.BeforeEachDerivedClass));
             this.mockReflectHelper.Setup(
                 rh => rh.IsAttributeDefined(baseCleanupMethod, typeof(UTF.ClassCleanupAttribute), false)).Returns(true);
             this.mockReflectHelper.Setup(
@@ -599,11 +603,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(type.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
             Assert.AreEqual(type.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
 
-            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitializeMethodsQueue.Count);
-            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassCleanupMethodsQueue.Count);
-
-            Assert.AreEqual(true, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitializeMethodsQueue.Contains(baseInitializeMethod));
-            Assert.AreEqual(true, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassCleanupMethodsQueue.Contains(baseCleanupMethod));
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
+            Assert.AreEqual(baseInitializeMethod, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item1);
+            Assert.AreEqual(baseCleanupMethod, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item2);
         }
 
         [TestMethodV1]
