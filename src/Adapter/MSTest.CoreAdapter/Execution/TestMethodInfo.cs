@@ -171,7 +171,48 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         internal void SetArguments(object[] arguments)
         {
-            this.arguments = arguments;
+            this.arguments = this.ResolveArguments(arguments);
+        }
+
+        internal object[] ResolveArguments(object[] arguments)
+        {
+            ParameterInfo[] parameterInfos = this.TestMethod.GetParameters();
+            int requiredParameterCount = 0;
+            foreach (var parameter in parameterInfos)
+            {
+                if (!parameter.IsOptional)
+                {
+                    requiredParameterCount++;
+                }
+            }
+
+            if (requiredParameterCount == parameterInfos.Length)
+            {
+                return arguments;
+            }
+
+            if (arguments == null)
+            {
+                return null;
+            }
+
+            if (arguments.Length < requiredParameterCount || arguments.Length > parameterInfos.Length)
+            {
+                return arguments;
+            }
+
+            object[] newParameters = new object[parameterInfos.Length];
+            for (int i = 0; i < arguments.Length; i++)
+            {
+                newParameters[i] = arguments[i];
+            }
+
+            for (int i = arguments.Length; i < parameterInfos.Length; i++)
+            {
+                newParameters[i] = parameterInfos[i].DefaultValue;
+            }
+
+            return newParameters;
         }
 
         /// <summary>

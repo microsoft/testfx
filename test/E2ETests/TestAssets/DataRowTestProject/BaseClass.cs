@@ -16,5 +16,24 @@ namespace DataRowTestProject
         {
             Assert.IsTrue(true);
         }
+
+        [TestMethod]
+        [DataRow(42)]
+        [DataRow(42,"OptionalString1")]
+        [DataRow(42,"OptionalString1","OptionalString2")]
+        public virtual void DataRowTestMethodWithSomeOptionalParameters(int i, string s1 = null, string s2 = null)
+        {
+            Assert.IsTrue(true);
+        }
+
+        [TestMethod]
+        [DataRow()]
+        [DataRow(42)]
+        [DataRow(42, "OptionalString1")]
+        [DataRow(42, "OptionalString1", "OptionalString2")]
+        public virtual void DataRowTestMethodWithAllOptionalParameters(int i = 0, string s1 = null, string s2 = null)
+        {
+            Assert.IsTrue(true);
+        }
     }
 }
