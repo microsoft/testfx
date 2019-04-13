@@ -186,7 +186,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Initializes a new instance of the <see cref="ClassInitializeAttribute"/> class.
         /// ClassInitializeAttribute
         /// </summary>
-        /// <param name="inheritanceBehavior">none</param>
+        /// <param name="inheritanceBehavior">
+        /// Specifies the ClassInitialize Inheritance Behavior
+        /// </param>
         public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior)
         {
             this.InheritanceBehavior = inheritanceBehavior;
@@ -217,7 +219,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
         /// ClassCleanupAttribute
         /// </summary>
-        /// <param name="inheritanceBehavior">none</param>
+        /// <param name="inheritanceBehavior">
+        /// Specifies the ClassCleanup Inheritance Behavior
+        /// </param>
         public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior)
         {
             this.InheritanceBehavior = inheritanceBehavior;
