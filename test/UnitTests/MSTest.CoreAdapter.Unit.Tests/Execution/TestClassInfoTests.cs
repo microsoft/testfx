@@ -127,7 +127,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
-        public void TestClassInfoClassCleanupMethodShouldInvokeBaseClassCleanupMethodsWhenNoTestClassInitializedIsCalled()
+        public void TestClassInfoClassCleanupMethodShouldNotInvokeBaseClassCleanupMethodsWhenNoTestClassInitializedIsCalled()
         {
             var classcleanupCallCount = 0;
             DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
@@ -141,7 +141,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
             Assert.AreEqual(null, ret);
-            Assert.AreEqual(1, classcleanupCallCount);
+            Assert.AreEqual(0, classcleanupCallCount);
         }
 
         [TestMethod]

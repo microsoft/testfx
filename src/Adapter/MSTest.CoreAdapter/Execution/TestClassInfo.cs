@@ -366,10 +366,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 try
                 {
                     classCleanupMethod?.InvokeAsSynchronousTask(null);
-                    var baseClassCleanupQueue = new Queue<Tuple<MethodInfo, MethodInfo>>(this.BaseClassInitAndCleanupMethods);
+                    var baseClassCleanupQueue = new Queue<MethodInfo>(this.BaseClassCleanupMethodsStack);
                     while (baseClassCleanupQueue.Count > 0)
                     {
-                        classCleanupMethod = baseClassCleanupQueue.Dequeue().Item2;
+                        classCleanupMethod = baseClassCleanupQueue.Dequeue();
                         classCleanupMethod?.InvokeAsSynchronousTask(null);
                     }
 
