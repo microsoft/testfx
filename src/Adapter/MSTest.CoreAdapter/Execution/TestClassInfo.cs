@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.ClassType = type;
             this.Constructor = constructor;
             this.TestContextProperty = testContextProperty;
-            this.ExecutedBaseClassInitializeMethods = new HashSet<MethodInfo>();
+            this.BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
             this.BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo, MethodInfo>>();
             this.BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
             this.BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
@@ -111,9 +111,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public bool IsClassInitializeExecuted { get; internal set; }
 
         /// <summary>
-        /// Gets a hash set of executed class initialize methods.
+        /// Gets a stack of class cleanup methods to be executed.
         /// </summary>
-        public HashSet<MethodInfo> ExecutedBaseClassInitializeMethods { get; internal set; }
+        public Stack<MethodInfo> BaseClassCleanupMethodsStack { get; internal set; }
 
         /// <summary>
         /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
@@ -246,30 +246,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             MethodInfo initializeMethod = null;
             string failedClassInitializeMethodName = string.Empty;
 
-            try
+            // If class initialization is done, just return
+            if (this.IsClassInitializeExecuted)
             {
-                // If class initialization is not done, we can proceed to perform
-                // base class initialization first
-                if (!this.IsClassInitializeExecuted)
+                return;
+            }
+
+            // Aquiring a lock is usually a costly operation which does not need to be
+            // performed every time if the class init is already executed.
+            lock (this.testClassExecuteSyncObject)
+            {
+                // Perform a check again.
+                if (this.IsClassInitializeExecuted)
+                {
+                    return;
+                }
+
+                try
                 {
                     // ClassInitialize methods for base classes are called in reverse order of discovery
                     // Base -> Child TestClass
-                    var baseClassInitializeStack = new Stack<Tuple<MethodInfo, MethodInfo>>(this.BaseClassInitAndCleanupMethods);
+                    var baseClassInitializeStack = new Stack<Tuple<MethodInfo, MethodInfo>>(
+                            this.BaseClassInitAndCleanupMethods.Where(p => p.Item1 != null));
+
                     while (baseClassInitializeStack.Count > 0)
                     {
-                        initializeMethod = baseClassInitializeStack.Pop().Item1;
-                        if (initializeMethod != null)
-                        {
-                            initializeMethod?.InvokeAsSynchronousTask(null, testContext);
-                            this.ExecutedBaseClassInitializeMethods.Add(initializeMethod);
-                        }
+                        var baseInitCleanupMethods = baseClassInitializeStack.Pop();
+                        initializeMethod = baseInitCleanupMethods.Item1;
+                        initializeMethod?.InvokeAsSynchronousTask(null, testContext);
+                        this.BaseClassCleanupMethodsStack.Push(baseInitCleanupMethods.Item2);
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                this.ClassInitializationException = ex;
-                failedClassInitializeMethodName = initializeMethod.Name;
+                catch (Exception ex)
+                {
+                    this.ClassInitializationException = ex;
+                    failedClassInitializeMethodName = initializeMethod.Name;
+                }
             }
 
             // If class initialization is not done and class initialize method is not null,
@@ -348,9 +360,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return null;
             }
 
-            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null || this.ExecutedBaseClassInitializeMethods.Any())
+            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null || this.BaseClassCleanupMethodsStack.Any())
             {
-                var classCleanupMethod = this.classCleanupMethod;
+                var classCleanupMethod = this.ClassCleanupMethod;
                 try
                 {
                     classCleanupMethod?.InvokeAsSynchronousTask(null);
