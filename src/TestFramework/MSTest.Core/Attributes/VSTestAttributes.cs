@@ -218,7 +218,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// ClassCleanupAttribute
         /// </summary>
         /// <param name="inheritanceBehavior">none</param>
-        public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior = InheritanceBehavior.None)
+        public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior)
         {
             this.InheritanceBehavior = inheritanceBehavior;
         }
