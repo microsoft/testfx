@@ -258,6 +258,10 @@ function Create-NugetPackages
         Copy-Item $tfSrcPackageDir\$file $stagingDir -Force
     }
 
+    # Copy over LICENSE.txt file to staging directory
+    $licenseFilePath = Join-Path $env:TF_ROOT_DIR "LICENSE.txt"
+    Copy-Item $licenseFilePath $stagingDir -Force
+
     # Call nuget pack on these components.
     $nugetExe = Locate-Nuget
 
