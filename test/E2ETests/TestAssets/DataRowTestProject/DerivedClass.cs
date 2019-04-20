@@ -15,5 +15,23 @@ namespace DataRowTestProject
         {
             Assert.IsTrue(true);
         }
+
+        [TestMethod]
+        [DataRow(123)]
+        [DataRow(123, "DerivedOptionalString1")]
+        [DataRow(123, "DerivedOptionalString2", "DerivedOptionalString3")]
+        public override void DataRowTestMethodWithSomeOptionalParameters(int i, string s1 = null, string s2 = null)
+        {
+            Assert.IsTrue(true);
+        }
+
+        [TestMethod]
+        [DataRow(123)]
+        [DataRow(123, "DerivedOptionalString4")]
+        [DataRow(123, "DerivedOptionalString5", "DerivedOptionalString6")]
+        public override void DataRowTestMethodWithAllOptionalParameters(int i = 0, string s1 = null, string s2 = null)
+        {
+            Assert.IsTrue(true);
+        }
     }
 }
