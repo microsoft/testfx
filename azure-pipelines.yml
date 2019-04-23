@@ -11,9 +11,9 @@ jobs:
   steps:
 
   - task: NuGetToolInstaller@0
-    displayName: 'Pull in NuGet 4.5.1'
+    displayName: 'Pull in NuGet 4.9.2'
     inputs:
-      versionSpec: 4.5.1
+      versionSpec: 4.9.2
   
   - powershell: |
       reg DELETE "HKLM\Software\Microsoft\StrongName\Verification" /f
