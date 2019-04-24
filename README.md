@@ -38,4 +38,4 @@ testfx platform is licensed under the [MIT license](https://github.com/Microsoft
 Please see [issue tracking](https://github.com/Microsoft/testfx-docs/blob/master/issuetracking.md) for a description of the workflow we use to process issues.
 
 ### Roadmap
-For information on shipped and upcoming features please refer to our [Releases Roadmap](https://github.com/Microsoft/testfx-docs/blob/master/docs/releases.md).
+For information on shipped and upcoming features/enhancements please refer to our [Releases](https://github.com/Microsoft/testfx-docs/blob/master/docs/releases.md) and [Quarterly Checkin reports](https://github.com/Microsoft/testfx-docs/tree/master/Quarterly%20Checkins).
