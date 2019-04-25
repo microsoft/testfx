@@ -20,7 +20,7 @@
   To discover and execute tests for project.json based projects install dotnet-test-mstest.
     </description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
-    <licenseUrl>http://www.microsoft.com/web/webpi/eula/net_library_eula_enu.htm</licenseUrl>
+    <license type="file">LICENSE.txt</license>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework </tags>
@@ -58,5 +58,8 @@
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />
+
+    <!-- LICENSE.txt -->
+    <file src="LICENSE.txt" target="" />
   </files>
 </package>

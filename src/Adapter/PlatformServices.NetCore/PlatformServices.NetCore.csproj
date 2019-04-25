@@ -12,6 +12,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <UseSharedResources>true</UseSharedResources>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
   </PropertyGroup>
 
   <ItemGroup>

@@ -16,7 +16,7 @@
    - ASP.NET Core 1.0+ (Visual Studio 2017) 
    </description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
-    <licenseUrl>http://www.microsoft.com/web/webpi/eula/net_library_eula_enu.htm</licenseUrl>
+    <license type="file">LICENSE.txt</license>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
@@ -45,5 +45,8 @@
     <!-- Desktop -->
     <file src="Build\Desktop\MSTest.TestAdapter.props" target="build\net45\MSTest.TestAdapter.props" />
     <file src="Build\Desktop\MSTest.TestAdapter.targets" target="build\net45\MSTest.TestAdapter.targets" />
+
+    <!-- LICENSE.txt -->
+    <file src="LICENSE.txt" target="" />
   </files>
 </package>
