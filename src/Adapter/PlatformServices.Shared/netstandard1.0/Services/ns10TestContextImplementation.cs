@@ -31,6 +31,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private static readonly string TestNameLabel = "TestName";
 
         /// <summary>
+        /// List of result files associated with the test
+        /// </summary>
+        private readonly IList<string> testResultFiles;
+
+        /// <summary>
         /// Properties
         /// </summary>
         private IDictionary<string, object> properties;
@@ -62,6 +67,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.testMethod = testMethod;
             this.properties = new Dictionary<string, object>(properties);
             this.stringWriter = writer;
+            this.testResultFiles = new List<string>();
             this.CancellationTokenSource = new CancellationTokenSource();
             this.InitializeProperties();
         }
@@ -132,6 +138,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 return this as UTF.TestContext;
             }
+        }
+
+        public override void AddResultFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                throw new ArgumentException("The parameter should not be null or empty.", "fileName");
+            }
+
+            this.testResultFiles.Add(Path.GetFullPath(fileName));
         }
 
         /// <summary>
@@ -223,9 +239,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Result files attached
+        /// Returns null as this feature is not supported in ASP .net and UWP
         /// </summary>
-        /// <returns>List of result files generated in run.</returns>
+        /// <returns>List of result files. Null presently.</returns>
         public IList<string> GetResultFiles()
         {
             return null;
