@@ -26,6 +26,7 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "CustomTestClass1 - Execution number 5");
             this.ValidateFailedTestsContain(
                 TestAssembly,
+                true,
                 "CustomTestMethod1 - Execution number 3",
                 "CustomTestClass1 - Execution number 3");
         }
@@ -43,6 +44,7 @@ namespace MSTestAdapter.Smoke.E2ETests
             this.ValidateFailedTestsCount(7);
             this.ValidateFailedTestsContain(
                 TestAssembly,
+                true,
                 "CustomTestMethod2 (A)",
                 "CustomTestMethod2 (A)",
                 "CustomTestMethod2 (A)",

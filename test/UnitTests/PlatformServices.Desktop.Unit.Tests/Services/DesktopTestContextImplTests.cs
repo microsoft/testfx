@@ -158,7 +158,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         public void AddPropertyShouldAddPropertiesToThePropertyBag()
         {
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
-
             this.testContextImplementation.AddProperty("SomeNewProperty", "SomeValue");
 
             CollectionAssert.Contains(

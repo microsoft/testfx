@@ -4,10 +4,12 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
+    using System.Threading;
     using System.Linq;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
@@ -65,6 +67,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.testMethod = testMethod;
             this.properties = new Dictionary<string, object>(properties);
             this.stringWriter = writer;
+            this.CancellationTokenSource = new CancellationTokenSource();
             this.InitializeProperties();
 
             this.testResultFiles = new List<string>();
@@ -122,11 +125,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// An System.Collections.IDictionary object that contains key/value pairs that
         ///  represent the test properties.
         /// </returns>
-        public override IDictionary<string, object> Properties
+        public override IDictionary Properties
         {
             get
             {
-                return this.properties as IDictionary<string, object>;
+                return this.properties as IDictionary;
             }
         }
 

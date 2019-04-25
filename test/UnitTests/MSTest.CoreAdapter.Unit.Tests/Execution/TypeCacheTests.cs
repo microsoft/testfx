@@ -922,7 +922,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 new Dictionary<string, object>());
 
             this.typeCache.GetTestMethodInfo(testMethod, testContext, false);
-            var customProperty = testContext.Properties.FirstOrDefault(p => p.Key.Equals("WhoAmI"));
+            var customProperty = ((IDictionary<string, object>)testContext.Properties).FirstOrDefault(p => p.Key.Equals("WhoAmI"));
 
             Assert.IsNotNull(customProperty);
             Assert.AreEqual("Me", customProperty.Value);
@@ -1009,7 +1009,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             // Verify that the first value gets set.
             object value;
-            Assert.IsTrue(testContext.Properties.TryGetValue("WhoAmI", out value));
+            Assert.IsTrue(((IDictionary<string, object>)testContext.Properties).TryGetValue("WhoAmI", out value));
             Assert.AreEqual("Me", value);
         }
 
@@ -1026,6 +1026,48 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     false);
 
             Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
+            Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
+            Assert.AreEqual(this.typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
+            Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedClassMethodOverloadByDefault()
+        {
+            var type = typeof(DerivedTestClass);
+            var methodInfo = type.GetRuntimeMethod("OverloadedTestMethod", new Type[] { });
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
+
+            Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
+            Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
+            Assert.AreEqual(this.typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
+            Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoShouldReturnTestMethodInfoForDeclaringTypeMethodOverload()
+        {
+            var baseType = typeof(BaseTestClass);
+            var type = typeof(DerivedTestClass);
+            var methodInfo = baseType.GetRuntimeMethod("OverloadedTestMethod", new Type[] { });
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false)
+            {
+                DeclaringClassFullName = baseType.FullName
+            };
+
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
+
+            // The two MethodInfo instances will have different ReflectedType properties,
+            // so cannot be compared directly. Use MethodHandle to verify it's the same.
+            Assert.AreEqual(methodInfo.MethodHandle, testMethodInfo.TestMethod.MethodHandle);
             Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
             Assert.AreEqual(this.typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
             Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor);
@@ -1236,7 +1278,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region dummy implementations
 
-        [UTF.TestClass]
+        [DummyTestClass]
         internal class DummyTestClassWithTestMethods
         {
             public UTFExtension.TestContext TestContext { get; set; }
@@ -1308,15 +1350,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         internal class DerivedTestClass : BaseTestClass
         {
+            [UTF.TestMethod]
+            public new void OverloadedTestMethod()
+            {
+            }
         }
 
         internal class BaseTestClass
         {
             [UTF.TestMethod]
             public void DummyTestMethod()
+            {
+            }
+
+            [UTF.TestMethod]
+            public void OverloadedTestMethod()
             {
             }
         }
@@ -1343,7 +1394,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithInitializeMethods
         {
             public static void AssemblyInit(UTFExtension.TestContext tc)
@@ -1355,7 +1406,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithCleanupMethods
         {
             public static void AssemblyCleanup()
@@ -1367,7 +1418,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyDerivedTestClassWithInitializeMethods : DummyTestClassWithInitializeMethods
         {
             public void TestMehtod()
@@ -1375,7 +1426,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyDerivedTestClassWithCleanupMethods : DummyTestClassWithCleanupMethods
         {
             public void TestMehtod()
@@ -1383,7 +1434,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithInitAndCleanupMethods
         {
             public static void AssemblyInit(UTFExtension.TestContext tc)
@@ -1399,7 +1450,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithIncorrectInitializeMethods
         {
             public static void TestInit(int i)
@@ -1411,7 +1462,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithIncorrectCleanupMethods
         {
             public static void TestCleanup(int i)
@@ -1423,7 +1474,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithIncorrectTestMethodSignatures
         {
             public static void TestMethod()
@@ -1432,6 +1483,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         private class DerivedTestMethodAttribute : UTF.TestMethodAttribute
+        {
+        }
+
+        private class DummyTestClassAttribute : UTF.TestClassAttribute
         {
         }
 

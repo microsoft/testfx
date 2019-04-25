@@ -16,9 +16,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// [DeploymentItem("file2.xml", "DataFiles")]
     /// [DeploymentItem("bin\Debug")]
     /// </example>
-    /// <remarks>
-    /// DeploymentItemAttribute is currently not supported in .Net Core. This is just a placehodler for support in the future.
-    /// </remarks>
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
     public sealed class DeploymentItemAttribute : Attribute
     {

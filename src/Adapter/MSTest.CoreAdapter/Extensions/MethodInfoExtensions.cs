@@ -114,8 +114,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <returns>True if the method has a void/task return type..</returns>
         internal static bool IsVoidOrTaskReturnType(this MethodInfo method)
         {
-            return method.GetAsyncTypeName() == null ? ReflectHelper.MatchReturnType(method, typeof(void))
-                : ReflectHelper.MatchReturnType(method, typeof(Task));
+            return ReflectHelper.MatchReturnType(method, typeof(Task))
+                || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName() == null);
         }
 
         /// <summary>

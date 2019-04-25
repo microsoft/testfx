@@ -134,7 +134,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             this.SetupTestMethod();
             var methodInfo = typeof(DummyTestClass).GetMethod(
-                "MethodWithTaskReturnType",
+                "MethodWithIntReturnType",
                 BindingFlags.Instance | BindingFlags.Public);
 
             Assert.IsFalse(this.testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), this.warnings));
@@ -146,6 +146,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.SetupTestMethod();
             var methodInfo = typeof(DummyTestClass).GetMethod(
                 "AsyncMethodWithTaskReturnType",
+                BindingFlags.Instance | BindingFlags.Public);
+
+            Assert.IsTrue(this.testMethodValidator.IsValidTestMethod(methodInfo, this.type, this.warnings));
+        }
+
+        [TestMethod]
+        public void IsValidTestMethodShouldReturnTrueForNonAsyncMethodsWithTaskReturnType()
+        {
+            this.SetupTestMethod();
+            var methodInfo = typeof(DummyTestClass).GetMethod(
+                "MethodWithTaskReturnType",
                 BindingFlags.Instance | BindingFlags.Public);
 
             Assert.IsTrue(this.testMethodValidator.IsValidTestMethod(methodInfo, this.type, this.warnings));
@@ -199,6 +210,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         public Task MethodWithTaskReturnType()
         {
             return Task.Delay(TimeSpan.Zero);
+        }
+
+        public int MethodWithIntReturnType()
+        {
+            return 0;
         }
 
         public void MethodWithVoidReturnType()

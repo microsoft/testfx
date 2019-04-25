@@ -4,9 +4,11 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
+    using System.Threading;
 
     /// <summary>
     /// TestContext class. This class should be fully abstract and not contain any
@@ -18,7 +20,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Gets test properties for a test.
         /// </summary>
-        public abstract IDictionary<string, object> Properties { get; }
+        public abstract IDictionary Properties { get; }
+
+        /// <summary>
+        /// Gets or sets the cancellation token source. This token source is cancelled when test timesout. Also when explicitly cancelled the test will be aborted
+        /// </summary>
+        public virtual CancellationTokenSource CancellationTokenSource { get; protected set; }
 
         /// <summary>
         /// Gets Fully-qualified name of the class containing the test method currently being executed
@@ -29,32 +36,17 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// in the test results. Users can benefit from messages that include the fully-qualified
         /// class name in addition to the name of the test method currently being executed.
         /// </remarks>
-        public virtual string FullyQualifiedTestClassName
-        {
-            get
-            {
-                return this.GetProperty<string>("FullyQualifiedTestClassName");
-            }
-        }
+        public virtual string FullyQualifiedTestClassName => this.GetProperty<string>("FullyQualifiedTestClassName");
 
         /// <summary>
         /// Gets the Name of the test method currently being executed
         /// </summary>
-        public virtual string TestName
-        {
-            get
-            {
-                return this.GetProperty<string>("TestName");
-            }
-        }
+        public virtual string TestName => this.GetProperty<string>("TestName");
 
         /// <summary>
         /// Gets the current test outcome.
         /// </summary>
-        public virtual UnitTestOutcome CurrentTestOutcome
-        {
-            get { return UnitTestOutcome.Unknown; }
-        }
+        public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
 
         /// <summary>
         /// Adds a file name to the list in TestResult.ResultFileNames
@@ -80,21 +72,18 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         private T GetProperty<T>(string name)
             where T : class
         {
-            object o;
-
-            if (!this.Properties.TryGetValue(name, out o))
+            if (!((IDictionary<string, object>)this.Properties).TryGetValue(name, out object propertyValue))
             {
                 return null;
             }
 
-            if (o != null && !(o is T))
+            if (propertyValue != null && !(propertyValue is T))
             {
                 // If o has a value, but it's not the right type
-                Debug.Assert(false, "How did an invalid value get in here?");
-                throw new InvalidCastException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.InvalidPropertyType, name, o.GetType(), typeof(T)));
+                throw new InvalidCastException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.InvalidPropertyType, name, propertyValue.GetType(), typeof(T)));
             }
 
-            return (T)o;
+            return (T)propertyValue;
         }
     }
 }

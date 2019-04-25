@@ -36,7 +36,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.reflectHelper = new TestableReflectHelper();
             this.method = new Mock<MethodInfo>();
             this.method.Setup(x => x.MemberType).Returns(MemberTypes.Method);
-            this.method.Setup(x => x.DeclaringType).Returns(typeof(ReflectHelperTests));
 
             this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
             this.testablePlatformServiceProvider.SetupMockReflectionOperations();
@@ -58,23 +57,43 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel") }, MemberTypes.TypeInfo);
 
             string[] expected = new[] { "ClassLevel" };
-            var actual = this.reflectHelper.GetCategories(this.method.Object).ToArray();
+            var actual = this.reflectHelper.GetCategories(this.method.Object, typeof(ReflectHelperTests)).ToArray();
 
             CollectionAssert.AreEqual(expected, actual);
         }
 
         /// <summary>
-        /// Testing test category attributes adorned at calss, assembly and method level are getting collected.
+        /// Testing test category attributes adorned at class, assembly and method level are getting collected.
         /// </summary>
         [TestMethod]
         public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtAllLevels()
         {
-            this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel") }, MemberTypes.All);
+            this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel1"), new UTF.TestCategoryAttribute("AsmLevel2") }, MemberTypes.All);
+            this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel3") }, MemberTypes.All);
             this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel") }, MemberTypes.TypeInfo);
             this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel") }, MemberTypes.Method);
 
-            var actual = this.reflectHelper.GetCategories(this.method.Object).ToArray();
-            string[] expected = new[] { "MethodLevel", "ClassLevel", "AsmLevel" };
+            var actual = this.reflectHelper.GetCategories(this.method.Object, typeof(ReflectHelperTests)).ToArray();
+            string[] expected = new[] { "MethodLevel", "ClassLevel", "AsmLevel1", "AsmLevel2", "AsmLevel3" };
+
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        /// <summary>
+        /// Testing test category attributes adorned at class, assembly and method level are getting collected.
+        /// </summary>
+        [TestMethod]
+        public void GetTestCategoryAttributeShouldConcatCustomAttributeOfSameType()
+        {
+            this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel1") }, MemberTypes.All);
+            this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel2") }, MemberTypes.All);
+            this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel1") }, MemberTypes.TypeInfo);
+            this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel2") }, MemberTypes.TypeInfo);
+            this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel1") }, MemberTypes.Method);
+            this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel2") }, MemberTypes.Method);
+
+            var actual = this.reflectHelper.GetCategories(this.method.Object, typeof(ReflectHelperTests)).ToArray();
+            string[] expected = new[] { "MethodLevel1", "MethodLevel2", "ClassLevel1", "ClassLevel2", "AsmLevel1", "AsmLevel2" };
 
             CollectionAssert.AreEqual(expected, actual);
         }
@@ -89,7 +108,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             string[] expected = new[] { "AsmLevel" };
 
-            var actual = this.reflectHelper.GetCategories(this.method.Object).ToArray();
+            var actual = this.reflectHelper.GetCategories(this.method.Object, typeof(ReflectHelperTests)).ToArray();
 
             CollectionAssert.AreEqual(expected, actual);
         }
@@ -103,7 +122,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel"), new UTF.TestCategoryAttribute("ClassLevel1") }, MemberTypes.TypeInfo);
 
             string[] expected = new[] { "ClassLevel", "ClassLevel1" };
-            var actual = this.reflectHelper.GetCategories(this.method.Object).ToArray();
+            var actual = this.reflectHelper.GetCategories(this.method.Object, typeof(ReflectHelperTests)).ToArray();
 
             CollectionAssert.AreEqual(expected, actual);
         }
@@ -117,7 +136,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel"), new UTF.TestCategoryAttribute("AsmLevel1") }, MemberTypes.All);
 
             string[] expected = new[] { "AsmLevel", "AsmLevel1" };
-            var actual = this.reflectHelper.GetCategories(this.method.Object).ToArray();
+            var actual = this.reflectHelper.GetCategories(this.method.Object, typeof(ReflectHelperTests)).ToArray();
             CollectionAssert.AreEqual(expected, actual);
         }
 
@@ -130,7 +149,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel") }, MemberTypes.Method);
 
             string[] expected = new[] { "MethodLevel" };
-            var actual = this.reflectHelper.GetCategories(this.method.Object).ToArray();
+            var actual = this.reflectHelper.GetCategories(this.method.Object, typeof(ReflectHelperTests)).ToArray();
 
             CollectionAssert.AreEqual(expected, actual);
         }

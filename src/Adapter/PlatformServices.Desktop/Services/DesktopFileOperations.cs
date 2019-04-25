@@ -11,8 +11,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
     /// <summary>
     /// This service is responsible for any file based operations.
     /// </summary>

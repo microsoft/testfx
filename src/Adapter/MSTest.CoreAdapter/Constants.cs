@@ -30,7 +30,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         #region Test Property registration
 
+        internal static readonly TestProperty DescriptionProperty = TestProperty.Register("Description", DescriptionLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
+
+        internal static readonly TestProperty WorkItemIdsProperty = TestProperty.Register("WorkItemIds", WorkItemIdsLabel, typeof(string[]), TestPropertyAttributes.Hidden, typeof(TestCase));
+
+        internal static readonly TestProperty CssIterationProperty = TestProperty.Register("CssIteration", CssIterationLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
+
+        internal static readonly TestProperty CssProjectStructureProperty = TestProperty.Register("CssProjectStructure", CssProjectStructureLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
+
         internal static readonly TestProperty TestClassNameProperty = TestProperty.Register("MSTestDiscoverer.TestClassName", TestClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
+
+        internal static readonly TestProperty DeclaringClassNameProperty = TestProperty.Register("MSTestDiscoverer.DeclaringClassName", DeclaringClassNameLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
         internal static readonly TestProperty AsyncTestProperty = TestProperty.Register("MSTestDiscoverer.IsAsync", IsAsyncLabel, typeof(bool), TestPropertyAttributes.Hidden, typeof(TestCase));
 
@@ -90,6 +100,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// These Property names should not be localized.
         /// </summary>
         private const string TestClassNameLabel = "ClassName";
+        private const string DeclaringClassNameLabel = "DeclaringClassName";
         private const string IsAsyncLabel = "IsAsync";
         private const string TestCategoryLabel = "TestCategory";
         private const string PriorityLabel = "Priority";
@@ -98,6 +109,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         private const string ExecutionIdLabel = "ExecutionId";
         private const string ParentExecIdLabel = "ParentExecId";
         private const string InnerResultsCountLabel = "InnerResultsCount";
+        private const string DescriptionLabel = "Description";
+        private const string CssIterationLabel = "CssIteration";
+        private const string CssProjectStructureLabel = "CssProjectStructure";
+        private const string WorkItemIdsLabel = "WorkItemIds";
 
         private const string TestRunId = "__Tfs_TestRunId__";
         private const string TestPlanId = "__Tfs_TestPlanId__";

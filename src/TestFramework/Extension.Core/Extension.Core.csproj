@@ -37,6 +37,7 @@
   <ItemGroup>
     <Compile Include="Attributes\DeploymentItemAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="NetCoreTestContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MSTest.Core\MSTest.Core.csproj">
@@ -48,6 +49,5 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <Import Project="..\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

@@ -38,7 +38,13 @@ namespace MSTestAdapter.Smoke.E2ETests
                  "SampleUnitTestProject.UnitTest1.PassingTest");
 
             this.ValidateFailedTestsContain(
-                "CompatTestProject.UnitTest1.FailingTest",
+                OldAdapterTestProject,
+                true,
+                "CompatTestProject.UnitTest1.FailingTest");
+
+            this.ValidateFailedTestsContain(
+                LatestAdapterTestProject,
+                true,
                 "SampleUnitTestProject.UnitTest1.FailingTest");
 
             this.ValidateSkippedTestsContain(

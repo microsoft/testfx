@@ -78,6 +78,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         internal string AsyncTypeName { get; set; }
 
         /// <summary>
+        /// Gets or sets the Css Iteration for the test method.
+        /// </summary>
+        internal string CssIteration { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Css Project Structure for the test method.
+        /// </summary>
+        internal string CssProjectStructure { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Description for the test method.
+        /// </summary>
+        internal string Description { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Work Item Ids for the test method.
+        /// </summary>
+        internal string[] WorkItemIds { get; set; }
+
+        /// <summary>
         /// Convert the UnitTestElement instance to an Object Model testCase instance.
         /// </summary>
         /// <returns> An instance of <see cref="TestCase"/>. </returns>
@@ -93,6 +113,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             testCase.DisplayName = this.TestMethod.Name;
 
             testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
+
+            // Set declaring type if present so the correct method info can be retrieved
+            if (this.TestMethod.DeclaringClassFullName != null)
+            {
+                testCase.SetPropertyValue(TestAdapter.Constants.DeclaringClassNameProperty, this.TestMethod.DeclaringClassFullName);
+            }
 
             // Many of the tests will not be async, so there is no point in sending extra data
             if (this.IsAsync)
@@ -115,6 +141,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             if (this.Traits != null)
             {
                 testCase.Traits.AddRange(this.Traits);
+            }
+
+            if (!string.IsNullOrEmpty(this.CssIteration))
+            {
+                testCase.SetPropertyValue(TestAdapter.Constants.CssIterationProperty, this.CssIteration);
+            }
+
+            if (!string.IsNullOrEmpty(this.CssProjectStructure))
+            {
+                testCase.SetPropertyValue(TestAdapter.Constants.CssProjectStructureProperty, this.CssProjectStructure);
+            }
+
+            if (!string.IsNullOrEmpty(this.Description))
+            {
+                testCase.SetPropertyValue(TestAdapter.Constants.DescriptionProperty, this.Description);
+            }
+
+            if (this.WorkItemIds != null)
+            {
+                testCase.SetPropertyValue(TestAdapter.Constants.WorkItemIdsProperty, this.WorkItemIds);
             }
 
             // The list of items to deploy before running this test.

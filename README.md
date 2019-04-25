@@ -7,9 +7,8 @@ Welcome to the "MSTest V2" repository, the evolution of the Microsoft Test Frame
 This is a fully supported, open source and cross-platform implementation of the MSTest test framework with which to write tests targeting .NET Framework, .NET Core and ASP.NET Core on Windows, Linux, and Mac. You can read more about MSTest V2 [here](https://blogs.msdn.microsoft.com/visualstudioalm/2017/02/25/mstest-v2-now-and-ahead/). For API documentation refer [here](https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.testtools.unittesting).
 
 ### Build status
-|            |Debug |Release |
-|:----------:|:----------------:|:------------------:|
-|**master**  |[![Build Status](https://ci.dot.net/buildStatus/icon?job=Microsoft_testfx/master/Debug)](https://ci.dot.net/job/Microsoft_testfx/job/master/job/Debug)|[![Build Status](https://ci.dot.net/buildStatus/icon?job=Microsoft_testfx/master/Release)](https://ci.dot.net/job/Microsoft_testfx/job/master/job/Release)|
+
+[![Build Status](https://dev.azure.com/vstestplatform/TestFx/_apis/build/status/TestFx.CI?branchName=master)](https://dev.azure.com/vstestplatform/TestFx/_build/latest?definitionId=8&branchName=master)
 
 ### Latest Builds
 |            | Framework | Adapter |
@@ -39,4 +38,4 @@ testfx platform is licensed under the [MIT license](https://github.com/Microsoft
 Please see [issue tracking](https://github.com/Microsoft/testfx-docs/blob/master/issuetracking.md) for a description of the workflow we use to process issues.
 
 ### Roadmap
-For information on shipped and upcoming features please refer to our [Releases Roadmap](https://github.com/Microsoft/testfx-docs/blob/master/docs/releases.md).
+For information on shipped and upcoming features/enhancements please refer to our [Releases](https://github.com/Microsoft/testfx-docs/blob/master/docs/releases.md) and [Quarterly Checkin reports](https://github.com/Microsoft/testfx-docs/tree/master/Quarterly%20Checkins).

@@ -287,6 +287,11 @@ Stack Trace: {4}</target>
         <target state="new">Method {0} must match the expected signature: {1} {0}({2}).</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DynamicDataIEnumerableEmpty">
+        <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
+        <target state="new">Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</target>
+        <note></note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -36,20 +36,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Helper for reflection API's.
         /// </summary>
-        private ReflectHelper reflectionHelper;
+        private readonly ReflectHelper reflectionHelper;
 
         /// <summary>
         /// Assembly info cache
         /// </summary>
-        private Dictionary<Assembly, TestAssemblyInfo> testAssemblyInfoCache;
+        private readonly Dictionary<Assembly, TestAssemblyInfo> testAssemblyInfoCache;
 
         /// <summary>
         /// ClassInfo cache
         /// </summary>
-        private Dictionary<string, TestClassInfo> classInfoCache;
+        private readonly Dictionary<string, TestClassInfo> classInfoCache;
 
-        private object assemblyInfoSyncObject;
-        private object classInfoSyncObject;
+        private readonly object assemblyInfoSyncObject;
+        private readonly object classInfoSyncObject;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TypeCache"/> class.
@@ -174,9 +174,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             var typeName = testMethod.FullClassName;
 
-            TestClassInfo classInfo;
-
-            if (!this.classInfoCache.TryGetValue(typeName, out classInfo))
+            if (!this.classInfoCache.TryGetValue(typeName, out TestClassInfo classInfo))
             {
                 // Aquiring a lock is usually a costly operation which does not need to be
                 // performed every time if the type is found in the cache.
@@ -363,9 +361,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private TestAssemblyInfo GetAssemblyInfo(Type type)
         {
             var assembly = type.GetTypeInfo().Assembly;
-            TestAssemblyInfo assemblyInfo;
 
-            if (!this.testAssemblyInfoCache.TryGetValue(assembly, out assemblyInfo))
+            if (!this.testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo assemblyInfo))
             {
                 // Aquiring a lock is usually a costly operation which does not need to be
                 // performed every time if the assembly is found in the cache.
@@ -392,8 +389,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                         try
                         {
-                            // Only examine test classes for test attributes
-                            if (!this.reflectionHelper.IsAttributeDefined(t, typeof(TestClassAttribute), inherit: true))
+                            // Only examine classes which are TestClass or derives from TestClass attribute
+                            if (!this.reflectionHelper.IsAttributeDefined(t, typeof(TestClassAttribute), inherit: true) &&
+                                !this.reflectionHelper.HasAttributeDerivedFrom(t, typeof(TestClassAttribute), true))
                             {
                                 continue;
                             }
@@ -608,10 +606,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private MethodInfo GetMethodInfoForTestMethod(TestMethod testMethod, TestClassInfo testClassInfo)
         {
             var methodsInClass = testClassInfo.ClassType.GetRuntimeMethods().ToArray();
+            MethodInfo testMethodInfo;
 
-            var testMethodInfo =
-                methodsInClass.Where(method => method.Name.Equals(testMethod.Name))
-                    .FirstOrDefault(method => method.HasCorrectTestMethodSignature(true));
+            if (testMethod.DeclaringClassFullName != null)
+            {
+                // Only find methods that match the given declaring name.
+                testMethodInfo =
+                    methodsInClass.Where(method => method.Name.Equals(testMethod.Name)
+                                                && method.DeclaringType.FullName.Equals(testMethod.DeclaringClassFullName)
+                                                && method.HasCorrectTestMethodSignature(true)).FirstOrDefault();
+            }
+            else
+            {
+                // Either the declaring class is the same as the test class, or
+                // the declaring class information wasn't passed in the test case.
+                // Prioritize the former while maintaining previous behavior for the latter.
+                var className = testClassInfo.ClassType.FullName;
+                testMethodInfo =
+                    methodsInClass.Where(method => method.Name.Equals(testMethod.Name) && method.HasCorrectTestMethodSignature(true))
+                        .OrderByDescending(method => method.DeclaringType.FullName.Equals(className)).FirstOrDefault();
+            }
 
             // if correct method is not found, throw appropriate
             // exception about what is wrong.
@@ -713,8 +727,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return false;
             }
 
-            object existingValue;
-            if (testContext.TryGetPropertyValue(propertyName, out existingValue))
+            if (testContext.TryGetPropertyValue(propertyName, out object existingValue))
             {
                 // Do not add to the test context because it would conflict with an already existing value.
                 // We were at one point reporting a warning here. However with extensibility centered around TestProperty where

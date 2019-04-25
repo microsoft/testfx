@@ -143,6 +143,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test &apos;{0}&apos; execution has been aborted..
+        /// </summary>
+        internal static string Execution_Test_Cancelled {
+            get {
+                return ResourceManager.GetString("Execution_Test_Cancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test &apos;{0}&apos; exceeded execution timeout period..
         /// </summary>
         internal static string Execution_Test_Timeout {
@@ -260,7 +269,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unable to load types from the test source &apos;{0}&apos;. Some or all of the tests in this source may not be discovered..
+        ///   Looks up a localized string similar to Unable to load types from the test source &apos;{0}&apos;. Some or all of the tests in this source may not be discovered.
+        ///Error: {1}.
         /// </summary>
         internal static string TypeLoadFailed {
             get {
