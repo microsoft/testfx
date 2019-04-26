@@ -19,7 +19,7 @@
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs" Link="Services\ns10FileOperationsTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs" Link="Services\ns10DiaSessionOperationsTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs" Link="Services\ns10ReflectionOperationsTests.cs" />
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestContextImplementationTests.cs" Link="Services\ns10TestContextImplementationTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netcore\NetCoreTestContextImplementationTests.cs" Link="Services\NetCoreTestContextImplementationTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs" Link="Services\ns10TestSourceHostTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceTests.cs" Link="Services\ns10TestSourceTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs" Link="Services\ns10ThreadOperationsTests.cs" />

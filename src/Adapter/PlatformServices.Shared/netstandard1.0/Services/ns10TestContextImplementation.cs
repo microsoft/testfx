@@ -140,14 +140,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
+        /// <summary>
+        /// Adds a file name to the list in TestResult.ResultFileNames
+        /// </summary>
+        /// <param name="fileName">
+        /// The file Name.
+        /// </param>
         public override void AddResultFile(string fileName)
         {
-            if (string.IsNullOrEmpty(fileName))
-            {
-                throw new ArgumentException("The parameter should not be null or empty.", "fileName");
-            }
-
-            this.testResultFiles.Add(Path.GetFullPath(fileName));
+            // No-op function
+            // will be replaced at runtime time by PlatformServices Desktop/NetCore
+            // depending the target framework
         }
 
         /// <summary>
