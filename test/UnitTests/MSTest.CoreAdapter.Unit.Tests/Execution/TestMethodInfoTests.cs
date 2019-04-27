@@ -1301,6 +1301,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #endregion
 
+        [TestMethodV1]
+        public void ResolveArgumentsShouldReturnAdditionalOptionalParametersWithNoneProvided()
+        {
+            var optionalArgumentsMethod = typeof(DummyTestClass).GetMethod("DummyOptionalArgumentsMethod");
+
+            var method = new TestMethodInfo(
+                optionalArgumentsMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { "RequiredStr1" };
+            object[] expectedArguments = new object[] { "RequiredStr1", null, null };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(3, resolvedArguments.Length);
+            CollectionAssert.AreEqual(expectedArguments, resolvedArguments);
+        }
+
+        [TestMethodV1]
+        public void ResolveArgumentsShouldReturnAdditionalOptionalParametersWithSomeProvided()
+        {
+            var optionalArgumentsMethod = typeof(DummyTestClass).GetMethod("DummyOptionalArgumentsMethod");
+
+            var method = new TestMethodInfo(
+                optionalArgumentsMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { "RequiredStr1", "OptionalStr1" };
+            object[] expectedArguments = new object[] { "RequiredStr1", "OptionalStr1", null };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(3, resolvedArguments.Length);
+            CollectionAssert.AreEqual(expectedArguments, resolvedArguments);
+        }
+
         #region helper methods
 
         private void RunWithTestablePlatformService(TestablePlatformServiceProvider testablePlatformServiceProvider, Action action)
@@ -1398,6 +1434,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             {
                 // We use this method to validate async TestInitialize, TestCleanup, TestMethod
                 return DummyAsyncTestMethodBody();
+            }
+
+            public void DummyOptionalArgumentsMethod(string str1, string str2 = null, string str3 = null)
+            {
+                TestMethodBody(this);
             }
         }
 
