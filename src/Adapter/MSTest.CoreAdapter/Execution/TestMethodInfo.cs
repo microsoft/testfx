@@ -171,32 +171,46 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         internal void SetArguments(object[] arguments)
         {
-            this.arguments = this.ResolveArguments(arguments);
+            if (arguments == null)
+            {
+                this.arguments = null;
+            }
+            else
+            {
+                this.arguments = this.ResolveArguments(arguments);
+            }
         }
 
         internal object[] ResolveArguments(object[] arguments)
         {
             ParameterInfo[] parameterInfos = this.TestMethod.GetParameters();
             int requiredParameterCount = 0;
+            bool hasParamsValue = false;
+            object paramsValues = null;
             foreach (var parameter in parameterInfos)
             {
+                // If this is a params array parameter, create an instance to
+                // populate with any extra values provided. Don't increment
+                // required parameter count - params arguments are not actually required
+                if (parameter.GetCustomAttribute(typeof(ParamArrayAttribute)) != null)
+                {
+                    hasParamsValue = true;
+                    break;
+                }
+
+                // Count required parameters from method
                 if (!parameter.IsOptional)
                 {
                     requiredParameterCount++;
                 }
             }
 
-            if (requiredParameterCount == parameterInfos.Length)
-            {
-                return arguments;
-            }
-
-            if (arguments == null)
-            {
-                return null;
-            }
-
-            if (arguments.Length < requiredParameterCount || arguments.Length > parameterInfos.Length)
+            // If all the parameters are required, we have fewer arguments
+            // supplied than required, or more arguments than the method takes
+            // and it doesn't have a params paramenter don't try and resolve anything
+            if (requiredParameterCount == parameterInfos.Length ||
+                arguments.Length < requiredParameterCount ||
+                (!hasParamsValue && arguments.Length > parameterInfos.Length))
             {
                 return arguments;
             }
@@ -204,12 +218,44 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             object[] newParameters = new object[parameterInfos.Length];
             for (int i = 0; i < arguments.Length; i++)
             {
-                newParameters[i] = arguments[i];
+                // We have reached the end of the regular parameters and any additional
+                // values will go in a params array
+                if (i >= parameterInfos.Length - 1 && hasParamsValue)
+                {
+                    // If this is the params parameter, instantiate a new object of that type
+                    if (i == parameterInfos.Length - 1)
+                    {
+                        paramsValues = Activator.CreateInstance(parameterInfos[i].ParameterType, new object[] { arguments.Length - i });
+                        newParameters[i] = paramsValues;
+                    }
+
+                    // The params parameters is an array but the type is not known
+                    // set the values as a generic array
+                    if (paramsValues is Array paramsArray)
+                    {
+                        paramsArray.SetValue(arguments[i], i - (parameterInfos.Length - 1));
+                    }
+                }
+                else
+                {
+                    newParameters[i] = arguments[i];
+                }
             }
 
+            // If arguments supplied are less than total possible arguments set
+            // the values supplied to the default values for those parameters
             for (int i = arguments.Length; i < parameterInfos.Length; i++)
             {
-                newParameters[i] = parameterInfos[i].DefaultValue;
+                // If this is the params parameters, set it to an empty
+                // array of that type as DefaultValue is DBNull
+                if (hasParamsValue && i == parameterInfos.Length - 1)
+                {
+                    newParameters[i] = Activator.CreateInstance(parameterInfos[i].ParameterType, 0);
+                }
+                else
+                {
+                    newParameters[i] = parameterInfos[i].DefaultValue;
+                }
             }
 
             return newParameters;

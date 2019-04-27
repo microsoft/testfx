@@ -8,6 +8,7 @@ namespace DataRowTestProject
     [TestClass]
     public class BaseClass
     {
+        [TestCategory("DataRowSimple")]
         [TestMethod]
         [DataRow("BaseString1")]
         [DataRow("BaseString2")]
@@ -17,6 +18,7 @@ namespace DataRowTestProject
             Assert.IsTrue(true);
         }
 
+        [TestCategory("DataRowSomeOptional")]
         [TestMethod]
         [DataRow(42)]
         [DataRow(42, "BaseOptionalString1")]
@@ -27,6 +29,7 @@ namespace DataRowTestProject
             Assert.IsTrue(true);
         }
 
+        [TestCategory("DataRowAllOptional")]
         [TestMethod]
         [DataRow()]
         [DataRow(42)]
@@ -36,6 +39,28 @@ namespace DataRowTestProject
         public virtual void DataRowTestMethodWithAllOptionalParameters(int i = 0, string s1 = null, string s2 = null)
         {
             Assert.IsTrue(true);
+        }
+
+        [TestCategory("DataRowParamsArgument")]
+        [TestMethod]
+        [DataRow(1)]
+        [DataRow(1, "BaseSingleParamsArg")]
+        [DataRow(1, "BaseParamsArg1","BaseParamsArg2")]
+        [DataRow(1, "BaseParamsArg1", "BaseParamsArg2", "BaseParamsArg3")]
+        public virtual void DataRowTestMethodWithParamsParameters(int i, params string[] args)
+        {
+            Assert.IsTrue(true);
+        }
+
+        [TestCategory("DataRowOptionalInvalidArguments")]
+        [TestMethod]
+        [ExpectedException(typeof(System.Reflection.TargetParameterCountException))]
+        [DataRow()]
+        [DataRow(1)]
+        [DataRow(1, "BaseRequiredArgument", "BaseOptionalArgument", "BaseExtraArgument")]
+        public virtual void DataRowTestMethodFailsWithInvalidArguments(int i1, string required, string s1 = null)
+        {
+            Assert.Fail();
         }
     }
 }

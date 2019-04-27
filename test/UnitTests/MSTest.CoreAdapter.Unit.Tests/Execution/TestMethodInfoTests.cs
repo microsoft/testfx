@@ -1302,6 +1302,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         #endregion
 
         [TestMethodV1]
+        public void ResolveArgumentsShouldReturnProvidedArgumentsWhenTooFewParameters()
+        {
+            var simpleArgumentsMethod = typeof(DummyTestClass).GetMethod("DummySimpleArgumentsMethod");
+
+            var method = new TestMethodInfo(
+                simpleArgumentsMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { "RequiredStr1" };
+            object[] expectedArguments = new object[] { "RequiredStr1" };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(1, resolvedArguments.Length);
+            CollectionAssert.AreEqual(expectedArguments, resolvedArguments);
+        }
+
+        [TestMethodV1]
+        public void ResolveArgumentsShouldReturnProvidedArgumentsWhenTooManyParameters()
+        {
+            var simpleArgumentsMethod = typeof(DummyTestClass).GetMethod("DummySimpleArgumentsMethod");
+
+            var method = new TestMethodInfo(
+                simpleArgumentsMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { "RequiredStr1", "RequiredStr2", "ExtraStr3" };
+            object[] expectedArguments = new object[] { "RequiredStr1", "RequiredStr2", "ExtraStr3" };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(3, resolvedArguments.Length);
+            CollectionAssert.AreEqual(expectedArguments, resolvedArguments);
+        }
+
+        [TestMethodV1]
         public void ResolveArgumentsShouldReturnAdditionalOptionalParametersWithNoneProvided()
         {
             var optionalArgumentsMethod = typeof(DummyTestClass).GetMethod("DummyOptionalArgumentsMethod");
@@ -1335,6 +1371,46 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.AreEqual(3, resolvedArguments.Length);
             CollectionAssert.AreEqual(expectedArguments, resolvedArguments);
+        }
+
+        [TestMethodV1]
+        public void ResolveArgumentsShouldReturnEmptyParamsWithNoneProvided()
+        {
+            var paramsArgumentMethod = typeof(DummyTestClass).GetMethod("DummyParamsArgumentMethod");
+
+            var method = new TestMethodInfo(
+                paramsArgumentMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { 1 };
+            object[] expectedArguments = new object[] { 1, new string[] { } };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(2, resolvedArguments.Length);
+            Assert.AreEqual(expectedArguments[0], resolvedArguments[0]);
+            Assert.IsInstanceOfType(resolvedArguments[1], typeof(string[]));
+            CollectionAssert.AreEqual((string[])expectedArguments[1], (string[])resolvedArguments[1]);
+        }
+
+        [TestMethodV1]
+        public void ResolveArgumentsShouldReturnPopulatedParamsWithAllProvided()
+        {
+            var paramsArgumentMethod = typeof(DummyTestClass).GetMethod("DummyParamsArgumentMethod");
+
+            var method = new TestMethodInfo(
+                paramsArgumentMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { 1, "str1", "str2", "str3" };
+            object[] expectedArguments = new object[] { 1, new string[] { "str1", "str2", "str3" } };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(2, resolvedArguments.Length);
+            Assert.AreEqual(expectedArguments[0], resolvedArguments[0]);
+            Assert.IsInstanceOfType(resolvedArguments[1], typeof(string[]));
+            CollectionAssert.AreEqual((string[])expectedArguments[1], (string[])resolvedArguments[1]);
         }
 
         #region helper methods
@@ -1436,7 +1512,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 return DummyAsyncTestMethodBody();
             }
 
+            public void DummySimpleArgumentsMethod(string str1, string str2)
+            {
+                TestMethodBody(this);
+            }
+
             public void DummyOptionalArgumentsMethod(string str1, string str2 = null, string str3 = null)
+            {
+                TestMethodBody(this);
+            }
+
+            public void DummyParamsArgumentMethod(int i, params string[] args)
             {
                 TestMethodBody(this);
             }
