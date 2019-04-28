@@ -281,7 +281,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             var exception = ActionUtility.PerformActionAndReturnException(() => this.testContextImplementation.AddResultFile(null));
 
             Assert.AreEqual(typeof(ArgumentException), exception.GetType());
-            StringAssert.Contains(exception.Message, "The parameter should not be null or empty.");
+            StringAssert.Contains(exception.Message, Resource.Common_CannotBeNullOrEmpty);
         }
 
         [TestMethod]
@@ -292,7 +292,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             var exception = ActionUtility.PerformActionAndReturnException(() => this.testContextImplementation.AddResultFile(string.Empty));
 
             Assert.AreEqual(typeof(ArgumentException), exception.GetType());
-            StringAssert.Contains(exception.Message, "The parameter should not be null or empty.");
+            StringAssert.Contains(exception.Message, Resource.Common_CannotBeNullOrEmpty);
         }
 
         [TestMethod]

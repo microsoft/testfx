@@ -9,7 +9,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-    using System.Linq;
     using System.Threading;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
@@ -29,11 +28,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     {
         private static readonly string FullyQualifiedTestClassNameLabel = "FullyQualifiedTestClassName";
         private static readonly string TestNameLabel = "TestName";
-
-        /// <summary>
-        /// List of result files associated with the test
-        /// </summary>
-        private readonly IList<string> testResultFiles;
 
         /// <summary>
         /// Properties
@@ -67,7 +61,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.testMethod = testMethod;
             this.properties = new Dictionary<string, object>(properties);
             this.stringWriter = writer;
-            this.testResultFiles = new List<string>();
             this.CancellationTokenSource = new CancellationTokenSource();
             this.InitializeProperties();
         }

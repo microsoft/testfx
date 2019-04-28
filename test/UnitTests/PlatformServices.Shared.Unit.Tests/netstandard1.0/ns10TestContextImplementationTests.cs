@@ -18,14 +18,11 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     using UnitTestOutcome = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 #endif
 
-    using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Moq;
-    using MSTestAdapter.TestUtilities;
     using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
 
     [TestClass]

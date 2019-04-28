@@ -224,7 +224,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             if (string.IsNullOrEmpty(fileName))
             {
-                throw new ArgumentException("The parameter should not be null or empty.", "fileName");
+                throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, "fileName");
             }
 
             this.testResultFiles.Add(Path.GetFullPath(fileName));
