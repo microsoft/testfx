@@ -134,6 +134,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
+        /// Adds a file name to the list in TestResult.ResultFileNames
+        /// </summary>
+        /// <param name="fileName">
+        /// The file Name.
+        /// </param>
+        public override void AddResultFile(string fileName)
+        {
+            // No-op function
+            // will be replaced at runtime time by PlatformServices Desktop/NetCore
+            // depending the target framework
+        }
+
+        /// <summary>
         /// Set the unit-test outcome
         /// </summary>
         /// <param name="outcome">The test outcome.</param>
@@ -172,15 +185,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             this.properties.Add(propertyName, propertyValue);
-        }
-
-        /// <summary>
-        /// Returning null as this feature is not supported in ASP .net and UWP
-        /// </summary>
-        /// <returns>List of result files. Null presently.</returns>
-        public IList<string> GetResultFiles()
-        {
-            return null;
         }
 
         /// <summary>
@@ -228,6 +232,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 this.stringWriterDisposed = true;
             }
+        }
+
+        /// <summary>
+        /// Returns null as this feature is not supported in ASP .net and UWP
+        /// </summary>
+        /// <returns>List of result files. Null presently.</returns>
+        public IList<string> GetResultFiles()
+        {
+            return null;
         }
 
         /// <summary>

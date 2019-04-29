@@ -10,6 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
+    using System.Linq;
     using System.Threading;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
@@ -31,7 +32,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// List of result files associated with the test
         /// </summary>
-        private IList<string> testResultFiles;
+        private readonly IList<string> testResultFiles;
 
         /// <summary>
         /// Properties
@@ -214,6 +215,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
+        /// Adds a file name to the list in TestResult.ResultFileNames
+        /// </summary>
+        /// <param name="fileName">
+        /// The file Name.
+        /// </param>
+        public override void AddResultFile(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+            {
+                throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, "fileName");
+            }
+
+            this.testResultFiles.Add(Path.GetFullPath(fileName));
+        }
+
+        /// <summary>
         /// Set the unit-test outcome
         /// </summary>
         /// <param name="outcome">The test outcome.</param>
@@ -255,12 +272,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Returning null as this feature is not supported in ASP .net and UWP
+        /// Result files attached
         /// </summary>
-        /// <returns>List of result files. Null presently.</returns>
+        /// <returns>List of result files generated in run.</returns>
         public IList<string> GetResultFiles()
         {
-            return null;
+            if (this.testResultFiles.Count == 0)
+            {
+                return null;
+            }
+
+            IList<string> results = this.testResultFiles.ToList();
+
+            this.testResultFiles.Clear();
+
+            return results;
         }
 
         /// <summary>
