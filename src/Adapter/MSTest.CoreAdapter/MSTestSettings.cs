@@ -51,7 +51,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             this.CaptureDebugTraces = true;
             this.MapInconclusiveToFailed = false;
-            this.MapNotRunnableToFailed = false;
+            this.MapNotRunnableToFailed = true;
             this.EnableBaseClassTestMethodsFromOtherAssemblies = true;
             this.ForcedLegacyMode = false;
             this.TestSettingsFile = null;
