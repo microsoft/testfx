@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
-        public void MapNotRunnableToFailedIsByDefaultFalseWhenNotSpecified()
+        public void MapNotRunnableToFailedIsByDefaultTrueWhenNotSpecified()
         {
             string runSettingxml =
                 @"<RunSettings>
@@ -75,7 +75,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, false);
+            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
         }
 
         [TestMethod]
@@ -887,7 +887,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, false);
+            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
             Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
         }
 
@@ -899,7 +899,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, false);
+            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
             Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
         }
 
@@ -912,7 +912,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
             Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, false);
+            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
             Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
         }
 

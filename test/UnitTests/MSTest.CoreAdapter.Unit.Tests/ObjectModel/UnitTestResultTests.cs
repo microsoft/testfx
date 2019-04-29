@@ -292,7 +292,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
         }
 
         [TestMethod]
-        public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeNoneWhenNotSpecified()
+        public void UnitTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutComeNoneWhenSpecifiedInAdapterSettings()
+        {
+            string runSettingxml =
+            @"<RunSettings>
+                    <MSTestV2>
+                        <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, adapterSettings);
+            Assert.AreEqual(TestOutcome.None, resultOutcome);
+        }
+
+        [TestMethod]
+        public void UnitTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailedByDefault()
         {
             string runSettingxml =
             @"<RunSettings>
@@ -303,7 +319,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
             var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, adapterSettings);
-            Assert.AreEqual(TestOutcome.None, resultOutcome);
+            Assert.AreEqual(TestOutcome.Failed, resultOutcome);
         }
 
         [TestMethod]
