@@ -216,45 +216,45 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             object[] newParameters = new object[parameterInfos.Length];
-            for (int i = 0; i < arguments.Length; i++)
+            for (int argumentIndex = 0; argumentIndex < arguments.Length; argumentIndex++)
             {
                 // We have reached the end of the regular parameters and any additional
                 // values will go in a params array
-                if (i >= parameterInfos.Length - 1 && hasParamsValue)
+                if (argumentIndex >= parameterInfos.Length - 1 && hasParamsValue)
                 {
                     // If this is the params parameter, instantiate a new object of that type
-                    if (i == parameterInfos.Length - 1)
+                    if (argumentIndex == parameterInfos.Length - 1)
                     {
-                        paramsValues = Activator.CreateInstance(parameterInfos[i].ParameterType, new object[] { arguments.Length - i });
-                        newParameters[i] = paramsValues;
+                        paramsValues = Activator.CreateInstance(parameterInfos[argumentIndex].ParameterType, new object[] { arguments.Length - argumentIndex });
+                        newParameters[argumentIndex] = paramsValues;
                     }
 
                     // The params parameters is an array but the type is not known
                     // set the values as a generic array
                     if (paramsValues is Array paramsArray)
                     {
-                        paramsArray.SetValue(arguments[i], i - (parameterInfos.Length - 1));
+                        paramsArray.SetValue(arguments[argumentIndex], argumentIndex - (parameterInfos.Length - 1));
                     }
                 }
                 else
                 {
-                    newParameters[i] = arguments[i];
+                    newParameters[argumentIndex] = arguments[argumentIndex];
                 }
             }
 
             // If arguments supplied are less than total possible arguments set
             // the values supplied to the default values for those parameters
-            for (int i = arguments.Length; i < parameterInfos.Length; i++)
+            for (int parameterNotProvidedIndex = arguments.Length; parameterNotProvidedIndex < parameterInfos.Length; parameterNotProvidedIndex++)
             {
                 // If this is the params parameters, set it to an empty
                 // array of that type as DefaultValue is DBNull
-                if (hasParamsValue && i == parameterInfos.Length - 1)
+                if (hasParamsValue && parameterNotProvidedIndex == parameterInfos.Length - 1)
                 {
-                    newParameters[i] = Activator.CreateInstance(parameterInfos[i].ParameterType, 0);
+                    newParameters[parameterNotProvidedIndex] = Activator.CreateInstance(parameterInfos[parameterNotProvidedIndex].ParameterType, 0);
                 }
                 else
                 {
-                    newParameters[i] = parameterInfos[i].DefaultValue;
+                    newParameters[parameterNotProvidedIndex] = parameterInfos[parameterNotProvidedIndex].DefaultValue;
                 }
             }
 
