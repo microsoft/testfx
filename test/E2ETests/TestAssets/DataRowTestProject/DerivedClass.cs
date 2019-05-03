@@ -22,17 +22,18 @@ namespace DataRowTestProject
         [DataRow(123)]
         [DataRow(123, "DerivedOptionalString1")]
         [DataRow(123, "DerivedOptionalString2", "DerivedOptionalString3")]
-        public override void DataRowTestMethodWithSomeOptionalParameters(int i, string s1 = null, string s2 = null)
+        public void DataRowTestMethodWithSomeOptionalParameters(int i, string s1 = null, string s2 = null)
         {
             Assert.IsTrue(true);
         }
 
         [TestCategory("DataRowAllOptional")]
         [TestMethod]
+        [DataRow()]
         [DataRow(123)]
         [DataRow(123, "DerivedOptionalString4")]
         [DataRow(123, "DerivedOptionalString5", "DerivedOptionalString6")]
-        public override void DataRowTestMethodWithAllOptionalParameters(int i = 0, string s1 = null, string s2 = null)
+        public void DataRowTestMethodWithAllOptionalParameters(int i = 0, string s1 = null, string s2 = null)
         {
             Assert.IsTrue(true);
         }
@@ -42,7 +43,8 @@ namespace DataRowTestProject
         [DataRow(2)]
         [DataRow(2, "DerivedSingleParamsArg")]
         [DataRow(2, "DerivedParamsArg1", "DerivedParamsArg2")]
-        public override void DataRowTestMethodWithParamsParameters(int i, params string[] args)
+        [DataRow(2, "DerivedParamsArg1", "DerivedParamsArg2","DerivedParamsArg3")]
+        public void DataRowTestMethodWithParamsParameters(int i, params string[] args)
         {
             Assert.IsTrue(true);
         }
@@ -50,9 +52,10 @@ namespace DataRowTestProject
         [TestCategory("DataRowOptionalInvalidArguments")]
         [TestMethod]
         [ExpectedException(typeof(System.Reflection.TargetParameterCountException))]
+        [DataRow()]
         [DataRow(2)]
         [DataRow(2, "DerivedRequiredArgument", "DerivedOptionalArgument", "DerivedExtraArgument")]
-        public override void DataRowTestMethodFailsWithInvalidArguments(int i1, string requiredString, string s1 = null)
+        public void DataRowTestMethodFailsWithInvalidArguments(int i1, string requiredString, string s1 = null)
         {
             Assert.Fail();
         }
