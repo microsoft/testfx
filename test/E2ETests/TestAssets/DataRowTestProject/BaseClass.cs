@@ -8,6 +8,7 @@ namespace DataRowTestProject
     [TestClass]
     public class BaseClass
     {
+        [TestCategory("DataRowSimple")]
         [TestMethod]
         [DataRow("BaseString1")]
         [DataRow("BaseString2")]

@@ -21,6 +21,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         private MethodInfo testMethodInfo;
 
         [TestMethod]
+        public void DefaultConstructorSetsEmptyArrayPassed()
+        {
+            var dataRow = new DataRowAttribute();
+
+            CollectionAssert.AreEqual(new object[] { }, dataRow.Data);
+        }
+
+        [TestMethod]
         public void ConstructorShouldSetDataPassed()
         {
             var dataRow = new DataRowAttribute("mercury");
