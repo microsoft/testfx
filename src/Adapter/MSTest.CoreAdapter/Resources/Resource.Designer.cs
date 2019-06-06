@@ -641,7 +641,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0}. If you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread..
+        ///   Looks up a localized string similar to {0} For UWP projects, if you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread..
         /// </summary>
         internal static string UTA_WrongThread {
             get {
