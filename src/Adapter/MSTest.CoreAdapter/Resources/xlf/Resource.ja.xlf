@@ -295,8 +295,8 @@ Error: {1}</source>
         </note>
       </trans-unit>
       <trans-unit id="UTA_WrongThread">
-        <source>{0}. If you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</source>
-        <target state="translated">{0}。テスト内で UI オブジェクトを使用している場合は、[TestMethod] の代わりに [UITestMethod] 属性を使用して UI スレッド内でテストを実行することを検討してください。</target>
+        <source>{0} For UWP projects, if you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</source>
+        <target state="new">{0} For UWP projects, if you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</target>
         <note>
         </note>
       </trans-unit>
