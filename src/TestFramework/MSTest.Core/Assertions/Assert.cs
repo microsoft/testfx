@@ -1758,7 +1758,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 HandleFail("Assert.IsNotInstanceOfType", message, parameters);
             }
-            
+
             if (value == null)
             {
                 return;
