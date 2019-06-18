@@ -278,7 +278,6 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         public void InstanceNotOfTypeShouldFailWhenValueIsNull()
         {
             Action action = () => TestFrameworkV2.Assert.IsNotInstanceOfType(null, typeof(AssertTests));
-            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
         [TestMethod]
