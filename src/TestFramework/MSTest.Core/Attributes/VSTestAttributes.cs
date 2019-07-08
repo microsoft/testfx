@@ -6,8 +6,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.Globalization;
-    using System.Linq;
 
 #pragma warning disable SA1402 // FileMayOnlyContainASingleType
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
@@ -23,6 +21,25 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The infinite.
         /// </summary>
         Infinite = int.MaxValue
+    }
+
+    /// <summary>
+    /// Enumeration for inheritance behavior, that can be used with both the <see cref="ClassInitializeAttribute"/> class
+    /// and <see cref="ClassCleanupAttribute"/> class.
+    /// Defines the behavior of the ClassInitialize and ClassCleanup methods of base classes.
+    /// The type of the enumeration must match
+    /// </summary>
+    public enum InheritanceBehavior
+    {
+        /// <summary>
+        /// None.
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Before each derived class.
+        /// </summary>
+        BeforeEachDerivedClass
     }
 
     /// <summary>
@@ -156,6 +173,31 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class ClassInitializeAttribute : Attribute
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClassInitializeAttribute"/> class.
+        /// ClassInitializeAttribute
+        /// </summary>
+        public ClassInitializeAttribute()
+        {
+            this.InheritanceBehavior = InheritanceBehavior.None;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClassInitializeAttribute"/> class.
+        /// ClassInitializeAttribute
+        /// </summary>
+        /// <param name="inheritanceBehavior">
+        /// Specifies the ClassInitialize Inheritance Behavior
+        /// </param>
+        public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior)
+        {
+            this.InheritanceBehavior = inheritanceBehavior;
+        }
+
+        /// <summary>
+        /// Gets the Inheritance Behavior
+        /// </summary>
+        public InheritanceBehavior InheritanceBehavior { get; private set; }
     }
 
     /// <summary>
@@ -164,6 +206,31 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class ClassCleanupAttribute : Attribute
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
+        /// ClassCleanupAttribute
+        /// </summary>
+        public ClassCleanupAttribute()
+        {
+            this.InheritanceBehavior = InheritanceBehavior.None;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
+        /// ClassCleanupAttribute
+        /// </summary>
+        /// <param name="inheritanceBehavior">
+        /// Specifies the ClassCleanup Inheritance Behavior
+        /// </param>
+        public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior)
+        {
+            this.InheritanceBehavior = inheritanceBehavior;
+        }
+
+        /// <summary>
+        /// Gets the Inheritance Behavior
+        /// </summary>
+        public InheritanceBehavior InheritanceBehavior { get; private set; }
     }
 
     /// <summary>
