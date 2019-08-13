@@ -5,7 +5,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 {
     using System;
     using System.Diagnostics;
-
+    using System.Threading.Tasks;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
     /// <summary>
@@ -42,6 +44,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             this.FullClassName = fullClassName;
             this.AssemblyName = assemblyName;
             this.IsAsync = isAsync;
+        }
+
+        internal TestMethod(TestMethodInfo testMethodInfo)
+        {
+            Debug.Assert(testMethodInfo != null, "TestMethodInfo can't be null");
+
+            this.Name = testMethodInfo.TestMethodName;
+            this.FullClassName = testMethodInfo.TestClassName;
+            this.AssemblyName = testMethodInfo.Parent.ClassType.AssemblyQualifiedName;
+            this.IsAsync = ReflectHelper.MatchReturnType(testMethodInfo.MethodInfo, typeof(Task));
         }
 
         /// <summary>

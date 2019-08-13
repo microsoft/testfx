@@ -168,8 +168,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, unitTestResult.DatarowIndex);
                 }
 
-                testExecutionRecorder.RecordEnd(test, testResult.Outcome);
-
                 if (testResult.Outcome == TestOutcome.Failed)
                 {
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
@@ -363,7 +361,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 var unitTestElement = currentTest.ToUnitTestElement(source);
-                testExecutionRecorder.RecordStart(currentTest);
 
                 var startTime = DateTimeOffset.Now;
 
@@ -374,7 +371,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Run single test passing test context properties to it.
                 var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
                 var testContextProperties = this.GetTestContextProperties(tcmProperties, sourceLevelParameters);
-                var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
+                var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testExecutionRecorder, testContextProperties);
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                     "Executed test {0}",

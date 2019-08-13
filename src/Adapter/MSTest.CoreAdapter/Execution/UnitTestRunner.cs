@@ -12,6 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
     /// <summary>
     /// The runner that runs a single unit test. Also manages the assembly and class cleanup methods at the end of the run.
@@ -62,9 +63,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Runs a single test.
         /// </summary>
         /// <param name="testMethod"> The test Method. </param>
+        /// <param name="testExecutionRecorder">A instance of ITestExecutionRecorder to log test execution.</param>
         /// <param name="testContextProperties"> The test context properties. </param>
         /// <returns> The <see cref="UnitTestResult"/>. </returns>
-        internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object> testContextProperties)
+        internal UnitTestResult[] RunSingleTest(TestMethod testMethod, ITestExecutionRecorder testExecutionRecorder, IDictionary<string, object> testContextProperties)
         {
             if (testMethod == null)
             {
@@ -80,7 +82,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testContext.SetOutcome(TestTools.UnitTesting.UnitTestOutcome.InProgress);
 
                     // Get the testMethod
-                    var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                    var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, testExecutionRecorder, MSTestSettings.CurrentSettings.CaptureDebugTraces);
 
                     // If the specified TestMethod could not be found, return a NotFound result.
                     if (testMethodInfo == null)
