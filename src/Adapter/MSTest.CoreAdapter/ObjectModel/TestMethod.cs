@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 {
     using System;
     using System.Diagnostics;
+    using System.Reflection;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -52,7 +53,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
             this.Name = testMethodInfo.TestMethodName;
             this.FullClassName = testMethodInfo.TestClassName;
-            this.AssemblyName = testMethodInfo.Parent.ClassType.AssemblyQualifiedName;
+            this.AssemblyName = PlatformServiceProvider.Instance.FileOperations.GetAssemblyPath(
+                testMethodInfo.Parent.ClassType.GetTypeInfo().Assembly);
             this.IsAsync = ReflectHelper.MatchReturnType(testMethodInfo.MethodInfo, typeof(Task));
         }
 

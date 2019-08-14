@@ -44,6 +44,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.TestMethod = testMethod;
             this.Parent = parent;
             this.TestMethodOptions = testmethodOptions;
+            this.TestExecutionRecorder = testExecutionRecorder;
         }
 
         /// <summary>
