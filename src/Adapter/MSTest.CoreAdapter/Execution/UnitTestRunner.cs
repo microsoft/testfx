@@ -63,7 +63,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Runs a single test.
         /// </summary>
         /// <param name="testMethod"> The test Method. </param>
-        /// <param name="testExecutionRecorder">A instance of ITestExecutionRecorder to log test execution.</param>
+        /// <param name="testExecutionRecorder">A instance of TestExecutionRecorderWrapper used to log test execution.</param>
         /// <param name="testContextProperties"> The test context properties. </param>
         /// <returns> The <see cref="UnitTestResult"/>. </returns>
         internal UnitTestResult[] RunSingleTest(TestMethod testMethod, TestExecutionRecorderWrapper testExecutionRecorder, IDictionary<string, object> testContextProperties)

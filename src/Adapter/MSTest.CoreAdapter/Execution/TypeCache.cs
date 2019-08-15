@@ -122,7 +122,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="testMethod"> The test Method. </param>
         /// <param name="testContext"> The test Context. </param>
-        /// <param name="testExecutionRecorder">A instance of ITestExecutionRecorder to log test execution.</param>
+        /// <param name="testExecutionRecorder">A instance of TestExecutionRecorderWrapper used to log test execution.</param>
         /// <param name="captureDebugTraces"> Indicates whether the test method should capture debug traces.</param>
         /// <returns> The <see cref="TestMethodInfo"/>. </returns>
         public TestMethodInfo GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, TestExecutionRecorderWrapper testExecutionRecorder, bool captureDebugTraces)
@@ -633,7 +633,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="testMethod"> The test Method. </param>
         /// <param name="testClassInfo"> The test Class Info. </param>
         /// <param name="testContext"> The test Context. </param>
-        /// <param name="testExecutionRecorder">A instance of ITestExecutionRecorder to log test execution.</param>
+        /// <param name="testExecutionRecorder">A instance of TestExecutionRecorderWrapper used to log test execution.</param>
         /// <param name="captureDebugTraces"> Indicates whether the test method should capture debug traces.</param>
         /// <returns>
         /// The TestMethodInfo for the given test method. Null if the test method could not be found.
