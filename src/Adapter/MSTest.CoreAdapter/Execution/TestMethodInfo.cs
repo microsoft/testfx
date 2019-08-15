@@ -48,6 +48,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
+        /// Gets or sets the id of the test.
+        /// </summary>
+        public Guid TestId { get; set; }
+
+        /// <summary>
         /// Gets a value indicating whether timeout is set.
         /// </summary>
         public bool IsTimeoutSet => this.TestMethodOptions.Timeout != TimeoutWhenNotSet;
@@ -144,6 +149,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             using (LogMessageListener listener = new LogMessageListener(this.TestMethodOptions.CaptureDebugTraces))
             {
                 var testCase = new UnitTestElement(new TestMethod(this)).ToTestCase();
+                if (this.TestId != Guid.Empty)
+                {
+                    testCase.Id = this.TestId;
+                }
 
                 watch.Start();
                 try
@@ -172,6 +181,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         result.LogError = listener.StandardError;
                         result.TestContextMessages = this.TestMethodOptions.TestContext.GetAndClearDiagnosticMessages();
                         result.ResultFiles = this.TestMethodOptions.TestContext.GetResultFiles();
+                        result.TestId = testCase.Id;
                     }
 
                     this.TestExecutionRecorder.RecordEnd(

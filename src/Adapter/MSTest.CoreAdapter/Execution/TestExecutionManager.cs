@@ -154,6 +154,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return;
             }
 
+            Guid orginalTestCaseId = test.Id;
             foreach (var unitTestResult in unitTestResults)
             {
                 if (test == null)
@@ -161,6 +162,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     continue;
                 }
 
+                test.Id = unitTestResult.TestId == Guid.Empty ? orginalTestCaseId : unitTestResult.TestId;
                 var testResult = unitTestResult.ToTestResult(test, startTime, endTime, MSTestSettings.CurrentSettings);
 
                 if (unitTestResult.DatarowIndex >= 0)
@@ -183,6 +185,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     // Ignore this exception
                 }
             }
+
+            test.Id = orginalTestCaseId;
         }
 
         private static bool MatchTestFilter(ITestCaseFilterExpression filterExpression, TestCase test, TestMethodFilter testMethodFilter)
