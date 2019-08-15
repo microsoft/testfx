@@ -165,7 +165,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 test.Id = unitTestResult.TestId == Guid.Empty ? orginalTestCaseId : unitTestResult.TestId;
                 var testResult = unitTestResult.ToTestResult(test, startTime, endTime, MSTestSettings.CurrentSettings);
 
-                if (unitTestResult.DatarowIndex >= 0)
+                if (unitTestResult.DatarowIndex >= 0 && string.IsNullOrEmpty(unitTestResult.DisplayName))
                 {
                     testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, unitTestResult.DatarowIndex);
                 }
@@ -357,6 +357,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             IDictionary<string, object> sourceLevelParameters,
             UnitTestRunner testRunner)
         {
+            var testExecutionRecorderWrapper = new TestExecutionRecorderWrapper(testExecutionRecorder);
             foreach (var currentTest in tests)
             {
                 if (this.cancellationToken != null && this.cancellationToken.Canceled)
@@ -375,7 +376,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Run single test passing test context properties to it.
                 var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
                 var testContextProperties = this.GetTestContextProperties(tcmProperties, sourceLevelParameters);
-                var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testExecutionRecorder, testContextProperties);
+                var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testExecutionRecorderWrapper, testContextProperties);
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                     "Executed test {0}",

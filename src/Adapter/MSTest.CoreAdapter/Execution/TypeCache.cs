@@ -125,7 +125,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="testExecutionRecorder">A instance of ITestExecutionRecorder to log test execution.</param>
         /// <param name="captureDebugTraces"> Indicates whether the test method should capture debug traces.</param>
         /// <returns> The <see cref="TestMethodInfo"/>. </returns>
-        public TestMethodInfo GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, ITestExecutionRecorder testExecutionRecorder, bool captureDebugTraces)
+        public TestMethodInfo GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, TestExecutionRecorderWrapper testExecutionRecorder, bool captureDebugTraces)
         {
             if (testMethod == null)
             {
@@ -638,7 +638,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>
         /// The TestMethodInfo for the given test method. Null if the test method could not be found.
         /// </returns>
-        private TestMethodInfo ResolveTestMethod(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext, ITestExecutionRecorder testExecutionRecorder, bool captureDebugTraces)
+        private TestMethodInfo ResolveTestMethod(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext, TestExecutionRecorderWrapper testExecutionRecorder, bool captureDebugTraces)
         {
             Debug.Assert(testMethod != null, "testMethod is Null");
             Debug.Assert(testClassInfo != null, "testClassInfo is Null");

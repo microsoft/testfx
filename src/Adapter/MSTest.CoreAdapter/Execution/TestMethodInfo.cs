@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             MethodInfo testMethod,
             TestClassInfo parent,
             TestMethodOptions testmethodOptions,
-            ITestExecutionRecorder testExecutionRecorder)
+            TestExecutionRecorderWrapper testExecutionRecorder)
         {
             Debug.Assert(testMethod != null, "TestMethod should not be null");
             Debug.Assert(parent != null, "Parent should not be null");
@@ -94,7 +94,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         internal TestMethodOptions TestMethodOptions { get; private set; }
 
-        private ITestExecutionRecorder TestExecutionRecorder { get; }
+        private TestExecutionRecorderWrapper TestExecutionRecorder { get; }
 
         public Attribute[] GetAllAttributes(bool inherit)
         {
@@ -148,16 +148,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             using (LogMessageListener listener = new LogMessageListener(this.TestMethodOptions.CaptureDebugTraces))
             {
-                var testCase = new UnitTestElement(new TestMethod(this)).ToTestCase();
-                if (this.TestId != Guid.Empty)
-                {
-                    testCase.Id = this.TestId;
-                }
+                var testElement = new UnitTestElement(new TestMethod(this)) { TestId = this.TestId };
 
                 watch.Start();
                 try
                 {
-                    this.TestExecutionRecorder.RecordStart(testCase);
+                    this.TestExecutionRecorder.RecordStart(testElement);
 
                     if (this.IsTimeoutSet)
                     {
@@ -181,12 +177,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         result.LogError = listener.StandardError;
                         result.TestContextMessages = this.TestMethodOptions.TestContext.GetAndClearDiagnosticMessages();
                         result.ResultFiles = this.TestMethodOptions.TestContext.GetResultFiles();
-                        result.TestId = testCase.Id;
+                        result.TestId = this.TestId;
                     }
 
                     this.TestExecutionRecorder.RecordEnd(
-                        testCase,
-                        UnitTestOutcomeHelper.ToTestOutcome(result.Outcome.ToUnitTestOutcome(), MSTestSettings.CurrentSettings));
+                        testElement,
+                        UnitTestOutcomeHelper.ToTestOutcome(
+                            result?.Outcome.ToUnitTestOutcome() ?? UnitTestOutcome.Error,
+                            MSTestSettings.CurrentSettings));
                 }
             }
 
