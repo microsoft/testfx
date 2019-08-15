@@ -19,6 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Moq;
     using MSTest.TestAdapter;
     using TestableImplementations;
@@ -84,7 +85,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var globalTestMethodInfo = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.globaltestMethodOptions);
+                this.globaltestMethodOptions,
+                new TestExecutionRecorderWrapper(new Mock<ITestExecutionRecorder>().Object));
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, null);
             this.globalTestMethodRunner = new TestMethodRunner(globalTestMethodInfo, this.testMethod, this.testContextImplementation, false);
 
@@ -887,7 +889,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             private readonly Func<UTF.TestResult> invokeTest;
 
             internal TestableTestmethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<UTF.TestResult> invoke)
-                : base(testMethod, parent, testMethodOptions)
+                : base(testMethod, parent, testMethodOptions, new TestExecutionRecorderWrapper(new Mock<ITestExecutionRecorder>().Object))
             {
                 this.invokeTest = invoke;
             }

@@ -73,6 +73,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 throw new ArgumentNullException("testMethod");
             }
 
+            if (testExecutionRecorder == null)
+            {
+                throw new ArgumentNullException(nameof(testExecutionRecorder));
+            }
+
             try
             {
                 using (var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture))

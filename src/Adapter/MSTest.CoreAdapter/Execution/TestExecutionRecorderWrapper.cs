@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
     using System;
+    using System.Diagnostics;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -15,9 +16,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     {
         private readonly ITestExecutionRecorder recorder;
 
-        public TestExecutionRecorderWrapper(ITestExecutionRecorder recorder)
+        public TestExecutionRecorderWrapper(ITestExecutionRecorder testExecutionRecorder)
         {
-            this.recorder = recorder;
+            Debug.Assert(testExecutionRecorder != null, "TestExecutionRecorder should not be null");
+
+            this.recorder = testExecutionRecorder;
         }
 
         /// <summary>
