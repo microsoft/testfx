@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
     using System;
     using System.Diagnostics;
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -34,14 +35,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             return null;
         }
 
-        public void RecordEnd(UnitTestElement test, TestOutcome outcome)
+        public void RecordEnd(UnitTestElement test, UnitTestOutcome outcome)
         {
-            this.recorder.RecordEnd(test.ToTestCase(), outcome);
+            this.recorder.RecordEnd(test.ToTestCase(), UnitTestOutcomeHelper.ToTestOutcome(outcome, MSTestSettings.CurrentSettings));
         }
 
         public void RecordStart(UnitTestElement test)
         {
             this.recorder.RecordStart(test.ToTestCase());
+        }
+
+        public void RecordStartAndEnd(UnitTestElement test, UnitTestOutcome outcome)
+        {
+            TestCase testCase = test.ToTestCase();
+            this.recorder.RecordStart(testCase);
+            this.recorder.RecordEnd(testCase, UnitTestOutcomeHelper.ToTestOutcome(outcome, MSTestSettings.CurrentSettings));
         }
     }
 }

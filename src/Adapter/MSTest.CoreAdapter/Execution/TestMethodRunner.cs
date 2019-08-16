@@ -145,6 +145,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             if (isIgnoreAttributeOnClass || isIgnoreAttributeOnMethod)
             {
+                this.testMethodInfo.TestExecutionRecorder.RecordStartAndEnd(new UnitTestElement(this.test), UnitTestOutcome.Ignored);
                 return new[] { new UnitTestResult(UnitTestOutcome.Ignored, ignoreMessage) };
             }
 
@@ -158,6 +159,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         // Assembly or class initialize can throw exceptions in which case we need to ensure that we fail the test.
                         this.testMethodInfo.Parent.Parent.RunAssemblyInitialize(this.testContext.Context);
                         this.testMethodInfo.Parent.RunClassInitialize(this.testContext.Context);
+                    }
+                    catch
+                    {
+                        this.testMethodInfo.TestExecutionRecorder.RecordStartAndEnd(new UnitTestElement(this.test), UnitTestOutcome.Error);
+                        throw;
                     }
                     finally
                     {
@@ -333,10 +339,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                                 foreach (var testResult in testResults)
                                 {
-                                    if (string.IsNullOrEmpty(testResult.DisplayName))
-                                    {
-                                        testResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
-                                    }
+                                    testResult.DisplayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
                                 }
 
                                 results.AddRange(testResults);

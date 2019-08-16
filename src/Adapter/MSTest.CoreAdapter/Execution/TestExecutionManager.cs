@@ -165,7 +165,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 test.Id = unitTestResult.TestId == Guid.Empty ? orginalTestCaseId : unitTestResult.TestId;
                 var testResult = unitTestResult.ToTestResult(test, startTime, endTime, MSTestSettings.CurrentSettings);
 
-                if (unitTestResult.DatarowIndex >= 0 && string.IsNullOrEmpty(unitTestResult.DisplayName))
+                if (unitTestResult.DatarowIndex >= 0)
                 {
                     testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, unitTestResult.DatarowIndex);
                 }

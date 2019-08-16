@@ -94,7 +94,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         internal TestMethodOptions TestMethodOptions { get; private set; }
 
-        private TestExecutionRecorderWrapper TestExecutionRecorder { get; }
+        /// <summary>
+        /// Gets the test execution recorder used to log test execution.
+        /// </summary>
+        internal TestExecutionRecorderWrapper TestExecutionRecorder { get; }
 
         public Attribute[] GetAllAttributes(bool inherit)
         {
@@ -182,9 +185,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                     this.TestExecutionRecorder.RecordEnd(
                         testElement,
-                        UnitTestOutcomeHelper.ToTestOutcome(
-                            result?.Outcome.ToUnitTestOutcome() ?? UnitTestOutcome.Error,
-                            MSTestSettings.CurrentSettings));
+                        result?.Outcome.ToUnitTestOutcome() ?? UnitTestOutcome.Error);
                 }
             }
 
