@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testMethodAttribute = new UTF.TestMethodAttribute();
             this.testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
-            this.testAssemblyInfo = new TestAssemblyInfo();
+            this.testAssemblyInfo = new TestAssemblyInfo("dummyAssemblyName");
             var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
             this.testContextImplementation = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object>());
             this.testClassInfo = new TestClassInfo(

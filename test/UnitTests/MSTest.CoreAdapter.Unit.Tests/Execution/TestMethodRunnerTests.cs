@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testMethodAttribute = new UTF.TestMethodAttribute();
             var testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
-            var testAssemblyInfo = new TestAssemblyInfo();
+            var testAssemblyInfo = new TestAssemblyInfo("dummyAssemblyName");
             this.testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
             this.testContextImplementation = new TestContextImplementation(this.testMethod, new StringWriter(), new Dictionary<string, object>());
             this.testClassInfo = new TestClassInfo(
@@ -226,7 +226,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void ExecuteForAssemblyInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             // Arrange.
-            var tai = new TestAssemblyInfo
+            var tai = new TestAssemblyInfo(this.testMethod.AssemblyName)
             {
                 AssemblyInitializeMethod = typeof(TestMethodRunnerTests).GetMethod(
                 "InitMethodThrowingException",
@@ -258,7 +258,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void ExecuteForClassInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             // Arrange.
-            var tai = new TestAssemblyInfo();
+            var tai = new TestAssemblyInfo(this.testMethod.AssemblyName);
 
             var constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
             var classAttribute = new UTF.TestClassAttribute();

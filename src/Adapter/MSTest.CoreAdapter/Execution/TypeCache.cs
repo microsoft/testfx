@@ -268,7 +268,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             var testContextProperty = this.ResolveTestContext(classType);
 
-            var assemblyInfo = this.GetAssemblyInfo(classType);
+            var assemblyInfo = this.GetAssemblyInfo(classType, testMethod.AssemblyName);
 
             var classInfo = new TestClassInfo(classType, constructor, testContextProperty, this.reflectionHelper.GetDerivedAttribute<TestClassAttribute>(classType, false), assemblyInfo);
 
@@ -360,9 +360,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Get the assembly info for the parameter type
         /// </summary>
         /// <param name="type"> The type. </param>
+        /// <param name="assemblyLocation">The location of the assembly</param>
         /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Discoverer should continue with remaining sources.")]
-        private TestAssemblyInfo GetAssemblyInfo(Type type)
+        private TestAssemblyInfo GetAssemblyInfo(Type type, string assemblyLocation)
         {
             var assembly = type.GetTypeInfo().Assembly;
 
@@ -380,7 +381,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     var assemblyInitializeType = typeof(AssemblyInitializeAttribute);
                     var assemblyCleanupType = typeof(AssemblyCleanupAttribute);
 
-                    assemblyInfo = new TestAssemblyInfo();
+                    assemblyInfo = new TestAssemblyInfo(assemblyLocation);
 
                     var types = new AssemblyEnumerator().GetTypes(assembly, assembly.FullName, null);
 
