@@ -22,6 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Moq;
 
@@ -1445,6 +1446,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedArguments[0], resolvedArguments[0]);
             Assert.IsInstanceOfType(resolvedArguments[1], typeof(string[]));
             CollectionAssert.AreEqual((string[])expectedArguments[1], (string[])resolvedArguments[1]);
+        }
+
+        [TestMethodV1]
+        public void InvokeShouldRecordTestStartEnd()
+        {
+            TestCase startTestCase = null;
+            TestCase endTestCase = null;
+            this.mockExecutionRecorder
+                .Setup(m => m.RecordStart(It.IsAny<TestCase>()))
+                .Callback<TestCase>(tc => startTestCase = tc);
+            this.mockExecutionRecorder
+                .Setup(m => m.RecordEnd(It.IsAny<TestCase>(), TestOutcome.Passed))
+                .Callback<TestCase, TestOutcome>((tc, o) => endTestCase = tc);
+
+            var method = new TestMethodInfo(
+                this.methodInfo,
+                this.testClassInfo,
+                this.testMethodOptions,
+                this.executionRecorderWrapper)
+            {
+                TestId = Guid.NewGuid(),
+            };
+
+            var result = method.Invoke(null);
+
+            Assert.IsNotNull(startTestCase, "RecordStart called");
+            Assert.IsNotNull(endTestCase, "RecordEnd called");
+            Assert.AreEqual(method.TestId, startTestCase.Id, "RecordStart TestCase.Id");
+            Assert.AreEqual(method.TestId, endTestCase.Id, "RecordEnd TestCase.Id");
+            Assert.AreEqual(method.TestId, result.TestId, "Result.TestId");
         }
 
         #region helper methods

@@ -669,7 +669,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldReturnParentResultForDataSourceDataDrivenTests()
         {
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult());
+            var testMethodInfo = new TestableTestmethodInfo(tmi => new UTF.TestResult() { TestId = tmi.TestId }, this.methodInfo, this.testClassInfo, this.testMethodOptions);
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             UTF.DataSourceAttribute dataSourceAttribute = new UTF.DataSourceAttribute("DummyConnectionString", "DummyTableName");
@@ -687,6 +687,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(results[0].ExecutionId, results[1].ParentExecId);
             Assert.AreEqual(Guid.Empty, results[0].ParentExecId);
             Assert.AreNotEqual(Guid.Empty, results[1].ParentExecId);
+
+            Assert.AreNotEqual(results[0].TestId, results[1].TestId, "Parent result had different TestId from child result");
+            Assert.AreNotEqual(results[1].TestId, results[2].TestId, "Child results have different TestIds");
         }
 
         [TestMethodV1]
@@ -715,12 +718,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldReturnParentResultForDataRowDataDrivenTests()
         {
-            UTF.TestResult testResult = new UTF.TestResult
-            {
-                ResultFiles = new List<string>() { "C:\\temp.txt" }
-            };
-
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
+            var testMethodInfo = new TestableTestmethodInfo(
+                tmi => new UTF.TestResult() { TestId = tmi.TestId, ResultFiles = new[] { "C:\\temp.txt" }, },
+                this.methodInfo,
+                this.testClassInfo,
+                this.testMethodOptions);
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
 
             int dummyIntData1 = 1;
@@ -744,6 +746,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(Guid.Empty, results[0].ParentExecId);
             Assert.AreNotEqual(Guid.Empty, results[1].ParentExecId);
             Assert.AreNotEqual(Guid.Empty, results[2].ParentExecId);
+
+            Assert.AreNotEqual(results[0].TestId, results[1].TestId, "Parent result had different TestId from child result");
+            Assert.AreNotEqual(results[1].TestId, results[2].TestId, "Child results have different TestIds");
         }
 
         [TestMethodV1]
@@ -886,9 +891,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         public class TestableTestmethodInfo : TestMethodInfo
         {
-            private readonly Func<UTF.TestResult> invokeTest;
+            private readonly Func<TestMethodInfo, UTF.TestResult> invokeTest;
 
             internal TestableTestmethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<UTF.TestResult> invoke)
+                : this(tmi => invoke(), testMethod, parent, testMethodOptions)
+            {
+            }
+
+            internal TestableTestmethodInfo(
+                Func<TestMethodInfo, UTF.TestResult> invoke,
+                MethodInfo testMethod,
+                TestClassInfo parent,
+                TestMethodOptions testMethodOptions)
                 : base(testMethod, parent, testMethodOptions, new TestExecutionRecorderWrapper(new Mock<ITestExecutionRecorder>().Object))
             {
                 this.invokeTest = invoke;
@@ -897,7 +911,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public override UTF.TestResult Invoke(object[] arguments)
             {
                 // Ignore args for now
-                return this.invokeTest();
+                return this.invokeTest(this);
             }
         }
 

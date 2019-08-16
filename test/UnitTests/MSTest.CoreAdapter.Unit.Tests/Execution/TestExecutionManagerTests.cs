@@ -194,6 +194,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void RunTestsForDataRowTestShouldSendMulipleResults()
+        {
+            var testCase = this.GetTestCase(typeof(DummyTestClass), "DataRowTest");
+            TestCase[] tests = new[] { testCase };
+
+            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, this.cancellationToken);
+
+            var expectedTestCaseStartList = new[] { "DataRowTest", "DataRowTest" };
+            var expectedTestCaseEndList = new[] { "DataRowTest:Passed", "DataRowTest:Passed" };
+            var expectedResultList = new[] { "DataRowTest  Passed", "DataRowTest  Passed", "DataRowTest  Passed" };
+            var expectedDisplayNameList = new[] { null, "DataRowTest (True)", "DataRowTest (False)" };
+
+            CollectionAssert.AreEqual(expectedTestCaseStartList, this.frameworkHandle.TestCaseStartList);
+            CollectionAssert.AreEqual(expectedTestCaseEndList, this.frameworkHandle.TestCaseEndList);
+            CollectionAssert.AreEqual(expectedResultList, this.frameworkHandle.ResultsList);
+            CollectionAssert.AreEqual(expectedDisplayNameList, this.frameworkHandle.TestDisplayNameList);
+        }
+
+        [TestMethodV1]
         public void RunTestsShouldLogResultCleanupWarnings()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClassWithCleanupMethods), "TestMethod");
@@ -898,6 +917,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public void IgnoredTest()
             {
                 UTF.Assert.Fail();
+            }
+
+            [UTF.DataTestMethod]
+            [UTF.DataRow(true)]
+            [UTF.DataRow(false)]
+            public void DataRowTest(bool data)
+            {
             }
         }
 
