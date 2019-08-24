@@ -6,7 +6,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.Globalization;
 
 #pragma warning disable SA1402 // FileMayOnlyContainASingleType
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
@@ -22,6 +21,25 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The infinite.
         /// </summary>
         Infinite = int.MaxValue
+    }
+
+    /// <summary>
+    /// Enumeration for inheritance behavior, that can be used with both the <see cref="ClassInitializeAttribute"/> class
+    /// and <see cref="ClassCleanupAttribute"/> class.
+    /// Defines the behavior of the ClassInitialize and ClassCleanup methods of base classes.
+    /// The type of the enumeration must match
+    /// </summary>
+    public enum InheritanceBehavior
+    {
+        /// <summary>
+        /// None.
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// Before each derived class.
+        /// </summary>
+        BeforeEachDerivedClass
     }
 
     /// <summary>
@@ -179,6 +197,31 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class ClassInitializeAttribute : Attribute
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClassInitializeAttribute"/> class.
+        /// ClassInitializeAttribute
+        /// </summary>
+        public ClassInitializeAttribute()
+        {
+            this.InheritanceBehavior = InheritanceBehavior.None;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClassInitializeAttribute"/> class.
+        /// ClassInitializeAttribute
+        /// </summary>
+        /// <param name="inheritanceBehavior">
+        /// Specifies the ClassInitialize Inheritance Behavior
+        /// </param>
+        public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior)
+        {
+            this.InheritanceBehavior = inheritanceBehavior;
+        }
+
+        /// <summary>
+        /// Gets the Inheritance Behavior
+        /// </summary>
+        public InheritanceBehavior InheritanceBehavior { get; private set; }
     }
 
     /// <summary>
@@ -187,6 +230,31 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class ClassCleanupAttribute : Attribute
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
+        /// ClassCleanupAttribute
+        /// </summary>
+        public ClassCleanupAttribute()
+        {
+            this.InheritanceBehavior = InheritanceBehavior.None;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
+        /// ClassCleanupAttribute
+        /// </summary>
+        /// <param name="inheritanceBehavior">
+        /// Specifies the ClassCleanup Inheritance Behavior
+        /// </param>
+        public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior)
+        {
+            this.InheritanceBehavior = inheritanceBehavior;
+        }
+
+        /// <summary>
+        /// Gets the Inheritance Behavior
+        /// </summary>
+        public InheritanceBehavior InheritanceBehavior { get; private set; }
     }
 
     /// <summary>
@@ -204,8 +272,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public sealed class AssemblyCleanupAttribute : Attribute
     {
     }
-
-    #region Description attributes
 
     /// <summary>
     /// Test Owner
@@ -257,14 +323,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// Description of the test
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class DescriptionAttribute : TestPropertyAttribute
+    public sealed class DescriptionAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DescriptionAttribute"/> class to describe a test.
         /// </summary>
         /// <param name="description">The description.</param>
         public DescriptionAttribute(string description)
-            : base("Description", description)
         {
             this.Description = description;
         }
@@ -279,14 +344,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// CSS Project Structure URI
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class CssProjectStructureAttribute : TestPropertyAttribute
+    public sealed class CssProjectStructureAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CssProjectStructureAttribute"/> class for CSS Project Structure URI.
         /// </summary>
         /// <param name="cssProjectStructure">The CSS Project Structure URI.</param>
         public CssProjectStructureAttribute(string cssProjectStructure)
-            : base("CssProjectStructure", cssProjectStructure)
         {
             this.CssProjectStructure = cssProjectStructure;
         }
@@ -301,14 +365,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// CSS Iteration URI
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class CssIterationAttribute : TestPropertyAttribute
+    public sealed class CssIterationAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="CssIterationAttribute"/> class for CSS Iteration URI.
         /// </summary>
         /// <param name="cssIteration">The CSS Iteration URI.</param>
         public CssIterationAttribute(string cssIteration)
-            : base("CssIteration", cssIteration)
         {
             this.CssIteration = cssIteration;
         }
@@ -323,14 +386,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// WorkItem attribute; used to specify a work item associated with this test.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public sealed class WorkItemAttribute : TestPropertyAttribute
+    public sealed class WorkItemAttribute : Attribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="WorkItemAttribute"/> class for the WorkItem Attribute.
         /// </summary>
         /// <param name="id">The Id to a work item.</param>
         public WorkItemAttribute(int id)
-            : base("WorkItem", id.ToString(CultureInfo.CurrentCulture))
         {
             this.Id = id;
         }
@@ -340,8 +402,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         public int Id { get; private set; }
     }
-
-    #endregion
 
     /// <summary>
     /// Timeout attribute; used to specify the timeout of a unit test.

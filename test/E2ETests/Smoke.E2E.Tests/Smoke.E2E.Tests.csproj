@@ -39,14 +39,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssertExtensibilityTests.cs" />
+    <Compile Include="TimeoutTests.cs" />
     <Compile Include="CompatTests.cs" />
     <Compile Include="CustomTestExecutionExtensibilityTests.cs" />
     <Compile Include="DataSourceTests.cs" />
+    <Compile Include="DeploymentTests.cs" />
     <Compile Include="DesktopCSharpCLITests.cs" />
     <Compile Include="ParallelExecutionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DynamicDataExtensibilityTests.cs" />
     <Compile Include="TestDataSourceExtensibilityTests.cs" />
+    <Compile Include="DataRowTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -8,22 +8,30 @@
   <PropertyGroup>
     <RootNamespace>MSTestAdapter.PlatformServices.NetCore.UnitTests</RootNamespace>
     <AssemblyName>MSTestAdapter.PlatformServices.NetCore.UnitTests</AssemblyName>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">$(PackageTargetFallback);portable-net45+win8+wpa81+wp8</PackageTargetFallback>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\MSTest.CoreAdapter.TestUtilities\ActionUtility.cs" Link="ActionUtility.cs" />
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10AssemblyAttributes.cs" Link="ns10AssemblyAttributes.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10DeploymentItemTests.cs" Link="Deployment\ns10DeploymentItemTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10TestRunDirectoriesTests.cs" Link="Deployment\ns10TestRunDirectoriesTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\Extensions\ns10ExceptionExtensionsTests.cs" Link="Extensions\ns10ExceptionExtensionsTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs" Link="Services\ns10FileOperationsTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs" Link="Services\ns10DiaSessionOperationsTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs" Link="Services\ns10ReflectionOperationsTests.cs" />
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10SettingsProviderTests.cs" Link="Services\ns10SettingsProviderTests.cs" />
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestContextImplementationTests.cs" Link="Services\ns10TestContextImplementationTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs" Link="Services\ns10TestSourceHostTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceTests.cs" Link="Services\ns10TestSourceTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs" Link="Services\ns10ThreadOperationsTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\Services\ns10MSTestAdapterSettingsTests.cs" Link="Services\ns10MSTestAdapterSettingsTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\Utilities\ns10DeploymentUtilityTests.cs" Link="Utilities\ns10DeploymentUtilityTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\Utilities\ns10FileUtilityTests.cs" Link="Utilities\ns10FileUtilityTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerManagerTests.cs" Link="Services\ns13TraceListenerManagerTests.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerTests.cs" Link="Services\ns13TraceListenerTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13MSTestSettingsProviderTests.cs" Link="Services\ns13MSTestSettingsProviderTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13TestDeploymentTests.cs" Link="Services\ns13TestDeploymentTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13DeploymentItemUtilityTests.cs" Link="Utilities\ns13DeploymentItemUtilityTests.cs" />
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13ReflectionUtilityTests.cs" Link="Utilities\ns13ReflectionUtilityTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,21 +41,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\TestFramework\MSTest.Core\MSTest.Core.csproj">
-      <Private>true</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\..\src\TestFramework\Extension.Core\Extension.Core.csproj">
-      <Private>true</Private>
+      <Aliases>FrameworkV2Extension</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
-      <Private>true</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj">
-      <Private>true</Private>
     </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\" />
+    <Folder Include="Extensions\" />
   </ItemGroup>
 
   <ItemGroup>

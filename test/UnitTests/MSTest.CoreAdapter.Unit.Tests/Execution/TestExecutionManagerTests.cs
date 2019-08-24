@@ -27,6 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
     using Ignore = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute;
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+    using TestAdapterConstants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
@@ -47,6 +48,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         private List<string> callers;
 
         private TestExecutionManager TestExecutionManager { get; set; }
+
+        private readonly TestProperty[] tcmKnownProperties = new TestProperty[]
+        {
+            TestAdapterConstants.TestRunIdProperty,
+            TestAdapterConstants.TestPlanIdProperty,
+            TestAdapterConstants.BuildConfigurationIdProperty,
+            TestAdapterConstants.BuildDirectoryProperty,
+            TestAdapterConstants.BuildFlavorProperty,
+            TestAdapterConstants.BuildNumberProperty,
+            TestAdapterConstants.BuildPlatformProperty,
+            TestAdapterConstants.BuildUriProperty,
+            TestAdapterConstants.TfsServerCollectionUrlProperty,
+            TestAdapterConstants.TfsTeamProjectProperty,
+            TestAdapterConstants.IsInLabEnvironmentProperty,
+            TestAdapterConstants.TestCaseIdProperty,
+            TestAdapterConstants.TestConfigurationIdProperty,
+            TestAdapterConstants.TestConfigurationNameProperty,
+            TestAdapterConstants.TestPointIdProperty
+        };
 
         [TestInitialize]
         public void TestInit()
@@ -281,6 +301,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void RunTestsForTestShouldPassInTcmPropertiesAsPropertiesToTheTest()
+        {
+            var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
+            var propertiesValue = new object[] { 32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 1401, 54, "sample configuration name", 345 };
+            this.SetTestCaseProperties(testCase, propertiesValue);
+
+            TestCase[] tests = new[] { testCase };
+
+            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+            this.VerifyTcmProperties(DummyTestClass.TestContextProperties, testCase);
+        }
+
+        [TestMethodV1]
         public void RunTestsForTestShouldPassInDeploymentInformationAsPropertiesToTheTest()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -383,11 +417,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             int testsCount = 0;
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location, Assembly.GetExecutingAssembly().Location };
-            TestableTestExecutionManager testableTestExecutionmanager = new TestableTestExecutionManager();
-
-            testableTestExecutionmanager.ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) =>
+            TestableTestExecutionManager testableTestExecutionmanager = new TestableTestExecutionManager
             {
-                testsCount += tests.Count();
+                ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) =>
+                {
+                    testsCount += tests.Count();
+                }
             };
 
             testableTestExecutionmanager.RunTests(sources, this.runContext, this.frameworkHandle, this.cancellationToken);
@@ -758,8 +793,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var methodInfo = typeOfClass.GetMethod(testName);
             var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName, Assembly.GetExecutingAssembly().FullName, isAsync: false);
-            UnitTestElement element = new UnitTestElement(testMethod);
-            element.Ignored = ignore;
+            UnitTestElement element = new UnitTestElement(testMethod)
+            {
+                Ignored = ignore
+            };
             return element.ToTestCase();
         }
 
@@ -806,11 +843,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.callers.Add(caller);
         }
 
+        private void VerifyTcmProperties(IDictionary<string, object> tcmProperties, TestCase testCase)
+        {
+            foreach (var property in this.tcmKnownProperties)
+            {
+                Assert.AreEqual(testCase.GetPropertyValue(property), tcmProperties[property.Id]);
+            }
+        }
+
+        private void SetTestCaseProperties(TestCase testCase, object[] propertiesValue)
+        {
+            var tcmKnownPropertiesEnumerator = this.tcmKnownProperties.GetEnumerator();
+
+            var propertiesValueEnumerator = propertiesValue.GetEnumerator();
+            while (tcmKnownPropertiesEnumerator.MoveNext() && propertiesValueEnumerator.MoveNext())
+            {
+                var property = tcmKnownPropertiesEnumerator.Current;
+                var value = propertiesValueEnumerator.Current;
+                testCase.SetPropertyValue(property as TestProperty, value);
+            }
+        }
+
         #endregion
 
         #region Dummy implementation
 
-        [UTF.TestClass]
+        [DummyTestClass]
         internal class DummyTestClass
         {
             public static IDictionary<string, object> TestContextProperties
@@ -825,7 +883,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestCategory("Foo")]
             public void PassingTest()
             {
-                TestContextProperties = this.TestContext.Properties;
+                TestContextProperties = this.TestContext.Properties as IDictionary<string, object>;
             }
 
             [UTF.TestMethod]
@@ -843,7 +901,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithCleanupMethods
         {
             [UTF.ClassCleanup]
@@ -858,7 +916,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassForParallelize
         {
             private static HashSet<int> threadIds = new HashSet<int>();
@@ -879,21 +937,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
-                // Ensures stability.
-                System.Threading.Thread.Sleep(200);
+                // Ensures stability.. for the thread to be not used for another testmethod
+                System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
 
             [UTF.TestMethod]
             public void TestMethod2()
             {
-                // Ensures stability.
-                System.Threading.Thread.Sleep(200);
+                // Ensures stability.. for the thread to be not used for another testmethod
+                System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassForParallelize2
         {
             private static HashSet<int> threadIds = new HashSet<int>();
@@ -914,17 +972,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
+                // Ensures stability.. for the thread to be not used for another testmethod
+                System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
 
             [UTF.TestMethod]
             public void TestMethod2()
             {
+                // Ensures stability.. for the thread to be not used for another testmethod
+                System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassForParallelize3
         {
             private static HashSet<int> threadIds = new HashSet<int>();
@@ -945,11 +1007,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
+                // Ensures stability.. for the thread to be not used for another testmethod
+                Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
         }
 
-        [UTF.TestClass]
+        [DummyTestClass]
         private class DummyTestClassWithDoNotParallelizeMethods
         {
             private static HashSet<int> parallelizableTestsThreadIds = new HashSet<int>();
@@ -996,6 +1060,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
+                // Ensures stability.. for the thread to be not used for another testmethod
+                Thread.Sleep(2000);
                 parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
                 threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
@@ -1005,6 +1071,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod2()
             {
+                // Ensures stability.. for the thread to be not used for another testmethod
+                Thread.Sleep(2000);
                 parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
                 threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
@@ -1036,6 +1104,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
                 threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
             }
+        }
+
+        private class DummyTestClassAttribute : UTF.TestClassAttribute
+        {
         }
 
         #endregion

@@ -97,17 +97,23 @@
     <SourcePath>$(TargetDir)..\</SourcePath>
     <DestinationPath>$(TargetDir)..\..\TestAssets</DestinationPath>
     <PostBuildEvent>
-        xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" "$(DestinationPath)"
-        xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" "$(DestinationPath)"
-        xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" "$(DestinationPath)"
-        xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" "$(DestinationPath)"
-        xcopy /Y /I "$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" "$(DestinationPath)"
-        xcopy /Y /I "$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" "$(DestinationPath)"
-        xcopy /Y /I "$(SourcePath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" "$(DestinationPath)"
-        xcopy /Y /I "$(SourcePath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" "$(DestinationPath)"
-        xcopy /Y /I "$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" "$(DestinationPath)"
-        xcopy /Y /I "$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" "$(DestinationPath)"
-      </PostBuildEvent>
+      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" "$(DestinationPath)\netcoreapp1.1\"
+      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" "$(DestinationPath)\netcoreapp1.1\"
+      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" "$(DestinationPath)\netcoreapp1.1\"
+      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" "$(DestinationPath)\netcoreapp1.1\"
+      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" "$(DestinationPath)\netcoreapp1.1\"
+      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" "$(DestinationPath)\netcoreapp1.1\"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" "$(DestinationPath)"
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

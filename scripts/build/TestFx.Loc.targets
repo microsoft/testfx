@@ -9,6 +9,7 @@
   <!-- Default Localization folder. -->
   <PropertyGroup>
     <ResourceDirectory>$(ProjectDir)Resources</ResourceDirectory>
+    <SharedResourceDirectory>$(ProjectDir)..\PlatformServices.Shared\netstandard1.3\Resources</SharedResourceDirectory>
   </PropertyGroup>
 
   <Target Name="GatherResxResources">
@@ -20,11 +21,14 @@
     </PropertyGroup>
   </Target>
 
-  <!-- Localization for Libraries.-->
+  <!-- Localization for Libraries.
+  'UseSharedResources' flag is true for desktop and netcore as their resources are common and present at a shared location -->
   <Target Name="TestFxLocalization" Condition="$(IsVsixProj) =='' and $(IsVsixProj) !='true'" BeforeTargets="BeforeBuild" DependsOnTargets="GatherResxResources">
-    <CallTarget Targets="CreateLocalizeXLF;CreateLocalizeResx" Condition="'$(HasResxResources)' == 'true'"/>
+    <CallTarget Targets="CreateLocalizeXLF;CreateLocalizeResx" Condition="'$(HasResxResources)' == 'true' and '$(UseSharedResources)' == ''"/>
+    <CallTarget Targets="CreateLocalizeXLFShared;CreateLocalizeResxShared" Condition="'$(HasResxResources)' == 'true' and '$(UseSharedResources)' == 'true'"/>
   </Target>
 
+  <!-- Generate xlf files from Resources.resx by using command Build.cmd -uxlf -->
   <Target Name="CreateLocalizeXLF" Condition="'$(UpdateXlf)' == 'true'">
     <CreateItem Include="@(ResxResources)" AdditionalMetadata="Language=%(ResxLang.Identity)">
       <Output ItemName="LocResourceFile" TaskParameter="Include"/>
@@ -33,6 +37,16 @@
     <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool.0.1.3\tools\xlftool.exe update -Resx %(ResxResources.Identity) -Xlf $(ResourceDirectory)\xlf\%(ResxResources.Filename).xlf" />
   </Target>
 
+  <!-- Generate xlf files from Resources.resx for shared resources by using command Build.cmd -uxlf -->
+  <Target Name="CreateLocalizeXLFShared" Condition="'$(UpdateXlf)' == 'true'">
+    <CreateItem Include="@(ResxResources)" AdditionalMetadata="Language=%(ResxLang.Identity)">
+      <Output ItemName="LocResourceFile" TaskParameter="Include"/>
+    </CreateItem>
+    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool.0.1.3\tools\xlftool.exe update -Resx %(LocResourceFile.Identity) -Xlf $(SharedResourceDirectory)\xlf\%(LocResourceFile.Filename).%(LocResourceFile.Language).xlf" />
+    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool.0.1.3\tools\xlftool.exe update -Resx %(ResxResources.Identity) -Xlf $(SharedResourceDirectory)\xlf\%(ResxResources.Filename).xlf" />
+  </Target>
+
+  <!-- Generate language specific resx files from the xlf files -->
   <Target Name="CreateLocalizeResx" Condition="'$(IsLocalizedBuild)' == 'true'">
     <CreateItem Include="@(ResxResources)" AdditionalMetadata="Language=%(ResxLang.Identity)">
       <Output ItemName="LocResourceFile" TaskParameter="Include"/>
@@ -42,87 +56,22 @@
       <EmbeddedResource Include="$(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx" />
     </ItemGroup>
   </Target>
+
+  <!-- Generate language specific resx files from the xlf files for shared resources -->
+  <Target Name="CreateLocalizeResxShared" Condition="'$(IsLocalizedBuild)' == 'true'">
+    <CreateItem Include="@(ResxResources)" AdditionalMetadata="Language=%(ResxLang.Identity)">
+      <Output ItemName="LocResourceFile" TaskParameter="Include"/>
+    </CreateItem>
+    <Exec Command="$(TestFxPackagesRoot)fmdev.xlftool.0.1.3\tools\xlftool.exe  writeTarget -Xlf $(SharedResourceDirectory)\xlf\%(LocResourceFile.Filename).%(LocResourceFile.Language).xlf -Resx $(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx -verbose" />
+    <ItemGroup>
+      <EmbeddedResource Include="$(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx" />
+    </ItemGroup>
+  </Target>
   
   <!-- Localization for documentation files. -->
   <Target Name="CopyLocalizedXmls" BeforeTargets="BeforeBuild" Condition="$(LocDocumentationSubPath) != ''">
     <Exec Command="xcopy /Y /I /S /E $(TestFxPackagesRoot)MSTest.Internal.TestFx.Localized.Documentation.1.0.0-build-20170420-1\contentFiles\any\any\$(LocDocumentationSubPath) $(OutDir)" />
   </Target>
-
-  <!-- Localization for vsix files.-->
-  <!-- Forcing the Localize task and the localized vsixlangpack inclusion to run before the vsix package is created. 
-Without this the vsix gets generated before localization and hence does not include localized assets. This is a workaround for an issue in the build system. -->
-  <Target Name="PostLocalizeCopyArtifacts" DependsOnTargets="CopyStaticResourcesToOutput" BeforeTargets="ZipProjects" Condition="'$(IsVsixProj)'=='true'">
-    <PropertyGroup>
-      <LocalizationPath>$(OutputPath)\localize</LocalizationPath>
-    </PropertyGroup>
-    <ItemGroup>
-        <Content Include="$(LocalizationPath)\zh-Hans\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\zh-Hans\extension.vsixlangpack')">
-          <Link>zh-Hans\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\zh-Hant\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\zh-Hant\extension.vsixlangpack')">
-          <Link>zh-Hant\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\cs\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\cs\extension.vsixlangpack')">
-          <Link>cs\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\de\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\de\extension.vsixlangpack')">
-          <Link>de\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\es\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\es\extension.vsixlangpack')">
-          <Link>es\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\fr\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\fr\extension.vsixlangpack')">
-          <Link>fr\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\it\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\it\extension.vsixlangpack')">
-          <Link>it\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\ja\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\ja\extension.vsixlangpack')">
-          <Link>ja\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\ko\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\ko\extension.vsixlangpack')">
-          <Link>ko\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\pl\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\pl\extension.vsixlangpack')">
-          <Link>pl\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\pt-BR\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\pt-BR\extension.vsixlangpack')">
-          <Link>pt-BR\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\ru\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\ru\extension.vsixlangpack')">
-          <Link>ru\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-        <Content Include="$(LocalizationPath)\tr\extension.vsixlangpack" Condition="Exists('$(LocalizationPath)\tr\extension.vsixlangpack')">
-          <Link>tr\extension.vsixlangpack</Link>
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <IncludeInVSIX>true</IncludeInVSIX>
-        </Content>
-      </ItemGroup>
-    </Target>
 
   <Target Name ="CopyStaticResourcesToOutput">
     <!-- Until we have a process of converting to/from loc friendly file formats like resx files, the already localized vsixlangpacks are checked in and packaged in the vsix.-->

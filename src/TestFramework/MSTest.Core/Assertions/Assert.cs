@@ -1754,9 +1754,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void IsNotInstanceOfType(object value, Type wrongType, string message, params object[] parameters)
         {
-            if (wrongType == null || value == null)
+            if (wrongType == null)
             {
                 HandleFail("Assert.IsNotInstanceOfType", message, parameters);
+            }
+
+            // Null is not an instance of any type.
+            if (value == null)
+            {
+                return;
             }
 
             var elementTypeInfo = value.GetType().GetTypeInfo();

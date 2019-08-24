@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Threading;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
@@ -21,36 +22,44 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="action">The action to execute.</param>
         /// <param name="timeout">Timeout for the specified action in milliseconds.</param>
+        /// <param name="cancelToken">Token to cancel the execution</param>
         /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
-        public bool Execute(Action action, int timeout)
+        public bool Execute(Action action, int timeout, CancellationToken cancelToken)
         {
-            Thread executionThread = new Thread(new ThreadStart(action));
-            executionThread.IsBackground = true;
-            executionThread.Name = "MSTestAdapter Thread";
+            bool executionAborted = false;
+            Thread executionThread = new Thread(new ThreadStart(action))
+            {
+                IsBackground = true,
+                Name = "MSTestAdapter Thread"
+            };
 
             executionThread.SetApartmentState(Thread.CurrentThread.GetApartmentState());
             executionThread.Start();
-
-            if (executionThread.Join(timeout))
+            cancelToken.Register(() =>
             {
+                executionAborted = true;
+                AbortThread(executionThread);
+            });
+
+            if (JoinThread(timeout, executionThread))
+            {
+                if (executionAborted)
+                {
+                    return false;
+                }
+
+                // Successfully completed
                 return true;
+            }
+            else if (executionAborted)
+            {
+                // Execution aborted due to user choice
+                return false;
             }
             else
             {
                 // Timed out
-                try
-                {
-                    // Abort test thread after timeout.
-                    executionThread.Abort();
-                }
-                catch (ThreadStateException)
-                {
-                    // Catch and discard ThreadStateException. If Abort is called on a thread that has been suspended,
-                    // a ThreadStateException is thrown in the thread that called Abort,
-                    // and AbortRequested is added to the ThreadState property of the thread being aborted.
-                    // A ThreadAbortException is not thrown in the suspended thread until Resume is called.
-                }
-
+                AbortThread(executionThread);
                 return false;
             }
         }
@@ -75,7 +84,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 throw new TargetInvocationException(exception);
             }
         }
-    }
 
+        private static bool JoinThread(int timeout, Thread executionThread)
+        {
+            try
+            {
+                return executionThread.Join(timeout);
+            }
+            catch (ThreadStateException)
+            {
+                // Join was called on a thread not started
+            }
+
+            return false;
+        }
+
+        private static void AbortThread(Thread executionThread)
+        {
+            try
+            {
+                // Abort test thread after timeout.
+                executionThread.Abort();
+            }
+            catch (ThreadStateException)
+            {
+                // Catch and discard ThreadStateException. If Abort is called on a thread that has been suspended,
+                // a ThreadStateException is thrown in the thread that called Abort,
+                // and AbortRequested is added to the ThreadState property of the thread being aborted.
+                // A ThreadAbortException is not thrown in the suspended thread until Resume is called.
+            }
+        }
+    }
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

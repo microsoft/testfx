@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
+    using System.Linq;
     using System.Reflection;
     using Extensions;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -48,6 +49,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.ClassType = type;
             this.Constructor = constructor;
             this.TestContextProperty = testContextProperty;
+            this.BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
+            this.BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo, MethodInfo>>();
             this.BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
             this.BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
             this.Parent = parent;
@@ -108,6 +111,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public bool IsClassInitializeExecuted { get; internal set; }
 
         /// <summary>
+        /// Gets a stack of class cleanup methods to be executed.
+        /// </summary>
+        public Stack<MethodInfo> BaseClassCleanupMethodsStack { get; internal set; }
+
+        /// <summary>
         /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
         /// </summary>
         public Exception ClassInitializationException { get; internal set; }
@@ -156,6 +164,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return true;
             }
         }
+
+        /// <summary>
+        /// Gets a tuples' queue of class initialize/cleanup methods to call for this type.
+        /// </summary>
+        public Queue<Tuple<MethodInfo, MethodInfo>> BaseClassInitAndCleanupMethods { get; private set; }
 
         /// <summary>
         /// Gets the test initialize method.
@@ -219,8 +232,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public void RunClassInitialize(TestContext testContext)
         {
-            // If no class initialize return
-            if (this.ClassInitializeMethod == null)
+            // If no class initialize and no base class initialize, return
+            if (this.ClassInitializeMethod is null && !this.BaseClassInitAndCleanupMethods.Any(p => p.Item1 != null))
             {
                 return;
             }
@@ -230,8 +243,50 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 throw new NullReferenceException(Resource.TestContextIsNull);
             }
 
-            // If class initialization is not done, then do it.
-            if (!this.IsClassInitializeExecuted)
+            MethodInfo initializeMethod = null;
+            string failedClassInitializeMethodName = string.Empty;
+
+            // If class initialization is done, just return
+            if (this.IsClassInitializeExecuted)
+            {
+                return;
+            }
+
+            // Aquiring a lock is usually a costly operation which does not need to be
+            // performed every time if the class init is already executed.
+            lock (this.testClassExecuteSyncObject)
+            {
+                // Perform a check again.
+                if (this.IsClassInitializeExecuted)
+                {
+                    return;
+                }
+
+                try
+                {
+                    // ClassInitialize methods for base classes are called in reverse order of discovery
+                    // Base -> Child TestClass
+                    var baseClassInitializeStack = new Stack<Tuple<MethodInfo, MethodInfo>>(
+                            this.BaseClassInitAndCleanupMethods.Where(p => p.Item1 != null));
+
+                    while (baseClassInitializeStack.Count > 0)
+                    {
+                        var baseInitCleanupMethods = baseClassInitializeStack.Pop();
+                        initializeMethod = baseInitCleanupMethods.Item1;
+                        initializeMethod?.InvokeAsSynchronousTask(null, testContext);
+                        this.BaseClassCleanupMethodsStack.Push(baseInitCleanupMethods.Item2);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.ClassInitializationException = ex;
+                    failedClassInitializeMethodName = initializeMethod.Name;
+                }
+            }
+
+            // If class initialization is not done and class initialize method is not null,
+            // and class initialization exception is null, then do it.
+            if (!this.IsClassInitializeExecuted && this.classInitializeMethod != null && this.ClassInitializationException == null)
             {
                 // Aquiring a lock is usually a costly operation which does not need to be
                 // performed every time if the class init is already executed.
@@ -247,6 +302,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         catch (Exception ex)
                         {
                             this.ClassInitializationException = ex;
+                            failedClassInitializeMethodName = this.ClassInitializeMethod.Name;
                         }
                         finally
                         {
@@ -271,15 +327,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var realException = this.ClassInitializationException.InnerException ?? this.ClassInitializationException;
 
             var outcome = UnitTestOutcome.Failed;
-            string errorMessage = null;
-            StackTraceInformation exceptionStackTraceInfo = null;
-            if (!realException.TryGetUnitTestAssertException(out outcome, out errorMessage, out exceptionStackTraceInfo))
+            if (!realException.TryGetUnitTestAssertException(out outcome, out string errorMessage, out StackTraceInformation exceptionStackTraceInfo))
             {
                 errorMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.UTA_ClassInitMethodThrows,
                     this.ClassType.FullName,
-                    this.ClassInitializeMethod.Name,
+                    failedClassInitializeMethodName,
                     realException.GetType().ToString(),
                     StackTraceHelper.GetExceptionMessage(realException));
 
@@ -298,19 +352,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>
         /// Any exception that can be thrown as part of a class cleanup as warning messages.
         /// </returns>
-        [SuppressMessageAttribute("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public string RunClassCleanup()
         {
-            if (this.ClassCleanupMethod == null)
+            if (this.ClassCleanupMethod is null && !this.BaseClassInitAndCleanupMethods.Any(p => p.Item2 != null))
             {
                 return null;
             }
 
-            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod == null)
+            if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null || this.BaseClassCleanupMethodsStack.Any())
             {
+                var classCleanupMethod = this.ClassCleanupMethod;
                 try
                 {
-                    this.ClassCleanupMethod.InvokeAsSynchronousTask(null);
+                    classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    var baseClassCleanupQueue = new Queue<MethodInfo>(this.BaseClassCleanupMethodsStack);
+                    while (baseClassCleanupQueue.Count > 0)
+                    {
+                        classCleanupMethod = baseClassCleanupQueue.Dequeue();
+                        classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    }
 
                     return null;
                 }

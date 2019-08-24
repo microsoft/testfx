@@ -48,14 +48,6 @@ Param(
   [Switch] $ClearPackageCache = $false,
 
   [Parameter(Mandatory=$false)]
-  [Alias("tmpl")]
-  [Switch] $Templates = $false,
-
-  [Parameter(Mandatory=$false)]
-  [Alias("wiz")]
-  [Switch] $Wizards = $false,
-
-  [Parameter(Mandatory=$false)]
   [Switch] $Official = $false,
 
   [Parameter(Mandatory=$false)]
@@ -84,19 +76,11 @@ $TFB_BuildVersion = $BuildVersionPrefix + "." + $BuildVersionSuffix
 $TFB_SkipRestore = $SkipRestore
 $TFB_Clean = $Clean
 $TFB_ClearPackageCache = $ClearPackageCache
-$TFB_Templates = $Templates
-$TFB_Wizards = $Wizards
 $TFB_Full = $Full
 $TFB_Official = $Official
 $TFB_UpdateXlf = $UpdateXlf
 $TFB_IsLocalizedBuild = $IsLocalizedBuild -or $TFB_Official
-$TFB_Solutions = @("TestFx.sln","Templates\MSTestTemplates.sln","WizardExtensions\WizardExtensions.sln")
-$TFB_VSmanprojs =@("src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.Desktop.UnitTest.vsmanproj",
-                   "src\setup\Microsoft.VisualStudio.Templates.CS.MSTestv2.UWP.UnitTest.vsmanproj", 
-				   "src\setup\Microsoft.VisualStudio.Templates.VB.MSTestv2.Desktop.UnitTest.vsmanproj",
-				   "src\setup\Microsoft.VisualStudio.Templates.VB.MSTestv2.UWP.UnitTest.vsmanproj",
-                   "src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.IntelliTest.vsmanproj", 
-                   "src\setup\Microsoft.VisualStudio.TestTools.MSTestV2.WizardExtension.UnitTest.vsmanproj")
+$TFB_Solutions = @("TestFx.sln")
 $TFB_NetCoreProjects =@("src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj",
 						"test\UnitTests\PlatformServices.NetCore.Unit.Tests\PlatformServices.NetCore.Unit.Tests.csproj")
 
@@ -120,12 +104,10 @@ function Print-Help {
   Write-Host -object "  Clean (-cl)                   - [Switch] - Indicates that this should be a clean build."
   Write-Host -object "  SkipRestore (-sr)             - [Switch] - Indicates nuget package restoration should be skipped."
   Write-Host -object "  ClearPackageCache (-cache)    - [Switch] - Indicates local package cache should be cleared before restore."
-  Write-Host -object "  Templates (-tmpl)             - [Switch] - Indicates Templates should also be built."
-  Write-Host -object "  Wizards (-wiz)                - [Switch] - Indicates WizardExtensions should also be built."
   Write-Host -object "  Updatexlf (-uxlf)             - [Switch] - Indicates that there are resource changes and that these need to be copied to other languages as well."
   Write-Host -object "  IsLocalizedBuild (-loc)       - [Switch] - Indicates that the build needs to generate resource assemblies as well."
   Write-Host -object "  Official                      - [Switch] - Indicates that this is an official build. Only used in CI builds."
-  Write-Host -object "  Full                          - [Switch] - Indicates to perform a full build which includes Adapter,Framework,Templates,Wizards, and vsmanprojs."
+  Write-Host -object "  Full                          - [Switch] - Indicates to perform a full build which includes Adapter, Framework"
   Write-Host -object ""
   Write-Host -object "  Configuration (-c)            - [String] - Specifies the build configuration. Defaults to 'Debug'."
   Write-Host -object "  FrameworkVersion (-fv)        - [String] - Specifies the version of the Test Framework nuget package."
@@ -227,22 +209,7 @@ function Perform-Build {
   }
 
   Invoke-Build -solution "TestFx.sln"
-  
-  if($TFB_Templates -or $TFB_Full)
-  {
-	  Invoke-Build -solution "Templates\MSTestTemplates.sln" -hasVsixExtension true
-  }
-  
-  if($TFB_Wizards -or $TFB_Full)
-  {
-	  Invoke-Build -solution "WizardExtensions\WizardExtensions.sln" -hasVsixExtension true
-  }
-  
-  if($TFB_Official)
-  {
-	  Build-vsmanprojs -hasVsixExtension true
-  }
-  
+   
   Write-Log "Perform-Build: Completed. {$(Get-ElapsedTime($timer))}"
 }
 
@@ -262,24 +229,6 @@ function Invoke-Build([string] $solution, $hasVsixExtension = "false")
 	if ($lastExitCode -ne 0) {
 		throw "Build failed with an exit code of '$lastExitCode'."
 	}
-}
-
-function Build-vsmanprojs
-{
-  $msbuild = Locate-MSBuild
-  
-  foreach($vsmanproj in $TFB_VSmanprojs)
-  {
-	$vsmanprojPath = Locate-Item -relativePath $vsmanproj
-	
-	Write-Log "    Building $vsmanproj..."
-	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /m /p:TargetExt=.vsman $vsmanprojPath"
-	& $msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /m /p:TargetExt=.vsman $vsmanprojPath
-	
-	if ($lastExitCode -ne 0) {
-		throw "VSManProj build failed with an exit code of '$lastExitCode'."
-	}
-  }
 }
 
 #
@@ -308,6 +257,10 @@ function Create-NugetPackages
     foreach ($file in $nuspecFiles) {
         Copy-Item $tfSrcPackageDir\$file $stagingDir -Force
     }
+
+    # Copy over LICENSE.txt file to staging directory
+    $licenseFilePath = Join-Path $env:TF_ROOT_DIR "LICENSE.txt"
+    Copy-Item $licenseFilePath $stagingDir -Force
 
     # Call nuget pack on these components.
     $nugetExe = Locate-Nuget

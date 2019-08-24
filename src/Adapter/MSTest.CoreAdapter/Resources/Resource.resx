@@ -172,7 +172,8 @@
     <value>{0}: {1}</value>
   </data>
   <data name="TypeLoadFailed" xml:space="preserve">
-    <value>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.</value>
+    <value>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.
+Error: {1}</value>
   </data>
   <data name="UTA_ErrorGenericTestMethod" xml:space="preserve">
     <value>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</value>
@@ -263,7 +264,7 @@
 {2}</value>
   </data>
   <data name="UTA_WrongThread" xml:space="preserve">
-    <value>{0}. If you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</value>
+    <value>{0} For UWP projects, if you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</value>
   </data>
   <data name="AttachmentSetDisplayName" xml:space="preserve">
     <value>MSTestAdapterV2</value>
@@ -315,5 +316,8 @@
   </data>
   <data name="UTA_TestMethodExpectedParameters" xml:space="preserve">
     <value>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</value>
+  </data>
+  <data name="Execution_Test_Cancelled" xml:space="preserve">
+    <value>Test '{0}' execution has been aborted.</value>
   </data>
 </root>

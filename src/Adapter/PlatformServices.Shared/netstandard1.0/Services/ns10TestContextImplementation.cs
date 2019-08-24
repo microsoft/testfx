@@ -4,11 +4,12 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-
+    using System.Threading;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
@@ -60,6 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.testMethod = testMethod;
             this.properties = new Dictionary<string, object>(properties);
             this.stringWriter = writer;
+            this.CancellationTokenSource = new CancellationTokenSource();
             this.InitializeProperties();
         }
 
@@ -115,11 +117,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// An System.Collections.IDictionary object that contains key/value pairs that
         ///  represent the test properties.
         /// </returns>
-        public override IDictionary<string, object> Properties
+        public override IDictionary Properties
         {
             get
             {
-                return this.properties as IDictionary<string, object>;
+                return this.properties as IDictionary;
             }
         }
 
@@ -129,6 +131,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 return this as UTF.TestContext;
             }
+        }
+
+        /// <summary>
+        /// Adds a file name to the list in TestResult.ResultFileNames
+        /// </summary>
+        /// <param name="fileName">
+        /// The file Name.
+        /// </param>
+        public override void AddResultFile(string fileName)
+        {
+            // No-op function
+            // will be replaced at runtime time by PlatformServices Desktop/NetCore
+            // depending the target framework
         }
 
         /// <summary>
@@ -170,15 +185,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             this.properties.Add(propertyName, propertyValue);
-        }
-
-        /// <summary>
-        /// Returning null as this feature is not supported in ASP .net and UWP
-        /// </summary>
-        /// <returns>List of result files. Null presently.</returns>
-        public IList<string> GetResultFiles()
-        {
-            return null;
         }
 
         /// <summary>
@@ -226,6 +232,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 this.stringWriterDisposed = true;
             }
+        }
+
+        /// <summary>
+        /// Returns null as this feature is not supported in ASP .net and UWP
+        /// </summary>
+        /// <returns>List of result files. Null presently.</returns>
+        public IList<string> GetResultFiles()
+        {
+            return null;
         }
 
         /// <summary>

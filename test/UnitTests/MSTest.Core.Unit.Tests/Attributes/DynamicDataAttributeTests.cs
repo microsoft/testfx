@@ -100,6 +100,19 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         }
 
         [TestFrameworkV1.TestMethod]
+        public void GetDataShouldThrowExceptionIfPropertyReturnsEmpty()
+        {
+            Action action = () =>
+            {
+                var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod5");
+                this.dynamicDataAttribute = new DynamicDataAttribute("EmptyProperty", typeof(DummyTestClass));
+                this.dynamicDataAttribute.GetData(methodInfo);
+            };
+
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentException));
+        }
+
+        [TestFrameworkV1.TestMethod]
         public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType()
         {
             Action action = () =>
@@ -282,7 +295,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         }
 
         /// <summary>
-        /// Gets the reusable test data property.
+        /// Gets the null test data property.
         /// </summary>
         public static IEnumerable<object[]> NullProperty
         {
@@ -293,13 +306,25 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         }
 
         /// <summary>
-        /// Gets the reusable test data property.
+        /// Gets the empty test data property.
         /// </summary>
-        public static IEnumerable<object[]> WrongDataTypeProperty
+        public static IEnumerable<object[]> EmptyProperty
         {
             get
             {
-                return null;
+                return new object[][] { };
+            }
+        }
+
+        /// <summary>
+        /// Gets the wrong test data property i.e. Property returning something other than
+        /// expected data type of IEnumerable<object[]>
+        /// </summary>
+        public static string WrongDataTypeProperty
+        {
+            get
+            {
+                return "Dummy";
             }
         }
 
@@ -434,6 +459,15 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
         [DynamicData("NullProperty")]
         public void TestMethod4()
+        {
+        }
+
+        /// <summary>
+        /// The test method 5.
+        /// </summary>
+        [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
+        [DynamicData("EmptyProperty")]
+        public void TestMethod5()
         {
         }
 

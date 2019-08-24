@@ -10,6 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Globalization;
     using System.Reflection;
     using System.Text;
+    using System.Threading;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -170,7 +171,94 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         internal void SetArguments(object[] arguments)
         {
-            this.arguments = arguments;
+            if (arguments == null)
+            {
+                this.arguments = null;
+            }
+            else
+            {
+                this.arguments = this.ResolveArguments(arguments);
+            }
+        }
+
+        internal object[] ResolveArguments(object[] arguments)
+        {
+            ParameterInfo[] parameterInfos = this.TestMethod.GetParameters();
+            int requiredParameterCount = 0;
+            bool hasParamsValue = false;
+            object paramsValues = null;
+            foreach (var parameter in parameterInfos)
+            {
+                // If this is a params array parameter, create an instance to
+                // populate with any extra values provided. Don't increment
+                // required parameter count - params arguments are not actually required
+                if (parameter.GetCustomAttribute(typeof(ParamArrayAttribute)) != null)
+                {
+                    hasParamsValue = true;
+                    break;
+                }
+
+                // Count required parameters from method
+                if (!parameter.IsOptional)
+                {
+                    requiredParameterCount++;
+                }
+            }
+
+            // If all the parameters are required, we have fewer arguments
+            // supplied than required, or more arguments than the method takes
+            // and it doesn't have a params paramenter don't try and resolve anything
+            if (requiredParameterCount == parameterInfos.Length ||
+                arguments.Length < requiredParameterCount ||
+                (!hasParamsValue && arguments.Length > parameterInfos.Length))
+            {
+                return arguments;
+            }
+
+            object[] newParameters = new object[parameterInfos.Length];
+            for (int argumentIndex = 0; argumentIndex < arguments.Length; argumentIndex++)
+            {
+                // We have reached the end of the regular parameters and any additional
+                // values will go in a params array
+                if (argumentIndex >= parameterInfos.Length - 1 && hasParamsValue)
+                {
+                    // If this is the params parameter, instantiate a new object of that type
+                    if (argumentIndex == parameterInfos.Length - 1)
+                    {
+                        paramsValues = Activator.CreateInstance(parameterInfos[argumentIndex].ParameterType, new object[] { arguments.Length - argumentIndex });
+                        newParameters[argumentIndex] = paramsValues;
+                    }
+
+                    // The params parameters is an array but the type is not known
+                    // set the values as a generic array
+                    if (paramsValues is Array paramsArray)
+                    {
+                        paramsArray.SetValue(arguments[argumentIndex], argumentIndex - (parameterInfos.Length - 1));
+                    }
+                }
+                else
+                {
+                    newParameters[argumentIndex] = arguments[argumentIndex];
+                }
+            }
+
+            // If arguments supplied are less than total possible arguments set
+            // the values supplied to the default values for those parameters
+            for (int parameterNotProvidedIndex = arguments.Length; parameterNotProvidedIndex < parameterInfos.Length; parameterNotProvidedIndex++)
+            {
+                // If this is the params parameters, set it to an empty
+                // array of that type as DefaultValue is DBNull
+                if (hasParamsValue && parameterNotProvidedIndex == parameterInfos.Length - 1)
+                {
+                    newParameters[parameterNotProvidedIndex] = Activator.CreateInstance(parameterInfos[parameterNotProvidedIndex].ParameterType, 0);
+                }
+                else
+                {
+                    newParameters[parameterNotProvidedIndex] = parameterInfos[parameterNotProvidedIndex].DefaultValue;
+                }
+            }
+
+            return newParameters;
         }
 
         /// <summary>
@@ -453,8 +541,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 if (cleanupStackTrace.Length > 0)
                 {
-                        cleanupStackTrace.Append(Resource.UTA_CleanupStackTrace);
-                        cleanupStackTrace.Append(Environment.NewLine);
+                    cleanupStackTrace.Append(Resource.UTA_CleanupStackTrace);
+                    cleanupStackTrace.Append(Environment.NewLine);
                 }
 
                 Exception realException = ex.GetInnerExceptionOrDefault();
@@ -668,40 +756,42 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             TestResult result = null;
             Exception failure = null;
 
-            Action executeAsyncAction = () =>
+            void executeAsyncAction()
+            {
+                try
                 {
-                    try
-                    {
-                        result = this.ExecuteInternal(arguments);
-                    }
-                    catch (Exception ex)
-                    {
-                        failure = ex;
-                    }
-                };
+                    result = this.ExecuteInternal(arguments);
+                }
+                catch (Exception ex)
+                {
+                    failure = ex;
+                }
+            }
 
-            if (PlatformServiceProvider.Instance.ThreadOperations.Execute(executeAsyncAction, this.TestMethodOptions.Timeout))
+            CancellationToken cancelToken = this.TestMethodOptions.TestContext.Context.CancellationTokenSource.Token;
+            if (PlatformServiceProvider.Instance.ThreadOperations.Execute(executeAsyncAction, this.TestMethodOptions.Timeout, cancelToken))
             {
                 if (failure != null)
                 {
                     throw failure;
                 }
 
-                Debug.Assert(result != null, "no timeout, no failure result should not be null");
                 return result;
             }
             else
             {
-                // Timed out
-
-                // If the method times out, then
-                //
-                // 1. If the test is stuck, then we can get CannotUnloadAppDomain exception.
-                //
-                // Which are handled as follows: -
-                //
-                // For #1, we are now restarting the execution process if adapter fails to unload app-domain.
+                // Timed out or canceled
                 string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, this.TestMethodName);
+                if (this.TestMethodOptions.TestContext.Context.CancellationTokenSource.IsCancellationRequested)
+                {
+                    errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, this.TestMethodName);
+                }
+                else
+                {
+                    // Cancel the token source as test has timedout
+                    this.TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel();
+                }
+
                 TestResult timeoutResult = new TestResult() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };
                 return timeoutResult;
             }

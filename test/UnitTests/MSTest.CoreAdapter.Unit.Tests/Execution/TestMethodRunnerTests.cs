@@ -48,11 +48,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private readonly TestMethod testMethod;
 
-        private TestablePlatformServiceProvider testablePlatformServiceProvider;
+        private readonly TestMethodOptions globaltestMethodOptions;
 
-        private TestMethodOptions globaltestMethodOptions;
-        private TestMethodOptions testMethodOptions;
-        private Mock<ReflectHelper> mockReflectHelper;
+        private readonly TestMethodOptions testMethodOptions;
+
+        private readonly Mock<ReflectHelper> mockReflectHelper;
+
+        private TestablePlatformServiceProvider testablePlatformServiceProvider;
 
         public TestMethodRunnerTests()
         {
@@ -222,10 +224,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void ExecuteForAssemblyInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             // Arrange.
-            var tai = new TestAssemblyInfo();
-            tai.AssemblyInitializeMethod = typeof(TestMethodRunnerTests).GetMethod(
+            var tai = new TestAssemblyInfo
+            {
+                AssemblyInitializeMethod = typeof(TestMethodRunnerTests).GetMethod(
                 "InitMethodThrowingException",
-                BindingFlags.Static | BindingFlags.NonPublic);
+                BindingFlags.Static | BindingFlags.NonPublic)
+            };
 
             var constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
             var classAttribute = new UTF.TestClassAttribute();
@@ -263,11 +267,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 constructor: constructorInfo,
                 testContextProperty: testContextProperty,
                 classAttribute: classAttribute,
-                parent: tai);
-
-            tci.ClassInitializeMethod = typeof(TestMethodRunnerTests).GetMethod(
+                parent: tai)
+            {
+                ClassInitializeMethod = typeof(TestMethodRunnerTests).GetMethod(
                 "InitMethodThrowingException",
-                BindingFlags.Static | BindingFlags.NonPublic);
+                BindingFlags.Static | BindingFlags.NonPublic)
+            };
 
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, tci, this.testMethodOptions, () => { throw new Exception("DummyException"); });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
@@ -506,8 +511,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldRunDataDrivenTestsWhenDataIsProvidedUsingDataRowAttribute()
         {
-            UTF.TestResult testResult = new UTF.TestResult();
-            testResult.Outcome = UTF.UnitTestOutcome.Inconclusive;
+            UTF.TestResult testResult = new UTF.TestResult
+            {
+                Outcome = UTF.UnitTestOutcome.Inconclusive
+            };
 
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
@@ -589,10 +596,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             int dummyIntData = 2;
             string dummyStringData = "DummyString";
-            UTF.DataRowAttribute dataRowAttribute = new UTF.DataRowAttribute(
-                dummyIntData,
-                dummyStringData);
-            dataRowAttribute.DisplayName = "DataRowTestDisplayName";
+            UTF.DataRowAttribute dataRowAttribute = new UTF.DataRowAttribute(dummyIntData, dummyStringData)
+            {
+                DisplayName = "DataRowTestDisplayName"
+            };
 
             var attribs = new Attribute[] { dataRowAttribute };
 
@@ -634,8 +641,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldSetResultFilesIfPresentForDataDrivenTests()
         {
-            UTF.TestResult testResult = new UTF.TestResult();
-            testResult.ResultFiles = new List<string>() { "C:\\temp.txt" };
+            UTF.TestResult testResult = new UTF.TestResult
+            {
+                ResultFiles = new List<string>() { "C:\\temp.txt" }
+            };
 
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
@@ -704,8 +713,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldReturnParentResultForDataRowDataDrivenTests()
         {
-            UTF.TestResult testResult = new UTF.TestResult();
-            testResult.ResultFiles = new List<string>() { "C:\\temp.txt" };
+            UTF.TestResult testResult = new UTF.TestResult
+            {
+                ResultFiles = new List<string>() { "C:\\temp.txt" }
+            };
 
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
@@ -736,8 +747,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldReturnParentResultForDataRowDataDrivenTestsContainingSingleTest()
         {
-            UTF.TestResult testResult = new UTF.TestResult();
-            testResult.ResultFiles = new List<string>() { "C:\\temp.txt" };
+            UTF.TestResult testResult = new UTF.TestResult
+            {
+                ResultFiles = new List<string>() { "C:\\temp.txt" }
+            };
 
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
@@ -871,7 +884,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         public class TestableTestmethodInfo : TestMethodInfo
         {
-            private Func<UTF.TestResult> invokeTest;
+            private readonly Func<UTF.TestResult> invokeTest;
 
             internal TestableTestmethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<UTF.TestResult> invoke)
                 : base(testMethod, parent, testMethodOptions)

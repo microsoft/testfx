@@ -16,7 +16,7 @@
    - ASP.NET Core 1.0+ (Visual Studio 2017) 
    </description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
-    <licenseUrl>http://www.microsoft.com/web/webpi/eula/net_library_eula_enu.htm</licenseUrl>
+    <license type="file">LICENSE.txt</license>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
@@ -79,6 +79,20 @@
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netcoreapp1.0\" />
     <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp1.0\" />
 
+	  <!-- <file src="PlatformServices.NetCore\netstandard1.5\zh-Hans\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\zh-Hans" />
+    <file src="PlatformServices.NetCore\netstandard1.5\zh-Hant\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\zh-Hant" />
+    <file src="PlatformServices.NetCore\netstandard1.5\cs\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\cs" />
+    <file src="PlatformServices.NetCore\netstandard1.5\de\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\de" />
+    <file src="PlatformServices.NetCore\netstandard1.5\es\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\es" />
+    <file src="PlatformServices.NetCore\netstandard1.5\fr\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\fr" />
+    <file src="PlatformServices.NetCore\netstandard1.5\it\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\it" />
+    <file src="PlatformServices.NetCore\netstandard1.5\ja\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\ja" />
+    <file src="PlatformServices.NetCore\netstandard1.5\ko\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\ko" />
+    <file src="PlatformServices.NetCore\netstandard1.5\pl\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\pl" />
+    <file src="PlatformServices.NetCore\netstandard1.5\pt-BR\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\pt" />
+    <file src="PlatformServices.NetCore\netstandard1.5\ru\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\ru" />
+    <file src="PlatformServices.NetCore\netstandard1.5\tr\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\tr" /> -->
+
     <!-- UWP -->
     <file src="Build\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />
     <file src="Build\Universal\MSTest.TestAdapter.targets" target="build\uap10.0\MSTest.TestAdapter.targets" />
@@ -87,5 +101,8 @@
     <!-- Desktop -->
     <file src="Build\Desktop\MSTest.TestAdapter.props" target="build\net45\MSTest.TestAdapter.props" />
     <file src="Build\Desktop\MSTest.TestAdapter.targets" target="build\net45\MSTest.TestAdapter.targets" />
+
+    <!-- LICENSE.txt -->
+    <file src="LICENSE.txt" target="" />
   </files>
 </package>

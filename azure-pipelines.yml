@@ -1,0 +1,44 @@
+
+# Pipeline YAML for PR
+
+jobs:
+- job: Windows
+  pool:
+    vmImage: 'vs2017-win2016'
+  variables:
+    buildConfiguration: 'Release'
+
+  steps:
+
+  - task: NuGetToolInstaller@0
+    displayName: 'Pull in NuGet 4.9.2'
+    inputs:
+      versionSpec: 4.9.2
+  
+  - powershell: |
+      reg DELETE "HKLM\Software\Microsoft\StrongName\Verification" /f
+      reg ADD "HKLM\Software\Microsoft\StrongName\Verification\*,*" /f
+      reg DELETE "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification" /f
+      reg ADD "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification\*,*" /f
+    displayName: 'Disable strongname validation'
+
+  - task: BatchScript@1
+    displayName: 'Restore, Build and Package'
+    inputs:
+      filename: build.cmd
+      arguments: '-configuration $(BuildConfiguration) -Full'
+      modifyEnvironment: false
+
+  - task: BatchScript@1
+    displayName: 'Run All Tests'
+    inputs:
+      filename: test.cmd
+      arguments: '-configuration $(BuildConfiguration) -all -parallel'
+      modifyEnvironment: false
+  
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results **\*.trx'
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: '**\*.trx'
+    condition: succeededOrFailed()

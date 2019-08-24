@@ -10,39 +10,72 @@
     <TargetFramework>netstandard1.5</TargetFramework>
     <PackageTargetFallback>$(PackageTargetFallback);portable-net45+win8+wpa81+wp8</PackageTargetFallback>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <UseSharedResources>true</UseSharedResources>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Constants.cs" Link="Constants.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs" Link="MarshalByRefObject.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs" Link="ns10RecursiveDirectoryPath.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs" Link="SerializableAttribute.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10FileOperations.cs" Link="Services\ns10FileOperations.cs" />
+    <Compile Include="Deployment\NetCoreTestRunDirectories.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs" Link="Services\ns10DiaSessionOperations.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs" Link="Services\ns10MSTestSettingsProvider.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs" Link="Services\ns10ReflectionOperations.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10SettingsProvider.cs" Link="Services\ns10SettingsProvider.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs" Link="Services\ns10TestContextImplementation.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs" Link="Services\ns10TestDataSource.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestDeployment.cs" Link="Services\ns10TestDeployment.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestSource.cs" Link="Services\ns10TestSource.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestSourceHost.cs" Link="Services\ns10TestSourceHost.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" Link="Services\ns10ThreadOperations.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TraceLogger.cs" Link="Services\ns10TraceLogger.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextPropertyStrings.cs" Link="Services\ns10TestContextPropertyStrings.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Utilities\ns10Validate.cs" Link="Utilities\ns10Validate.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Extensions\ns13ExceptionExtensions.cs" Link="Extensions\ns13ExceptionExtensions.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13DeploymentItem.cs" Link="Deployment\ns13DeploymentItem.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13MSTestAdapterSettings.cs" Link="Services\ns13MSTestAdapterSettings.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TestDeployment.cs" Link="Services\ns13TestDeployment.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs" Link="Services\ns13TraceListener.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListenerManager.cs" Link="Services\ns13TraceListenerManager.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentItemUtility.cs" Link="Utilities\ns13DeploymentItemUtility.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentUtilityBase.cs" Link="Utilities\ns13DeploymentUtilityBase.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs" Link="Utilities\ns13FileUtility.cs" />
     <Compile Include="Friends.cs" />
+    <Compile Include="Services\NetCoreTestContextImplementation.cs" />
+    <Compile Include="Services\NetCoreTestSourceHost.cs" />
+    <Compile Include="Utilities\NetCoreAssemblyUtility.cs" />
+    <Compile Include="Utilities\NetCoreDeploymentUtility.cs" />
+    <Compile Include="Utilities\NetCoreReflectionUtility.cs" />
+    <Folder Include="Resources\" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
+      <Link>Resources\Resource.Designer.cs</Link>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="11.0.0" />
+    <EmbeddedResource Include="..\PlatformServices.Shared\netstandard1.3\Resources\Resource.resx">
+      <Link>Resources\Resource.resx</Link>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+      <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</CustomToolNamespace>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="15.0.0" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PlatformServices.Interface\PlatformServices.Interface.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
-    <Folder Include="Services\" />
+    <Folder Include="Extensions\" />
   </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

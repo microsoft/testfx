@@ -18,6 +18,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
         /// </summary>
+        public DataRowAttribute()
+        {
+            this.Data = new object[0];
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
+        /// </summary>
         /// <param name="data1"> The data object. </param>
         public DataRowAttribute(object data1)
         {

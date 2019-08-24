@@ -14,6 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System.Linq;
     using System.Reflection;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -371,6 +372,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             Mock<ITestContext> testContext = new Mock<ITestContext>();
             testContext.Setup(tc => tc.GetResultFiles()).Returns(new List<string>() { "C:\\temp.txt" });
+            var mockInnerContext = new Mock<UTFExtension.TestContext>();
+            testContext.SetupGet(tc => tc.Context).Returns(mockInnerContext.Object);
+            mockInnerContext.SetupGet(tc => tc.CancellationTokenSource).Returns(new CancellationTokenSource());
             this.testMethodOptions.TestContext = testContext.Object;
 
             var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
@@ -1221,7 +1225,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 PlatformServiceProvider.Instance = testablePlatformServiceProvider;
 
                 testablePlatformServiceProvider.MockThreadOperations.Setup(
-                 to => to.Execute(It.IsAny<Action>(), It.IsAny<int>())).Returns(false);
+                 to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
                 this.testMethodOptions.Timeout = 1;
                 var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
 
@@ -1235,19 +1239,179 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void TestMethodInfoInvokeShouldReturnTestPassedOnCompletionWithinTimeout()
         {
-            DummyTestClass.TestMethodBody = o =>
-                {
-                    /* do nothing */
-                };
-
+            DummyTestClass.TestMethodBody = o => { /* do nothing */ };
             var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
-
             var result = method.Invoke(null);
-
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldCancelTokenSourceOnTimeout()
+        {
+            var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+            this.RunWithTestablePlatformService(testablePlatformServiceProvider, () =>
+            {
+                testablePlatformServiceProvider.MockThreadOperations.CallBase = true;
+                PlatformServiceProvider.Instance = testablePlatformServiceProvider;
+
+                testablePlatformServiceProvider.MockThreadOperations.Setup(
+                 to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
+                this.testMethodOptions.Timeout = 1;
+
+                var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
+                var result = method.Invoke(null);
+
+                Assert.AreEqual(UTF.UnitTestOutcome.Timeout, result.Outcome);
+                StringAssert.Contains(result.TestFailureException.Message, "exceeded execution timeout period");
+                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not cancelled..");
+            });
+        }
+
+        [TestMethodV1]
+        public void TestMethodInfoInvokeShouldFailOnTokenSourceCancellation()
+        {
+            var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+            this.RunWithTestablePlatformService(testablePlatformServiceProvider, () =>
+            {
+                testablePlatformServiceProvider.MockThreadOperations.CallBase = true;
+                PlatformServiceProvider.Instance = testablePlatformServiceProvider;
+
+                testablePlatformServiceProvider.MockThreadOperations.Setup(
+                 to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Callback((Action action, int timeoOut, CancellationToken cancelToken) =>
+                 {
+                     try
+                     {
+                         Task.WaitAny(new[] { Task.Delay(100000) }, cancelToken);
+                     }
+                     catch (OperationCanceledException)
+                     {
+                     }
+                 });
+
+                this.testMethodOptions.Timeout = 100000;
+                this.testContextImplementation.CancellationTokenSource.CancelAfter(100);
+                var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
+                var result = method.Invoke(null);
+
+                Assert.AreEqual(UTF.UnitTestOutcome.Timeout, result.Outcome);
+                StringAssert.Contains(result.TestFailureException.Message, "execution has been aborted");
+                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not cancelled..");
+            });
+        }
+
         #endregion
+
+        [TestMethodV1]
+        public void ResolveArgumentsShouldReturnProvidedArgumentsWhenTooFewParameters()
+        {
+            var simpleArgumentsMethod = typeof(DummyTestClass).GetMethod("DummySimpleArgumentsMethod");
+
+            var method = new TestMethodInfo(
+                simpleArgumentsMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { "RequiredStr1" };
+            object[] expectedArguments = new object[] { "RequiredStr1" };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(1, resolvedArguments.Length);
+            CollectionAssert.AreEqual(expectedArguments, resolvedArguments);
+        }
+
+        [TestMethodV1]
+        public void ResolveArgumentsShouldReturnProvidedArgumentsWhenTooManyParameters()
+        {
+            var simpleArgumentsMethod = typeof(DummyTestClass).GetMethod("DummySimpleArgumentsMethod");
+
+            var method = new TestMethodInfo(
+                simpleArgumentsMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { "RequiredStr1", "RequiredStr2", "ExtraStr3" };
+            object[] expectedArguments = new object[] { "RequiredStr1", "RequiredStr2", "ExtraStr3" };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(3, resolvedArguments.Length);
+            CollectionAssert.AreEqual(expectedArguments, resolvedArguments);
+        }
+
+        [TestMethodV1]
+        public void ResolveArgumentsShouldReturnAdditionalOptionalParametersWithNoneProvided()
+        {
+            var optionalArgumentsMethod = typeof(DummyTestClass).GetMethod("DummyOptionalArgumentsMethod");
+
+            var method = new TestMethodInfo(
+                optionalArgumentsMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { "RequiredStr1" };
+            object[] expectedArguments = new object[] { "RequiredStr1", null, null };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(3, resolvedArguments.Length);
+            CollectionAssert.AreEqual(expectedArguments, resolvedArguments);
+        }
+
+        [TestMethodV1]
+        public void ResolveArgumentsShouldReturnAdditionalOptionalParametersWithSomeProvided()
+        {
+            var optionalArgumentsMethod = typeof(DummyTestClass).GetMethod("DummyOptionalArgumentsMethod");
+
+            var method = new TestMethodInfo(
+                optionalArgumentsMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { "RequiredStr1", "OptionalStr1" };
+            object[] expectedArguments = new object[] { "RequiredStr1", "OptionalStr1", null };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(3, resolvedArguments.Length);
+            CollectionAssert.AreEqual(expectedArguments, resolvedArguments);
+        }
+
+        [TestMethodV1]
+        public void ResolveArgumentsShouldReturnEmptyParamsWithNoneProvided()
+        {
+            var paramsArgumentMethod = typeof(DummyTestClass).GetMethod("DummyParamsArgumentMethod");
+
+            var method = new TestMethodInfo(
+                paramsArgumentMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { 1 };
+            object[] expectedArguments = new object[] { 1, new string[] { } };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(2, resolvedArguments.Length);
+            Assert.AreEqual(expectedArguments[0], resolvedArguments[0]);
+            Assert.IsInstanceOfType(resolvedArguments[1], typeof(string[]));
+            CollectionAssert.AreEqual((string[])expectedArguments[1], (string[])resolvedArguments[1]);
+        }
+
+        [TestMethodV1]
+        public void ResolveArgumentsShouldReturnPopulatedParamsWithAllProvided()
+        {
+            var paramsArgumentMethod = typeof(DummyTestClass).GetMethod("DummyParamsArgumentMethod");
+
+            var method = new TestMethodInfo(
+                paramsArgumentMethod,
+                this.testClassInfo,
+                this.testMethodOptions);
+
+            object[] arguments = new object[] { 1, "str1", "str2", "str3" };
+            object[] expectedArguments = new object[] { 1, new string[] { "str1", "str2", "str3" } };
+            var resolvedArguments = method.ResolveArguments(arguments);
+
+            Assert.AreEqual(2, resolvedArguments.Length);
+            Assert.AreEqual(expectedArguments[0], resolvedArguments[0]);
+            Assert.IsInstanceOfType(resolvedArguments[1], typeof(string[]));
+            CollectionAssert.AreEqual((string[])expectedArguments[1], (string[])resolvedArguments[1]);
+        }
 
         #region helper methods
 
@@ -1256,9 +1420,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             try
             {
                 testablePlatformServiceProvider.MockThreadOperations.
-                    Setup(tho => tho.Execute(It.IsAny<Action>(), It.IsAny<int>())).
+                    Setup(tho => tho.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).
                     Returns(true).
-                    Callback((Action a, int timeout) =>
+                    Callback((Action a, int timeout, CancellationToken token) =>
                     {
                         a.Invoke();
                     });
@@ -1346,6 +1510,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             {
                 // We use this method to validate async TestInitialize, TestCleanup, TestMethod
                 return DummyAsyncTestMethodBody();
+            }
+
+            public void DummySimpleArgumentsMethod(string str1, string str2)
+            {
+                TestMethodBody(this);
+            }
+
+            public void DummyOptionalArgumentsMethod(string str1, string str2 = null, string str3 = null)
+            {
+                TestMethodBody(this);
+            }
+
+            public void DummyParamsArgumentMethod(int i, params string[] args)
+            {
+                TestMethodBody(this);
             }
         }
 

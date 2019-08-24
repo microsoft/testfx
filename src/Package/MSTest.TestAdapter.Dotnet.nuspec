@@ -9,7 +9,7 @@
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <description>A nuget package targeting running MSTest tests on Dotnet vnext projects.</description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
-    <licenseUrl>http://www.microsoft.com/web/webpi/eula/net_library_eula_enu.htm</licenseUrl>
+    <license type="file">LICENSE.txt</license>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
   </metadata>
@@ -24,5 +24,8 @@
 	  
     <!-- Added the below so source navigation works in dotnet-test scenarios -->
 	  <file src="$packagesroot$\Microsoft.Internal.Dia.Interop.14.0.1\lib\net20\msdia140typelib_clr0200.dll" target="lib\net451\" />
+
+    <!-- LICENSE.txt -->
+    <file src="LICENSE.txt" target="" />
   </files>
 </package>

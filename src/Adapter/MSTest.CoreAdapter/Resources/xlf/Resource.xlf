@@ -93,8 +93,9 @@
         <note></note>
       </trans-unit>
       <trans-unit id="TypeLoadFailed">
-        <source>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.</source>
-        <target state="translated">Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.</target>
+        <source>Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.
+Error: {1}</source>
+        <target state="new">Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorGenericTestMethod">
@@ -245,8 +246,8 @@
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_WrongThread">
-        <source>{0}. If you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</source>
-        <target state="translated">{0}. If you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</target>
+        <source>{0} For UWP projects, if you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</source>
+        <target state="new">{0}. If you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="AttachmentSetDisplayName">
@@ -282,7 +283,7 @@
         <note></note>
       </trans-unit>
       <trans-unit id="LegacyScenariosNotSupportedWarning">
-        <source>Warning : A testsettings file, a runsettings file with a ForcedLegacyMode set to true or a vsmdi file is not supported with the MSTest V2 Adapter.</source>
+        <source>Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.</source>
         <target state="new">Warning : A testsettings file or a runsettings with a ForcedLegacyMode set to true is not supported with the MSTest V2 Adapter.</target>
         <note></note>
       </trans-unit>
@@ -329,6 +330,11 @@
       <trans-unit id="UTA_TestMethodExpectedParameters">
         <source>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</source>
         <target state="new">Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="Execution_Test_Cancelled">
+        <source>Test '{0}' execution has been aborted.</source>
+        <target state="new">Test '{0}' execution has been aborted.</target>
         <note></note>
       </trans-unit>
     </body>

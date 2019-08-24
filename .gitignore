@@ -86,7 +86,6 @@ ehthumbs.db
 packages
 artifacts
 Tools
-!Templates/**/packages
 
 # ===========================
 # Tools

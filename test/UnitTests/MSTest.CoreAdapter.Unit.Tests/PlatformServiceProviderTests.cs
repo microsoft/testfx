@@ -94,7 +94,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             // Assert.
             Assert.AreEqual("A.C.M", testContext.Context.FullyQualifiedTestClassName);
             Assert.AreEqual("M", testContext.Context.TestName);
-            Assert.IsTrue(testContext.Context.Properties.Contains(properties.ToArray()[0]));
+            Assert.IsTrue(testContext.Context.Properties.Contains(properties.ToArray()[0].Key));
+            Assert.IsTrue(((IDictionary<string, object>)testContext.Context.Properties).Contains(properties.ToArray()[0]));
         }
     }
 }
