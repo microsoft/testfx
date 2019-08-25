@@ -529,6 +529,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             Assert.AreEqual(otherAssemblyName, testElement.TestMethod.DeclaringAssemblyName);
         }
 
+        [TestMethod]
+        public void GetTestFromMethodShouldSetDisplayNameToTestMethodNameIfNotPresent()
+        {
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
+
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
+
+            Assert.IsNotNull(testElement);
+            Assert.IsNotNull(testElement.DisplayName);
+            Assert.AreEqual("MethodWithVoidReturnType", testElement.DisplayName);
+        }
+
+        [TestMethod]
+        public void GetTestFromMethodShouldSetDisplayName()
+        {
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
+
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
+            testElement.DisplayName = "New Display Name";
+
+            Assert.IsNotNull(testElement);
+            Assert.IsNotNull(testElement.DisplayName);
+            Assert.AreEqual("New Display Name", testElement.DisplayName);
+        }
+
         #endregion
 
         #region private methods

@@ -77,6 +77,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
         }
 
         [TestMethodV1]
+        public void ToTestCaseShouldSetDisplayNameIfPresent()
+        {
+            this.unitTestElement.DisplayName = "Display Name";
+            var testCase = this.unitTestElement.ToTestCase();
+
+            Assert.AreEqual("Display Name", testCase.DisplayName);
+        }
+
+        [TestMethodV1]
         public void ToTestCaseShouldSetTestClassNameProperty()
         {
             var testCase = this.unitTestElement.ToTestCase();
