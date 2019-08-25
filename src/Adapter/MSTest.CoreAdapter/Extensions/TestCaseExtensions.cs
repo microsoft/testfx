@@ -24,10 +24,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             var testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
             var declaringClassName = testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) as string;
 
-            // method name from fully qualified name, feels hacky
-            var parts = testCase.FullyQualifiedName.Split('.');
-            var methodName = parts[parts.Length - 1];
-            TestMethod testMethod = new TestMethod(methodName, testClassName, source, isAsync);
+            TestMethod testMethod = new TestMethod(testCase.DisplayName, testClassName, source, isAsync);
 
             if (declaringClassName != null && declaringClassName != testClassName)
             {
