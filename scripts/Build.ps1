@@ -223,8 +223,8 @@ function Invoke-Build([string] $solution, $hasVsixExtension = "false")
   $solutionFailureLog = Join-Path -path $solutionDir -childPath "msbuild.err"
 
 	Write-Log "    Building $solution..."
-	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath"
-	& $msbuild /t:$Target /p:Configuration=$configuration /tv:$msbuildVersion /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath
+	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath"
+	& $msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath
   
 	if ($lastExitCode -ne 0) {
 		throw "Build failed with an exit code of '$lastExitCode'."

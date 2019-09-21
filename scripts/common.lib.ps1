@@ -54,8 +54,18 @@ function Locate-MSBuild($hasVsixExtension = "false") {
 
 function Locate-MSBuildPath($hasVsixExtension = "false") {
   $vsInstallPath = Locate-VsInstallPath -hasVsixExtension $hasVsixExtension
-  $msbuildPath = Join-Path -path $vsInstallPath -childPath "MSBuild\$msbuildVersion\Bin"
-  return Resolve-Path -path $msbuildPath
+
+  # first try to find the VS2019+ path
+  $msbuildPath = Join-Path -path $vsInstallPath -childPath "MSBuild\Current\Bin"
+  $msbuildPath = Resolve-Path $msbuildPath
+
+  # otherwise fall back to the VS2017 path
+  if(!(Test-Path -path $msbuildPath)) {
+    $msbuildPath = Join-Path -path $vsInstallPath -childPath "MSBuild\$msbuildVersion\Bin"
+    $msbuildPath = Resolve-Path $msbuildPath
+  }
+
+  return $msbuildPath
 }
 
 function Locate-NuGet {
@@ -117,6 +127,7 @@ function Locate-VsInstallPath($hasVsixExtension ="false"){
 
   $requiredPackageIds += "Microsoft.Component.MSBuild" 
   $requiredPackageIds += "Microsoft.Net.Component.4.6.TargetingPack"
+  $requiredPackageIds += "Microsoft.VisualStudio.Windows.Build"
 
   if($hasVsixExtension -eq 'true')
   {
