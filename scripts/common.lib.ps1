@@ -56,11 +56,12 @@ function Locate-MSBuildPath($hasVsixExtension = "false") {
   $vsInstallPath = Locate-VsInstallPath -hasVsixExtension $hasVsixExtension
 
   # first try to find the VS2019+ path
-  $msbuildPath = Join-Path -path $vsInstallPath -childPath "MSBuild\Current\Bin"
-  $msbuildPath = Resolve-Path $msbuildPath
-
-  # otherwise fall back to the VS2017 path
-  if(!(Test-Path -path $msbuildPath)) {
+  try {
+    $msbuildPath = Join-Path -path $vsInstallPath -childPath "MSBuild\Current\Bin"
+    $msbuildPath = Resolve-Path $msbuildPath
+  }
+  catch {
+    # Resolve-Path throws if the path does not exist, so use the VS2017 path as a fallback
     $msbuildPath = Join-Path -path $vsInstallPath -childPath "MSBuild\$msbuildVersion\Bin"
     $msbuildPath = Resolve-Path $msbuildPath
   }
