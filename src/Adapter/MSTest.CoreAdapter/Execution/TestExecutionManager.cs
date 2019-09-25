@@ -154,7 +154,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return;
             }
 
-            Guid orginalTestCaseId = test.Id;
+            Guid originalTestCaseId = test.Id;
             foreach (var unitTestResult in unitTestResults)
             {
                 if (test == null)
@@ -162,7 +162,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     continue;
                 }
 
-                test.Id = unitTestResult.TestId == Guid.Empty ? orginalTestCaseId : unitTestResult.TestId;
+                // If the result has a TestId set then update the TestCase to have that id
+                // this is done for data driven results so we can fire unique start/end events for each iteration
+                test.Id = unitTestResult.TestId == Guid.Empty ? originalTestCaseId : unitTestResult.TestId;
                 var testResult = unitTestResult.ToTestResult(test, startTime, endTime, MSTestSettings.CurrentSettings);
 
                 if (unitTestResult.DatarowIndex >= 0)
@@ -186,7 +188,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
 
-            test.Id = orginalTestCaseId;
+            // Reset the test id back to the original id in case we changed it above
+            test.Id = originalTestCaseId;
         }
 
         private static bool MatchTestFilter(ITestCaseFilterExpression filterExpression, TestCase test, TestMethodFilter testMethodFilter)

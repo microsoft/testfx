@@ -46,6 +46,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             this.IsAsync = isAsync;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestMethod"/> class from the given <see cref="TestMethod"/> instance (i.e. clone).
+        /// </summary>
+        /// <param name="testMethodInfo">The <see cref="TestMethod"/> instance to clone values from.</param>
         internal TestMethod(TestMethodInfo testMethodInfo)
         {
             Debug.Assert(testMethodInfo != null, "TestMethodInfo can't be null");
