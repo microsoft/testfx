@@ -39,15 +39,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             Debug.Assert(!string.IsNullOrEmpty(fullClassName), "Full className cannot be empty");
 
             this.Name = name;
+            this.DisplayName = GetFriendlyName(name);
             this.FullClassName = fullClassName;
             this.AssemblyName = assemblyName;
             this.IsAsync = isAsync;
         }
-
+        
         /// <summary>
         /// Gets the name of the test method
         /// </summary>
         public string Name { get; private set; }
+        
+        /// <summary>
+        /// Gets the display name of the test method
+        /// </summary>
+        public string DisplayName { get; private set; }
 
         /// <summary>
         /// Gets the full classname of the test method
@@ -102,5 +108,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// Gets a value indicating whether specifies test method is async
         /// </summary>
         public bool IsAsync { get; private set; }
+        
+        string GetFriendlyName(string name) => name?.Replace('_', ' ');
     }
 }
