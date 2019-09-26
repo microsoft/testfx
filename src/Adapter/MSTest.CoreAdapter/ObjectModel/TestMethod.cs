@@ -109,6 +109,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         public bool IsAsync { get; private set; }
         
-        string GetFriendlyName(string name) => name?.Replace('_', ' ');
+        string GetFriendlyName(string name) => name?.Replace('_', ' ')?.Trim();
     }
 }
