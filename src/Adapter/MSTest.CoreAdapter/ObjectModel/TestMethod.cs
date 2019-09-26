@@ -39,7 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             Debug.Assert(!string.IsNullOrEmpty(fullClassName), "Full className cannot be empty");
 
             this.Name = name;
-            this.DisplayName = GetFriendlyName(name);
+            this.DisplayName = this.GetFriendlyName(name);
             this.FullClassName = fullClassName;
             this.AssemblyName = assemblyName;
             this.IsAsync = isAsync;
