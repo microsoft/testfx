@@ -44,12 +44,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             this.AssemblyName = assemblyName;
             this.IsAsync = isAsync;
         }
-        
+
         /// <summary>
         /// Gets the name of the test method
         /// </summary>
         public string Name { get; private set; }
-        
+
         /// <summary>
         /// Gets the display name of the test method
         /// </summary>
@@ -108,7 +108,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// Gets a value indicating whether specifies test method is async
         /// </summary>
         public bool IsAsync { get; private set; }
-        
-        string GetFriendlyName(string name) => name?.Replace('_', ' ')?.Trim();
+
+        private string GetFriendlyName(string name) => name?.Replace('_', ' ')?.Trim();
     }
 }
