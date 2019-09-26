@@ -110,7 +110,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 this.TestMethod.Name);
 
             TestCase testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
-            testCase.DisplayName = this.TestMethod.Name;
+            testCase.DisplayName = this.TestMethod.DisplayName;
 
             testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
 
