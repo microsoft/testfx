@@ -35,9 +35,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private readonly TestAssemblyInfo testAssemblyInfo;
 
-        private readonly TestClassInfo testClassInfo;
+        private readonly UTFExtension.TestContext testContext;
 
-        private UTFExtension.TestContext testContext;
+        private TestClassInfo testClassInfo;
 
         public TestClassInfoTests()
         {
@@ -127,6 +127,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
+        public void TestClassInfoClassCleanupMethodShouldNotInvokeBaseClassCleanupMethodsWhenNoTestClassInitializedIsCalled()
+        {
+            var classcleanupCallCount = 0;
+            DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
+                new Tuple<MethodInfo, MethodInfo>(
+                    null,
+                    typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod")));
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitBaseClassMethod");
+
+            var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
+
+            Assert.AreEqual(null, ret);
+            Assert.AreEqual(0, classcleanupCallCount);
+        }
+
+        [TestMethod]
         public void TestClassInfoClassCleanupMethodShouldInvokeWhenTestClassInitializedIsCalled()
         {
             var classcleanupCallCount = 0;
@@ -137,6 +155,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             this.testClassInfo.RunClassInitialize(this.testContext);
             var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
+
+            Assert.AreEqual(null, ret);
+            Assert.AreEqual(1, classcleanupCallCount);
+        }
+
+        [TestMethod]
+        public void TestClassInfoClassCleanupMethodShouldInvokeBaseClassCleanupMethodWhenTestClassInitializedIsCalled()
+        {
+            var classcleanupCallCount = 0;
+            DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
+                new Tuple<MethodInfo, MethodInfo>(
+                    typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"),
+                    typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod")));
+
+            this.testClassInfo.RunClassInitialize(this.testContext);
+            var ret = this.testClassInfo.RunClassCleanup();
 
             Assert.AreEqual(null, ret);
             Assert.AreEqual(1, classcleanupCallCount);
@@ -238,6 +274,95 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var exception = ActionUtility.PerformActionAndReturnException(() => this.testClassInfo.RunClassInitialize(this.testContext));
 
             Assert.IsNotNull(this.testClassInfo.ClassInitializationException);
+        }
+
+        [TestMethod]
+        public void RunClassInitializeShouldExecuteBaseClassInitializeMethod()
+        {
+            var classInitCallCount = 0;
+            DummyBaseTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+            DummyDerivedTestClass.DerivedClassInitializeMethodBody = (tc) => classInitCallCount++;
+
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
+                new Tuple<MethodInfo, MethodInfo>(
+                    typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"),
+                    null));
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitDerivedClassMethod");
+
+            this.testClassInfo.RunClassInitialize(this.testContext);
+
+            Assert.AreEqual(2, classInitCallCount);
+        }
+
+        [TestMethod]
+        public void RunClassInitializeShouldNotExecuteBaseClassInitializeMethodIfClassInitializeHasExecuted()
+        {
+            var classInitCallCount = 0;
+
+            DummyBaseTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount += 2;
+            DummyDerivedTestClass.DerivedClassInitializeMethodBody = (tc) => classInitCallCount++;
+
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
+                new Tuple<MethodInfo, MethodInfo>(
+                    typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"),
+                    null));
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitDerivedClassMethod");
+
+            this.testClassInfo.RunClassInitialize(this.testContext);
+            this.testClassInfo.RunClassInitialize(this.testContext); // this one shouldn't run
+
+            Assert.AreEqual(3, classInitCallCount);
+        }
+
+        [TestMethod]
+        public void RunClassInitializeShouldExecuteBaseClassInitializeIfDerivedClassInitializeIsNull()
+        {
+            var classInitCallCount = 0;
+            DummyBaseTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
+                new Tuple<MethodInfo, MethodInfo>(
+                    typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"),
+                    null));
+
+            this.testClassInfo.RunClassInitialize(this.testContext);
+
+            Assert.AreEqual(1, classInitCallCount);
+        }
+
+        [TestMethod]
+        public void RunClassInitializeShouldNotExecuteBaseClassIfBaseClassInitializeIsNull()
+        {
+            var classInitCallCount = 0;
+            DummyTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(new Tuple<MethodInfo, MethodInfo>(null, null));
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
+
+            this.testClassInfo.RunClassInitialize(this.testContext);
+
+            Assert.AreEqual(1, classInitCallCount);
+        }
+
+        [TestMethod]
+        public void RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions()
+        {
+            DummyBaseTestClass.ClassInitializeMethodBody = (tc) => { throw new ArgumentException("Argument exception"); };
+
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(new Tuple<MethodInfo, MethodInfo>(
+                typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"),
+                null));
+
+            var exception = ActionUtility.PerformActionAndReturnException(() => this.testClassInfo.RunClassInitialize(this.testContext)) as TestFailedException;
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(UnitTestOutcome.Failed, exception.Outcome);
+            Assert.AreEqual(
+                "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.InitBaseClassMethod threw exception. System.ArgumentException: System.ArgumentException: Argument exception.",
+                exception.Message);
+            StringAssert.StartsWith(
+                exception.StackTraceInformation.ErrorStackTrace,
+                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions>");
         }
 
         [TestMethod]
@@ -377,7 +502,69 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #endregion
 
-        [UTF.TestClass]
+        [DummyTestClass]
+        public class DummyGrandParentTestClass
+        {
+            public static Action<object> ClassInitMethodBody { get; set; }
+
+            public static Action CleanupClassMethodBody { get; set; }
+
+            public UTFExtension.TestContext BaseTestContext { get; set; }
+
+            [UTF.ClassInitialize(UTF.InheritanceBehavior.BeforeEachDerivedClass)]
+            public static void InitClassMethod(UTFExtension.TestContext testContext)
+            {
+                ClassInitMethodBody?.Invoke(testContext);
+            }
+
+            public static void ClassCleanupMethod()
+            {
+                CleanupClassMethodBody?.Invoke();
+            }
+        }
+
+        [DummyTestClass]
+        public class DummyBaseTestClass : DummyGrandParentTestClass
+        {
+            public static Action<object> ClassInitializeMethodBody { get; set; }
+
+            public static Action ClassCleanupMethodBody { get; set; }
+
+            public UTFExtension.TestContext TestContext { get; set; }
+
+            [UTF.ClassInitialize(UTF.InheritanceBehavior.BeforeEachDerivedClass)]
+            public static void InitBaseClassMethod(UTFExtension.TestContext testContext)
+            {
+                ClassInitializeMethodBody?.Invoke(testContext);
+            }
+
+            public static void CleanupClassMethod()
+            {
+                ClassCleanupMethodBody?.Invoke();
+            }
+        }
+
+        [DummyTestClass]
+        public class DummyDerivedTestClass : DummyBaseTestClass
+        {
+            public static Action<object> DerivedClassInitializeMethodBody { get; set; }
+
+            public static Action DerivedClassCleanupMethodBody { get; set; }
+
+            public UTFExtension.TestContext Context { get; set; }
+
+            public static void InitDerivedClassMethod(UTFExtension.TestContext testContext)
+            {
+                DerivedClassInitializeMethodBody?.Invoke(testContext);
+            }
+
+            public static void CleanupDerivedClassMethod()
+            {
+                DerivedClassCleanupMethodBody?.Invoke();
+            }
+        }
+
+        [DummyTestClass]
         public class DummyTestClass
         {
             public static Action<object> ClassInitializeMethodBody { get; set; }
@@ -395,6 +582,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             {
                 ClassCleanupMethodBody?.Invoke();
             }
+        }
+
+        private class DummyTestClassAttribute : UTF.TestClassAttribute
+        {
         }
     }
 }

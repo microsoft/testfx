@@ -38,7 +38,7 @@
   <!-- Signing and Localization. -->
   <ItemGroup Condition="$(IsTest) == '' or $(IsTest) == 'false'">
     <FilesToSign Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(IsVsixProj)' == '' or '$(IsVsixProj)' != 'true'">
-      <Authenticode>Microsoft</Authenticode>
+      <Authenticode>Microsoft402400</Authenticode>
       <StrongName>StrongName</StrongName>
     </FilesToSign>
 
@@ -59,7 +59,7 @@
   <Target Name="GatherLocalizedOutputsForSigning" DependsOnTargets="TestFxLocalization">
     <ItemGroup>
       <FilesToSign Include="$(OutDir)\**\$(AssemblyName).resources.dll">
-        <Authenticode>Microsoft</Authenticode>
+        <Authenticode>Microsoft402400</Authenticode>
         <StrongName>StrongName</StrongName>
       </FilesToSign>
     </ItemGroup>
