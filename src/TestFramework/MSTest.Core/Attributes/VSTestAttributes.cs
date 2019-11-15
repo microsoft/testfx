@@ -391,7 +391,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Initializes a new instance of the <see cref="TimeoutAttribute"/> class.
         /// </summary>
         /// <param name="timeout">
-        /// The timeout.
+        /// The timeout in milliseconds.
         /// </param>
         public TimeoutAttribute(int timeout)
         {
@@ -414,7 +414,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         #region Properties
 
         /// <summary>
-        /// Gets the timeout.
+        /// Gets the timeout in milliseconds.
         /// </summary>
         public int Timeout { get; }
 
