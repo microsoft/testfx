@@ -215,7 +215,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 source = Path.Combine(PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory(), Path.GetFileName(source));
             }
 
-            System.Diagnostics.Debugger.Launch();
             using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle))
             {
                 // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain

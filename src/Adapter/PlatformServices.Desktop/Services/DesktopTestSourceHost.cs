@@ -86,7 +86,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         public void SetupHost()
         {
-            System.Diagnostics.Debugger.Launch();
             List<string> resolutionPaths = this.GetResolutionPaths(this.sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
 
             if (EqtTrace.IsInfoEnabled)
