@@ -215,15 +215,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 source = Path.Combine(PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory(), Path.GetFileName(source));
             }
 
+            System.Diagnostics.Debugger.Launch();
             using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle))
             {
                 // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
                 var testRunner = isolationHost.CreateInstanceForType(
                     typeof(UnitTestRunner),
                     new object[] { MSTestSettings.CurrentSettings }) as UnitTestRunner;
-
-                // After loading adapter reset the chils-domain's appbase to point to test source location
-                isolationHost.UpdateAppBaseToTestSourceLocation();
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
@@ -247,10 +245,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
                 }
 
-                var sourceSettingsProvider = isolationHost.CreateInstanceForType(
-                    typeof(TestAssemblySettingsProvider),
-                    null) as TestAssemblySettingsProvider;
-
+                var sourceSettingsProvider = new TestAssemblySettingsProvider();
                 var sourceSettings = sourceSettingsProvider.GetSettings(source);
                 var parallelWorkers = sourceSettings.Workers;
                 var parallelScope = sourceSettings.Scope;

@@ -39,7 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var testAssemblySettings = new TestAssemblySettings();
 
             // Load the source.
-            var testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
+            var testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: true);
 
             var parallelizeAttribute = this.reflectHelper.GetParallelizeAttribute(testAssembly);
 
