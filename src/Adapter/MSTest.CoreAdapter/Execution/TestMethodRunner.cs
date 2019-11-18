@@ -145,7 +145,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             if (isIgnoreAttributeOnClass || isIgnoreAttributeOnMethod)
             {
-                this.testMethodInfo.TestExecutionRecorder.RecordStartAndEnd(new UnitTestElement(this.test), UnitTestOutcome.Ignored);
                 return new[] { new UnitTestResult(UnitTestOutcome.Ignored, ignoreMessage) };
             }
 
@@ -162,7 +161,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     }
                     catch
                     {
-                        this.testMethodInfo.TestExecutionRecorder.RecordStartAndEnd(new UnitTestElement(this.test), UnitTestOutcome.Error);
                         throw;
                     }
                     finally
