@@ -92,14 +92,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     // If the specified TestMethod could not be found, return a NotFound result.
                     if (testMethodInfo == null)
                     {
-                        testExecutionRecorder.RecordStartAndEnd(new UnitTestElement(testMethod), UnitTestOutcome.NotFound);
                         return new UnitTestResult[] { new UnitTestResult(UnitTestOutcome.NotFound, string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name)) };
                     }
 
                     // If test cannot be executed, then bail out.
                     if (!testMethodInfo.IsRunnable)
                     {
-                        testExecutionRecorder.RecordStartAndEnd(new UnitTestElement(testMethod), UnitTestOutcome.NotRunnable);
                         return new UnitTestResult[] { new UnitTestResult(UnitTestOutcome.NotRunnable, testMethodInfo.NotRunnableReason) };
                     }
 
@@ -109,7 +107,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             catch (TypeInspectionException ex)
             {
                 // Catch any exception thrown while inspecting the test method and return failure.
-                testExecutionRecorder.RecordStartAndEnd(new UnitTestElement(testMethod), UnitTestOutcome.Failed);
                 return new UnitTestResult[] { new UnitTestResult(UnitTestOutcome.Failed, ex.Message) };
             }
         }

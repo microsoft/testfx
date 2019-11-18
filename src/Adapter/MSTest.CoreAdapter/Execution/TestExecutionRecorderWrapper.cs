@@ -44,12 +44,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             this.recorder.RecordStart(test.ToTestCase());
         }
-
-        public void RecordStartAndEnd(UnitTestElement test, UnitTestOutcome outcome)
-        {
-            TestCase testCase = test.ToTestCase();
-            this.recorder.RecordStart(testCase);
-            this.recorder.RecordEnd(testCase, UnitTestOutcomeHelper.ToTestOutcome(outcome, MSTestSettings.CurrentSettings));
-        }
     }
 }

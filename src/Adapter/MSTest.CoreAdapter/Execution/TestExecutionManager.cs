@@ -172,6 +172,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, unitTestResult.DatarowIndex);
                 }
 
+                // Fire a RecordEnd here even though we also fire RecordEnd inside TestMethodInfo
+                // this is to ensure we fire end events for error cases. This is acceptable because
+                // vstest ignores multiple end events.
+                testExecutionRecorder.RecordEnd(test, testResult.Outcome);
+
                 if (testResult.Outcome == TestOutcome.Failed)
                 {
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
@@ -369,6 +374,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 var unitTestElement = currentTest.ToUnitTestElement(source);
+
+                // Fire a RecordStart here even though we also fire RecordStart inside TestMethodInfo
+                // this is to ensure we fire start events for error cases. This is acceptable because
+                // vstest ignores multiple start events.
+                testExecutionRecorder.RecordStart(currentTest);
 
                 var startTime = DateTimeOffset.Now;
 
