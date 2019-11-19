@@ -432,16 +432,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
-        public void RunClassCleanupShouldInvokeIfClassCleanupMethod()
-        {
-           var classcleanupCallCount = 0;
-            DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
-            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
-            Assert.IsNull(this.testClassInfo.RunClassCleanup());
-            Assert.AreEqual(1, classcleanupCallCount);
-        }
-
-        [TestMethod]
         public void RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
         {
             DummyTestClass.ClassInitializeMethodBody = (tc) => { Assert.AreEqual(tc, this.testContext); };
@@ -453,6 +443,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         #endregion
 
         #region Run Class Cleanup tests
+
+        [TestMethod]
+        public void RunClassCleanupShouldInvokeIfClassCleanupMethod()
+        {
+            var classcleanupCallCount = 0;
+            DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
+            Assert.IsNull(this.testClassInfo.RunClassCleanup());
+            Assert.AreEqual(1, classcleanupCallCount);
+        }
 
         [TestMethod]
         public void RunClassCleanupShouldNotInvokeIfClassCleanupIsNull()
@@ -498,6 +498,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             StringAssert.StartsWith(
                 this.testClassInfo.RunClassCleanup(),
                 "Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: System.ArgumentException: Argument Exception. Stack Trace:     at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions>");
+        }
+
+        [TestMethod]
+        public void RunBaseClassCleanupEvenIfThereIsNoTopLevelClassCleanup()
+        {
+            var classcleanupCallCount = 0;
+            DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
+
+            this.testClassInfo.ClassCleanupMethod = null;
+            this.testClassInfo.BaseClassCleanupMethodsStack.Push(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
+
+            Assert.IsNull(this.testClassInfo.RunClassCleanup());
+            Assert.AreEqual(1, classcleanupCallCount, "DummyBaseTestClass.CleanupClassMethod call count");
         }
 
         #endregion
