@@ -159,10 +159,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         this.testMethodInfo.Parent.Parent.RunAssemblyInitialize(this.testContext.Context);
                         this.testMethodInfo.Parent.RunClassInitialize(this.testContext.Context);
                     }
-                    catch
-                    {
-                        throw;
-                    }
                     finally
                     {
                         initLogs = logListener.StandardOutput;
