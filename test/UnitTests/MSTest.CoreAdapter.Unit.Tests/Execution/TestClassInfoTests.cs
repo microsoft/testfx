@@ -509,6 +509,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testClassInfo.ClassCleanupMethod = null;
             this.testClassInfo.BaseClassCleanupMethodsStack.Push(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
 
+            Assert.IsTrue(this.testClassInfo.HasExecutableCleanupMethod);
             Assert.IsNull(this.testClassInfo.RunClassCleanup());
             Assert.AreEqual(1, classcleanupCallCount, "DummyBaseTestClass.CleanupClassMethod call count");
         }
