@@ -149,6 +149,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             get
             {
+                if (this.BaseClassCleanupMethodsStack.Any())
+                {
+                    // If any base cleanups were pushed to the stack we need to run them
+                    return true;
+                }
+
                 // If no class cleanup, then continue with the next one.
                 if (this.ClassCleanupMethod == null)
                 {
@@ -274,7 +280,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         var baseInitCleanupMethods = baseClassInitializeStack.Pop();
                         initializeMethod = baseInitCleanupMethods.Item1;
                         initializeMethod?.InvokeAsSynchronousTask(null, testContext);
-                        this.BaseClassCleanupMethodsStack.Push(baseInitCleanupMethods.Item2);
+
+                        if (baseInitCleanupMethods.Item2 != null)
+                        {
+                            this.BaseClassCleanupMethodsStack.Push(baseInitCleanupMethods.Item2);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -355,16 +365,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public string RunClassCleanup()
         {
-            if (this.ClassCleanupMethod is null && !this.BaseClassInitAndCleanupMethods.Any(p => p.Item2 != null))
+            if (this.ClassCleanupMethod is null && !this.BaseClassCleanupMethodsStack.Any())
             {
                 return null;
             }
 
             if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null || this.BaseClassCleanupMethodsStack.Any())
             {
-                var classCleanupMethod = this.ClassCleanupMethod;
                 try
                 {
+                    var classCleanupMethod = this.ClassCleanupMethod;
                     classCleanupMethod?.InvokeAsSynchronousTask(null);
                     var baseClassCleanupQueue = new Queue<MethodInfo>(this.BaseClassCleanupMethodsStack);
                     while (baseClassCleanupQueue.Count > 0)
