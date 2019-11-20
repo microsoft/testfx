@@ -485,17 +485,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             TestClassInfo classInfo,
             ref MethodInfo[] initAndCleanupMethods)
         {
-            if (initAndCleanupMethods is null)
+            if (initAndCleanupMethods.Any(x => x != null))
             {
-                return;
+                classInfo.BaseClassInitAndCleanupMethods.Enqueue(
+                        new Tuple<MethodInfo, MethodInfo>(
+                            initAndCleanupMethods.FirstOrDefault(),
+                            initAndCleanupMethods.LastOrDefault()));
             }
 
-            classInfo.BaseClassInitAndCleanupMethods.Enqueue(
-                    new Tuple<MethodInfo, MethodInfo>(
-                        initAndCleanupMethods.FirstOrDefault(),
-                        initAndCleanupMethods.LastOrDefault()));
-
-            initAndCleanupMethods = null;
+            initAndCleanupMethods = new MethodInfo[2];
         }
 
         /// <summary>
