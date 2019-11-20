@@ -485,7 +485,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             TestClassInfo classInfo,
             ref MethodInfo[] initAndCleanupMethods)
         {
-            if (initAndCleanupMethods is null)
+            if (initAndCleanupMethods is null || (initAndCleanupMethods[0] == null && initAndCleanupMethods[1] == null))
             {
                 return;
             }
@@ -495,7 +495,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         initAndCleanupMethods.FirstOrDefault(),
                         initAndCleanupMethods.LastOrDefault()));
 
-            initAndCleanupMethods = null;
+            initAndCleanupMethods = new MethodInfo[2];
         }
 
         /// <summary>
