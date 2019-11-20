@@ -459,7 +459,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
-            Assert.AreEqual(type.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
+            Assert.AreEqual(0, this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Count);
+            Assert.AreEqual(type.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.First().ClassInitializeMethod);
         }
 
         [TestMethodV1]
@@ -489,8 +490,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
-            Assert.AreEqual(null, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item2);
-            Assert.AreEqual(baseType.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item1);
+            Assert.IsNull(this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.First().Item2, "No base class cleanup");
+            Assert.AreEqual(baseType.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.First().Item1);
         }
 
         [TestMethodV1]
@@ -536,9 +537,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 false);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
-            Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
-            Assert.AreEqual(null, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item1);
-            Assert.AreEqual(baseType.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item2);
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Count);
+            Assert.IsNull(this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.First().Item1, "No base class init");
+            Assert.AreEqual(baseType.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.First().Item2);
         }
 
         [TestMethodV1]
@@ -606,6 +607,72 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
             Assert.AreEqual(baseInitializeMethod, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item1);
             Assert.AreEqual(baseCleanupMethod, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item2);
+        }
+
+        [TestMethodV1]
+        public void GetTestMethodInfoShouldCacheParentAndGrandparentClassInitAndCleanupAttributes()
+        {
+            var grandparentType = typeof(DummyBaseTestClassWithInitAndCleanupMethods);
+            var parentType = typeof(DummyChildBaseTestClassWithInitAndCleanupMethods);
+            var type = typeof(DummyTestClassWithParentAndGrandparentInitAndCleanupMeethods);
+
+            var grandparentInitMethod = grandparentType.GetMethod("ClassInit");
+            var grandparentCleanupMethod = grandparentType.GetMethod("ClassCleanup");
+            var parentInitMethod = parentType.GetMethod("ChildClassInit");
+            var parentCleanupMethod = parentType.GetMethod("ChildClassCleanup");
+
+            this.mockReflectHelper
+                .Setup(rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true))
+                .Returns(true);
+
+            // Setup grandparent class init/cleanup methods
+            this.mockReflectHelper
+                .Setup(rh => rh.IsAttributeDefined(grandparentInitMethod, typeof(UTF.ClassInitializeAttribute), false))
+                .Returns(true);
+            this.mockReflectHelper
+                .Setup(rh => rh.GetCustomAttribute(grandparentInitMethod, typeof(UTF.ClassInitializeAttribute)))
+                .Returns(new UTF.ClassInitializeAttribute(UTF.InheritanceBehavior.BeforeEachDerivedClass));
+            this.mockReflectHelper
+                .Setup(rh => rh.IsAttributeDefined(grandparentCleanupMethod, typeof(UTF.ClassCleanupAttribute), false))
+                .Returns(true);
+            this.mockReflectHelper
+                .Setup(rh => rh.GetCustomAttribute(grandparentCleanupMethod, typeof(UTF.ClassCleanupAttribute)))
+                .Returns(new UTF.ClassCleanupAttribute(UTF.InheritanceBehavior.BeforeEachDerivedClass));
+
+            // Setup parent class init/cleanup methods
+            this.mockReflectHelper
+                .Setup(rh => rh.IsAttributeDefined(parentInitMethod, typeof(UTF.ClassInitializeAttribute), false))
+                .Returns(true);
+            this.mockReflectHelper
+                .Setup(rh => rh.GetCustomAttribute(parentInitMethod, typeof(UTF.ClassInitializeAttribute)))
+                .Returns(new UTF.ClassInitializeAttribute(UTF.InheritanceBehavior.BeforeEachDerivedClass));
+            this.mockReflectHelper
+                .Setup(rh => rh.IsAttributeDefined(parentCleanupMethod, typeof(UTF.ClassCleanupAttribute), false))
+                .Returns(true);
+            this.mockReflectHelper
+                .Setup(rh => rh.GetCustomAttribute(parentCleanupMethod, typeof(UTF.ClassCleanupAttribute)))
+                .Returns(new UTF.ClassCleanupAttribute(UTF.InheritanceBehavior.BeforeEachDerivedClass));
+
+            var testMethod = new TestMethod("TestMethod", type.FullName, "A", isAsync: false);
+            this.typeCache.GetTestMethodInfo(
+                    testMethod,
+                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                    false);
+
+            var classInfo = this.typeCache.ClassInfoCache.FirstOrDefault();
+            Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
+            Assert.IsNull(classInfo.ClassInitializeMethod);
+            Assert.IsNull(classInfo.ClassCleanupMethod);
+
+            Assert.AreEqual(2, classInfo.BaseClassInitAndCleanupMethods.Count);
+
+            var parentInitAndCleanup = classInfo.BaseClassInitAndCleanupMethods.Dequeue();
+            Assert.AreEqual(parentInitMethod, parentInitAndCleanup.Item1);
+            Assert.AreEqual(parentCleanupMethod, parentInitAndCleanup.Item2);
+
+            var grandparentInitAndCleanup = classInfo.BaseClassInitAndCleanupMethods.Dequeue();
+            Assert.AreEqual(grandparentInitMethod, grandparentInitAndCleanup.Item1);
+            Assert.AreEqual(grandparentCleanupMethod, grandparentInitAndCleanup.Item2);
         }
 
         [TestMethodV1]
@@ -1569,6 +1636,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
 
             public void TestInitOrCleanup()
+            {
+            }
+        }
+
+        [DummyTestClass]
+        private class DummyChildBaseTestClassWithInitAndCleanupMethods : DummyBaseTestClassWithInitAndCleanupMethods
+        {
+            [UTF.ClassInitialize(UTF.InheritanceBehavior.BeforeEachDerivedClass)]
+            public static void ChildClassInit(UTFExtension.TestContext tc)
+            {
+            }
+
+            public static void ChildClassCleanup()
+            {
+            }
+        }
+
+        [DummyTestClass]
+        private class DummyTestClassWithParentAndGrandparentInitAndCleanupMeethods : DummyChildBaseTestClassWithInitAndCleanupMethods
+        {
+            public void TestMethod()
             {
             }
         }
