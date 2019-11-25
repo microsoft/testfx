@@ -244,8 +244,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
                 }
 
-                var sourceSettingsProvider = new TestAssemblySettingsProvider();
-                var sourceSettings = sourceSettingsProvider.GetSettings(source);
+                TestAssemblySettingsProvider sourceSettingsProvider = null;
+
+                try
+                {
+                    sourceSettingsProvider = isolationHost.CreateInstanceForType(
+                        typeof(TestAssemblySettingsProvider),
+                        null) as TestAssemblySettingsProvider;
+                }
+                catch (TypeLoadException ex)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                        "Could not create TestAssemblySettingsProvider instance in child app-domain",
+                        ex);
+                }
+
+                TestAssemblySettings sourceSettings;
+                if (sourceSettingsProvider != null)
+                {
+                    sourceSettings = sourceSettingsProvider.GetSettings(source);
+                }
+                else
+                {
+                     sourceSettings = new TestAssemblySettings();
+                }
+
                 var parallelWorkers = sourceSettings.Workers;
                 var parallelScope = sourceSettings.Scope;
 
