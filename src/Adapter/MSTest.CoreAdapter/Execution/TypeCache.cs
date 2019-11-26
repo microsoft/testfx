@@ -722,7 +722,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="methodInfo"> The method Info. </param>
         /// <param name="testMethod"> The test Method. </param>
-        /// <returns> The timeout value if defined. 0 if not defined. </returns>
+        /// <returns> The timeout value if defined in milliseconds. 0 if not defined. </returns>
         private int GetTestTimeout(MethodInfo methodInfo, TestMethod testMethod)
         {
             Debug.Assert(methodInfo != null, "TestMethod should be non-null");
