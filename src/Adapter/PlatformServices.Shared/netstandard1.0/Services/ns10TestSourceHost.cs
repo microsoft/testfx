@@ -53,14 +53,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             // Do nothing.
         }
-
-        /// <summary>
-        /// Updates child-domain's appbase to point to test source location
-        /// </summary>
-        public void UpdateAppBaseToTestSourceLocation()
-        {
-            // Do nothing.
-        }
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

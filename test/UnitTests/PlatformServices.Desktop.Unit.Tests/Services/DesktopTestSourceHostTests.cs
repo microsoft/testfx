@@ -106,7 +106,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         }
 
         [TestMethod]
-        public void SetupHostShouldSetChildDomainsAppBaseToAdapterLocation()
+        public void SetupHostShouldSetChildDomainsAppBaseToTestSourceLocation()
         {
             // Arrange
             DummyClass dummyclass = new DummyClass();
@@ -121,7 +121,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
                 // Assert
-                Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
+                Assert.AreEqual(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location), expectedObject.AppDomainAppBase);
             }
             finally
             {
@@ -178,66 +178,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
                 // Assert
                 sourceHost.Verify(sh => sh.GetResolutionPaths(location, It.IsAny<bool>()), Times.Once);
-            }
-            finally
-            {
-                sourceHost.Object.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// This test should ideally be choosing a different path for the test source. Currently both the test source and the adapter
-        /// are in the same location. However when we move to run these tests with the V2 itself, then this would be valid.
-        /// Leaving the test running till then.
-        /// </summary>
-        [TestMethod]
-        public void UpdateAppBaseToTestSourceLocationShouldSetDomainsAppBaseToTestSourceLocationForFullCLRTestss()
-        {
-            // Arrange
-            DummyClass dummyclass = new DummyClass();
-
-            var location = typeof(DesktopTestSourceHostTests).Assembly.Location;
-            var sourceHost = new Mock<TestSourceHost>(location, null, null) { CallBase = true };
-            try
-            {
-                sourceHost.Setup(tsh => tsh.GetTargetFrameworkVersionString(location))
-                    .Returns(".NETFramework,Version=v4.5.1");
-
-                // Act
-                sourceHost.Object.SetupHost();
-                var expectedObject =
-                    sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
-                sourceHost.Object.UpdateAppBaseToTestSourceLocation();
-
-                // Assert
-                Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
-            }
-            finally
-            {
-                sourceHost.Object.Dispose();
-            }
-        }
-
-        [TestMethod]
-        public void UpdateAppBaseToTestSourceLocationShouldSetDomainsAppBaseToAdaptersLocationForNonFullCLRTests()
-        {
-            // Arrange
-            DummyClass dummyclass = new DummyClass();
-
-            var location = typeof(TestSourceHost).Assembly.Location;
-            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, null, null) { CallBase = true };
-
-            try
-            {
-                sourceHost.Setup(tsh => tsh.GetTargetFrameworkVersionString(location)).Returns(".NETCore,Version=v5.0");
-
-                // Act
-                sourceHost.Object.SetupHost();
-                var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
-                sourceHost.Object.UpdateAppBaseToTestSourceLocation();
-
-                // Assert
-                Assert.AreEqual(Path.GetDirectoryName(location), expectedObject.AppDomainAppBase);
             }
             finally
             {

@@ -222,9 +222,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     typeof(UnitTestRunner),
                     new object[] { MSTestSettings.CurrentSettings }) as UnitTestRunner;
 
-                // After loading adapter reset the chils-domain's appbase to point to test source location
-                isolationHost.UpdateAppBaseToTestSourceLocation();
-
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
                 // Default test set is filtered tests based on user provided filter criteria
@@ -247,11 +244,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
                 }
 
-                var sourceSettingsProvider = isolationHost.CreateInstanceForType(
-                    typeof(TestAssemblySettingsProvider),
-                    null) as TestAssemblySettingsProvider;
+                TestAssemblySettingsProvider sourceSettingsProvider = null;
 
-                var sourceSettings = sourceSettingsProvider.GetSettings(source);
+                try
+                {
+                    sourceSettingsProvider = isolationHost.CreateInstanceForType(
+                        typeof(TestAssemblySettingsProvider),
+                        null) as TestAssemblySettingsProvider;
+                }
+                catch (Exception ex)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                        "Could not create TestAssemblySettingsProvider instance in child app-domain",
+                        ex);
+                }
+
+                var sourceSettings = (sourceSettingsProvider != null) ? sourceSettingsProvider.GetSettings(source) : new TestAssemblySettings();
                 var parallelWorkers = sourceSettings.Workers;
                 var parallelScope = sourceSettings.Scope;
 
