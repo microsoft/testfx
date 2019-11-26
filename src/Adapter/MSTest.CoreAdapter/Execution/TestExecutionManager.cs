@@ -252,7 +252,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         typeof(TestAssemblySettingsProvider),
                         null) as TestAssemblySettingsProvider;
                 }
-                catch (TypeLoadException ex)
+                catch (Exception ex)
                 {
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                         "Could not create TestAssemblySettingsProvider instance in child app-domain",
