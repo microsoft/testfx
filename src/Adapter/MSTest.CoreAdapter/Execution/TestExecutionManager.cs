@@ -259,16 +259,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         ex);
                 }
 
-                TestAssemblySettings sourceSettings;
-                if (sourceSettingsProvider != null)
-                {
-                    sourceSettings = sourceSettingsProvider.GetSettings(source);
-                }
-                else
-                {
-                     sourceSettings = new TestAssemblySettings();
-                }
-
+                var sourceSettings = (sourceSettingsProvider != null) ? sourceSettingsProvider.GetSettings(source) : new TestAssemblySettings();
                 var parallelWorkers = sourceSettings.Workers;
                 var parallelScope = sourceSettings.Scope;
 
