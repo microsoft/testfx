@@ -65,14 +65,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Updates child-domain's appbase to point to test source location
-        /// </summary>
-        public void UpdateAppBaseToTestSourceLocation()
-        {
-            // Do nothing.
-        }
-
-        /// <summary>
         /// Sets context required for running tests.
         /// </summary>
         /// <param name="source">

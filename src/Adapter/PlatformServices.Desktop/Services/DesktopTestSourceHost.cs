@@ -64,7 +64,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.sourceFileName = sourceFileName;
             this.runSettings = runSettings;
             this.frameworkHandle = frameworkHandle;
-
             this.appDomain = appDomain;
 
             // Set the environment context.
@@ -109,10 +108,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 this.targetFrameworkVersion = this.GetTargetFrameworkVersionString(this.sourceFileName);
                 AppDomainUtilities.SetAppDomainFrameworkVersionBasedOnTestSource(appDomainSetup, this.targetFrameworkVersion);
 
-                // Temporarily set appbase to the location from where adapter should be picked up from. We will later reset this to test source location
-                // once adapter gets loaded in the child app domain.
-                appDomainSetup.ApplicationBase = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
-
+                appDomainSetup.ApplicationBase = this.GetAppBaseAsPerPlatform();
                 var configFile = this.GetConfigFileForTestSource(this.sourceFileName);
                 AppDomainUtilities.SetConfigurationFile(appDomainSetup, configFile);
 
@@ -214,17 +210,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Updates child-domain's appbase to point to test source location.
+        /// Gets child-domain's appbase to point to appropriate location.
         /// </summary>
-        public void UpdateAppBaseToTestSourceLocation()
+        /// <returns>Appbase path that should be set for child appdomain</returns>
+        internal string GetAppBaseAsPerPlatform()
         {
-            // Simply return if no child-appdomain was created
-            if (this.isAppDomainCreationDisabled)
-            {
-                return;
-            }
-
-            // After adapter has been loaded, reset child-appdomains appbase.
             // The below logic of preferential setting the appdomains appbase is needed because:
             // 1. We set this to the location of the test source if it is built for Full CLR  -> Ideally this needs to be done in all situations.
             // 2. We set this to the location where the current adapter is being picked up from for UWP and .Net Core scenarios -> This needs to be
@@ -234,14 +224,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             //    there would be a mismatch of platform service assemblies during discovery.
             if (this.targetFrameworkVersion.Contains(PlatformServices.Constants.DotNetFrameWorkStringPrefix))
             {
-                this.domain.SetData("APPBASE", Path.GetDirectoryName(this.sourceFileName) ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location));
+                return Path.GetDirectoryName(this.sourceFileName) ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
             }
             else
             {
-                this.domain.SetData("APPBASE", Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location));
+                return Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
             }
-
-            EqtTrace.Info("DesktopTestSourceHost.UpdateAppBaseToTestSourceLocation(): Updating domain's appbase path for source {0} to {1}.", this.sourceFileName, this.domain.SetupInformation.ApplicationBase);
         }
 
         /// <summary>
