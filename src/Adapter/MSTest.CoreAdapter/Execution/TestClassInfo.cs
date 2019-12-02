@@ -365,7 +365,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         public string RunClassCleanup()
         {
-            if (this.ClassCleanupMethod is null && !this.BaseClassCleanupMethodsStack.Any())
+            if (this.ClassCleanupMethod is null && !this.BaseClassInitAndCleanupMethods.Any(p => p.Item2 != null))
             {
                 return null;
             }

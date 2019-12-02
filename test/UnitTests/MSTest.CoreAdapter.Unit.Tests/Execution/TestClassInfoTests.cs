@@ -501,12 +501,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
-        public void RunBaseClassCleanupEvenIfThereIsNoTopLevelClassCleanup()
+        public void RunBaseClassCleanupEvenIfThereIsNoDerivedClassCleanup()
         {
             var classcleanupCallCount = 0;
             DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
 
             this.testClassInfo.ClassCleanupMethod = null;
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
+                Tuple.Create((MethodInfo)null, typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod")));
             this.testClassInfo.BaseClassCleanupMethodsStack.Push(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
 
             Assert.IsTrue(this.testClassInfo.HasExecutableCleanupMethod);
