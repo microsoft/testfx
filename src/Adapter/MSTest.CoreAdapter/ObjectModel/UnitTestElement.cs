@@ -73,6 +73,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public KeyValuePair<string, string>[] DeploymentItems { get; set; }
 
         /// <summary>
+        /// Gets or sets the DisplayName
+        /// </summary>
+        public string DisplayName { get; set; }
+
+        /// <summary>
         /// Gets or sets the compiler generated type name for async test method.
         /// </summary>
         internal string AsyncTypeName { get; set; }
@@ -110,7 +115,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 this.TestMethod.Name);
 
             TestCase testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
-            testCase.DisplayName = this.TestMethod.Name;
+            testCase.DisplayName = string.IsNullOrEmpty(this.DisplayName) ? this.TestMethod.Name : this.DisplayName;
 
             testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
 

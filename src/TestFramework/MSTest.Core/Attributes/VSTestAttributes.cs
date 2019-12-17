@@ -68,6 +68,30 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public class TestMethodAttribute : Attribute
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
+        /// </summary>
+        public TestMethodAttribute()
+        : this(null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
+        /// </summary>
+        /// <param name="displayName">
+        /// Message specifies reason for ignoring.
+        /// </param>
+        public TestMethodAttribute(string displayName)
+        {
+            this.DisplayName = displayName;
+        }
+
+        /// <summary>
+        /// Gets display Name for the Test Window
+        /// </summary>
+        public string DisplayName { get; private set; }
+
+        /// <summary>
         /// Executes a test method.
         /// </summary>
         /// <param name="testMethod">The test method to execute.</param>

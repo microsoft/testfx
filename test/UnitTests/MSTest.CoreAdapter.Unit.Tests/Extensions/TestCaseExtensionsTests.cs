@@ -34,7 +34,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             Assert.AreEqual(true, resultUnitTestElement.IsAsync);
             Assert.AreEqual(2, resultUnitTestElement.Priority);
             Assert.AreEqual(testCategories, resultUnitTestElement.TestCategory);
-            Assert.AreEqual("DummyDisplayName", resultUnitTestElement.TestMethod.Name);
+            Assert.AreEqual("DummyDisplayName", resultUnitTestElement.DisplayName);
+            Assert.AreEqual("DummyMethod", resultUnitTestElement.TestMethod.Name);
             Assert.AreEqual("DummyClassName", resultUnitTestElement.TestMethod.FullClassName);
             Assert.AreEqual(true, resultUnitTestElement.TestMethod.IsAsync);
             Assert.IsNull(resultUnitTestElement.TestMethod.DeclaringClassFullName);
