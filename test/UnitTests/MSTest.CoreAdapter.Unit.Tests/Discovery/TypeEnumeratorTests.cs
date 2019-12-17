@@ -25,6 +25,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
     using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+    using TestMethodV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -530,32 +531,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethod]
-        public void GetTestFromMethodShouldSetDisplayNameToTestMethodNameIfNotPresent()
+        public void GetTestFromMethodShouldSetDisplayNameToTestMethodNameIfDisplayNameIsNotPresent()
         {
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
-            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DisplayNameTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DisplayNameTestClass).GetMethod(nameof(DisplayNameTestClass.TestMethodWithoutDisplayName));
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
             Assert.IsNotNull(testElement);
-            Assert.IsNotNull(testElement.DisplayName);
-            Assert.AreEqual("MethodWithVoidReturnType", testElement.DisplayName);
+            Assert.AreEqual("TestMethodWithoutDisplayName", testElement.DisplayName);
         }
 
         [TestMethod]
-        public void GetTestFromMethodShouldSetDisplayName()
+        public void GetTestFromMethodShouldSetDisplayNameFromAttribute()
         {
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
-            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
-            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DisplayNameTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DisplayNameTestClass).GetMethod(nameof(DisplayNameTestClass.TestMethodWithDisplayName));
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
-            testElement.DisplayName = "New Display Name";
 
             Assert.IsNotNull(testElement);
-            Assert.IsNotNull(testElement.DisplayName);
-            Assert.AreEqual("New Display Name", testElement.DisplayName);
+            Assert.AreEqual("Test method display name.", testElement.DisplayName);
         }
 
         #endregion
@@ -626,6 +624,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         public new void DerivedTestMethod()
+        {
+        }
+    }
+
+    internal abstract class DisplayNameTestClass
+    {
+        [TestMethodV2]
+        public void TestMethodWithoutDisplayName()
+        {
+        }
+
+        [TestMethodV2("Test method display name.")]
+        public void TestMethodWithDisplayName()
         {
         }
     }
