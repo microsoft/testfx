@@ -205,7 +205,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 warnings);
 
             // get DisplayName from TestMethodAttribute
-            var testMethodAttribute = this.reflectHelper.GetAttribute<TestMethodAttribute>(method);
+            var testMethodAttribute = this.reflectHelper.GetCustomAttribute(method, typeof(TestMethodAttribute)) as TestMethodAttribute;
             testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
 
             return testElement;

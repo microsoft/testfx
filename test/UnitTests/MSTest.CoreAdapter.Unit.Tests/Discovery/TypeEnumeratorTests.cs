@@ -534,21 +534,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         public void GetTestFromMethodShouldSetDisplayNameToTestMethodNameIfDisplayNameIsNotPresent()
         {
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
-            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DisplayNameTestClass), "DummyAssemblyName");
-            var methodInfo = typeof(DisplayNameTestClass).GetMethod(nameof(DisplayNameTestClass.TestMethodWithoutDisplayName));
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.MethodWithVoidReturnType));
+
+            // Setup mocks to behave like we have [TestMethod] attribute on the method
+            this.mockReflectHelper.Setup(
+                rh => rh.GetCustomAttribute(It.IsAny<MemberInfo>(), It.IsAny<Type>())).Returns(new TestMethodV2());
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
             Assert.IsNotNull(testElement);
-            Assert.AreEqual("TestMethodWithoutDisplayName", testElement.DisplayName);
+            Assert.AreEqual("MethodWithVoidReturnType", testElement.DisplayName);
         }
 
         [TestMethod]
         public void GetTestFromMethodShouldSetDisplayNameFromAttribute()
         {
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
-            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DisplayNameTestClass), "DummyAssemblyName");
-            var methodInfo = typeof(DisplayNameTestClass).GetMethod(nameof(DisplayNameTestClass.TestMethodWithDisplayName));
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.MethodWithVoidReturnType));
+
+            // Setup mocks to behave like we have [TestMethod("Test method display name.")] attribute on the method
+            this.mockReflectHelper.Setup(
+                rh => rh.GetCustomAttribute(methodInfo, typeof(TestMethodV2))).Returns(new TestMethodV2("Test method display name."));
 
             var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
 
@@ -624,19 +632,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         public new void DerivedTestMethod()
-        {
-        }
-    }
-
-    internal abstract class DisplayNameTestClass
-    {
-        [TestMethodV2]
-        public void TestMethodWithoutDisplayName()
-        {
-        }
-
-        [TestMethodV2("Test method display name.")]
-        public void TestMethodWithDisplayName()
         {
         }
     }
