@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
     using System;
+    using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Reflection;
@@ -25,10 +26,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Initializes a new instance of the <see cref="TestAssemblyInfo"/> class.
         /// </summary>
-        internal TestAssemblyInfo()
+        /// <param name="assemblyLocation">The test assembly location</param>
+        internal TestAssemblyInfo(string assemblyLocation)
         {
+            Debug.Assert(!string.IsNullOrEmpty(assemblyLocation), "AssemblyLocation should not be null or empty");
+
             this.assemblyInfoExecuteSyncObject = new object();
+            this.AssemblyName = assemblyLocation;
         }
+
+        /// <summary>
+        /// Gets the assembly name.
+        /// </summary>
+        public string AssemblyName { get; }
 
         /// <summary>
         /// Gets <c>AssemblyInitialize</c> method for the assembly.
