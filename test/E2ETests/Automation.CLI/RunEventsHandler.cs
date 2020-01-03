@@ -3,6 +3,7 @@
 
 namespace Microsoft.MSTestV2.CLIAutomation
 {
+    using System;
     using System.Collections.Generic;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
@@ -27,11 +28,17 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
         public double ElapsedTimeInRunningTests { get; private set; }
 
+        /// <summary>
+        /// Gets a list of Errors that the handler logged.
+        /// </summary>
+        public IList<string> Errors { get; private set; }
+
         public RunEventsHandler()
         {
             this.PassedTests = new List<TestResult>();
             this.FailedTests = new List<TestResult>();
             this.SkippedTests = new List<TestResult>();
+            this.Errors = new List<string>();
         }
 
         public void HandleLogMessage(TestMessageLevel level, string message)
@@ -45,6 +52,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
                     EqtTrace.Warning(message);
                     break;
                 case TestMessageLevel.Error:
+                    this.Errors.Add(message);
                     EqtTrace.Error(message);
                     break;
                 default:
@@ -108,6 +116,14 @@ namespace Microsoft.MSTestV2.CLIAutomation
         public int LaunchProcessWithDebuggerAttached(TestProcessStartInfo testProcessStartInfo)
         {
             return 0;
+        }
+
+        public void EnsureSuccess()
+        {
+            if (this.Errors.Count > 0)
+            {
+                throw new InvalidOperationException($"Test run ended with {this.Errors.Count} errors.\n{string.Join("\n", this.Errors)}");
+            }
         }
     }
 }

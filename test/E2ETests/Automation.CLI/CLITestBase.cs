@@ -77,6 +77,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
             // this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
             vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(this.GetTestAdapterPath(), "*TestAdapter.dll"));
             vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, this.runEventsHandler);
+            this.runEventsHandler.EnsureSuccess();
         }
 
         /// <summary>
