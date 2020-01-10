@@ -33,7 +33,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         public TestAssemblyInfoTests()
         {
-            this.testAssemblyInfo = new TestAssemblyInfo(@"C:\test.dll");
+            this.testAssemblyInfo = new TestAssemblyInfo();
             this.dummyMethodInfo = typeof(TestAssemblyInfoTests).GetMethods().First();
             this.testContext = new Mock<UTFExtension.TestContext>().Object;
         }

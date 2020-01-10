@@ -22,8 +22,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Moq;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -62,10 +60,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private readonly TestMethodOptions testMethodOptions;
 
-        private readonly Mock<ITestExecutionRecorder> mockExecutionRecorder;
-
-        private readonly TestExecutionRecorderWrapper executionRecorderWrapper;
-
         public TestMethodInfoTests()
         {
             this.constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
@@ -74,7 +68,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testMethodAttribute = new UTF.TestMethodAttribute();
             this.testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
-            this.testAssemblyInfo = new TestAssemblyInfo("dummyAssemblyName");
+            this.testAssemblyInfo = new TestAssemblyInfo();
             var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
             this.testContextImplementation = new TestContextImplementation(testMethod, new StringWriter(), new Dictionary<string, object>());
             this.testClassInfo = new TestClassInfo(
@@ -92,14 +86,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 TestContext = this.testContextImplementation
             };
 
-            this.mockExecutionRecorder = new Mock<ITestExecutionRecorder>();
-            this.executionRecorderWrapper = new TestExecutionRecorderWrapper(this.mockExecutionRecorder.Object);
-
             this.testMethodInfo = new TestMethodInfo(
                 this.methodInfo,
                 parent: this.testClassInfo,
-                testmethodOptions: this.testMethodOptions,
-                testExecutionRecorder: this.executionRecorderWrapper);
+                testmethodOptions: this.testMethodOptions);
 
             // Reset test hooks
             DummyTestClass.TestConstructorMethodBody = () => { };
@@ -133,8 +123,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 asyncMethodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             var result = method.Invoke(null);
 
@@ -151,8 +140,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 asyncMethodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             var result = method.Invoke(null);
 
@@ -168,8 +156,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 asyncMethodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             var result = method.Invoke(null);
 
@@ -185,8 +172,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 dummyMethodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             var result = method.Invoke(null);
 
@@ -202,8 +188,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 dummyMethodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             var result = method.Invoke(null);
 
@@ -221,8 +206,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
             this.RunWithTestablePlatformService(testablePlatformServiceProvider, () =>
@@ -244,8 +228,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
             StringWriter writer = new StringWriter(new StringBuilder());
 
             DummyTestClass.TestMethodBody = o => { writer.Write("Trace logs"); };
@@ -270,8 +253,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             var result = method.Invoke(null);
 
@@ -286,8 +268,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             var result = method.Invoke(null);
 
@@ -346,7 +327,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
             var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, this.testContextProperty, this.classAttribute, this.testAssemblyInfo);
-            var method = new TestMethodInfo(this.methodInfo, testClass, this.testMethodOptions, this.executionRecorderWrapper);
+            var method = new TestMethodInfo(this.methodInfo, testClass, this.testMethodOptions);
 
             var result = method.Invoke(null);
             var errorMessage = string.Format(
@@ -376,7 +357,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
             var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, this.testContextProperty, this.classAttribute, this.testAssemblyInfo);
-            var method = new TestMethodInfo(this.methodInfo, testClass, this.testMethodOptions, this.executionRecorderWrapper);
+            var method = new TestMethodInfo(this.methodInfo, testClass, this.testMethodOptions);
 
             var exception = method.Invoke(null).TestFailureException as TestFailedException;
 
@@ -396,7 +377,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             mockInnerContext.SetupGet(tc => tc.CancellationTokenSource).Returns(new CancellationTokenSource());
             this.testMethodOptions.TestContext = testContext.Object;
 
-            var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, this.executionRecorderWrapper);
+            var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
 
             var result = method.Invoke(null);
             CollectionAssert.Contains(result.ResultFiles.ToList(), "C:\\temp.txt");
@@ -409,7 +390,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestMethodInfoInvokeShouldNotThrowIfTestContextIsNotPresent()
         {
             var testClass = new TestClassInfo(typeof(DummyTestClass), this.constructorInfo, null, this.classAttribute, this.testAssemblyInfo);
-            var method = new TestMethodInfo(this.methodInfo, testClass, this.testMethodOptions, this.executionRecorderWrapper);
+            var method = new TestMethodInfo(this.methodInfo, testClass, this.testMethodOptions);
 
             UTF.TestResult result = null;
             Action runMethod = () => result = method.Invoke(null);
@@ -423,7 +404,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var testContext = typeof(DummyTestClassWithTestContextWithoutSetter).GetProperties().Single();
             var testClass = new TestClassInfo(typeof(DummyTestClass), this.constructorInfo, testContext, this.classAttribute, this.testAssemblyInfo);
-            var method = new TestMethodInfo(this.methodInfo, testClass, this.testMethodOptions, this.executionRecorderWrapper);
+            var method = new TestMethodInfo(this.methodInfo, testClass, this.testMethodOptions);
 
             UTF.TestResult result = null;
             Action runMethod = () => result = method.Invoke(null);
@@ -632,7 +613,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             const string ErrorMessage = "Assert.Fail failed. dummyFailMessage";
 
             this.testMethodOptions.ExpectedException = this.expectedException;
-            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, this.executionRecorderWrapper);
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
 
             // Act.
             var exception = testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
@@ -864,7 +845,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
             var ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructors().Single();
             var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, null, this.classAttribute, this.testAssemblyInfo);
-            var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), testClass, this.testMethodOptions, this.executionRecorderWrapper);
+            var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), testClass, this.testMethodOptions);
 
             method.Invoke(null);
 
@@ -880,7 +861,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructors().Single();
             var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, null, this.classAttribute, this.testAssemblyInfo);
             testClass.TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod");
-            var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), testClass, this.testMethodOptions, this.executionRecorderWrapper);
+            var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), testClass, this.testMethodOptions);
 
             method.Invoke(null);
 
@@ -949,7 +930,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             this.testMethodOptions.ExpectedException = this.expectedException;
-            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, this.executionRecorderWrapper);
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
 
             var result = testMethodInfo.Invoke(null);
 
@@ -961,7 +942,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             DummyTestClass.TestMethodBody = o => { throw new IndexOutOfRangeException(); };
             this.testMethodOptions.ExpectedException = this.expectedException;
-            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, this.executionRecorderWrapper);
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
 
             var result = testMethodInfo.Invoke(null);
 
@@ -976,7 +957,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             DummyTestClass.TestMethodBody = o => { return; };
             this.testMethodOptions.ExpectedException = this.expectedException;
-            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, this.executionRecorderWrapper);
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
             var result = testMethodInfo.Invoke(null);
             Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
             var message = "Test method did not throw expected exception System.DivideByZeroException.";
@@ -988,7 +969,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
             this.testMethodOptions.ExpectedException = this.expectedException;
-            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, this.executionRecorderWrapper);
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
             var result = testMethodInfo.Invoke(null);
             Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, result.Outcome);
             var message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
@@ -1009,7 +990,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                         };
             this.testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
             this.testMethodOptions.ExpectedException = this.expectedException;
-            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, this.executionRecorderWrapper);
+            var testMethodInfo = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
 
             var result = testMethodInfo.Invoke(null);
 
@@ -1025,8 +1006,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
@@ -1043,8 +1023,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
@@ -1061,8 +1040,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
             var result = method.Invoke(null);
@@ -1080,8 +1058,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
@@ -1099,8 +1076,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
@@ -1117,8 +1093,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             DummyTestClass.TestMethodBody = o => { throw new ArgumentNullException(); };
             var result = method.Invoke(null);
@@ -1138,8 +1113,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             DummyTestClass.TestMethodBody = o => { throw new UTF.AssertFailedException(); };
             var result = method.Invoke(null);
@@ -1158,8 +1132,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
             var result = method.Invoke(null);
@@ -1177,8 +1150,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
@@ -1197,8 +1169,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
             var result = method.Invoke(null);
@@ -1256,7 +1227,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 testablePlatformServiceProvider.MockThreadOperations.Setup(
                  to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
                 this.testMethodOptions.Timeout = 1;
-                var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, this.executionRecorderWrapper);
+                var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
 
                 var result = method.Invoke(null);
 
@@ -1269,7 +1240,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void TestMethodInfoInvokeShouldReturnTestPassedOnCompletionWithinTimeout()
         {
             DummyTestClass.TestMethodBody = o => { /* do nothing */ };
-            var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, this.executionRecorderWrapper);
+            var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
             var result = method.Invoke(null);
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
@@ -1287,7 +1258,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                  to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
                 this.testMethodOptions.Timeout = 1;
 
-                var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, this.executionRecorderWrapper);
+                var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
                 var result = method.Invoke(null);
 
                 Assert.AreEqual(UTF.UnitTestOutcome.Timeout, result.Outcome);
@@ -1319,7 +1290,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
                 this.testMethodOptions.Timeout = 100000;
                 this.testContextImplementation.CancellationTokenSource.CancelAfter(100);
-                var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, this.executionRecorderWrapper);
+                var method = new TestMethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions);
                 var result = method.Invoke(null);
 
                 Assert.AreEqual(UTF.UnitTestOutcome.Timeout, result.Outcome);
@@ -1338,8 +1309,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 simpleArgumentsMethod,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             object[] arguments = new object[] { "RequiredStr1" };
             object[] expectedArguments = new object[] { "RequiredStr1" };
@@ -1357,8 +1327,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 simpleArgumentsMethod,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             object[] arguments = new object[] { "RequiredStr1", "RequiredStr2", "ExtraStr3" };
             object[] expectedArguments = new object[] { "RequiredStr1", "RequiredStr2", "ExtraStr3" };
@@ -1376,8 +1345,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 optionalArgumentsMethod,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             object[] arguments = new object[] { "RequiredStr1" };
             object[] expectedArguments = new object[] { "RequiredStr1", null, null };
@@ -1395,8 +1363,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 optionalArgumentsMethod,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             object[] arguments = new object[] { "RequiredStr1", "OptionalStr1" };
             object[] expectedArguments = new object[] { "RequiredStr1", "OptionalStr1", null };
@@ -1414,8 +1381,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 paramsArgumentMethod,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             object[] arguments = new object[] { 1 };
             object[] expectedArguments = new object[] { 1, new string[] { } };
@@ -1435,8 +1401,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(
                 paramsArgumentMethod,
                 this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper);
+                this.testMethodOptions);
 
             object[] arguments = new object[] { 1, "str1", "str2", "str3" };
             object[] expectedArguments = new object[] { 1, new string[] { "str1", "str2", "str3" } };
@@ -1446,36 +1411,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(expectedArguments[0], resolvedArguments[0]);
             Assert.IsInstanceOfType(resolvedArguments[1], typeof(string[]));
             CollectionAssert.AreEqual((string[])expectedArguments[1], (string[])resolvedArguments[1]);
-        }
-
-        [TestMethodV1]
-        public void InvokeShouldRecordTestStartEnd()
-        {
-            TestCase startTestCase = null;
-            TestCase endTestCase = null;
-            this.mockExecutionRecorder
-                .Setup(m => m.RecordStart(It.IsAny<TestCase>()))
-                .Callback<TestCase>(tc => startTestCase = tc);
-            this.mockExecutionRecorder
-                .Setup(m => m.RecordEnd(It.IsAny<TestCase>(), TestOutcome.Passed))
-                .Callback<TestCase, TestOutcome>((tc, o) => endTestCase = tc);
-
-            var method = new TestMethodInfo(
-                this.methodInfo,
-                this.testClassInfo,
-                this.testMethodOptions,
-                this.executionRecorderWrapper)
-            {
-                TestId = Guid.NewGuid(),
-            };
-
-            var result = method.Invoke(null);
-
-            Assert.IsNotNull(startTestCase, "RecordStart called");
-            Assert.IsNotNull(endTestCase, "RecordEnd called");
-            Assert.AreEqual(method.TestId, startTestCase.Id, "RecordStart TestCase.Id");
-            Assert.AreEqual(method.TestId, endTestCase.Id, "RecordEnd TestCase.Id");
-            Assert.AreEqual(method.TestId, result.TestId, "Result.TestId");
         }
 
         #region helper methods

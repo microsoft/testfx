@@ -258,8 +258,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                     watch.Reset();
                                     watch.Start();
 
-                                    // Create a unique ID for each iteration so data collectors can attach results to specific iterations
-                                    this.testMethodInfo.TestId = Guid.NewGuid();
                                     this.testContext.SetDataRow(dataRow);
                                     UTF.TestResult[] testResults;
 
@@ -315,8 +313,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         {
                             foreach (var data in testDataSource.GetData(this.testMethodInfo.MethodInfo))
                             {
-                                // Create a unique ID for each iteration so data collectors can attach results to specific iterations
-                                this.testMethodInfo.TestId = Guid.NewGuid();
                                 this.testMethodInfo.SetArguments(data);
                                 UTF.TestResult[] testResults;
                                 try

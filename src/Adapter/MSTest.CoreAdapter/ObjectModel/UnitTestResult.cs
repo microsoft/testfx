@@ -76,11 +76,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public string ErrorStackTrace { get; internal set; }
 
         /// <summary>
-        /// Gets the id of the test case this result is for
-        /// </summary>
-        public Guid TestId { get; internal set; }
-
-        /// <summary>
         /// Gets the execution id of the result
         /// </summary>
         public Guid ExecutionId { get; internal set; }

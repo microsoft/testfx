@@ -495,11 +495,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public string TestContextMessages { get; set; }
 
         /// <summary>
-        /// Gets or sets the id of the test case this result is for.
-        /// </summary>
-        public Guid TestId { get; set; }
-
-        /// <summary>
         /// Gets or sets the execution id of the result.
         /// </summary>
         public Guid ExecutionId { get; set; }

@@ -154,7 +154,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return;
             }
 
-            Guid originalTestCaseId = test.Id;
             foreach (var unitTestResult in unitTestResults)
             {
                 if (test == null)
@@ -162,9 +161,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     continue;
                 }
 
-                // If the result has a TestId set then update the TestCase to have that id
-                // this is done for data driven results so we can fire unique start/end events for each iteration
-                test.Id = unitTestResult.TestId == Guid.Empty ? originalTestCaseId : unitTestResult.TestId;
                 var testResult = unitTestResult.ToTestResult(test, startTime, endTime, MSTestSettings.CurrentSettings);
 
                 if (unitTestResult.DatarowIndex >= 0)
@@ -172,9 +168,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testResult.DisplayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, unitTestResult.DatarowIndex);
                 }
 
-                // Fire a RecordEnd here even though we also fire RecordEnd inside TestMethodInfo
-                // this is to ensure we fire end events for error cases. This is acceptable because
-                // vstest ignores multiple end events.
                 testExecutionRecorder.RecordEnd(test, testResult.Outcome);
 
                 if (testResult.Outcome == TestOutcome.Failed)
@@ -192,9 +185,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     // Ignore this exception
                 }
             }
-
-            // Reset the test id back to the original id in case we changed it above
-            test.Id = originalTestCaseId;
         }
 
         private static bool MatchTestFilter(ITestCaseFilterExpression filterExpression, TestCase test, TestMethodFilter testMethodFilter)
@@ -373,7 +363,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             IDictionary<string, object> sourceLevelParameters,
             UnitTestRunner testRunner)
         {
-            var testExecutionRecorderWrapper = new TestExecutionRecorderWrapper(testExecutionRecorder);
             foreach (var currentTest in tests)
             {
                 if (this.cancellationToken != null && this.cancellationToken.Canceled)
@@ -382,10 +371,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 var unitTestElement = currentTest.ToUnitTestElement(source);
-
-                // Fire a RecordStart here even though we also fire RecordStart inside TestMethodInfo
-                // this is to ensure we fire start events for error cases. This is acceptable because
-                // vstest ignores multiple start events.
                 testExecutionRecorder.RecordStart(currentTest);
 
                 var startTime = DateTimeOffset.Now;
@@ -397,7 +382,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Run single test passing test context properties to it.
                 var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
                 var testContextProperties = this.GetTestContextProperties(tcmProperties, sourceLevelParameters);
-                var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testExecutionRecorderWrapper, testContextProperties);
+                var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                     "Executed test {0}",

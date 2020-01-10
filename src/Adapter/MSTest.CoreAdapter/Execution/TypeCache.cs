@@ -16,7 +16,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -122,10 +121,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="testMethod"> The test Method. </param>
         /// <param name="testContext"> The test Context. </param>
-        /// <param name="testExecutionRecorder">A instance of TestExecutionRecorderWrapper used to log test execution.</param>
         /// <param name="captureDebugTraces"> Indicates whether the test method should capture debug traces.</param>
         /// <returns> The <see cref="TestMethodInfo"/>. </returns>
-        public TestMethodInfo GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, TestExecutionRecorderWrapper testExecutionRecorder, bool captureDebugTraces)
+        public TestMethodInfo GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
         {
             if (testMethod == null)
             {
@@ -148,7 +146,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             // Get the testMethod
-            return this.ResolveTestMethod(testMethod, testClassInfo, testContext, testExecutionRecorder, captureDebugTraces);
+            return this.ResolveTestMethod(testMethod, testClassInfo, testContext, captureDebugTraces);
         }
 
         /// <summary>
@@ -268,7 +266,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             var testContextProperty = this.ResolveTestContext(classType);
 
-            var assemblyInfo = this.GetAssemblyInfo(classType, testMethod.AssemblyName);
+            var assemblyInfo = this.GetAssemblyInfo(classType);
 
             var classInfo = new TestClassInfo(classType, constructor, testContextProperty, this.reflectionHelper.GetDerivedAttribute<TestClassAttribute>(classType, false), assemblyInfo);
 
@@ -360,10 +358,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Get the assembly info for the parameter type
         /// </summary>
         /// <param name="type"> The type. </param>
-        /// <param name="assemblyLocation">The location of the assembly</param>
         /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Discoverer should continue with remaining sources.")]
-        private TestAssemblyInfo GetAssemblyInfo(Type type, string assemblyLocation)
+        private TestAssemblyInfo GetAssemblyInfo(Type type)
         {
             var assembly = type.GetTypeInfo().Assembly;
 
@@ -381,7 +378,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     var assemblyInitializeType = typeof(AssemblyInitializeAttribute);
                     var assemblyCleanupType = typeof(AssemblyCleanupAttribute);
 
-                    assemblyInfo = new TestAssemblyInfo(assemblyLocation);
+                    assemblyInfo = new TestAssemblyInfo();
 
                     var types = new AssemblyEnumerator().GetTypes(assembly, assembly.FullName, null);
 
@@ -632,12 +629,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="testMethod"> The test Method. </param>
         /// <param name="testClassInfo"> The test Class Info. </param>
         /// <param name="testContext"> The test Context. </param>
-        /// <param name="testExecutionRecorder">A instance of TestExecutionRecorderWrapper used to log test execution.</param>
         /// <param name="captureDebugTraces"> Indicates whether the test method should capture debug traces.</param>
         /// <returns>
         /// The TestMethodInfo for the given test method. Null if the test method could not be found.
         /// </returns>
-        private TestMethodInfo ResolveTestMethod(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext, TestExecutionRecorderWrapper testExecutionRecorder, bool captureDebugTraces)
+        private TestMethodInfo ResolveTestMethod(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext, bool captureDebugTraces)
         {
             Debug.Assert(testMethod != null, "testMethod is Null");
             Debug.Assert(testClassInfo != null, "testClassInfo is Null");
@@ -653,7 +649,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var timeout = this.GetTestTimeout(methodInfo, testMethod);
 
             var testMethodOptions = new TestMethodOptions() { Timeout = timeout, Executor = this.GetTestMethodAttribute(methodInfo, testClassInfo), ExpectedException = expectedExceptionAttribute, TestContext = testContext, CaptureDebugTraces = captureDebugTraces };
-            var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testMethodOptions, testExecutionRecorder);
+            var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testMethodOptions);
 
             this.SetCustomProperties(testMethodInfo, testContext);
 
