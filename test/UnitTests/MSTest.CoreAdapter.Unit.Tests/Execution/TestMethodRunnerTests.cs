@@ -19,7 +19,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Moq;
     using MSTest.TestAdapter;
     using TestableImplementations;
@@ -65,7 +64,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testMethodAttribute = new UTF.TestMethodAttribute();
             var testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
-            var testAssemblyInfo = new TestAssemblyInfo("dummyAssemblyName");
+            var testAssemblyInfo = new TestAssemblyInfo();
             this.testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
             this.testContextImplementation = new TestContextImplementation(this.testMethod, new StringWriter(), new Dictionary<string, object>());
             this.testClassInfo = new TestClassInfo(
@@ -85,8 +84,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var globalTestMethodInfo = new TestMethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
-                this.globaltestMethodOptions,
-                new TestExecutionRecorderWrapper(new Mock<ITestExecutionRecorder>().Object));
+                this.globaltestMethodOptions);
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, null);
             this.globalTestMethodRunner = new TestMethodRunner(globalTestMethodInfo, this.testMethod, this.testContextImplementation, false);
 
@@ -226,7 +224,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void ExecuteForAssemblyInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             // Arrange.
-            var tai = new TestAssemblyInfo(this.testMethod.AssemblyName)
+            var tai = new TestAssemblyInfo
             {
                 AssemblyInitializeMethod = typeof(TestMethodRunnerTests).GetMethod(
                 "InitMethodThrowingException",
@@ -258,7 +256,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void ExecuteForClassInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             // Arrange.
-            var tai = new TestAssemblyInfo(this.testMethod.AssemblyName);
+            var tai = new TestAssemblyInfo();
 
             var constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
             var classAttribute = new UTF.TestClassAttribute();
@@ -669,7 +667,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldReturnParentResultForDataSourceDataDrivenTests()
         {
-            var testMethodInfo = new TestableTestmethodInfo(tmi => new UTF.TestResult() { TestId = tmi.TestId }, this.methodInfo, this.testClassInfo, this.testMethodOptions);
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult());
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
             UTF.DataSourceAttribute dataSourceAttribute = new UTF.DataSourceAttribute("DummyConnectionString", "DummyTableName");
@@ -687,9 +685,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(results[0].ExecutionId, results[1].ParentExecId);
             Assert.AreEqual(Guid.Empty, results[0].ParentExecId);
             Assert.AreNotEqual(Guid.Empty, results[1].ParentExecId);
-
-            Assert.AreNotEqual(results[0].TestId, results[1].TestId, "Parent result had different TestId from child result");
-            Assert.AreNotEqual(results[1].TestId, results[2].TestId, "Child results have different TestIds");
         }
 
         [TestMethodV1]
@@ -718,11 +713,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldReturnParentResultForDataRowDataDrivenTests()
         {
-            var testMethodInfo = new TestableTestmethodInfo(
-                tmi => new UTF.TestResult() { TestId = tmi.TestId, ResultFiles = new[] { "C:\\temp.txt" }, },
-                this.methodInfo,
-                this.testClassInfo,
-                this.testMethodOptions);
+            UTF.TestResult testResult = new UTF.TestResult
+            {
+                ResultFiles = new List<string>() { "C:\\temp.txt" }
+            };
+
+            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
 
             int dummyIntData1 = 1;
@@ -746,9 +742,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(Guid.Empty, results[0].ParentExecId);
             Assert.AreNotEqual(Guid.Empty, results[1].ParentExecId);
             Assert.AreNotEqual(Guid.Empty, results[2].ParentExecId);
-
-            Assert.AreNotEqual(results[0].TestId, results[1].TestId, "Parent result had different TestId from child result");
-            Assert.AreNotEqual(results[1].TestId, results[2].TestId, "Child results have different TestIds");
         }
 
         [TestMethodV1]
@@ -891,19 +884,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         public class TestableTestmethodInfo : TestMethodInfo
         {
-            private readonly Func<TestMethodInfo, UTF.TestResult> invokeTest;
+            private readonly Func<UTF.TestResult> invokeTest;
 
             internal TestableTestmethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<UTF.TestResult> invoke)
-                : this(tmi => invoke(), testMethod, parent, testMethodOptions)
-            {
-            }
-
-            internal TestableTestmethodInfo(
-                Func<TestMethodInfo, UTF.TestResult> invoke,
-                MethodInfo testMethod,
-                TestClassInfo parent,
-                TestMethodOptions testMethodOptions)
-                : base(testMethod, parent, testMethodOptions, new TestExecutionRecorderWrapper(new Mock<ITestExecutionRecorder>().Object))
+                : base(testMethod, parent, testMethodOptions)
             {
                 this.invokeTest = invoke;
             }
@@ -911,7 +895,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public override UTF.TestResult Invoke(object[] arguments)
             {
                 // Ignore args for now
-                return this.invokeTest(this);
+                return this.invokeTest();
             }
         }
 

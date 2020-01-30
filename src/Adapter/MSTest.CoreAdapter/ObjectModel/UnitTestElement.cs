@@ -103,11 +103,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         internal string[] WorkItemIds { get; set; }
 
         /// <summary>
-        /// Gets or sets the id of the test.
-        /// </summary>
-        internal Guid TestId { get; set; }
-
-        /// <summary>
         /// Convert the UnitTestElement instance to an Object Model testCase instance.
         /// </summary>
         /// <returns> An instance of <see cref="TestCase"/>. </returns>
@@ -185,11 +180,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 testCase.SetPropertyValue(
                     TestAdapter.Constants.DoNotParallelizeProperty,
                     this.DoNotParallelize);
-            }
-
-            if (this.TestId != Guid.Empty)
-            {
-                testCase.Id = this.TestId;
             }
 
             return testCase;

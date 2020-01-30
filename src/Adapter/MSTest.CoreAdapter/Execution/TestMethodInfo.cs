@@ -14,7 +14,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -34,23 +33,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         internal TestMethodInfo(
             MethodInfo testMethod,
             TestClassInfo parent,
-            TestMethodOptions testmethodOptions,
-            TestExecutionRecorderWrapper testExecutionRecorder)
+            TestMethodOptions testmethodOptions)
         {
             Debug.Assert(testMethod != null, "TestMethod should not be null");
             Debug.Assert(parent != null, "Parent should not be null");
-            Debug.Assert(testExecutionRecorder != null, "TestExecutionRecorder should not be null");
 
             this.TestMethod = testMethod;
             this.Parent = parent;
             this.TestMethodOptions = testmethodOptions;
-            this.TestExecutionRecorder = testExecutionRecorder;
         }
-
-        /// <summary>
-        /// Gets or sets the id of the test.
-        /// </summary>
-        public Guid TestId { get; set; }
 
         /// <summary>
         /// Gets a value indicating whether timeout is set.
@@ -93,11 +84,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Gets the options for the test method in this environment.
         /// </summary>
         internal TestMethodOptions TestMethodOptions { get; private set; }
-
-        /// <summary>
-        /// Gets the test execution recorder used to log test execution.
-        /// </summary>
-        internal TestExecutionRecorderWrapper TestExecutionRecorder { get; }
 
         public Attribute[] GetAllAttributes(bool inherit)
         {
@@ -151,13 +137,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             using (LogMessageListener listener = new LogMessageListener(this.TestMethodOptions.CaptureDebugTraces))
             {
-                var testElement = new UnitTestElement(new TestMethod(this)) { TestId = this.TestId };
-
                 watch.Start();
                 try
                 {
-                    this.TestExecutionRecorder.RecordStart(testElement);
-
                     if (this.IsTimeoutSet)
                     {
                         result = this.ExecuteInternalWithTimeout(arguments);
@@ -180,12 +162,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         result.LogError = listener.StandardError;
                         result.TestContextMessages = this.TestMethodOptions.TestContext.GetAndClearDiagnosticMessages();
                         result.ResultFiles = this.TestMethodOptions.TestContext.GetResultFiles();
-                        result.TestId = this.TestId;
                     }
-
-                    this.TestExecutionRecorder.RecordEnd(
-                        testElement,
-                        result?.Outcome.ToUnitTestOutcome() ?? UnitTestOutcome.Error);
                 }
             }
 

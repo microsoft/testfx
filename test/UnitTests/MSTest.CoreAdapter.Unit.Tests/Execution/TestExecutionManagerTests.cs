@@ -117,13 +117,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, this.cancellationToken);
 
             // FailingTest should be skipped because it does not match the filter criteria.
-            CollectionAssert.DoesNotContain(this.frameworkHandle.TestCaseStartList, "FailingTest");
-            CollectionAssert.DoesNotContain(this.frameworkHandle.TestCaseEndList, "FailingTest:Failed");
-            CollectionAssert.DoesNotContain(this.frameworkHandle.ResultsList, "FailingTest  Failed");
+            List<string> expectedTestCaseStartList = new List<string>() { "PassingTest" };
+            List<string> expectedTestCaseEndList = new List<string>() { "PassingTest:Passed" };
+            List<string> expectedResultList = new List<string>() { "PassingTest  Passed" };
 
-            CollectionAssert.Contains(this.frameworkHandle.TestCaseStartList, "PassingTest");
-            CollectionAssert.Contains(this.frameworkHandle.TestCaseEndList, "PassingTest:Passed");
-            CollectionAssert.Contains(this.frameworkHandle.ResultsList, "PassingTest  Passed");
+            CollectionAssert.AreEqual(expectedTestCaseStartList, this.frameworkHandle.TestCaseStartList);
+            CollectionAssert.AreEqual(expectedTestCaseEndList, this.frameworkHandle.TestCaseEndList);
+            CollectionAssert.AreEqual(expectedResultList, this.frameworkHandle.ResultsList);
         }
 
         [TestMethodV1]
@@ -148,9 +148,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
 
-            CollectionAssert.Contains(this.frameworkHandle.TestCaseStartList, "PassingTest");
-            CollectionAssert.Contains(this.frameworkHandle.TestCaseEndList, "PassingTest:Passed");
-            CollectionAssert.Contains(this.frameworkHandle.ResultsList, "PassingTest  Passed");
+            List<string> expectedTestCaseStartList = new List<string>() { "PassingTest" };
+            List<string> expectedTestCaseEndList = new List<string>() { "PassingTest:Passed" };
+            List<string> expectedResultList = new List<string>() { "PassingTest  Passed" };
+
+            CollectionAssert.AreEqual(expectedTestCaseStartList, this.frameworkHandle.TestCaseStartList);
+            CollectionAssert.AreEqual(expectedTestCaseEndList, this.frameworkHandle.TestCaseEndList);
+            CollectionAssert.AreEqual(expectedResultList, this.frameworkHandle.ResultsList);
         }
 
         [TestMethodV1]
@@ -162,14 +166,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, this.cancellationToken);
 
-            CollectionAssert.Contains(this.frameworkHandle.TestCaseStartList, "PassingTest");
-            CollectionAssert.Contains(this.frameworkHandle.TestCaseStartList, "FailingTest");
-            CollectionAssert.Contains(this.frameworkHandle.TestCaseEndList, "PassingTest:Passed");
-            CollectionAssert.Contains(this.frameworkHandle.TestCaseEndList, "FailingTest:Failed");
-            CollectionAssert.Contains(this.frameworkHandle.ResultsList, "PassingTest  Passed");
-            Assert.IsNotNull(
-                this.frameworkHandle.ResultsList.FirstOrDefault(x => x.Contains("FailingTest  Failed\r\n  Message: Assert.Fail failed.")),
-                "ResultsList contains failed result");
+            List<string> expectedTestCaseStartList = new List<string>() { "PassingTest", "FailingTest" };
+            List<string> expectedTestCaseEndList = new List<string>() { "PassingTest:Passed", "FailingTest:Failed" };
+            List<string> expectedResultList = new List<string>() { "PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail failed." };
+
+            CollectionAssert.AreEqual(expectedTestCaseStartList, this.frameworkHandle.TestCaseStartList);
+            CollectionAssert.AreEqual(expectedTestCaseEndList, this.frameworkHandle.TestCaseEndList);
+            Assert.AreEqual(expectedResultList[0], this.frameworkHandle.ResultsList[0]);
+            StringAssert.Contains(this.frameworkHandle.ResultsList[1], expectedResultList[1]);
         }
 
         [TestMethodV1]
@@ -187,27 +191,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(0, this.frameworkHandle.TestCaseStartList.Count);
             Assert.AreEqual(0, this.frameworkHandle.ResultsList.Count);
             Assert.AreEqual(0, this.frameworkHandle.TestCaseEndList.Count);
-        }
-
-        [TestMethodV1]
-        public void RunTestsForDataRowTestShouldSendMulipleResults()
-        {
-            var testCase = this.GetTestCase(typeof(DummyTestClass), "DataRowTest");
-            TestCase[] tests = new[] { testCase };
-
-            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, this.cancellationToken);
-
-            // Even though there are only 2 data rows we fire a start event and results for the parent result
-            var expectedTestCaseStartList = new[] { "DataRowTest", "DataRowTest", "DataRowTest" };
-            var expectedResultList = new[] { "DataRowTest  Passed", "DataRowTest  Passed", "DataRowTest  Passed" };
-            var expectedDisplayNameList = new[] { null, "DataRowTest (True)", "DataRowTest (False)" };
-
-            CollectionAssert.AreEqual(expectedTestCaseStartList, this.frameworkHandle.TestCaseStartList);
-            CollectionAssert.AreEqual(expectedResultList, this.frameworkHandle.ResultsList);
-            CollectionAssert.AreEqual(expectedDisplayNameList, this.frameworkHandle.TestDisplayNameList);
-
-            // End events get duplicated
-            Assert.IsTrue(this.frameworkHandle.TestCaseEndList.Count(x => x.Equals("DataRowTest:Passed")) >= 3, "At least 3 end events");
         }
 
         [TestMethodV1]
@@ -915,13 +898,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             public void IgnoredTest()
             {
                 UTF.Assert.Fail();
-            }
-
-            [UTF.DataTestMethod]
-            [UTF.DataRow(true)]
-            [UTF.DataRow(false)]
-            public void DataRowTest(bool data)
-            {
             }
         }
 

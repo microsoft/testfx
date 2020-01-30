@@ -35,7 +35,6 @@
     <Compile Include="Discovery\TestMethodValidator.cs" />
     <Compile Include="Execution\RunCleanupResult.cs" />
     <Compile Include="Execution\TcmTestPropertiesProvider.cs" />
-    <Compile Include="Execution\TestExecutionRecorderWrapper.cs" />
     <Compile Include="Extensions\TestContextExtensions.cs" />
     <Compile Include="Extensions\TestResultExtensions.cs" />
     <Compile Include="Extensions\UnitTestOutcomeExtensions.cs" />

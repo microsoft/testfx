@@ -45,7 +45,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testClassConstructor = this.testClassType.GetConstructors().First();
             this.testContextProperty = this.testClassType.GetProperties().First();
             this.testClassAttribute = (UTF.TestClassAttribute)this.testClassType.GetCustomAttributes().First();
-            this.testAssemblyInfo = new TestAssemblyInfo(@"C:\test.dll");
+            this.testAssemblyInfo = new TestAssemblyInfo();
 
             this.testClassInfo = new TestClassInfo(
                 this.testClassType,

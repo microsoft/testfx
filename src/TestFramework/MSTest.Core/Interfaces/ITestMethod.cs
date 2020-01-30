@@ -12,11 +12,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public interface ITestMethod
     {
         /// <summary>
-        /// Gets or sets the id of the test.
-        /// </summary>
-        Guid TestId { get; set; }
-
-        /// <summary>
         /// Gets the name of test method.
         /// </summary>
         string TestMethodName { get; }
