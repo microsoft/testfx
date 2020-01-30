@@ -657,7 +657,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
-                    this.executionRecorderWrapper,
                     false);
 
             var classInfo = this.typeCache.ClassInfoCache.FirstOrDefault();
