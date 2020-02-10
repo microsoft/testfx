@@ -15,7 +15,7 @@ namespace MSTestAdapter.Smoke.E2ETests
         public void ExecuteCustomTestExtensibilityTests()
         {
             this.InvokeVsTestForExecution(new string[] { TestAssembly });
-            this.ValidatePassedTestsContain("TestMethodPassingWithA.In");
+            this.ValidatePassedTestsContain("Test method passing with a . in it");
         }
     }
 }

@@ -7,5 +7,5 @@ open Microsoft.VisualStudio.TestTools.UnitTesting
 type UnitTest1 () =
 
     [<TestMethod>]
-    member this.``TestMethodPassingWithA.In`` () =
+    member this.``Test method passing with a . in it`` () =
         Assert.IsTrue(true);
