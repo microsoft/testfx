@@ -244,7 +244,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(true, adapterSettings.DeploymentEnabled);
+            Assert.IsTrue(adapterSettings.DeploymentEnabled);
         }
 
         [TestMethod]
@@ -275,7 +275,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(true, adapterSettings.DeployTestSourceDependencies);
+            Assert.IsTrue(adapterSettings.DeployTestSourceDependencies);
         }
 
         [TestMethod]
@@ -303,7 +303,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(true, adapterSettings.DeployTestSourceDependencies);
+            Assert.IsTrue(adapterSettings.DeployTestSourceDependencies);
         }
 
 #endregion

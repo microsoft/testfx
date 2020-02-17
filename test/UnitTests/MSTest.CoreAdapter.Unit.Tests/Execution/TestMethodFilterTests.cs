@@ -172,7 +172,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, recorder, out filterHasError);
 
             Assert.AreEqual(null, filterExpression);
-            Assert.AreEqual(true, filterHasError);
+            Assert.IsTrue(filterHasError);
             Assert.AreEqual("DummyException", recorder.Message);
             Assert.AreEqual(TestMessageLevel.Error, recorder.TestMessageLevel);
         }
@@ -189,7 +189,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
 
             Assert.AreEqual(null, filterExpression);
-            Assert.AreEqual(true, filterHasError);
+            Assert.IsTrue(filterHasError);
             Assert.AreEqual("DummyException", recorder.Message);
             Assert.AreEqual(TestMessageLevel.Error, recorder.TestMessageLevel);
         }

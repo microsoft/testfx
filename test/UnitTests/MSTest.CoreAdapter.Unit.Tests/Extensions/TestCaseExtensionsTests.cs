@@ -31,13 +31,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
-            Assert.AreEqual(true, resultUnitTestElement.IsAsync);
+            Assert.IsTrue(resultUnitTestElement.IsAsync);
             Assert.AreEqual(2, resultUnitTestElement.Priority);
             Assert.AreEqual(testCategories, resultUnitTestElement.TestCategory);
             Assert.AreEqual("DummyDisplayName", resultUnitTestElement.DisplayName);
             Assert.AreEqual("DummyMethod", resultUnitTestElement.TestMethod.Name);
             Assert.AreEqual("DummyClassName", resultUnitTestElement.TestMethod.FullClassName);
-            Assert.AreEqual(true, resultUnitTestElement.TestMethod.IsAsync);
+            Assert.IsTrue(resultUnitTestElement.TestMethod.IsAsync);
             Assert.IsNull(resultUnitTestElement.TestMethod.DeclaringClassFullName);
         }
 
