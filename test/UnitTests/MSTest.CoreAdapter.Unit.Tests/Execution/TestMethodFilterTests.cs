@@ -71,7 +71,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void PropertyProviderValueForInvalidTestCaseReturnsNull()
         {
             var result = this.TestMethodFilter.PropertyValueProvider(null, "Hello");
-            Assert.AreEqual(null, result);
+            Assert.IsNull(result);
         }
 
         [TestMethod]
@@ -82,7 +82,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             TestCase testCase = new TestCase(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 
             var result = this.TestMethodFilter.PropertyValueProvider(testCase, null);
-            Assert.AreEqual(null, result);
+            Assert.IsNull(result);
         }
 
         [TestMethod]
@@ -93,7 +93,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             TestCase testCase = new TestCase(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
             var result = this.TestMethodFilter.PropertyValueProvider(testCase, "Priority");
-            Assert.AreEqual(null, result);
+            Assert.IsNull(result);
         }
 
         [TestMethod]
@@ -115,7 +115,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             bool filterHasError;
             var filterExpression = this.TestMethodFilter.GetFilterExpression(null, recorder, out filterHasError);
 
-            Assert.AreEqual(null, filterExpression);
+            Assert.IsNull(filterExpression);
             Assert.IsFalse(filterHasError);
         }
 
@@ -159,7 +159,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             bool filterHasError;
             var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
 
-            Assert.AreEqual(null, filterExpression);
+            Assert.IsNull(filterExpression);
             Assert.IsFalse(filterHasError);
         }
 
@@ -171,7 +171,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             bool filterHasError;
             var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, recorder, out filterHasError);
 
-            Assert.AreEqual(null, filterExpression);
+            Assert.IsNull(filterExpression);
             Assert.IsTrue(filterHasError);
             Assert.AreEqual("DummyException", recorder.Message);
             Assert.AreEqual(TestMessageLevel.Error, recorder.TestMessageLevel);
@@ -188,7 +188,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             bool filterHasError;
             var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
 
-            Assert.AreEqual(null, filterExpression);
+            Assert.IsNull(filterExpression);
             Assert.IsTrue(filterHasError);
             Assert.AreEqual("DummyException", recorder.Message);
             Assert.AreEqual(TestMessageLevel.Error, recorder.TestMessageLevel);

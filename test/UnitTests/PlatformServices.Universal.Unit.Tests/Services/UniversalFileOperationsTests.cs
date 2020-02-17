@@ -174,7 +174,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
         [TestMethod]
         public void GetFullFilePathShouldReturnAssemblyFileName()
         {
-            Assert.AreEqual(null, this.fileOperations.GetFullFilePath(null));
+            Assert.IsNull(this.fileOperations.GetFullFilePath(null));
             Assert.AreEqual("assemblyFileName", this.fileOperations.GetFullFilePath("assemblyFileName"));
         }
     }

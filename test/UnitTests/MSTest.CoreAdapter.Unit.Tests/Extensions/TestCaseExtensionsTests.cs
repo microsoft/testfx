@@ -52,7 +52,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             // These are set for testCase by default by ObjectModel.
             Assert.IsFalse(resultUnitTestElement.IsAsync);
             Assert.AreEqual(0, resultUnitTestElement.Priority);
-            Assert.AreEqual(null, resultUnitTestElement.TestCategory);
+            Assert.IsNull(resultUnitTestElement.TestCategory);
         }
 
         [TestMethod]
