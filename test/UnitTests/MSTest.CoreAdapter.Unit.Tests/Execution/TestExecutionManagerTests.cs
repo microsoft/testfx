@@ -357,7 +357,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             // Trigger another Run
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
 
-            Assert.AreEqual(DummyTestClass.TestContextProperties["webAppUrl"], "http://updatedLocalHost");
+            Assert.AreEqual("http://updatedLocalHost", DummyTestClass.TestContextProperties["webAppUrl"]);
         }
 
         #endregion
@@ -426,7 +426,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             };
 
             testableTestExecutionmanager.RunTests(sources, this.runContext, this.frameworkHandle, this.cancellationToken);
-            Assert.AreEqual(testsCount, 4);
+            Assert.AreEqual(4, testsCount);
         }
 
         #endregion
@@ -440,8 +440,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             UnitTestResult unitTestResult1 = new UnitTestResult() { DatarowIndex = 0, DisplayName = "DummyTest" };
             UnitTestResult unitTestResult2 = new UnitTestResult() { DatarowIndex = 1, DisplayName = "DummyTest" };
             this.TestExecutionManager.SendTestResults(testCase, new UnitTestResult[] { unitTestResult1, unitTestResult2 }, default(DateTimeOffset), default(DateTimeOffset), this.frameworkHandle);
-            Assert.AreEqual(this.frameworkHandle.TestDisplayNameList[0], "DummyTest (Data Row 0)");
-            Assert.AreEqual(this.frameworkHandle.TestDisplayNameList[1], "DummyTest (Data Row 1)");
+            Assert.AreEqual("DummyTest (Data Row 0)", this.frameworkHandle.TestDisplayNameList[0]);
+            Assert.AreEqual("DummyTest (Data Row 1)", this.frameworkHandle.TestDisplayNameList[1]);
         }
 
         #endregion

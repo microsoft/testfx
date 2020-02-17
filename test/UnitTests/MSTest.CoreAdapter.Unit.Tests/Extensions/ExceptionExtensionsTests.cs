@@ -204,8 +204,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo);
 
-            Assert.AreEqual(outcome, UTF.UnitTestOutcome.Inconclusive);
-            Assert.AreEqual(exceptionMessage, "Dummy Message");
+            Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, outcome);
+            Assert.AreEqual("Dummy Message", exceptionMessage);
         }
 
         [TestMethod]
@@ -218,8 +218,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo);
 
-            Assert.AreEqual(outcome, UTF.UnitTestOutcome.Failed);
-            Assert.AreEqual(exceptionMessage, "Dummy Message");
+            Assert.AreEqual(UTF.UnitTestOutcome.Failed, outcome);
+            Assert.AreEqual("Dummy Message", exceptionMessage);
         }
         #endregion
 
