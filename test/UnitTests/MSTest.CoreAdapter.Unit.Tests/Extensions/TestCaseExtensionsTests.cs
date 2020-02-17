@@ -50,7 +50,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
             // These are set for testCase by default by ObjectModel.
-            Assert.AreEqual(false, resultUnitTestElement.IsAsync);
+            Assert.IsFalse(resultUnitTestElement.IsAsync);
             Assert.AreEqual(0, resultUnitTestElement.Priority);
             Assert.AreEqual(null, resultUnitTestElement.TestCategory);
         }

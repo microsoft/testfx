@@ -221,7 +221,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(false, adapterSettings.CaptureDebugTraces);
+            Assert.IsFalse(adapterSettings.CaptureDebugTraces);
         }
 
         [TestMethod]
@@ -822,7 +822,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsNotNull(adapterSettings);
 
             // Validating the default value of a random setting.
-            Assert.AreEqual(false, adapterSettings.ForcedLegacyMode);
+            Assert.IsFalse(adapterSettings.ForcedLegacyMode);
         }
 
         [TestMethod]
@@ -871,7 +871,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings.PopulateSettings(settings);
 
-            Assert.AreEqual(false, MSTestSettings.CurrentSettings.CaptureDebugTraces);
+            Assert.IsFalse(MSTestSettings.CurrentSettings.CaptureDebugTraces);
             Assert.AreEqual(true, MSTestSettings.CurrentSettings.MapInconclusiveToFailed);
             Assert.AreEqual(true, MSTestSettings.CurrentSettings.MapNotRunnableToFailed);
             Assert.AreEqual(true, MSTestSettings.CurrentSettings.ForcedLegacyMode);
@@ -886,7 +886,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(true, adapterSettings.CaptureDebugTraces);
-            Assert.AreEqual(false, adapterSettings.MapInconclusiveToFailed);
+            Assert.IsFalse(adapterSettings.MapInconclusiveToFailed);
             Assert.AreEqual(true, adapterSettings.MapNotRunnableToFailed);
             Assert.AreEqual(true, adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
         }
@@ -898,7 +898,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(true, adapterSettings.CaptureDebugTraces);
-            Assert.AreEqual(false, adapterSettings.MapInconclusiveToFailed);
+            Assert.IsFalse(adapterSettings.MapInconclusiveToFailed);
             Assert.AreEqual(true, adapterSettings.MapNotRunnableToFailed);
             Assert.AreEqual(true, adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
         }
@@ -911,7 +911,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
             Assert.AreEqual(true, adapterSettings.CaptureDebugTraces);
-            Assert.AreEqual(false, adapterSettings.MapInconclusiveToFailed);
+            Assert.IsFalse(adapterSettings.MapInconclusiveToFailed);
             Assert.AreEqual(true, adapterSettings.MapNotRunnableToFailed);
             Assert.AreEqual(true, adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
         }
@@ -935,7 +935,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsNotNull(adapterSettings);
 
             // Validating the default value of a random setting.
-            Assert.AreEqual(false, adapterSettings.ForcedLegacyMode);
+            Assert.IsFalse(adapterSettings.ForcedLegacyMode);
         }
 
         [TestMethod]
@@ -1024,7 +1024,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.AreEqual(true, adapterSettings.MapInconclusiveToFailed);
             Assert.AreEqual(true, adapterSettings.MapNotRunnableToFailed);
             Assert.AreEqual(true, adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
-            Assert.AreEqual(false, adapterSettings.ForcedLegacyMode);
+            Assert.IsFalse(adapterSettings.ForcedLegacyMode);
             Assert.AreEqual(true, adapterSettings.CaptureDebugTraces);
             Assert.IsTrue(string.IsNullOrEmpty(adapterSettings.TestSettingsFile));
         }

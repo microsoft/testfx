@@ -69,7 +69,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             this.settingsProvider.Load(reader);
-            Assert.AreEqual(false, MSTestSettingsProvider.Settings.DeploymentEnabled);
+            Assert.IsFalse(MSTestSettingsProvider.Settings.DeploymentEnabled);
         }
 
         [TestMethod]
@@ -89,7 +89,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             this.settingsProvider.Load(reader);
-            Assert.AreEqual(false, MSTestSettingsProvider.Settings.DeploymentEnabled);
+            Assert.IsFalse(MSTestSettingsProvider.Settings.DeploymentEnabled);
         }
     }
 }

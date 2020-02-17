@@ -258,7 +258,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(false, adapterSettings.DeploymentEnabled);
+            Assert.IsFalse(adapterSettings.DeploymentEnabled);
         }
 
 #endregion
@@ -289,7 +289,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(false, adapterSettings.DeployTestSourceDependencies);
+            Assert.IsFalse(adapterSettings.DeployTestSourceDependencies);
         }
 
         [TestMethod]

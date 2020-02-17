@@ -116,7 +116,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var filterExpression = this.TestMethodFilter.GetFilterExpression(null, recorder, out filterHasError);
 
             Assert.AreEqual(null, filterExpression);
-            Assert.AreEqual(false, filterHasError);
+            Assert.IsFalse(filterHasError);
         }
 
         [TestMethod]
@@ -129,7 +129,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, recorder, out filterHasError);
 
             Assert.AreEqual(dummyFilterExpression, filterExpression);
-            Assert.AreEqual(false, filterHasError);
+            Assert.IsFalse(filterHasError);
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
 
             Assert.AreEqual(dummyFilterExpression, filterExpression);
-            Assert.AreEqual(false, filterHasError);
+            Assert.IsFalse(filterHasError);
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
 
             Assert.AreEqual(null, filterExpression);
-            Assert.AreEqual(false, filterHasError);
+            Assert.IsFalse(filterHasError);
         }
 
         [TestMethod]

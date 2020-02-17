@@ -52,8 +52,8 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: true);
 
             // Assert
-            Assert.AreEqual(false, result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
-            Assert.AreEqual(false, result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
+            Assert.IsFalse(result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
+            Assert.IsFalse(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
         }
 
         [TestMethod]
@@ -66,7 +66,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
 
             // Assert
-            Assert.AreEqual(false, result.Contains(typeof(TestSourceHost).Assembly.Location));
+            Assert.IsFalse(result.Contains(typeof(TestSourceHost).Assembly.Location));
         }
 
         [TestMethod]
@@ -79,7 +79,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
 
             // Assert
-            Assert.AreEqual(false, result.Contains(typeof(AssemblyHelper).Assembly.Location));
+            Assert.IsFalse(result.Contains(typeof(AssemblyHelper).Assembly.Location));
         }
 
         [TestMethod]

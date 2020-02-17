@@ -118,7 +118,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             this.unitTestElement.IsAsync = false;
             testCase = this.unitTestElement.ToTestCase();
 
-            Assert.AreEqual(false, testCase.GetPropertyValue(Constants.AsyncTestProperty));
+            Assert.IsFalse(testCase.GetPropertyValue(Constants.AsyncTestProperty));
         }
 
         [TestMethodV1]
