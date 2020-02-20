@@ -19,7 +19,7 @@ namespace UnitTestFramework.Tests
     public class ExpectedExceptionAttributeTests
     {
         /// <summary>
-        /// ExpectedExceptionAttribute constructer should throw ArgumentNullException when parameter exceptionType = null
+        /// ExpectedExceptionAttribute constructor should throw ArgumentNullException when parameter exceptionType = null
         /// </summary>
         [TestFrameworkV1.TestMethod]
         public void ExpectedExceptionAttributeConstructerShouldThrowArgumentNullExceptionWhenExceptionTypeIsNull()
@@ -30,7 +30,7 @@ namespace UnitTestFramework.Tests
         }
 
         /// <summary>
-        /// ExpectedExceptionAttribute constructer should throw ArgumentNullException when parameter exceptionType = typeof(AnyClassNotDerivedFromExceptionClass)
+        /// ExpectedExceptionAttribute constructor should throw ArgumentNullException when parameter exceptionType = typeof(AnyClassNotDerivedFromExceptionClass)
         /// </summary>
         [TestFrameworkV1.TestMethod]
         public void ExpectedExceptionAttributeConstructerShouldThrowArgumentException()
@@ -41,7 +41,7 @@ namespace UnitTestFramework.Tests
         }
 
         /// <summary>
-        /// ExpectedExceptionAttribute constructer should not throw exception when parameter exceptionType = typeof(AnyClassDerivedFromExceptionClass)
+        /// ExpectedExceptionAttribute constructor should not throw exception when parameter exceptionType = typeof(AnyClassDerivedFromExceptionClass)
         /// </summary>
         [TestFrameworkV1.TestMethod]
         public void ExpectedExceptionAttributeConstructerShouldNotThrowAnyException()

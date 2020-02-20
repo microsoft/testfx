@@ -119,7 +119,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// </summary>
         /// <param name="testFailureException">An <see cref="TestFailedException"/> instance.</param>
         /// <param name="message"> Appends TestFailedException message to this message.</param>
-        /// <param name="stackTrace"> Appends TestFailedExeption stacktrace to this stackTrace</param>
+        /// <param name="stackTrace"> Appends TestFailedExeption stack trace to this stackTrace</param>
         internal static void TryGetTestFailureExceptionMessageAndStackTrace(this TestFailedException testFailureException, StringBuilder message, StringBuilder stackTrace)
         {
             if (testFailureException != null)

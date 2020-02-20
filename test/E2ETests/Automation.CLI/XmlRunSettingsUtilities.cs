@@ -43,7 +43,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
     public static class Constants
     {
         /// <summary>
-        /// Name of data collection settigns node in RunSettings.
+        /// Name of data collection settings node in RunSettings.
         /// </summary>
         public const string DataCollectionRunSettingsName = "DataCollectionRunSettings";
 

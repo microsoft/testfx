@@ -94,9 +94,9 @@ namespace UnitTestFramework.Tests
         }
 
         /// <summary>
-        /// Rethrow the exception if it is an AssertFailedException or an AssertInconclusiveException
+        /// Re-throw the exception if it is an AssertFailedException or an AssertInconclusiveException
         /// </summary>
-        /// <param name="exception">The exception to rethrow if it is an assertion exception</param>
+        /// <param name="exception">The exception to re-throw if it is an assertion exception</param>
         public new void RethrowIfAssertException(Exception exception)
         {
             base.RethrowIfAssertException(exception);

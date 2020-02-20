@@ -125,7 +125,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 }
                 else
                 {
-                    // Ideally we should not be reaaching here. We only query for attributes on types/methods currently.
+                    // Ideally we should not be reaching here. We only query for attributes on types/methods currently.
                     // Return the attributes that CustomAttributeData returns in this cases not considering inheritance.
                     var firstLevelAttributes =
                     CustomAttributeData.GetCustomAttributes(memberInfo);

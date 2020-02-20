@@ -228,7 +228,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             // Deployment should not happen
             Assert.IsFalse(testDeployment.Deploy(new List<TestCase> { testCase }, null, null));
 
-            // Deplyment directories should not be created
+            // Deployment directories should not be created
             Assert.IsNull(testDeployment.GetDeploymentDirectory());
         }
 
@@ -280,7 +280,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             Assert.IsNotNull(testDeployment.GetDeploymentDirectory());
         }
 
-        // [Todo] This test has to have mocks. It actually deploys stuff and we cannot assume that all the dependencies get copied over to bin\debug.
+        // TODO: This test has to have mocks. It actually deploys stuff and we cannot assume that all the dependencies get copied over to bin\debug.
         [TestMethod]
         [Ignore]
         public void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()

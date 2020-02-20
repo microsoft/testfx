@@ -42,7 +42,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Logging
 
                 string message = string.Format(CultureInfo.InvariantCulture, format, args);
 
-                // Making sure all event handlers are called in sunc on same thread.
+                // Making sure all event handlers are called in sync on same thread.
                 foreach (var invoker in OnLogMessage.GetInvocationList())
                 {
                     try

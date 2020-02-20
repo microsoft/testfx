@@ -149,7 +149,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         /// <summary>
-        /// GetFilterExpression shoould return null test case filter expression in case DiscoveryContext doesnt have GetTestCaseFilter.
+        /// GetFilterExpression should return null test case filter expression in case DiscoveryContext doesn't have GetTestCaseFilter.
         /// </summary>
         [TestMethod]
         public void GetFilterExpressionForDiscoveryContextWithoutGetTestCaseFilterReturnsNullTestCaseFilterExpression()

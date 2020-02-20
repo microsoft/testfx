@@ -1263,7 +1263,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
                 Assert.AreEqual(UTF.UnitTestOutcome.Timeout, result.Outcome);
                 StringAssert.Contains(result.TestFailureException.Message, "exceeded execution timeout period");
-                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not cancelled..");
+                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not canceled..");
             });
         }
 
@@ -1295,7 +1295,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
                 Assert.AreEqual(UTF.UnitTestOutcome.Timeout, result.Outcome);
                 StringAssert.Contains(result.TestFailureException.Message, "execution has been aborted");
-                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not cancelled..");
+                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not canceled..");
             });
         }
 
@@ -1564,7 +1564,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         #region Dummy implementation
 
         /// <summary>
-        ///  Custom Expected exception attribute which doverrides the Verify method.
+        ///  Custom Expected exception attribute which overrides the Verify method.
         /// </summary>
         public class CustomExpectedExceptionAttribute : UTF.ExpectedExceptionBaseAttribute
         {
@@ -1593,7 +1593,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         /// <summary>
-        ///  Custom Expected exception attribute which doverrides the Verify method.
+        ///  Custom Expected exception attribute which overrides the Verify method.
         /// </summary>
         public class DerivedCustomExpectedExceptionAttribute : CustomExpectedExceptionAttribute
         {

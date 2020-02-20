@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// </param>
         /// <returns>
         /// Framework string
-        /// Todo: Need to add components/E2E tests to cover these scenarios.
+        /// TODO: Need to add components/E2E tests to cover these scenarios.
         /// </returns>
         [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
         internal static string GetTargetFrameworkVersionString(string testSourcePath)

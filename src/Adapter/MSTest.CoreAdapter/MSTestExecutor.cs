@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     public class MSTestExecutor : ITestExecutor
     {
         /// <summary>
-        /// Token for cancelling the test run.
+        /// Token for canceling the test run.
         /// </summary>
         private TestRunCancellationToken cancellationToken = null;
 

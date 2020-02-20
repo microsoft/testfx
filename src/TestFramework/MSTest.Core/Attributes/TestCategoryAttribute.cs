@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// TestCategory attribute; used to specify the category of a unit test.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true)]
-    [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments", Justification = "The TestCategories accessor propety exposes the testCategory argument.")]
+    [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments", Justification = "The TestCategories accessor property exposes the testCategory argument.")]
     public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
     {
         private IList<string> testCategories;

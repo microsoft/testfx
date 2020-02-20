@@ -176,7 +176,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             if (!this.classInfoCache.TryGetValue(typeName, out TestClassInfo classInfo))
             {
-                // Aquiring a lock is usually a costly operation which does not need to be
+                // Acquiring a lock is usually a costly operation which does not need to be
                 // performed every time if the type is found in the cache.
                 lock (this.classInfoSyncObject)
                 {
@@ -402,7 +402,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         {
                             // If we fail to discover type from an assembly, then do not abort. Pick the next type.
                             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
-                                "TypeCache: Exception occured while checking whether type {0} is a test class or not. {1}",
+                                "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}",
                                 t.FullName,
                                 ex);
 

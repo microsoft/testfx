@@ -258,7 +258,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return;
             }
 
-            // Aquiring a lock is usually a costly operation which does not need to be
+            // Acquiring a lock is usually a costly operation which does not need to be
             // performed every time if the class init is already executed.
             lock (this.testClassExecuteSyncObject)
             {
@@ -298,7 +298,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             // and class initialization exception is null, then do it.
             if (!this.IsClassInitializeExecuted && this.classInitializeMethod != null && this.ClassInitializationException == null)
             {
-                // Aquiring a lock is usually a costly operation which does not need to be
+                // Acquiring a lock is usually a costly operation which does not need to be
                 // performed every time if the class init is already executed.
                 lock (this.testClassExecuteSyncObject)
                 {
@@ -322,7 +322,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
 
-            // If classInitialization was successful, then dont do anything
+            // If classInitialization was successful, then don't do anything
             if (this.ClassInitializationException == null)
             {
                 return;

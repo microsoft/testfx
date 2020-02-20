@@ -94,7 +94,7 @@ namespace PlatformServices.Desktop.ComponentTests
             this.testSourceHost = new TestSourceHost(this.testSource, null, null);
             this.testSourceHost.SetupHost();
 
-            // Check that child appdmon was indeed created
+            // Check that child appdomain was indeed created
             Assert.IsNotNull(this.testSourceHost.AppDomain);
             this.testSourceHost.Dispose();
 

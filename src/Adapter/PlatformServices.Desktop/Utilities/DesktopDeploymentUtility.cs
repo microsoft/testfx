@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
             if (MSTestSettingsProvider.Settings.DeployTestSourceDependencies)
             {
-                EqtTrace.Info("Adding the references and satellite assemblies to the deploymentitems list");
+                EqtTrace.Info("Adding the references and satellite assemblies to the deployment items list");
 
                 // Get the referenced assemblies.
                 this.ProcessNewStorage(testSource, deploymentItems, warnings);
@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
             else
             {
-                EqtTrace.Info("Adding the test source directory to the deploymentitems list");
+                EqtTrace.Info("Adding the test source directory to the deployment items list");
                 this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
             }
         }
@@ -81,7 +81,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(testSource, string.Empty, DeploymentItemOriginType.TestStorage));
 
-            // Deploy .config file if exists, only for assemlbies, i.e. DLL and EXE.
+            // Deploy .config file if exists, only for assemblies, i.e. DLL and EXE.
             // First check <TestStorage>.config, then if not found check for App.Config
             // and deploy AppConfig to <TestStorage>.config.
             if (this.AssemblyUtility.IsAssemblyExtension(Path.GetExtension(testSource)))
@@ -173,7 +173,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                             new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
 
                         Debug.Assert(!string.IsNullOrEmpty(satelliteDir), "DeploymentManager.DoDeployment: got empty satellite dir!");
-                        Debug.Assert(satelliteDir.Length > itemDir.Length + 1, "DeploymentManager.DoDeployment: wrong satellite dir lenght!");
+                        Debug.Assert(satelliteDir.Length > itemDir.Length + 1, "DeploymentManager.DoDeployment: wrong satellite dir length!");
 
                         string localeDir = satelliteDir.Substring(itemDir.Length + 1);
                         Debug.Assert(!string.IsNullOrEmpty(localeDir), "DeploymentManager.DoDeployment: got empty dir name for satellite dir!");
@@ -210,12 +210,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         }
 
         /// <summary>
-        /// Process test storage and add dependant assemblies to dependencyDeploymentItems.
+        /// Process test storage and add dependent assemblies to dependencyDeploymentItems.
         /// </summary>
         /// <param name="testSource">The test source.</param>
         /// <param name="configFile">The config file.</param>
         /// <param name="deploymentItems">Deployment items.</param>
-        /// <param name="warnings">Warnigns.</param>
+        /// <param name="warnings">Warnings.</param>
         private void AddDependencies(string testSource, string configFile, IList<DeploymentItem> deploymentItems, IList<string> warnings)
         {
             Debug.Assert(!string.IsNullOrEmpty(testSource), "testSource should not be null or empty.");

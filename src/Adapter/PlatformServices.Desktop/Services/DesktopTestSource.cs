@@ -24,7 +24,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             get
             {
-                // Since desktop Platform service would also discover other platform tests on dekstop,
+                // Since desktop Platform service would also discover other platform tests on desktop,
                 // this extension list needs to be updated with all platforms supported file extensions.
                 return new List<string>
                            {
@@ -43,7 +43,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns> True if the assembly is referenced. </returns>
         public bool IsAssemblyReferenced(AssemblyName assemblyName, string source)
         {
-            // This loads the dll in a different app domain. We can optimize this to load in the current domain since this code ould be run in a new app domain anyway.
+            // This loads the dll in a different app domain. We can optimize this to load in the current domain since this code could be run in a new app domain anyway.
             bool? utfReference = AssemblyHelper.DoesReferencesAssembly(source, assemblyName);
 
             // If no reference to UTF don't run discovery. Take conservative approach. If not able to find proceed with discovery.

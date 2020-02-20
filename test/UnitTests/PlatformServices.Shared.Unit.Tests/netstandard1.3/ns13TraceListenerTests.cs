@@ -40,7 +40,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services
             var traceListener = new TraceListenerWrapper(writer);
             traceListener.Dispose();
 
-            // Tring to write after disposing textWriter should throw exception
+            // String to write after disposing textWriter should throw exception
             Action shouldThrowException = () => writer.WriteLine("Try to write something");
             ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
         }

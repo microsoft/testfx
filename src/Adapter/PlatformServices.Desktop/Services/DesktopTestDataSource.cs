@@ -31,7 +31,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public IEnumerable<object> GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
         {
             // Figure out where (as well as the current directory) we could look for data files
-            // for unit tests this means looking at the the location of the test itself
+            // for unit tests this means looking at the location of the test itself
             List<string> dataFolders = new List<string>();
             dataFolders.Add(Path.GetDirectoryName(new Uri(testMethodInfo.MethodInfo.Module.Assembly.CodeBase).LocalPath));
 
@@ -62,7 +62,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     DataRow[] rows = table.Select();
                     Debug.Assert(rows != null, "rows should not be null.");
 
-                    // check for rowlength is 0
+                    // check for row length is 0
                     if (rows.Length == 0)
                     {
                         return null;
