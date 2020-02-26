@@ -300,5 +300,27 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         }
 
         #endregion
+
+        #region Nullable Booleans tests.
+
+        [TestMethod]
+        public void IsFalseNullableBooleansShouldFailWithNull()
+        {
+            bool? nullBool = null;
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.IsFalse(nullBool));
+            Assert.IsNotNull(ex);
+            StringAssert.Contains(ex.Message, "Assert.IsFalse failed");
+        }
+
+        [TestMethod]
+        public void IsTrueNullableBooleansShouldFailWithNull()
+        {
+            bool? nullBool = null;
+
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.IsTrue(nullBool));
+            Assert.IsNotNull(ex);
+            StringAssert.Contains(ex.Message, "Assert.IsTrue failed");
+        }
+        #endregion
     }
 }
