@@ -162,14 +162,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void IsTrue(bool? condition, string message, params object[] parameters)
         {
-            if (condition == false)
+            if (condition == false || condition == null)
             {
                 HandleFail("Assert.IsTrue", message, parameters);
-            }
-
-            if (condition == null)
-            {
-                HandleFail("Assert.IsNull", message, parameters);
             }
         }
 
@@ -285,14 +280,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void IsFalse(bool? condition, string message, params object[] parameters)
         {
-            if (condition == true)
+            if (condition == true || condition == null)
             {
                 HandleFail("Assert.IsFalse", message, parameters);
-            }
-
-            if (condition == null)
-            {
-                HandleFail("Assert.IsNull", message, parameters);
             }
         }
 
