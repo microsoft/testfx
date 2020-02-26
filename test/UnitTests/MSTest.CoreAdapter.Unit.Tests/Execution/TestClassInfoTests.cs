@@ -122,7 +122,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
-            Assert.AreEqual(null, ret);
+            Assert.IsNull(ret);
             Assert.AreEqual(0, classcleanupCallCount);
         }
 
@@ -140,7 +140,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
-            Assert.AreEqual(null, ret);
+            Assert.IsNull(ret);
             Assert.AreEqual(0, classcleanupCallCount);
         }
 
@@ -156,7 +156,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testClassInfo.RunClassInitialize(this.testContext);
             var ret = this.testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
-            Assert.AreEqual(null, ret);
+            Assert.IsNull(ret);
             Assert.AreEqual(1, classcleanupCallCount);
         }
 
@@ -174,7 +174,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testClassInfo.RunClassInitialize(this.testContext);
             var ret = this.testClassInfo.RunClassCleanup();
 
-            Assert.AreEqual(null, ret);
+            Assert.IsNull(ret);
             Assert.AreEqual(1, classcleanupCallCount);
         }
 

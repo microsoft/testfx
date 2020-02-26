@@ -1010,7 +1010,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
-            Assert.AreEqual(true, customExpectedException.IsVerifyInvoked);
+            Assert.IsTrue(customExpectedException.IsVerifyInvoked);
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
@@ -1027,7 +1027,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
-            Assert.AreEqual(result.TestFailureException.Message, "The exception message doesn't contain the string defined in the exception attribute");
+            Assert.AreEqual("The exception message doesn't contain the string defined in the exception attribute", result.TestFailureException.Message);
             Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
         }
 
@@ -1062,7 +1062,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
-            Assert.AreEqual(true, derivedCustomExpectedException.IsVerifyInvoked);
+            Assert.IsTrue(derivedCustomExpectedException.IsVerifyInvoked);
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 

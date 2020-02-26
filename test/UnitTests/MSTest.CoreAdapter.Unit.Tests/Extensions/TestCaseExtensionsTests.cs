@@ -31,13 +31,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
-            Assert.AreEqual(true, resultUnitTestElement.IsAsync);
+            Assert.IsTrue(resultUnitTestElement.IsAsync);
             Assert.AreEqual(2, resultUnitTestElement.Priority);
             Assert.AreEqual(testCategories, resultUnitTestElement.TestCategory);
             Assert.AreEqual("DummyDisplayName", resultUnitTestElement.DisplayName);
             Assert.AreEqual("DummyMethod", resultUnitTestElement.TestMethod.Name);
             Assert.AreEqual("DummyClassName", resultUnitTestElement.TestMethod.FullClassName);
-            Assert.AreEqual(true, resultUnitTestElement.TestMethod.IsAsync);
+            Assert.IsTrue(resultUnitTestElement.TestMethod.IsAsync);
             Assert.IsNull(resultUnitTestElement.TestMethod.DeclaringClassFullName);
         }
 
@@ -50,9 +50,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
             // These are set for testCase by default by ObjectModel.
-            Assert.AreEqual(false, resultUnitTestElement.IsAsync);
+            Assert.IsFalse(resultUnitTestElement.IsAsync);
             Assert.AreEqual(0, resultUnitTestElement.Priority);
-            Assert.AreEqual(null, resultUnitTestElement.TestCategory);
+            Assert.IsNull(resultUnitTestElement.TestCategory);
         }
 
         [TestMethod]

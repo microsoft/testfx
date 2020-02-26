@@ -1408,7 +1408,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
 
-            Assert.AreEqual(null, testMethodInfo.TestMethodOptions.ExpectedException);
+            Assert.IsNull(testMethodInfo.TestMethodOptions.ExpectedException);
         }
 
         [TestMethodV1]

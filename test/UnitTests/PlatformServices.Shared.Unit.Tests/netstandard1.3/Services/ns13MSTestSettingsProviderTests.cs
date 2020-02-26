@@ -55,7 +55,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             var settings = MSTestSettingsProvider.Settings;
 
             Assert.IsNotNull(settings);
-            Assert.AreEqual(true, settings.DeploymentEnabled);
+            Assert.IsTrue(settings.DeploymentEnabled);
         }
 
         [TestMethod]
@@ -69,7 +69,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             this.settingsProvider.Load(reader);
-            Assert.AreEqual(MSTestSettingsProvider.Settings.DeploymentEnabled, false);
+            Assert.IsFalse(MSTestSettingsProvider.Settings.DeploymentEnabled);
         }
 
         [TestMethod]
@@ -89,7 +89,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             this.settingsProvider.Load(reader);
-            Assert.AreEqual(MSTestSettingsProvider.Settings.DeploymentEnabled, false);
+            Assert.IsFalse(MSTestSettingsProvider.Settings.DeploymentEnabled);
         }
     }
 }

@@ -190,8 +190,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
 
             var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
 
-            Assert.AreEqual(testresult.Attachments.Count, 1);
-            Assert.AreEqual(testresult.Attachments[0].Attachments[0].Description, "dummy://DummyFile.txt");
+            Assert.AreEqual(1, testresult.Attachments.Count);
+            Assert.AreEqual("dummy://DummyFile.txt", testresult.Attachments[0].Attachments[0].Description);
         }
 
         [TestMethod]
@@ -213,7 +213,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
 
             var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
 
-            Assert.AreEqual(testresult.Attachments.Count, 0);
+            Assert.AreEqual(0, testresult.Attachments.Count);
         }
 
         [TestMethod]

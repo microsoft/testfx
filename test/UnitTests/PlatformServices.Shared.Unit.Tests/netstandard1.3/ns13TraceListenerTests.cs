@@ -30,7 +30,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services
             StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
             var traceListener = new TraceListenerWrapper(writer);
             var returnedWriter = traceListener.GetWriter();
-            Assert.AreEqual(returnedWriter.ToString(), "DummyTrace");
+            Assert.AreEqual("DummyTrace", returnedWriter.ToString());
         }
 
         [TestMethod]

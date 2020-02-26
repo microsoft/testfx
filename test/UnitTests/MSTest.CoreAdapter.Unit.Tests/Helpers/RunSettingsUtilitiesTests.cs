@@ -87,7 +87,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
 
             // Verify Parameter Values.
             Assert.IsTrue(trp.ContainsKey("webAppUrl"));
-            Assert.AreEqual(trp["webAppUrl"], "http://localhost");
+            Assert.AreEqual("http://localhost", trp["webAppUrl"]);
         }
 
         [TestMethod]
@@ -114,11 +114,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
 
             // Verify Parameter Values.
             Assert.IsTrue(trp.ContainsKey("webAppUrl"));
-            Assert.AreEqual(trp["webAppUrl"], "http://localhost");
+            Assert.AreEqual("http://localhost", trp["webAppUrl"]);
             Assert.IsTrue(trp.ContainsKey("webAppUserName"));
-            Assert.AreEqual(trp["webAppUserName"], "Admin");
+            Assert.AreEqual("Admin", trp["webAppUserName"]);
             Assert.IsTrue(trp.ContainsKey("webAppPassword"));
-            Assert.AreEqual(trp["webAppPassword"], "Password");
+            Assert.AreEqual("Password", trp["webAppPassword"]);
         }
 
         [TestMethod]

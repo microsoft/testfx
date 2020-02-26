@@ -61,7 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
+            Assert.IsFalse(adapterSettings.MapInconclusiveToFailed);
         }
 
         [TestMethod]
@@ -75,7 +75,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
+            Assert.IsTrue(adapterSettings.MapNotRunnableToFailed);
         }
 
         [TestMethod]
@@ -90,7 +90,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
+            Assert.IsTrue(adapterSettings.MapInconclusiveToFailed);
         }
 
         [TestMethod]
@@ -105,7 +105,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
+            Assert.IsTrue(adapterSettings.MapNotRunnableToFailed);
         }
 
         [TestMethod]
@@ -119,7 +119,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
 
-            Assert.AreEqual(adapterSettings.ForcedLegacyMode, false);
+            Assert.IsFalse(adapterSettings.ForcedLegacyMode);
         }
 
         [TestMethod]
@@ -134,7 +134,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
 
-            Assert.AreEqual(adapterSettings.ForcedLegacyMode, true);
+            Assert.IsTrue(adapterSettings.ForcedLegacyMode);
         }
 
         [TestMethod]
@@ -177,7 +177,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+            Assert.IsTrue(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
         }
 
         [TestMethod]
@@ -192,7 +192,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+            Assert.IsTrue(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
         }
 
         [TestMethod]
@@ -206,7 +206,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
+            Assert.IsTrue(adapterSettings.CaptureDebugTraces);
         }
 
         [TestMethod]
@@ -221,7 +221,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.CaptureDebugTraces, false);
+            Assert.IsFalse(adapterSettings.CaptureDebugTraces);
         }
 
         [TestMethod]
@@ -236,7 +236,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.TestTimeout, 4000);
+            Assert.AreEqual(4000, adapterSettings.TestTimeout);
         }
 
         [TestMethod]
@@ -250,7 +250,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-            Assert.AreEqual(adapterSettings.TestTimeout, 0);
+            Assert.AreEqual(0, adapterSettings.TestTimeout);
         }
 
         [TestMethod]
@@ -637,8 +637,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             // Assert.
             Assert.IsTrue(dummyPlatformSpecificSetting);
-            Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
+            Assert.IsTrue(adapterSettings.MapInconclusiveToFailed);
+            Assert.IsTrue(adapterSettings.MapNotRunnableToFailed);
             Assert.AreEqual("DummyPath\\\\TestSettings1.testsettings", adapterSettings.TestSettingsFile);
         }
 
@@ -694,10 +694,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             // Assert.
             Assert.IsTrue(dummyPlatformSpecificSetting);
-            Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
-            Assert.AreEqual(adapterSettings.ForcedLegacyMode, true);
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+            Assert.IsTrue(adapterSettings.MapInconclusiveToFailed);
+            Assert.IsTrue(adapterSettings.MapNotRunnableToFailed);
+            Assert.IsTrue(adapterSettings.ForcedLegacyMode);
+            Assert.IsTrue(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
             Assert.AreEqual("DummyPath\\\\TestSettings1.testsettings", adapterSettings.TestSettingsFile);
         }
 
@@ -803,10 +803,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             // Assert.
             Assert.IsTrue(dummyPlatformSpecificSetting);
-            Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
-            Assert.AreEqual(adapterSettings.ForcedLegacyMode, true);
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+            Assert.IsTrue(adapterSettings.MapInconclusiveToFailed);
+            Assert.IsTrue(adapterSettings.MapNotRunnableToFailed);
+            Assert.IsTrue(adapterSettings.ForcedLegacyMode);
+            Assert.IsTrue(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
         }
 
         #endregion
@@ -822,7 +822,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsNotNull(adapterSettings);
 
             // Validating the default value of a random setting.
-            Assert.AreEqual(adapterSettings.ForcedLegacyMode, false);
+            Assert.IsFalse(adapterSettings.ForcedLegacyMode);
         }
 
         [TestMethod]
@@ -871,11 +871,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             MSTestSettings.PopulateSettings(settings);
 
-            Assert.AreEqual(MSTestSettings.CurrentSettings.CaptureDebugTraces, false);
-            Assert.AreEqual(MSTestSettings.CurrentSettings.MapInconclusiveToFailed, true);
-            Assert.AreEqual(MSTestSettings.CurrentSettings.MapNotRunnableToFailed, true);
-            Assert.AreEqual(MSTestSettings.CurrentSettings.ForcedLegacyMode, true);
-            Assert.AreEqual(MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+            Assert.IsFalse(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+            Assert.IsTrue(MSTestSettings.CurrentSettings.MapInconclusiveToFailed);
+            Assert.IsTrue(MSTestSettings.CurrentSettings.MapNotRunnableToFailed);
+            Assert.IsTrue(MSTestSettings.CurrentSettings.ForcedLegacyMode);
+            Assert.IsTrue(MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
             Assert.IsFalse(string.IsNullOrEmpty(MSTestSettings.CurrentSettings.TestSettingsFile));
         }
 
@@ -885,10 +885,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings.PopulateSettings((IDiscoveryContext)null);
 
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
-            Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
-            Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+            Assert.IsTrue(adapterSettings.CaptureDebugTraces);
+            Assert.IsFalse(adapterSettings.MapInconclusiveToFailed);
+            Assert.IsTrue(adapterSettings.MapNotRunnableToFailed);
+            Assert.IsTrue(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
         }
 
         [TestMethod]
@@ -897,10 +897,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
 
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
-            Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
-            Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+            Assert.IsTrue(adapterSettings.CaptureDebugTraces);
+            Assert.IsFalse(adapterSettings.MapInconclusiveToFailed);
+            Assert.IsTrue(adapterSettings.MapNotRunnableToFailed);
+            Assert.IsTrue(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
         }
 
         [TestMethod]
@@ -910,10 +910,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
 
             MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
-            Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
-            Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, false);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+            Assert.IsTrue(adapterSettings.CaptureDebugTraces);
+            Assert.IsFalse(adapterSettings.MapInconclusiveToFailed);
+            Assert.IsTrue(adapterSettings.MapNotRunnableToFailed);
+            Assert.IsTrue(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
         }
 
         [TestMethod]
@@ -935,7 +935,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsNotNull(adapterSettings);
 
             // Validating the default value of a random setting.
-            Assert.AreEqual(adapterSettings.ForcedLegacyMode, false);
+            Assert.IsFalse(adapterSettings.ForcedLegacyMode);
         }
 
         [TestMethod]
@@ -960,10 +960,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             Assert.IsNotNull(adapterSettings);
 
-            Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
-            Assert.AreEqual(adapterSettings.ForcedLegacyMode, true);
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+            Assert.IsTrue(adapterSettings.MapInconclusiveToFailed);
+            Assert.IsTrue(adapterSettings.MapNotRunnableToFailed);
+            Assert.IsTrue(adapterSettings.ForcedLegacyMode);
+            Assert.IsTrue(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
             Assert.IsFalse(string.IsNullOrEmpty(adapterSettings.TestSettingsFile));
         }
 
@@ -989,10 +989,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             Assert.IsNotNull(adapterSettings);
 
-            Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
-            Assert.AreEqual(adapterSettings.ForcedLegacyMode, true);
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
+            Assert.IsTrue(adapterSettings.MapInconclusiveToFailed);
+            Assert.IsTrue(adapterSettings.MapNotRunnableToFailed);
+            Assert.IsTrue(adapterSettings.ForcedLegacyMode);
+            Assert.IsTrue(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
             Assert.IsFalse(string.IsNullOrEmpty(adapterSettings.TestSettingsFile));
         }
 
@@ -1021,11 +1021,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
 
             Assert.IsNotNull(adapterSettings);
 
-            Assert.AreEqual(adapterSettings.MapInconclusiveToFailed, true);
-            Assert.AreEqual(adapterSettings.MapNotRunnableToFailed, true);
-            Assert.AreEqual(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies, true);
-            Assert.AreEqual(adapterSettings.ForcedLegacyMode, false);
-            Assert.AreEqual(adapterSettings.CaptureDebugTraces, true);
+            Assert.IsTrue(adapterSettings.MapInconclusiveToFailed);
+            Assert.IsTrue(adapterSettings.MapNotRunnableToFailed);
+            Assert.IsTrue(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
+            Assert.IsFalse(adapterSettings.ForcedLegacyMode);
+            Assert.IsTrue(adapterSettings.CaptureDebugTraces);
             Assert.IsTrue(string.IsNullOrEmpty(adapterSettings.TestSettingsFile));
         }
 
