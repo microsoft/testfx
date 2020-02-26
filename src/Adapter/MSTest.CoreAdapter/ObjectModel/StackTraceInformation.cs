@@ -32,17 +32,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public string ErrorStackTrace { get; private set; }
 
         /// <summary>
-        /// Gets source code FilePath where the error occured
+        /// Gets source code FilePath where the error occurred
         /// </summary>
         public string ErrorFilePath { get; private set; }
 
         /// <summary>
-        /// Gets line number in the source code file where the error occured.
+        /// Gets line number in the source code file where the error occurred.
         /// </summary>
         public int ErrorLineNumber { get; private set; }
 
         /// <summary>
-        /// Gets column number in the source code file where the error occured.
+        /// Gets column number in the source code file where the error occurred.
         /// </summary>
         public int ErrorColumnNumber { get; private set; }
     }

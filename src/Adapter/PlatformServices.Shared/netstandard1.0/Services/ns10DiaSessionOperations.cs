@@ -111,7 +111,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
             catch (Exception)
             {
-                // todo : Add EqtTrace
+                // TODO : Add EqtTrace
             }
 
             return null;

@@ -58,8 +58,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Gets the current run directories for this session.
         /// </summary>
         /// <remarks>
-        /// This is intialized at the beginning of a run session when Deploy is called.
-        /// Leaving this as a static varaible since the testContext needs to be filled in with this information.
+        /// This is initialized at the beginning of a run session when Deploy is called.
+        /// Leaving this as a static variable since the testContext needs to be filled in with this information.
         /// </remarks>
         internal static TestRunDirectories RunDirectories
         {
@@ -132,7 +132,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             RunDirectories = this.deploymentUtility.CreateDeploymentDirectories(runContext);
 
             // Deployment directories are created but deployment will not happen.
-            // This is added just to keep consistency with MSTestv1 behaviour.
+            // This is added just to keep consistency with MSTestv1 behavior.
             if (!hasDeploymentItems)
             {
                 return false;
@@ -204,7 +204,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Reset the static varaible to default values. Used only for testing purposes.
+        /// Reset the static variable to default values. Used only for testing purposes.
         /// </summary>
         internal static void Reset()
         {

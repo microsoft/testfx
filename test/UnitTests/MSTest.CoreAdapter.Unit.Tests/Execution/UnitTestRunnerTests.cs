@@ -344,7 +344,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #endregion
 
-        #region Dummmy implementations
+        #region Dummy implementations
 
         [DummyTestClass]
         private class DummyTestClass

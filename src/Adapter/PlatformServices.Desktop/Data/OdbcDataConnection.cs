@@ -107,7 +107,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             }
             else
             {
-                // Fixup magic file paths
+                // Fix-up magic file paths
                 string fixedFilePath = FixPath(fileName, dataFolders);
                 if (fixedFilePath != null)
                 {

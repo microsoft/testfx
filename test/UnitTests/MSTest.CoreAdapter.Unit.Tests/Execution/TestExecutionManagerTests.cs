@@ -177,7 +177,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
-        public void RunTestsForCancellationTokenCancelledSetToTrueShouldSendZeroResults()
+        public void RunTestsForCancellationTokencanceledSetToTrueShouldSendZeroResults()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClass), "PassingTest");
 
@@ -364,7 +364,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         #region Run Tests on Sources
 
-        // Todo: This tests needs to be mocked.
+        // TODO: This tests needs to be mocked.
         [Ignore]
         [TestMethodV1]
         public void RunTestsForSourceShouldRunTestsInASource()
@@ -378,7 +378,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             CollectionAssert.Contains(this.frameworkHandle.ResultsList, "PassingTest  Passed");
         }
 
-        // Todo: This tests needs to be mocked.
+        // TODO: This tests needs to be mocked.
         [Ignore]
         [TestMethodV1]
         public void RunTestsForSourceShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
@@ -937,7 +937,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
-                // Ensures stability.. for the thread to be not used for another testmethod
+                // Ensures stability.. for the thread to be not used for another test method
                 System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
@@ -945,7 +945,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod2()
             {
-                // Ensures stability.. for the thread to be not used for another testmethod
+                // Ensures stability.. for the thread to be not used for another test method
                 System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
@@ -972,7 +972,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
-                // Ensures stability.. for the thread to be not used for another testmethod
+                // Ensures stability.. for the thread to be not used for another test method
                 System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
@@ -980,7 +980,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod2()
             {
-                // Ensures stability.. for the thread to be not used for another testmethod
+                // Ensures stability.. for the thread to be not used for another test method
                 System.Threading.Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
@@ -1007,7 +1007,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
-                // Ensures stability.. for the thread to be not used for another testmethod
+                // Ensures stability.. for the thread to be not used for another test method
                 Thread.Sleep(2000);
                 threadIds.Add(Thread.CurrentThread.ManagedThreadId);
             }
@@ -1060,7 +1060,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod1()
             {
-                // Ensures stability.. for the thread to be not used for another testmethod
+                // Ensures stability.. for the thread to be not used for another test method
                 Thread.Sleep(2000);
                 parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
                 threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
@@ -1071,7 +1071,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             [UTF.TestMethod]
             public void TestMethod2()
             {
-                // Ensures stability.. for the thread to be not used for another testmethod
+                // Ensures stability.. for the thread to be not used for another test method
                 Thread.Sleep(2000);
                 parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
                 threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());

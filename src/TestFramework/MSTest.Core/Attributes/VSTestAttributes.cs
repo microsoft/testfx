@@ -104,7 +104,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     }
 
     /// <summary>
-    /// Attribute for data driven test where data can be specified inline.
+    /// Attribute for data driven test where data can be specified in-line.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public class DataTestMethodAttribute : TestMethodAttribute
@@ -398,7 +398,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Gets the Id to a workitem associated.
+        /// Gets the Id to a work item associated.
         /// </summary>
         public int Id { get; private set; }
     }
@@ -601,7 +601,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             this.DataSourceSettingName = dataSourceSettingName;
         }
 
-        // Different providers use dfferent connection strings and provider itself is a part of connection string.
+        // Different providers use different connection strings and provider itself is a part of connection string.
 
         /// <summary>
         /// Gets a value representing the data provider of the data source.

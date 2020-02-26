@@ -23,8 +23,8 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "DataRowTestMethod (DerivedString1)",
                 "DataRowTestMethod (DerivedString2)");
 
-            // 4 tests of BaseClass.DataRowTestMethod - 3 datarow result and 1 parent result
-            // 3 tests of DerivedClass.DataRowTestMethod - 2 datarow result and 1 parent result
+            // 4 tests of BaseClass.DataRowTestMethod - 3 data row results and 1 parent result
+            // 3 tests of DerivedClass.DataRowTestMethod - 2 data row results and 1 parent result
             // Total 7 tests - Making sure that DerivedClass doesn't run BaseClass tests
             this.ValidatePassedTestsCount(7);
         }

@@ -405,7 +405,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Updates given resutls with parent info if results are greater than 1.
+        /// Updates given results with parent info if results are greater than 1.
         /// Add parent results as first result in updated result.
         /// </summary>
         /// <param name="results">Results.</param>

@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         public string NotRunnableReason { get; internal set; }
 
         /// <summary>
-        /// Gets a value indicating whether test is runnnable
+        /// Gets a value indicating whether test is runnable
         /// </summary>
         public bool IsRunnable => string.IsNullOrEmpty(this.NotRunnableReason);
 
@@ -350,9 +350,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             // Set the current tests outcome before cleanup so it can be used in the cleanup logic.
             this.TestMethodOptions.TestContext.SetOutcome(result.Outcome);
 
-            // TestCleanup can potentially be a long running operation which should'nt ideally be in a finally block.
+            // TestCleanup can potentially be a long running operation which shouldn't ideally be in a finally block.
             // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block
-            // does not allow a threadabort exception to be raised within the block but throws one after finally is executed
+            // does not allow a thread abort exception to be raised within the block but throws one after finally is executed
             // crashing the process. This was blocking writing an extension for Dynamic Timeout in VSO.
             if (classInstance != null && testContextSetup)
             {
@@ -788,7 +788,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
                 else
                 {
-                    // Cancel the token source as test has timedout
+                    // Cancel the token source as test has timed out
                     this.TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel();
                 }
 

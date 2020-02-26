@@ -16,7 +16,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         public string SettingsName { get; set; }
 
         /// <summary>
-        /// Gets or sets paths at which enigine should look for test adapters
+        /// Gets or sets paths at which engine should look for test adapters
         /// </summary>
         public string TestAdaptersPaths { get; set; }
 

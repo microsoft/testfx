@@ -43,7 +43,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         #region Properties
 
-        // Todo: Test Context needs to be put in here for source compat.
+        // TODO: Test Context needs to be put in here for source compat.
 
         /// <summary>
         /// Gets the message to include in the test result if the test fails due to not throwing an exception

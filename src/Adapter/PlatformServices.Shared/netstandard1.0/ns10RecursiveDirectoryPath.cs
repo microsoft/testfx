@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// For each directory we need to have two info 1) path 2) includeSubDirectories
     /// </summary>
     [Serializable]
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1603:DocumentationMustContainValidXml", Justification = "Reviewed. Suppression is OK here.")]
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1603:DocumentationMustContainValidXml", Justification = "Reviewed. Suppression is ok here.")]
 #pragma warning disable SA1649 // File name must match first type name
     public class RecursiveDirectoryPath : MarshalByRefObject
     {

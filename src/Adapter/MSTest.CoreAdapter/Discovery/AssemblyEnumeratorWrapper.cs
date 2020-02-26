@@ -28,9 +28,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <summary>
         /// Gets test elements from an assembly.
         /// </summary>
-        /// <param name="assemblyFileName"> The assembly file name.  </param>
+        /// <param name="assemblyFileName"> The assembly file name. </param>
         /// <param name="runSettings"> The run Settings. </param>
-        /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller.  </param>
+        /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
         /// <returns> A collection of test elements. </returns>
         [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Catching a generic exception since it is a requirement to not abort discovery in case of any errors.")]
         [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "3#", Justification = "This is only for internal use.")]
@@ -66,7 +66,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     return null;
                 }
 
-                // Load the assemly in isolation if required.
+                // Load the assembly in isolation if required.
                 return this.GetTestsInIsolation(fullFilePath, runSettings, out warnings);
             }
             catch (FileNotFoundException ex)

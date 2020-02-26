@@ -51,7 +51,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 return false;
             }
 
-            // Todo: Decide wheter parameter count matters.
+            // Todo: Decide whether parameter count matters.
             // The isGenericMethod check below id to verify that there are no closed generic methods slipping through.
             // Closed generic methods being GenericMethod<int> and open being GenericMethod<T>.
             var isValidTestMethod = testMethodInfo.IsPublic && !testMethodInfo.IsAbstract && !testMethodInfo.IsStatic

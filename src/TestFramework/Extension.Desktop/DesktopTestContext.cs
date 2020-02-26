@@ -24,7 +24,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public abstract IDictionary Properties { get; }
 
         /// <summary>
-        /// Gets or sets the cancellation token source. This token source is cancelled when test timesout. Also when explicitly cancelled the test will be aborted
+        /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted
         /// </summary>
         public virtual CancellationTokenSource CancellationTokenSource { get; protected set; }
 

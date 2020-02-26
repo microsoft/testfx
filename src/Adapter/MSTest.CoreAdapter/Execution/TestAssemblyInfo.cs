@@ -129,7 +129,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             // If assembly initialization is not done, then do it.
             if (!this.IsAssemblyInitializeExecuted)
             {
-                // Aquiring a lock is usually a costly operation which does not need to be
+                // Acquiring a lock is usually a costly operation which does not need to be
                 // performed every time if the assembly init is already executed.
                 lock (this.assemblyInfoExecuteSyncObject)
                 {
@@ -152,7 +152,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
 
-            // If assemblyInitialization was successful, then dont do anything
+            // If assemblyInitialization was successful, then don't do anything
             if (this.AssemblyInitializationException == null)
             {
                 return;

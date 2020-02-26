@@ -36,7 +36,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// the already existing object of the private class
         /// </summary>
         /// <param name="obj"> object that serves as starting point to reach the private members</param>
-        /// <param name="memberToAccess">the derefrencing string using . that points to the object to be retrived as in m_X.m_Y.m_Z</param>
+        /// <param name="memberToAccess">the de-referencing string using . that points to the object to be retrieved as in m_X.m_Y.m_Z</param>
         [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an object, so 'obj' seems reasonable")]
         public PrivateObject(object obj, string memberToAccess)
         {
@@ -68,7 +68,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="assemblyName">Name of the assembly</param>
         /// <param name="typeName">fully qualified name</param>
-        /// <param name="args">Argmenets to pass to the constructor</param>
+        /// <param name="args">Arguments to pass to the constructor</param>
         public PrivateObject(string assemblyName, string typeName, params object[] args)
             : this(assemblyName, typeName, null, args)
         {
@@ -81,7 +81,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="assemblyName">Name of the assembly</param>
         /// <param name="typeName">fully qualified name</param>
         /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get</param>
-        /// <param name="args">Argmenets to pass to the constructor</param>
+        /// <param name="args">Arguments to pass to the constructor</param>
         public PrivateObject(string assemblyName, string typeName, Type[] parameterTypes, object[] args)
             : this(Type.GetType(string.Format(CultureInfo.InvariantCulture, "{0}, {1}", typeName, assemblyName), false), parameterTypes, args)
         {
@@ -94,7 +94,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// specified type.
         /// </summary>
         /// <param name="type">type of the object to create</param>
-        /// <param name="args">Argmenets to pass to the constructor</param>
+        /// <param name="args">Arguments to pass to the constructor</param>
         public PrivateObject(Type type, params object[] args)
             : this(type, null, args)
         {
@@ -107,7 +107,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="type">type of the object to create</param>
         /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get</param>
-        /// <param name="args">Argmenets to pass to the constructor</param>
+        /// <param name="args">Arguments to pass to the constructor</param>
         public PrivateObject(Type type, Type[] parameterTypes, object[] args)
         {
             Helper.CheckParameterNotNull(type, "type", string.Empty);
@@ -161,7 +161,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="obj">object to wrap</param>
         /// <param name="type">PrivateType object</param>
-        [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an an object, so 'obj' seems reasonable")]
+        [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an object, so 'obj' seems reasonable")]
         public PrivateObject(object obj, PrivateType type)
         {
             Helper.CheckParameterNotNull(type, "type", string.Empty);
@@ -382,7 +382,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 // Fix up the parameter types
                 MethodInfo member = this.originalType.GetMethod(name, bindingFlags, null, parameterTypes, null);
 
-                // If the method was not found and type arguments were provided for generic paramaters,
+                // If the method was not found and type arguments were provided for generic parameters,
                 // attempt to look up a generic method.
                 if ((member == null) && (typeArguments != null))
                 {
@@ -430,11 +430,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Gets the array element using array of subsrcipts for each dimension
+        /// Gets the array element using array of subscripts for each dimension
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="indices">the indices of array</param>
-        /// <returns>An arrya of elements.</returns>
+        /// <returns>An array of elements.</returns>
         public object GetArrayElement(string name, params int[] indices)
         {
             Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -442,7 +442,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Sets the array element using array of subsrcipts for each dimension
+        /// Sets the array element using array of subscripts for each dimension
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="value">Value to set</param>
@@ -454,12 +454,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Gets the array element using array of subsrcipts for each dimension
+        /// Gets the array element using array of subscripts for each dimension
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
         /// <param name="indices">the indices of array</param>
-        /// <returns>An arrya of elements.</returns>
+        /// <returns>An array of elements.</returns>
         public object GetArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
         {
             Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -468,7 +468,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Sets the array element using array of subsrcipts for each dimension
+        /// Sets the array element using array of subscripts for each dimension
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
@@ -728,7 +728,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Invokes the memeber
+        /// Invokes the member
         /// </summary>
         /// <param name="name">Name of the member</param>
         /// <param name="bindingFlags">Additional attributes</param>
@@ -796,7 +796,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
         /// <param name="bindingFlags"><see cref="BindingFlags"/> to further filter the method signatures.</param>
         /// <param name="modifiers">Modifiers for parameters.</param>
-        /// <returns>A methodinfo instance.</returns>
+        /// <returns>A method info instance.</returns>
         private MethodInfo GetGenericMethodFromCache(string methodName, Type[] parameterTypes, Type[] typeArguments, BindingFlags bindingFlags, ParameterModifier[] modifiers)
         {
             Debug.Assert(!string.IsNullOrEmpty(methodName), "Invalid method name.");

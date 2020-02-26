@@ -127,7 +127,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         }
 
         [TestMethod]
-        public void TokenCancelShouldAbortIfAlreadyCancelled()
+        public void TokenCancelShouldAbortIfAlreadycanceled()
         {
             // setup
             var cancellationTokenSource = new CancellationTokenSource();
