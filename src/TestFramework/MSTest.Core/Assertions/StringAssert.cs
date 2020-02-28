@@ -503,7 +503,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         #endregion Substrings
 
-        #region Regular Expresssions
+        #region Regular Expressions
 
         /// <summary>
         /// Tests whether the specified string matches a regular expression and
@@ -662,6 +662,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
         }
 
-        #endregion Regular Expresssions
+        #endregion Regular Expressions
     }
 }
