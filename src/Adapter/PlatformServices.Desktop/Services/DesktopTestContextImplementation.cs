@@ -14,14 +14,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.IO;
     using System.Linq;
     using System.Threading;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
     /// Internal implementation of TestContext exposed to the user.
-    /// The virtual string properties of the TestContext are retreived from the property dictionary
+    /// The virtual string properties of the TestContext are retrieved from the property dictionary
     /// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName");
     /// </summary>
     public class TestContextImplementation : UTF.TestContext, ITestContext

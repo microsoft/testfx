@@ -7,7 +7,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System.Diagnostics;
     using System.IO;
     using System.Runtime.InteropServices;
-    using Microsoft.Win32;
     using static System.String;
 
     public static class VSInstallationUtilities
