@@ -97,12 +97,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     return false;
                 }
 
-                // If assembly initialization was successful, then only call assembly cleanup.
-                if (this.AssemblyInitializationException != null)
-                {
-                    return false;
-                }
-
                 return true;
             }
         }
