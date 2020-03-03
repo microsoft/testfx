@@ -423,8 +423,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             // UpdatedResults contain parent result at first position and remaining results has parent info updated.
-            var updatedResults = new List<UTF.TestResult>();
-            updatedResults.Add(parentResult);
+            var updatedResults = new List<UTF.TestResult>
+            {
+                parentResult
+            };
 
             foreach (var result in results)
             {

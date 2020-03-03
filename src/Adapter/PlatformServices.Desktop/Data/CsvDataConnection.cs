@@ -44,8 +44,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         public override List<string> GetDataTablesAndViews()
         {
-            List<string> tableNames = new List<string>(1);
-            tableNames.Add(this.TableName);
+            List<string> tableNames = new List<string>(1)
+            {
+                this.TableName
+            };
             return tableNames;
         }
 

@@ -28,11 +28,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string path = @"C:\unitTesting";
             List<string> searchDirectories = new List<string>();
 
-            List<string> resultDirectories = new List<string>();
-            resultDirectories.Add(@"C:\unitTesting\a");
-            resultDirectories.Add(@"C:\unitTesting\a\c");
-            resultDirectories.Add(@"C:\unitTesting\a\c\d");
-            resultDirectories.Add(@"C:\unitTesting\b");
+            List<string> resultDirectories = new List<string>
+            {
+                @"C:\unitTesting\a",
+                @"C:\unitTesting\a\c",
+                @"C:\unitTesting\a\c\d",
+                @"C:\unitTesting\b"
+            };
 
             TestableAssemblyResolver assemblyResolver = new TestableAssemblyResolver(new List<string> { @"c:\dummy" })
             {
@@ -70,12 +72,16 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         {
             int count = 0;
 
-            List<RecursiveDirectoryPath> recursiveDirectoryPath = new List<RecursiveDirectoryPath>();
-            recursiveDirectoryPath.Add(new RecursiveDirectoryPath(@"C:\unitTesting", true));
-            recursiveDirectoryPath.Add(new RecursiveDirectoryPath(@"C:\FunctionalTesting", false));
+            List<RecursiveDirectoryPath> recursiveDirectoryPath = new List<RecursiveDirectoryPath>
+            {
+                new RecursiveDirectoryPath(@"C:\unitTesting", true),
+                new RecursiveDirectoryPath(@"C:\FunctionalTesting", false)
+            };
 
-            List<string> dummyDirectories = new List<string>();
-            dummyDirectories.Add(@"c:\dummy");
+            List<string> dummyDirectories = new List<string>
+            {
+                @"c:\dummy"
+            };
             TestableAssemblyResolver assemblyResolver = new TestableAssemblyResolver(dummyDirectories);
 
             // Adding search directory with recursive property true/false

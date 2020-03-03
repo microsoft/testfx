@@ -32,8 +32,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             // Figure out where (as well as the current directory) we could look for data files
             // for unit tests this means looking at the location of the test itself
-            List<string> dataFolders = new List<string>();
-            dataFolders.Add(Path.GetDirectoryName(new Uri(testMethodInfo.MethodInfo.Module.Assembly.CodeBase).LocalPath));
+            List<string> dataFolders = new List<string>
+            {
+                Path.GetDirectoryName(new Uri(testMethodInfo.MethodInfo.Module.Assembly.CodeBase).LocalPath)
+            };
 
             List<UTF.TestResult> dataRowResults = new List<UTF.TestResult>();
 

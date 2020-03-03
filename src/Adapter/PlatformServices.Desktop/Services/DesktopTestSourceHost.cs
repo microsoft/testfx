@@ -246,10 +246,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </returns>
         internal virtual List<string> GetResolutionPaths(string sourceFileName, bool isPortableMode)
         {
-            List<string> resolutionPaths = new List<string>();
+            List<string> resolutionPaths = new List<string>
+            {
 
-            // Add path of test assembly in resolution path. Mostly will be used for resolving winmd.
-            resolutionPaths.Add(Path.GetDirectoryName(sourceFileName));
+                // Add path of test assembly in resolution path. Mostly will be used for resolving winmd.
+                Path.GetDirectoryName(sourceFileName)
+            };
 
             if (!isPortableMode)
             {

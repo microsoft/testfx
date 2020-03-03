@@ -32,9 +32,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 if (typesToBeExcluded == null)
                 {
-                    typesToBeExcluded = new List<string>();
-                    typesToBeExcluded.Add(typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Namespace);
-                    typesToBeExcluded.Add(typeof(MSTestExecutor).Namespace);
+                    typesToBeExcluded = new List<string>
+                    {
+                        typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Namespace,
+                        typeof(MSTestExecutor).Namespace
+                    };
                 }
 
                 return typesToBeExcluded;

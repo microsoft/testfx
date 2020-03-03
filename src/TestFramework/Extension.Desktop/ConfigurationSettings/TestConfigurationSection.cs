@@ -15,8 +15,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         static TestConfigurationSection()
         {
-            properties = new ConfigurationPropertyCollection();
-            properties.Add(DataSourcesValue);
+            properties = new ConfigurationPropertyCollection
+            {
+                DataSourcesValue
+            };
         }
 
         /// <summary>

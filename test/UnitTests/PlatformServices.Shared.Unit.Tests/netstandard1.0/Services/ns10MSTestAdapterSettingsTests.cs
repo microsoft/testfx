@@ -176,9 +176,11 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         {
             string baseDirectory = @"C:\unitTesting";
 
-            List<RecursiveDirectoryPath> expectedResult = new List<RecursiveDirectoryPath>();
-            expectedResult.Add(new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true));
-            expectedResult.Add(new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false));
+            List<RecursiveDirectoryPath> expectedResult = new List<RecursiveDirectoryPath>
+            {
+                new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true),
+                new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false)
+            };
 
             var adapterSettings = new TestableMSTestAdapterSettings(expectedResult)
             {

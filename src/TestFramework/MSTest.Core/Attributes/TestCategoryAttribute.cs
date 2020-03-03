@@ -24,8 +24,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </param>
         public TestCategoryAttribute(string testCategory)
         {
-            List<string> categories = new List<string>(1);
-            categories.Add(testCategory);
+            List<string> categories = new List<string>(1)
+            {
+                testCategory
+            };
             this.testCategories = categories;
         }
 

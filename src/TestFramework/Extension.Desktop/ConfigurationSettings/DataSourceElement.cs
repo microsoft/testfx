@@ -19,11 +19,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         static DataSourceElement()
         {
-            properties = new ConfigurationPropertyCollection();
-            properties.Add(NameValue);
-            properties.Add(ConnectionStringValue);
-            properties.Add(DataAccessMethodValue);
-            properties.Add(DataTableNameValue);
+            properties = new ConfigurationPropertyCollection
+            {
+                NameValue,
+                ConnectionStringValue,
+                DataAccessMethodValue,
+                DataTableNameValue
+            };
         }
 
         /// <summary>

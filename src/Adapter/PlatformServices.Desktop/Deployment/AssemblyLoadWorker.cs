@@ -58,9 +58,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             Debug.Assert(assembly != null, "assembly");
 
             List<string> result = new List<string>();
-            List<string> visitedAssemblies = new List<string>();
-
-            visitedAssemblies.Add(assembly.FullName);
+            List<string> visitedAssemblies = new List<string>
+            {
+                assembly.FullName
+            };
 
             this.ProcessChildren(assembly, result, visitedAssemblies, warnings);
 

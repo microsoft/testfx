@@ -180,8 +180,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     Debug.Assert(Path.IsPathRooted(deploymentItemFile), "File " + deploymentItemFile + " is not rooted");
 
                     // List of files to deploy, by default, just itemFile.
-                    var filesToDeploy = new List<string>(1);
-                    filesToDeploy.Add(deploymentItemFile);
+                    var filesToDeploy = new List<string>(1)
+                    {
+                        deploymentItemFile
+                    };
 
                     // Find dependencies of test deployment items and deploy them at the same time as master file.
                     if (deploymentItem.OriginType == DeploymentItemOriginType.PerTestDeployment &&
