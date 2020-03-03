@@ -29,8 +29,10 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestInitialize]
         public void TestInit()
         {
-            this.fileUtility = new Mock<FileUtility>();
-            this.fileUtility.CallBase = true;
+            this.fileUtility = new Mock<FileUtility>
+            {
+                CallBase = true
+            };
         }
 
         [TestMethod]

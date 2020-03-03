@@ -843,8 +843,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 WriteDiagnostics("ReadTable: SQL Query: {0}", command.CommandText);
                 dataAdapter.SelectCommand = command;
 
-                DataTable table = new DataTable();
-                table.Locale = CultureInfo.InvariantCulture;
+                DataTable table = new DataTable
+                {
+                    Locale = CultureInfo.InvariantCulture
+                };
                 dataAdapter.Fill(table);
 
                 table.TableName = tableName;    // Make table name in the data set the same as original table name.

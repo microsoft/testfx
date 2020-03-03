@@ -47,8 +47,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string baseDirectory = null;
             string expectedResult = @"C:\MsTest\Adapter";
 
-            var adapterSettings = new TestableMSTestAdapterSettings();
-            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+            var adapterSettings = new TestableMSTestAdapterSettings
+            {
+                DoesDirectoryExistSetter = (str) => { return true; }
+            };
 
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -63,9 +65,11 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string baseDirectory = null;
             string expectedResult = @"C:\foo\unitTesting\MsTest\Adapter";
 
-            var adapterSettings = new TestableMSTestAdapterSettings();
-            adapterSettings.ExpandEnvironmentVariablesSetter = (str) => { return str.Replace("%temp%", "C:\\foo"); };
-            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+            var adapterSettings = new TestableMSTestAdapterSettings
+            {
+                ExpandEnvironmentVariablesSetter = (str) => { return str.Replace("%temp%", "C:\\foo"); },
+                DoesDirectoryExistSetter = (str) => { return true; }
+            };
 
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -80,8 +84,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string baseDirectory = @"C:\unitTesting";
             string expectedResult = @"C:\unitTesting\MsTest\Adapter";
 
-            var adapterSettings = new TestableMSTestAdapterSettings();
-            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+            var adapterSettings = new TestableMSTestAdapterSettings
+            {
+                DoesDirectoryExistSetter = (str) => { return true; }
+            };
 
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -96,8 +102,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string baseDirectory = @"C:\unitTesting";
             string expectedResult = @"C:\unitTesting\MsTest\Adapter";
 
-            var adapterSettings = new TestableMSTestAdapterSettings();
-            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+            var adapterSettings = new TestableMSTestAdapterSettings
+            {
+                DoesDirectoryExistSetter = (str) => { return true; }
+            };
 
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -118,8 +126,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string currentDrive = currentDirectory.Split('\\').First() + "\\";
             string expectedResult = Path.Combine(currentDrive, @"MsTest\Adapter");
 
-            var adapterSettings = new TestableMSTestAdapterSettings();
-            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+            var adapterSettings = new TestableMSTestAdapterSettings
+            {
+                DoesDirectoryExistSetter = (str) => { return true; }
+            };
 
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -135,8 +145,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
             string expectedResult = path;
 
-            var adapterSettings = new TestableMSTestAdapterSettings();
-            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+            var adapterSettings = new TestableMSTestAdapterSettings
+            {
+                DoesDirectoryExistSetter = (str) => { return true; }
+            };
 
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -168,9 +180,11 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             expectedResult.Add(new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true));
             expectedResult.Add(new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false));
 
-            var adapterSettings = new TestableMSTestAdapterSettings(expectedResult);
-            adapterSettings.ExpandEnvironmentVariablesSetter = (str) => { return str.Replace("%temp%", "C:\\foo"); };
-            adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+            var adapterSettings = new TestableMSTestAdapterSettings(expectedResult)
+            {
+                ExpandEnvironmentVariablesSetter = (str) => { return str.Replace("%temp%", "C:\\foo"); },
+                DoesDirectoryExistSetter = (str) => { return true; }
+            };
 
             IList<RecursiveDirectoryPath> result = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
             Assert.IsNotNull(result);

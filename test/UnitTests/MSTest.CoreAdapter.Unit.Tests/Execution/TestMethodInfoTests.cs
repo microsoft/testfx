@@ -859,8 +859,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
             DummyTestClassWithDisposable.DummyTestCleanupMethodBody = classInstance => { throw new NotImplementedException(); };
             var ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructors().Single();
-            var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, null, this.classAttribute, this.testAssemblyInfo);
-            testClass.TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod");
+            var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, null, this.classAttribute, this.testAssemblyInfo)
+            {
+                TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod")
+            };
             var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), testClass, this.testMethodOptions);
 
             method.Invoke(null);
@@ -1069,8 +1071,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void VerifyShouldNotThrowIfThrownExceptionCanBeAssignedToExpectedException()
         {
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(Exception));
-            expectedException.AllowDerivedTypes = true;
+            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(Exception))
+            {
+                AllowDerivedTypes = true
+            };
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = expectedException;
             var method = new TestMethodInfo(
@@ -1086,8 +1090,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void VerifyShouldThrowExceptionIfThrownExceptionCannotBeAssignedToExpectedException()
         {
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException), "Custom Exception");
-            expectedException.AllowDerivedTypes = true;
+            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException), "Custom Exception")
+            {
+                AllowDerivedTypes = true
+            };
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = expectedException;
             var method = new TestMethodInfo(
@@ -1106,8 +1112,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void VerifyShouldRethrowExceptionIfThrownExceptionIsAssertFailedException()
         {
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
-            expectedException.AllowDerivedTypes = true;
+            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException))
+            {
+                AllowDerivedTypes = true
+            };
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = expectedException;
             var method = new TestMethodInfo(
@@ -1125,8 +1133,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void VerifyShouldRethrowExceptionIfThrownExceptionIsAssertInconclusiveException()
         {
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
-            expectedException.AllowDerivedTypes = true;
+            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException))
+            {
+                AllowDerivedTypes = true
+            };
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = expectedException;
             var method = new TestMethodInfo(

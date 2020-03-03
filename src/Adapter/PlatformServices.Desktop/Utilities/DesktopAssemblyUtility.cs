@@ -189,8 +189,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: start.");
 
-            AppDomainSetup setupInfo = new AppDomainSetup();
-            setupInfo.ApplicationBase = Path.GetDirectoryName(Path.GetFullPath(assemblyPath));
+            AppDomainSetup setupInfo = new AppDomainSetup
+            {
+                ApplicationBase = Path.GetDirectoryName(Path.GetFullPath(assemblyPath))
+            };
 
             Debug.Assert(string.IsNullOrEmpty(configFile) || File.Exists(configFile), "Config file is specified but does not exist: {0}", configFile);
 

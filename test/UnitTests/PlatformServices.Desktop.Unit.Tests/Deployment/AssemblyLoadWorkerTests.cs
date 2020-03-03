@@ -28,11 +28,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
         {
             // Arrange.
             var v1AssemblyName = new AssemblyName("Microsoft.VisualStudio.QualityTools.UnitTestFramework");
-            var testableAssembly = new TestableAssembly();
-            testableAssembly.GetReferencedAssembliesSetter = () =>
-                {
-                    return new AssemblyName[] { v1AssemblyName };
-                };
+            var testableAssembly = new TestableAssembly
+            {
+                GetReferencedAssembliesSetter = () =>
+                    {
+                        return new AssemblyName[] { v1AssemblyName };
+                    }
+            };
 
             var mockAssemblyUtility = new Mock<IAssemblyUtility>();
             mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoadFrom(It.IsAny<string>())).Returns(testableAssembly);
@@ -57,16 +59,20 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
             var v1AssemblyName = new AssemblyName("Microsoft.VisualStudio.QualityTools.UnitTestFramework");
 
             var dependentAssemblyName = new AssemblyName("Common.TestFramework");
-            var dependentAssembly = new TestableAssembly(dependentAssemblyName.Name);
-            dependentAssembly.GetReferencedAssembliesSetter = () =>
+            var dependentAssembly = new TestableAssembly(dependentAssemblyName.Name)
             {
-                return new AssemblyName[] { v1AssemblyName };
+                GetReferencedAssembliesSetter = () =>
+                {
+                    return new AssemblyName[] { v1AssemblyName };
+                }
             };
 
-            var testableAssembly = new TestableAssembly();
-            testableAssembly.GetReferencedAssembliesSetter = () =>
+            var testableAssembly = new TestableAssembly
             {
-                return new AssemblyName[] { dependentAssemblyName };
+                GetReferencedAssembliesSetter = () =>
+                {
+                    return new AssemblyName[] { dependentAssemblyName };
+                }
             };
 
             var mockAssemblyUtility = new Mock<IAssemblyUtility>();

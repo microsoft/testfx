@@ -155,8 +155,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
                 dataAdapter.SelectCommand = command;
 
-                DataTable table = new DataTable();
-                table.Locale = CultureInfo.InvariantCulture;
+                DataTable table = new DataTable
+                {
+                    Locale = CultureInfo.InvariantCulture
+                };
                 dataAdapter.Fill(table);
                 return table;
             }

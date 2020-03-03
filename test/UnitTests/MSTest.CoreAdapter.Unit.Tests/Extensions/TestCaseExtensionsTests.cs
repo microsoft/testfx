@@ -20,8 +20,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         [TestMethod]
         public void ToUnitTestElementShouldReturnUnitTestElementWithFieldsSet()
         {
-            TestCase testCase = new TestCase("DummyClass.DummyMethod", new Uri("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
-            testCase.DisplayName = "DummyDisplayName";
+            TestCase testCase = new TestCase("DummyClass.DummyMethod", new Uri("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName)
+            {
+                DisplayName = "DummyDisplayName"
+            };
             var testCategories = new[] { "DummyCategory" };
 
             testCase.SetPropertyValue(Constants.AsyncTestProperty, true);

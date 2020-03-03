@@ -95,8 +95,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         {
             try
             {
-                DataSet dataSet = new DataSet();
-                dataSet.Locale = CultureInfo.CurrentCulture;
+                DataSet dataSet = new DataSet
+                {
+                    Locale = CultureInfo.CurrentCulture
+                };
                 string path = this.FixPath(this.fileName) ?? Path.GetFullPath(this.fileName);
                 if (schemaOnly)
                 {

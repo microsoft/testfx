@@ -78,9 +78,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
         internal static string GetTargetFrameworkVersionString(string testSourcePath)
         {
-            AppDomainSetup appDomainSetup = new AppDomainSetup();
-
-            appDomainSetup.LoaderOptimization = LoaderOptimization.MultiDomainHost;
+            AppDomainSetup appDomainSetup = new AppDomainSetup
+            {
+                LoaderOptimization = LoaderOptimization.MultiDomainHost
+            };
 
             AppDomainUtilities.SetConfigurationFile(appDomainSetup, new DeploymentUtility().GetConfigFile(testSourcePath));
 
