@@ -533,18 +533,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                         bool isDefaultSchema = false;
 
                         // Check the table type for validity
-                        if (metadata.TableTypeColumn != null)
+                        if (metadata.TableTypeColumn != null && row[metadata.TableTypeColumn] != DBNull.Value)
                         {
-                            if (row[metadata.TableTypeColumn] != DBNull.Value)
+                            string tableType = row[metadata.TableTypeColumn] as string;
+                            if (!IsInArray(tableType, metadata.ValidTableTypes))
                             {
-                                string tableType = row[metadata.TableTypeColumn] as string;
-                                if (!IsInArray(tableType, metadata.ValidTableTypes))
-                                {
-                                    WriteDiagnostics("Table type {0} is not acceptable", tableType);
+                                WriteDiagnostics("Table type {0} is not acceptable", tableType);
 
-                                    // Not a valid table type, get the next row
-                                    continue;
-                                }
+                                // Not a valid table type, get the next row
+                                continue;
                             }
                         }
 

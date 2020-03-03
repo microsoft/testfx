@@ -82,14 +82,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             if (currentTest != null && propertyName != null)
             {
                 TestProperty testProperty;
-                if (this.supportedProperties.TryGetValue(propertyName, out testProperty))
+                if (this.supportedProperties.TryGetValue(propertyName, out testProperty) && currentTest.Properties.Contains(testProperty))
                 {
-                    // Test case might not have defined this property. In that case GetPropertyValue()
-                    // would return default value. For filtering, if property is not defined return null.
-                    if (currentTest.Properties.Contains(testProperty))
-                    {
-                        return currentTest.GetPropertyValue(testProperty);
-                    }
+                    return currentTest.GetPropertyValue(testProperty);
                 }
             }
 

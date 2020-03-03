@@ -108,14 +108,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                             nonUniqueAttributes);
                         var baseDefinition = tempMethodInfo.GetBaseDefinition();
 
-                        if (baseDefinition != null)
-                        {
-                            if (string.Equals(
+                        if (baseDefinition != null && string.Equals(
                                 string.Concat(tempMethodInfo.DeclaringType.FullName, tempMethodInfo.Name),
                                 string.Concat(baseDefinition.DeclaringType.FullName, baseDefinition.Name)))
-                            {
-                                break;
-                            }
+                        {
+                            break;
                         }
 
                         tempMethodInfo = baseDefinition;

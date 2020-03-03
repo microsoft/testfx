@@ -96,12 +96,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         internal static bool PathNeedsFixup(string path)
         {
-            if (!string.IsNullOrEmpty(path))
+            if (!string.IsNullOrEmpty(path) && path.StartsWith(ConnectionDirectoryKey, StringComparison.Ordinal))
             {
-                if (path.StartsWith(ConnectionDirectoryKey, StringComparison.Ordinal))
-                {
-                    return true;
-                }
+                return true;
             }
 
             return false;
