@@ -71,7 +71,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             if (directories == null || directories.Count == 0)
             {
-                throw new ArgumentNullException("directories");
+                throw new ArgumentNullException(nameof(directories));
             }
 
             this.searchDirectories = new List<string>(directories);

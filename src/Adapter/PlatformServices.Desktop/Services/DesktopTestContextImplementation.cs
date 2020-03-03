@@ -230,7 +230,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             if (string.IsNullOrEmpty(fileName))
             {
-                throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, "fileName");
+                throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
             }
 
             this.testResultFiles.Add(Path.GetFullPath(fileName));

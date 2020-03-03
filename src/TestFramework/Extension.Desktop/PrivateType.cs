@@ -48,7 +48,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (type == null)
             {
-                throw new ArgumentNullException("type");
+                throw new ArgumentNullException(nameof(type));
             }
 
             this.type = type;
