@@ -15,10 +15,8 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
 #endif
 
     using System;
-    using System.IO;
     using System.Reflection;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-    using MSTestAdapter.TestUtilities;
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     [TestClass]

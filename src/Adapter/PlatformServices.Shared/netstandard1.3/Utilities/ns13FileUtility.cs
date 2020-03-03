@@ -9,7 +9,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System.Globalization;
     using System.IO;
     using System.Linq;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 

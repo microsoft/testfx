@@ -15,7 +15,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
     using Moq;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using MSTestAdapter.PlatformServices.Tests.Utilities;
 
     [TestClass]
     public class NetCoreDeploymentUtilityTests

@@ -6,8 +6,6 @@ namespace PlatformServices.Desktop.ComponentTests
     extern alias FrameworkV1;
     extern alias FrameworkV2;
 
-    using System;
-    using System.Diagnostics;
     using System.IO;
     using System.Reflection;
     using System.Xml;

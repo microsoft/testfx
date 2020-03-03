@@ -3,8 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface
 {
-    using System.IO;
-
     /// <summary>
     /// Manager to perform operations on the TraceListener object passed as parameter.
     /// These operations are implemented differently for each platform service.

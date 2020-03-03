@@ -6,8 +6,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     using System;
     using System.Diagnostics;
 
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-
     /// <summary>
     /// Internal class to indicate Test Execution failure
     /// </summary>

@@ -8,7 +8,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
     using System.Linq;
     using System.Reflection;
     using FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
     /// <summary>
     /// The universal test source validator tests.

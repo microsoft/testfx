@@ -6,8 +6,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
     using System;
     using System.Runtime.CompilerServices;
 
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-
     /// <summary>
     /// Execute test code in UI thread for Windows store apps.
     /// </summary>
