@@ -189,7 +189,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         private static bool MatchTestFilter(ITestCaseFilterExpression filterExpression, TestCase test, TestMethodFilter testMethodFilter)
         {
-            if (filterExpression != null && filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)) == false)
+            if (filterExpression != null && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
             {
                 // Skip test if not fitting filter criteria.
                 return false;
@@ -289,8 +289,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     // Parallel and not parallel sets.
                     testsets = testsToRun.GroupBy(t => t.GetPropertyValue<bool>(TestAdapter.Constants.DoNotParallelizeProperty, false));
 
-                    var parallelizableTestSet = testsets.FirstOrDefault(g => g.Key == false);
-                    var nonparallelizableTestSet = testsets.FirstOrDefault(g => g.Key == true);
+                    var parallelizableTestSet = testsets.FirstOrDefault(g => !g.Key);
+                    var nonparallelizableTestSet = testsets.FirstOrDefault(g => g.Key);
 
                     if (parallelizableTestSet != null)
                     {

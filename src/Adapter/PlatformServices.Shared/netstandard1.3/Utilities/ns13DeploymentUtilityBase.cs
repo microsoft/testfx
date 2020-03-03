@@ -392,7 +392,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
             string configFile = this.GetConfigFile(testSource);
 
-            if (string.IsNullOrEmpty(configFile) == false)
+            if (!string.IsNullOrEmpty(configFile))
             {
                 this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(configFile));
             }

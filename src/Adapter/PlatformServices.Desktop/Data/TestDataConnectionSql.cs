@@ -725,7 +725,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         public bool IsOpen()
 #pragma warning restore SA1202 // Elements must be ordered by access
         {
-            return this.connection != null ? this.connection.State == ConnectionState.Open : false;
+            return this.connection != null && this.connection.State == ConnectionState.Open;
         }
 
         /// <summary>

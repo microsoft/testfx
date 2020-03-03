@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             Debug.Assert(this.IsOpen(), "The connection must be open!");
 
             // Fill m_isMSSql.
-            this.isMSSql = this.Connection != null ? IsMSSql(this.Connection.Provider) : false;
+            this.isMSSql = this.Connection != null && IsMSSql(this.Connection.Provider);
         }
 
         public new OleDbCommandBuilder CommandBuilder

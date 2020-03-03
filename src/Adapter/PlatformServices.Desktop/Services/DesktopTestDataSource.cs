@@ -122,7 +122,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="dataAccessMethod">The data access method.</param>
         private void GetConnectionProperties(UTF.DataSourceAttribute dataSourceAttribute, out string providerNameInvariant, out string connectionString, out string tableName, out UTF.DataAccessMethod dataAccessMethod)
         {
-            if (string.IsNullOrEmpty(dataSourceAttribute.DataSourceSettingName) == false)
+            if (!string.IsNullOrEmpty(dataSourceAttribute.DataSourceSettingName))
             {
                 UTF.DataSourceElement elem = UTF.TestConfiguration.ConfigurationSection.DataSources[dataSourceAttribute.DataSourceSettingName];
                 if (elem == null)

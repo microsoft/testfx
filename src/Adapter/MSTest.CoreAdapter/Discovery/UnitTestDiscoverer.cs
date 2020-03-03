@@ -112,7 +112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                     var testCase = testElement.ToTestCase();
 
                     // Filter tests based on test case filters
-                    if (filterExpression != null && filterExpression.MatchTestCase(testCase, (p) => this.TestMethodFilter.PropertyValueProvider(testCase, p)) == false)
+                    if (filterExpression != null && !filterExpression.MatchTestCase(testCase, (p) => this.TestMethodFilter.PropertyValueProvider(testCase, p)))
                     {
                         continue;
                     }

@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             bool? utfReference = AssemblyHelper.DoesReferencesAssembly(source, assemblyName);
 
             // If no reference to UTF don't run discovery. Take conservative approach. If not able to find proceed with discovery.
-            if (utfReference.HasValue && utfReference.Value == false)
+            if (utfReference.HasValue && !utfReference.Value)
             {
                 return false;
             }

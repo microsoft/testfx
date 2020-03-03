@@ -340,7 +340,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 if (current == null)
                 {
-                    if (foundNull == false)
+                    if (!foundNull)
                     {
                         foundNull = true;
                     }
