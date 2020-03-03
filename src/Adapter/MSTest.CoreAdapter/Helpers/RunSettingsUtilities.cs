@@ -97,7 +97,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 }
             }
 
-            return default(T);
+            return default;
         }
     }
 }
