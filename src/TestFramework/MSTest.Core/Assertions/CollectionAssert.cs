@@ -350,7 +350,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                         var finalMessage = string.Format(
                             CultureInfo.CurrentCulture,
                             FrameworkMessages.AllItemsAreUniqueFailMsg,
-                            message == null ? string.Empty : message,
+                            message ?? string.Empty,
                             FrameworkMessages.Common_NullInMessages);
 
                         Assert.HandleFail("CollectionAssert.AllItemsAreUnique", finalMessage, parameters);
@@ -363,7 +363,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                         string finalMessage = string.Format(
                             CultureInfo.CurrentCulture,
                             FrameworkMessages.AllItemsAreUniqueFailMsg,
-                            message == null ? string.Empty : message,
+                            message ?? string.Empty,
                             Assert.ReplaceNulls(current));
 
                         Assert.HandleFail("CollectionAssert.AllItemsAreUnique", finalMessage, parameters);
@@ -874,8 +874,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             int i = 0;
             foreach (object element in collection)
             {
-                var elementTypeInfo = element != null ? element.GetType().GetTypeInfo() : null;
-                var expectedTypeInfo = expectedType != null ? expectedType.GetTypeInfo() : null;
+                var elementTypeInfo = element?.GetType().GetTypeInfo();
+                var expectedTypeInfo = expectedType?.GetTypeInfo();
                 if (expectedTypeInfo != null && elementTypeInfo != null && !expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
                 {
                     var finalMessage = string.Format(
