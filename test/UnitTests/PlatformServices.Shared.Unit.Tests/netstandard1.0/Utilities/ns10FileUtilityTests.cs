@@ -57,7 +57,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
             var topLevelFiles = new string[] { "tick.txt", "tock.tick.txt" };
 
             this.fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns(topLevelFiles);
-            this.fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns(new string[] { });
+            this.fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns(Array.Empty<string>());
 
             var files = this.fileUtility.Object.AddFilesFromDirectory("C:\\randomclock", false);
 
