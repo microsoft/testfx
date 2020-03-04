@@ -77,6 +77,10 @@ namespace Microsoft.MSTestV2.CLIAutomation
             // this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
             vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(this.GetTestAdapterPath(), "*TestAdapter.dll"));
             vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, this.runEventsHandler);
+            if (this.runEventsHandler.Errors.Any())
+            {
+                throw new Exception($"Run failed with {this.runEventsHandler.Errors.Count} errors:{Environment.NewLine}{string.Join(Environment.NewLine, this.runEventsHandler.Errors)}");
+            }
         }
 
         /// <summary>
@@ -177,7 +181,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
                 var testFound = this.runEventsHandler.PassedTests.Any(
                     p => test.Equals(p.TestCase?.FullyQualifiedName)
                          || test.Equals(p.DisplayName));
-                Assert.IsTrue(testFound, "Test {0} does not appear in passed tests list.", test);
+                Assert.IsTrue(testFound, $"Test {0} does not appear in passed tests list", test);
             }
         }
 
