@@ -43,7 +43,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             Debug.Assert(!string.IsNullOrEmpty(assemblyPath), "assemblyPath");
 
             warnings = new List<string>();
-            Assembly assembly = null;
+            Assembly assembly;
             try
             {
                 // First time we load in LoadFromContext to avoid issues.
@@ -231,7 +231,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 
             visitedAssemblies.Add(assemblyString);
 
-            Assembly assembly = null;
+            Assembly assembly;
             try
             {
                 string postPolicyAssembly = AppDomain.CurrentDomain.ApplyPolicy(assemblyString);

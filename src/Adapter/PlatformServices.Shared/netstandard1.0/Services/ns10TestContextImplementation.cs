@@ -327,7 +327,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>Property value</returns>
         private object GetPropertyValue(string propertyName)
         {
-            object propertyValue = null;
+            object propertyValue;
             this.properties.TryGetValue(propertyName, out propertyValue);
 
             return propertyValue;

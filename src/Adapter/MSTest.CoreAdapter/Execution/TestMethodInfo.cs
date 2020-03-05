@@ -453,10 +453,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             // Get the real exception thrown by the test method
             Exception realException = this.GetRealException(ex);
-            string exceptionMessage = null;
-            StackTraceInformation exceptionStackTraceInfo = null;
-            var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
-
+            string exceptionMessage;
+            StackTraceInformation exceptionStackTraceInfo;
+            UTF.UnitTestOutcome outcome;
             if (realException.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out exceptionStackTraceInfo))
             {
                 return new TestFailedException(outcome.ToUnitTestOutcome(), exceptionMessage, exceptionStackTraceInfo, realException);
@@ -531,7 +530,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             catch (Exception ex)
             {
-                var cleanupOutcome = UTF.UnitTestOutcome.Failed;
+                StackTraceInformation realExceptionStackTraceInfo;
+                UTF.UnitTestOutcome cleanupOutcome;
+                string exceptionMessage;
+
                 var cleanupError = new StringBuilder();
                 var cleanupStackTrace = new StringBuilder();
                 StackTraceInformation cleanupStackTraceInfo = null;
@@ -546,8 +548,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 Exception realException = ex.GetInnerExceptionOrDefault();
-                string exceptionMessage = null;
-                StackTraceInformation realExceptionStackTraceInfo = null;
 
                 // special case UnitTestAssertException to trim off part of the stack trace
                 if (!realException.TryGetUnitTestAssertException(out cleanupOutcome, out exceptionMessage, out realExceptionStackTraceInfo))
@@ -632,9 +632,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             catch (Exception ex)
             {
                 var innerException = ex.GetInnerExceptionOrDefault();
-                string exceptionMessage = null;
-                StackTraceInformation exceptionStackTraceInfo = null;
-                var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
+                string exceptionMessage;
+                StackTraceInformation exceptionStackTraceInfo;
+                UTF.UnitTestOutcome outcome;
 
                 if (innerException.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out exceptionStackTraceInfo))
                 {

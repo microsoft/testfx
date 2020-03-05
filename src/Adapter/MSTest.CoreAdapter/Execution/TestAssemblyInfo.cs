@@ -166,10 +166,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             var realException = this.AssemblyInitializationException.InnerException
                                 ?? this.AssemblyInitializationException;
-
-            var outcome = UnitTestOutcome.Failed;
-            string errorMessage = null;
-            StackTraceInformation stackTraceInfo = null;
+            UnitTestOutcome outcome;
+            string errorMessage;
+            StackTraceInformation stackTraceInfo;
             if (!realException.TryGetUnitTestAssertException(out outcome, out errorMessage, out stackTraceInfo))
             {
                 var exception = realException.GetType().ToString();

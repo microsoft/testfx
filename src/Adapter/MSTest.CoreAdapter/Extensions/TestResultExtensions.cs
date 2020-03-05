@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 
             for (int i = 0; i < testResults.Length; ++i)
             {
-                UnitTestResult unitTestResult = null;
+                UnitTestResult unitTestResult;
                 UnitTestOutcome outcome = testResults[i].Outcome.ToUnitTestOutcome();
 
                 if (testResults[i].TestFailureException != null)

@@ -224,8 +224,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     It.IsAny<bool>())).Returns(true);
 
             var validator = 1;
-            DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => { validator = validator << 2; };
-            DummyTestClassWithInitializeMethods.ClassInitializeMethodBody = () => { validator = validator >> 2; };
+            DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => { validator <<= 2; };
+            DummyTestClassWithInitializeMethods.ClassInitializeMethodBody = () => { validator >>= 2; };
 
             this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
 

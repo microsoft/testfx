@@ -16,7 +16,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <returns>The adapter's UnitTestOutcome object.</returns>
         public static UnitTestOutcome ToUnitTestOutcome(this UTF.UnitTestOutcome frameworkTestOutcome)
         {
-            UnitTestOutcome outcome = UnitTestOutcome.Passed;
+            UnitTestOutcome outcome;
 
             switch (frameworkTestOutcome)
             {

@@ -2088,8 +2088,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public static T ThrowsException<T>(Action action, string message, params object[] parameters)
             where T : Exception
         {
-            var finalMessage = string.Empty;
-
             if (action == null)
             {
                 throw new ArgumentNullException(nameof(action));
@@ -2100,6 +2098,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 throw new ArgumentNullException(nameof(message));
             }
 
+            string finalMessage;
             try
             {
                 action();
@@ -2203,8 +2202,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message, params object[] parameters)
             where T : Exception
         {
-            var finalMessage = string.Empty;
-
             if (action == null)
             {
                 throw new ArgumentNullException(nameof(action));
@@ -2215,6 +2212,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 throw new ArgumentNullException(nameof(message));
             }
 
+            string finalMessage;
             try
             {
                 await action();

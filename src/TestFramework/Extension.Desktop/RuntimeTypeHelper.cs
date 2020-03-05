@@ -420,7 +420,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
             else
             {
-                return (p1Less) ? 1 : 2;
+                return p1Less ? 1 : 2;
             }
         }
 

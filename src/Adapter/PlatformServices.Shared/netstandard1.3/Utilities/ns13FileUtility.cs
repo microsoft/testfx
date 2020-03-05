@@ -151,8 +151,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 return null;
             }
 
-            string pdbDestination = null;
-            string relativePdbDestination = null;
+            string pdbDestination;
+            string relativePdbDestination;
 
             try
             {

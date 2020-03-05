@@ -837,7 +837,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Debug.Assert(typeArguments != null, "typeArguments should not be null.");
 
             LinkedList<MethodInfo> methodCandidates = new LinkedList<MethodInfo>();
-            LinkedList<MethodInfo> methods = null;
+            LinkedList<MethodInfo> methods;
 
             if (!this.GenericMethodCache.TryGetValue(methodName, out methods))
             {
@@ -849,10 +849,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             foreach (MethodInfo candidate in methods)
             {
                 bool paramMatch = true;
-                ParameterInfo[] candidateParams = null;
+                ParameterInfo[] candidateParams;
                 Type[] genericArgs = candidate.GetGenericArguments();
-                Type sourceParameterType = null;
-
                 if (genericArgs.Length != typeArguments.Length)
                 {
                     continue;
@@ -875,8 +873,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
                     foreach (ParameterInfo candidateParam in candidateParams)
                     {
-                        sourceParameterType = parameterTypes[i++];
-
+                        Type sourceParameterType = parameterTypes[i++];
                         if (candidateParam.ParameterType.ContainsGenericParameters)
                         {
                             // Since we have a generic parameter here, just make sure the IsArray matches.
