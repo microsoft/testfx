@@ -37,6 +37,7 @@
   <ItemGroup>
     <Compile Include="Attributes\DoNotParallelizeAttribute.cs" />
     <Compile Include="Attributes\DynamicDataAttribute.cs" />
+    <Compile Include="Attributes\EnumDataSourceAttribute.cs" />
     <Compile Include="Attributes\ParallelizeAttribute.cs" />
     <Compile Include="Attributes\ExecutionScope.cs" />
     <Compile Include="Interfaces\ITestDataSource.cs" />
