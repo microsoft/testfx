@@ -121,7 +121,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             get
             {
-                return this.properties as IDictionary;
+                lock (this.properties)
+                {
+                    return this.properties as IDictionary;
+                }
             }
         }
 
@@ -169,7 +172,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 return false;
             }
 
-            return this.properties.TryGetValue(propertyName, out propertyValue);
+            lock (this.properties)
+            {
+                return this.properties.TryGetValue(propertyName, out propertyValue);
+            }
         }
 
         /// <summary>
@@ -184,7 +190,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 this.properties = new Dictionary<string, object>();
             }
 
-            this.properties.Add(propertyName, propertyValue);
+            lock (this.properties)
+            {
+                this.properties.Add(propertyName, propertyValue);
+            }
         }
 
         /// <summary>
@@ -202,7 +211,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             try
             {
                 var msg = message?.Replace("\0", "\\0");
-                this.stringWriter.Write(msg);
+                lock (this.stringWriter)
+                {
+                    this.stringWriter.Write(msg);
+                }
             }
             catch (ObjectDisposedException)
             {
@@ -226,7 +238,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             try
             {
                 string message = string.Format(CultureInfo.CurrentCulture, format?.Replace("\0", "\\0"), args);
-                this.stringWriter.Write(message);
+
+                lock (this.stringWriter)
+                {
+                    this.stringWriter.Write(message);
+                }
             }
             catch (ObjectDisposedException)
             {
@@ -249,7 +265,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             try
             {
                 var msg = message?.Replace("\0", "\\0");
-                this.stringWriter.WriteLine(msg);
+                lock (this.stringWriter)
+                {
+                    this.stringWriter.WriteLine(msg);
+                }
             }
             catch (ObjectDisposedException)
             {
@@ -273,7 +292,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             try
             {
                 string message = string.Format(CultureInfo.CurrentCulture, format?.Replace("\0", "\\0"), args);
-                this.stringWriter.WriteLine(message);
+                lock (this.stringWriter)
+                {
+                    this.stringWriter.WriteLine(message);
+                }
             }
             catch (ObjectDisposedException)
             {
@@ -296,7 +318,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>The test context messages added so far.</returns>
         public string GetDiagnosticMessages()
         {
-            return this.stringWriter.ToString();
+            lock (this.stringWriter)
+            {
+                return this.stringWriter.ToString();
+            }
         }
 
         /// <summary>
@@ -304,8 +329,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         public void ClearDiagnosticMessages()
         {
-            var sb = this.stringWriter.GetStringBuilder();
-            sb.Remove(0, sb.Length);
+            lock (this.stringWriter)
+            {
+                var sb = this.stringWriter.GetStringBuilder();
+                sb.Remove(0, sb.Length);
+            }
         }
 
         public void SetDataRow(object dataRow)
@@ -328,7 +356,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private object GetPropertyValue(string propertyName)
         {
             object propertyValue = null;
-            this.properties.TryGetValue(propertyName, out propertyValue);
+            lock (this.properties)
+            {
+                this.properties.TryGetValue(propertyName, out propertyValue);
+            }
 
             return propertyValue;
         }
@@ -338,8 +369,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         private void InitializeProperties()
         {
-            this.properties[FullyQualifiedTestClassNameLabel] = this.testMethod.FullClassName;
-            this.properties[TestNameLabel] = this.testMethod.Name;
+            lock (this.properties)
+            {
+                this.properties[FullyQualifiedTestClassNameLabel] = this.testMethod.FullClassName;
+                this.properties[TestNameLabel] = this.testMethod.Name;
+            }
         }
     }
 
