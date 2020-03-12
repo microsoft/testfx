@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
                 catch (ObjectDisposedException)
                 {
-                    return default;
+                    return default(string);
                 }
             }
         }
