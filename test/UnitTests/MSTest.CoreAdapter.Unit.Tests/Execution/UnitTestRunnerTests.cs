@@ -412,7 +412,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        private class DummyTestClassAttribute : UTF.TestClassAttribute
+        private sealed class DummyTestClassAttribute : UTF.TestClassAttribute
         {
         }
 

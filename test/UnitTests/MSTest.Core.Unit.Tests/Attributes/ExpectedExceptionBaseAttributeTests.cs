@@ -76,7 +76,7 @@ namespace UnitTestFramework.Tests
     /// <summary>
     /// Dummy class derived from Exception
     /// </summary>
-    public class TestableExpectedExceptionBaseAttributeClass : TestFrameworkV2.ExpectedExceptionBaseAttribute
+    public sealed class TestableExpectedExceptionBaseAttributeClass : TestFrameworkV2.ExpectedExceptionBaseAttribute
     {
         public TestableExpectedExceptionBaseAttributeClass()
             : base()

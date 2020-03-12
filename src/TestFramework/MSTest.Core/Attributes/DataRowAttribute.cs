@@ -13,7 +13,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// Attribute to define in-line data for a test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class DataRowAttribute : Attribute, ITestDataSource
+    public sealed class DataRowAttribute : Attribute, ITestDataSource
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.

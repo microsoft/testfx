@@ -107,7 +107,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// Attribute for data driven test where data can be specified in-line.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class DataTestMethodAttribute : TestMethodAttribute
+    public sealed class DataTestMethodAttribute : TestMethodAttribute
     {
     }
 

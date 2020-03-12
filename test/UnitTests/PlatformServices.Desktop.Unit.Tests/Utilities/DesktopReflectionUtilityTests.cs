@@ -103,7 +103,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         }
 
         [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = false)]
-        public class DummySingleAAttribute : Attribute
+        public sealed class DummySingleAAttribute : Attribute
         {
             public DummySingleAAttribute(string foo)
             {

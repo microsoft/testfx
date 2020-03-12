@@ -1693,11 +1693,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
-        private class DerivedTestMethodAttribute : UTF.TestMethodAttribute
+        private sealed class DerivedTestMethodAttribute : UTF.TestMethodAttribute
         {
         }
 
-        private class DummyTestClassAttribute : UTF.TestClassAttribute
+        private sealed class DummyTestClassAttribute : UTF.TestClassAttribute
         {
         }
 

@@ -32,7 +32,7 @@
         }
     }
 
-    public class IterativeTestMethodAttribute : TestMethodAttribute
+    public sealed class IterativeTestMethodAttribute : TestMethodAttribute
     {
         private readonly int stabilityThreshold;
 
@@ -58,7 +58,7 @@
         }
     }
 
-    public class IterativeTestClassAttribute : TestClassAttribute
+    public sealed class IterativeTestClassAttribute : TestClassAttribute
     {
         private readonly int stabilityThreshold;
 

@@ -1605,7 +1605,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         /// <summary>
         ///  Custom Expected exception attribute which overrides the Verify method.
         /// </summary>
-        public class DerivedCustomExpectedExceptionAttribute : CustomExpectedExceptionAttribute
+        public sealed class DerivedCustomExpectedExceptionAttribute : CustomExpectedExceptionAttribute
         {
             public DerivedCustomExpectedExceptionAttribute(Type expectionType, string noExceptionMessage)
                 : base(expectionType, noExceptionMessage)

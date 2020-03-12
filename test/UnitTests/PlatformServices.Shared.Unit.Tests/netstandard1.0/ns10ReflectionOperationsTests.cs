@@ -233,7 +233,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         }
 
         [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true)]
-        public class DummyAAttribute : Attribute
+        public sealed class DummyAAttribute : Attribute
         {
             public DummyAAttribute(string foo)
             {
@@ -244,7 +244,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         }
 
         [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = false)]
-        public class DummySingleAAttribute : Attribute
+        public sealed class DummySingleAAttribute : Attribute
         {
             public DummySingleAAttribute(string foo)
             {

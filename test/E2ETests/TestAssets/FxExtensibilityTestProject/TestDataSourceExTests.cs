@@ -21,7 +21,7 @@ namespace FxExtensibilityTestProject
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class CustomTestDataSourceAttribute : Attribute, ITestDataSource
+    public sealed class CustomTestDataSourceAttribute : Attribute, ITestDataSource
     {
         public IEnumerable<object[]> GetData(MethodInfo methodInfo)
         {

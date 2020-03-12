@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// Specification to disable parallelization.
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
-    public class DoNotParallelizeAttribute : Attribute
+    public sealed class DoNotParallelizeAttribute : Attribute
     {
     }
 }
