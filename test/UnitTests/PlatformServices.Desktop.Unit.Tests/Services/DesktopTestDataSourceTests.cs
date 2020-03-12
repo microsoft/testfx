@@ -89,15 +89,15 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             [TestFrameworkV2.TestMethod]
             public void PassingTest()
             {
-                Assert.AreEqual(this.testContextInstance.DataRow["adapter"].ToString(), "v1");
-                Assert.AreEqual(this.testContextInstance.DataRow["targetPlatform"].ToString(), "x86");
+                Assert.AreEqual("v1", this.testContextInstance.DataRow["adapter"].ToString());
+                Assert.AreEqual("x86", this.testContextInstance.DataRow["targetPlatform"].ToString());
                 this.TestContext.AddResultFile("C:\\temp.txt");
             }
 
             [TestFrameworkV2.TestMethod]
             public void FailingTest()
             {
-                Assert.AreEqual(this.testContextInstance.DataRow["configuration"].ToString(), "Release");
+                Assert.AreEqual("Release", this.testContextInstance.DataRow["configuration"].ToString());
             }
         }
 
