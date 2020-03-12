@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     /// <summary>
     /// Outcome of a test
     /// </summary>
-    public enum UnitTestOutcome : int
+    public enum UnitTestOutcome
     {
         /// <summary>
         /// There was a system error while we were trying to execute a test.

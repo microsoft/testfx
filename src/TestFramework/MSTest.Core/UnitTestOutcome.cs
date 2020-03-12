@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// <summary>
     /// unit test outcomes
     /// </summary>
-    public enum UnitTestOutcome : int
+    public enum UnitTestOutcome
     {
         /// <summary>
         /// Test was executed, but there were issues.
