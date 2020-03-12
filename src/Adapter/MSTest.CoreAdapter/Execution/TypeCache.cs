@@ -689,9 +689,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 // Only find methods that match the given declaring name.
                 testMethodInfo =
-                    methodsInClass.Where(method => method.Name.Equals(testMethod.Name)
+                    methodsInClass.FirstOrDefault(method => method.Name.Equals(testMethod.Name)
                                                 && method.DeclaringType.FullName.Equals(testMethod.DeclaringClassFullName)
-                                                && method.HasCorrectTestMethodSignature(true)).FirstOrDefault();
+                                                && method.HasCorrectTestMethodSignature(true));
             }
             else
             {
