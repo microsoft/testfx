@@ -407,7 +407,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>Results files generated in run.</returns>
         public IList<string> GetResultFiles()
         {
-            if (this.testResultFiles.Count() == 0)
+            if (this.testResultFiles.Any())
             {
                 return null;
             }
