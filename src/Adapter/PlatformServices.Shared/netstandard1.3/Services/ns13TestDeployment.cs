@@ -15,7 +15,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+#if !NETSTANDARD1_5
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+#endif
 
     /// <summary>
     /// The test deployment.
