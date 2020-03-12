@@ -243,7 +243,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
                 .Returns(mockAssembly.Object);
 
-            Assert.AreEqual(0, this.assemblyEnumerator.EnumerateAssembly("DummyAssembly", out this.warnings).Count());
+            Assert.AreEqual(0, this.assemblyEnumerator.EnumerateAssembly("DummyAssembly", out this.warnings).Count);
         }
 
         [TestMethodV1]
@@ -260,7 +260,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out this.warnings))
                 .Returns((ICollection<UnitTestElement>)null);
 
-            Assert.AreEqual(0, this.assemblyEnumerator.EnumerateAssembly("DummyAssembly", out this.warnings).Count());
+            Assert.AreEqual(0, this.assemblyEnumerator.EnumerateAssembly("DummyAssembly", out this.warnings).Count);
         }
 
         [TestMethodV1]
