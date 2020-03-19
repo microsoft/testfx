@@ -162,6 +162,76 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         }
 
         [TestMethod]
+        public void WriteShouldWriteToStringWriter()
+        {
+            var stringWriter = new StringWriter();
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
+            this.testContextImplementation.Write("{0} Testing write", 1);
+            StringAssert.Contains(stringWriter.ToString(), "1 Testing write");
+        }
+
+        [TestMethod]
+        public void WriteShouldWriteToStringWriterForNullCharacters()
+        {
+            var stringWriter = new StringWriter();
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
+            this.testContextImplementation.Write("{0} Testing \0 write \0", 1);
+            StringAssert.Contains(stringWriter.ToString(), "1 Testing \\0 write \\0");
+        }
+
+        [TestMethod]
+        public void WriteShouldNotThrowIfStringWriterIsDisposed()
+        {
+            var stringWriter = new StringWriter();
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
+            stringWriter.Dispose();
+            this.testContextImplementation.Write("{0} Testing write", 1);
+
+            // Calling it twice to cover the direct return when we know the object has been disposed.
+            this.testContextImplementation.Write("{0} Testing write", 1);
+        }
+
+        [TestMethod]
+        public void WriteWithMessageShouldWriteToStringWriter()
+        {
+            var stringWriter = new StringWriter();
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
+            this.testContextImplementation.Write("1 Testing write");
+            StringAssert.Contains(stringWriter.ToString(), "1 Testing write");
+        }
+
+        [TestMethod]
+        public void WriteWithMessageShouldWriteToStringWriterForNullCharacters()
+        {
+            var stringWriter = new StringWriter();
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
+            this.testContextImplementation.Write("1 Testing \0 write \0");
+            StringAssert.Contains(stringWriter.ToString(), "1 Testing \\0 write \\0");
+        }
+
+        [TestMethod]
+        public void WriteWithMessageShouldNotThrowIfStringWriterIsDisposed()
+        {
+            var stringWriter = new StringWriter();
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
+            stringWriter.Dispose();
+            this.testContextImplementation.Write("1 Testing write");
+
+            // Calling it twice to cover the direct return when we know the object has been disposed.
+            this.testContextImplementation.Write("1 Testing write");
+        }
+
+        [TestMethod]
+        public void WriteWithMessageShouldWriteToStringWriterForReturnCharacters()
+        {
+            var stringWriter = new StringWriter();
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
+            this.testContextImplementation.Write("2 Testing write \n\r");
+            this.testContextImplementation.Write("3 Testing write\n\r");
+            StringAssert.Equals(stringWriter.ToString(), "2 Testing write 3 Testing write");
+        }
+
+        [TestMethod]
         public void WriteLineShouldWriteToStringWriter()
         {
             var stringWriter = new StringWriter();

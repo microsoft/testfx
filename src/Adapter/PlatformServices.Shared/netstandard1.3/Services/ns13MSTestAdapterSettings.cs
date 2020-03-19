@@ -209,8 +209,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 try
                 {
                     // Get the full path.
-                    // This will cleanup the path converting any "..\" to the appropariate value
-                    // and convert any alternative directory seperators to "\"
+                    // This will cleanup the path converting any "..\" to the appropriate value
+                    // and convert any alternative directory separators to "\"
                     path = Path.GetFullPath(path);
                 }
                 catch (Exception e)
@@ -235,7 +235,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     return path;
                 }
 
-                // generate warning that path doesnot exist.
+                // generate warning that path does not exist.
                 EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, string.Format("The Directory: {0}, does not exist.", path));
             }
 

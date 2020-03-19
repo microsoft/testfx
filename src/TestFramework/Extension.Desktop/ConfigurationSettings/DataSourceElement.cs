@@ -4,7 +4,6 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System.Configuration;
-    using System.Diagnostics.CodeAnalysis;
 
     /// <summary>
     /// The Data Source element.

@@ -9,7 +9,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System.Globalization;
     using System.IO;
     using System.Linq;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -128,7 +127,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// For given file checks if it is a binary, then finds and deploys PDB for line number info in call stack.
         /// </summary>
         /// <returns>
-        /// Returns deployed destination pdb file path if everything is Ok, otherwise null.
+        /// Returns deployed destination pdb file path if everything is ok, otherwise null.
         /// </returns>
         /// <param name="destinationFile">The file we need to find PDBs for (we care only about binaries).</param>
         /// <param name="relativeDestination">Destination relative to the root of deployment dir.</param>
@@ -184,7 +183,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             {
                 EqtTrace.WarningIf(
                         EqtTrace.IsWarningEnabled,
-                        "Conflict during copiyng PDBs for line number info: '{0}' and '{1}' are from different origins although they might be the same.",
+                        "Conflict during copying PDBs for line number info: '{0}' and '{1}' are from different origins although they might be the same.",
                         pdbSource,
                         destToSource[relativePdbDestination]);
             }

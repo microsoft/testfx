@@ -71,7 +71,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             {
                 // We only want to load the source assembly in reflection only context in UWP scenarios where it is always an exe.
                 // For normal test assemblies continue loading it in the default context since:
-                // 1. There isnt much benefit in terms of Performance loading the assembly in a Reflection Only context during discovery.
+                // 1. There isn't much benefit in terms of Performance loading the assembly in a Reflection Only context during discovery.
                 // 2. Loading it in Reflection only context entails a bunch of custom logic to identify custom attributes which is over-kill for normal desktop users.
                 assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(
                     assemblyFileName,
@@ -112,7 +112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 }
                 catch (Exception exception)
                 {
-                    // If we fail to discover type from a class, then dont abort the discovery
+                    // If we fail to discover type from a class, then don't abort the discovery
                     // Move to the next type.
                     string message = string.Format(
                         CultureInfo.CurrentCulture,
@@ -123,7 +123,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     warningMessages.Add(message);
 
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                        "AssemblyEnumerator: Exception occured while enumerating type {0}. {1}",
+                        "AssemblyEnumerator: Exception occurred while enumerating type {0}. {1}",
                         typeFullName,
                         exception);
                 }
@@ -179,10 +179,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         }
 
         /// <summary>
-        /// Formats load exception as multiline string, each line contains load error message.
+        /// Formats load exception as multi-line string, each line contains load error message.
         /// </summary>
         /// <param name="ex">The exception.</param>
-        /// <returns>Returns loader exceptions as a multiline string.</returns>
+        /// <returns>Returns loader exceptions as a multi-line string.</returns>
         internal string GetLoadExceptionDetails(ReflectionTypeLoadException ex)
         {
             Debug.Assert(ex != null, "exception should not be null.");

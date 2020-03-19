@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <summary>
         /// Stores whether the test run is canceled or not.
         /// </summary>
-        private bool cancelled;
+        private bool canceled;
 
         /// <summary>
         /// Callback to be invoked when canceled.
@@ -29,13 +29,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                return this.cancelled;
+                return this.canceled;
             }
 
             private set
             {
-                this.cancelled = value;
-                if (this.cancelled)
+                this.canceled = value;
+                if (this.canceled)
                 {
                     this.registeredCallback?.Invoke();
                 }

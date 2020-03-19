@@ -30,7 +30,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services
             StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
             var traceListener = new TraceListenerWrapper(writer);
             var returnedWriter = traceListener.GetWriter();
-            Assert.AreEqual(returnedWriter.ToString(), "DummyTrace");
+            Assert.AreEqual("DummyTrace", returnedWriter.ToString());
         }
 
         [TestMethod]
@@ -40,7 +40,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services
             var traceListener = new TraceListenerWrapper(writer);
             traceListener.Dispose();
 
-            // Tring to write after disposing textWriter should throw exception
+            // Trying to write after disposing textWriter should throw exception
             Action shouldThrowException = () => writer.WriteLine("Try to write something");
             ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
         }

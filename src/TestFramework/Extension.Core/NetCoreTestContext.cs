@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         #region Test run deployment directories
 
         /// <summary>
-        /// Gets or sets the cancellation token source. This token source is cancelled when test timesout. Also when explicitly cancelled the test will be aborted
+        /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted
         /// </summary>
         public virtual CancellationTokenSource CancellationTokenSource { get; protected set; }
 
@@ -104,6 +104,19 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The file Name.
         /// </param>
         public abstract void AddResultFile(string fileName);
+
+        /// <summary>
+        /// Used to write trace messages while the test is running
+        /// </summary>
+        /// <param name="message">formatted message string</param>
+        public abstract void Write(string message);
+
+        /// <summary>
+        /// Used to write trace messages while the test is running
+        /// </summary>
+        /// <param name="format">format string</param>
+        /// <param name="args">the arguments</param>
+        public abstract void Write(string format, params object[] args);
 
         /// <summary>
         /// Used to write trace messages while the test is running

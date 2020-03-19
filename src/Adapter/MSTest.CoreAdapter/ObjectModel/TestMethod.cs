@@ -57,7 +57,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <summary>
         /// Gets or sets the declaring class full name. This will be used while getting navigation data.
         /// This will be null if AssemblyName is same as DeclaringAssemblyName.
-        /// Reason to set to null in the above case is to minimise the transfer of data across appdomains and not have a perf hit.
+        /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
         /// </summary>
         public string DeclaringAssemblyName
         {

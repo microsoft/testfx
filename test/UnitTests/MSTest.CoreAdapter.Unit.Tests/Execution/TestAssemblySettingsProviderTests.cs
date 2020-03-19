@@ -151,7 +151,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var settings = this.testAssemblySettingProvider.GetSettings("Foo");
 
             // Assert.
-            Assert.AreEqual(true, settings.CanParallelizeAssembly);
+            Assert.IsTrue(settings.CanParallelizeAssembly);
         }
 
         [TestMethod]
@@ -171,7 +171,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var settings = this.testAssemblySettingProvider.GetSettings("Foo");
 
             // Assert.
-            Assert.AreEqual(false, settings.CanParallelizeAssembly);
+            Assert.IsFalse(settings.CanParallelizeAssembly);
         }
     }
 }

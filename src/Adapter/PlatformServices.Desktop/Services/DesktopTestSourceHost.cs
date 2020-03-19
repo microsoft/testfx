@@ -117,7 +117,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 string domainName = string.Format("TestSourceHost: Enumerating source ({0})", this.sourceFileName);
                 this.domain = this.appDomain.CreateDomain(domainName, null, appDomainSetup);
 
-                // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recurive assembly resolution
+                // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recursive assembly resolution
                 // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
                 EqtTrace.SetupRemoteEqtTraceListeners(this.domain);
 
@@ -154,7 +154,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
         public object CreateInstanceForType(Type type, object[] args)
         {
-            // Honour DisableAppDomain setting if it is present in runsettings
+            // Honor DisableAppDomain setting if it is present in runsettings
             if (this.isAppDomainCreationDisabled)
             {
                 return Activator.CreateInstance(type, args);
@@ -194,7 +194,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     if (this.frameworkHandle != null)
                     {
                         // Let the test platform know that it should tear down the test host process
-                        // since we we have issues in unloading appdomain. We do so to avoid any assembly locking issues.
+                        // since we have issues in unloading appdomain. We do so to avoid any assembly locking issues.
                         this.frameworkHandle.EnableShutdownAfterTestRun = true;
 
                         EqtTrace.Verbose("DesktopTestSourceHost.Dispose(): Notifying the test platform that the test host process should be shut down because the app domain running tests could not be unloaded successfully.");
@@ -248,7 +248,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             List<string> resolutionPaths = new List<string>();
 
-            // Add path of test assembly in resolution path. Mostly will be used for resovling winmd.
+            // Add path of test assembly in resolution path. Mostly will be used for resolving winmd.
             resolutionPaths.Add(Path.GetDirectoryName(sourceFileName));
 
             if (!isPortableMode)
@@ -358,7 +358,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 catch (Exception exception)
                 {
                     EqtTrace.Error(
-                        "DesktopTestSourceHost.AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(): Exception hit while trying to set assemly resolver for domain. Exception : {0} \n Message : {1}",
+                        "DesktopTestSourceHost.AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(): Exception hit while trying to set assembly resolver for domain. Exception : {0} \n Message : {1}",
                         exception,
                         exception.Message);
                 }

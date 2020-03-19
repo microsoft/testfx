@@ -52,7 +52,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public bool DoesFileExist(string assemblyFileName)
         {
             // For projectK these assemblies can be created on the fly which means the file might not exist on disk.
-            // Depend on Assembly Load failures intead of this validation.
+            // Depend on Assembly Load failures instead of this validation.
             return true;
         }
 

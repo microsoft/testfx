@@ -6,7 +6,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System;
     using System.Collections;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Globalization;
     using System.Threading;
 
@@ -47,6 +46,19 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Gets the current test outcome.
         /// </summary>
         public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
+
+        /// <summary>
+        /// Used to write trace messages while the test is running
+        /// </summary>
+        /// <param name="message">formatted message string</param>
+        public abstract void Write(string message);
+
+        /// <summary>
+        /// Used to write trace messages while the test is running
+        /// </summary>
+        /// <param name="format">format string</param>
+        /// <param name="args">the arguments</param>
+        public abstract void Write(string format, params object[] args);
 
         /// <summary>
         /// Used to write trace messages while the test is running

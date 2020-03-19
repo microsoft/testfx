@@ -37,8 +37,8 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
 
             // Assert
-            Assert.AreEqual(result.Contains(VSInstallationUtilities.PathToPublicAssemblies), true);
-            Assert.AreEqual(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies), true);
+            Assert.IsTrue(result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
+            Assert.IsTrue(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
         }
 
         [TestMethod]
@@ -52,8 +52,8 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: true);
 
             // Assert
-            Assert.AreEqual(result.Contains(VSInstallationUtilities.PathToPublicAssemblies), false);
-            Assert.AreEqual(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies), false);
+            Assert.IsFalse(result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
+            Assert.IsFalse(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
         }
 
         [TestMethod]
@@ -66,7 +66,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
 
             // Assert
-            Assert.AreEqual(result.Contains(typeof(TestSourceHost).Assembly.Location), false);
+            Assert.IsFalse(result.Contains(typeof(TestSourceHost).Assembly.Location));
         }
 
         [TestMethod]
@@ -79,7 +79,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
 
             // Assert
-            Assert.AreEqual(result.Contains(typeof(AssemblyHelper).Assembly.Location), false);
+            Assert.IsFalse(result.Contains(typeof(AssemblyHelper).Assembly.Location));
         }
 
         [TestMethod]

@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     // This next suppression could mask a problem, since Equals and CompareTo may not agree!
     [SuppressMessage("Microsoft.Design", "CA1036:OverrideMethodsOnComparableTypes", Justification = "Compat reasons.")]
 
-    // GenericParameterHelper in full CLR version also implements ICloneable, but we dont have ICloneable in core CLR
+    // GenericParameterHelper in full CLR version also implements ICloneable, but we don't have ICloneable in core CLR
     public class GenericParameterHelper : IComparable, IEnumerable
     {
         #region Private Fields

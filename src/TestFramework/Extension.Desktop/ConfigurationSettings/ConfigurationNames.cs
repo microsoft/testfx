@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         internal const string ConnectionStringAttributeName = "connectionString";
 
         /// <summary>
-        /// Attrbiute name for 'DataAccessMethod'
+        /// Attribute name for 'DataAccessMethod'
         /// </summary>
         internal const string DataAccessMethodAttributeName = "dataAccessMethod";
 

@@ -59,7 +59,7 @@ namespace UnitTestFramework.Tests
         {
             TestFrameworkV2.GenericParameterHelper objectToCompare = new TestFrameworkV2.GenericParameterHelper(10);
 
-            TestFrameworkV1.Assert.AreEqual(this.sut.CompareTo(objectToCompare), 0);
+            TestFrameworkV1.Assert.AreEqual(0, this.sut.CompareTo(objectToCompare));
         }
 
         [TestFrameworkV1.TestMethod]

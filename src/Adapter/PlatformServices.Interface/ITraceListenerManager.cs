@@ -3,8 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface
 {
-    using System.IO;
-
     /// <summary>
     /// Manager to perform operations on the TraceListener object passed as parameter.
     /// These operations are implemented differently for each platform service.
@@ -12,19 +10,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
     public interface ITraceListenerManager
     {
         /// <summary>
-        /// Adds the arguement traceListener object to TraceListenerCollection.
+        /// Adds the argument traceListener object to TraceListenerCollection.
         /// </summary>
         /// <param name="traceListener">The trace listener instance.</param>
         void Add(ITraceListener traceListener);
 
         /// <summary>
-        /// Removes the arguement traceListener object from TraceListenerCollection.
+        /// Removes the argument traceListener object from TraceListenerCollection.
         /// </summary>
         /// <param name="traceListener">The trace listener instance.</param>
         void Remove(ITraceListener traceListener);
 
         /// <summary>
-        /// Disposes the traceListener object passed as arguement.
+        /// Disposes the traceListener object passed as argument.
         /// </summary>
         /// <param name="traceListener">The trace listener instance.</param>
         void Dispose(ITraceListener traceListener);

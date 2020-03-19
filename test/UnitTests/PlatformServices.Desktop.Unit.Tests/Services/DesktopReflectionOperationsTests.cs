@@ -6,7 +6,6 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     extern alias FrameworkV1;
 
     using System;
-    using System.Collections.Generic;
     using System.Reflection;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;

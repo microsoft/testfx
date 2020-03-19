@@ -9,11 +9,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Moq;
     using MSTest.TestAdapter;
-    using MSTest.TestAdapter.ObjectModel;
     using TestPlatform.ObjectModel.Adapter;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;

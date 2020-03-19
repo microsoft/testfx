@@ -18,13 +18,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Reflection;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
     using Moq;
 
     [TestClass]

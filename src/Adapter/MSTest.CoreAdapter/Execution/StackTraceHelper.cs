@@ -64,8 +64,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // TODO:Fix the shadow stack-trace used in Private Object
                 // (Look-in Assertion.cs in the UnitTestFramework assembly)
 
-                // Sometimes the stacktrace can be null, but the inner stacktrace
-                // contains information. We are not interested in null stacktraces
+                // Sometimes the stack trace can be null, but the inner stack trace
+                // contains information. We are not interested in null stack traces
                 // so we simply ignore this case
                 try
                 {
@@ -79,7 +79,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     // curException.StackTrace can throw exception, Although MSDN doc doesn't say that.
                     try
                     {
-                        // try to get stacktrace
+                        // try to get stack trace
                         if (e.StackTrace != null)
                         {
                             stackTraces.Push(e.StackTrace);
@@ -88,7 +88,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     catch (Exception)
                     {
                         PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
-                            "StackTraceHelper.GetStackTraceInformation: Failed to get stacktrace info.");
+                            "StackTraceHelper.GetStackTraceInformation: Failed to get stack trace info.");
                     }
                 }
             }

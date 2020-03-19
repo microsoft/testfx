@@ -70,7 +70,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var logMessageListener = new LogMessageListener(true);
             StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
             this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-            Assert.AreEqual(logMessageListener.DebugTrace, "DummyTrace");
+            Assert.AreEqual("DummyTrace", logMessageListener.DebugTrace);
         }
 
         #region Dispose Tests

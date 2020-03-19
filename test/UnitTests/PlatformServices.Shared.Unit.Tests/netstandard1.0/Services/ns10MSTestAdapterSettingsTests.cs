@@ -53,7 +53,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(0, string.Compare(result, expectedResult, true), 0);
         }
 
         [TestMethod]
@@ -70,7 +70,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(0, string.Compare(result, expectedResult, true));
         }
 
         [TestMethod]
@@ -86,7 +86,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(0, string.Compare(result, expectedResult, true));
         }
 
         [TestMethod]
@@ -102,7 +102,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(0, string.Compare(result, expectedResult, true));
         }
 
         [TestMethod]
@@ -124,7 +124,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(0, string.Compare(result, expectedResult, true));
         }
 
         [TestMethod]
@@ -141,7 +141,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual(string.Compare(result, expectedResult, true), 0);
+            Assert.AreEqual(0, string.Compare(result, expectedResult, true));
         }
 
         [TestMethod]
@@ -174,11 +174,11 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
 
             IList<RecursiveDirectoryPath> result = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
             Assert.IsNotNull(result);
-            Assert.AreEqual(result.Count, 2);
+            Assert.AreEqual(2, result.Count);
 
             for (int i = 0; i < 2; i++)
             {
-                Assert.AreEqual(string.Compare(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase), 0);
+                Assert.AreEqual(0, string.Compare(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase));
                 Assert.AreEqual(result[i].IncludeSubDirectories, expectedResult[i].IncludeSubDirectories);
             }
         }
@@ -244,7 +244,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(true, adapterSettings.DeploymentEnabled);
+            Assert.IsTrue(adapterSettings.DeploymentEnabled);
         }
 
         [TestMethod]
@@ -258,7 +258,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(false, adapterSettings.DeploymentEnabled);
+            Assert.IsFalse(adapterSettings.DeploymentEnabled);
         }
 
 #endregion
@@ -275,7 +275,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(true, adapterSettings.DeployTestSourceDependencies);
+            Assert.IsTrue(adapterSettings.DeployTestSourceDependencies);
         }
 
         [TestMethod]
@@ -289,7 +289,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(false, adapterSettings.DeployTestSourceDependencies);
+            Assert.IsFalse(adapterSettings.DeployTestSourceDependencies);
         }
 
         [TestMethod]
@@ -303,7 +303,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
-            Assert.AreEqual(true, adapterSettings.DeployTestSourceDependencies);
+            Assert.IsTrue(adapterSettings.DeployTestSourceDependencies);
         }
 
 #endregion

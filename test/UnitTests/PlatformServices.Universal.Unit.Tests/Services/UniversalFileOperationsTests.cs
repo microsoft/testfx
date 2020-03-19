@@ -10,7 +10,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
     using System.Reflection;
     using FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting;
     using global::MSTestAdapter.TestUtilities;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
     /// <summary>
     /// The universal file operations tests.
@@ -174,7 +173,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
         [TestMethod]
         public void GetFullFilePathShouldReturnAssemblyFileName()
         {
-            Assert.AreEqual(null, this.fileOperations.GetFullFilePath(null));
+            Assert.IsNull(this.fileOperations.GetFullFilePath(null));
             Assert.AreEqual("assemblyFileName", this.fileOperations.GetFullFilePath("assemblyFileName"));
         }
     }

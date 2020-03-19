@@ -18,7 +18,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         /// <summary>
         /// Returns default database schema.
-        /// this.Connection must be alredy opened.
+        /// this.Connection must be already opened.
         /// </summary>
         /// <returns>The default database schema.</returns>
         public override string GetDefaultSchema()
@@ -58,7 +58,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 // for a long time, preventing us from moving files around
                 sqlBuilder.Pooling = false;
 
-                // Fixup magic file paths
+                // Fix-up magic file paths
                 string fixedFilePath = FixPath(attachedFile, dataFolders);
                 if (fixedFilePath != null)
                 {
