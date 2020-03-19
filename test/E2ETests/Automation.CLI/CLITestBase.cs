@@ -179,7 +179,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
                 var testFound = this.runEventsHandler.PassedTests.Any(
                     p => test.Equals(p.TestCase?.FullyQualifiedName)
                          || test.Equals(p.DisplayName));
-                Assert.IsTrue(testFound, $"Test {0} does not appear in passed tests list", test);
+                Assert.IsTrue(testFound, "Test {0} does not appear in passed tests list.", test);
             }
         }
 
