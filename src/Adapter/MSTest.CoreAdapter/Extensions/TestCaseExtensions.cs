@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 
             var fullyQualifiedName = testCase.FullyQualifiedName;
 
-            // not using Replace because there can be multiple instances of that string
+            // Not using Replace because there can be multiple instances of that string.
             var name = fullyQualifiedName.StartsWith($"{testClassName}.") ? fullyQualifiedName.Remove(0, $"{testClassName}.".Length) : fullyQualifiedName;
             TestMethod testMethod = new TestMethod(name, testClassName, source, isAsync);
 
