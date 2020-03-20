@@ -174,10 +174,10 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodPass.</remarks>
         public void ValidatePassedTestsContain(params string[] passedTests)
         {
+            var passedTestResults = this.runEventsHandler.PassedTests.ToList();
             foreach (var test in passedTests)
             {
-                var tests = this.runEventsHandler.PassedTests.ToList();
-                var testFound = tests.Any(
+                var testFound = passedTestResults.Any(
                     p => test.Equals(p.TestCase?.FullyQualifiedName)
                          || test.Equals(p.DisplayName)
                          || test.Equals(p.TestCase.DisplayName));
