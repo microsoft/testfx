@@ -24,6 +24,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             {
                 DisplayName = "DummyDisplayName"
             };
+
             var testCategories = new[] { "DummyCategory" };
 
             testCase.SetPropertyValue(Constants.AsyncTestProperty, true);
