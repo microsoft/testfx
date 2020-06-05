@@ -79,7 +79,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
         /// </summary>
         /// <param name="displayName">
-        /// Message specifies reason for ignoring.
+        /// Display Name for the Test Window
         /// </param>
         public TestMethodAttribute(string displayName)
         {
