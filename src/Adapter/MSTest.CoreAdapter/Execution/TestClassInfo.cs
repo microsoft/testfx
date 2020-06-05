@@ -161,12 +161,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     return false;
                 }
 
-                // If class initialization was successful, then only call class cleanup.
-                if (this.ClassInitializationException != null)
-                {
-                    return false;
-                }
-
                 return true;
             }
         }

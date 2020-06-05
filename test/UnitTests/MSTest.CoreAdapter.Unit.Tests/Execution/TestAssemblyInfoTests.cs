@@ -69,11 +69,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
-        public void TestAssemblyHasExecutableCleanupMethodShouldReturnFalseIfAssemblyInitializationThrewAnException()
+        public void TestAssemblyHasExecutableCleanupMethodShouldReturnTrueEvenIfAssemblyInitializationThrewAnException()
         {
+            this.testAssemblyInfo.AssemblyCleanupMethod = this.dummyMethodInfo;
             this.testAssemblyInfo.AssemblyInitializationException = new NotImplementedException();
 
-            Assert.IsFalse(this.testAssemblyInfo.HasExecutableCleanupMethod);
+            Assert.IsTrue(this.testAssemblyInfo.HasExecutableCleanupMethod);
         }
 
         [TestMethod]
