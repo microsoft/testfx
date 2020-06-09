@@ -545,6 +545,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
+        public void RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
+        {
+            DummyBaseTestClass.ClassCleanupMethodBody = () => { throw new ArgumentException("Argument Exception"); };
+
+            this.testClassInfo.ClassCleanupMethod = null;
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
+                Tuple.Create((MethodInfo)null, typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod")));
+            this.testClassInfo.BaseClassCleanupMethodsStack.Push(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
+            StringAssert.StartsWith(
+                this.testClassInfo.RunClassCleanup(),
+                "Class Cleanup method DummyBaseTestClass.CleanupClassMethod failed. Error Message: System.ArgumentException: Argument Exception. Stack Trace:     at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions>");
+        }
+
+        [TestMethod]
         public void RunBaseClassCleanupEvenIfThereIsNoDerivedClassCleanup()
         {
             var classcleanupCallCount = 0;
