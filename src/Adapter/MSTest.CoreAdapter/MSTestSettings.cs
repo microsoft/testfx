@@ -57,6 +57,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             this.TestSettingsFile = null;
             this.DisableParallelization = false;
             this.TestTimeout = 0;
+            this.TreatClassAndAssemblyCleanupWarningsAsErrors = false;
         }
 
         /// <summary>
@@ -156,6 +157,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public int TestTimeout { get; private set; }
 
         /// <summary>
+        /// Gets a value indicating whether failures in class cleanups should be treated as errors.
+        /// </summary>
+        public bool TreatClassAndAssemblyCleanupWarningsAsErrors { get; private set; }
+
+        /// <summary>
         /// Populate settings based on existing settings object.
         /// </summary>
         /// <param name="settings">The existing settings object.</param>
@@ -171,6 +177,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
             CurrentSettings.DisableParallelization = settings.DisableParallelization;
             CurrentSettings.TestTimeout = settings.TestTimeout;
+            CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors = settings.TreatClassAndAssemblyCleanupWarningsAsErrors;
         }
 
         /// <summary>
@@ -290,6 +297,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             //     <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
             //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
             //     <TestTimeout>5000</TestTimeout>
+            //     <TreatClassAndAssemblyCleanupWarningsAsErrors>false</TreatClassAndAssemblyCleanupWarningsAsErrors>
             //     <Parallelize>
             //        <Workers>4</Workers>
             //        <Scope>TestClass</Scope>
@@ -393,6 +401,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                 if (int.TryParse(reader.ReadInnerXml(), out int testTimeout) && testTimeout > 0)
                                 {
                                     settings.TestTimeout = testTimeout;
+                                }
+
+                                break;
+                            }
+
+                        case "TREATCLASSANDASSEMBLYCLEANUPWARNINGSASERRORS":
+                            {
+                                if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                {
+                                    settings.TreatClassAndAssemblyCleanupWarningsAsErrors = result;
                                 }
 
                                 break;

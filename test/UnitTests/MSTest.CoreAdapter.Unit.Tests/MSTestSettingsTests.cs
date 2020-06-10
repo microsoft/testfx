@@ -254,6 +254,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
+        public void TreatClassCleanupWarningsAsErrorsShouldBeFalseByDefault()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.IsFalse(adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
+        }
+
+        [TestMethod]
+        public void TreatClassCleanupWarningsAsErrorsShouldBeConsumedFromRunSettingsWhenSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <TreatClassAndAssemblyCleanupWarningsAsErrors>True</TreatClassAndAssemblyCleanupWarningsAsErrors>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.IsTrue(adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
+        }
+
+        [TestMethod]
         public void ParallelizationSettingsShouldNotBeSetByDefault()
         {
             string runSettingxml =
@@ -864,6 +893,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                    <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
                    <ForcedLegacyMode>true</ForcedLegacyMode>
                    <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+                   <TreatClassAndAssemblyCleanupWarningsAsErrors>true</TreatClassAndAssemblyCleanupWarningsAsErrors>
                  </MSTest>
                </RunSettings>";
 
@@ -876,6 +906,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsTrue(MSTestSettings.CurrentSettings.MapNotRunnableToFailed);
             Assert.IsTrue(MSTestSettings.CurrentSettings.ForcedLegacyMode);
             Assert.IsTrue(MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
+            Assert.IsTrue(MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
             Assert.IsFalse(string.IsNullOrEmpty(MSTestSettings.CurrentSettings.TestSettingsFile));
         }
 
