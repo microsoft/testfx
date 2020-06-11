@@ -345,9 +345,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null)
             {
+                MethodInfo classCleanupMethod = null;
+
                 try
                 {
-                    var classCleanupMethod = this.ClassCleanupMethod;
+                    classCleanupMethod = this.ClassCleanupMethod;
                     classCleanupMethod?.InvokeAsSynchronousTask(null);
                     var baseClassCleanupQueue = new Queue<MethodInfo>(this.BaseClassCleanupMethodsStack);
                     while (baseClassCleanupQueue.Count > 0)
@@ -378,8 +380,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     return string.Format(
                         CultureInfo.CurrentCulture,
                         Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-                        this.ClassType.Name,
-                        this.ClassCleanupMethod.Name,
+                        classCleanupMethod.DeclaringType.Name,
+                        classCleanupMethod.Name,
                         errorMessage,
                         StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
                 }
