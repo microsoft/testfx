@@ -12,6 +12,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// </summary>
     public sealed class StringAssert
     {
+        private static readonly object[] Empty = new object[0];
+
         private static StringAssert that;
 
         #region Singleton constructor
@@ -139,7 +141,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Contains(string value, string substring, string message, StringComparison comparisonType)
         {
-            Contains(value, substring, message, comparisonType);
+            Contains(value, substring, message, comparisonType, Empty);
         }
 
         /// <summary>
@@ -247,7 +249,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void StartsWith(string value, string substring, StringComparison comparisonType)
         {
-            StartsWith(value, substring, string.Empty, comparisonType);
+            StartsWith(value, substring, string.Empty, comparisonType, Empty);
         }
 
         /// <summary>
@@ -328,7 +330,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void StartsWith(string value, string substring, string message, StringComparison comparisonType)
         {
-            StartsWith(value, substring, message, comparisonType);
+            StartsWith(value, substring, message, comparisonType, Empty);
         }
 
         /// <summary>
@@ -408,7 +410,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void EndsWith(string value, string substring, StringComparison comparisonType)
         {
-            EndsWith(value, substring, string.Empty, comparisonType);
+            EndsWith(value, substring, string.Empty, comparisonType, Empty);
         }
 
         /// <summary>
@@ -489,7 +491,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void EndsWith(string value, string substring, string message, StringComparison comparisonType)
         {
-            EndsWith(value, substring, message, comparisonType);
+            EndsWith(value, substring, message, comparisonType, Empty);
         }
 
         /// <summary>
