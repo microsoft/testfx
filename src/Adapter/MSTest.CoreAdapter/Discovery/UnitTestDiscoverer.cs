@@ -6,7 +6,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
     using System.Collections.Generic;
     using System.Globalization;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;

@@ -59,7 +59,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             assemblyResolver.AddSubdirectories(path, searchDirectories);
 
             // Assert.
-            Assert.AreEqual(searchDirectories.Count, 4, "searchDirectories should have only 5 elements");
+            Assert.AreEqual(4, searchDirectories.Count, "searchDirectories should have only 5 elements");
 
             CollectionAssert.AreEqual(resultDirectories, searchDirectories, StringComparer.OrdinalIgnoreCase);
         }
@@ -104,37 +104,37 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                     {
                         // First time SearchAssemblyInTheFollowingLocation should get call with one directory which is in
                         // m_searchDirectories variable
-                        Assert.AreEqual(listPath.Count, 1);
-                        Assert.AreEqual(string.Compare(listPath[0], dummyDirectories[0], true), 0);
+                        Assert.AreEqual(1, listPath.Count);
+                        Assert.AreEqual(0, string.Compare(listPath[0], dummyDirectories[0], true));
                         count++;
                     }
                     else if (count == 1)
                     {
                         // Second time SearchAssemblyInTheFollowingLocation should get call with directory C:\unitTesting
                         // and with all its sub directory, as its isRecursive property is true
-                        Assert.AreEqual(listPath.Count, 3);
-                        Assert.AreEqual(string.Compare(listPath[0], @"C:\unitTesting", true), 0);
-                        Assert.AreEqual(string.Compare(listPath[1], @"C:\unitTesting\a", true), 0);
-                        Assert.AreEqual(string.Compare(listPath[2], @"C:\unitTesting\b", true), 0);
+                        Assert.AreEqual(3, listPath.Count);
+                        Assert.AreEqual(0, string.Compare(listPath[0], @"C:\unitTesting", true));
+                        Assert.AreEqual(0, string.Compare(listPath[1], @"C:\unitTesting\a", true));
+                        Assert.AreEqual(0, string.Compare(listPath[2], @"C:\unitTesting\b", true));
                         count++;
                     }
                     else if (count == 2)
                     {
                         // Third time SearchAssemblyInTheFollowingLocation should get call with directory C:\FunctionalTesting
                         // as its isRecursive property is false
-                        Assert.AreEqual(listPath.Count, 1);
-                        Assert.AreEqual(string.Compare(listPath[0], @"C:\FunctionalTesting", true), 0);
+                        Assert.AreEqual(1, listPath.Count);
+                        Assert.AreEqual(0, string.Compare(listPath[0], @"C:\FunctionalTesting", true));
                         count++;
                     }
                     else if (count == 3)
                     {
                         // call will come here when we will call onResolve second time.
-                        Assert.AreEqual(listPath.Count, 5);
-                        Assert.AreEqual(string.Compare(listPath[0], dummyDirectories[0], true), 0);
-                        Assert.AreEqual(string.Compare(listPath[1], @"C:\unitTesting", true), 0);
-                        Assert.AreEqual(string.Compare(listPath[2], @"C:\unitTesting\a", true), 0);
-                        Assert.AreEqual(string.Compare(listPath[3], @"C:\unitTesting\b", true), 0);
-                        Assert.AreEqual(string.Compare(listPath[4], @"C:\FunctionalTesting", true), 0);
+                        Assert.AreEqual(5, listPath.Count);
+                        Assert.AreEqual(0, string.Compare(listPath[0], dummyDirectories[0], true));
+                        Assert.AreEqual(0, string.Compare(listPath[1], @"C:\unitTesting", true));
+                        Assert.AreEqual(0, string.Compare(listPath[2], @"C:\unitTesting\a", true));
+                        Assert.AreEqual(0, string.Compare(listPath[3], @"C:\unitTesting\b", true));
+                        Assert.AreEqual(0, string.Compare(listPath[4], @"C:\FunctionalTesting", true));
                         count++;
                     }
 

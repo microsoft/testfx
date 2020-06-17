@@ -8,9 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
-    using System.Linq;
     using System.Reflection;
-    using System.Security;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
@@ -261,7 +259,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                         {
                             EqtTrace.WarningIf(
                                 EqtTrace.IsWarningEnabled,
-                                "Conflict during copiyng file: '{0}' and '{1}' are from different origins although they might be the same.",
+                                "Conflict during copying file: '{0}' and '{1}' are from different origins although they might be the same.",
                                 fileToDeploy,
                                 destToSource[relativeDestination]);
                         }
@@ -288,7 +286,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         protected string[] GetFullPathToFilesCorrespondingToDeploymentItem(DeploymentItem deploymentItem, string testSource, string resultsDirectory, IList<string> warnings, out bool isDirectory)
         {
             Debug.Assert(deploymentItem != null, "deploymentItem should not be null.");
-            Debug.Assert(!string.IsNullOrEmpty(testSource), "testsource should not be null or empty.");
+            Debug.Assert(!string.IsNullOrEmpty(testSource), "testSource should not be null or empty.");
 
             try
             {

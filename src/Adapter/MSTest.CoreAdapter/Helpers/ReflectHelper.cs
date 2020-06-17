@@ -27,7 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// </summary>
         /// <param name="memberInfo">Member/Type to test</param>
         /// <param name="attributeType">Attribute to search for</param>
-        /// <param name="inherit">Look throug inheritence or not</param>
+        /// <param name="inherit">Look through inheritance or not</param>
         /// <returns>True if the attribute of the specified type is defined.</returns>
         public virtual bool IsAttributeDefined(MemberInfo memberInfo, Type attributeType, bool inherit)
         {
@@ -68,7 +68,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// </summary>
         /// <param name="type">Member/Type to test</param>
         /// <param name="attributeType">Attribute to search for</param>
-        /// <param name="inherit">Look throug inheritence or not</param>
+        /// <param name="inherit">Look through inheritance or not</param>
         /// <returns>True if the specified attribute is defined on the type.</returns>
         public virtual bool IsAttributeDefined(Type type, Type attributeType, bool inherit)
         {
@@ -223,9 +223,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <summary>
         /// Get custom attributes on a member for both normal and reflection only load.
         /// </summary>
-        /// <param name="memberInfo">Memeber for which attributes needs to be retrieved.</param>
+        /// <param name="memberInfo">Member for which attributes needs to be retrieved.</param>
         /// <param name="type">Type of attribute to retrieve.</param>
-        /// <param name="inherit">If inheritied type of attribute.</param>
+        /// <param name="inherit">If inherited type of attribute.</param>
         /// <returns>All attributes of give type on member.</returns>
         internal static Attribute[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
         {
@@ -245,8 +245,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <summary>
         /// Get custom attributes on a member for both normal and reflection only load.
         /// </summary>
-        /// <param name="memberInfo">Memeber for which attributes needs to be retrieved.</param>
-        /// <param name="inherit">If inheritied type of attribute.</param>
+        /// <param name="memberInfo">Member for which attributes needs to be retrieved.</param>
+        /// <param name="inherit">If inherited type of attribute.</param>
         /// <returns>All attributes of give type on member.</returns>
         internal static object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
         {
@@ -301,7 +301,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
-        /// Returns true when the method is delcared in the assembly where the type is declared.
+        /// Returns true when the method is declared in the assembly where the type is declared.
         /// </summary>
         /// <param name="method">The method to check for.</param>
         /// <param name="type">The type declared in the assembly to check.</param>
@@ -336,7 +336,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <summary>
         /// Gets the parallelization level set on an assembly.
         /// </summary>
-        /// <param name="assembly"> The test asembly. </param>
+        /// <param name="assembly"> The test assembly. </param>
         /// <returns> The parallelization level if set. -1 otherwise. </returns>
         internal ParallelizeAttribute GetParallelizeAttribute(Assembly assembly)
         {

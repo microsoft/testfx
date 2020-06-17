@@ -59,7 +59,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="tests">Tests to be run.</param>
         /// <param name="runContext">Context to use when executing the tests.</param>
         /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
-        /// <param name="runCancellationToken">Test run cancellation tokenn</param>
+        /// <param name="runCancellationToken">Test run cancellation token</param>
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
         {
             Debug.Assert(tests != null, "tests");
@@ -235,7 +235,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
 
-                // this is done so that appropriate values of testcontext properties are set at source level
+                // this is done so that appropriate values of test context properties are set at source level
                 // and are merged with session level parameters
                 var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
 

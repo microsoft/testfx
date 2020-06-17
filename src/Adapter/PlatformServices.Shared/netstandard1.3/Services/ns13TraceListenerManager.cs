@@ -5,7 +5,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
     using System.Diagnostics;
-    using System.Globalization;
     using System.IO;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
@@ -43,7 +42,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Adds the arguement traceListener object to System.Diagnostics.TraceListenerCollection.
+        /// Adds the argument traceListener object to System.Diagnostics.TraceListenerCollection.
         /// </summary>
         /// <param name="traceListener">The trace listener instance.</param>
         public void Add(ITraceListener traceListener)
@@ -54,7 +53,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Removes the arguement traceListener object from System.Diagnostics.TraceListenerCollection.
+        /// Removes the argument traceListener object from System.Diagnostics.TraceListenerCollection.
         /// </summary>
         /// <param name="traceListener">The trace listener instance.</param>
         public void Remove(ITraceListener traceListener)

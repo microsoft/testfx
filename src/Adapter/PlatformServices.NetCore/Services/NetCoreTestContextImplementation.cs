@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// Internal implementation of TestContext exposed to the user.
     /// </summary>
     /// <remarks>
-    /// The virtual string properties of the TestContext are retreived from the property dictionary
+    /// The virtual string properties of the TestContext are retrieved from the property dictionary
     /// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName");
     /// </remarks>
     public class TestContextImplementation : UTF.TestContext, ITestContext
@@ -287,6 +287,53 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.testResultFiles.Clear();
 
             return results;
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, used to write trace messages while the
+        ///     test is running.
+        /// </summary>
+        /// <param name="message">The formatted string that contains the trace message.</param>
+        public override void Write(string message)
+        {
+            if (this.stringWriterDisposed)
+            {
+                return;
+            }
+
+            try
+            {
+                var msg = message?.Replace("\0", "\\0");
+                this.stringWriter.Write(msg);
+            }
+            catch (ObjectDisposedException)
+            {
+                this.stringWriterDisposed = true;
+            }
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, used to write trace messages while the
+        ///     test is running.
+        /// </summary>
+        /// <param name="format">The string that contains the trace message.</param>
+        /// <param name="args">Arguments to add to the trace message.</param>
+        public override void Write(string format, params object[] args)
+        {
+            if (this.stringWriterDisposed)
+            {
+                return;
+            }
+
+            try
+            {
+                string message = string.Format(CultureInfo.CurrentCulture, format?.Replace("\0", "\\0"), args);
+                this.stringWriter.Write(message);
+            }
+            catch (ObjectDisposedException)
+            {
+                this.stringWriterDisposed = true;
+            }
         }
 
         /// <summary>

@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                   </RunSettings>";
 
             RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
-            Assert.AreEqual(configurationSettings.CollectSourceInformation, true);
+            Assert.IsTrue(configurationSettings.CollectSourceInformation);
         }
 
         [TestMethod]
@@ -70,7 +70,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                 </RunSettings>";
 
             RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
-            Assert.AreEqual(configurationSettings.CollectSourceInformation, false);
+            Assert.IsFalse(configurationSettings.CollectSourceInformation);
         }
 
         #endregion
@@ -86,7 +86,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsNotNull(settings);
 
             // Validating the default value of a random setting.
-            Assert.AreEqual(settings.CollectSourceInformation, true);
+            Assert.IsTrue(settings.CollectSourceInformation);
         }
 
         #endregion
@@ -99,7 +99,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings.PopulateSettings((IDiscoveryContext)null);
 
             RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-            Assert.AreEqual(settings.CollectSourceInformation, true);
+            Assert.IsTrue(settings.CollectSourceInformation);
         }
 
         [TestMethod]
@@ -108,7 +108,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
 
             RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-            Assert.AreEqual(settings.CollectSourceInformation, true);
+            Assert.IsTrue(settings.CollectSourceInformation);
         }
 
         [TestMethod]
@@ -118,7 +118,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
 
             RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-            Assert.AreEqual(settings.CollectSourceInformation, true);
+            Assert.IsTrue(settings.CollectSourceInformation);
         }
 
         [TestMethod]
@@ -139,7 +139,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsNotNull(settings);
 
             // Validating the default value of a random setting.
-            Assert.AreEqual(settings.CollectSourceInformation, true);
+            Assert.IsTrue(settings.CollectSourceInformation);
         }
 
         [TestMethod]
@@ -161,7 +161,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsNotNull(settings);
 
             // Validating the default value of a random setting.
-            Assert.AreEqual(settings.CollectSourceInformation, false);
+            Assert.IsFalse(settings.CollectSourceInformation);
         }
 
         #endregion

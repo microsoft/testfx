@@ -25,6 +25,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </summary>
         public IList<TestResult> SkippedTests { get; private set; }
 
+        public IList<string> Errors { get; private set; }
+
         public double ElapsedTimeInRunningTests { get; private set; }
 
         public RunEventsHandler()
@@ -32,6 +34,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
             this.PassedTests = new List<TestResult>();
             this.FailedTests = new List<TestResult>();
             this.SkippedTests = new List<TestResult>();
+            this.Errors = new List<string>();
         }
 
         public void HandleLogMessage(TestMessageLevel level, string message)
@@ -45,6 +48,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
                     EqtTrace.Warning(message);
                     break;
                 case TestMessageLevel.Error:
+                    this.Errors.Add(message);
                     EqtTrace.Error(message);
                     break;
                 default:

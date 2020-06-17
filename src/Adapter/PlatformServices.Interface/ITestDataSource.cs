@@ -4,7 +4,6 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface
 {
     using System.Collections.Generic;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>

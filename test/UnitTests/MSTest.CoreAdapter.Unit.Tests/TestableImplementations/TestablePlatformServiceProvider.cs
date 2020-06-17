@@ -3,7 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations
 {
-    using System;
     using System.Collections.Generic;
     using System.IO;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;

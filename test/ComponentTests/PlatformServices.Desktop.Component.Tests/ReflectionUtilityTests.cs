@@ -46,7 +46,7 @@ namespace PlatformServices.Desktop.ComponentTests
                     "TestAssets");
             this.testAsset = Assembly.ReflectionOnlyLoadFrom(Path.Combine(testAssetPath, "TestProjectForDiscovery.dll"));
 
-            // Also preload the Test Framework assembly.
+            // Also pre-load the Test Framework assembly.
             Assembly.ReflectionOnlyLoadFrom(
                 Path.Combine(testAssetPath, "Microsoft.VisualStudio.TestPlatform.TestFramework.dll"));
 

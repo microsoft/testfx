@@ -6,12 +6,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     extern alias FrameworkV1;
 
     using System;
-    using System.Diagnostics;
     using System.Reflection;
     using System.Threading;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using MSTestAdapter.TestUtilities;
 
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -127,7 +125,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         }
 
         [TestMethod]
-        public void TokenCancelShouldAbortIfAlreadyCancelled()
+        public void TokenCancelShouldAbortIfAlreadycanceled()
         {
             // setup
             var cancellationTokenSource = new CancellationTokenSource();

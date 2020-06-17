@@ -1010,7 +1010,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
-            Assert.AreEqual(true, customExpectedException.IsVerifyInvoked);
+            Assert.IsTrue(customExpectedException.IsVerifyInvoked);
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
@@ -1027,7 +1027,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
-            Assert.AreEqual(result.TestFailureException.Message, "The exception message doesn't contain the string defined in the exception attribute");
+            Assert.AreEqual("The exception message doesn't contain the string defined in the exception attribute", result.TestFailureException.Message);
             Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
         }
 
@@ -1062,7 +1062,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
             var result = method.Invoke(null);
-            Assert.AreEqual(true, derivedCustomExpectedException.IsVerifyInvoked);
+            Assert.IsTrue(derivedCustomExpectedException.IsVerifyInvoked);
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
         }
 
@@ -1263,7 +1263,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
                 Assert.AreEqual(UTF.UnitTestOutcome.Timeout, result.Outcome);
                 StringAssert.Contains(result.TestFailureException.Message, "exceeded execution timeout period");
-                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not cancelled..");
+                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not canceled..");
             });
         }
 
@@ -1295,7 +1295,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
                 Assert.AreEqual(UTF.UnitTestOutcome.Timeout, result.Outcome);
                 StringAssert.Contains(result.TestFailureException.Message, "execution has been aborted");
-                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not cancelled..");
+                Assert.IsTrue(this.testContextImplementation.CancellationTokenSource.IsCancellationRequested, "Not canceled..");
             });
         }
 
@@ -1564,7 +1564,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         #region Dummy implementation
 
         /// <summary>
-        ///  Custom Expected exception attribute which doverrides the Verify method.
+        ///  Custom Expected exception attribute which overrides the Verify method.
         /// </summary>
         public class CustomExpectedExceptionAttribute : UTF.ExpectedExceptionBaseAttribute
         {
@@ -1593,7 +1593,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         /// <summary>
-        ///  Custom Expected exception attribute which doverrides the Verify method.
+        ///  Custom Expected exception attribute which overrides the Verify method.
         /// </summary>
         public class DerivedCustomExpectedExceptionAttribute : CustomExpectedExceptionAttribute
         {

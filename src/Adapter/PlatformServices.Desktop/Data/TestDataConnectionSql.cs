@@ -223,7 +223,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         /// <summary>
         /// Take a possibly qualified name and break it down into an
-        /// array of identifers unquoting any quoted names
+        /// array of identifiers unquoting any quoted names
         /// </summary>
         /// <param name="name">A string.</param>
         /// <returns>An array of unquoted parts, or null if the name fails to conform</returns>
@@ -391,7 +391,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         }
 
         /// <summary>
-        /// Find the first seperator in a string
+        /// Find the first separator in a string
         /// </summary>
         /// <param name="text">The string.</param>
         /// <param name="from">Index.</param>
@@ -414,7 +414,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             // These routine assumes prefixes and suffixes
             // are single characters
             string prefix = this.QuotePrefix;
-            Debug.Assert(prefix.Length == 1, "prefix lenght should be 1.");
+            Debug.Assert(prefix.Length == 1, "prefix length should be 1.");
             char prefixChar = prefix[0];
 
             int end = text.Length;
@@ -429,7 +429,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 int here = start + 1;
 
                 string suffix = this.QuoteSuffix;
-                Debug.Assert(suffix.Length == 1, "suffix lenght should be 1.");
+                Debug.Assert(suffix.Length == 1, "suffix length should be 1.");
                 char suffixChar = suffix[0];
 
                 while (here < end)
@@ -776,7 +776,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     (odbcConnection != null && IsMSSql(odbcConnection.Driver)),
                     "GetDefaultSchemaMSSql should be called only for MS SQL (either native or Ole Db or Odbc).");
 
-                Debug.Assert(this.IsOpen(), "The connection must aready be open!");
+                Debug.Assert(this.IsOpen(), "The connection must already be open!");
                 Debug.Assert(!string.IsNullOrEmpty(this.Connection.ServerVersion), "GetDefaultSchema: the ServerVersion is null or empty!");
 
                 int index = this.Connection.ServerVersion.IndexOf(".", StringComparison.Ordinal);

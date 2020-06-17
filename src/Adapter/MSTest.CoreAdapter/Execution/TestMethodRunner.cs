@@ -11,7 +11,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Linq;
     using System.Reflection;
     using Extensions;
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -405,7 +404,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
-        /// Updates given resutls with parent info if results are greater than 1.
+        /// Updates given results with parent info if results are greater than 1.
         /// Add parent results as first result in updated result.
         /// </summary>
         /// <param name="results">Results.</param>

@@ -4,7 +4,7 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     /// <summary>
-    /// Enumeration for how how we access data rows in data driven testing.
+    /// Enumeration for how we access data rows in data driven testing.
     /// </summary>
     public enum DataAccessMethod
     {

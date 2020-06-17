@@ -4,7 +4,6 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 {
     using System.Diagnostics;
-    using System.Globalization;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
@@ -70,7 +69,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// Verifies that the test method has the correct signature
         /// </summary>
         /// <param name="method">The method to verify.</param>
-        /// <param name="ignoreParameterLength">Indicates whether parameter lenght is to be ignored.</param>
+        /// <param name="ignoreParameterLength">Indicates whether parameter length is to be ignored.</param>
         /// <returns>True if the method has the right test method signature.</returns>
         internal static bool HasCorrectTestMethodSignature(this MethodInfo method, bool ignoreParameterLength)
         {

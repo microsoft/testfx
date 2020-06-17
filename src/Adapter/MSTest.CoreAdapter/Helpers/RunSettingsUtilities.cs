@@ -10,7 +10,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
     using System.IO;
     using System.Xml;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
-    using TestAdapter;
     using TestPlatform.ObjectModel;
 
     internal class RunSettingsUtilities

@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Reflection;
 
     /// <summary>
-    /// Attribute to define inline data for a test method.
+    /// Attribute to define in-line data for a test method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public class DataRowAttribute : Attribute, ITestDataSource

@@ -64,7 +64,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// A list of directories for resolution path
         /// </param>
         /// <remarks>
-        /// If there are additonal paths where a recursive search is required
+        /// If there are additional paths where a recursive search is required
         /// call AddSearchDirectoryFromRunSetting method with that list.
         /// </remarks>
         public AssemblyResolver(IList<string> directories)
@@ -197,7 +197,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 if (disposing)
                 {
-                    // cleanup Managed resourceslike calling dispose on other managed object created.
+                    // cleanup Managed resources like calling dispose on other managed object created.
                     AppDomain.CurrentDomain.AssemblyResolve -= new ResolveEventHandler(this.OnResolve);
                     AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= new ResolveEventHandler(this.ReflectionOnlyOnResolve);
 
@@ -434,7 +434,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     // see, if we can find it in user specified search directories.
                     while (assembly == null && this.directoryList.Count > 0)
                     {
-                        // instead of loading whole saerch directory in one time, we are adding directory on the basis of need
+                        // instead of loading whole search directory in one time, we are adding directory on the basis of need
                         var currentNode = this.directoryList.Dequeue();
 
                         List<string> increamentalSearchDirectory = new List<string>();
@@ -457,7 +457,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         }
                         else
                         {
-                            // generate warning that path doesnot exist.
+                            // generate warning that path does not exist.
                             this.SafeLog(
                                 assemblyNameToLoad,
                                 () =>
@@ -484,7 +484,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     if (isReflectionOnly)
                     {
                         // Put it in the resolved assembly cache so that if the Load call below
-                        // triggers another assembly resolution, then we dont end up in stack overflow.
+                        // triggers another assembly resolution, then we don't end up in stack overflow.
                         this.reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = null;
 
                         assembly = Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
@@ -497,7 +497,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     else
                     {
                         // Put it in the resolved assembly cache so that if the Load call below
-                        // triggers another assembly resolution, then we dont end up in stack overflow.
+                        // triggers another assembly resolution, then we don't end up in stack overflow.
                         this.resolvedAssemblies[assemblyNameToLoad] = null;
 
                         assembly = Assembly.Load(assemblyNameToLoad);
@@ -573,7 +573,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// CLR does not trigger a load when the EqtTrace messages are in a lamda expression. Leaving it that way
         /// to preserve readability instead of creating wrapper functions.
         /// </summary>
-        /// <param name="assemblyName">The assembly being rsolved.</param>
+        /// <param name="assemblyName">The assembly being resolved.</param>
         /// <param name="loggerAction">The logger function.</param>
         private void SafeLog(string assemblyName, Action loggerAction)
         {
@@ -591,7 +591,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="requestedName"> The requested Name. </param>
         /// <param name="isReflectionOnly"> Indicates whether this is called under a Reflection Only Load context. </param>
         /// <returns> The <see cref="Assembly"/>. </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFrom", Justification = "The assembly location is fugred out from the configuration that the user passes in.")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFrom", Justification = "The assembly location is figured out from the configuration that the user passes in.")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private Assembly SearchAndLoadAssembly(string assemblyPath, string assemblyName, AssemblyName requestedName, bool isReflectionOnly)
         {
@@ -645,7 +645,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                             }
                         });
 
-                // Rethrow FileLoadException, because this exception means that the assembly
+                // Re-throw FileLoadException, because this exception means that the assembly
                 // was found, but could not be loaded. This will allow us to report a more
                 // specific error message to the user for things like access denied.
                 throw;

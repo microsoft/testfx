@@ -18,7 +18,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="m1">Method1</param>
         /// <param name="m2">Method2</param>
-        /// <returns>True if they are similiar.</returns>
+        /// <returns>True if they are similar.</returns>
         internal static bool CompareMethodSigAndName(MethodBase m1, MethodBase m2)
         {
             ParameterInfo[] params1 = m1.GetParameters();
@@ -62,7 +62,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Finds most dervied type with the provided information.
+        /// Finds most derived type with the provided information.
         /// </summary>
         /// <param name="match">Candidate matches.</param>
         /// <param name="cMatches">Number of matches.</param>
@@ -240,10 +240,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="m1">Method 1</param>
         /// <param name="paramOrder1">Parameter order for Method 1</param>
-        /// <param name="paramArrayType1">Paramter array type.</param>
+        /// <param name="paramArrayType1">Parameter array type.</param>
         /// <param name="m2">Method 2</param>
         /// <param name="paramOrder2">Parameter order for Method 2</param>
-        /// <param name="paramArrayType2">>Paramter array type.</param>
+        /// <param name="paramArrayType2">>Parameter array type.</param>
         /// <param name="types">Types to search in.</param>
         /// <param name="args">Args.</param>
         /// <returns>An int representing the match.</returns>
@@ -305,10 +305,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="p1">Method 1</param>
         /// <param name="paramOrder1">Parameter order for Method 1</param>
-        /// <param name="paramArrayType1">Paramter array type.</param>
+        /// <param name="paramArrayType1">Parameter array type.</param>
         /// <param name="p2">Method 2</param>
         /// <param name="paramOrder2">Parameter order for Method 2</param>
-        /// <param name="paramArrayType2">>Paramter array type.</param>
+        /// <param name="paramArrayType2">>Parameter array type.</param>
         /// <param name="types">Types to search in.</param>
         /// <param name="args">Args.</param>
         /// <returns>An int representing the match.</returns>

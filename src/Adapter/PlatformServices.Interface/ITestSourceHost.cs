@@ -4,7 +4,6 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface
 {
     using System;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
     /// <summary>
     /// A host that loads the test source.This can be in isolation for desktop using an AppDomain or just loading the source in the current context.

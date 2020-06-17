@@ -106,7 +106,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 if (!this.ExceptionType.GetTypeInfo().IsAssignableFrom(thrownExceptionType.GetTypeInfo()))
                 {
-                    // If the exception is an AssertFailedException or an AssertInconclusiveException, then rethrow it to
+                    // If the exception is an AssertFailedException or an AssertInconclusiveException, then re-throw it to
                     // preserve the test outcome and error message
                     this.RethrowIfAssertException(exception);
 
@@ -123,7 +123,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 if (thrownExceptionType != this.ExceptionType)
                 {
-                    // If the exception is an AssertFailedException or an AssertInconclusiveException, then rethrow it to
+                    // If the exception is an AssertFailedException or an AssertInconclusiveException, then re-throw it to
                     // preserve the test outcome and error message
                     this.RethrowIfAssertException(exception);
 

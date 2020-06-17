@@ -18,7 +18,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// </example>
     /// <remarks>
     /// Putting this in here so that UWP discovery works. We still do not want users to be using DeploymentItem in the UWP world - Hence making it internal.
-    /// We should separate out DeploymentItem logic in the adapter via a Framework extensiblity point.
+    /// We should separate out DeploymentItem logic in the adapter via a Framework extensibility point.
     /// Filed https://github.com/Microsoft/testfx/issues/100 to track this.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]

@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
-    ///  A fascade service for options passed to a test method.
+    ///  A facade service for options passed to a test method.
     /// </summary>
     internal class TestMethodOptions
     {

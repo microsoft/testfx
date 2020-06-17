@@ -81,7 +81,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// Get the target dotNet framework string for the assembly
         /// </summary>
         /// <param name="path">Path of the assembly file</param>
-        /// <returns> String representation of the the target dotNet framework e.g. .NETFramework,Version=v4.0 </returns>
+        /// <returns> String representation of the target dotNet framework e.g. .NETFramework,Version=v4.0 </returns>
         internal string GetTargetFrameworkVersionStringFromPath(string path)
         {
             if (File.Exists(path))
@@ -114,7 +114,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// Get the target dot net framework string for the assembly
         /// </summary>
         /// <param name="assembly">Assembly from which target framework has to find</param>
-        /// <returns>String representation of the the target dot net framework e.g. .NETFramework,Version=v4.0 </returns>
+        /// <returns>String representation of the target dot net framework e.g. .NETFramework,Version=v4.0 </returns>
         private string GetTargetFrameworkStringFromAssembly(Assembly assembly)
         {
             string dotNetVersion = string.Empty;

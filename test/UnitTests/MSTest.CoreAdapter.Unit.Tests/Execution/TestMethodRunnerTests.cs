@@ -18,7 +18,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
     using Moq;
     using MSTest.TestAdapter;
     using TestableImplementations;
@@ -132,8 +131,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(typeof(DummyTestClass).GetTypeInfo())).Returns("IgnoreTestClassMessage");
 
             var results = testMethodRunner.Execute();
-            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
-            Assert.AreEqual(results[0].ErrorMessage, "IgnoreTestClassMessage");
+            Assert.AreEqual(AdapterTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual("IgnoreTestClassMessage", results[0].ErrorMessage);
         }
 
         [TestMethodV1]
@@ -148,8 +147,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(typeof(DummyTestClass).GetTypeInfo())).Returns(string.Empty);
 
             var results = testMethodRunner.Execute();
-            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
-            Assert.AreEqual(results[0].ErrorMessage, string.Empty);
+            Assert.AreEqual(AdapterTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual(string.Empty, results[0].ErrorMessage);
         }
 
         [TestMethodV1]
@@ -164,8 +163,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(this.methodInfo)).Returns("IgnoreMethodMessage");
 
             var results = testMethodRunner.Execute();
-            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
-            Assert.AreEqual(results[0].ErrorMessage, "IgnoreMethodMessage");
+            Assert.AreEqual(AdapterTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual("IgnoreMethodMessage", results[0].ErrorMessage);
         }
 
         [TestMethodV1]
@@ -180,8 +179,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(this.methodInfo)).Returns(string.Empty);
 
             var results = testMethodRunner.Execute();
-            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
-            Assert.AreEqual(results[0].ErrorMessage, string.Empty);
+            Assert.AreEqual(AdapterTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual(string.Empty, results[0].ErrorMessage);
         }
 
         [TestMethodV1]
@@ -198,8 +197,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(this.methodInfo)).Returns("IgnoreMethodMessage");
 
             var results = testMethodRunner.Execute();
-            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
-            Assert.AreEqual(results[0].ErrorMessage, "IgnoreTestClassMessage");
+            Assert.AreEqual(AdapterTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual("IgnoreTestClassMessage", results[0].ErrorMessage);
         }
 
         [TestMethodV1]
@@ -216,8 +215,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(rh => rh.GetIgnoreMessage(this.methodInfo)).Returns("IgnoreMethodMessage");
 
             var results = testMethodRunner.Execute();
-            Assert.AreEqual(results[0].Outcome, AdapterTestOutcome.Ignored);
-            Assert.AreEqual(results[0].ErrorMessage, "IgnoreMethodMessage");
+            Assert.AreEqual(AdapterTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual("IgnoreMethodMessage", results[0].ErrorMessage);
         }
 
         [TestMethodV1]
@@ -552,10 +551,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             // check for datarowIndex
             // 1st is parent result.
-            Assert.AreEqual(results[0].DatarowIndex, -1);
-            Assert.AreEqual(results[1].DatarowIndex, 0);
-            Assert.AreEqual(results[2].DatarowIndex, 1);
-            Assert.AreEqual(results[3].DatarowIndex, 2);
+            Assert.AreEqual(-1, results[0].DatarowIndex);
+            Assert.AreEqual(0, results[1].DatarowIndex);
+            Assert.AreEqual(1, results[2].DatarowIndex);
+            Assert.AreEqual(2, results[3].DatarowIndex);
         }
 
         [TestMethodV1]
@@ -581,10 +580,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             // check for datarowIndex as only DataSource Tests are Run
             // 1st is parent result.
-            Assert.AreEqual(results[0].DatarowIndex, -1);
-            Assert.AreEqual(results[1].DatarowIndex, 0);
-            Assert.AreEqual(results[2].DatarowIndex, 1);
-            Assert.AreEqual(results[3].DatarowIndex, 2);
+            Assert.AreEqual(-1, results[0].DatarowIndex);
+            Assert.AreEqual(0, results[1].DatarowIndex);
+            Assert.AreEqual(1, results[2].DatarowIndex);
+            Assert.AreEqual(2, results[3].DatarowIndex);
         }
 
         [TestMethodV1]
@@ -610,7 +609,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             // 1st results should be parent result.
             Assert.AreEqual(2, results.Length);
-            Assert.AreEqual(results[1].DisplayName, "DataRowTestDisplayName");
+            Assert.AreEqual("DataRowTestDisplayName", results[1].DisplayName);
         }
 
         [TestMethodV1]
@@ -635,7 +634,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             // 1st results should be parent result.
             Assert.AreEqual(2, results.Length);
-            Assert.AreEqual(results[1].DisplayName, "DummyTestMethod (2,DummyString)");
+            Assert.AreEqual("DummyTestMethod (2,DummyString)", results[1].DisplayName);
         }
 
         [TestMethodV1]
