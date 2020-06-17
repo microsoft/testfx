@@ -63,7 +63,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Contains(string value, string substring)
         {
-            Contains(value, substring, string.Empty, StringComparison.Ordinal, null);
+            Contains(value, substring, string.Empty, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Contains(string value, string substring, StringComparison comparisonType)
         {
-            Contains(value, substring, string.Empty, comparisonType, null);
+            Contains(value, substring, string.Empty, comparisonType);
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Contains(string value, string substring, string message)
         {
-            Contains(value, substring, message, StringComparison.Ordinal, null);
+            Contains(value, substring, message, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -139,7 +139,35 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Contains(string value, string substring, string message, StringComparison comparisonType)
         {
-            Contains(value, substring, message, comparisonType, null);
+            Contains(value, substring, message, comparisonType);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string contains the specified substring
+        /// and throws an exception if the substring does not occur within the
+        /// test string.
+        /// </summary>
+        /// <param name="value">
+        /// The string that is expected to contain <paramref name="substring"/>.
+        /// </param>
+        /// <param name="substring">
+        /// The string expected to occur within <paramref name="value"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="substring"/>
+        /// is not in <paramref name="value"/>. The message is shown in
+        /// test results.
+        /// </param>
+        /// <param name="parameters">
+        /// An array of parameters to use when formatting <paramref name="message"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="substring"/> is not found in
+        /// <paramref name="value"/>.
+        /// </exception>
+        public static void Contains(string value, string substring, string message, params object[] parameters)
+        {
+            Contains(value, substring, message, StringComparison.Ordinal, parameters);
         }
 
         /// <summary>
@@ -196,7 +224,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void StartsWith(string value, string substring)
         {
-            StartsWith(value, substring, string.Empty, StringComparison.Ordinal, null);
+            StartsWith(value, substring, string.Empty, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -219,7 +247,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void StartsWith(string value, string substring, StringComparison comparisonType)
         {
-            StartsWith(value, substring, string.Empty, comparisonType, null);
+            StartsWith(value, substring, string.Empty, comparisonType);
         }
 
         /// <summary>
@@ -244,7 +272,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void StartsWith(string value, string substring, string message)
         {
-            StartsWith(value, substring, message, StringComparison.Ordinal, null);
+            StartsWith(value, substring, message, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -300,7 +328,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void StartsWith(string value, string substring, string message, StringComparison comparisonType)
         {
-            StartsWith(value, substring, message, comparisonType, null);
+            StartsWith(value, substring, message, comparisonType);
         }
 
         /// <summary>
@@ -357,7 +385,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void EndsWith(string value, string substring)
         {
-            EndsWith(value, substring, string.Empty, StringComparison.Ordinal, null);
+            EndsWith(value, substring, string.Empty, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -380,7 +408,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void EndsWith(string value, string substring, StringComparison comparisonType)
         {
-            EndsWith(value, substring, string.Empty, comparisonType, null);
+            EndsWith(value, substring, string.Empty, comparisonType);
         }
 
         /// <summary>
@@ -405,7 +433,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void EndsWith(string value, string substring, string message)
         {
-            EndsWith(value, substring, message, StringComparison.Ordinal, null);
+            EndsWith(value, substring, message, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -461,7 +489,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void EndsWith(string value, string substring, string message, StringComparison comparisonType)
         {
-            EndsWith(value, substring, message, comparisonType, null);
+            EndsWith(value, substring, message, comparisonType);
         }
 
         /// <summary>
@@ -522,7 +550,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Matches(string value, Regex pattern)
         {
-            Matches(value, pattern, string.Empty, null);
+            Matches(value, pattern, string.Empty);
         }
 
         /// <summary>
@@ -547,7 +575,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Matches(string value, Regex pattern, string message)
         {
-            Matches(value, pattern, message, null);
+            Matches(value, pattern, message);
         }
 
         /// <summary>
@@ -601,7 +629,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void DoesNotMatch(string value, Regex pattern)
         {
-            DoesNotMatch(value, pattern, string.Empty, null);
+            DoesNotMatch(value, pattern, string.Empty);
         }
 
         /// <summary>
@@ -625,7 +653,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void DoesNotMatch(string value, Regex pattern, string message)
         {
-            DoesNotMatch(value, pattern, message, null);
+            DoesNotMatch(value, pattern, message);
         }
 
         /// <summary>
