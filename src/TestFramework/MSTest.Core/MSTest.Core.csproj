@@ -35,6 +35,8 @@
     <LocDocumentationSubPath>Core</LocDocumentationSubPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Attributes\ClassCleanupLifecycle.cs" />
+    <Compile Include="Attributes\ClassCleanupSequencingAttribute.cs" />
     <Compile Include="Attributes\DoNotParallelizeAttribute.cs" />
     <Compile Include="Attributes\DynamicDataAttribute.cs" />
     <Compile Include="Attributes\ParallelizeAttribute.cs" />

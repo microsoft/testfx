@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
@@ -225,7 +226,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
                 // Default test set is filtered tests based on user provided filter criteria
-                IEnumerable<TestCase> testsToRun = Enumerable.Empty<TestCase>();
+                ICollection<TestCase> testsToRun = new TestCase[0];
                 var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
                 if (filterHasError)
                 {
@@ -233,7 +234,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     return;
                 }
 
-                testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
+                testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter)).ToArray();
 
                 // this is done so that appropriate values of test context properties are set at source level
                 // and are merged with session level parameters
@@ -262,6 +263,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 var sourceSettings = (sourceSettingsProvider != null) ? sourceSettingsProvider.GetSettings(source) : new TestAssemblySettings();
                 var parallelWorkers = sourceSettings.Workers;
                 var parallelScope = sourceSettings.Scope;
+                this.InitializeClassCleanupManager(source, testRunner, testsToRun, sourceSettings);
 
                 if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
                 {
@@ -355,6 +357,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
         }
 
+        private void InitializeClassCleanupManager(
+            string source,
+            UnitTestRunner testRunner,
+            ICollection<TestCase> testsToRun,
+            TestAssemblySettings sourceSettings)
+        {
+            var unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
+            testRunner.InitializeClassCleanupManager(unitTestElements, sourceSettings.ClassCleanupLifecycle);
+        }
+
         private void ExecuteTestsWithTestRunner(
             IEnumerable<TestCase> tests,
             IRunContext runContext,
@@ -371,6 +383,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 var unitTestElement = currentTest.ToUnitTestElement(source);
+
                 testExecutionRecorder.RecordStart(currentTest);
 
                 var startTime = DateTimeOffset.Now;

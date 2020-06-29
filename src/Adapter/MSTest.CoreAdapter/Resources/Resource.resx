@@ -307,6 +307,10 @@ Error: {1}</value>
     <value>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</value>
     <comment>'Scope' is a setting name that shouldn't be localized.</comment>
   </data>
+  <data name="InvalidClassCleanupLifecycleValue" xml:space="preserve">
+    <value>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</value>
+    <comment>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</comment>
+  </data>
   <data name="InvalidParallelWorkersValue" xml:space="preserve">
     <value>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</value>
     <comment>`Workers` is a setting name that shouldn't be localized.</comment>

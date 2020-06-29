@@ -128,25 +128,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             UnitTestResult[] result = null;
 
-            string ignoreMessage = null;
-            var isIgnoreAttributeOnClass = this.reflectHelper.IsAttributeDefined(this.testMethodInfo.Parent.ClassType, typeof(UTF.IgnoreAttribute), false);
-            var isIgnoreAttributeOnMethod = this.reflectHelper.IsAttributeDefined(this.testMethodInfo.TestMethod, typeof(UTF.IgnoreAttribute), false);
-
-            if (isIgnoreAttributeOnClass)
-            {
-                ignoreMessage = this.reflectHelper.GetIgnoreMessage(this.testMethodInfo.Parent.ClassType.GetTypeInfo());
-            }
-
-            if (string.IsNullOrEmpty(ignoreMessage) && isIgnoreAttributeOnMethod)
-            {
-                ignoreMessage = this.reflectHelper.GetIgnoreMessage(this.testMethodInfo.TestMethod);
-            }
-
-            if (isIgnoreAttributeOnClass || isIgnoreAttributeOnMethod)
-            {
-                return new[] { new UnitTestResult(UnitTestOutcome.Ignored, ignoreMessage) };
-            }
-
             try
             {
                 using (LogMessageListener logListener = new LogMessageListener(this.captureDebugTraces))

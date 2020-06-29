@@ -28,5 +28,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// Gets or sets a value indicating whether the assembly can be parallelized.
         /// </summary>
         internal bool CanParallelizeAssembly { get; set; }
+
+        /// <summary>
+        /// Gets or sets the class cleanup lifecycle timing.
+        /// </summary>
+        internal ClassCleanupLifecycle ClassCleanupLifecycle { get; set; }
     }
 }

@@ -196,7 +196,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestsShouldLogResultCleanupWarnings()
         {
-            var testCase = this.GetTestCase(typeof(DummyTestClassWithCleanupMethods), "TestMethod");
+            var testCase = this.GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
             TestCase[] tests = new[] { testCase };
 
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
@@ -747,6 +747,46 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             }
         }
 
+        [TestMethodV1]
+        public void RunTestsForMultipleClassesShouldRunClassCleanupAfterEachClass()
+        {
+            var testCase1 = this.GetTestCase(typeof(DummyTestClassWithCleanupMethods), "TestMethod");
+            var testCase2 = this.GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
+
+            TestCase[] tests = new[] { testCase1, testCase2 };
+            MSTestSettings.PopulateSettings(this.runContext);
+            var testablePlatformService = this.SetupTestablePlatformService();
+            testablePlatformService.SetupMockReflectionOperations();
+
+            var originalReflectionOperation = new ReflectionOperations();
+
+            testablePlatformService.MockReflectionOperations.Setup(
+                ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).Returns(
+                (Assembly asm, Type type) =>
+                {
+                    if (type.FullName.Equals(typeof(UTF.ClassCleanupSequencingAttribute).FullName))
+                    {
+                        return new object[]
+                        {
+                            new UTF.ClassCleanupSequencingAttribute
+                                { LifecyclePosition = UTF.ClassCleanupLifecycle.EndOfClass }
+                        };
+                    }
+
+                    return originalReflectionOperation.GetCustomAttributes(asm, type);
+                });
+
+            testablePlatformService.MockReflectionOperations.Setup(
+                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).Returns(
+                (MemberInfo memberInfo, bool inherit) =>
+                {
+                    return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
+                });
+
+            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+            Assert.IsNull(this.callers); // TODO JBH - I don't know how to validate this properly.
+        }
+
         // This is tracked by https://github.com/Microsoft/testfx/issues/320.
         [TestMethodV1]
         [Ignore]
@@ -902,12 +942,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [DummyTestClass]
-        private class DummyTestClassWithCleanupMethods
+        private class DummyTestClassWithFailingCleanupMethods
         {
             [UTF.ClassCleanup]
             public static void ClassCleanup()
             {
                 throw new Exception("ClassCleanupException");
+            }
+
+            [UTF.TestMethod]
+            public void TestMethod()
+            {
+            }
+        }
+
+        [DummyTestClass]
+        private class DummyTestClassWithCleanupMethods
+        {
+            public static int ClassCleanupCount => classCleanupCount;
+
+            public static void Cleanup() => classCleanupCount = 0;
+
+            private static int classCleanupCount = 0;
+
+            [UTF.ClassCleanup]
+            public static void ClassCleanup()
+            {
+                classCleanupCount++;
             }
 
             [UTF.TestMethod]

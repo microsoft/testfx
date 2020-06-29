@@ -13,6 +13,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
     internal static class TestCaseExtensions
     {
         /// <summary>
+        /// The test name
+        /// </summary>
+        /// <param name="testCase"> The test case. </param>
+        /// <param name="testClassName"> The test case's class name. </param>
+        /// <returns> The test name, without the class name, if provided. </returns>
+        internal static string GetTestName(this TestCase testCase, string testClassName)
+        {
+            var fullyQualifiedName = testCase.FullyQualifiedName;
+
+            // Not using Replace because there can be multiple instances of that string.
+            var name = fullyQualifiedName.StartsWith($"{testClassName}.")
+                ? fullyQualifiedName.Remove(0, $"{testClassName}.".Length)
+                : fullyQualifiedName;
+            return name;
+        }
+
+        /// <summary>
         /// The to unit test element.
         /// </summary>
         /// <param name="testCase"> The test case. </param>
@@ -23,13 +40,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             var isAsync = (testCase.GetPropertyValue(Constants.AsyncTestProperty) as bool?) ?? false;
             var testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
             var declaringClassName = testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) as string;
-
-            var fullyQualifiedName = testCase.FullyQualifiedName;
-
-            // Not using Replace because there can be multiple instances of that string.
-            var name = fullyQualifiedName.StartsWith($"{testClassName}.")
-                ? fullyQualifiedName.Remove(0, $"{testClassName}.".Length)
-                : fullyQualifiedName;
+            var name = testCase.GetTestName(testClassName);
 
             TestMethod testMethod = new TestMethod(name, testClassName, source, isAsync);
 

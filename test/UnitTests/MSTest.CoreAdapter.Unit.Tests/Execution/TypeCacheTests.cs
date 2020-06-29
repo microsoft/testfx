@@ -1519,6 +1519,58 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [DummyTestClass]
+        [UTF.Ignore]
+        internal class DummyTestClassWithIgnoreClass
+        {
+            [UTF.TestMethod]
+            public void TestMethod()
+            {
+            }
+        }
+
+        [DummyTestClass]
+        [UTF.Ignore("IgnoreTestClassMessage")]
+        internal class DummyTestClassWithIgnoreClassWithMessage
+        {
+            [UTF.TestMethod]
+            public void TestMethod()
+            {
+            }
+        }
+
+        [DummyTestClass]
+        internal class DummyTestClassWithIgnoreTest
+        {
+            [UTF.TestMethod]
+            [UTF.Ignore]
+            public void TestMethod()
+            {
+            }
+        }
+
+        [DummyTestClass]
+        internal class DummyTestClassWithIgnoreTestWithMessage
+        {
+            [UTF.TestMethod]
+            [UTF.Ignore("IgnoreTestMessage")]
+            public void TestMethod()
+            {
+            }
+        }
+
+        [UTF.Ignore("IgnoreTestClassMessage")]
+        [DummyTestClass]
+        internal class DummyTestClassWithIgnoreClassAndIgnoreTestWithMessage : DummyTestClassWithIgnoreTestWithMessage
+        {
+        }
+
+        [UTF.Ignore]
+        [DummyTestClass]
+        internal class DummyTestClassWithIgnoreClassWithNoMessageAndIgnoreTestWithMessage : DummyTestClassWithIgnoreTestWithMessage
+        {
+        }
+
+        [DummyTestClass]
         internal class DerivedTestClass : BaseTestClass
         {
             [UTF.TestMethod]
