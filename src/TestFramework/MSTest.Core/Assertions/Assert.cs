@@ -1914,11 +1914,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws
-        /// <code>
-        /// AssertFailedException
-        /// </code>
-        /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+        /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
         /// </summary>
         /// <param name="action">
         /// Delegate to code to be tested and which is expected to throw exception.
@@ -1940,11 +1936,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws
-        /// <code>
-        /// AssertFailedException
-        /// </code>
-        /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+        /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
         /// </summary>
         /// <param name="action">
         /// Delegate to code to be tested and which is expected to throw exception.
@@ -1970,11 +1962,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws
-        /// <code>
-        /// AssertFailedException
-        /// </code>
-        /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+        /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
         /// </summary>
         /// <param name="action">
         /// Delegate to code to be tested and which is expected to throw exception.
@@ -1996,11 +1984,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws
-        /// <code>
-        /// AssertFailedException
-        /// </code>
-        /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+        /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
         /// </summary>
         /// <param name="action">
         /// Delegate to code to be tested and which is expected to throw exception.
@@ -2026,11 +2010,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws
-        /// <code>
-        /// AssertFailedException
-        /// </code>
-        /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+        /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
         /// </summary>
         /// <param name="action">
         /// Delegate to code to be tested and which is expected to throw exception.
@@ -2059,11 +2039,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws
-        /// <code>
-        /// AssertFailedException
-        /// </code>
-        /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+        /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
         /// </summary>
         /// <param name="action">
         /// Delegate to code to be tested and which is expected to throw exception.
@@ -2135,11 +2111,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws
-        /// <code>
-        /// AssertFailedException
-        /// </code>
-        /// if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+        /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
         /// </summary>
         /// <param name="action">
         /// Delegate to code to be tested and which is expected to throw exception.
@@ -2161,7 +2133,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws <code>AssertFailedException</code> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+        /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
         /// </summary>
         /// <param name="action">Delegate to code to be tested and which is expected to throw exception.</param>
         /// <param name="message">
@@ -2183,7 +2155,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
-        /// and throws <code>AssertFailedException</code> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+        /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
         /// </summary>
         /// <param name="action">Delegate to code to be tested and which is expected to throw exception.</param>
         /// <param name="message">
