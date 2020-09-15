@@ -72,6 +72,21 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="condition">
         /// The condition the test expects to be true.
         /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="condition"/> is false.
+        /// </exception>
+        public static void IsTrue(bool? condition)
+        {
+            IsTrue(condition, string.Empty, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified condition is true and throws an exception
+        /// if the condition is false.
+        /// </summary>
+        /// <param name="condition">
+        /// The condition the test expects to be true.
+        /// </param>
         /// <param name="message">
         /// The message to include in the exception when <paramref name="condition"/>
         /// is false. The message is shown in test results.
@@ -80,6 +95,25 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="condition"/> is false.
         /// </exception>
         public static void IsTrue(bool condition, string message)
+        {
+            IsTrue(condition, message, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified condition is true and throws an exception
+        /// if the condition is false.
+        /// </summary>
+        /// <param name="condition">
+        /// The condition the test expects to be true.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is false. The message is shown in test results.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="condition"/> is false.
+        /// </exception>
+        public static void IsTrue(bool? condition, string message)
         {
             IsTrue(condition, message, null);
         }
@@ -110,6 +144,31 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
+        /// Tests whether the specified condition is true and throws an exception
+        /// if the condition is false.
+        /// </summary>
+        /// <param name="condition">
+        /// The condition the test expects to be true.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is false. The message is shown in test results.
+        /// </param>
+        /// <param name="parameters">
+        /// An array of parameters to use when formatting <paramref name="message"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="condition"/> is false.
+        /// </exception>
+        public static void IsTrue(bool? condition, string message, params object[] parameters)
+        {
+            if (condition == false || condition == null)
+            {
+                HandleFail("Assert.IsTrue", message, parameters);
+            }
+        }
+
+        /// <summary>
         /// Tests whether the specified condition is false and throws an exception
         /// if the condition is true.
         /// </summary>
@@ -120,6 +179,21 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="condition"/> is true.
         /// </exception>
         public static void IsFalse(bool condition)
+        {
+            IsFalse(condition, string.Empty, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified condition is false and throws an exception
+        /// if the condition is true.
+        /// </summary>
+        /// <param name="condition">
+        /// The condition the test expects to be false.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="condition"/> is true.
+        /// </exception>
+        public static void IsFalse(bool? condition)
         {
             IsFalse(condition, string.Empty, null);
         }
@@ -154,6 +228,25 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The message to include in the exception when <paramref name="condition"/>
         /// is true. The message is shown in test results.
         /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="condition"/> is true.
+        /// </exception>
+        public static void IsFalse(bool? condition, string message)
+        {
+            IsFalse(condition, message, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified condition is false and throws an exception
+        /// if the condition is true.
+        /// </summary>
+        /// <param name="condition">
+        /// The condition the test expects to be false.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is true. The message is shown in test results.
+        /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
         /// </param>
@@ -163,6 +256,31 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public static void IsFalse(bool condition, string message, params object[] parameters)
         {
             if (condition)
+            {
+                HandleFail("Assert.IsFalse", message, parameters);
+            }
+        }
+
+        /// <summary>
+        /// Tests whether the specified condition is false and throws an exception
+        /// if the condition is true.
+        /// </summary>
+        /// <param name="condition">
+        /// The condition the test expects to be false.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is true. The message is shown in test results.
+        /// </param>
+        /// <param name="parameters">
+        /// An array of parameters to use when formatting <paramref name="message"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="condition"/> is true.
+        /// </exception>
+        public static void IsFalse(bool? condition, string message, params object[] parameters)
+        {
+            if (condition == true || condition == null)
             {
                 HandleFail("Assert.IsFalse", message, parameters);
             }
