@@ -20,5 +20,9 @@
   <ItemGroup>
     <Compile Include="Tests.fs" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.7.2" />
+  </ItemGroup>
 
 </Project>

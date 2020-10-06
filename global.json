@@ -1,0 +1,15 @@
+{
+  "sdk": {
+    "version": "3.1.403",
+    "rollForward": "minor",
+    "allowPrerelease": false,
+    "architecture": "x64"
+  },
+  "tools": {
+    "dotnet": "3.1.403"
+  },
+  "msbuild-sdks": {
+    "Microsoft.DotNet.Arcade.Sdk": "1.0.0-beta.20465.6",
+    "Microsoft.DotNet.Helix.Sdk": "2.0.0-beta.20465.6"
+  }
+}
