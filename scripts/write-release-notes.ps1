@@ -79,39 +79,40 @@ $v = $tag -replace '^v'
 $b = if ($Stable) { $v } else { $tag -replace '.*?(\d+-\d+)$', '$1' }
 # using .. because I want to know the changes that are on this branch, but don't care about the changes that I don't have https://stackoverflow.com/a/24186641/3065397
 $log = (git -C $Path log "$start..$end" --oneline --pretty="format:%s" --first-parent)
+$date = ([datetime](git -C $path log -1 --format=%ai $end)).ToString("MMMM yyyy")
 $issues = $log | ForEach-Object {
     if ($_ -match '^(?<message>.+)\s\(#(?<pr>\d+)\)?$') {
-        $message = "* $($matches.message)"
         if ($matches.pr) {
             $pr = $matches.pr
-            $message += " [#$pr]($prUrl$pr)"
+            "- [x] [$($matches.message)]($prUrl$pr)"
+        }
+        else {
+            "- [x] $($matches.message)"
         }
 
         $message
     }
     else
     {
-        "* $_"
+        "- [x] $_"
     }
 }
 
 $output = @"
 
-See the release notes [here](https://github.com/microsoft/vstest-docs/blob/master/docs/releases.md#$($v -replace '\.')).
+See release notes [here](https://github.com/microsoft/testfx-docs/blob/master/docs/releases.md#$(("$v $date" -replace "\.", "" -replace "\W", "-").ToLowerInvariant())).
 
--------------------------------
+---
 
-## $v
-
-### Issue Fixed
+# $v ($date)
 $($issues -join "`n")
 
-See full log [here]($repoUrl/compare/$start...$tag)
+A list of changes since last release are available [here]($repoUrl/compare/$start...$tag)
 
-### Drops
+### Builds
+* MSTest.TestFramework: [$v](https://www.nuget.org/packages/MSTest.TestFramework/$v)
+* MSTest.TestAdapter: [$v](https://www.nuget.org/packages/MSTest.TestAdapter/$v)
 
-* TestPlatform vsix: [$v](https://vsdrop.corp.microsoft.com/file/v1/Products/DevDiv/microsoft/vstest/$sourceBranch/$b;/TestPlatform.vsix)
-* Microsoft.TestPlatform.ObjectModel : [$v](https://www.nuget.org/packages/Microsoft.TestPlatform.ObjectModel/$v)
 "@
 
 
