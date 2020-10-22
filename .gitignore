@@ -29,6 +29,7 @@ msbuild*.err
 build*.log
 build*.wrn
 build*.err
+*.binlog
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
