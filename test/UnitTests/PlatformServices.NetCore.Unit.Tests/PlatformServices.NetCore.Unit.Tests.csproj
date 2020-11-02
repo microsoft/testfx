@@ -40,15 +40,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\TestFramework\MSTest.Core\MSTest.Core.csproj">
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\src\TestFramework\Extension.Core\Extension.Core.csproj">
-      <Aliases>FrameworkV2Extension</Aliases>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj">
-    </ProjectReference>
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" Aliases="FrameworkV2Extension" />
+    <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
+    <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

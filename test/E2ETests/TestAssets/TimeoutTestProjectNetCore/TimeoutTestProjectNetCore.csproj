@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
   </PropertyGroup>
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Versions.targets" />
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>

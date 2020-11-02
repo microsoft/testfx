@@ -5,61 +5,49 @@
 
 [CmdletBinding(PositionalBinding=$false)]
 Param(  
-  [Parameter(Mandatory=$false)]
   [ValidateSet("Debug", "Release")]
   [Alias("c")]
-  [System.String] $Configuration = "Debug",
+  [string] $Configuration = "Debug",
 
-  [Parameter(Mandatory=$false)]
   [Alias("fv")]
-  [System.String] $FrameworkVersion = "99.99.99",
+  [string] $FrameworkVersion = "99.99.99",
   
-  [Parameter(Mandatory=$false)]
   [Alias("av")]
-  [System.String] $AdapterVersion = "99.99.99",
+  [string] $AdapterVersion = "99.99.99",
 
-  [Parameter(Mandatory=$false)]
   [Alias("vs")]
-  [System.String] $VersionSuffix = "dev",
+  [string] $VersionSuffix = "dev",
   
-  [Parameter(Mandatory=$false)]
-  [System.String] $BuildVersionPrefix  = "14.0",
+  [string] $BuildVersionPrefix  = "14.0",
 
-  [Parameter(Mandatory=$false)]
-  [System.String] $BuildVersionSuffix = "9999.99",
+  [string] $BuildVersionSuffix = "9999.99",
   
-  [Parameter(Mandatory=$false)]
-  [System.String] $Target = "Build",
+  [string] $Target = "Build",
   
-  [Parameter(Mandatory=$false)]
   [Alias("h")]
-  [Switch] $Help = $false,
+  [Switch] $Help,
 
-  [Parameter(Mandatory=$false)]
   [Alias("cl")]
-  [Switch] $Clean = $false,
+  [Switch] $Clean,
 
-  [Parameter(Mandatory=$false)]
   [Alias("sr")]
-  [Switch] $SkipRestore = $false,
+  [Switch] $SkipRestore,
 
-  [Parameter(Mandatory=$false)]
   [Alias("cache")]
-  [Switch] $ClearPackageCache = $false,
+  [Switch] $ClearPackageCache,
 
-  [Parameter(Mandatory=$false)]
-  [Switch] $Official = $false,
+  [Switch] $Official,
 
-  [Parameter(Mandatory=$false)]
-  [Switch] $Full = $false,
+  [Switch] $Full,
 
-  [Parameter(Mandatory=$false)]
   [Alias("uxlf")]
-  [Switch] $UpdateXlf = $false,
+  [Switch] $UpdateXlf,
 
-  [Parameter(Mandatory=$false)]
   [Alias("loc")]
-  [Switch] $IsLocalizedBuild = $false
+  [Switch] $IsLocalizedBuild,
+
+  [Alias("tpv")]
+  [string] $TestPlatformVersion = $null
 )
 
 . $PSScriptRoot\common.lib.ps1
@@ -310,24 +298,30 @@ function Create-NugetPackages
 function Replace-InFile($File, $RegEx, $ReplaceWith) {
   $content = Get-Content -Raw -Encoding utf8 $File 
   $newContent = ($content -replace $RegEx,$ReplaceWith)
-  if($content.Equals($ReplaceWith)) {
-    return
+  if(-not $content.Equals($newContent)) {
+    Write-Log "Updating TestPlatform version in $File"
+    $newContent | Set-Content -Encoding utf8 $File -NoNewline
   }
-
-  Write-Verbose "Updating TestPlatform version in $_"
-  $newContent | Set-Content -Encoding utf8 $file -NoNewline
 }
 
 function Sync-PackageVersions {
-  $testPlarformVersion = (([XML](Get-Content $PSScriptRoot\build\TestFx.Settings.targets)).Project.PropertyGroup[1].TestPlatfromVersion).InnerText
-  $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform\.([0-9a-z.]+)" version="([0-9a-z.-]*)"'
+  $versionsFile = "$PSScriptRoot\build\TestFx.Versions.targets"
+
+  $versionsRegex = '(?mi)<(TestPlatfromVersion.*?)>(.*?)<\/TestPlatfromVersion>'
+  $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform([0-9a-z.]+)?" version="([0-9a-z.-]*)"'
   $sourceRegex = '(?mi)(.+[a-z =]+\@\")Microsoft\.TestPlatform\.([0-9.-a-z]+)\";'
 
-  (Get-ChildItem "$PSScriptRoot\..\src\*packages.config","$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
-    Replace-InFile -File $_ -RegEx $packageRegex -ReplaceWith "<package id=`"Microsoft.TestPlatform.`$1`" version=`"$testPlarformVersion`""
+  if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
+    $TestPlatformVersion = (([XML](Get-Content $versionsFile)).Project.PropertyGroup.TestPlatfromVersion).InnerText
+  } else {
+    Replace-InFile -File $versionsFile -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</TestPlatfromVersion>"
   }
 
-  Replace-InFile -File "$PSScriptRoot\..\test\E2ETests\Automation.CLI\CLITestBase.cs" -RegEx $sourceRegex -ReplaceWith "`$1Microsoft.TestPlatform.$testPlarformVersion`";"
+  (Get-ChildItem "$PSScriptRoot\..\src\*packages.config","$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
+    Replace-InFile -File $_ -RegEx $packageRegex -ReplaceWith "<package id=`"Microsoft.TestPlatform`$1`" version=`"$TestPlatformVersion`""
+  }
+
+  Replace-InFile -File "$PSScriptRoot\..\test\E2ETests\Automation.CLI\CLITestBase.cs" -RegEx $sourceRegex -ReplaceWith "`$1Microsoft.TestPlatform.$TestPlatformVersion`";"
 }
 
 Print-Help
