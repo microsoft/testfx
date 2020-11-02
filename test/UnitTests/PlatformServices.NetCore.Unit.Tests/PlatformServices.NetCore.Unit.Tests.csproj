@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatfromVersion)" />
     <PackageReference Include="Moq" Version="4.7.63" />
   </ItemGroup>
 

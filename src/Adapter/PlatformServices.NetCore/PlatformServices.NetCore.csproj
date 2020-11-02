@@ -66,7 +66,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="16.9.0-preview-20201021-10" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(TestPlatfromVersion)" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
   </ItemGroup>
 

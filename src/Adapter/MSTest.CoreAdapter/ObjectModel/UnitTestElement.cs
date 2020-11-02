@@ -114,10 +114,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 this.TestMethod.FullClassName,
                 this.TestMethod.Name);
 
-            TestCase testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
-            testCase.DisplayName = string.IsNullOrEmpty(this.DisplayName) ? this.TestMethod.Name : this.DisplayName;
+            TestCase testCase;
 
+            if (string.IsNullOrWhiteSpace(this.TestMethod.ManagedType) || string.IsNullOrWhiteSpace(this.TestMethod.ManagedMethod))
+            {
+                testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
+            }
+            else
+            {
+                testCase = new TestCase(fullName, this.TestMethod.ManagedType, this.TestMethod.ManagedMethod, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
+            }
+
+            testCase.DisplayName = string.IsNullOrEmpty(this.DisplayName) ? this.TestMethod.Name : this.DisplayName;
             testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
+            testCase.SetPropertyValue(TestCaseProperties.ManagedType, this.TestMethod.ManagedType);
+            testCase.SetPropertyValue(TestCaseProperties.ManagedMethod, this.TestMethod.ManagedMethod);
 
             // Set declaring type if present so the correct method info can be retrieved
             if (this.TestMethod.DeclaringClassFullName != null)

@@ -307,7 +307,31 @@ function Create-NugetPackages
     Write-Log "Create-NugetPackages: Complete. {$(Get-ElapsedTime($timer))}"
 }
 
+function Replace-InFile($File, $RegEx, $ReplaceWith) {
+  $content = Get-Content -Raw -Encoding utf8 $File 
+  $newContent = ($content -replace $RegEx,$ReplaceWith)
+  if($content.Equals($ReplaceWith)) {
+    return
+  }
+
+  Write-Verbose "Updating TestPlatform version in $_"
+  $newContent | Set-Content -Encoding utf8 $file -NoNewline
+}
+
+function Sync-PackageVersions {
+  $testPlarformVersion = (([XML](Get-Content $PSScriptRoot\build\TestFx.Settings.targets)).Project.PropertyGroup[1].TestPlatfromVersion).InnerText
+  $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform\.([0-9a-z.]+)" version="([0-9a-z.-]*)"'
+  $sourceRegex = '(?mi)(.+[a-z =]+\@\")Microsoft\.TestPlatform\.([0-9.-a-z]+)\";'
+
+  (Get-ChildItem "$PSScriptRoot\..\src\*packages.config","$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
+    Replace-InFile -File $_ -RegEx $packageRegex -ReplaceWith "<package id=`"Microsoft.TestPlatform.`$1`" version=`"$testPlarformVersion`""
+  }
+
+  Replace-InFile -File "$PSScriptRoot\..\test\E2ETests\Automation.CLI\CLITestBase.cs" -RegEx $sourceRegex -ReplaceWith "`$1Microsoft.TestPlatform.$testPlarformVersion`";"
+}
+
 Print-Help
+Sync-PackageVersions
 Perform-Restore
 Perform-Build
 Create-NugetPackages
