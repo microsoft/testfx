@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
   </PropertyGroup>
