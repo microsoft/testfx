@@ -1,4 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
+  </PropertyGroup>
   
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
@@ -6,7 +9,7 @@
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">$(PackageTargetFallback);portable-net45+win8+wpa81+wp8</PackageTargetFallback>
-    <OutputPath>..\..\..\..\artifacts\TestAssets\netcoreapp1.1\</OutputPath>
+    <OutputPath>$(TestFxRoot)artifacts\TestAssets\netcoreapp1.1\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\TestFramework\Extension.Core\Extension.Core.csproj" />
-    <ProjectReference Include="..\..\..\..\src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" />
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

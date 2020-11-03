@@ -5,20 +5,21 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net452</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(TestFxRoot)artifacts\TestAssets\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" />
-    <ProjectReference Include="..\..\..\..\src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" />
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
   
   <ItemGroup>
     <Compile Include="Tests.fs" />
   </ItemGroup>
-
+  
 </Project>
