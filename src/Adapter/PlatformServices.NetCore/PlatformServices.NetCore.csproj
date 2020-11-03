@@ -72,6 +72,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PlatformServices.Interface\PlatformServices.Interface.csproj" />
+    <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj" />
+    <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
