@@ -80,9 +80,26 @@ $TFB_Full = $Full
 $TFB_Official = $Official
 $TFB_UpdateXlf = $UpdateXlf
 $TFB_IsLocalizedBuild = $IsLocalizedBuild -or $TFB_Official
-$TFB_Solutions = @("TestFx.sln")
-$TFB_NetCoreProjects =@("src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj",
-						"test\UnitTests\PlatformServices.NetCore.Unit.Tests\PlatformServices.NetCore.Unit.Tests.csproj")
+
+$TFB_Solutions = @(
+  "TestFx.sln"
+)
+
+$TFB_NetCoreProjects =@(
+  "src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj"
+
+  "test\ComponentTests\TestAssets\TestProjectForAssemblyResolution\TestProjectForAssemblyResolution.csproj"
+  "test\E2ETests\TestAssets\CompatTestProject\CompatTestProject.csproj"
+  "test\E2ETests\TestAssets\DataRowTestProject\DataRowTestProject.csproj"
+  "test\E2ETests\TestAssets\DataSourceTestProject\DataSourceTestProject.csproj"
+  "test\E2ETests\TestAssets\DeploymentTestProject\DeploymentTestProject.csproj"
+  "test\E2ETests\TestAssets\DeploymentTestProjectNetCore\DeploymentTestProjectNetCore.csproj"
+  "test\E2ETests\TestAssets\DoNotParallelizeTestProject\DoNotParallelizeTestProject.csproj"
+  "test\E2ETests\TestAssets\FSharpTestProject\FSharpTestProject.fsproj"
+  "test\E2ETests\TestAssets\TimeoutTestProject\TimeoutTestProject.csproj"
+  "test\E2ETests\TestAssets\TimeoutTestProjectNetCore\TimeoutTestProjectNetCore.csproj"
+  "test\UnitTests\PlatformServices.NetCore.Unit.Tests\PlatformServices.NetCore.Unit.Tests.csproj"
+)
 
 #
 # Script Preferences
