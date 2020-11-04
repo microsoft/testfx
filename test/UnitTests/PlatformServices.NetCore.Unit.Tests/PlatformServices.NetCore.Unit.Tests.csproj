@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -35,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatfromVersion)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatformVersion)" />
     <PackageReference Include="Moq" Version="4.7.63" />
   </ItemGroup>
 

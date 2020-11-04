@@ -5,15 +5,15 @@
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Versions.targets" />
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(TestFxRoot)artifacts\TestAssets\netcoreapp1.1\</OutputPath>
+    <OutputPath>$(TestFxRoot)artifacts\TestAssets\netcoreapp2.1\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatfromVersion)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatformVersion)" />
   </ItemGroup>
 
   <ItemGroup>
