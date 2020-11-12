@@ -359,7 +359,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is null.
         /// </exception>
-        public static void IsNotNull(object value)
+        public static void IsNotNull([NotNull] object value)
         {
             IsNotNull(value, string.Empty, null);
         }
@@ -378,7 +378,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is null.
         /// </exception>
-        public static void IsNotNull(object value, string message)
+        public static void IsNotNull([NotNull] object value, string message)
         {
             IsNotNull(value, message, null);
         }
@@ -400,7 +400,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is null.
         /// </exception>
-        public static void IsNotNull(object value, string message, params object[] parameters)
+        public static void IsNotNull([NotNull]object value, string message, params object[] parameters)
         {
             if (value == null)
             {
@@ -2412,7 +2412,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="parameters">
         /// The parameters.
         /// </param>
-        internal static void CheckParameterNotNull(object param, string assertionName, string parameterName, string message, params object[] parameters)
+        internal static void CheckParameterNotNull([NotNull]object param, string assertionName, string parameterName, string message, params object[] parameters)
         {
             if (param == null)
             {
