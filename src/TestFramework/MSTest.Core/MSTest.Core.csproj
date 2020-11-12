@@ -50,6 +50,7 @@
     <Compile Include="Attributes\ExpectedExceptionBaseAttribute.cs" />
     <Compile Include="Friends.cs" />
     <Compile Include="GenericParameterHelper.cs" />
+    <Compile Include="Internal\NullableAttributes.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Attributes\TestCategoryAttribute.cs" />
