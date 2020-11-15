@@ -6,15 +6,16 @@
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Versions.targets" />
   
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp1.0;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.1;netcoreapp2.1</TargetFrameworks>
     <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <IsPackable>false</IsPackable>
-    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">$(PackageTargetFallback);portable-net45+win8+wpa81+wp8</PackageTargetFallback>
     <OutputPath>$(TestFxRoot)artifacts\TestAssets\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatformVersion)" />
+    <PackageReference Include="System.Runtime" Version="4.3.0"  Condition=" '$(TargetFramework)' == 'netcoreapp1.0' "/>
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0"  Condition=" '$(TargetFramework)' == 'netcoreapp1.0' "/>
   </ItemGroup>
 
   <ItemGroup>
