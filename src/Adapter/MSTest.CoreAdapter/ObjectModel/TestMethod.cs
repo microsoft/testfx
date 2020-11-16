@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     using System.Diagnostics;
     using System.Reflection;
 
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.FullyQualifiedNameUtilities;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.ManagedNameUtilities;
 
     using MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
@@ -55,7 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 throw new ArgumentNullException(nameof(method));
             }
 
-            FullyQualifiedNameHelper.GetFullyQualifiedName(method, out var managedType, out var managedMethod);
+            ManagedNameHelper.GetManagedName(method, out var managedType, out var managedMethod);
 
             this.ManagedType = managedType;
             this.ManagedMethod = managedMethod;

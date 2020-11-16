@@ -19,7 +19,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         private const string PackagesFolder = "packages";
 
         // This value is automatically updated by "build.ps1" script.
-        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.16.9.0-preview-20201115-01";
+        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.16.9.0-preview-20201119-02";
         private const string VstestConsoleRelativePath = @"tools\net451\Common7\IDE\Extensions\TestPlatform\vstest.console.exe";
 
         private static VsTestConsoleWrapper vsTestConsoleWrapper;
@@ -211,7 +211,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
                 {
                     if (string.IsNullOrWhiteSpace(testFound.ErrorStackTrace))
                     {
-                        Assert.Fail($"The test failure {testFound.DisplayName} with message {testFound.ErrorMessage} lacks stacktrace");
+                        Assert.Fail($@"The test failure {testFound.DisplayName ?? testFound.TestCase.FullyQualifiedName} with message {testFound.ErrorMessage} lacks stacktrace.");
                     }
 
                     // Verify stack information as well.
