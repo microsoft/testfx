@@ -2,17 +2,19 @@
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
-    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  
   <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
+    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
+    <IsPackable>false</IsPackable>
     <RootNamespace>MSTestAdapter.PlatformServices.NetCore.UnitTests</RootNamespace>
     <AssemblyName>MSTestAdapter.PlatformServices.NetCore.UnitTests</AssemblyName>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
-    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">$(PackageTargetFallback);portable-net45+win8+wpa81+wp8</PackageTargetFallback>
+    <NoWarn>CS1685</NoWarn>
   </PropertyGroup>
+  
   <ItemGroup>
     <Compile Include="..\MSTest.CoreAdapter.TestUtilities\ActionUtility.cs" Link="ActionUtility.cs" />
     <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10DeploymentItemTests.cs" Link="Deployment\ns10DeploymentItemTests.cs" />
@@ -41,8 +43,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
     <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" Aliases="FrameworkV2Extension" />
+    <ProjectReference Include="$(TestFxRoot)src\Adapter\MSTest.CoreAdapter\MSTest.CoreAdapter.csproj" />
+    
     <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
     <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj" />
   </ItemGroup>
@@ -61,11 +64,6 @@
       <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions' or '%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework'" />
     </ItemGroup>
   </Target>
-  <!-- Workaround for https://github.com/dotnet/sdk/issues/1020 
-       We should have a ProjectReference For MSTest.CoreAdapter with ReferenceOutputAssembly="false"-->
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="xcopy /Y /I $(TargetDir)..\..\MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll $(TargetDir)" />
-      <Exec Command="xcopy /Y /I $(TargetDir)..\..\MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb $(TargetDir)" />
-  </Target>
 
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

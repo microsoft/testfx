@@ -3,7 +3,7 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Services
 {
-#if NETCOREAPP1_1
+#if NETCOREAPP1_1 || NETCOREAPP2_1
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
     extern alias FrameworkV1;
@@ -36,7 +36,15 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         {
             var filePath = "temp<>txt";
             Action a = () => this.fileOperations.LoadAssembly(filePath, false);
-            ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentException));
+
+            Type expectedException;
+#if NETCOREAPP1_0 || NETCOREAPP2_1
+            expectedException = typeof(FileNotFoundException);
+#else
+            expectedException = typeof(ArgumentException);
+#endif
+
+            ActionUtility.ActionShouldThrowExceptionOfType(a, expectedException);
         }
 
         [TestMethod]

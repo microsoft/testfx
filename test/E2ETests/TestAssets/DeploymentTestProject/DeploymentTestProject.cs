@@ -1,12 +1,12 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DeploymentTestProject
 {
-    [DeploymentItem("DeploymentFile.xml")]
+
+    [DeploymentItem(@"..\..\..\..\test\E2ETests\TestAssets\DeploymentTestProject\DeploymentFile.xml")]
     [TestClass]
-    public class UnitTest1
+    public class DeploymentTestProject
     {
         [TestMethod]
         public void PassIfFilePresent()
@@ -20,7 +20,7 @@ namespace DeploymentTestProject
             Assert.IsFalse(File.Exists("EmptyDataFile.xml"));
         }
 
-        [DeploymentItem("TestCaseDeploymentFile.xml")]
+        [DeploymentItem(@"..\..\..\..\test\E2ETests\TestAssets\DeploymentTestProject\TestCaseDeploymentFile.xml")]
         [TestMethod]
         public void PassIfDeclaredFilesPresent()
         {

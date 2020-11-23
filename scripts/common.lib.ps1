@@ -127,7 +127,7 @@ function Locate-VsInstallPath($hasVsixExtension ="false"){
   $requiredPackageIds = @()
 
   $requiredPackageIds += "Microsoft.Component.MSBuild" 
-  $requiredPackageIds += "Microsoft.Net.Component.4.6.TargetingPack"
+  $requiredPackageIds += "Microsoft.Net.Component.4.5.2.TargetingPack"
   $requiredPackageIds += "Microsoft.VisualStudio.Windows.Build"
 
   if($hasVsixExtension -eq 'true')

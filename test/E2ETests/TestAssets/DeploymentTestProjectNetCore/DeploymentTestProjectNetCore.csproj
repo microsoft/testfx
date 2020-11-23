@@ -6,7 +6,7 @@
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Versions.targets" />
   
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp1.1;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
     <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <IsPackable>false</IsPackable>
     <OutputPath>$(TestFxRoot)artifacts\TestAssets\</OutputPath>
@@ -14,8 +14,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatformVersion)" />
-    <PackageReference Include="System.Runtime" Version="4.3.0"  Condition=" '$(TargetFramework)' == 'netcoreapp1.0' "/>
-    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0"  Condition=" '$(TargetFramework)' == 'netcoreapp1.0' "/>
   </ItemGroup>
 
   <ItemGroup>

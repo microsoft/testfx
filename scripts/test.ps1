@@ -49,7 +49,7 @@ $TFT_Configuration = $Configuration
 $TFT_Pattern = $Pattern
 $TFT_Parallel = $Parallel
 $TFT_All = $All
-$TestFramework = ".NETCoreApp,Version=v1.0"
+$TestFramework = ".NETCoreApp,Version=v2.1"
 
 #
 # Prints help text for the switches this script supports.
@@ -147,28 +147,28 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
        $additionalArguments += "/parallel"
     }
 	
-	if($testContainers.Count -gt 0)
-	{
-		if(!(Test-Path $vstestPath))
-		{
-			Write-Error "Unable to find vstest.console.exe at $vstestPath. Test aborted."
-		}
+	 if($testContainers.Count -gt 0)
+	 {
+	 	if(!(Test-Path $vstestPath))
+	 	{
+	 		Write-Error "Unable to find vstest.console.exe at $vstestPath. Test aborted."
+	 	}
 	
-		Write-Verbose "$vstestPath $testContainers $additionalArguments /logger:trx"
-		& $vstestPath $testContainers $additionalArguments /logger:trx
+	 	Write-Verbose "$vstestPath $testContainers $additionalArguments /logger:trx"
+	 	& $vstestPath $testContainers $additionalArguments /logger:trx
 
-		if ($lastExitCode -ne 0) 
-		{
-		    throw "Tests failed."
-		}
-	}
+	 	if ($lastExitCode -ne 0) 
+	 	{
+	 	    throw "Tests failed."
+	 	}
+	 }
 	
 	if($netCoreTestContainers.Count -gt 0)
 	{
 		Try
 		{
-			Write-Verbose "dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
-			& dotnet vstest $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx
+			Write-Verbose "dotnet test $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
+			& dotnet test $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx
 		}
 
 		Catch [System.Management.Automation.CommandNotFoundException]

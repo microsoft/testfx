@@ -4,7 +4,8 @@
 namespace MSTestAdapter.PlatformServices.Tests.Services
 {
     extern alias FrameworkV2Extension;
-#if NETCOREAPP1_1
+
+#if NETCOREAPP1_1 || NETCOREAPP2_1
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
     extern alias FrameworkV1;
@@ -529,7 +530,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
             this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
             var mockAssemblyUtility = new Mock<AssemblyUtility>();
-#if !NETCOREAPP1_1
+#if !NETCOREAPP1_1 && !NETCOREAPP2_1
              mockAssemblyUtility.Setup(
                 au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
                 .Returns(new string[] { });

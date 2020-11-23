@@ -114,7 +114,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 {
                     try
                     {
-                        this.traceListenerManager.Remove(this.traceListener);
+                        if (this.traceListener != null)
+                        {
+                            this.traceListenerManager.Remove(this.traceListener);
+                        }
 
                         // Restore the previous LogMessageListener's TraceListener (if there was one)
                         if (this.previousRedirector != null && this.previousRedirector.traceListener != null)

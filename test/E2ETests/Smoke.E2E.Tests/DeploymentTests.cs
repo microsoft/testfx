@@ -9,7 +9,8 @@ namespace MSTestAdapter.Smoke.E2ETests
     [TestClass]
     public class DeploymentTests : CLITestBase
     {
-        private const string TestAssembly = "DesktopDeployment\\DeploymentTestProject.dll";
+        private const string TestAssemblyDependency = "DesktopDeployment\\Never\\DeploymentTestProject.dll";
+        private const string TestAssemblyMSBuild = "DesktopDeployment\\PreserveNewest\\DeploymentTestProject.dll";
         private const string TestAssemblyNetCore10 = "netcoreapp1.0\\DeploymentTestProjectNetCore.dll";
         private const string TestAssemblyNetCore21 = "netcoreapp2.1\\DeploymentTestProjectNetCore.dll";
         private const string RunSetting =
@@ -22,17 +23,17 @@ namespace MSTestAdapter.Smoke.E2ETests
         [TestMethod]
         public void ValidateTestSourceDependencyDeployment()
         {
-            this.InvokeVsTestForExecution(new string[] { TestAssembly });
-            this.ValidatePassedTestsContain("DeploymentTestProject.UnitTest1.FailIfFilePresent", "DeploymentTestProject.UnitTest1.PassIfDeclaredFilesPresent");
-            this.ValidateFailedTestsContain("DeploymentTestProject.dll", true, "DeploymentTestProject.UnitTest1.PassIfFilePresent");
+            this.InvokeVsTestForExecution(new string[] { TestAssemblyDependency });
+            this.ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.FailIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
+            this.ValidateFailedTestsContain(TestAssemblyMSBuild, true, "DeploymentTestProject.DeploymentTestProject.PassIfFilePresent");
         }
 
         [TestMethod]
         public void ValidateTestSourceLocationDeployment()
         {
-            this.InvokeVsTestForExecution(new string[] { TestAssembly }, RunSetting);
-            this.ValidatePassedTestsContain("DeploymentTestProject.UnitTest1.PassIfFilePresent", "DeploymentTestProject.UnitTest1.PassIfDeclaredFilesPresent");
-            this.ValidateFailedTestsContain("DeploymentTestProject.dll", true, "DeploymentTestProject.UnitTest1.FailIfFilePresent");
+            this.InvokeVsTestForExecution(new string[] { TestAssemblyMSBuild }, RunSetting);
+            this.ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.PassIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
+            this.ValidateFailedTestsContain(TestAssemblyMSBuild, true, "DeploymentTestProject.DeploymentTestProject.FailIfFilePresent");
         }
 
         /*
@@ -50,9 +51,17 @@ namespace MSTestAdapter.Smoke.E2ETests
         [TestMethod]
         public void ValidateTestSourceLocationDeploymentNetCore2_1()
         {
+            // StackTrace isn't included in release builds with netcoreapp2.1.
+            const bool validateStackTrace =
+#if DEBUG
+            true;
+#else
+            false;
+#endif
+
             this.InvokeVsTestForExecution(new string[] { TestAssemblyNetCore21 }, null);
             this.ValidatePassedTestsContain("DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.FailIfFilePresent", "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfDeclaredFilesPresent");
-            this.ValidateFailedTestsContain("DeploymentTestProjectNetCore.dll", true, "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfFilePresent");
+            this.ValidateFailedTestsContain(TestAssemblyMSBuild, validateStackTrace, "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfFilePresent");
         }
     }
 }
