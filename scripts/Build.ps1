@@ -318,10 +318,10 @@ function Sync-PackageVersions {
   }
 
   (Get-ChildItem "$PSScriptRoot\..\src\*packages.config","$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
-    Replace-InFile -File $_ -RegEx $packageRegex -ReplaceWith "<package id=`"Microsoft.TestPlatform`$1`" version=`"$TestPlatformVersion`""
+    Replace-InFile -File $_ -RegEx $packageRegex -ReplaceWith ('<package id="Microsoft.TestPlatform$1" version="{0}"' -f $TestPlatformVersion)
   }
 
-  Replace-InFile -File "$PSScriptRoot\..\test\E2ETests\Automation.CLI\CLITestBase.cs" -RegEx $sourceRegex -ReplaceWith "`$1Microsoft.TestPlatform.$TestPlatformVersion`";"
+  Replace-InFile -File "$PSScriptRoot\..\test\E2ETests\Automation.CLI\CLITestBase.cs" -RegEx $sourceRegex -ReplaceWith ('$1Microsoft.TestPlatform.{0}";' -f $TestPlatformVersion)
 }
 
 Print-Help
