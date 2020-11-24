@@ -38,7 +38,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             Action a = () => this.fileOperations.LoadAssembly(filePath, false);
 
             Type expectedException;
-#if NETCOREAPP1_0 || NETCOREAPP2_1
+#if NETCOREAPP
             expectedException = typeof(FileNotFoundException);
 #else
             expectedException = typeof(ArgumentException);
