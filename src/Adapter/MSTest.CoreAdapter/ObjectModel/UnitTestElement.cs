@@ -116,13 +116,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
             TestCase testCase;
 
-            if (string.IsNullOrWhiteSpace(this.TestMethod.ManagedType) || string.IsNullOrWhiteSpace(this.TestMethod.ManagedMethod))
+            if (this.TestMethod.HasManagedMethodAndType)
             {
-                testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
+                testCase = new TestCase(fullName, this.TestMethod.ManagedType, this.TestMethod.ManagedMethod, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
             }
             else
             {
-                testCase = new TestCase(fullName, this.TestMethod.ManagedType, this.TestMethod.ManagedMethod, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
+                testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
             }
 
             testCase.DisplayName = string.IsNullOrEmpty(this.DisplayName) ? this.TestMethod.Name : this.DisplayName;

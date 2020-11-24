@@ -123,5 +123,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public string ManagedType { get; }
 
         public string ManagedMethod { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether both <see cref="ManagedType"/> and <see cref="ManagedMethod"/> are not null or whitespace.
+        /// </summary>
+        public bool HasManagedMethodAndType => !string.IsNullOrWhiteSpace(this.ManagedType) && !string.IsNullOrWhiteSpace(this.ManagedMethod);
     }
 }
