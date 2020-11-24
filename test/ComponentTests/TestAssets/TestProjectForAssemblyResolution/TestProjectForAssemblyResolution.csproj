@@ -1,11 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
   </PropertyGroup>
   
   <PropertyGroup>
-    <TargetFramework>net451</TargetFramework>
+    <TargetFramework>net452</TargetFramework>
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(TestFxRoot)artifacts\TestAssets\ComponentTests</OutputPath>
@@ -19,5 +18,4 @@
     <PackageReference Include="MSTest.TestAdapter" Version="1.2.0" />
     <PackageReference Include="MSTest.TestFramework" Version="1.2.0" />
   </ItemGroup>
-
 </Project>

@@ -23,7 +23,7 @@
 	  <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="lib\net451\" />
 	  
     <!-- Added the below so source navigation works in dotnet-test scenarios -->
-	  <file src="$packagesroot$\Microsoft.Internal.Dia.Interop.14.0.1\lib\net20\msdia140typelib_clr0200.dll" target="lib\net451\" />
+	  <file src="$packagesroot$\Microsoft.Internal.Dia.Interop.14.0.0\lib\net20\msdia140typelib_clr0200.dll" target="lib\net451\" />
 
     <!-- LICENSE.txt -->
     <file src="LICENSE.txt" target="" />

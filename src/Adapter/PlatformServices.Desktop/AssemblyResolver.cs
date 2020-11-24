@@ -12,6 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Runtime.InteropServices.WindowsRuntime;
     using System.Security;
     using System.Security.Permissions;
+
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
     /// <summary>
@@ -28,7 +29,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// The reason we have this is because the AssemblyResolver itself logs information during resolution.
         /// If the resolver is called for the assembly containing the logger APIs, we do not log so as to prevent a stack overflow.
         /// </remarks>
-        private const string LoggerAssemblyName = "Microsoft.VisualStudio.TestPlatform.ObjectModel";
+        private const string LoggerAssemblyNameLegacy = "Microsoft.VisualStudio.TestPlatform.ObjectModel";
+
+        /// <summary>
+        /// The assembly name of the dll containing logger APIs(EqtTrace) from the TestPlatform.
+        /// </summary>
+        /// <remarks>
+        /// The reason we have this is because the AssemblyResolver itself logs information during resolution.
+        /// If the resolver is called for the assembly containing the logger APIs, we do not log so as to prevent a stack overflow.
+        /// </remarks>
+        private const string LoggerAssemblyName = "Microsoft.TestPlatform.CoreUtilities";
 
         /// <summary>
         /// This will have the list of all directories read from runsettings.
@@ -577,7 +587,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="loggerAction">The logger function.</param>
         private void SafeLog(string assemblyName, Action loggerAction)
         {
-            if (!string.IsNullOrEmpty(assemblyName) && !assemblyName.StartsWith(LoggerAssemblyName))
+            // Logger assembly was in `Microsoft.VisualStudio.TestPlatform.ObjectModel` assembly in legacy versions and we need to omit it as well.
+            if (!string.IsNullOrEmpty(assemblyName) && !assemblyName.StartsWith(LoggerAssemblyName) && !assemblyName.StartsWith(LoggerAssemblyNameLegacy))
             {
                 loggerAction.Invoke();
             }

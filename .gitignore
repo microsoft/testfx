@@ -15,6 +15,7 @@
 *.sln.metaproj
 *.sln.metaproj.tmp
 .vs/
+.vscode/
 *.cache
 
 # Build results
@@ -29,6 +30,7 @@ msbuild*.err
 build*.log
 build*.wrn
 build*.err
+*.binlog
 
 # MSTest test Results
 [Tt]est[Rr]esult*/

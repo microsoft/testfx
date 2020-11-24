@@ -33,5 +33,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// Gets a value indicating whether test method is async
         /// </summary>
         bool IsAsync { get; }
+
+        /// <summary>
+        /// Gets the fully specified type name metadata format.
+        /// </summary>
+        /// <example>
+        ///     <code>NamespaceA.NamespaceB.ClassName`1+InnerClass`2</code>
+        /// </example>
+        string ManagedType { get; }
+
+        /// <summary>
+        /// Gets the fully specified method name metadata format.
+        /// </summary>
+        /// <example>
+        ///     <code>MethodName`2(ParamTypeA,ParamTypeB,…)</code>
+        /// </example>
+        string ManagedMethod { get; }
     }
 }

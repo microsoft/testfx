@@ -18,6 +18,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public static readonly string TestLogsDir = "TestLogsDir";
 
         public static readonly string FullyQualifiedTestClassName = "FullyQualifiedTestClassName";
+        public static readonly string ManagedType = "ManagedType";
+        public static readonly string ManagedMethod = "ManagedMethod";
         public static readonly string TestName = "TestName";
     }
 }

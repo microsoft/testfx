@@ -142,6 +142,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{F60B
 	ProjectSection(SolutionItems) = preProject
 		scripts\build\TestFx.Loc.targets = scripts\build\TestFx.Loc.targets
 		scripts\build\TestFx.Settings.targets = scripts\build\TestFx.Settings.targets
+		scripts\build\TestFx.Versions.targets = scripts\build\TestFx.Versions.targets
 		scripts\build\TestFx.targets = scripts\build\TestFx.targets
 	EndProjectSection
 EndProject
