@@ -185,10 +185,13 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 
 function Get-VSTestPath
 {
-	$vsInstallPath = Locate-VsInstallPath
-	$vstestPath = Join-Path -path $vsInstallPath "Common7\IDE\CommonExtensions\Microsoft\TestWindow\vstest.console.exe"
+    $versionsFile = "$PSScriptRoot\build\TestFx.Versions.targets"
+    $TestPlatformVersion = (([XML](Get-Content $versionsFile)).Project.PropertyGroup.TestPlatformVersion).InnerText
+
+	$vsInstallPath = "$PSScriptRoot\..\packages\Microsoft.TestPlatform.$TestPlatformVersion\"
+	$vstestPath = Join-Path -path $vsInstallPath "tools\net451\Common7\IDE\Extensions\TestPlatform\vstest.console.exe"
 	return Resolve-Path -path $vstestPath
 }
-	
+
 Print-Help
 Invoke-Test
