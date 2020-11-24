@@ -4,6 +4,7 @@
 namespace MSTestAdapter.Smoke.E2ETests
 {
     using System.IO;
+
     using Microsoft.MSTestV2.CLIAutomation;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -11,10 +12,10 @@ namespace MSTestAdapter.Smoke.E2ETests
     public class TimeoutTests : CLITestBase
     {
         private const string TimeoutTestAssembly = "TimeoutTestProject.dll";
-        private const string TimeoutTestAssemblyNetCore = "netcoreapp1.1\\TimeoutTestProjectNetCore.dll";
+        private const string TimeoutTestAssemblyNetCore = "netcoreapp2.1\\TimeoutTestProjectNetCore.dll";
         private const int TestMethodWaitTimeInMs = 6000;
         private const int OverheadTimeInMs = 2500;
-        private const string TimeoutFileToValidateNetCore = "netcoreapp1.1\\TimeoutTestOutputNetCore.txt";
+        private const string TimeoutFileToValidateNetCore = "netcoreapp2.1\\TimeoutTestOutputNetCore.txt";
         private const string TimeoutFileToValidate = "TimeoutTestOutput.txt";
 
         [TestMethod]

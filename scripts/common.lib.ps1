@@ -122,34 +122,29 @@ function Locate-VsWhere {
   return $vswhere
 }
 
-function Locate-VsInstallPath($hasVsixExtension ="false"){
+function Locate-VsInstallPath($hasVsixExtension = "false") {
   $vswhere = Locate-VsWhere
   $requiredPackageIds = @()
 
   $requiredPackageIds += "Microsoft.Component.MSBuild" 
-  $requiredPackageIds += "Microsoft.Net.Component.4.6.TargetingPack"
+  $requiredPackageIds += "Microsoft.Net.Component.4.5.2.TargetingPack"
   $requiredPackageIds += "Microsoft.VisualStudio.Windows.Build"
 
-  if($hasVsixExtension -eq 'true')
-  {
+  if ($hasVsixExtension -eq 'true') {
     $requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK" 
   }
 
   Write-Verbose "$vswhere -latest -products * -requires $requiredPackageIds -property installationPath"
-  try
-  {
-       if ($Official)
-	   {
-           $vsInstallPath = & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
-       }
-       else
-	   {
-           # Allow using pre release versions of VS for dev builds
-           $vsInstallPath = & $vswhere -latest -prerelease -products * -requires $requiredPackageIds -property installationPath
-       }
+  try {
+    if ($Official) {
+      $vsInstallPath = & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
+    }
+    else {
+      # Allow using pre release versions of VS for dev builds
+      $vsInstallPath = & $vswhere -latest -prerelease -products * -requires $requiredPackageIds -property installationPath
+    }
   }
-  catch [System.Management.Automation.MethodInvocationException]
-  {
+  catch [System.Management.Automation.MethodInvocationException] {
     Write-Error "Failed to find VS installation with requirements : $requiredPackageIds."
   }
 
@@ -157,31 +152,26 @@ function Locate-VsInstallPath($hasVsixExtension ="false"){
   return Resolve-Path -path $vsInstallPath
 }
 
-
 function Locate-Item([string] $relativePath) {
   $rootPath = $env:TF_ROOT_DIR
   $itemPath = Join-Path -path $rootPath -childPath $relativePath
   return Resolve-Path -path $itemPath
 }
 
-function Start-Timer
-{
-    return [System.Diagnostics.Stopwatch]::StartNew()
+function Start-Timer {
+  return [System.Diagnostics.Stopwatch]::StartNew()
 }
 
-function Get-ElapsedTime([System.Diagnostics.Stopwatch] $timer)
-{
-    $timer.Stop()
-    return $timer.Elapsed
+function Get-ElapsedTime([System.Diagnostics.Stopwatch] $timer) {
+  $timer.Stop()
+  return $timer.Elapsed
 }
 
-function Write-Log ([string] $message, $messageColor = "Green")
-{
-    $currentColor = $Host.UI.RawUI.ForegroundColor
-    $Host.UI.RawUI.ForegroundColor = $messageColor
-    if ($message)
-    {
-        Write-Output "... $message"
-    }
-    $Host.UI.RawUI.ForegroundColor = $currentColor
+function Write-Log ([string] $message, $messageColor = "Green") {
+  $currentColor = $Host.UI.RawUI.ForegroundColor
+  $Host.UI.RawUI.ForegroundColor = $messageColor
+  if ($message) {
+    Write-Output "... $message"
+  }
+  $Host.UI.RawUI.ForegroundColor = $currentColor
 }

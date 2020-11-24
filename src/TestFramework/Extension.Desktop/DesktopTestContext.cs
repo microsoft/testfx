@@ -101,6 +101,16 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public virtual string FullyQualifiedTestClassName => this.GetProperty<string>("FullyQualifiedTestClassName");
 
         /// <summary>
+        /// Gets the fully specified type name metadata format.
+        /// </summary>
+        public virtual string ManagedType => this.GetProperty<string>(nameof(this.ManagedType));
+
+        /// <summary>
+        /// Gets the fully specified method name metadata format.
+        /// </summary>
+        public virtual string ManagedMethod => this.GetProperty<string>(nameof(this.ManagedMethod));
+
+        /// <summary>
         /// Gets the name of the test method currently being executed
         /// </summary>
         public virtual string TestName => this.GetProperty<string>("TestName");

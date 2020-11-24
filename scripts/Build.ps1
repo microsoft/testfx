@@ -5,61 +5,49 @@
 
 [CmdletBinding(PositionalBinding=$false)]
 Param(  
-  [Parameter(Mandatory=$false)]
   [ValidateSet("Debug", "Release")]
   [Alias("c")]
-  [System.String] $Configuration = "Debug",
+  [string] $Configuration = "Debug",
 
-  [Parameter(Mandatory=$false)]
   [Alias("fv")]
-  [System.String] $FrameworkVersion = "99.99.99",
+  [string] $FrameworkVersion = "99.99.99",
   
-  [Parameter(Mandatory=$false)]
   [Alias("av")]
-  [System.String] $AdapterVersion = "99.99.99",
+  [string] $AdapterVersion = "99.99.99",
 
-  [Parameter(Mandatory=$false)]
   [Alias("vs")]
-  [System.String] $VersionSuffix = "dev",
+  [string] $VersionSuffix = "dev",
   
-  [Parameter(Mandatory=$false)]
-  [System.String] $BuildVersionPrefix  = "14.0",
+  [string] $BuildVersionPrefix  = "14.0",
 
-  [Parameter(Mandatory=$false)]
-  [System.String] $BuildVersionSuffix = "9999.99",
+  [string] $BuildVersionSuffix = "9999.99",
   
-  [Parameter(Mandatory=$false)]
-  [System.String] $Target = "Build",
+  [string] $Target = "Build",
   
-  [Parameter(Mandatory=$false)]
   [Alias("h")]
-  [Switch] $Help = $false,
+  [Switch] $Help,
 
-  [Parameter(Mandatory=$false)]
   [Alias("cl")]
-  [Switch] $Clean = $false,
+  [Switch] $Clean,
 
-  [Parameter(Mandatory=$false)]
   [Alias("sr")]
-  [Switch] $SkipRestore = $false,
+  [Switch] $SkipRestore,
 
-  [Parameter(Mandatory=$false)]
   [Alias("cache")]
-  [Switch] $ClearPackageCache = $false,
+  [Switch] $ClearPackageCache,
 
-  [Parameter(Mandatory=$false)]
-  [Switch] $Official = $false,
+  [Switch] $Official,
 
-  [Parameter(Mandatory=$false)]
-  [Switch] $Full = $false,
+  [Switch] $Full,
 
-  [Parameter(Mandatory=$false)]
   [Alias("uxlf")]
-  [Switch] $UpdateXlf = $false,
+  [Switch] $UpdateXlf,
 
-  [Parameter(Mandatory=$false)]
   [Alias("loc")]
-  [Switch] $IsLocalizedBuild = $false
+  [Switch] $IsLocalizedBuild,
+
+  [Alias("tpv")]
+  [string] $TestPlatformVersion = $null
 )
 
 . $PSScriptRoot\common.lib.ps1
@@ -188,10 +176,10 @@ function Perform-Restore {
   Write-Verbose "Starting restore for NetCore Projects"
   foreach($project in $TFB_NetCoreProjects)
   {
-	$projectPath = Locate-Item -relativePath $project
+    $projectPath = Locate-Item -relativePath $project
 
-	Write-Verbose "$msbuild /t:restore -verbosity:minimal $projectPath"
-	& $msbuild /t:restore -verbosity:minimal $projectPath
+    Write-Verbose "$msbuild /t:restore -verbosity:minimal $projectPath /m"
+    & $msbuild /t:restore -verbosity:minimal $projectPath /m
   }
   
   if ($lastExitCode -ne 0) {
@@ -240,8 +228,8 @@ function Invoke-Build([string] $solution, $hasVsixExtension = "false")
   $solutionFailureLog = Join-Path -path $solutionDir -childPath "msbuild.err"
 
 	Write-Log "    Building $solution..."
-	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath"
-	& $msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath
+	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath /bl /m" 
+	& $msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath /bl /m
   
 	if ($lastExitCode -ne 0) {
 		throw "Build failed with an exit code of '$lastExitCode'."
@@ -307,7 +295,37 @@ function Create-NugetPackages
     Write-Log "Create-NugetPackages: Complete. {$(Get-ElapsedTime($timer))}"
 }
 
+function Replace-InFile($File, $RegEx, $ReplaceWith) {
+  $content = Get-Content -Raw -Encoding utf8 $File 
+  $newContent = ($content -replace $RegEx,$ReplaceWith)
+  if(-not $content.Equals($newContent)) {
+    Write-Log "Updating TestPlatform version in $File"
+    $newContent | Set-Content -Encoding utf8 $File -NoNewline
+  }
+}
+
+function Sync-PackageVersions {
+  $versionsFile = "$PSScriptRoot\build\TestFx.Versions.targets"
+
+  $versionsRegex = '(?mi)<(TestPlatformVersion.*?)>(.*?)<\/TestPlatformVersion>'
+  $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform([0-9a-z.]+)?" version="([0-9a-z.-]*)"'
+  $sourceRegex = '(?mi)(.+[a-z =]+\@\")Microsoft\.TestPlatform\.([0-9.-a-z]+)\";'
+
+  if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
+    $TestPlatformVersion = (([XML](Get-Content $versionsFile)).Project.PropertyGroup.TestPlatformVersion).InnerText
+  } else {
+    Replace-InFile -File $versionsFile -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</TestPlatformVersion>"
+  }
+
+  (Get-ChildItem "$PSScriptRoot\..\src\*packages.config","$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
+    Replace-InFile -File $_ -RegEx $packageRegex -ReplaceWith ('<package id="Microsoft.TestPlatform$1" version="{0}"' -f $TestPlatformVersion)
+  }
+
+  Replace-InFile -File "$PSScriptRoot\..\test\E2ETests\Automation.CLI\CLITestBase.cs" -RegEx $sourceRegex -ReplaceWith ('$1Microsoft.TestPlatform.{0}";' -f $TestPlatformVersion)
+}
+
 Print-Help
+Sync-PackageVersions
 Perform-Restore
 Perform-Build
 Create-NugetPackages

@@ -5,6 +5,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 {
     using System;
     using System.Diagnostics;
+    using System.Reflection;
+
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.ManagedNameUtilities;
 
     using MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
@@ -28,7 +31,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
         #endregion
 
-        public TestMethod(string name, string fullClassName, string assemblyName,  bool isAsync)
+        public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
         {
             if (string.IsNullOrEmpty(assemblyName))
             {
@@ -42,6 +45,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             this.FullClassName = fullClassName;
             this.AssemblyName = assemblyName;
             this.IsAsync = isAsync;
+        }
+
+        public TestMethod(MethodBase method, string name, string fullClassName, string assemblyName, bool isAsync)
+            : this(name, fullClassName, assemblyName, isAsync)
+        {
+            if (method == null)
+            {
+                throw new ArgumentNullException(nameof(method));
+            }
+
+            ManagedNameHelper.GetManagedName(method, out var managedType, out var managedMethod);
+
+            this.ManagedType = managedType;
+            this.ManagedMethod = managedMethod;
         }
 
         /// <summary>
@@ -102,5 +119,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// Gets a value indicating whether specifies test method is async
         /// </summary>
         public bool IsAsync { get; private set; }
+
+        public string ManagedType { get; }
+
+        public string ManagedMethod { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether both <see cref="ManagedType"/> and <see cref="ManagedMethod"/> are not null or whitespace.
+        /// </summary>
+        public bool HasManagedMethodAndType => !string.IsNullOrWhiteSpace(this.ManagedType) && !string.IsNullOrWhiteSpace(this.ManagedMethod);
     }
 }

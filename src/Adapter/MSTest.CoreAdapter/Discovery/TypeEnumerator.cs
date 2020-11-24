@@ -132,7 +132,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.
             var isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
 
-            var testMethod = new TestMethod(method.Name, this.type.FullName, this.assemblyName, isAsync);
+            var testMethod = new TestMethod(method, method.Name, this.type.FullName, this.assemblyName, isAsync);
 
             if (!method.DeclaringType.FullName.Equals(this.type.FullName))
             {

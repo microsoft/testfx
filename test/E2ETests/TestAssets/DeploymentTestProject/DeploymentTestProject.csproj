@@ -1,20 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
+    <DependencyCopyBehavior Condition="$(DependencyCopyBehavior) == ''">Never</DependencyCopyBehavior>
   </PropertyGroup>
-  
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Versions.targets" />
+
   <PropertyGroup>
     <TargetFramework>net452</TargetFramework>
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(TestFxRoot)artifacts\TestAssets\\DesktopDeployment\</OutputPath>
-    
+    <OutputPath>$(TestFxRoot)artifacts\TestAssets\DesktopDeployment\$(DependencyCopyBehavior)\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" />
-    <ProjectReference Include="..\..\..\..\src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatformVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" />
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,13 +27,20 @@
 
   <ItemGroup>
     <None Update="DeploymentFile.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>$(DependencyCopyBehavior)</CopyToOutputDirectory>
     </None>
     <None Update="EmptyDataFile.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>$(DependencyCopyBehavior)</CopyToOutputDirectory>
     </None>
     <None Update="TestCaseDeploymentFile.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>$(DependencyCopyBehavior)</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <Target Name="CleanWithPreserveNewest" AfterTargets="Clean" Condition="$(DependencyCopyBehavior) == 'Never'">
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Clean" Properties="DependencyCopyBehavior=PreserveNewest" />
+  </Target>
+  <Target Name="BuildWithPreserveNewest" AfterTargets="Rebuild;Build" Condition="$(DependencyCopyBehavior) == 'Never'">
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Properties="DependencyCopyBehavior=PreserveNewest" />
+  </Target>
 </Project>

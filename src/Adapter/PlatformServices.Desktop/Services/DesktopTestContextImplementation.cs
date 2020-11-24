@@ -14,8 +14,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.IO;
     using System.Linq;
     using System.Threading;
+
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -205,6 +207,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             get
             {
                 return this.GetStringPropertyValue(TestContextPropertyStrings.FullyQualifiedTestClassName);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string ManagedType
+        {
+            get
+            {
+                return this.GetStringPropertyValue(TestContextPropertyStrings.ManagedType);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string ManagedMethod
+        {
+            get
+            {
+                return this.GetStringPropertyValue(TestContextPropertyStrings.ManagedMethod);
             }
         }
 
@@ -450,40 +470,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             switch (outcome)
             {
                 case UTF.UnitTestOutcome.Error:
-                    {
-                        return UTF.UnitTestOutcome.Error;
-                    }
-
                 case UTF.UnitTestOutcome.Failed:
-                    {
-                        return UTF.UnitTestOutcome.Failed;
-                    }
-
                 case UTF.UnitTestOutcome.Inconclusive:
-                    {
-                        return UTF.UnitTestOutcome.Inconclusive;
-                    }
-
                 case UTF.UnitTestOutcome.Passed:
-                    {
-                        return UTF.UnitTestOutcome.Passed;
-                    }
-
                 case UTF.UnitTestOutcome.Timeout:
-                    {
-                        return UTF.UnitTestOutcome.Timeout;
-                    }
-
                 case UTF.UnitTestOutcome.InProgress:
-                    {
-                        return UTF.UnitTestOutcome.InProgress;
-                    }
+                    return outcome;
 
                 default:
-                    {
-                        Debug.Fail("Unknown outcome " + outcome);
-                        return UTF.UnitTestOutcome.Unknown;
-                    }
+                    Debug.Fail("Unknown outcome " + outcome);
+                    return UTF.UnitTestOutcome.Unknown;
             }
         }
 
@@ -505,6 +501,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private void InitializeProperties()
         {
             this.properties[TestContextPropertyStrings.FullyQualifiedTestClassName] = this.testMethod.FullClassName;
+            this.properties[TestContextPropertyStrings.ManagedType] = this.testMethod.ManagedType;
+            this.properties[TestContextPropertyStrings.ManagedMethod] = this.testMethod.ManagedMethod;
             this.properties[TestContextPropertyStrings.TestName] = this.testMethod.Name;
         }
     }
