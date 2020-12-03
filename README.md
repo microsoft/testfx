@@ -39,4 +39,3 @@ Please see [issue tracking](https://github.com/Microsoft/testfx-docs/blob/master
 
 ### Roadmap
 For information on shipped and upcoming features/enhancements please refer to our [Releases](https://github.com/Microsoft/testfx-docs/blob/master/docs/releases.md) and [Quarterly Checkin reports](https://github.com/Microsoft/testfx-docs/tree/master/Quarterly%20Checkins).
-
