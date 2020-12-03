@@ -1,3 +1,4 @@
+// comment to trigger CI
 ### Microsoft Test Framework "MSTest V2"
 Welcome to the "MSTest V2" repository, the evolution of the Microsoft Test Framework and Adapter. "MSTest V2" is currently in use in a variety of scenarios including:
  - in the relevant in-box unit test project templates (Visual Studio 2017 Preview 4 onwards)
@@ -39,3 +40,4 @@ Please see [issue tracking](https://github.com/Microsoft/testfx-docs/blob/master
 
 ### Roadmap
 For information on shipped and upcoming features/enhancements please refer to our [Releases](https://github.com/Microsoft/testfx-docs/blob/master/docs/releases.md) and [Quarterly Checkin reports](https://github.com/Microsoft/testfx-docs/tree/master/Quarterly%20Checkins).
+
