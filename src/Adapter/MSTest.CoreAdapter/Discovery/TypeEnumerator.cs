@@ -192,8 +192,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 testElement.Description = descriptionAttribute.Description;
             }
 
-            var workItemAttributes = this.reflectHelper.GetCustomAttributes(method, typeof(WorkItemAttribute)).Cast<WorkItemAttribute>();
-            testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString()).ToArray();
+            var workItemAttributes = this.reflectHelper.GetCustomAttributes(method, typeof(WorkItemAttribute)).Cast<WorkItemAttribute>().ToArray();
+            if (workItemAttributes.Any())
+            {
+                testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString()).ToArray();
+            }
 
             // Get Deployment items if any.
             testElement.DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(

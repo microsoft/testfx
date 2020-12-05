@@ -448,6 +448,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethod]
+        public void GetTestFromMethodShouldSetWorkItemIdsToNullIfNotAny()
+        {
+            this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+            TypeEnumerator typeEnumerator = this.GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+            var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
+            this.mockReflectHelper.Setup(rh => rh.GetCustomAttributes(methodInfo, typeof(UTF.WorkItemAttribute))).Returns(new Attribute[0]);
+
+            var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, this.warnings);
+
+            Assert.IsNull(testElement.WorkItemIds);
+        }
+
+        [TestMethod]
         public void GetTestFromMethodShouldSetCssIteration()
         {
             this.SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
