@@ -42,7 +42,6 @@ else {
 # $start = "v16.8.0-preview-20200812-03"
 # $end = $tag = "v16.8.0-preview-20200921-01"
 
-
 Write-Host "Generating release notes for $start..$end$(if ($EndWithLatestCommit) { " (expected tag: $tag)" })"
 
 $sourceBranch = $branch = git -C $Path rev-parse --abbrev-ref HEAD
