@@ -18,7 +18,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: NeutralResourcesLanguage("en")]
-[assembly: TypesToLoad(typeof(MSTestDiscoverer), typeof(MSTestExecutor))]
 
 // Version information for an assembly consists of the following four values:
 //

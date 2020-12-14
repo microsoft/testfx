@@ -54,6 +54,7 @@
     <Compile Include="ObjectModel\AdapterSettingsException.cs" />
     <Compile Include="ObjectModel\TestAssemblySettings.cs" />
     <Compile Include="ObjectModel\TestFailedException.cs" />
+    <Compile Include="Properties\TypesToLoadAttribute.cs" />
     <Compile Include="TestMethodFilter.cs" />
     <Compile Include="Execution\TestMethodRunner.cs" />
     <Compile Include="Execution\TypeCache.cs" />
