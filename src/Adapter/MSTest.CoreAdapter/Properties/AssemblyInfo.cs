@@ -3,6 +3,8 @@
 
 using System.Reflection;
 using System.Resources;
+
+using Microsoft.VisualStudio.TestPlatform;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
@@ -18,6 +20,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: NeutralResourcesLanguage("en")]
+
+[assembly: TestExtensionTypes(typeof(MSTestDiscoverer), typeof(MSTestExecutor))]
 
 // Version information for an assembly consists of the following four values:
 //
