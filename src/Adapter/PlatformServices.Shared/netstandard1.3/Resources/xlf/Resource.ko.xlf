@@ -40,7 +40,7 @@
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
-        <target state="translated">테스트 실행 배포 문제: 테스트 저장소 '{0}'에 대한 종속성을 배포하지 못함: {1}</target>
+        <target state="translated">테스트 실행 배포 문제: 테스트 스토리지 '{0}'에 대한 종속성을 배포하지 못함: {1}</target>
         <note>
         </note>
       </trans-unit>
