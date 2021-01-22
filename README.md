@@ -8,7 +8,7 @@ This is a fully supported, open source and cross-platform implementation of the 
 
 ### Build status
 
-[![Build Status](https://dev.azure.com/vstestplatform/TestFx/_apis/build/status/TestFx.CI?branchName=master)](https://dev.azure.com/vstestplatform/TestFx/_build/latest?definitionId=8&branchName=master)
+[![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/Microsoft/testfx/microsoft.testfx.ci?branchName=master)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=937&branchName=master)
 
 ### Latest Builds
 |            | Framework | Adapter |
