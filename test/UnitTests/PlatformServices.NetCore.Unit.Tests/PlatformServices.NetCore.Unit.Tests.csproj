@@ -3,7 +3,6 @@
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
   </PropertyGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
   
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
@@ -14,6 +13,7 @@
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     <NoWarn>CS1685</NoWarn>
   </PropertyGroup>
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
   
   <ItemGroup>
     <Compile Include="..\MSTest.CoreAdapter.TestUtilities\ActionUtility.cs" Link="ActionUtility.cs" />
