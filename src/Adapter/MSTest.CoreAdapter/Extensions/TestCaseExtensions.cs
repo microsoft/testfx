@@ -5,13 +5,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 {
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
     using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
+    using ManagedNameUtilities = Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 
     /// <summary>
     /// Extension Methods for TestCase Class
     /// </summary>
     internal static class TestCaseExtensions
     {
+        internal static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
+            id: ManagedNameUtilities.Contants.ManagedTypePropertyId,
+            label: ManagedNameUtilities.Contants.ManagedTypeLabel,
+            category: string.Empty,
+            description: string.Empty,
+            valueType: typeof(string),
+            validateValueCallback: o => !string.IsNullOrWhiteSpace(o as string),
+            attributes: TestPropertyAttributes.Hidden,
+            owner: typeof(TestCase));
+
+        internal static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
+            id: ManagedNameUtilities.Contants.ManagedMethodPropertyId,
+            label: ManagedNameUtilities.Contants.ManagedMethodLabel,
+            category: string.Empty,
+            description: string.Empty,
+            valueType: typeof(string),
+            validateValueCallback: o => !string.IsNullOrWhiteSpace(o as string),
+            attributes: TestPropertyAttributes.Hidden,
+            owner: typeof(TestCase));
+
         /// <summary>
         /// The to unit test element.
         /// </summary>
@@ -48,5 +70,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 
             return testElement;
         }
+
+        internal static string GetManagedType(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedTypeProperty, null);
+
+        internal static void SetManagedType(this TestCase testCase, string value) => testCase.SetPropertyValue<string>(ManagedTypeProperty, value);
+
+        internal static string GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
+
+        internal static void SetManagedMethod(this TestCase testCase, string value) => testCase.SetPropertyValue<string>(ManagedMethodProperty, value);
+
+        internal static bool ContainsManagedMethodAndType(this TestCase testCase) => !string.IsNullOrWhiteSpace(testCase.GetManagedMethod()) && !string.IsNullOrWhiteSpace(testCase.GetManagedType());
     }
 }

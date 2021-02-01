@@ -25,20 +25,36 @@
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework </tags>
+
+    <dependencies>
+      <group targetFramework="netstandard1.0">
+        <dependency id="NETStandard.Library" version="1.6.1" />
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
+        <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
+      </group>
+
+      <group targetFramework="net45">
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
+      </group>
+
+      <group targetFramework="uap10.0">
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
+      </group>
+    </dependencies>
   </metadata>
-  <files> 
+  <files>
 
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard1.0" />
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0" />
     <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard1.0" />
     <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0" />
- 
+
     <!--Net45-->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net45" />
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net45" />
     <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\net45" />
     <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net45" />
- 
+
     <!-- UWP -->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\uap10.0" />
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\uap10.0" />

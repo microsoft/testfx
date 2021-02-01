@@ -14,17 +14,27 @@
    - .NET 4.5.0+ 
    - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017) 
    - ASP.NET Core 1.0+ (Visual Studio 2017) 
-   </description>
+    </description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
     <license type="file">LICENSE.txt</license>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
-	<dependencies>
-	    <group targetFramework="netcoreapp1.0">
-			<dependency id="NETStandard.Library" version="1.6.1" />
-			<dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
-	    </group>      
+
+    <dependencies>
+      <group targetFramework="netcoreapp1.0">
+        <dependency id="NETStandard.Library" version="1.6.1" />
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
+        <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
+      </group>
+
+      <group targetFramework="net45">
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
+      </group>
+
+      <group targetFramework="uap10.0">
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
+      </group>
     </dependencies>
   </metadata>
   <files>

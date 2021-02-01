@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     using System.Diagnostics;
     using System.Globalization;
 
+    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
     /// <summary>
@@ -114,21 +115,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 this.TestMethod.FullClassName,
                 this.TestMethod.Name);
 
-            TestCase testCase;
-
-            if (this.TestMethod.HasManagedMethodAndType)
-            {
-                testCase = new TestCase(fullName, this.TestMethod.ManagedType, this.TestMethod.ManagedMethod, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
-            }
-            else
-            {
-                testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
-            }
+            TestCase testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
 
             testCase.DisplayName = string.IsNullOrEmpty(this.DisplayName) ? this.TestMethod.Name : this.DisplayName;
             testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
-            testCase.SetPropertyValue(TestCaseProperties.ManagedType, this.TestMethod.ManagedType);
-            testCase.SetPropertyValue(TestCaseProperties.ManagedMethod, this.TestMethod.ManagedMethod);
+            if (this.TestMethod.HasManagedMethodAndType)
+            {
+                testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, this.TestMethod.ManagedType);
+                testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, this.TestMethod.ManagedMethod);
+            }
 
             // Set declaring type if present so the correct method info can be retrieved
             if (this.TestMethod.DeclaringClassFullName != null)

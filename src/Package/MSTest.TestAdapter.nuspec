@@ -8,23 +8,20 @@
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <description>
-  The adapter to discover and execute MSTest Framework based tests. 
+      The adapter to discover and execute MSTest Framework based tests.
 
-  Supported platforms: 
-   - .NET 4.5.0+ 
-   - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017) 
-   - ASP.NET Core 1.0+ (Visual Studio 2017) 
-   </description>
+      Supported platforms:
+      - .NET 4.5.0+
+      - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017)
+      - ASP.NET Core 1.0+ (Visual Studio 2017)
+    </description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
     <license type="file">LICENSE.txt</license>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
-	<dependencies>
-	    <group targetFramework="netcoreapp1.0">
-			<dependency id="NETStandard.Library" version="1.6.1" />
-			<dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
-	    </group>      
+    <dependencies>
+      <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
     </dependencies>
   </metadata>
   <files>
@@ -79,7 +76,7 @@
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netcoreapp1.0\" />
     <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp1.0\" />
 
-	  <!-- <file src="PlatformServices.NetCore\netstandard1.5\zh-Hans\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\zh-Hans" />
+    <!-- <file src="PlatformServices.NetCore\netstandard1.5\zh-Hans\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\zh-Hans" />
     <file src="PlatformServices.NetCore\netstandard1.5\zh-Hant\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\zh-Hant" />
     <file src="PlatformServices.NetCore\netstandard1.5\cs\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\cs" />
     <file src="PlatformServices.NetCore\netstandard1.5\de\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\de" />

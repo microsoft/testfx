@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     using System.Diagnostics;
     using System.Reflection;
 
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.ManagedNameUtilities;
+    using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 
     using MSTestAdapter.PlatformServices.Interface.ObjectModel;
 

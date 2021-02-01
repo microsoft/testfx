@@ -3,7 +3,7 @@
 
 # Build script for MSTest Test Framework.
 
-[CmdletBinding(PositionalBinding=$false)]
+[CmdletBinding(PositionalBinding = $false)]
 Param(  
   [ValidateSet("Debug", "Release")]
   [Alias("c")]
@@ -18,7 +18,7 @@ Param(
   [Alias("vs")]
   [string] $VersionSuffix = "dev",
   
-  [string] $BuildVersionPrefix  = "14.0",
+  [string] $BuildVersionPrefix = "14.0",
 
   [string] $BuildVersionSuffix = "9999.99",
   
@@ -47,7 +47,13 @@ Param(
   [Switch] $IsLocalizedBuild,
 
   [Alias("tpv")]
-  [string] $TestPlatformVersion = $null
+  [string] $TestPlatformVersion = $null,
+
+  [Alias("f")]
+  [Switch] $Force, 
+
+  [Alias("s")]
+  [String[]] $Steps = @("UpdateTPVersion", "Restore", "Build", "Publish")
 )
 
 . $PSScriptRoot\common.lib.ps1
@@ -73,7 +79,7 @@ $TFB_Solutions = @(
   "TestFx.sln"
 )
 
-$TFB_NetCoreProjects =@(
+$TFB_NetCoreProjects = @(
   "src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj"
 
   "test\ComponentTests\TestAssets\TestProjectForAssemblyResolution\TestProjectForAssemblyResolution.csproj"
@@ -132,8 +138,7 @@ function Perform-Restore {
 
   Write-Log "Perform-Restore: Started."
   
-  if($TFB_SkipRestore)
-  {
+  if ($TFB_SkipRestore) {
     Write-Log "Perform-Restore: Skipped."
     return;
   }
@@ -159,12 +164,11 @@ function Perform-Restore {
   $msbuildPath = Locate-MSBuildPath 
 
   Write-Verbose "Starting solution restore..."
-  foreach($solution in $TFB_Solutions)
-  {
-	$solutionPath = Locate-Item -relativePath $solution
+  foreach ($solution in $TFB_Solutions) {
+    $solutionPath = Locate-Item -relativePath $solution
 
-	Write-Verbose "$nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath"
-	& $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath
+    Write-Verbose "$nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath"
+    & $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath
   }
 
   if ($lastExitCode -ne 0) {
@@ -174,8 +178,7 @@ function Perform-Restore {
   $msbuild = Join-Path $msbuildPath "MSBuild.exe"
   
   Write-Verbose "Starting restore for NetCore Projects"
-  foreach($project in $TFB_NetCoreProjects)
-  {
+  foreach ($project in $TFB_NetCoreProjects) {
     $projectPath = Locate-Item -relativePath $project
 
     Write-Verbose "$msbuild /t:restore -verbosity:minimal $projectPath /m"
@@ -197,16 +200,13 @@ function Perform-Build {
 
   Write-Log "Perform-Build: Started."
 
-  if($TFB_Clean)
-  {
+  if ($TFB_Clean) {
     $foldersToDel = @( $TFB_Configuration, "TestAssets" )
     Write-Log "    Clean build requested."
-    foreach($folder in $foldersToDel)
-    {
+    foreach ($folder in $foldersToDel) {
       $outDir = Join-Path $env:TF_OUT_DIR -ChildPath $folder
-	  
-      if(Test-Path $outDir)
-      {
+      
+      if (Test-Path $outDir) {
         Write-Output "    Deleting $outDir"
         Remove-Item -Recurse -Force $outDir
       }
@@ -218,87 +218,81 @@ function Perform-Build {
   Write-Log "Perform-Build: Completed. {$(Get-ElapsedTime($timer))}"
 }
 
-function Invoke-Build([string] $solution, $hasVsixExtension = "false")
-{
+function Invoke-Build([string] $solution, $hasVsixExtension = "false") {
   $msbuild = Locate-MSBuild -hasVsixExtension $hasVsixExtension
-	$solutionPath = Locate-Item -relativePath $solution
+  $solutionPath = Locate-Item -relativePath $solution
   $solutionDir = [System.IO.Path]::GetDirectoryName($solutionPath)
   $solutionSummaryLog = Join-Path -path $solutionDir -childPath "msbuild.log"
   $solutionWarningLog = Join-Path -path $solutionDir -childPath "msbuild.wrn"
   $solutionFailureLog = Join-Path -path $solutionDir -childPath "msbuild.err"
 
-	Write-Log "    Building $solution..."
-	Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath /bl /m" 
-	& $msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath /bl /m
+  Write-Log "    Building $solution..."
+  Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath /bl /m" 
+  & $msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath /bl /m
   
-	if ($lastExitCode -ne 0) {
-		throw "Build failed with an exit code of '$lastExitCode'."
-	}
+  if ($lastExitCode -ne 0) {
+    throw "Build failed with an exit code of '$lastExitCode'."
+  }
 }
 
 #
 # Creates Fx & Adapter nuget packages
 #
-function Create-NugetPackages
-{
-    $timer = Start-Timer
+function Create-NugetPackages {
+  $timer = Start-Timer
 
-    Write-Log "Create-NugetPackages: Started."
+  Write-Log "Create-NugetPackages: Started."
 
-    $stagingDir = Join-Path $env:TF_OUT_DIR $TFB_Configuration
-    $packageOutDir = Join-Path $stagingDir "MSTestPackages"
-    $tfSrcPackageDir = Join-Path $env:TF_SRC_DIR "Package"
+  $stagingDir = Join-Path $env:TF_OUT_DIR $TFB_Configuration
+  $packageOutDir = Join-Path $stagingDir "MSTestPackages"
+  $tfSrcPackageDir = Join-Path $env:TF_SRC_DIR "Package"
 
-    # Copy over the nuspecs to the staging directory
-    if($TFB_Official)
-    {
-        $nuspecFiles = @("MSTest.TestAdapter.Dotnet.nuspec", "MSTest.TestAdapter.nuspec", "MSTest.TestAdapter.symbols.nuspec", "MSTest.TestFramework.nuspec", "MSTest.TestFramework.symbols.nuspec", "MSTest.Internal.TestFx.Documentation.nuspec")
-    }
-    else
-    {
-        $nuspecFiles = @("MSTest.TestAdapter.Enu.nuspec","MSTest.TestFramework.enu.nuspec", "MSTest.TestAdapter.Dotnet.nuspec")
-    }
+  # Copy over the nuspecs to the staging directory
+  if ($TFB_Official) {
+    $nuspecFiles = @("MSTest.TestAdapter.Dotnet.nuspec", "MSTest.TestAdapter.nuspec", "MSTest.TestAdapter.symbols.nuspec", "MSTest.TestFramework.nuspec", "MSTest.TestFramework.symbols.nuspec", "MSTest.Internal.TestFx.Documentation.nuspec")
+  }
+  else {
+    $nuspecFiles = @("MSTest.TestAdapter.Enu.nuspec", "MSTest.TestFramework.enu.nuspec", "MSTest.TestAdapter.Dotnet.nuspec")
+  }
 
-    foreach ($file in $nuspecFiles) {
-        Copy-Item $tfSrcPackageDir\$file $stagingDir -Force
-    }
+  foreach ($file in $nuspecFiles) {
+    Copy-Item $tfSrcPackageDir\$file $stagingDir -Force
+  }
 
-    # Copy over LICENSE.txt file to staging directory
-    $licenseFilePath = Join-Path $env:TF_ROOT_DIR "LICENSE.txt"
-    Copy-Item $licenseFilePath $stagingDir -Force
+  # Copy over LICENSE.txt file to staging directory
+  $licenseFilePath = Join-Path $env:TF_ROOT_DIR "LICENSE.txt"
+  Copy-Item $licenseFilePath $stagingDir -Force
 
-    # Call nuget pack on these components.
-    $nugetExe = Locate-Nuget
+  # Call nuget pack on these components.
+  $nugetExe = Locate-Nuget
 
-    foreach ($file in $nuspecFiles) {
-        $version = $TFB_FrameworkVersion
+  foreach ($file in $nuspecFiles) {
+    $version = $TFB_FrameworkVersion
         
-        if($file.Contains("TestAdapter"))
-        {
-            $version = $TFB_AdapterVersion
-        }
-
-        if(![string]::IsNullOrEmpty($TFB_VersionSuffix))
-        {
-			$versionSuffix = $TFB_VersionSuffix -replace "\.","-"
-            $version = $version + "-" + $versionSuffix
-        }
-
-        Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version=$version -Properties Version=$version"
-        & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR
-
-		if ($lastExitCode -ne 0) {
-		throw "Nuget pack failed with an exit code of '$lastExitCode'."
-	    }
+    if ($file.Contains("TestAdapter")) {
+      $version = $TFB_AdapterVersion
     }
 
-    Write-Log "Create-NugetPackages: Complete. {$(Get-ElapsedTime($timer))}"
+    if (![string]::IsNullOrEmpty($TFB_VersionSuffix)) {
+      $versionSuffix = $TFB_VersionSuffix -replace "\.", "-"
+      $version = $version + "-" + $versionSuffix
+    }
+
+    Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version=$version -Properties Version=$version"
+    & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR
+
+    if ($lastExitCode -ne 0) {
+      throw "Nuget pack failed with an exit code of '$lastExitCode'."
+    }
+  }
+
+  Write-Log "Create-NugetPackages: Complete. {$(Get-ElapsedTime($timer))}"
 }
 
 function Replace-InFile($File, $RegEx, $ReplaceWith) {
   $content = Get-Content -Raw -Encoding utf8 $File 
-  $newContent = ($content -replace $RegEx,$ReplaceWith)
-  if(-not $content.Equals($newContent)) {
+  $newContent = ($content -replace $RegEx, $ReplaceWith)
+  if (-not $content.Equals($newContent)) {
     Write-Log "Updating TestPlatform version in $File"
     $newContent | Set-Content -Encoding utf8 $File -NoNewline
   }
@@ -313,19 +307,46 @@ function Sync-PackageVersions {
 
   if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
     $TestPlatformVersion = (([XML](Get-Content $versionsFile)).Project.PropertyGroup.TestPlatformVersion).InnerText
-  } else {
+  }
+  else {
     Replace-InFile -File $versionsFile -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</TestPlatformVersion>"
   }
 
-  (Get-ChildItem "$PSScriptRoot\..\src\*packages.config","$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
+  (Get-ChildItem "$PSScriptRoot\..\src\*packages.config", "$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
     Replace-InFile -File $_ -RegEx $packageRegex -ReplaceWith ('<package id="Microsoft.TestPlatform$1" version="{0}"' -f $TestPlatformVersion)
   }
 
   Replace-InFile -File "$PSScriptRoot\..\test\E2ETests\Automation.CLI\CLITestBase.cs" -RegEx $sourceRegex -ReplaceWith ('$1Microsoft.TestPlatform.{0}";' -f $TestPlatformVersion)
 }
 
+function ShouldRunStep([string[]]$CurrentSteps) {
+  if ($Force) {
+    return $true
+  }
+  
+  foreach ($step in $CurrentSteps) {
+    if ($Steps -contains $step) {
+      return $true
+    }
+  }
+
+  return $false
+}
+
 Print-Help
-Sync-PackageVersions
-Perform-Restore
-Perform-Build
-Create-NugetPackages
+
+if (ShouldRunStep @("UpdateTPVersion")) {
+  Sync-PackageVersions
+}
+
+if (ShouldRunStep @("UpdateTPVersion", "Restore")) {
+  Perform-Restore
+}
+
+if (ShouldRunStep @("Build")) {
+  Perform-Build
+}
+
+if (ShouldRunStep @("Publish")) {
+  Create-NugetPackages
+}

@@ -126,6 +126,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(TestPlatformVersion)" />
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(TestPlatformVersion)" />
     <PackageReference Include="MicroBuild.Core" Version="0.2.0" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -138,7 +139,7 @@
   <PropertyGroup>
     <SourcePath>$(ProjectDir)..\Build</SourcePath>
     <PostBuildEvent>
-        xcopy /Y /I /S /E "$(SourcePath)" "$(OutDir)..\Build"
-      </PostBuildEvent>
+      xcopy /Y /I /S /E "$(SourcePath)" "$(OutDir)..\Build"
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>
