@@ -7,6 +7,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
     using System.IO;
     using System.Linq;
     using System.Xml;
+
     using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -19,7 +20,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         private const string PackagesFolder = "packages";
 
         // This value is automatically updated by "build.ps1" script.
-        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.16.9.0-preview-20210129-05";
+        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.16.10.0-preview-20210204-01";
         private const string VstestConsoleRelativePath = @"tools\net451\Common7\IDE\Extensions\TestPlatform\vstest.console.exe";
 
         private static VsTestConsoleWrapper vsTestConsoleWrapper;
@@ -176,7 +177,10 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodPass.</remarks>
         public void ValidatePassedTestsContain(params string[] passedTests)
         {
-            var passedTestResults = this.runEventsHandler.PassedTests.ToList();
+            var passedTestResults = this.runEventsHandler.PassedTests;
+            var failedTestResults = this.runEventsHandler.FailedTests;
+            var skippedTestsResults = this.runEventsHandler.SkippedTests;
+
             foreach (var test in passedTests)
             {
                 var testFound = passedTestResults.Any(
@@ -184,7 +188,19 @@ namespace Microsoft.MSTestV2.CLIAutomation
                          || test.Equals(p.DisplayName)
                          || test.Equals(p.TestCase.DisplayName));
 
-                Assert.IsTrue(testFound, "Test '{0}' does not appear in passed tests list.", test);
+                var isFailed = failedTestResults.Any(
+                    p => test.Equals(p.TestCase?.FullyQualifiedName)
+                         || test.Equals(p.DisplayName)
+                         || test.Equals(p.TestCase.DisplayName));
+
+                var isSkipped = skippedTestsResults.Any(
+                    p => test.Equals(p.TestCase?.FullyQualifiedName)
+                         || test.Equals(p.DisplayName)
+                         || test.Equals(p.TestCase.DisplayName));
+
+                var failedOrSkippedMessage = isFailed ? " (Test failed)" : isSkipped ? " (Test skipped)" : string.Empty;
+
+                Assert.IsTrue(testFound, "Test '{0}' does not appear in passed tests list." + failedOrSkippedMessage, test);
             }
         }
 

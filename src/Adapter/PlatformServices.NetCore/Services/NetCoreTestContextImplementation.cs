@@ -446,8 +446,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private void InitializeProperties()
         {
             this.properties[FullyQualifiedTestClassNameLabel] = this.testMethod.FullClassName;
-            this.properties[ManagedTypeLabel] = this.testMethod.ManagedType;
-            this.properties[ManagedMethodLabel] = this.testMethod.ManagedMethod;
+            this.properties[ManagedTypeLabel] = this.testMethod.ManagedTypeName;
+            this.properties[ManagedMethodLabel] = this.testMethod.ManagedMethodName;
             this.properties[TestNameLabel] = this.testMethod.Name;
         }
     }

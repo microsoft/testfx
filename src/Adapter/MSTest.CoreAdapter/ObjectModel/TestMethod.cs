@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             this.IsAsync = isAsync;
         }
 
-        public TestMethod(MethodBase method, string name, string fullClassName, string assemblyName, bool isAsync)
+        internal TestMethod(MethodBase method, string name, string fullClassName, string assemblyName, bool isAsync)
             : this(name, fullClassName, assemblyName, isAsync)
         {
             if (method == null)
@@ -57,8 +57,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
             ManagedNameHelper.GetManagedName(method, out var managedType, out var managedMethod);
 
-            this.ManagedType = managedType;
-            this.ManagedMethod = managedMethod;
+            // ManagedNameHelpers currently does not support spaces in method names.
+            // If there are spaces in the method name, we'll use the legacy way to find the method.
+            if (!managedMethod.Contains(" "))
+            {
+                this.ManagedTypeName = managedType;
+                this.ManagedMethodName = managedMethod;
+            }
+        }
+
+        internal TestMethod(string managedTypeName, string managedMethodName, string name, string fullClassName, string assemblyName, bool isAsync)
+            : this(name, fullClassName, assemblyName, isAsync)
+        {
+            this.ManagedTypeName = managedTypeName;
+            this.ManagedMethodName = managedMethodName;
         }
 
         /// <summary>
@@ -120,13 +132,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         public bool IsAsync { get; private set; }
 
-        public string ManagedType { get; }
+        /// <inheritdoc />
+        public string ManagedTypeName { get; }
 
-        public string ManagedMethod { get; }
+        /// <inheritdoc />
+        public string ManagedMethodName { get; }
 
-        /// <summary>
-        /// Gets a value indicating whether both <see cref="ManagedType"/> and <see cref="ManagedMethod"/> are not null or whitespace.
-        /// </summary>
-        public bool HasManagedMethodAndType => !string.IsNullOrWhiteSpace(this.ManagedType) && !string.IsNullOrWhiteSpace(this.ManagedMethod);
+        /// <inheritdoc />
+        public bool HasManagedMethodAndTypeProperties => !string.IsNullOrWhiteSpace(this.ManagedTypeName) && !string.IsNullOrWhiteSpace(this.ManagedMethodName);
     }
 }

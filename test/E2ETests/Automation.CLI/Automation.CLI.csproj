@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.TestPlatform.AdapterUtilities, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\..\..\packages\Microsoft.TestPlatform.AdapterUtilities.$(TestPlatformVersion)\lib\net45\Microsoft.TestPlatform.AdapterUtilities.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.TestPlatform.CommunicationUtilities, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\Microsoft.TestPlatform.TranslationLayer.$(TestPlatformVersion)\lib\net451\Microsoft.TestPlatform.CommunicationUtilities.dll</HintPath>
     </Reference>
@@ -102,9 +105,9 @@
     <DestinationPath>$(TargetDir)..\..\TestAssets</DestinationPath>
     <PackagesPath>$(TestFxRoot)\packages</PackagesPath>
     <PostBuildEvent>
-      xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities\$(TestPlatformVersion)\lib\netstandard1.0\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities\$(TestPlatformVersion)\lib\netstandard1.0\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)\netcoreapp1.1\"
-      xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities\$(TestPlatformVersion)\lib\netstandard1.0\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)\netcoreapp2.1\"
+      xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities.$(TestPlatformVersion)\lib\net45\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities.$(TestPlatformVersion)\lib\netstandard1.0\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)\netcoreapp1.1\"
+      xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities.$(TestPlatformVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)\netcoreapp2.1\"
       xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" "$(DestinationPath)"
       xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" "$(DestinationPath)"
       xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" "$(DestinationPath)"
