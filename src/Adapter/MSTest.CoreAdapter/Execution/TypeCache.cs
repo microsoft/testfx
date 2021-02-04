@@ -12,6 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Reflection;
     using System.Security;
 
+    using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -332,7 +333,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 var assemblyInitializeType = typeof(AssemblyInitializeAttribute);
                 var assemblyCleanupType = typeof(AssemblyCleanupAttribute);
 
-                assemblyInfo = new TestAssemblyInfo();
+                assemblyInfo = new TestAssemblyInfo(assembly);
 
                 var types = new AssemblyEnumerator().GetTypes(assembly, assembly.FullName, null);
 
@@ -635,8 +636,48 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns> The <see cref="MethodInfo"/>. </returns>
         private MethodInfo GetMethodInfoForTestMethod(TestMethod testMethod, TestClassInfo testClassInfo)
         {
-            var methodsInClass = testClassInfo.ClassType.GetRuntimeMethods().ToArray();
+            var testMethodInfo = testMethod.HasManagedMethodAndTypeProperties
+                               ? this.GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo)
+                               : this.GetMethodInfoUsingRuntimeMethods(testMethod, testClassInfo);
+
+            // if correct method is not found, throw appropriate
+            // exception about what is wrong.
+            if (testMethodInfo == null)
+            {
+                var errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_MethodDoesNotExists, testMethod.FullClassName, testMethod.Name);
+                throw new TypeInspectionException(errorMessage);
+            }
+
+            return testMethodInfo;
+        }
+
+        private MethodInfo GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo)
+        {
+            MethodInfo testMethodInfo = null;
+            var methodBase = ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName, testMethod.ManagedMethodName);
+
+            if (methodBase is MethodInfo mi)
+            {
+                testMethodInfo = mi;
+            }
+            else if (methodBase != null)
+            {
+                var parameters = methodBase.GetParameters().Select(i => i.ParameterType).ToArray();
+                testMethodInfo = methodBase.DeclaringType.GetRuntimeMethod(methodBase.Name, parameters);
+            }
+
+            testMethodInfo = testMethodInfo?.HasCorrectTestMethodSignature(true) ?? false
+                           ? testMethodInfo
+                           : null;
+
+            return testMethodInfo;
+        }
+
+        private MethodInfo GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo)
+        {
             MethodInfo testMethodInfo;
+
+            var methodsInClass = testClassInfo.ClassType.GetRuntimeMethods().ToArray();
 
             if (testMethod.DeclaringClassFullName != null)
             {
@@ -655,14 +696,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 testMethodInfo =
                     methodsInClass.Where(method => method.Name.Equals(testMethod.Name) && method.HasCorrectTestMethodSignature(true))
                         .OrderByDescending(method => method.DeclaringType.FullName.Equals(className)).FirstOrDefault();
-            }
-
-            // if correct method is not found, throw appropriate
-            // exception about what is wrong.
-            if (testMethodInfo == null)
-            {
-                var errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_MethodDoesNotExists, testMethod.FullClassName, testMethod.Name);
-                throw new TypeInspectionException(errorMessage);
             }
 
             return testMethodInfo;

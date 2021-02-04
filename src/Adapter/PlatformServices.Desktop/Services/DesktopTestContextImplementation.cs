@@ -501,8 +501,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private void InitializeProperties()
         {
             this.properties[TestContextPropertyStrings.FullyQualifiedTestClassName] = this.testMethod.FullClassName;
-            this.properties[TestContextPropertyStrings.ManagedType] = this.testMethod.ManagedType;
-            this.properties[TestContextPropertyStrings.ManagedMethod] = this.testMethod.ManagedMethod;
+            this.properties[TestContextPropertyStrings.ManagedType] = this.testMethod.ManagedTypeName;
+            this.properties[TestContextPropertyStrings.ManagedMethod] = this.testMethod.ManagedMethodName;
             this.properties[TestContextPropertyStrings.TestName] = this.testMethod.Name;
         }
     }

@@ -127,6 +127,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <returns> Returns a UnitTestElement.</returns>
         internal UnitTestElement GetTestFromMethod(MethodInfo method, bool isDeclaredInTestTypeAssembly, ICollection<string> warnings)
         {
+            // null if the current instance represents a generic type parameter.
             Debug.Assert(this.type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
             // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.

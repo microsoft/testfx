@@ -14,13 +14,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System.Reflection;
     using System.Text;
     using System.Threading.Tasks;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
     using Moq;
+
     using MSTest.TestAdapter;
+
     using TestableImplementations;
+
     using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
@@ -63,7 +68,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testMethodAttribute = new UTF.TestMethodAttribute();
             var testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
 
-            var testAssemblyInfo = new TestAssemblyInfo();
+            var testAssemblyInfo = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
             this.testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
             this.testContextImplementation = new TestContextImplementation(this.testMethod, new StringWriter(), new Dictionary<string, object>());
             this.testClassInfo = new TestClassInfo(
@@ -223,7 +228,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void ExecuteForAssemblyInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             // Arrange.
-            var tai = new TestAssemblyInfo
+            var tai = new TestAssemblyInfo(typeof(TestMethodRunnerTests).Assembly)
             {
                 AssemblyInitializeMethod = typeof(TestMethodRunnerTests).GetMethod(
                 "InitMethodThrowingException",
@@ -255,7 +260,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void ExecuteForClassInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
         {
             // Arrange.
-            var tai = new TestAssemblyInfo();
+            var tai = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
 
             var constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
             var classAttribute = new UTF.TestClassAttribute();

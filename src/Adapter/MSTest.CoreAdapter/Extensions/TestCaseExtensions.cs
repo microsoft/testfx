@@ -3,11 +3,11 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 {
+    using Microsoft.TestPlatform.AdapterUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
     using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
-    using ManagedNameUtilities = Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 
     /// <summary>
     /// Extension Methods for TestCase Class
@@ -15,8 +15,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
     internal static class TestCaseExtensions
     {
         internal static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
-            id: ManagedNameUtilities.Contants.ManagedTypePropertyId,
-            label: ManagedNameUtilities.Contants.ManagedTypeLabel,
+            id: ManagedNameConstants.ManagedTypePropertyId,
+            label: ManagedNameConstants.ManagedTypeLabel,
             category: string.Empty,
             description: string.Empty,
             valueType: typeof(string),
@@ -25,8 +25,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             owner: typeof(TestCase));
 
         internal static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
-            id: ManagedNameUtilities.Contants.ManagedMethodPropertyId,
-            label: ManagedNameUtilities.Contants.ManagedMethodLabel,
+            id: ManagedNameConstants.ManagedMethodPropertyId,
+            label: ManagedNameConstants.ManagedMethodLabel,
             category: string.Empty,
             description: string.Empty,
             valueType: typeof(string),
@@ -53,7 +53,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
                 ? fullyQualifiedName.Remove(0, $"{testClassName}.".Length)
                 : fullyQualifiedName;
 
-            TestMethod testMethod = new TestMethod(name, testClassName, source, isAsync);
+            TestMethod testMethod;
+            if (testCase.ContainsManagedMethodAndType())
+            {
+                testMethod = new TestMethod(testCase.GetManagedType(), testCase.GetManagedMethod(), name, testClassName, source, isAsync);
+            }
+            else
+            {
+                testMethod = new TestMethod(name, testClassName, source, isAsync);
+            }
 
             if (declaringClassName != null && declaringClassName != testClassName)
             {

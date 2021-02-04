@@ -109,20 +109,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <returns> An instance of <see cref="TestCase"/>. </returns>
         internal TestCase ToTestCase()
         {
-            var fullName = string.Format(
-                CultureInfo.InvariantCulture,
-                "{0}.{1}",
-                this.TestMethod.FullClassName,
-                this.TestMethod.Name);
+            string fullName = this.TestMethod.HasManagedMethodAndTypeProperties
+                            ? string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.ManagedTypeName, this.TestMethod.ManagedMethodName)
+                            : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
 
             TestCase testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
+            testCase.DisplayName = this.GetDisplayName();
 
-            testCase.DisplayName = string.IsNullOrEmpty(this.DisplayName) ? this.TestMethod.Name : this.DisplayName;
-            testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
-            if (this.TestMethod.HasManagedMethodAndType)
+            if (this.TestMethod.HasManagedMethodAndTypeProperties)
             {
-                testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, this.TestMethod.ManagedType);
-                testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, this.TestMethod.ManagedMethod);
+                testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, this.TestMethod.ManagedTypeName);
+                testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, this.TestMethod.ManagedMethodName);
+                testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.ManagedTypeName);
+            }
+            else
+            {
+                testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
             }
 
             // Set declaring type if present so the correct method info can be retrieved
@@ -183,12 +185,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             // Set the Do not parallelize state if present
             if (this.DoNotParallelize)
             {
-                testCase.SetPropertyValue(
-                    TestAdapter.Constants.DoNotParallelizeProperty,
-                    this.DoNotParallelize);
+                testCase.SetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, this.DoNotParallelize);
             }
 
             return testCase;
+        }
+
+        private string GetDisplayName()
+        {
+            if (string.IsNullOrWhiteSpace(this.DisplayName))
+            {
+                return string.IsNullOrWhiteSpace(this.TestMethod.ManagedMethodName)
+                     ? this.TestMethod.Name
+                     : this.TestMethod.ManagedMethodName;
+            }
+            else
+            {
+                return this.DisplayName;
+            }
         }
     }
 }

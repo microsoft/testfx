@@ -40,7 +40,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// <example>
         ///     <code>NamespaceA.NamespaceB.ClassName`1+InnerClass`2</code>
         /// </example>
-        string ManagedType { get; }
+        string ManagedTypeName { get; }
 
         /// <summary>
         /// Gets the fully specified method name metadata format.
@@ -48,6 +48,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// <example>
         ///     <code>MethodName`2(ParamTypeA,ParamTypeB,…)</code>
         /// </example>
-        string ManagedMethod { get; }
+        string ManagedMethodName { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether both <see cref="ManagedTypeName"/> and <see cref="ManagedMethodName"/> are not null or whitespace.
+        /// </summary>
+        bool HasManagedMethodAndTypeProperties { get; }
     }
 }
