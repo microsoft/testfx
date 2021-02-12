@@ -39,6 +39,9 @@
       <HintPath>..\..\..\packages\Castle.Core.4.0.0\lib\net45\Castle.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.TestPlatform.AdapterUtilities">
+      <HintPath>..\..\..\packages\Microsoft.TestPlatform.AdapterUtilities.$(TestPlatformVersion)\lib\uap10.0\Microsoft.TestPlatform.AdapterUtilities.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.TestPlatform.CoreUtilities, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.$(TestPlatformVersion)\lib\net451\Microsoft.TestPlatform.CoreUtilities.dll</HintPath>
     </Reference>
