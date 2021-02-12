@@ -4,187 +4,187 @@
     <body>
       <trans-unit id="AccessStringInvalidSyntax">
         <source>Access string has invalid syntax.</source>
-        <target state="translated">Erişim dizesi geçersiz söz dizimine sahip.</target>
+        <target state="new">Access string has invalid syntax.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ActualHasMismatchedElements">
         <source>The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</source>
-        <target state="translated">Beklenen koleksiyon {1} &lt;{2}&gt; örneği içerir. Gerçek koleksiyon {3} örnek içerir. {0}</target>
+        <target state="new">The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AllItemsAreUniqueFailMsg">
         <source>Duplicate item found:&lt;{1}&gt;. {0}</source>
-        <target state="translated">Yinelenen öğe bulundu:&lt;{1}&gt;. {0}</target>
+        <target state="new">Duplicate item found:&lt;{1}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualFailMsg">
         <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Beklenen:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;. {0}</target>
+        <target state="new">Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualDeltaFailMsg">
         <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Beklenen değer &lt;{1}&gt; ile gerçek değer &lt;{2}&gt; arasında, şundan büyük olmayan fark bekleniyor: &lt;{3}&gt;. {0}</target>
+        <target state="new">Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Beklenen:&lt;{1}&gt;. Durum, gerçek değer için farklı:&lt;{2}&gt;. {0}</target>
+        <target state="new">Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
         <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
-        <target state="translated">Beklenen:&lt;{1} ({2})&gt;. Gerçek:&lt;{3} ({4})&gt;. {0}</target>
+        <target state="new">Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Şunun dışında bir değer bekleniyor:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;. {0}</target>
+        <target state="new">Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreNotEqualDeltaFailMsg">
         <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Beklenen değer &lt;{1}&gt; ile gerçek değer &lt;{2}&gt; arasında, şundan büyük olan fark bekleniyor: &lt;{3}&gt;. {0}</target>
+        <target state="new">Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreSameGivenValues">
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
-        <target state="translated">AreSame()'e değer türleri geçirmeyin. Object olarak dönüştürülen değerler asla aynı olamayacak. AreEqual() kullanmayı düşün. {0}</target>
+        <target state="new">Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty. {0}</source>
-        <target state="translated">Koleksiyonların her ikisi de boş. {0}</target>
+        <target state="new">Both collections are empty. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothCollectionsSameElements">
         <source>Both collection contain same elements.</source>
-        <target state="translated">Her iki koleksiyon da aynı öğeleri içeriyor.</target>
+        <target state="new">Both collection contain same elements.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothCollectionsSameReference">
         <source>Both collection references point to the same collection object. {0}</source>
-        <target state="translated">Her iki koleksiyon başvurusu da aynı koleksiyon nesnesine işaret ediyor. {0}</target>
+        <target state="new">Both collection references point to the same collection object. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothSameElements">
         <source>Both collections contain the same elements. {0}</source>
-        <target state="translated">Her iki koleksiyon da aynı öğeleri içeriyor. {0}</target>
+        <target state="new">Both collections contain the same elements. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}({1})</source>
-        <target state="translated">{0}({1})</target>
+        <target state="new">{0}({1})</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ContainsFail">
         <source>String '{0}' does not contain string '{1}'. {2}.</source>
-        <target state="translated">'{0}' dizesi, '{1}' dizesini içermiyor. {2}.</target>
+        <target state="new">String '{0}' does not contain string '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
         <source>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</source>
-        <target state="translated">Koleksiyonlar içindeki öğe sayıları eşleşmiyor. Beklenen:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;.{0}</target>
+        <target state="new">The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
         <source>Element at index {0} do not match.</source>
-        <target state="translated">{0} dizinindeki öğe eşleşmiyor.</target>
+        <target state="new">Element at index {0} do not match.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
         <source>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</source>
-        <target state="translated">{1} dizinindeki öğe, beklenen türde değil. Beklenen tür:&lt;{2}&gt;. Gerçek tür:&lt;{3}&gt;.{0}</target>
+        <target state="new">Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch2">
         <source>Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</source>
-        <target state="translated">{1} dizinindeki öğe (null). Beklenen tür:&lt;{2}&gt;.{0}</target>
+        <target state="new">Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}.</source>
-        <target state="translated">'{0}' dizesi, '{1}' dizesi ile sonlanmıyor. {2}.</target>
+        <target state="new">String '{0}' does not end with string '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="EqualsTesterInvalidArgs">
         <source>Invalid argument- EqualsTester can't use nulls.</source>
-        <target state="translated">Geçersiz bağımsız değişken- EqualsTester, null değerleri kullanamaz.</target>
+        <target state="new">Invalid argument- EqualsTester can't use nulls.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ErrorInvalidCast">
         <source>Cannot convert object of type {0} to {1}.</source>
-        <target state="translated">{0} türündeki nesne {1} türüne dönüştürülemez.</target>
+        <target state="new">Cannot convert object of type {0} to {1}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
-        <target state="translated">{0} başarısız. {1}</target>
+        <target state="new">{0} failed. {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InternalObjectNotValid">
         <source>The internal object referenced is no longer valid.</source>
-        <target state="translated">Başvurulan dahili nesne artık geçerli değil.</target>
+        <target state="new">The internal object referenced is no longer valid.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InvalidParameterToAssert">
         <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">'{0}' parametresi geçersiz. {1}.</target>
+        <target state="new">The parameter '{0}' is invalid. {1}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
-        <target state="translated">{0} Beklenen tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;.</target>
+        <target state="new">{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}.</source>
-        <target state="translated">'{0}' dizesi, '{1}' deseni ile eşleşmiyor. {2}.</target>
+        <target state="new">String '{0}' does not match pattern '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Yanlış Tür:&lt;{1}&gt;. Gerçek tür:&lt;{2}&gt;. {0}</target>
+        <target state="new">Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}.</source>
-        <target state="translated">'{0}' dizesi, '{1}' deseni ile eşleşiyor. {2}.</target>
+        <target state="new">String '{0}' matches pattern '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
-        <target state="translated">Assert.Equals, Onaylama için kullanılmamalı. Lütfen yerine Assert.AreEqual &amp; aşırı yüklemeleri kullanın.</target>
+        <target state="new">Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</target>
         <note>
         </note>
       </trans-unit>
@@ -194,10 +194,10 @@
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      Belirtilen üye ({0}) bulunamadı. Özel erişimcinizi yeniden oluşturmanız gerekiyor olabilir
-      veya üye, özel olabilir ve temel sınıfta tanımlı olabilir. Eğer ikincisi doğru ise, türü geçirmeniz gerekir;
-      bu tür PrivateObject'in oluşturucusunda üyeyi tanımlar.
+        <target state="new">
+      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>
         </note>
@@ -208,89 +208,89 @@
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      Belirtilmiş imzaya sahip oluşturucu bulunamadı. Özel erişimcinizi yeniden oluşturmanız gerekiyor olabilir
-      veya üye, özel olabilir ve temel sınıfta tanımlı olabilir. Eğer ikincisi doğru ise, türü geçirmeniz gerekir;
-      bu tür, PrivateObject'in oluşturucusunda üyeyi tanımlar.
+        <target state="new">
+      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
-        <target state="translated">'{0}' parametresi geçersiz. Değer null olamaz. {1}.</target>
+        <target state="new">The parameter '{0}' is invalid. The value cannot be null. {1}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
         <source>Different number of elements.</source>
-        <target state="translated">Öğe sayıları farklı.</target>
+        <target state="new">Different number of elements.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}.</source>
-        <target state="translated">'{0}' dizesi, '{1}' dizesi ile başlamıyor. {2}.</target>
+        <target state="new">String '{0}' does not start with string '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
         <source>The property {0} has type {1}; expected type {2}.</source>
-        <target state="translated">{0} özelliği, {1} türüne sahip; beklenen tür {2}.</target>
+        <target state="new">The property {0} has type {1}; expected type {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="Common_NullInMessages">
         <source>(null)</source>
-        <target state="translated">(null)</target>
+        <target state="new">(null)</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="Common_ObjectString">
         <source>(object)</source>
-        <target state="translated">(nesne)</target>
+        <target state="new">(object)</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
         <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">Beklenen özel durum türü, System.Exception türü veya System.Exception'dan türetilmiş bir tür olmalıdır.</target>
+        <target state="new">The expected exception type must be System.Exception or a type derived from System.Exception.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodNoExceptionDefault">
         <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">Test metodu bir özel durum oluşturmadı. Test metodunda tanımlanan {0} özniteliği tarafından bir özel durum bekleniyordu.</target>
+        <target state="new">Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodNoException">
         <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">Test yöntemi beklenen {0} özel durumunu oluşturmadı. {1}</target>
+        <target state="new">Test method did not throw expected exception {0}. {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodWrongException">
         <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">Test yöntemi {0} özel durumunu oluşturdu, ancak {1} özel durumu bekleniyordu. Özel durum iletisi: {2}</target>
+        <target state="new">Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
         <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">Test yöntemi {0} özel durumunu oluşturdu, ancak {1} özel durumu veya ondan türetilmiş bir tür bekleniyordu. Özel durum iletisi: {2}</target>
+        <target state="new">Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
-        <target state="translated">(Bir özel durum nedeniyle, {0} türündeki özel durum iletisi alınamadı.)</target>
+        <target state="new">(Failed to get the message for an exception of type {0} due to an exception.)</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NoExceptionThrown">
         <source>No exception thrown. {1} exception was expected. {0}</source>
-        <target state="translated">Özel durum oluşturulmadı. {1} özel durumu bekleniyordu. {0}</target>
+        <target state="new">No exception thrown. {1} exception was expected. {0}</target>
         <note>
         </note>
       </trans-unit>
@@ -298,51 +298,51 @@
         <source>Threw exception {2}, but exception {1} was expected. {0}
 Exception Message: {3}
 Stack Trace: {4}</source>
-        <target state="translated">{2} özel durumu oluşturuldu, ancak {1} özel durumu bekleniyordu. {0}
-Özel Durum İletisi: {3}
-Yığın İzleme: {4}</target>
+        <target state="new">Threw exception {2}, but exception {1} was expected. {0}
+Exception Message: {3}
+Stack Trace: {4}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NoDataRow">
         <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
-        <target state="translated">Test verisi kaynağı belirtilmedi. DataTestMethodAttribute ile en az bir TestDataSource gereklidir.</target>
+        <target state="new">No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
         <source>{0} ({1})</source>
-        <target state="translated">{0} ({1})</target>
+        <target state="new">{0} ({1})</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AsyncUITestMethodNotSupported">
         <source>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</source>
-        <target state="translated">UITestMethodAttribute özniteliğine sahip async TestMethod metodu desteklenmiyor. async ifadesini kaldırın ya da TestMethodAttribute özniteliğini kullanın.</target>
+        <target state="new">async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</source>
-        <target state="translated">{1} üzerindeki {0} özelliği veya metodu IEnumerable&lt;object[]&gt; döndürmez.</target>
+        <target state="new">Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
         <source>Value returned by property or method {0} shouldn't be null.</source>
-        <target state="translated">{0} özelliği veya metodu tarafından döndürülen değer null olamaz.</target>
+        <target state="new">Value returned by property or method {0} shouldn't be null.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataDisplayName">
         <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
-        <target state="translated">{0} metodu, beklenen imzayla eşleşmelidir: public static {1} {0}({2}).</target>
+        <target state="new">Method {0} must match the expected signature: public static {1} {0}({2}).</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableEmpty">
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
-        <target state="translated">{1} üzerindeki {0} özelliği veya metodu boş IEnumerable&lt;object[]&gt; döndürür.</target>
+        <target state="new">Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</target>
         <note>
         </note>
       </trans-unit>

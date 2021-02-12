@@ -4,133 +4,133 @@
     <body>
       <trans-unit id="CannotFindFile">
         <source>Could not find file '{0}'.</source>
-        <target state="translated">ファイル '{0}' が見つかりませんでした。</target>
+        <target state="new">Could not find file '{0}'.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="Common_CannotBeNullOrEmpty">
         <source>The parameter should not be null or empty.</source>
-        <target state="translated">パラメーターを null または空にすることはできません。</target>
+        <target state="new">The parameter should not be null or empty.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
-        <target state="translated">テストの実行の配置問題です: 配置項目が正しくありません: '{0}': 出力ディレクトリ '{1}' は、項目が配置ルート ディレクトリ外に配置されるように指定していますが、それは許可されません。</target>
+        <target state="new">Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToAccesOutputDirectory">
         <source>Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}</source>
-        <target state="translated">テストの実行の配置問題です: 配置項目 '{0}' によって指定された出力ディレクトリ '{1}' にアクセスできません。項目は配置されません: {2}: {3}</target>
+        <target state="new">Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToAccessFile">
         <source>Test Run deployment issue: Failed to access the file '{0}': {1}: {2}</source>
-        <target state="translated">テストの実行の配置問題です: ファイル '{0}' にアクセスできませんでした: {1}: {2}</target>
+        <target state="new">Test Run deployment issue: Failed to access the file '{0}': {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
         <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">テストの実行の配置問題です: ファイル '{0}' を '{1}' にコピーできませんでした: {2}: {3}</target>
+        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
-        <target state="translated">テストの実行の配置問題です: テスト ストレージ '{0}' の依存関係を配置できませんでした: {1}</target>
+        <target state="new">Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToGetFileForDeploymentItem">
         <source>Test Run deployment issue: Failed to get the file for {0}: {1}: {2}</source>
-        <target state="translated">テストの実行の配置問題です: {0} のファイルを取得できませんでした: {1}: {2}</target>
+        <target state="new">Test Run deployment issue: Failed to get the file for {0}: {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorGettingSatellite">
         <source>Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}</source>
-        <target state="translated">テストの実行の配置問題です: {0} のサテライト アセンブリを取得中にエラーが発生しました: {1}: {2}</target>
+        <target state="new">Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItem">
         <source>deployment item '{0}'</source>
-        <target state="translated">配置項目 '{0}'</target>
+        <target state="new">deployment item '{0}'</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemContainsInvalidCharacters">
         <source>Invalid deployment item: the specified path '{0}' or output directory '{1}' contains illegal characters.</source>
-        <target state="translated">無効な配置項目です: 指定されたパス '{0}' または出力ディレクトリ '{1}' に使用できない文字が含まれています。</target>
+        <target state="new">Invalid deployment item: the specified path '{0}' or output directory '{1}' contains illegal characters.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
         <source>Invalid deployment item: the output directory cannot be null.</source>
-        <target state="translated">無効な配置項目です: 出力ディレクトリを null にすることはできません。</target>
+        <target state="new">Invalid deployment item: the output directory cannot be null.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryMustBeRelative">
         <source>Invalid deployment item: the specified output directory '{0}' is not relative.</source>
-        <target state="translated">無効な配置項目です: 指定された出力ディレクトリ '{0}' は相対ではありません。</target>
+        <target state="new">Invalid deployment item: the specified output directory '{0}' is not relative.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemPathCannotBeNullOrEmpty">
         <source>Invalid deployment item: the path must contain at least one character.</source>
-        <target state="translated">無効な配置項目です: パスは少なくとも 1 つの文字を含んでいなければなりません。</target>
+        <target state="new">Invalid deployment item: the path must contain at least one character.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemWithOutputDirectory">
         <source>deployment item '{0}' (output directory '{1}')</source>
-        <target state="translated">配置項目 '{0}' (出力ディレクトリ '{1}')</target>
+        <target state="new">deployment item '{0}' (output directory '{1}')</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlElement">
         <source>MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</source>
-        <target state="translated">MSTestAdapter で設定 '{1}' に予期しない要素 '{0}' が見つかりました。この要素を削除して、もう一度お試しください。</target>
+        <target state="new">MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="MissingDeploymentDependency">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</source>
-        <target state="translated">テストの実行の配置問題です: アセンブリまたはモジュール '{0}' が見つかりませんでした。理由: {1}</target>
+        <target state="new">Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="MissingDeploymentDependencyWithoutReason">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found.</source>
-        <target state="translated">テストの実行の配置問題です: アセンブリまたはモジュール '{0}' が見つかりませんでした。</target>
+        <target state="new">Test Run deployment issue: The assembly or module '{0}' was not found.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>
-        <target state="translated">{0}_{1} {2}</target>
+        <target state="new">{0}_{1} {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
         <source>Data source '{0}' cannot be found in the test configuration settings</source>
-        <target state="translated">データ ソース '{0}' がテスト構成の設定に見つかりません</target>
+        <target state="new">Data source '{0}' cannot be found in the test configuration settings</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTA_ErrorDataConnectionFailed">
         <source>The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see "Troubleshooting Data-Driven Unit Tests" (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}</source>
-        <target state="translated">単体テスト アダプターがデータ ソースに接続できなかったか、データを読み取れませんでした。このエラーのトラブルシューティングの詳細については、MSDN ライブラリの「方法: データ ドリブン単体テストを作成する」(http://go.microsoft.com/fwlink/?LinkId=62412) をご覧ください。エラーの詳細: {0}</target>
+        <target state="new">The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see "Troubleshooting Data-Driven Unit Tests" (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="WrongNumberOfObjects">
         <source>Wrong number of objects for permutation. Should be greater than zero.</source>
-        <target state="translated">順列のオブジェクト数が正しくありません。ゼロより大きくなければなりません。</target>
+        <target state="new">Wrong number of objects for permutation. Should be greater than zero.</target>
         <note>
         </note>
       </trans-unit>

@@ -4,187 +4,187 @@
     <body>
       <trans-unit id="AccessStringInvalidSyntax">
         <source>Access string has invalid syntax.</source>
-        <target state="translated">La chaîne Access possède une syntaxe non valide.</target>
+        <target state="new">Access string has invalid syntax.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ActualHasMismatchedElements">
         <source>The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</source>
-        <target state="translated">La collection attendue contient {1} occurrence(s) de &lt;{2}&gt;. La collection réelle contient {3} occurrence(s). {0}</target>
+        <target state="new">The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AllItemsAreUniqueFailMsg">
         <source>Duplicate item found:&lt;{1}&gt;. {0}</source>
-        <target state="translated">Un élément dupliqué a été trouvé : &lt;{1}&gt;. {0}</target>
+        <target state="new">Duplicate item found:&lt;{1}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualFailMsg">
         <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Attendu : &lt;{1}&gt;, Réel : &lt;{2}&gt;. {0}</target>
+        <target state="new">Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualDeltaFailMsg">
         <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Différence attendue non supérieure à &lt;{3}&gt; comprise entre la valeur attendue &lt;{1}&gt; et la valeur réelle &lt;{2}&gt;. {0}</target>
+        <target state="new">Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Attendu :&lt;{1}&gt;. La casse est différente pour la valeur réelle :&lt;{2}&gt;. {0}</target>
+        <target state="new">Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
         <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
-        <target state="translated">Attendu : &lt;{1} ({2})&gt;, Réel : &lt;{3} ({4})&gt;. {0}</target>
+        <target state="new">Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Toute valeur attendue sauf :&lt;{1}&gt;. Réel :&lt;{2}&gt;. {0}</target>
+        <target state="new">Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreNotEqualDeltaFailMsg">
         <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">Différence attendue supérieure à &lt;{3}&gt; comprise entre la valeur attendue &lt;{1}&gt; et la valeur réelle &lt;{2}&gt;. {0}</target>
+        <target state="new">Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreSameGivenValues">
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
-        <target state="translated">Ne passez pas de types valeur à AreSame(). Les valeurs converties en Object ne seront plus jamais les mêmes. Si possible, utilisez AreEqual(). {0}</target>
+        <target state="new">Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty. {0}</source>
-        <target state="translated">Les deux collections sont vides. {0}</target>
+        <target state="new">Both collections are empty. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothCollectionsSameElements">
         <source>Both collection contain same elements.</source>
-        <target state="translated">Les deux collections contiennent des éléments identiques.</target>
+        <target state="new">Both collection contain same elements.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothCollectionsSameReference">
         <source>Both collection references point to the same collection object. {0}</source>
-        <target state="translated">Les deux collections Reference pointent vers le même objet Collection. {0}</target>
+        <target state="new">Both collection references point to the same collection object. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothSameElements">
         <source>Both collections contain the same elements. {0}</source>
-        <target state="translated">Les deux collections contiennent les mêmes éléments. {0}</target>
+        <target state="new">Both collections contain the same elements. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}({1})</source>
-        <target state="translated">{0}({1})</target>
+        <target state="new">{0}({1})</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ContainsFail">
         <source>String '{0}' does not contain string '{1}'. {2}.</source>
-        <target state="translated">La chaîne '{0}' ne contient pas la chaîne '{1}'. {2}.</target>
+        <target state="new">String '{0}' does not contain string '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
         <source>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</source>
-        <target state="translated">Le nombre d'éléments dans les collections ne correspond pas. Attendu : &lt;{1}&gt;, Réel : &lt;{2}&gt;.{0}</target>
+        <target state="new">The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
         <source>Element at index {0} do not match.</source>
-        <target state="translated">Les éléments à l'index {0} ne correspondent pas.</target>
+        <target state="new">Element at index {0} do not match.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
         <source>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</source>
-        <target state="translated">L'élément à l'index {1} n'est pas du type attendu. Type attendu : &lt;{2}&gt;, Type réel : &lt;{3}&gt;.{0}</target>
+        <target state="new">Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch2">
         <source>Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</source>
-        <target state="translated">L'élément à l'index {1} est (null). Type attendu : &lt;{2}&gt;.{0}</target>
+        <target state="new">Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}.</source>
-        <target state="translated">La chaîne '{0}' ne se termine pas par la chaîne '{1}'. {2}.</target>
+        <target state="new">String '{0}' does not end with string '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="EqualsTesterInvalidArgs">
         <source>Invalid argument- EqualsTester can't use nulls.</source>
-        <target state="translated">Argument non valide - EqualsTester ne peut pas utiliser de valeur null.</target>
+        <target state="new">Invalid argument- EqualsTester can't use nulls.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ErrorInvalidCast">
         <source>Cannot convert object of type {0} to {1}.</source>
-        <target state="translated">Impossible de convertir un objet de type {0} en {1}.</target>
+        <target state="new">Cannot convert object of type {0} to {1}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
-        <target state="translated">Échec de {0}. {1}</target>
+        <target state="new">{0} failed. {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InternalObjectNotValid">
         <source>The internal object referenced is no longer valid.</source>
-        <target state="translated">L'objet interne référencé n'est plus valide.</target>
+        <target state="new">The internal object referenced is no longer valid.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InvalidParameterToAssert">
         <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">Le paramètre '{0}' n'est pas valide. {1}.</target>
+        <target state="new">The parameter '{0}' is invalid. {1}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
-        <target state="translated">{0}Type attendu :&lt;{1}&gt;. Type réel :&lt;{2}&gt;.</target>
+        <target state="new">{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}.</source>
-        <target state="translated">La chaîne '{0}' ne correspond pas au modèle '{1}'. {2}.</target>
+        <target state="new">String '{0}' does not match pattern '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
-        <target state="translated">Type incorrect : &lt;{1}&gt;, Type réel : &lt;{2}&gt;. {0}</target>
+        <target state="new">Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}.</source>
-        <target state="translated">La chaîne '{0}' correspond au modèle '{1}'. {2}.</target>
+        <target state="new">String '{0}' matches pattern '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
-        <target state="translated">Assert.Equals ne doit pas être utilisé pour les assertions. Utilisez Assert.AreEqual &amp; overloads à la place.</target>
+        <target state="new">Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</target>
         <note>
         </note>
       </trans-unit>
@@ -194,10 +194,10 @@
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      Le membre spécifié ({0}) est introuvable. Vous devrez peut-être régénérer votre accesseur private,
-      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est vrai, vous devez transmettre le type
-      qui définit le membre dans le constructeur de PrivateObject.
+        <target state="new">
+      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>
         </note>
@@ -208,89 +208,89 @@
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      Le constructeur doté de la signature spécifiée est introuvable. Vous devrez peut-être régénérer votre accesseur private,
-      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est vrai, vous devez transmettre le type
-      qui définit le membre dans le constructeur de PrivateObject.
+        <target state="new">
+      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
-        <target state="translated">Le paramètre '{0}' n'est pas valide. La valeur ne peut pas être null. {1}.</target>
+        <target state="new">The parameter '{0}' is invalid. The value cannot be null. {1}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
         <source>Different number of elements.</source>
-        <target state="translated">Nombre d'éléments différent.</target>
+        <target state="new">Different number of elements.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}.</source>
-        <target state="translated">La chaîne '{0}' ne commence pas par la chaîne '{1}'. {2}.</target>
+        <target state="new">String '{0}' does not start with string '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
         <source>The property {0} has type {1}; expected type {2}.</source>
-        <target state="translated">La propriété {0} possède le type {1} ; type attendu {2}.</target>
+        <target state="new">The property {0} has type {1}; expected type {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="Common_NullInMessages">
         <source>(null)</source>
-        <target state="translated">(null)</target>
+        <target state="new">(null)</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="Common_ObjectString">
         <source>(object)</source>
-        <target state="translated">(objet)</target>
+        <target state="new">(object)</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
         <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">Le type de l'exception attendue doit être System.Exception ou un type dérivé de System.Exception.</target>
+        <target state="new">The expected exception type must be System.Exception or a type derived from System.Exception.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodNoExceptionDefault">
         <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">La méthode de test n'a pas levé d'exception. Une exception était attendue par l'attribut {0} défini sur la méthode de test.</target>
+        <target state="new">Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodNoException">
         <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">La méthode de test n'a pas levé l'exception attendue {0}. {1}</target>
+        <target state="new">Test method did not throw expected exception {0}. {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodWrongException">
         <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">La méthode de test a levé l'exception {0}, mais l'exception {1} était attendue. Message d'exception : {2}</target>
+        <target state="new">Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
         <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">La méthode de test a levé l'exception {0}, mais l'exception {1} (ou un type dérivé de cette dernière) était attendue. Message d'exception : {2}</target>
+        <target state="new">Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
-        <target state="translated">(Échec de la réception du message pour une exception de type {0} en raison d'une exception.)</target>
+        <target state="new">(Failed to get the message for an exception of type {0} due to an exception.)</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NoExceptionThrown">
         <source>No exception thrown. {1} exception was expected. {0}</source>
-        <target state="translated">Aucune exception levée. Exception {1} attendue. {0}</target>
+        <target state="new">No exception thrown. {1} exception was expected. {0}</target>
         <note>
         </note>
       </trans-unit>
@@ -298,51 +298,51 @@
         <source>Threw exception {2}, but exception {1} was expected. {0}
 Exception Message: {3}
 Stack Trace: {4}</source>
-        <target state="translated">L'exception {2} a été levée, mais l'exception {1} était attendue. {0}
-Message d'exception : {3}
-Trace de la pile : {4}</target>
+        <target state="new">Threw exception {2}, but exception {1} was expected. {0}
+Exception Message: {3}
+Stack Trace: {4}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NoDataRow">
         <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
-        <target state="translated">Aucune source de données de test spécifiée. Au moins une TestDataSouce est obligatoire avec DataTestMethodAttribute.</target>
+        <target state="new">No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
         <source>{0} ({1})</source>
-        <target state="translated">{0} ({1})</target>
+        <target state="new">{0} ({1})</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AsyncUITestMethodNotSupported">
         <source>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</source>
-        <target state="translated">async TestMethod avec UITestMethodAttribute ne sont pas pris en charge. Supprimez async ou utilisez TestMethodAttribute.</target>
+        <target state="new">async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</source>
-        <target state="translated">La propriété ou la méthode {0} sur {1} ne retourne pas IEnumerable&lt;object[]&gt;.</target>
+        <target state="new">Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
         <source>Value returned by property or method {0} shouldn't be null.</source>
-        <target state="translated">La valeur retournée par la propriété ou la méthode {0} ne doit pas être Null.</target>
+        <target state="new">Value returned by property or method {0} shouldn't be null.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataDisplayName">
         <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
-        <target state="translated">La méthode {0} doit correspondre à la signature attendue : public static {1} {0}({2}).</target>
+        <target state="new">Method {0} must match the expected signature: public static {1} {0}({2}).</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableEmpty">
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
-        <target state="translated">La propriété ou la méthode {0} sur {1} retourne un IEnumerable&lt;object[]&gt; vide.</target>
+        <target state="new">Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</target>
         <note>
         </note>
       </trans-unit>

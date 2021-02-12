@@ -4,133 +4,133 @@
     <body>
       <trans-unit id="CannotFindFile">
         <source>Could not find file '{0}'.</source>
-        <target state="translated">Die Datei "{0}" konnte nicht gefunden werden.</target>
+        <target state="new">Could not find file '{0}'.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="Common_CannotBeNullOrEmpty">
         <source>The parameter should not be null or empty.</source>
-        <target state="translated">Der Parameter darf nicht NULL oder leer sein.</target>
+        <target state="new">The parameter should not be null or empty.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
-        <target state="translated">Problem bei der Testlaufbereitstellung: Ungültiges Bereitstellungselement: "{0}". Das Ausgabeverzeichnis "{1}" gibt das unzulässige Element an, das außerhalb des Bereitstellungsstammverzeichnisses bereitgestellt werden soll.</target>
+        <target state="new">Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToAccesOutputDirectory">
         <source>Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}</source>
-        <target state="translated">Problem bei der Testlaufbereitstellung: Fehler beim Zugriff auf das vom Bereitstellungselement "{0}" angegebene Ausgabeverzeichnis "{1}". Das Element wird nicht bereitgestellt: {2}: {3}</target>
+        <target state="new">Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToAccessFile">
         <source>Test Run deployment issue: Failed to access the file '{0}': {1}: {2}</source>
-        <target state="translated">Problem bei der Testlaufbereitstellung: Fehler beim Zugriff auf die Datei "{0}": {1}: {2}</target>
+        <target state="new">Test Run deployment issue: Failed to access the file '{0}': {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
         <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">Problem bei der Testlaufbereitstellung: Fehler beim Kopieren der Datei "{0}" nach "{1}": {2}: {3}</target>
+        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
-        <target state="translated">Problem bei der Testlaufbereitstellung: Fehler beim Bereitstellen der Abhängigkeiten für den Testspeicher "{0}": {1}</target>
+        <target state="new">Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToGetFileForDeploymentItem">
         <source>Test Run deployment issue: Failed to get the file for {0}: {1}: {2}</source>
-        <target state="translated">Problem bei der Testlaufbereitstellung: Fehler beim Abrufen der Datei für {0}: {1}: {2}</target>
+        <target state="new">Test Run deployment issue: Failed to get the file for {0}: {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorGettingSatellite">
         <source>Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}</source>
-        <target state="translated">Problem bei der Testlaufbereitstellung: Fehler beim Abrufen der Satellitenassemblys für {0}: {1}: {2}</target>
+        <target state="new">Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItem">
         <source>deployment item '{0}'</source>
-        <target state="translated">Bereitstellungselement "{0}"</target>
+        <target state="new">deployment item '{0}'</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemContainsInvalidCharacters">
         <source>Invalid deployment item: the specified path '{0}' or output directory '{1}' contains illegal characters.</source>
-        <target state="translated">Ungültiges Bereitstellungselement: Der angegebene Pfad "{0}" oder das angegebene Ausgabeverzeichnis "{1}" enthält unzulässige Zeichen.</target>
+        <target state="new">Invalid deployment item: the specified path '{0}' or output directory '{1}' contains illegal characters.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
         <source>Invalid deployment item: the output directory cannot be null.</source>
-        <target state="translated">Ungültiges Bereitstellungselement: Das Ausgabeverzeichnis darf nicht NULL sein.</target>
+        <target state="new">Invalid deployment item: the output directory cannot be null.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryMustBeRelative">
         <source>Invalid deployment item: the specified output directory '{0}' is not relative.</source>
-        <target state="translated">Ungültiges Bereitstellungselement: Das angegebene Ausgabeverzeichnis "{0}" ist nicht relativ.</target>
+        <target state="new">Invalid deployment item: the specified output directory '{0}' is not relative.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemPathCannotBeNullOrEmpty">
         <source>Invalid deployment item: the path must contain at least one character.</source>
-        <target state="translated">Ungültiges Bereitstellungselement: Der Pfad muss mindestens ein Zeichen enthalten.</target>
+        <target state="new">Invalid deployment item: the path must contain at least one character.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemWithOutputDirectory">
         <source>deployment item '{0}' (output directory '{1}')</source>
-        <target state="translated">Bereitstellungselement "{0}" (Ausgabeverzeichnis "{1}")</target>
+        <target state="new">deployment item '{0}' (output directory '{1}')</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlElement">
         <source>MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</source>
-        <target state="translated">"MSTestAdapter" hat ein unerwartetes Element "{0}" in den Einstellungen "{1}" ermittelt. Entfernen Sie dieses Element, und versuchen Sie es erneut.</target>
+        <target state="new">MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="MissingDeploymentDependency">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</source>
-        <target state="translated">Problem bei der Testlaufbereitstellung: Die Assembly oder das Modul "{0}" wurde nicht gefunden. Ursache: {1}</target>
+        <target state="new">Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="MissingDeploymentDependencyWithoutReason">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found.</source>
-        <target state="translated">Problem bei der Testlaufbereitstellung: Die Assembly oder das Modul "{0}" wurde nicht gefunden.</target>
+        <target state="new">Test Run deployment issue: The assembly or module '{0}' was not found.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>
-        <target state="translated">{0}{1} {2}</target>
+        <target state="new">{0}_{1} {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
         <source>Data source '{0}' cannot be found in the test configuration settings</source>
-        <target state="translated">Die Datenquelle "{0}" wurde in den Testkonfigurationseinstellungen nicht gefunden.</target>
+        <target state="new">Data source '{0}' cannot be found in the test configuration settings</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTA_ErrorDataConnectionFailed">
         <source>The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see "Troubleshooting Data-Driven Unit Tests" (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}</source>
-        <target state="translated">Der Komponententestadapter konnte keine Verbindung mit der Datenquelle herstellen bzw. die Daten nicht lesen. Weitere Informationen zur Problembehandlung dieses Fehlers finden Sie unter "Problembehandlung von datengesteuerten Komponententests" (http://go.microsoft.com/fwlink/?LinkId=62412) in der MSDN Library. Fehlerdetails: {0}</target>
+        <target state="new">The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see "Troubleshooting Data-Driven Unit Tests" (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="WrongNumberOfObjects">
         <source>Wrong number of objects for permutation. Should be greater than zero.</source>
-        <target state="translated">Falsche Anzahl von Objekten für die Permutation. Die Anzahl muss größer als NULL sein.</target>
+        <target state="new">Wrong number of objects for permutation. Should be greater than zero.</target>
         <note>
         </note>
       </trans-unit>

@@ -4,133 +4,133 @@
     <body>
       <trans-unit id="CannotFindFile">
         <source>Could not find file '{0}'.</source>
-        <target state="translated">Soubor {0} se nenašel.</target>
+        <target state="new">Could not find file '{0}'.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="Common_CannotBeNullOrEmpty">
         <source>The parameter should not be null or empty.</source>
-        <target state="translated">Parametr nemůže být null nebo prázdný.</target>
+        <target state="new">The parameter should not be null or empty.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
-        <target state="translated">Problém nasazení testovacího běhu: Chybná položka nasazení: {0}: výstupní adresář {1} určuje položku, která se má nasadit mimo kořenový adresář nasazení, což není povolené.</target>
+        <target state="new">Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToAccesOutputDirectory">
         <source>Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Nepodařilo se získat přístup k výstupnímu adresáři {1} zadanému položkou nasazení {0}, položka se nenasadí: {2}: {3}</target>
+        <target state="new">Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToAccessFile">
         <source>Test Run deployment issue: Failed to access the file '{0}': {1}: {2}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Nepodařilo se získat přístup k souboru {0}: {1}: {2}</target>
+        <target state="new">Test Run deployment issue: Failed to access the file '{0}': {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
         <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Nepodařilo se zkopírovat soubor {0} do {1}: {2}: {3}</target>
+        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Nepodařilo se nasadit závislosti úložiště testů {0}: {1}</target>
+        <target state="new">Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToGetFileForDeploymentItem">
         <source>Test Run deployment issue: Failed to get the file for {0}: {1}: {2}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Nepodařilo se získat soubor pro {0}: {1}: {2}</target>
+        <target state="new">Test Run deployment issue: Failed to get the file for {0}: {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorGettingSatellite">
         <source>Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Během získávání satelitních sestavení pro {0}: {1}: {2} došlo k chybě</target>
+        <target state="new">Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItem">
         <source>deployment item '{0}'</source>
-        <target state="translated">položka nasazení {0}</target>
+        <target state="new">deployment item '{0}'</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemContainsInvalidCharacters">
         <source>Invalid deployment item: the specified path '{0}' or output directory '{1}' contains illegal characters.</source>
-        <target state="translated">Neplatná položka nasazení: Zadaná cesta {0} nebo adresář výstupu {1} obsahuje neplatné znaky.</target>
+        <target state="new">Invalid deployment item: the specified path '{0}' or output directory '{1}' contains illegal characters.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
         <source>Invalid deployment item: the output directory cannot be null.</source>
-        <target state="translated">Neplatná položka nasazení: Adresář výstupu nemůže být null.</target>
+        <target state="new">Invalid deployment item: the output directory cannot be null.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryMustBeRelative">
         <source>Invalid deployment item: the specified output directory '{0}' is not relative.</source>
-        <target state="translated">Neplatná položka nasazení: Zadaný adresář výstupu {0} nemá relativní adresu.</target>
+        <target state="new">Invalid deployment item: the specified output directory '{0}' is not relative.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemPathCannotBeNullOrEmpty">
         <source>Invalid deployment item: the path must contain at least one character.</source>
-        <target state="translated">Neplatná položka nasazení: Cesta musí obsahovat minimálně jeden znak.</target>
+        <target state="new">Invalid deployment item: the path must contain at least one character.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemWithOutputDirectory">
         <source>deployment item '{0}' (output directory '{1}')</source>
-        <target state="translated">položka nasazení {0} (adresář výstupu {1})</target>
+        <target state="new">deployment item '{0}' (output directory '{1}')</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlElement">
         <source>MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</source>
-        <target state="translated">Nástroj MSTestAdapter zjistil neočekávaný prvek {0} v nastavení {1}. Odeberte tento prvek a zkuste to znovu.</target>
+        <target state="new">MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="MissingDeploymentDependency">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Sestavení nebo modul {0} se nenašly. Důvod: {1}</target>
+        <target state="new">Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="MissingDeploymentDependencyWithoutReason">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found.</source>
-        <target state="translated">Problém nasazení testovacího běhu: Sestavení nebo modul {0} se nenašly.</target>
+        <target state="new">Test Run deployment issue: The assembly or module '{0}' was not found.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>
-        <target state="translated">{0}_{1} {2}</target>
+        <target state="new">{0}_{1} {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
         <source>Data source '{0}' cannot be found in the test configuration settings</source>
-        <target state="translated">Zdroj dat {0} se v nastavení konfigurace testu nenašel.</target>
+        <target state="new">Data source '{0}' cannot be found in the test configuration settings</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTA_ErrorDataConnectionFailed">
         <source>The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see "Troubleshooting Data-Driven Unit Tests" (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}</source>
-        <target state="translated">Adaptéru testování částí se buď nepodařilo připojit ke zdroji dat, nebo přečíst data. Další informace o odstraňování této chyby najdete v knihovně MSDN v tématu Troubleshooting Data-Driven Unit Tests (http://go.microsoft.com/fwlink/?LinkId=62412). Podrobnosti o chybě: {0}</target>
+        <target state="new">The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see "Troubleshooting Data-Driven Unit Tests" (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="WrongNumberOfObjects">
         <source>Wrong number of objects for permutation. Should be greater than zero.</source>
-        <target state="translated">Chybný počet objektů pro permutaci. Počet musí být větší než nula.</target>
+        <target state="new">Wrong number of objects for permutation. Should be greater than zero.</target>
         <note>
         </note>
       </trans-unit>

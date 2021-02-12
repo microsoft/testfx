@@ -1,190 +1,190 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
-  <file datatype="xml" source-language="en" original="../FrameworkMessages.resx" target-language="zh-HANT">
+  <file datatype="xml" source-language="en" original="../FrameworkMessages.resx" target-language="zh-Hant">
     <body>
       <trans-unit id="AccessStringInvalidSyntax">
         <source>Access string has invalid syntax.</source>
-        <target state="translated">存取字串有無效的語法。</target>
+        <target state="new">Access string has invalid syntax.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ActualHasMismatchedElements">
         <source>The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</source>
-        <target state="translated">預期在集合中包含 {1} 項 &lt;{2}&gt;，但實際的集合卻有 {3} 項。{0}</target>
+        <target state="new">The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AllItemsAreUniqueFailMsg">
         <source>Duplicate item found:&lt;{1}&gt;. {0}</source>
-        <target state="translated">找到重複的項目: &lt;{1}&gt;。{0}</target>
+        <target state="new">Duplicate item found:&lt;{1}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualFailMsg">
         <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">預期: &lt;{1}&gt;。實際: &lt;{2}&gt;。{0}</target>
+        <target state="new">Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualDeltaFailMsg">
         <source>Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">預期值 &lt;{1}&gt; 和實際值 &lt;{2}&gt; 之間的預期差異沒有大於 &lt;{3}&gt;。{0}</target>
+        <target state="new">Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
-        <target state="translated">預期: &lt;{1}&gt;。大小寫與下列實際值不同: &lt;{2}&gt;。{0}</target>
+        <target state="new">Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
         <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
-        <target state="translated">預期: &lt;{1} ({2})&gt;。實際: &lt;{3} ({4})&gt;。{0}</target>
+        <target state="new">Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="translated">預期任何值 (&lt;{1}&gt; 除外)。實際: &lt;{2}&gt;。{0}</target>
+        <target state="new">Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreNotEqualDeltaFailMsg">
         <source>Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</source>
-        <target state="translated">預期值 &lt;{1}&gt; 和實際值 &lt;{2}&gt; 之間的預期差異大於 &lt;{3}&gt;。{0}</target>
+        <target state="new">Expected a difference greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AreSameGivenValues">
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
-        <target state="translated">不要將實值型別傳遞給 AreSame()。轉換成 Object 的值從此不再一樣。請考慮使用 AreEqual()。{0}</target>
+        <target state="new">Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty. {0}</source>
-        <target state="translated">兩個集合皆空白。{0}</target>
+        <target state="new">Both collections are empty. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothCollectionsSameElements">
         <source>Both collection contain same elements.</source>
-        <target state="translated">兩個集合含有相同的項目。</target>
+        <target state="new">Both collection contain same elements.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothCollectionsSameReference">
         <source>Both collection references point to the same collection object. {0}</source>
-        <target state="translated">兩個集合參考都指向同一個集合物件。{0}</target>
+        <target state="new">Both collection references point to the same collection object. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="BothSameElements">
         <source>Both collections contain the same elements. {0}</source>
-        <target state="translated">兩個集合含有相同的項目。{0}</target>
+        <target state="new">Both collections contain the same elements. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}({1})</source>
-        <target state="translated">{0}({1})</target>
+        <target state="new">{0}({1})</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ContainsFail">
         <source>String '{0}' does not contain string '{1}'. {2}.</source>
-        <target state="translated">字串 '{0}' 未包含字串 '{1}'。{2}。</target>
+        <target state="new">String '{0}' does not contain string '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
         <source>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</source>
-        <target state="translated">集合中的項目數目不符。預期: &lt;{1}&gt;。實際: &lt;{2}&gt;。{0}</target>
+        <target state="new">The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
         <source>Element at index {0} do not match.</source>
-        <target state="translated">位於索引 {0} 的項目不符。</target>
+        <target state="new">Element at index {0} do not match.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
         <source>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</source>
-        <target state="translated">位於索引 {1} 的項目不是預期的類型。預期的類型: &lt;{2}&gt;。實際的類型: &lt;{3}&gt;。{0}</target>
+        <target state="new">Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch2">
         <source>Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</source>
-        <target state="translated">位於索引 {1} 的項目是 (null)。預期的類型: &lt;{2}&gt;。{0}</target>
+        <target state="new">Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}.</source>
-        <target state="translated">字串 '{0}' 不是以字串 '{1}' 結尾。{2}。</target>
+        <target state="new">String '{0}' does not end with string '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="EqualsTesterInvalidArgs">
         <source>Invalid argument- EqualsTester can't use nulls.</source>
-        <target state="translated">引數無效 - EqualsTester 不可使用 null。</target>
+        <target state="new">Invalid argument- EqualsTester can't use nulls.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="ErrorInvalidCast">
         <source>Cannot convert object of type {0} to {1}.</source>
-        <target state="translated">無法將 {0} 類型的物件轉換為 {1}。</target>
+        <target state="new">Cannot convert object of type {0} to {1}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
-        <target state="translated">{0} 失敗。 {1}</target>
+        <target state="new">{0} failed. {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InternalObjectNotValid">
         <source>The internal object referenced is no longer valid.</source>
-        <target state="translated">所參考的內部物件已不再有效。</target>
+        <target state="new">The internal object referenced is no longer valid.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InvalidParameterToAssert">
         <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">參數 '{0}' 無效。{1}。</target>
+        <target state="new">The parameter '{0}' is invalid. {1}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
-        <target state="translated">{0} 預期的類型: &lt;{1}&gt;，實際的類型: &lt;{2}&gt;。</target>
+        <target state="new">{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}.</source>
-        <target state="translated">字串 '{0}' 與模式 '{1}' 不符。{2}。</target>
+        <target state="new">String '{0}' does not match pattern '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
-        <target state="translated">錯誤的類型: &lt;{1}&gt;。實際的類型: &lt;{2}&gt;。{0}</target>
+        <target state="new">Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}.</source>
-        <target state="translated">字串 '{0}' 與模式 '{1}' 相符。{2}。</target>
+        <target state="new">String '{0}' matches pattern '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
-        <target state="translated">Assert.Equals 不應使用於判斷提示。請改用 Assert.AreEqual 及多載。</target>
+        <target state="new">Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</target>
         <note>
         </note>
       </trans-unit>
@@ -194,10 +194,10 @@
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      找不到所指定的成員 ({0})。您可能必須重新產生私用存取子，
-      或者該成員可能為私用，並且定義在基底類別上。如果是後者，
-      您必須將定義該成員的類型傳遞至 PrivateObject 的建構函式。
+        <target state="new">
+      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>
         </note>
@@ -208,89 +208,89 @@
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="translated">
-      找不到具有所指定簽章的建構函式。您可能必須重新產生私用存取子，
-      或者該成員可能為私用，並且定義在基底類別上。如果是後者，您必須
-      將定義該成員的類型傳遞至 PrivateObject 的建構函式。
+        <target state="new">
+      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null. {1}.</source>
-        <target state="translated">參數 '{0}' 無效。此值不可為 null。{1}。</target>
+        <target state="new">The parameter '{0}' is invalid. The value cannot be null. {1}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
         <source>Different number of elements.</source>
-        <target state="translated">項目數目不同。</target>
+        <target state="new">Different number of elements.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}.</source>
-        <target state="translated">字串 '{0}' 不是以字串 '{1}' 開頭。{2}。</target>
+        <target state="new">String '{0}' does not start with string '{1}'. {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
         <source>The property {0} has type {1}; expected type {2}.</source>
-        <target state="translated">屬性 {0} 具有類型 {1}; 預期為類型 {2}。</target>
+        <target state="new">The property {0} has type {1}; expected type {2}.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="Common_NullInMessages">
         <source>(null)</source>
-        <target state="translated">(null)</target>
+        <target state="new">(null)</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="Common_ObjectString">
         <source>(object)</source>
-        <target state="translated">(物件)</target>
+        <target state="new">(object)</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_ExpectedExceptionTypeMustDeriveFromException">
         <source>The expected exception type must be System.Exception or a type derived from System.Exception.</source>
-        <target state="translated">預期的例外狀況類型必須是 System.Exception 或衍生自 System.Exception 的類型。</target>
+        <target state="new">The expected exception type must be System.Exception or a type derived from System.Exception.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodNoExceptionDefault">
         <source>Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</source>
-        <target state="translated">測試方法未擲回例外狀況。測試方法上定義的屬性 {0} 需要例外狀況。</target>
+        <target state="new">Test method did not throw an exception. An exception was expected by attribute {0} defined on the test method.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodNoException">
         <source>Test method did not throw expected exception {0}. {1}</source>
-        <target state="translated">測試方法未擲回預期的例外狀況 {0}。{1}</target>
+        <target state="new">Test method did not throw expected exception {0}. {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodWrongException">
         <source>Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</source>
-        <target state="translated">測試方法擲回例外狀況 {0}，但需要的是例外狀況 {1}。例外狀況訊息: {2}</target>
+        <target state="new">Test method threw exception {0}, but exception {1} was expected. Exception message: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_TestMethodWrongExceptionDerivedAllowed">
         <source>Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</source>
-        <target state="translated">測試方法擲回例外狀況 {0}，但需要的是例外狀況 {1} 或是衍生自其的類型。例外狀況訊息: {2}</target>
+        <target state="new">Test method threw exception {0}, but exception {1} or a type derived from it was expected. Exception message: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
-        <target state="translated">(因為發生例外狀況，所以無法取得類型 {0} 之例外狀況的訊息。)</target>
+        <target state="new">(Failed to get the message for an exception of type {0} due to an exception.)</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NoExceptionThrown">
         <source>No exception thrown. {1} exception was expected. {0}</source>
-        <target state="translated">未擲回任何例外狀況。預期為 {1} 例外狀況。{0}</target>
+        <target state="new">No exception thrown. {1} exception was expected. {0}</target>
         <note>
         </note>
       </trans-unit>
@@ -298,51 +298,51 @@
         <source>Threw exception {2}, but exception {1} was expected. {0}
 Exception Message: {3}
 Stack Trace: {4}</source>
-        <target state="translated">擲回例外狀況 {2}，但需要的是例外狀況 {1}。{0}
-例外狀況訊息: {3}
-堆疊追蹤: {4}</target>
+        <target state="new">Threw exception {2}, but exception {1} was expected. {0}
+Exception Message: {3}
+Stack Trace: {4}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="NoDataRow">
         <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
-        <target state="translated">未指定任何測試資料來源。必須至少有一個具備 DataTestMethodAttribute 的 TestDataSource。</target>
+        <target state="new">No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
         <source>{0} ({1})</source>
-        <target state="translated">{0} ({1})</target>
+        <target state="new">{0} ({1})</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="AsyncUITestMethodNotSupported">
         <source>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</source>
-        <target state="translated">不支援有 UITestMethodAttribute 的 async TestMethod。請移除 async 或使用 TestMethodAttribute。</target>
+        <target state="new">async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</source>
-        <target state="translated">{1} 上的屬性或方法 {0} 並未傳回 IEnumerable&lt;object[]&gt;。</target>
+        <target state="new">Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
         <source>Value returned by property or method {0} shouldn't be null.</source>
-        <target state="translated">屬性或方法 {0} 傳回的值不可為 null。</target>
+        <target state="new">Value returned by property or method {0} shouldn't be null.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataDisplayName">
         <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
-        <target state="translated">方法 {0} 必須與正確的簽章相符: public static {1} {0}({2})。</target>
+        <target state="new">Method {0} must match the expected signature: public static {1} {0}({2}).</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableEmpty">
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
-        <target state="translated">{1} 上的屬性或方法 {0} 傳回空的 IEnumerable&lt;object[]&gt;。</target>
+        <target state="new">Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</target>
         <note>
         </note>
       </trans-unit>

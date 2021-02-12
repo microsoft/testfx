@@ -4,133 +4,133 @@
     <body>
       <trans-unit id="CannotFindFile">
         <source>Could not find file '{0}'.</source>
-        <target state="translated">'{0}' 파일을 찾을 수 없습니다.</target>
+        <target state="new">Could not find file '{0}'.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="Common_CannotBeNullOrEmpty">
         <source>The parameter should not be null or empty.</source>
-        <target state="translated">매개 변수는 null이거나 비워 둘 수 없습니다.</target>
+        <target state="new">The parameter should not be null or empty.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
-        <target state="translated">테스트 실행 배포 문제: 잘못된 배포 항목: '{0}': 출력 디렉터리 '{1}'에서 항목을 배포 루트 디렉터리 외부에 배포하도록 지정하며 이는 허용되지 않습니다.</target>
+        <target state="new">Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToAccesOutputDirectory">
         <source>Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}</source>
-        <target state="translated">테스트 실행 배포 문제: 배포 항목 '{0}'에 의해 지정된 출력 디렉터리 '{1}'에 액세스하지 못했습니다. 항목이 배포되지 않음: {2}: {3}</target>
+        <target state="new">Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToAccessFile">
         <source>Test Run deployment issue: Failed to access the file '{0}': {1}: {2}</source>
-        <target state="translated">테스트 실행 배포 문제: '{0}' 파일에 액세스하지 못함: {1}: {2}</target>
+        <target state="new">Test Run deployment issue: Failed to access the file '{0}': {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
         <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">테스트 실행 배포 문제: '{0}' 파일을 '{1}'에 복사하지 못함: {2}: {3}</target>
+        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
-        <target state="translated">테스트 실행 배포 문제: 테스트 스토리지 '{0}'에 대한 종속성을 배포하지 못함: {1}</target>
+        <target state="new">Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToGetFileForDeploymentItem">
         <source>Test Run deployment issue: Failed to get the file for {0}: {1}: {2}</source>
-        <target state="translated">테스트 실행 배포 문제: {0}에 대한 파일을 가져오지 못함: {1}: {2}</target>
+        <target state="new">Test Run deployment issue: Failed to get the file for {0}: {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentErrorGettingSatellite">
         <source>Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}</source>
-        <target state="translated">테스트 실행 배포 문제: {0}에 대한 위성 어셈블리를 가져오는 동안 오류 발생: {1}: {2}</target>
+        <target state="new">Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItem">
         <source>deployment item '{0}'</source>
-        <target state="translated">배포 항목 '{0}'</target>
+        <target state="new">deployment item '{0}'</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemContainsInvalidCharacters">
         <source>Invalid deployment item: the specified path '{0}' or output directory '{1}' contains illegal characters.</source>
-        <target state="translated">잘못된 배포 항목: 지정된 경로 '{0}' 또는 출력 디렉터리 '{1}'에 잘못된 문자가 들어 있습니다.</target>
+        <target state="new">Invalid deployment item: the specified path '{0}' or output directory '{1}' contains illegal characters.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
         <source>Invalid deployment item: the output directory cannot be null.</source>
-        <target state="translated">잘못된 배포 항목: 출력 디렉터리는 null일 수 없습니다.</target>
+        <target state="new">Invalid deployment item: the output directory cannot be null.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryMustBeRelative">
         <source>Invalid deployment item: the specified output directory '{0}' is not relative.</source>
-        <target state="translated">잘못된 배포 항목: 지정된 출력 디렉터리 '{0}'이(가) 상대 디렉터리가 아닙니다.</target>
+        <target state="new">Invalid deployment item: the specified output directory '{0}' is not relative.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemPathCannotBeNullOrEmpty">
         <source>Invalid deployment item: the path must contain at least one character.</source>
-        <target state="translated">잘못된 배포 항목: 경로에는 하나 이상의 문자가 포함되어 있어야 합니다.</target>
+        <target state="new">Invalid deployment item: the path must contain at least one character.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="DeploymentItemWithOutputDirectory">
         <source>deployment item '{0}' (output directory '{1}')</source>
-        <target state="translated">배포 항목 '{0}'(출력 디렉터리 '{1}')</target>
+        <target state="new">deployment item '{0}' (output directory '{1}')</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlElement">
         <source>MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</source>
-        <target state="translated">MSTestAdapter의 '{1}' 설정에서 예기치 않은 요소 '{0}'이(가) 발견되었습니다. 이 요소를 제거하고 다시 시도하세요.</target>
+        <target state="new">MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="MissingDeploymentDependency">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</source>
-        <target state="translated">테스트 실행 배포 문제: 어셈블리 또는 모듈 '{0}'을(를) 찾을 수 없습니다. 이유: {1}</target>
+        <target state="new">Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="MissingDeploymentDependencyWithoutReason">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found.</source>
-        <target state="translated">테스트 실행 배포 문제: 어셈블리 또는 모듈 '{0}'을(를) 찾을 수 없습니다.</target>
+        <target state="new">Test Run deployment issue: The assembly or module '{0}' was not found.</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>
-        <target state="translated">{0}_{1} {2}</target>
+        <target state="new">{0}_{1} {2}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
         <source>Data source '{0}' cannot be found in the test configuration settings</source>
-        <target state="translated">테스트 구성 설정에서 데이터 원본 '{0}'을(를) 찾을 수 없습니다.</target>
+        <target state="new">Data source '{0}' cannot be found in the test configuration settings</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="UTA_ErrorDataConnectionFailed">
         <source>The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see "Troubleshooting Data-Driven Unit Tests" (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}</source>
-        <target state="translated">단위 테스트 어댑터가 데이터 원본에 연결하거나 데이터를 읽지 못했습니다. 이 오류를 해결하는 방법에 대한 자세한 내용은 MSDN 라이브러리에서 "데이터 기반 단위 테스트 문제 해결"(http://go.microsoft.com/fwlink/?LinkId=62412)을 참조하십시오. 오류 세부 정보: {0}</target>
+        <target state="new">The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see "Troubleshooting Data-Driven Unit Tests" (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}</target>
         <note>
         </note>
       </trans-unit>
       <trans-unit id="WrongNumberOfObjects">
         <source>Wrong number of objects for permutation. Should be greater than zero.</source>
-        <target state="translated">순열의 개체 수가 잘못되었습니다. 개체 수는 0보다 커야 합니다.</target>
+        <target state="new">Wrong number of objects for permutation. Should be greater than zero.</target>
         <note>
         </note>
       </trans-unit>
