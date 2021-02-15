@@ -38,6 +38,7 @@
     <Compile Include="Extensions\TestContextExtensions.cs" />
     <Compile Include="Extensions\TestResultExtensions.cs" />
     <Compile Include="Extensions\UnitTestOutcomeExtensions.cs" />
+    <Compile Include="Helpers\DictionaryHelper.cs" />
     <Compile Include="Helpers\RunSettingsUtilities.cs" />
     <Compile Include="Helpers\TestRunParameters.cs" />
     <Compile Include="MSTestDiscoverer.cs" />
