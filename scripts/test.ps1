@@ -26,21 +26,25 @@ Param(
   [Switch] $Help = $false
 )
 
-. $PSScriptRoot\common.lib.ps1
-
 #
 # Script Preferences
 #
 $ErrorActionPreference = "Stop"
 
+$CurrentScriptDir = (Get-Item (Split-Path $MyInvocation.MyCommand.Path))
+
 #
 # Variables
 #
+$env:TF_ROOT_DIR = $CurrentScriptDir.Parent.FullName
+$env:TF_TOOLS_DIR = Join-Path $env:TF_ROOT_DIR "tools"
+$env:DOTNET_CLI_VERSION = "6.0.100-alpha.1.21067.8"
 $env:TF_TESTS_OUTDIR_PATTERN = "*.Tests"
 $env:TF_UNITTEST_FILES_PATTERN = "*.UnitTests*.dll"
 $env:TF_COMPONENTTEST_FILES_PATTERN = "*.ComponentTests*.dll"
 $env:TF_E2ETEST_FILES_PATTERN = "*.E2ETests*.dll"
 $env:TF_NetCoreContainers =@("MSTestAdapter.PlatformServices.NetCore.UnitTests.dll")
+
 #
 # Test configuration
 #
@@ -49,7 +53,9 @@ $TFT_Configuration = $Configuration
 $TFT_Pattern = $Pattern
 $TFT_Parallel = $Parallel
 $TFT_All = $All
-$TestFramework = ".NETCoreApp,Version=v2.1"
+$TestFramework = ".NETCoreApp2.1"
+
+. $PSScriptRoot\common.lib.ps1
 
 #
 # Prints help text for the switches this script supports.
@@ -169,8 +175,8 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
     {
         Try
         {
-            Write-Verbose "dotnet test $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx"
-            & dotnet test $netCoreTestContainers /framework:$TestFramework $additionalArguments /logger:trx
+            Write-Verbose "dotnet test $netCoreTestContainers /framework:`"$TestFramework`" $additionalArguments /logger:trx"
+            & dotnet test $netCoreTestContainers /framework:"$TestFramework" $additionalArguments /logger:trx
         }
 
         Catch [System.Management.Automation.CommandNotFoundException]
@@ -196,4 +202,5 @@ function Get-VSTestPath
 }
 
 Print-Help
+Install-DotNetCli
 Invoke-Test
