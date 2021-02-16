@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatformVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(TestPlatformVersion)" />
     <PackageReference Include="Moq" Version="4.7.63" />
   </ItemGroup>
 

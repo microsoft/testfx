@@ -20,7 +20,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         private const string PackagesFolder = "packages";
 
         // This value is automatically updated by "build.ps1" script.
-        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.16.10.0-preview-20210204-01";
+        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform.16.10.0-preview-20210211-01";
         private const string VstestConsoleRelativePath = @"tools\net451\Common7\IDE\Extensions\TestPlatform\vstest.console.exe";
 
         private static VsTestConsoleWrapper vsTestConsoleWrapper;
