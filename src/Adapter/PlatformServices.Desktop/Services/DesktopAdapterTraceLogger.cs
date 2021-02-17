@@ -20,7 +20,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="args"> The args. </param>
         public void LogError(string format, params object[] args)
         {
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, format, args);
+            if (EqtTrace.IsErrorEnabled)
+            {
+                EqtTrace.Error(this.PrependAdapterName(format, args));
+            }
         }
 
         /// <summary>
@@ -30,7 +33,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="args"> The args. </param>
         public void LogWarning(string format, params object[] args)
         {
-            EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, format, args);
+            if (EqtTrace.IsWarningEnabled)
+            {
+                EqtTrace.Warning(this.PrependAdapterName(format, args));
+            }
         }
 
         /// <summary>
@@ -40,7 +46,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="args"> The args. </param>
         public void LogInfo(string format, params object[] args)
         {
-            EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, format, args);
+            if (EqtTrace.IsInfoEnabled)
+            {
+                EqtTrace.Info(this.PrependAdapterName(format, args));
+            }
+        }
+
+        private string PrependAdapterName(string format, params object[] args)
+        {
+            return string.Format($"MSTest - {string.Format(format, args)}");
         }
     }
 
