@@ -241,7 +241,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 if (this.sessionParameters != null && this.sessionParameters.Count > 0)
                 {
-                    sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
+                    sourceLevelParameters = this.sessionParameters.ConcatWithOverwrites(sourceLevelParameters);
                 }
 
                 TestAssemblySettingsProvider sourceSettingsProvider = null;
