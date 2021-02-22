@@ -31,7 +31,7 @@ testfx can be built from within Visual Studio or from the CLI.
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 ### License
-testfx platform is licensed under the [MIT license](https://github.com/Microsoft/testfx/blob/master/LICENSE)
+testfx platform is licensed under the [MIT license](https://github.com/Microsoft/testfx/blob/master/LICENSE.txt)
 
 ### Issue Tracking
 Please see [issue tracking](https://github.com/Microsoft/testfx-docs/blob/master/issuetracking.md) for a description of the workflow we use to process issues.
