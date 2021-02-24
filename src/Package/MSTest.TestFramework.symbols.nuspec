@@ -60,6 +60,7 @@
     <file src="$srcroot$\**\*.cs" target="src" />
 
     <!-- LICENSE -->
-    <file src="LICENSE" target="" />
+    <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
+    <file src="LICENS*" target="" />
   </files>
 </package>

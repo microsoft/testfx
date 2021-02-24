@@ -105,6 +105,7 @@
     <file src="MSTest.Core\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\tr" />
 
     <!-- LICENSE -->
-    <file src="LICENSE" target="" />
+    <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
+    <file src="LICENS*" target="" />
   </files>
 </package>

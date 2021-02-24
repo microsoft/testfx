@@ -146,6 +146,7 @@
     <file src="Extension.UWP\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\uap10.0\tr" />
 
     <!-- LICENSE -->
-    <file src="LICENSE" target="" />
+    <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
+    <file src="LICENS*" target="" />
   </files>
 </package>

@@ -26,6 +26,7 @@
 	  <file src="$packagesroot$\Microsoft.Internal.Dia.Interop.14.0.0\lib\net20\msdia140typelib_clr0200.dll" target="lib\net451\" />
 
     <!-- LICENSE -->
-    <file src="LICENSE" target="" />
+    <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
+    <file src="LICENS*" target="" />
   </files>
 </package>

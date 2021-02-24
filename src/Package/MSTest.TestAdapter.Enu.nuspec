@@ -57,6 +57,7 @@
     <file src="Build\Desktop\MSTest.TestAdapter.targets" target="build\net45\MSTest.TestAdapter.targets" />
 
     <!-- LICENSE -->
-    <file src="LICENSE" target="" />
+    <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
+    <file src="LICENS*" target="" />
   </files>
 </package>
