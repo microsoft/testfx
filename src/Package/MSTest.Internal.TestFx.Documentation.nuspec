@@ -10,7 +10,7 @@
     <summary>This is a private nuget package that contains the xml documentation files for MSTest V2 Framework.</summary>
     <description>This is a private nuget package that contains the xml documentation files for MSTest V2 Framework.</description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
-    <license type="file">LICENSE.txt</license>
+    <license type="file">LICENSE</license>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework MSTestV2</tags>
@@ -23,7 +23,8 @@
     <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\UWP" />
     <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\WinUI" />
 
-    <!-- LICENSE.txt -->
-    <file src="LICENSE.txt" target="" />
+    <!-- LICENSE -->
+    <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
+    <file src="LICENS*" target="" />
   </files>
 </package>
