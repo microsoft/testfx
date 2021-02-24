@@ -277,6 +277,9 @@ Stack Trace: {4}</value>
   <data name="AsyncUITestMethodNotSupported" xml:space="preserve">
     <value>async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.</value>
   </data>
+  <data name="AsyncUITestMethodWithNoDispatcherQueue" xml:space="preserve">
+    <value>UITestMethodAttribute.DispatcherQueue should not be nul. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</value>
+  </data>
   <data name="DynamicDataIEnumerableNull" xml:space="preserve">
     <value>Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</value>
   </data>

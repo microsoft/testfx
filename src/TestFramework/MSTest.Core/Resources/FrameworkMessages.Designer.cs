@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class FrameworkMessages {
@@ -166,6 +166,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string AsyncUITestMethodNotSupported {
             get {
                 return ResourceManager.GetString("AsyncUITestMethodNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to UITestMethodAttribute.DispatcherQueue should not be nul. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization..
+        /// </summary>
+        internal static string AsyncUITestMethodWithNoDispatcherQueue {
+            get {
+                return ResourceManager.GetString("AsyncUITestMethodWithNoDispatcherQueue", resourceCulture);
             }
         }
         
