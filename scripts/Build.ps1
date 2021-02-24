@@ -247,6 +247,8 @@ function Create-NugetPackages {
   $packageOutDir = Join-Path $stagingDir "MSTestPackages"
   $tfSrcPackageDir = Join-Path $env:TF_SRC_DIR "Package"
 
+  "" > "$stagingDir\_._"
+
   # Copy over the nuspecs to the staging directory
   if ($TFB_Official) {
     $nuspecFiles = @("MSTest.TestAdapter.Dotnet.nuspec", "MSTest.TestAdapter.nuspec", "MSTest.TestAdapter.symbols.nuspec", "MSTest.TestFramework.nuspec", "MSTest.TestFramework.symbols.nuspec", "MSTest.Internal.TestFx.Documentation.nuspec")
@@ -258,6 +260,8 @@ function Create-NugetPackages {
   foreach ($file in $nuspecFiles) {
     Copy-Item $tfSrcPackageDir\$file $stagingDir -Force
   }
+  
+  Copy-Item (Join-Path $tfSrcPackageDir "Icon.png") $stagingDir -Force
 
   # Copy over LICENSE file to staging directory
   $licenseFilePath = Join-Path $env:TF_ROOT_DIR "LICENSE"

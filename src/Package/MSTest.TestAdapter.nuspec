@@ -18,6 +18,7 @@
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
     <license type="file">LICENSE</license>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
+    <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
     <dependencies>
@@ -102,5 +103,8 @@
     <!-- LICENSE -->
     <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
     <file src="LICENS*" target="" />
+
+    <!-- Icon -->
+    <file src="Icon.png" target="" />
   </files>
 </package>

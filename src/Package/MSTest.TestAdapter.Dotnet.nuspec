@@ -11,7 +11,13 @@
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
     <license type="file">LICENSE</license>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
+    <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+
+    <dependencies>
+      <group targetFramework="net451"></group>
+      <group targetFramework="dotnet"></group>
+    </dependencies>
   </metadata>
   <files>	
 	  <file src="MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="lib\dotnet\" />
@@ -28,5 +34,8 @@
     <!-- LICENSE -->
     <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
     <file src="LICENS*" target="" />
+
+    <!-- Icon -->
+    <file src="Icon.png" target="" />
   </files>
 </package>

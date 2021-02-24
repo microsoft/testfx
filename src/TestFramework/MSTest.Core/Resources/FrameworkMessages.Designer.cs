@@ -170,7 +170,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to UITestMethodAttribute.DispatcherQueue should not be nul. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization..
+        ///   Looks up a localized string similar to UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization..
         /// </summary>
         internal static string AsyncUITestMethodWithNoDispatcherQueue {
             get {
