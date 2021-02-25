@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 {
     using Microsoft.TestPlatform.AdapterUtilities;
+    using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -15,8 +16,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
     internal static class TestCaseExtensions
     {
         internal static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
-            id: ManagedNameConstants.ManagedTypePropertyId,
-            label: ManagedNameConstants.ManagedTypeLabel,
+            id: Contants.ManagedTypePropertyId,
+            label: Contants.ManagedTypeLabel,
             category: string.Empty,
             description: string.Empty,
             valueType: typeof(string),
@@ -25,8 +26,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             owner: typeof(TestCase));
 
         internal static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
-            id: ManagedNameConstants.ManagedMethodPropertyId,
-            label: ManagedNameConstants.ManagedMethodLabel,
+            id: Contants.ManagedMethodPropertyId,
+            label: Contants.ManagedMethodLabel,
             category: string.Empty,
             description: string.Empty,
             valueType: typeof(string),
