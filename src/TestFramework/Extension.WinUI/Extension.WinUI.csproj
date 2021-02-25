@@ -24,6 +24,9 @@
 
   <Import Project="..\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <ItemGroup>
+    <Compile Include="..\Extension.UWP\DeploymentItemAttribute.cs" Link="DeploymentItemAttribute.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WinUI" Version="3.0.0-preview4.210210.4" />
