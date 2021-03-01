@@ -29,16 +29,16 @@
     <dependencies>
       <group targetFramework="netstandard1.0">
         <dependency id="NETStandard.Library" version="1.6.1" />
-        <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="[16.9.1, )" />
         <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
       </group>
 
       <group targetFramework="net45">
-        <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="[16.9.1, )" />
       </group>
 
       <group targetFramework="uap10.0">
-        <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="[16.9.1, )" />
       </group>
     </dependencies>
   </metadata>
