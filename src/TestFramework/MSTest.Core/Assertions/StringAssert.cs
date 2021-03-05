@@ -577,7 +577,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Matches(string value, Regex pattern, string message)
         {
-            Matches(value, pattern, message);
+            Matches(value, pattern, message, null);
         }
 
         /// <summary>
