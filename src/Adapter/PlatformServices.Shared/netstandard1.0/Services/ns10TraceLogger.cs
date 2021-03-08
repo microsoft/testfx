@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             if (EqtTrace.IsErrorEnabled)
             {
-                EqtTrace.Error(this.PrependAdapterName(format, args));
+                EqtTrace.Error(this.PrependAdapterName(format), args);
             }
         }
 
@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             if (EqtTrace.IsWarningEnabled)
             {
-                EqtTrace.Warning(this.PrependAdapterName(format, args));
+                EqtTrace.Warning(this.PrependAdapterName(format), args);
             }
         }
 
@@ -48,13 +48,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             if (EqtTrace.IsInfoEnabled)
             {
-                EqtTrace.Info(this.PrependAdapterName(format, args));
+                EqtTrace.Info(this.PrependAdapterName(format), args);
             }
         }
 
-        private string PrependAdapterName(string format, params object[] args)
+        private string PrependAdapterName(string format)
         {
-            return string.Format($"MSTest - {string.Format(format, args)}");
+            return $"MSTest - {format}";
         }
     }
 

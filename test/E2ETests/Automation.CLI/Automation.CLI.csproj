@@ -105,7 +105,7 @@
     <DestinationPath>$(TargetDir)..\..\TestAssets</DestinationPath>
     <PackagesPath>$(TestFxRoot)\packages</PackagesPath>
     <PostBuildEvent>
-      xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities.$(TestPlatformVersion)\lib\net45\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)"
+      xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities.$(TestPlatformVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)"
       xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities.$(TestPlatformVersion)\lib\netstandard1.0\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)\netcoreapp1.1\"
       xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities.$(TestPlatformVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)\netcoreapp2.1\"
       xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" "$(DestinationPath)"

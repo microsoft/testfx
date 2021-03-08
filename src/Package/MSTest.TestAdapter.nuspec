@@ -22,7 +22,7 @@
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
     <dependencies>
-      <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="[16.9.1, )" />
     </dependencies>
   </metadata>
   <files>
