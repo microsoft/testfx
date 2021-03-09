@@ -56,14 +56,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             }
 
             ManagedNameHelper.GetManagedName(method, out var managedType, out var managedMethod);
-
-            // ManagedNameHelpers currently does not support spaces in method names.
-            // If there are spaces in the method name, we'll use the legacy way to find the method.
-            if (!managedMethod.Contains(" "))
-            {
-                this.ManagedTypeName = managedType;
-                this.ManagedMethodName = managedMethod;
-            }
+            this.ManagedTypeName = managedType;
+            this.ManagedMethodName = managedMethod;
         }
 
         internal TestMethod(string managedTypeName, string managedMethodName, string name, string fullClassName, string assemblyName, bool isAsync)
@@ -73,18 +67,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             this.ManagedMethodName = managedMethodName;
         }
 
-        /// <summary>
-        /// Gets the name of the test method
-        /// </summary>
+        /// <inheritdoc />
         public string Name { get; private set; }
 
-        /// <summary>
-        /// Gets the full classname of the test method
-        /// </summary>
+        /// <inheritdoc />
         public string FullClassName { get; private set; }
 
         /// <summary>
-        /// Gets or sets the declaring class full name. This will be used while getting navigation data.
+        /// Gets or sets the declaring assembly full name. This will be used while getting navigation data.
         /// This will be null if AssemblyName is same as DeclaringAssemblyName.
         /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
         /// </summary>
@@ -122,14 +112,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             }
         }
 
-        /// <summary>
-        /// Gets the name of the test assembly
-        /// </summary>
+        /// <inheritdoc />
         public string AssemblyName { get; private set; }
 
-        /// <summary>
-        /// Gets a value indicating whether specifies test method is async
-        /// </summary>
+        /// <inheritdoc />
         public bool IsAsync { get; private set; }
 
         /// <inheritdoc />
@@ -140,5 +126,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
         /// <inheritdoc />
         public bool HasManagedMethodAndTypeProperties => !string.IsNullOrWhiteSpace(this.ManagedTypeName) && !string.IsNullOrWhiteSpace(this.ManagedMethodName);
+
+        /// <summary>
+        /// Gets or sets type of dynamic data if any
+        /// </summary>
+        internal DynamicDataType DataType { get; set; }
+
+        /// <summary>
+        /// Gets or sets indices of dynamic data
+        /// </summary>
+        internal object[] Data { get; set; }
+
+        /// <summary>
+        /// Gets or sets the display name set during discovery
+        /// </summary>
+        internal string DisplayName { get; set; }
+
+        internal TestMethod Clone() => this.MemberwiseClone() as TestMethod;
     }
 }

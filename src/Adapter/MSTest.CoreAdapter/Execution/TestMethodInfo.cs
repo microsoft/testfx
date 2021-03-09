@@ -11,10 +11,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Reflection;
     using System.Text;
     using System.Threading;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -91,31 +93,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
-            where TAttributeType : Attribute
-        {
-            Attribute[] attributeArray = ReflectHelper.GetCustomAttributes(this.TestMethod, typeof(TAttributeType), inherit);
-
-            TAttributeType[] tAttributeArray = attributeArray as TAttributeType[];
-            if (tAttributeArray != null)
-            {
-                return tAttributeArray;
-            }
-
-            List<TAttributeType> tAttributeList = new List<TAttributeType>();
-            if (attributeArray != null)
-            {
-                foreach (Attribute attribute in attributeArray)
-                {
-                    TAttributeType tAttribute = attribute as TAttributeType;
-                    if (tAttribute != null)
-                    {
-                        tAttributeList.Add(tAttribute);
-                    }
-                }
-            }
-
-            return tAttributeList.ToArray();
-        }
+            where TAttributeType : Attribute => ReflectHelper.GetAttributes<TAttributeType>(this.TestMethod, inherit);
 
         /// <summary>
         /// Execute test method. Capture failures, handle async and return result.

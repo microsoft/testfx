@@ -136,7 +136,7 @@ function Locate-VsInstallPath($hasVsixExtension = "false") {
 
   Write-Verbose "$vswhere -latest -products * -requires $requiredPackageIds -property installationPath"
   try {
-    if ($Official) {
+    if ($Official -or $DisallowPrereleaseMSBuild) {
       $vsInstallPath = & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
     }
     else {

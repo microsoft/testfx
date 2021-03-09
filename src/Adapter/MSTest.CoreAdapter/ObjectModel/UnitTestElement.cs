@@ -7,14 +7,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
+    using System.IO;
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
     /// <summary>
     /// The unit test element.
     /// </summary>
     [Serializable]
+    [DebuggerDisplay("{GetDisplayName()} ({TestMethod.ManagedTypeName})")]
     internal class UnitTestElement
     {
         /// <summary>
@@ -103,15 +106,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         internal string[] WorkItemIds { get; set; }
 
+        internal UnitTestElement Clone()
+        {
+            var clone = this.MemberwiseClone() as UnitTestElement;
+            if (this.TestMethod != null)
+            {
+                clone.TestMethod = this.TestMethod.Clone();
+            }
+
+            return clone;
+        }
+
         /// <summary>
         /// Convert the UnitTestElement instance to an Object Model testCase instance.
         /// </summary>
         /// <returns> An instance of <see cref="TestCase"/>. </returns>
         internal TestCase ToTestCase()
         {
-            string fullName = this.TestMethod.HasManagedMethodAndTypeProperties
-                            ? string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.ManagedTypeName, this.TestMethod.ManagedMethodName)
-                            : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
+            // This causes compatibility problems with older runners.
+            // string fullName = this.TestMethod.HasManagedMethodAndTypeProperties
+            //                 ? string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.ManagedTypeName, this.TestMethod.ManagedMethodName)
+            //                 : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
+            var fullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
 
             TestCase testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
             testCase.DisplayName = this.GetDisplayName();
@@ -188,6 +204,44 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 testCase.SetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, this.DoNotParallelize);
             }
 
+            // Store resolved data if any
+            if (this.TestMethod.DataType != DynamicDataType.None)
+            {
+                var data = Helpers.DataSerializationHelper.Serialize(this.TestMethod.Data);
+
+                testCase.SetPropertyValue(TestAdapter.Constants.TestDynamicDataTypeProperty, (int)this.TestMethod.DataType);
+                testCase.SetPropertyValue(TestAdapter.Constants.TestDynamicDataProperty, data);
+            }
+
+            string fileName = testCase.Source;
+            try
+            {
+                fileName = Path.GetFileName(fileName);
+            }
+            catch
+            {
+            }
+
+            var testFullId = new System.Text.StringBuilder();
+            testFullId.Append(testCase.ExecutorUri?.ToString());
+            testFullId.Append(fileName);
+            if (this.TestMethod.HasManagedMethodAndTypeProperties)
+            {
+                testFullId.Append(this.TestMethod.ManagedTypeName);
+                testFullId.Append(this.TestMethod.ManagedMethodName);
+            }
+            else
+            {
+                testFullId.Append(testCase.FullyQualifiedName);
+            }
+
+            if (this.TestMethod.DataType != DynamicDataType.None)
+            {
+                testFullId.Append(testCase.DisplayName);
+            }
+
+            testCase.Id = EqtHash.GuidFromString(testFullId.ToString());
+
             return testCase;
         }
 
@@ -195,9 +249,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         {
             if (string.IsNullOrWhiteSpace(this.DisplayName))
             {
-                return string.IsNullOrWhiteSpace(this.TestMethod.ManagedMethodName)
-                     ? this.TestMethod.Name
-                     : this.TestMethod.ManagedMethodName;
+                return this.TestMethod.Name;
+
+                // This causes compatibility problems with older runners.
+                // return string.IsNullOrWhiteSpace(this.TestMethod.ManagedMethodName)
+                //      ? this.TestMethod.Name
+                //      : this.TestMethod.ManagedMethodName;
             }
             else
             {

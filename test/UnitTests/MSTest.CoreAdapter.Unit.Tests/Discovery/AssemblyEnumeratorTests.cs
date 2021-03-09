@@ -19,6 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
     using Moq;
 
@@ -57,7 +58,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void ConstructorShouldPopulateSettings()
         {
-            string runSettingxml =
+            string runSettingsXml =
                  @"<RunSettings>
                      <MSTest>
                         <ForcedLegacyMode>True</ForcedLegacyMode>
@@ -75,8 +76,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
                     }
                 });
 
-            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName);
             var assemblyEnumerator = new AssemblyEnumerator(adapterSettings);
+            assemblyEnumerator.RunSettingsXml = runSettingsXml;
 
             Assert.IsTrue(MSTestSettings.CurrentSettings.ForcedLegacyMode);
             Assert.AreEqual("DummyPath\\TestSettings1.testsettings", MSTestSettings.CurrentSettings.TestSettingsFile);
