@@ -86,7 +86,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Package", "Package", "{E374A3A6-C364-4890-B315-D60F5C682B6E}"
 	ProjectSection(SolutionItems) = preProject
 		src\Package\MSTest.Internal.TestFx.Documentation.nuspec = src\Package\MSTest.Internal.TestFx.Documentation.nuspec
-		src\Package\MSTest.TestAdapter.Dotnet.nuspec = src\Package\MSTest.TestAdapter.Dotnet.nuspec
 		src\Package\MSTest.TestAdapter.Enu.nuspec = src\Package\MSTest.TestAdapter.Enu.nuspec
 		src\Package\MSTest.TestAdapter.nuspec = src\Package\MSTest.TestAdapter.nuspec
 		src\Package\MSTest.TestAdapter.symbols.nuspec = src\Package\MSTest.TestAdapter.symbols.nuspec
@@ -142,8 +141,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{F60B
 	ProjectSection(SolutionItems) = preProject
 		scripts\build\TestFx.Loc.targets = scripts\build\TestFx.Loc.targets
 		scripts\build\TestFx.Settings.targets = scripts\build\TestFx.Settings.targets
-		scripts\build\TestFx.Versions.targets = scripts\build\TestFx.Versions.targets
 		scripts\build\TestFx.targets = scripts\build\TestFx.targets
+		scripts\build\TestFx.Versions.targets = scripts\build\TestFx.Versions.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BCF525B1-E67F-486D-B091-06A8BB8A2793}"
@@ -186,7 +185,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeploymentTestProjectNetCor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TimeoutTestProjectNetCore", "test\E2ETests\TestAssets\TimeoutTestProjectNetCore\TimeoutTestProjectNetCore.csproj", "{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharpTestProject", "test\E2ETests\TestAssets\FSharpTestProject\FSharpTestProject.fsproj", "{E5E58613-82FC-44CD-B75F-4F1C7ED52D0D}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "FSharpTestProject", "test\E2ETests\TestAssets\FSharpTestProject\FSharpTestProject.fsproj", "{E5E58613-82FC-44CD-B75F-4F1C7ED52D0D}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
