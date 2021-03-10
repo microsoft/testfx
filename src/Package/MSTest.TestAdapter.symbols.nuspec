@@ -20,11 +20,11 @@
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
-	<dependencies>
-	    <group targetFramework="netcoreapp1.0">
-			<dependency id="NETStandard.Library" version="1.6.1" />
-			<dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
-	    </group>      
+  <dependencies>
+      <group targetFramework="netcoreapp1.0">
+      <dependency id="NETStandard.Library" version="1.6.1" />
+      <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
+      </group>      
     </dependencies>
   </metadata>
   <files>
@@ -33,7 +33,7 @@
     <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\_common\" />
 
-	<!-- NetCore -->
+  <!-- NetCore -->
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netcoreapp1.0\" />
     <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp1.0\" />
 
