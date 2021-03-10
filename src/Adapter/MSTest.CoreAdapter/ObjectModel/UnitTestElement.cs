@@ -109,9 +109,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <returns> An instance of <see cref="TestCase"/>. </returns>
         internal TestCase ToTestCase()
         {
-            string fullName = this.TestMethod.HasManagedMethodAndTypeProperties
-                            ? string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.ManagedTypeName, this.TestMethod.ManagedMethodName)
-                            : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
+            // This causes compatibility problems with older runners.
+            // string fullName = this.TestMethod.HasManagedMethodAndTypeProperties
+            //                 ? string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.ManagedTypeName, this.TestMethod.ManagedMethodName)
+            //                 : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
+            var fullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
 
             TestCase testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
             testCase.DisplayName = this.GetDisplayName();
@@ -195,9 +197,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         {
             if (string.IsNullOrWhiteSpace(this.DisplayName))
             {
-                return string.IsNullOrWhiteSpace(this.TestMethod.ManagedMethodName)
-                     ? this.TestMethod.Name
-                     : this.TestMethod.ManagedMethodName;
+                return this.TestMethod.Name;
+
+                // This causes compatibility problems with older runners.
+                // return string.IsNullOrWhiteSpace(this.TestMethod.ManagedMethodName)
+                //      ? this.TestMethod.Name
+                //      : this.TestMethod.ManagedMethodName;
             }
             else
             {

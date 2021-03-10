@@ -9,14 +9,14 @@
     <owners>Microsoft</owners>
     <summary>This is MSTest V2, the evolution of Microsoft's Test Framework.</summary>
     <description>
-	This is MSTest V2, the evolution of Microsoft's Test Framework.
+  This is MSTest V2, the evolution of Microsoft's Test Framework.
 
-	Supported platforms:
-	- .NET 4.5.0+
-	- .NET Core 1.0+ (Universal Windows Apps 10+, DNX Core 5+)
-	- ASP.NET Core 1.0+
+  Supported platforms:
+  - .NET 4.5.0+
+  - .NET Core 1.0+ (Universal Windows Apps 10+, DNX Core 5+)
+  - ASP.NET Core 1.0+
 
-	To discover and execute tests install MSTest.TestAdapter. 
+  To discover and execute tests install MSTest.TestAdapter. 
 
   To discover and execute tests for project.json based projects install dotnet-test-mstest.
     </description>
@@ -30,16 +30,16 @@
     <dependencies>
       <group targetFramework="netstandard1.0">
         <dependency id="NETStandard.Library" version="1.6.1" />
-        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="[16.9.1, )" />
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="$TestPlatformVersion$" />
         <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
       </group>
 
       <group targetFramework="net45">
-        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="[16.9.1, )" />
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="$TestPlatformVersion$" />
       </group>
 
       <group targetFramework="uap10.0">
-        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="[16.9.1, )" />
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="$TestPlatformVersion$" />
       </group>
 
       <group targetFramework="net5.0-windows10.0.18362.0">

@@ -86,7 +86,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Package", "Package", "{E374A3A6-C364-4890-B315-D60F5C682B6E}"
 	ProjectSection(SolutionItems) = preProject
 		src\Package\MSTest.Internal.TestFx.Documentation.nuspec = src\Package\MSTest.Internal.TestFx.Documentation.nuspec
-		src\Package\MSTest.TestAdapter.Dotnet.nuspec = src\Package\MSTest.TestAdapter.Dotnet.nuspec
 		src\Package\MSTest.TestAdapter.Enu.nuspec = src\Package\MSTest.TestAdapter.Enu.nuspec
 		src\Package\MSTest.TestAdapter.nuspec = src\Package\MSTest.TestAdapter.nuspec
 		src\Package\MSTest.TestAdapter.symbols.nuspec = src\Package\MSTest.TestAdapter.symbols.nuspec

@@ -20,6 +20,10 @@ $env:TF_SRC_DIR = Join-Path $env:TF_ROOT_DIR "src"
 $env:TF_TEST_DIR = Join-Path $env:TF_ROOT_DIR "test"
 $env:TF_PACKAGES_DIR = Join-Path $env:TF_ROOT_DIR "packages"
 
+$TF_VERSIONS_FILE = "$PSScriptRoot\build\TestFx.Versions.targets"
+if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
+    $TestPlatformVersion = (([XML](Get-Content $TF_VERSIONS_FILE)).Project.PropertyGroup.TestPlatformVersion).InnerText
+}
 
 function Create-Directory([string[]] $path) {
   if (!(Test-Path -path $path)) {
@@ -136,7 +140,7 @@ function Locate-VsInstallPath($hasVsixExtension = "false") {
 
   Write-Verbose "$vswhere -latest -products * -requires $requiredPackageIds -property installationPath"
   try {
-    if ($Official) {
+    if ($Official -or $DisallowPrereleaseMSBuild) {
       $vsInstallPath = & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
     }
     else {

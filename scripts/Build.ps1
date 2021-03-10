@@ -49,6 +49,9 @@ Param(
   [Alias("tpv")]
   [string] $TestPlatformVersion = $null,
 
+  [Alias("np")]
+  [Switch] $DisallowPrereleaseMSBuild,
+
   [Alias("f")]
   [Switch] $Force, 
 
@@ -111,20 +114,23 @@ function Print-Help {
   Write-Host -object ""
   Write-Host -object "********* MSTest Adapter Build Script *********"
   Write-Host -object ""
-  Write-Host -object "  Help (-h)                     - [Switch] - Prints this help message."
-  Write-Host -object "  Clean (-cl)                   - [Switch] - Indicates that this should be a clean build."
-  Write-Host -object "  SkipRestore (-sr)             - [Switch] - Indicates nuget package restoration should be skipped."
-  Write-Host -object "  ClearPackageCache (-cache)    - [Switch] - Indicates local package cache should be cleared before restore."
-  Write-Host -object "  Updatexlf (-uxlf)             - [Switch] - Indicates that there are resource changes and that these need to be copied to other languages as well."
-  Write-Host -object "  IsLocalizedBuild (-loc)       - [Switch] - Indicates that the build needs to generate resource assemblies as well."
-  Write-Host -object "  Official                      - [Switch] - Indicates that this is an official build. Only used in CI builds."
-  Write-Host -object "  Full                          - [Switch] - Indicates to perform a full build which includes Adapter, Framework"
+  Write-Host -object "  Help (-h)                        - [switch]   - Prints this help message."
+  Write-Host -object "  Clean (-cl)                      - [switch]   - Indicates that this should be a clean build."
+  Write-Host -object "  SkipRestore (-sr)                - [switch]   - Indicates nuget package restoration should be skipped."
+  Write-Host -object "  ClearPackageCache (-cache)       - [switch]   - Indicates local package cache should be cleared before restore."
+  Write-Host -object "  Updatexlf (-uxlf)                - [switch]   - Indicates that there are resource changes and that these need to be copied to other languages as well."
+  Write-Host -object "  IsLocalizedBuild (-loc)          - [switch]   - Indicates that the build needs to generate resource assemblies as well."
+  Write-Host -object "  Official                         - [switch]   - Indicates that this is an official build. Only used in CI builds."
+  Write-Host -object "  Full                             - [switch]   - Indicates to perform a full build which includes Adapter, Framework"
+  Write-Host -object "  DisallowPrereleaseMSBuild (-np)  - [switch]   - Uses an RTM version of MSBuild to build the projects"
+  Write-Host -object ""                                               
+  Write-Host -object "  Configuration (-c)               - [string]   - Specifies the build configuration. Defaults to 'Debug'."
+  Write-Host -object "  FrameworkVersion (-fv)           - [string]   - Specifies the version of the Test Framework nuget package."
+  Write-Host -object "  AdapterVersion (-av)             - [string]   - Specifies the version of the Test Adapter nuget package."
+  Write-Host -object "  VersionSuffix (-vs)              - [string]   - Specifies the version suffix for the nuget packages."
+  Write-Host -object "  Target                           - [string]   - Specifies the build target. Defaults to 'Build'."
   Write-Host -object ""
-  Write-Host -object "  Configuration (-c)            - [String] - Specifies the build configuration. Defaults to 'Debug'."
-  Write-Host -object "  FrameworkVersion (-fv)        - [String] - Specifies the version of the Test Framework nuget package."
-  Write-Host -object "  AdapterVersion (-av)          - [String] - Specifies the version of the Test Adapter nuget package."
-  Write-Host -object "  VersionSuffix (-vs)           - [String] - Specifies the version suffix for the nuget packages."
-  Write-Host -object "  Target                        - [String] - Specifies the build target. Defaults to 'Build'."
+  Write-Host -object "  Steps (-s)                       - [string[]] - List of build steps to run, valid steps: `"UpdateTPVersion`", `"Restore`", `"Build`", `"Publish`""
 
   Write-Host -object ""
   Exit 0
@@ -263,6 +269,8 @@ function Create-NugetPackages {
   
   Copy-Item (Join-Path $tfSrcPackageDir "Icon.png") $stagingDir -Force
 
+  Copy-Item -Path "$($env:TF_PACKAGES_DIR)\microsoft.testplatform.adapterutilities\$TestPlatformVersion\lib" -Destination "$($stagingDir)\Microsoft.TestPlatform.AdapterUtilities" -Recurse -Force
+
   # Copy over LICENSE file to staging directory
   $licenseFilePath = Join-Path $env:TF_ROOT_DIR "LICENSE"
   Copy-Item $licenseFilePath $stagingDir -Force
@@ -283,7 +291,7 @@ function Create-NugetPackages {
     }
 
     Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version=$version -Properties Version=$version"
-    & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR
+    & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR`;TestPlatformVersion=$TestPlatformVersion
 
     if ($lastExitCode -ne 0) {
       throw "Nuget pack failed with an exit code of '$lastExitCode'."
@@ -303,17 +311,15 @@ function Replace-InFile($File, $RegEx, $ReplaceWith) {
 }
 
 function Sync-PackageVersions {
-  $versionsFile = "$PSScriptRoot\build\TestFx.Versions.targets"
-
   $versionsRegex = '(?mi)<(TestPlatformVersion.*?)>(.*?)<\/TestPlatformVersion>'
   $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform([0-9a-z.]+)?" version="([0-9a-z.-]*)"'
   $sourceRegex = '(?mi)(.+[a-z =]+\@\")Microsoft\.TestPlatform\.([0-9.-a-z]+)\";'
 
   if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
-    $TestPlatformVersion = (([XML](Get-Content $versionsFile)).Project.PropertyGroup.TestPlatformVersion).InnerText
+    $TestPlatformVersion = (([XML](Get-Content $TF_VERSIONS_FILE)).Project.PropertyGroup.TestPlatformVersion).InnerText
   }
   else {
-    Replace-InFile -File $versionsFile -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</TestPlatformVersion>"
+    Replace-InFile -File $TF_VERSIONS_FILE -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</TestPlatformVersion>"
   }
 
   (Get-ChildItem "$PSScriptRoot\..\src\*packages.config", "$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
