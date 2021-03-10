@@ -52,6 +52,9 @@ Param(
   [Alias("np")]
   [Switch] $DisallowPrereleaseMSBuild,
 
+  [Alias("np")]
+  [Switch] $DisallowPrereleaseMSBuild,
+
   [Alias("f")]
   [Switch] $Force, 
 
@@ -265,6 +268,8 @@ function Create-NugetPackages {
     Copy-Item $tfSrcPackageDir\$file $stagingDir -Force
   }
 
+  Copy-Item -Path "$($env:TF_PACKAGES_DIR)\microsoft.testplatform.adapterutilities\$TestPlatformVersion\lib" -Destination "$($stagingDir)\Microsoft.TestPlatform.AdapterUtilities" -Recurse -Force
+
   # Copy over LICENSE file to staging directory
   $licenseFilePath = Join-Path $env:TF_ROOT_DIR "LICENSE"
   Copy-Item $licenseFilePath $stagingDir -Force
@@ -285,7 +290,7 @@ function Create-NugetPackages {
     }
 
     Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version=$version -Properties Version=$version"
-    & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR
+    & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR`;TestPlatformVersion=$TestPlatformVersion
 
     if ($lastExitCode -ne 0) {
       throw "Nuget pack failed with an exit code of '$lastExitCode'."
@@ -305,17 +310,15 @@ function Replace-InFile($File, $RegEx, $ReplaceWith) {
 }
 
 function Sync-PackageVersions {
-  $versionsFile = "$PSScriptRoot\build\TestFx.Versions.targets"
-
   $versionsRegex = '(?mi)<(TestPlatformVersion.*?)>(.*?)<\/TestPlatformVersion>'
   $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform([0-9a-z.]+)?" version="([0-9a-z.-]*)"'
   $sourceRegex = '(?mi)(.+[a-z =]+\@\")Microsoft\.TestPlatform\.([0-9.-a-z]+)\";'
 
   if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
-    $TestPlatformVersion = (([XML](Get-Content $versionsFile)).Project.PropertyGroup.TestPlatformVersion).InnerText
+    $TestPlatformVersion = (([XML](Get-Content $TF_VERSIONS_FILE)).Project.PropertyGroup.TestPlatformVersion).InnerText
   }
   else {
-    Replace-InFile -File $versionsFile -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</TestPlatformVersion>"
+    Replace-InFile -File $TF_VERSIONS_FILE -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</TestPlatformVersion>"
   }
 
   (Get-ChildItem "$PSScriptRoot\..\src\*packages.config", "$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
