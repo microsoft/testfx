@@ -43,7 +43,7 @@
       </group>
 
       <group targetFramework="net5.0-windows10.0.18362.0">
-        <dependency id="Microsoft.TestPlatform.AdapterUtilities" />
+        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="$TestPlatformVersion$" />
       </group>
     </dependencies>
   </metadata>
