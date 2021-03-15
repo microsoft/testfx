@@ -20,8 +20,21 @@
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
+
     <dependencies>
-        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="$TestPlatformVersion$" />
+      <group targetFramework="netcoreapp1.0">
+        <dependency id="NETStandard.Library" version="1.6.1" />
+        <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
+      </group>
+
+      <group targetFramework="netstandard1.5">
+        <dependency id="NETStandard.Library" version="1.6.1" />
+        <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
+      </group>
+
+      <group targetFramework="net45" />
+
+      <group targetFramework="uap10.0" />
     </dependencies>
   </metadata>
   <files>
@@ -30,77 +43,31 @@
     <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\_common\" />
 
-    <file src="MSTest.CoreAdapter\zh-Hans\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\zh-Hans" />
-    <file src="MSTest.CoreAdapter\zh-Hant\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\zh-Hant" />
-    <file src="MSTest.CoreAdapter\cs\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\cs" />
-    <file src="MSTest.CoreAdapter\de\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\de" />
-    <file src="MSTest.CoreAdapter\es\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\es" />
-    <file src="MSTest.CoreAdapter\fr\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\fr" />
-    <file src="MSTest.CoreAdapter\it\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\it" />
-    <file src="MSTest.CoreAdapter\ja\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ja" />
-    <file src="MSTest.CoreAdapter\ko\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ko" />
-    <file src="MSTest.CoreAdapter\pl\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\pl" />
-    <file src="MSTest.CoreAdapter\pt-BR\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\pt" />
-    <file src="MSTest.CoreAdapter\ru\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\ru" />
-    <file src="MSTest.CoreAdapter\tr\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.resources.dll" target="\build\_common\tr" />
-
-    <file src="PlatformServices.Desktop\zh-Hans\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\zh-Hans" />
-    <file src="PlatformServices.Desktop\zh-Hant\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\zh-Hant" />
-    <file src="PlatformServices.Desktop\cs\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\cs" />
-    <file src="PlatformServices.Desktop\de\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\de" />
-    <file src="PlatformServices.Desktop\es\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\es" />
-    <file src="PlatformServices.Desktop\fr\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\fr" />
-    <file src="PlatformServices.Desktop\it\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\it" />
-    <file src="PlatformServices.Desktop\ja\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ja" />
-    <file src="PlatformServices.Desktop\ko\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ko" />
-    <file src="PlatformServices.Desktop\pl\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\pl" />
-    <file src="PlatformServices.Desktop\pt-BR\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\pt" />
-    <file src="PlatformServices.Desktop\ru\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\ru" />
-    <file src="PlatformServices.Desktop\tr\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\_common\tr" />
-
-    <file src="MSTest.Core\zh-Hans\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\zh-Hans" />
-    <file src="MSTest.Core\zh-Hant\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\zh-Hant" />
-    <file src="MSTest.Core\cs\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\cs" />
-    <file src="MSTest.Core\de\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\de" />
-    <file src="MSTest.Core\es\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\es" />
-    <file src="MSTest.Core\fr\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\fr" />
-    <file src="MSTest.Core\it\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\it" />
-    <file src="MSTest.Core\ja\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ja" />
-    <file src="MSTest.Core\ko\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ko" />
-    <file src="MSTest.Core\pl\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\pl" />
-    <file src="MSTest.Core\pt-BR\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\pt" />
-    <file src="MSTest.Core\ru\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\ru" />
-    <file src="MSTest.Core\tr\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="build\_common\tr" />
-
-    <!-- NetCore -->
+    <!-- netcoreapp1.0 -->
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netcoreapp1.0\" />
     <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp1.0\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard1.0\" target="build\netcoreapp1.0\" />
 
-    <!-- <file src="PlatformServices.NetCore\netstandard1.5\zh-Hans\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\zh-Hans" />
-    <file src="PlatformServices.NetCore\netstandard1.5\zh-Hant\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\zh-Hant" />
-    <file src="PlatformServices.NetCore\netstandard1.5\cs\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\cs" />
-    <file src="PlatformServices.NetCore\netstandard1.5\de\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\de" />
-    <file src="PlatformServices.NetCore\netstandard1.5\es\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\es" />
-    <file src="PlatformServices.NetCore\netstandard1.5\fr\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\fr" />
-    <file src="PlatformServices.NetCore\netstandard1.5\it\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\it" />
-    <file src="PlatformServices.NetCore\netstandard1.5\ja\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\ja" />
-    <file src="PlatformServices.NetCore\netstandard1.5\ko\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\ko" />
-    <file src="PlatformServices.NetCore\netstandard1.5\pl\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\pl" />
-    <file src="PlatformServices.NetCore\netstandard1.5\pt-BR\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\pt" />
-    <file src="PlatformServices.NetCore\netstandard1.5\ru\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\ru" />
-    <file src="PlatformServices.NetCore\netstandard1.5\tr\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources.dll" target="\build\netcoreapp1.0\tr" /> -->
+    <!-- netstandard1.5 -->
+    <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netstandard1.5\" />
+    <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard1.5\" />
+    <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard1.0\" target="build\netstandard1.5\" />
 
-    <!-- UWP -->
+    <!-- uap10. -->
     <file src="Build\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />
     <file src="Build\Universal\MSTest.TestAdapter.targets" target="build\uap10.0\MSTest.TestAdapter.targets" />
     <file src="PlatformServices.Universal\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\uap10.0\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\uap10.0\" target="build\uap10.0\" />
 
-    <!-- Desktop -->
+    <!-- net45 -->
     <file src="Build\Desktop\MSTest.TestAdapter.props" target="build\net45\MSTest.TestAdapter.props" />
     <file src="Build\Desktop\MSTest.TestAdapter.targets" target="build\net45\MSTest.TestAdapter.targets" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard2.0\" target="build\net45\" />
+
+    <!-- Localization -->
+    <file src="MSTest.CoreAdapter\**\*.resources.dll" target="\build\_common\" />
+    <file src="PlatformServices.Desktop\**\*.resources.dll" target="\build\_common\" />
+    <file src="MSTest.Core\**\*.resources.dll" target="build\_common\" />
 
     <!-- LICENSE -->
     <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->

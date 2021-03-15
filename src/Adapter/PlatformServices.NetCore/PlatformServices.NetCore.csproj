@@ -78,8 +78,5 @@
     <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Extensions\" />
-  </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>
