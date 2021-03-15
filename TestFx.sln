@@ -67,11 +67,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{3B88
 		src\Adapter\Build\Desktop\MSTest.TestAdapter.targets = src\Adapter\Build\Desktop\MSTest.TestAdapter.targets
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Portable", "Portable", "{DEDA0A36-BC06-403A-BE01-EB04CA7C662C}"
-	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\Portable\MSTest.TestAdapter.props = src\Adapter\Build\Portable\MSTest.TestAdapter.props
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Universal", "Universal", "{89314305-F815-4969-9B1B-8AEDE109DEC4}"
 	ProjectSection(SolutionItems) = preProject
 		src\Adapter\Build\Universal\MSTest.TestAdapter.props = src\Adapter\Build\Universal\MSTest.TestAdapter.props
@@ -188,6 +183,11 @@ EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "FSharpTestProject", "test\E2ETests\TestAssets\FSharpTestProject\FSharpTestProject.fsproj", "{E5E58613-82FC-44CD-B75F-4F1C7ED52D0D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Extension.WinUI", "src\TestFramework\Extension.WinUI\Extension.WinUI.csproj", "{23B9D9A2-4AEE-47E6-97B5-060DF21539FB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetCore", "NetCore", "{D11C6664-1C4E-48F0-AA92-7F5BADC6F82C}"
+	ProjectSection(SolutionItems) = preProject
+		src\Adapter\Build\NetCore\MSTest.TestAdapter.props = src\Adapter\Build\NetCore\MSTest.TestAdapter.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -1227,7 +1227,6 @@ Global
 		{C6F38A55-2B8E-4C5D-A49A-2D0B9D4F10C8} = {A9596292-7E67-4566-9096-143DDAA4E8D8}
 		{CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34} = {24088844-2107-4DB2-8F3F-CBCA94FC4B28}
 		{3B88BD67-C767-466D-8C9C-C14681544B84} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
-		{DEDA0A36-BC06-403A-BE01-EB04CA7C662C} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 		{89314305-F815-4969-9B1B-8AEDE109DEC4} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 		{E374A3A6-C364-4890-B315-D60F5C682B6E} = {FF8B1B72-55A1-4FFE-809E-7B79323ED8D0}
 		{4EA6EED3-0579-4C7C-94EA-52B2AD2A9D39} = {1A9F8CEF-7C03-40BD-B33C-1453114F9ABD}
@@ -1259,6 +1258,7 @@ Global
 		{ED27A844-6870-4FE6-8FEF-3ABDD1ED6564} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
 		{E5E58613-82FC-44CD-B75F-4F1C7ED52D0D} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
 		{23B9D9A2-4AEE-47E6-97B5-060DF21539FB} = {E48AC786-E150-4F41-9A16-32F02E4493D8}
+		{D11C6664-1C4E-48F0-AA92-7F5BADC6F82C} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}

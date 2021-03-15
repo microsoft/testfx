@@ -8,12 +8,12 @@
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <description>
-  The adapter to discover and execute MSTest Framework based tests. 
+      The adapter to discover and execute MSTest Framework based tests.
 
-  Supported platforms: 
-   - .NET 4.5.0+ 
-   - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017) 
-   - ASP.NET Core 1.0+ (Visual Studio 2017) 
+      Supported platforms:
+      - .NET 4.5.0+
+      - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017)
+      - ASP.NET Core 1.0+ (Visual Studio 2017)
     </description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
     <license type="file">LICENSE</license>
@@ -25,17 +25,17 @@
     <dependencies>
       <group targetFramework="netcoreapp1.0">
         <dependency id="NETStandard.Library" version="1.6.1" />
-        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="$TestPlatformVersion$" />
+        <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
+      </group>
+      
+      <group targetFramework="netstandard1.5">
+        <dependency id="NETStandard.Library" version="1.6.1" />
         <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
       </group>
 
-      <group targetFramework="net45">
-        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="$TestPlatformVersion$" />
-      </group>
+      <group targetFramework="net45" />
 
-      <group targetFramework="uap10.0">
-        <dependency id="Microsoft.TestPlatform.AdapterUtilities" version="$TestPlatformVersion$" />
-      </group>
+      <group targetFramework="uap10.0" />
     </dependencies>
   </metadata>
   <files>
@@ -44,10 +44,16 @@
     <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\_common\" />
 
-    <!-- NetCore -->
+    <!-- netcoreapp1.0 -->
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netcoreapp1.0\" />
     <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp1.0\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard1.0\" target="build\netcoreapp1.0\" />
+
+
+    <!-- netstandard1.5 -->
+    <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netstandard1.5\" />
+    <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard1.5\" />
+    <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard1.0\" target="build\netstandard1.5\" />
 
     <!-- UWP -->
     <file src="Build\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />
