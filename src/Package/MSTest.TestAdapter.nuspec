@@ -42,6 +42,7 @@
     <file src="PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="build\_common\" />
     <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\_common\" />
+    <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard2.0\" target="build\_common\" />
 
     <!-- netcoreapp1.0 -->
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netcoreapp1.0\" />
@@ -53,7 +54,7 @@
     <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard1.5\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard1.0\" target="build\netstandard1.5\" />
 
-    <!-- uap10. -->
+    <!-- uap10.0 -->
     <file src="Build\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />
     <file src="Build\Universal\MSTest.TestAdapter.targets" target="build\uap10.0\MSTest.TestAdapter.targets" />
     <file src="PlatformServices.Universal\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\uap10.0\" />
