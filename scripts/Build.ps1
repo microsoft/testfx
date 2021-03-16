@@ -48,9 +48,6 @@ Param(
 
   [Alias("tpv")]
   [string] $TestPlatformVersion = $null,
-  
-  [Alias("np")]
-  [Switch] $DisallowPrereleaseMSBuild,
 
   [Alias("np")]
   [Switch] $DisallowPrereleaseMSBuild,
