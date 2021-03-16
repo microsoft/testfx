@@ -22,7 +22,7 @@ $env:TF_PACKAGES_DIR = Join-Path $env:TF_ROOT_DIR "packages"
 
 $TF_VERSIONS_FILE = "$PSScriptRoot\build\TestFx.Versions.targets"
 if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
-    $TestPlatformVersion = (([XML](Get-Content $TF_VERSIONS_FILE)).Project.PropertyGroup.TestPlatformVersion).InnerText
+  $TestPlatformVersion = (([XML](Get-Content $TF_VERSIONS_FILE)).Project.PropertyGroup.TestPlatformVersion).InnerText
 }
 
 function Create-Directory([string[]] $path) {
@@ -180,64 +180,64 @@ function Write-Log ([string] $message, $messageColor = "Green") {
   $Host.UI.RawUI.ForegroundColor = $currentColor
 }
 
-function Install-DotNetCli
-{
-    Write-Log "Install-DotNetCli: Get dotnet-install.ps1 script..."
-    $dotnetInstallRemoteScript = "https://raw.githubusercontent.com/dotnet/cli/master/scripts/obtain/dotnet-install.ps1"
-    $dotnetInstallScript = Join-Path $env:TF_TOOLS_DIR "dotnet-install.ps1"
-    if (-not (Test-Path $env:TF_TOOLS_DIR)) {
-        New-Item $env:TF_TOOLS_DIR -Type Directory | Out-Null
-    }
+function Install-DotNetCli {
+  Write-Log "Install-DotNetCli: Get dotnet-install.ps1 script..."
+  $dotnetInstallRemoteScript = "https://raw.githubusercontent.com/dotnet/cli/master/scripts/obtain/dotnet-install.ps1"
+  $dotnetInstallScript = Join-Path $env:TF_TOOLS_DIR "dotnet-install.ps1"
+  if (-not (Test-Path $env:TF_TOOLS_DIR)) {
+    New-Item $env:TF_TOOLS_DIR -Type Directory | Out-Null
+  }
 
-    $dotnet_dir= Join-Path $env:TF_TOOLS_DIR "dotnet"
+  $dotnet_dir = Join-Path $env:TF_TOOLS_DIR "dotnet"
 
-    if (-not (Test-Path $dotnet_dir)) {
-        New-Item $dotnet_dir -Type Directory | Out-Null
-    }
+  if (-not (Test-Path $dotnet_dir)) {
+    New-Item $dotnet_dir -Type Directory | Out-Null
+  }
 
-    (New-Object System.Net.WebClient).DownloadFile($dotnetInstallRemoteScript, $dotnetInstallScript)
+  (New-Object System.Net.WebClient).DownloadFile($dotnetInstallRemoteScript, $dotnetInstallScript)
 
-    if (-not (Test-Path $dotnetInstallScript)) {
-        Write-Error "Failed to download dotnet install script."
-    }
+  if (-not (Test-Path $dotnetInstallScript)) {
+    Write-Error "Failed to download dotnet install script."
+  }
 
-    Unblock-File $dotnetInstallScript
+  Unblock-File $dotnetInstallScript
 
-    Write-Log "Install-DotNetCli: Get the latest dotnet cli toolset..."
-    $dotnetInstallPath = Join-Path $env:TF_TOOLS_DIR "dotnet"
-    New-Item -ItemType directory -Path $dotnetInstallPath -Force | Out-Null
-    & $dotnetInstallScript -Channel "master" -InstallDir $dotnetInstallPath -Version $env:DOTNET_CLI_VERSION
+  Write-Log "Install-DotNetCli: Get the latest dotnet cli toolset..."
+  $dotnetInstallPath = Join-Path $env:TF_TOOLS_DIR "dotnet"
+  New-Item -ItemType directory -Path $dotnetInstallPath -Force | Out-Null
+  & $dotnetInstallScript -Channel "master" -InstallDir $dotnetInstallPath -Version $env:DOTNET_CLI_VERSION
     
-    & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '2.1.0' -Channel '2.1.0' -Architecture x64 -NoPath
-    $env:DOTNET_ROOT= $dotnetInstallPath
+  & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '2.1.0' -Channel '2.1.0' -Architecture x64 -NoPath
+  $env:DOTNET_ROOT = $dotnetInstallPath
 
-    & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '2.1.0' -Channel '2.1.0' -Architecture x86 -NoPath
-    ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
+  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '2.1.0' -Channel '2.1.0' -Architecture x86 -NoPath
+  ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
     
-    & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '3.1.0' -Channel '3.1.0' -Architecture x64 -NoPath
-    $env:DOTNET_ROOT= $dotnetInstallPath
+  & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '3.1.0' -Channel '3.1.0' -Architecture x64 -NoPath
+  $env:DOTNET_ROOT = $dotnetInstallPath
 
-    & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '3.1.0' -Channel '3.1.0' -Architecture x86 -NoPath
-    ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
+  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '3.1.0' -Channel '3.1.0' -Architecture x86 -NoPath
+  ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
 
-    & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '5.0.1' -Channel '5.0.1' -Architecture x64 -NoPath
-    $env:DOTNET_ROOT= $dotnetInstallPath
+  & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '5.0.1' -Channel '5.0.1' -Architecture x64 -NoPath
+  $env:DOTNET_ROOT = $dotnetInstallPath
 
-    & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '5.0.1' -Channel '5.0.1' -Architecture x86 -NoPath
-    ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
+  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '5.0.1' -Channel '5.0.1' -Architecture x86 -NoPath
+  ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
 
-    $env:DOTNET_MULTILEVEL_LOOKUP=0
+  $env:DOTNET_MULTILEVEL_LOOKUP = 0
 
-    "---- dotnet environment variables"
-    Get-ChildItem "Env:\dotnet_*"
+  "---- dotnet environment variables"
+  Get-ChildItem "Env:\dotnet_*"
     
-    "`n`n---- x64 dotnet"
-    & "$env:DOTNET_ROOT\dotnet.exe" --info
+  "`n`n---- x64 dotnet"
+  & "$env:DOTNET_ROOT\dotnet.exe" --info
 
-    "`n`n---- x86 dotnet"
-    # avoid erroring out because we don't have the sdk for x86 that global.json requires
-    try {
-        & "${env:DOTNET_ROOT(x86)}\dotnet.exe" --info 2> $null
-    } catch {}
-    Write-Log "Install-DotNetCli: Complete."
+  "`n`n---- x86 dotnet"
+  # avoid erroring out because we don't have the sdk for x86 that global.json requires
+  try {
+    & "${env:DOTNET_ROOT(x86)}\dotnet.exe" --info 2> $null
+  }
+  catch {}
+  Write-Log "Install-DotNetCli: Complete."
 }

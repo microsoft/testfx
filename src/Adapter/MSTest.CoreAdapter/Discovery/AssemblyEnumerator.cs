@@ -55,10 +55,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <summary>
         /// Enumerates through all types in the assembly in search of valid test methods.
         /// </summary>
-        /// <param name="assemblyFileName"> The assembly file name. </param>
-        /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
-        /// <returns> A collection of Test Elements. </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Catching a generic exception since it is a requirement to not abort discovery in case of any errors.")]
+        /// <param name="assemblyFileName">The assembly file name.</param>
+        /// <param name="warnings">Contains warnings if any, that need to be passed back to the caller.</param>
+        /// <returns>A collection of Test Elements.</returns>
         internal ICollection<UnitTestElement> EnumerateAssembly(string assemblyFileName, out ICollection<string> warnings)
         {
             Debug.Assert(!string.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
@@ -73,9 +72,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 // For normal test assemblies continue loading it in the default context since:
                 // 1. There isn't much benefit in terms of Performance loading the assembly in a Reflection Only context during discovery.
                 // 2. Loading it in Reflection only context entails a bunch of custom logic to identify custom attributes which is over-kill for normal desktop users.
-                assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(
-                    assemblyFileName,
-                    isReflectionOnly: true);
+                assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: true);
             }
             else
             {
