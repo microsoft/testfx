@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// Gets the fully specified method name metadata format.
         /// </summary>
         /// <example>
-        ///     <code>MethodName`2(ParamTypeA,ParamTypeB,…)</code>
+        ///     <code>MethodName`2(ParamTypeA,ParamTypeB,...)</code>
         /// </example>
         string ManagedMethodName { get; }
 

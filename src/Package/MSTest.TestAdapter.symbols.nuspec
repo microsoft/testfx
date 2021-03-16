@@ -69,7 +69,7 @@
     <file src="MSTest.CoreAdapter\**\*.resources.dll" target="\build\_common\" />
     <file src="PlatformServices.Desktop\**\*.resources.dll" target="\build\_common\" />
     <file src="MSTest.Core\**\*.resources.dll" target="build\_common\" />
-    
+
     <!-- LICENSE -->
     <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
     <file src="LICENS*" target="" />
