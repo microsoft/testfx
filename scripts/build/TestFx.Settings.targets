@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\</TestFxRoot>
-    <RepoRoot Condition="$(RepoRoot) == ''">$(TestFxRoot)</RepoRoot>
+    <RepoRoot Condition="$(RepoRoot) == ''">$(MSBuildThisFileDirectory)..\..\</RepoRoot>
     <IncludeMicrosoftCommon Condition="$(IncludeMicrosoftCommon) == ''">true</IncludeMicrosoftCommon>
   </PropertyGroup>
 
@@ -17,7 +17,7 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <GenerateLCE>true</GenerateLCE>
-    <AssemblyOriginatorKeyFile>$(TestFxRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)key.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <PublicSign Condition="'$(IsLocalizedBuild)' == '' or '$(IsLocalizedBuild)' != 'true'">true</PublicSign>
     <!-- Temporarily turning on Delay signing for Localized builds because publickey = true is not passed on to the assembler to create resource assmblies.-->
@@ -34,7 +34,7 @@
   <!-- Code analysis settings -->
   <PropertyGroup>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>$(TestFxRoot)scripts/build/stylecop.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSet Condition="$(IsTest) == 'true'">$(TestFxRoot)scripts/build/stylecop.test.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)stylecop.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="$(IsTest) == 'true'">$(MSBuildThisFileDirectory)stylecop.test.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 </Project>
