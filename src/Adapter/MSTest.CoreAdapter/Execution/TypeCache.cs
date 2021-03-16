@@ -323,7 +323,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="type"> The type. </param>
         /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Discoverer should continue with remaining sources.")]
         private TestAssemblyInfo GetAssemblyInfo(Type type)
         {
             var assembly = type.GetTypeInfo().Assembly;

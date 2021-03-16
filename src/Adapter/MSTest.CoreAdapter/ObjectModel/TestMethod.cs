@@ -84,7 +84,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public string FullClassName { get; private set; }
 
         /// <summary>
-        /// Gets or sets the declaring class full name. This will be used while getting navigation data.
+        /// Gets or sets the declaring assembly full name. This will be used while getting navigation data.
         /// This will be null if AssemblyName is same as DeclaringAssemblyName.
         /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
         /// </summary>
@@ -122,14 +122,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             }
         }
 
-        /// <summary>
-        /// Gets the name of the test assembly
-        /// </summary>
+        /// <inheritdoc />
         public string AssemblyName { get; private set; }
 
-        /// <summary>
-        /// Gets a value indicating whether specifies test method is async
-        /// </summary>
+        /// <inheritdoc />
         public bool IsAsync { get; private set; }
 
         /// <inheritdoc />

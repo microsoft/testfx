@@ -2,9 +2,11 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\</TestFxRoot>
-    <RepoRoot>..\..\</RepoRoot>
+    <RepoRoot Condition="$(RepoRoot) == ''">$(TestFxRoot)</RepoRoot>
+    <IncludeMicrosoftCommon Condition="$(IncludeMicrosoftCommon) == ''">true</IncludeMicrosoftCommon>
   </PropertyGroup>
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props') and $(FrameworkIdentifier) != 'NetCore'" />
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props') and $(FrameworkIdentifier) != 'NetCore' and $(IncludeMicrosoftCommon) == 'true'" />
   <!-- Import props/targets with $(RepoRoot) since msbuild takes the relative path based on settings.targets and not with respect to the project. -->
   <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <Import Project="TestFx.Versions.targets" />

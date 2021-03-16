@@ -14,17 +14,17 @@
    - .NET 4.5.0+ 
    - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017) 
    - ASP.NET Core 1.0+ (Visual Studio 2017) 
-   </description>
+    </description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
     <license type="file">LICENSE</license>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
-  <dependencies>
+    <dependencies>
       <group targetFramework="netcoreapp1.0">
-      <dependency id="NETStandard.Library" version="1.6.1" />
-      <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
-      </group>      
+        <dependency id="NETStandard.Library" version="1.6.1" />
+        <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
+      </group>
     </dependencies>
   </metadata>
   <files>
@@ -58,7 +58,7 @@
 
     <!-- netcoreapp1.0 -->
     <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\netcoreapp1.0\" />
- 
+
     <!-- uap10.0 -->
     <file src="PlatformServices.Universal\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\uap10.0\" />
 
@@ -69,7 +69,7 @@
     <file src="MSTest.CoreAdapter\**\*.resources.dll" target="\build\_common\" />
     <file src="PlatformServices.Desktop\**\*.resources.dll" target="\build\_common\" />
     <file src="MSTest.Core\**\*.resources.dll" target="build\_common\" />
-    
+
     <!-- LICENSE -->
     <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
     <file src="LICENS*" target="" />
