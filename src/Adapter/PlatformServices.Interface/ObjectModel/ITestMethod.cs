@@ -19,8 +19,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         string FullClassName { get; }
 
         /// <summary>
-        /// Gets the declaring class full name.
-        /// This will be used for resolving overloads and while getting navigation data.
+        /// Gets the declaring class full name. This will be used while getting navigation data.
+        /// This will be null if AssemblyName is same as DeclaringAssemblyName.
+        /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
         /// </summary>
         string DeclaringClassFullName { get; }
 
@@ -46,7 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// Gets the fully specified method name metadata format.
         /// </summary>
         /// <example>
-        ///     <code>MethodName`2(ParamTypeA,ParamTypeB,…)</code>
+        ///     <code>MethodName`2(ParamTypeA,ParamTypeB,...)</code>
         /// </example>
         string ManagedMethodName { get; }
 

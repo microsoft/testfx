@@ -14,6 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
     [Serializable]
+    [DebuggerDisplay("{DisplayName} ({Outcome})")]
     public class UnitTestResult
     {
         /// <summary>
@@ -154,14 +155,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             Debug.Assert(testCase != null, "testCase");
 
             var testResult = new TestResult(testCase)
-                                        {
-                                            DisplayName = this.DisplayName,
-                                            Duration = this.Duration,
-                                            ErrorMessage = this.ErrorMessage,
-                                            ErrorStackTrace = this.ErrorStackTrace,
-                                            Outcome = UnitTestOutcomeHelper.ToTestOutcome(this.Outcome, currentSettings),
-                                            StartTime = startTime,
-                                            EndTime = endTime
+            {
+                DisplayName = this.DisplayName,
+                Duration = this.Duration,
+                ErrorMessage = this.ErrorMessage,
+                ErrorStackTrace = this.ErrorStackTrace,
+                Outcome = UnitTestOutcomeHelper.ToTestOutcome(this.Outcome, currentSettings),
+                StartTime = startTime,
+                EndTime = endTime
             };
 
             testResult.SetPropertyValue<Guid>(Constants.ExecutionIdProperty, this.ExecutionId);

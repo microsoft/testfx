@@ -2,9 +2,11 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\</TestFxRoot>
-    <RepoRoot>..\..\</RepoRoot>
+    <RepoRoot Condition="$(RepoRoot) == ''">$(MSBuildThisFileDirectory)..\..\</RepoRoot>
+    <IncludeMicrosoftCommon Condition="$(IncludeMicrosoftCommon) == ''">true</IncludeMicrosoftCommon>
   </PropertyGroup>
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props') and $(FrameworkIdentifier) != 'NetCore'" />
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props') and $(FrameworkIdentifier) != 'NetCore' and $(IncludeMicrosoftCommon) == 'true'" />
   <!-- Import props/targets with $(RepoRoot) since msbuild takes the relative path based on settings.targets and not with respect to the project. -->
   <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" />
   <Import Project="TestFx.Versions.targets" />
@@ -15,7 +17,7 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <GenerateLCE>true</GenerateLCE>
-    <AssemblyOriginatorKeyFile>$(TestFxRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)key.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <PublicSign Condition="'$(IsLocalizedBuild)' == '' or '$(IsLocalizedBuild)' != 'true'">true</PublicSign>
     <!-- Temporarily turning on Delay signing for Localized builds because publickey = true is not passed on to the assembler to create resource assmblies.-->
@@ -32,7 +34,7 @@
   <!-- Code analysis settings -->
   <PropertyGroup>
     <RunCodeAnalysis>false</RunCodeAnalysis>
-    <CodeAnalysisRuleSet>$(TestFxRoot)scripts/build/stylecop.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSet Condition="$(IsTest) == 'true'">$(TestFxRoot)scripts/build/stylecop.test.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)stylecop.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="$(IsTest) == 'true'">$(MSBuildThisFileDirectory)stylecop.test.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 </Project>
