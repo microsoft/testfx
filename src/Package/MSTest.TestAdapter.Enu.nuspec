@@ -8,12 +8,12 @@
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <description>
-      The adapter to discover and execute MSTest Framework based tests.
+      The adapter to discover and execute MSTest Framework based tests. 
 
-      Supported platforms:
-      - .NET 4.5.0+
-      - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017)
-      - ASP.NET Core 1.0+ (Visual Studio 2017)
+      Supported platforms: 
+      - .NET 4.5.0+ 
+      - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017) 
+      - ASP.NET Core 1.0+ (Visual Studio 2017) 
     </description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
     <license type="file">LICENSE</license>
@@ -36,6 +36,8 @@
       <group targetFramework="net45" />
 
       <group targetFramework="uap10.0" />
+
+      <group targetFramework="net5.0-windows10.0.18362" />
     </dependencies>
   </metadata>
   <files>
@@ -72,10 +74,5 @@
 
     <!-- Icon -->
     <file src="Icon.png" target="" />
-
-    <!-- Ignores -->
-    <file src="_._" target="lib/netcoreapp1.0" />
-    <file src="_._" target="lib/net45" />
-    <file src="_._" target="lib/uap10.0" />
   </files>
 </package>

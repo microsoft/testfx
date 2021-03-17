@@ -36,6 +36,8 @@
       <group targetFramework="net45" />
 
       <group targetFramework="uap10.0" />
+
+      <group targetFramework="net5.0-windows10.0.18362" />
     </dependencies>
   </metadata>
   <files>
