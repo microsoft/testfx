@@ -108,7 +108,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
                 var assemblyEnumerator = isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings }) as AssemblyEnumerator;
 
-                // This might not be supported if an older version of "PlatformServices
+                // This might not be supported if an older version of "PlatformServices" (Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices) assembly is already loaded into the App Domain.
                 try
                 {
                     assemblyEnumerator.RunSettingsXml = runSettings?.SettingsXml;

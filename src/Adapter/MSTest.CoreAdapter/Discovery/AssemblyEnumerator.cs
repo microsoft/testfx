@@ -15,8 +15,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
-    using ITestContext = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestContext;
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -226,13 +226,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 {
                     foreach (var test in unitTestCases)
                     {
-                        test.Ignored = typeIgnored || test.Ignored;
-                        if (test.Ignored)
-                        {
-                            tests.Add(test);
-                            continue;
-                        }
-
                         if (this.DynamicDataAttached(sourceLevelParameters, assembly, test, tests))
                         {
                             continue;
@@ -256,7 +249,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
         private bool DynamicDataAttached(IDictionary<string, object> sourceLevelParameters, Assembly assembly, UnitTestElement test, List<UnitTestElement> tests)
         {
-            if (test.TestMethod.HasManagedMethodAndTypeProperties == false)
+            // It should always be `true`, but any part of the chain is obsolete; it might not contain those. Since we depend on those properties, if they don't exist, we bail out early.
+            if (!test.TestMethod.HasManagedMethodAndTypeProperties)
             {
                 return false;
             }
@@ -271,36 +265,38 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     return false;
                 }
 
-                return false /* DataSourceAttribute discovery is disabled for now, since we cannot serialize DataRow values.
-                    || this.TryProcessDataSource(test, testMethodInfo, testContext, tests) */
-                    || this.TryProcessTestDataSourceTests(test, testMethodInfo, tests);
+                return /* DataSourceAttribute discovery is disabled for now, since we cannot serialize DataRow values.
+                       this.TryProcessDataSource(test, testMethodInfo, testContext, tests) || */
+                       this.TryProcessTestDataSourceTests(test, testMethodInfo, tests);
             }
         }
 
         private bool TryProcessDataSource(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
         {
-            UTF.DataSourceAttribute[] dataSourceAttributes = ReflectHelper.GetAttributes<UTF.DataSourceAttribute>(testMethodInfo.MethodInfo, false);
-            if (dataSourceAttributes != null && dataSourceAttributes.Length == 1)
+            var dataSourceAttributes = ReflectHelper.GetAttributes<UTF.DataSourceAttribute>(testMethodInfo.MethodInfo, false);
+            if (dataSourceAttributes == null)
             {
-                try
-                {
-                    return this.ProcessDataSourceTests(test, testMethodInfo, testContext, tests);
-                }
-                catch (Exception ex)
-                {
-                    var message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, ex);
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumarator: {message}");
-                    return false;
-                }
+                return false;
             }
-            else if (dataSourceAttributes != null && dataSourceAttributes.Length > 1)
+
+            if (dataSourceAttributes.Length > 1)
             {
                 var message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateDataSourceAttribute_MoreThenOneDefined, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, dataSourceAttributes.Length);
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumarator: {message}");
                 throw new InvalidOperationException(message);
             }
 
-            return false;
+            // dataSourceAttributes.Length == 1
+            try
+            {
+                return this.ProcessDataSourceTests(test, testMethodInfo, testContext, tests);
+            }
+            catch (Exception ex)
+            {
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, ex);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumarator: {message}");
+                return false;
+            }
         }
 
         private bool ProcessDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
@@ -330,20 +326,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
                 return true;
             }
-            catch
+            finally
             {
                 testContext.SetDataConnection(null);
                 testContext.SetDataRow(null);
             }
-
-            return false;
         }
 
         private bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
         {
             var methodInfo = testMethodInfo.MethodInfo;
+            var testDataSources = ReflectHelper.GetAttributes<Attribute>(methodInfo, false)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
+            if (testDataSources == null || testDataSources.Length == 0)
+            {
+                return false;
+            }
 
-            UTF.ITestDataSource[] testDataSources = ReflectHelper.GetAttributes<Attribute>(methodInfo, false)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
             try
             {
                 return this.ProcessTestDataSourceTests(test, (MethodInfo)methodInfo, testDataSources, tests);
@@ -358,11 +356,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
         private bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, UTF.ITestDataSource[] testDataSources, List<UnitTestElement> tests)
         {
-            if (testDataSources == null || testDataSources.Length == 0)
-            {
-                return false;
-            }
-
             foreach (var dataSource in testDataSources)
             {
                 var data = dataSource.GetData(methodInfo);
