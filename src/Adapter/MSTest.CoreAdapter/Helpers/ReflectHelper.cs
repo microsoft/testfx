@@ -212,14 +212,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             where T : Attribute
         {
             Attribute[] attributeArray = GetCustomAttributes(methodBase, typeof(T), inherit);
+            if (attributeArray == null || attributeArray.Length == 0)
+            {
+                return null;
+            }
 
-            var attributes = attributeArray as T[];
-            if (attributes != null)
+            if (attributeArray is T[] attributes)
             {
                 return attributes;
             }
 
-            return attributeArray?.Select(a => a as T)?.Where(a => a != null)?.ToArray();
+            return attributeArray.Where(a => a is T).Cast<T>().ToArray();
         }
 
         /// <summary>
