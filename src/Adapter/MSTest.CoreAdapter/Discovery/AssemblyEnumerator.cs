@@ -27,7 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <summary>
         /// Helper for reflection API's.
         /// </summary>
-        private static readonly ReflectHelper ReflectHelper = new ReflectHelper();
+        private static readonly ReflectHelper ReflectHelper = ReflectHelper.Instance;
 
         /// <summary>
         /// Type cache
@@ -54,9 +54,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         }
 
         /// <summary>
-        /// Sets run settings to use for current discovery session.
+        /// Gets or sets the run settings to use for current discovery session.
         /// </summary>
-        public string RunSettingsXml { private get; set; }
+        public string RunSettingsXml { get; set; }
 
         /// <summary>
         /// Returns object to be used for controlling lifetime, null means infinite lifetime.
@@ -80,8 +80,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         {
             Debug.Assert(!string.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
 
-            string runSettingsXml = this.RunSettingsXml;
-
+            var runSettingsXml = this.RunSettingsXml;
             var warningMessages = new List<string>();
             var tests = new List<UnitTestElement>();
 

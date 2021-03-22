@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Initializes a new instance of the <see cref="TypeCache"/> class.
         /// </summary>
         internal TypeCache()
-            : this(new ReflectHelper())
+            : this(ReflectHelper.Instance)
         {
         }
 

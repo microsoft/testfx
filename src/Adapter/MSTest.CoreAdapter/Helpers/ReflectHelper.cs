@@ -18,10 +18,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
     internal class ReflectHelper : MarshalByRefObject
     {
+        private static readonly Lazy<ReflectHelper> InstanceValue = new Lazy<ReflectHelper>(() => new ReflectHelper());
+
         /// <summary>
         /// Contains the memberInfo Vs the name/type of the attributes defined on that member. (FYI: - MemberInfo denotes properties, fields, methods, events)
         /// </summary>
-        private Dictionary<MemberInfo, Dictionary<string, object>> attributeCache = new Dictionary<MemberInfo, Dictionary<string, object>>();
+        private readonly Dictionary<MemberInfo, Dictionary<string, object>> attributeCache = new Dictionary<MemberInfo, Dictionary<string, object>>();
+
+        internal ReflectHelper()
+        {
+        }
+
+        public static ReflectHelper Instance => InstanceValue.Value;
 
         /// <summary>
         /// Checks to see if the parameter memberInfo contains the parameter attribute or not.

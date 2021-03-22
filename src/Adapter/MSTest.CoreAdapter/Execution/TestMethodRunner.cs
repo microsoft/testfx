@@ -69,7 +69,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             TestMethod testMethod,
             ITestContext testContext,
             bool captureDebugTraces)
-            : this(testMethodInfo, testMethod, testContext, captureDebugTraces, new ReflectHelper())
+            : this(testMethodInfo, testMethod, testContext, captureDebugTraces, ReflectHelper.Instance)
         {
             Debug.Assert(testMethodInfo != null, "testMethodInfo should not be null");
             Debug.Assert(testMethod != null, "testMethod should not be null");

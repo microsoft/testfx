@@ -28,7 +28,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
         public UnitTestRunner(MSTestSettings settings)
-            : this(settings, new ReflectHelper())
+            : this(settings, ReflectHelper.Instance)
         {
         }
 
