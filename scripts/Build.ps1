@@ -253,6 +253,8 @@ function Create-NugetPackages {
   $packageOutDir = Join-Path $stagingDir "MSTestPackages"
   $tfSrcPackageDir = Join-Path $env:TF_SRC_DIR "Package"
 
+  "" > "$stagingDir\_._"
+
   # Copy over the nuspecs to the staging directory
   if ($TFB_Official) {
     $nuspecFiles = @("MSTest.TestAdapter.nuspec", "MSTest.TestAdapter.symbols.nuspec", "MSTest.TestFramework.nuspec", "MSTest.TestFramework.symbols.nuspec", "MSTest.Internal.TestFx.Documentation.nuspec")
@@ -264,6 +266,8 @@ function Create-NugetPackages {
   foreach ($file in $nuspecFiles) {
     Copy-Item $tfSrcPackageDir\$file $stagingDir -Force
   }
+  
+  Copy-Item (Join-Path $tfSrcPackageDir "Icon.png") $stagingDir -Force
 
   Copy-Item -Path "$($env:TF_PACKAGES_DIR)\microsoft.testplatform.adapterutilities\$TestPlatformVersion\lib" -Destination "$($stagingDir)\Microsoft.TestPlatform.AdapterUtilities" -Recurse -Force
 
@@ -286,9 +290,8 @@ function Create-NugetPackages {
       $version = $version + "-" + $versionSuffix
     }
 
-    Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version=$version -Properties Version=$version"
-    & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR`;TestPlatformVersion=$TestPlatformVersion
-
+    Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version``;Srcroot=$env:TF_SRC_DIR``;Packagesroot=$env:TF_PACKAGES_DIR``;TestPlatformVersion=$TestPlatformVersion``;NOWARN=`"NU5127,NU5128,NU5129`""
+    & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR`;TestPlatformVersion=$TestPlatformVersion`;NOWARN="NU5127,NU5128,NU5129"
     if ($lastExitCode -ne 0) {
       throw "Nuget pack failed with an exit code of '$lastExitCode'."
     }
