@@ -57,7 +57,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void ConstructorShouldPopulateSettings()
         {
-            string runSettingxml =
+            string runSettingsXml =
                  @"<RunSettings>
                      <MSTest>
                         <ForcedLegacyMode>True</ForcedLegacyMode>
@@ -75,7 +75,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
                     }
                 });
 
-            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName);
             var assemblyEnumerator = new AssemblyEnumerator(adapterSettings);
 
             Assert.IsTrue(MSTestSettings.CurrentSettings.ForcedLegacyMode);

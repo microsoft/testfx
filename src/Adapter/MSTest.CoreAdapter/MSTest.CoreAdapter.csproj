@@ -38,6 +38,7 @@
     <Compile Include="Extensions\TestContextExtensions.cs" />
     <Compile Include="Extensions\TestResultExtensions.cs" />
     <Compile Include="Extensions\UnitTestOutcomeExtensions.cs" />
+    <Compile Include="Helpers\DictionaryHelper.cs" />
     <Compile Include="Helpers\RunSettingsUtilities.cs" />
     <Compile Include="Helpers\TestRunParameters.cs" />
     <Compile Include="MSTestDiscoverer.cs" />
@@ -54,6 +55,7 @@
     <Compile Include="ObjectModel\AdapterSettingsException.cs" />
     <Compile Include="ObjectModel\TestAssemblySettings.cs" />
     <Compile Include="ObjectModel\TestFailedException.cs" />
+    <Compile Include="Properties\TestExtensionTypesAttribute.cs" />
     <Compile Include="TestMethodFilter.cs" />
     <Compile Include="Execution\TestMethodRunner.cs" />
     <Compile Include="Execution\TypeCache.cs" />
@@ -110,13 +112,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.11.0.0\lib\portable-net45+win8+wpa81+wp8\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Collections.Concurrent">
       <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETPortable\v4.5\System.Collections.Concurrent.dll</HintPath>
     </Reference>
@@ -128,11 +126,21 @@
       <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(TestPlatformVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(TestPlatformVersion)" />
+    <PackageReference Include="MicroBuild.Core" Version="0.2.0" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.0.0" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
   <PropertyGroup>
     <SourcePath>$(ProjectDir)..\Build</SourcePath>
     <PostBuildEvent>
-        xcopy /Y /I /S /E "$(SourcePath)" "$(OutDir)..\Build"
-      </PostBuildEvent>
+      xcopy /Y /I /S /E "$(SourcePath)" "$(OutDir)..\Build"
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>

@@ -19,8 +19,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         string FullClassName { get; }
 
         /// <summary>
-        /// Gets the declaring class full name.
-        /// This will be used for resolving overloads and while getting navigation data.
+        /// Gets the declaring class full name. This will be used while getting navigation data.
+        /// This will be null if AssemblyName is same as DeclaringAssemblyName.
+        /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
         /// </summary>
         string DeclaringClassFullName { get; }
 
@@ -33,5 +34,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// Gets a value indicating whether test method is async
         /// </summary>
         bool IsAsync { get; }
+
+        /// <summary>
+        /// Gets the fully specified type name metadata format.
+        /// </summary>
+        /// <example>
+        ///     <code>NamespaceA.NamespaceB.ClassName`1+InnerClass`2</code>
+        /// </example>
+        string ManagedTypeName { get; }
+
+        /// <summary>
+        /// Gets the fully specified method name metadata format.
+        /// </summary>
+        /// <example>
+        ///     <code>MethodName`2(ParamTypeA,ParamTypeB,...)</code>
+        /// </example>
+        string ManagedMethodName { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether both <see cref="ManagedTypeName"/> and <see cref="ManagedMethodName"/> are not null or whitespace.
+        /// </summary>
+        bool HasManagedMethodAndTypeProperties { get; }
     }
 }

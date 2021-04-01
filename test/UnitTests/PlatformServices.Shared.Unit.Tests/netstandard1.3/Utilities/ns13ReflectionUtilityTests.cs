@@ -3,7 +3,7 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Utilities
 {
-#if NETCOREAPP1_1
+#if NETCOREAPP
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
     extern alias FrameworkV1;

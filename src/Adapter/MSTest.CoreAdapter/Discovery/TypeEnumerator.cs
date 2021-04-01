@@ -49,7 +49,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// </summary>
         /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
         /// <returns> list of test cases.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "0#", Justification = "This is only for internal use.")]
         internal virtual ICollection<UnitTestElement> Enumerate(out ICollection<string> warnings)
         {
             warnings = new Collection<string>();
@@ -127,12 +126,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <returns> Returns a UnitTestElement.</returns>
         internal UnitTestElement GetTestFromMethod(MethodInfo method, bool isDeclaredInTestTypeAssembly, ICollection<string> warnings)
         {
+            // null if the current instance represents a generic type parameter.
             Debug.Assert(this.type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
             // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.
             var isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
 
-            var testMethod = new TestMethod(method.Name, this.type.FullName, this.assemblyName, isAsync);
+            var testMethod = new TestMethod(method, method.Name, this.type.FullName, this.assemblyName, isAsync);
 
             if (!method.DeclaringType.FullName.Equals(this.type.FullName))
             {
@@ -192,10 +192,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 testElement.Description = descriptionAttribute.Description;
             }
 
-            var workItemAttributeArray = this.reflectHelper.GetCustomAttributes(method, typeof(WorkItemAttribute)) as WorkItemAttribute[];
-            if (workItemAttributeArray != null)
+            var workItemAttributes = this.reflectHelper.GetCustomAttributes(method, typeof(WorkItemAttribute)).Cast<WorkItemAttribute>().ToArray();
+            if (workItemAttributes.Any())
             {
-                testElement.WorkItemIds = workItemAttributeArray.Select(x => x.Id.ToString()).ToArray();
+                testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString()).ToArray();
             }
 
             // Get Deployment items if any.

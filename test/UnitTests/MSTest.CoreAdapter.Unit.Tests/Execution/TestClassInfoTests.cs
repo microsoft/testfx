@@ -10,13 +10,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System;
     using System.Linq;
     using System.Reflection;
+
     using global::MSTestAdapter.TestUtilities;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+
     using Moq;
+
     using MSTest.TestAdapter.ObjectModel;
+
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+    using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -45,7 +51,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testClassConstructor = this.testClassType.GetConstructors().First();
             this.testContextProperty = this.testClassType.GetProperties().First();
             this.testClassAttribute = (UTF.TestClassAttribute)this.testClassType.GetCustomAttributes().First();
-            this.testAssemblyInfo = new TestAssemblyInfo();
+            this.testAssemblyInfo = new TestAssemblyInfo(this.testClassType.Assembly);
 
             this.testClassInfo = new TestClassInfo(
                 this.testClassType,
@@ -55,6 +61,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 this.testAssemblyInfo);
 
             this.testContext = new Mock<UTFExtension.TestContext>().Object;
+        }
+
+        [TestInitialize]
+        public void TestInitialize()
+        {
+            // Prevent leaking init/cleanup methods between classes
+            DummyGrandParentTestClass.ClassInitMethodBody = null;
+            DummyGrandParentTestClass.CleanupClassMethodBody = null;
+            DummyBaseTestClass.ClassInitializeMethodBody = null;
+            DummyBaseTestClass.ClassCleanupMethodBody = null;
+            DummyDerivedTestClass.DerivedClassInitializeMethodBody = null;
+            DummyDerivedTestClass.DerivedClassCleanupMethodBody = null;
+            DummyTestClass.ClassInitializeMethodBody = null;
+            DummyTestClass.ClassCleanupMethodBody = null;
         }
 
         [TestMethod]
@@ -185,12 +205,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
-        public void TestClassInfoHasExecutableCleanupMethodShouldReturnFalseIfClassInitializeThrowsAnException()
+        public void TestClassInfoHasExecutableCleanupMethodShouldReturnTrueEvenIfClassInitializeThrowsAnException()
         {
             this.testClassInfo.ClassCleanupMethod = this.testClassType.GetMethods().First();
             this.testClassInfo.ClassInitializationException = new NotImplementedException();
 
-            Assert.IsFalse(this.testClassInfo.HasExecutableCleanupMethod);
+            Assert.IsTrue(this.testClassInfo.HasExecutableCleanupMethod);
         }
 
         [TestMethod]
@@ -266,6 +286,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethod]
+        public void RunClassInitializeShouldOnlyRunOnce()
+        {
+            var classInitCallCount = 0;
+            DummyTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
+
+            this.testClassInfo.RunClassInitialize(this.testContext);
+            this.testClassInfo.RunClassInitialize(this.testContext);
+
+            Assert.AreEqual(1, classInitCallCount, "Class Initialize called only once");
+        }
+
+        [TestMethod]
+        public void RunClassInitializeShouldRunOnlyOnceIfThereIsNoDerivedClassInitializeAndSetClassInitializeExecutedFlag()
+        {
+            var classInitCallCount = 0;
+            DummyBaseTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
+                Tuple.Create(typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"), (MethodInfo)null));
+
+            this.testClassInfo.RunClassInitialize(this.testContext);
+            Assert.IsTrue(this.testClassInfo.IsClassInitializeExecuted);
+
+            this.testClassInfo.RunClassInitialize(this.testContext);
+            Assert.AreEqual(1, classInitCallCount);
+        }
+
+        [TestMethod]
         public void RunClassInitializeShouldSetClassInitializationExceptionOnException()
         {
             DummyTestClass.ClassInitializeMethodBody = (tc) => UTF.Assert.Inconclusive("Test Inconclusive");
@@ -309,8 +357,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitDerivedClassMethod");
 
             this.testClassInfo.RunClassInitialize(this.testContext);
-            this.testClassInfo.RunClassInitialize(this.testContext); // this one shouldn't run
+            Assert.IsTrue(this.testClassInfo.IsClassInitializeExecuted);
 
+            this.testClassInfo.RunClassInitialize(this.testContext); // this one shouldn't run
             Assert.AreEqual(3, classInitCallCount);
         }
 
@@ -498,6 +547,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             StringAssert.StartsWith(
                 this.testClassInfo.RunClassCleanup(),
                 "Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: System.ArgumentException: Argument Exception. Stack Trace:     at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions>");
+        }
+
+        [TestMethod]
+        public void RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
+        {
+            DummyBaseTestClass.ClassCleanupMethodBody = () => { throw new ArgumentException("Argument Exception"); };
+
+            this.testClassInfo.ClassCleanupMethod = null;
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
+                Tuple.Create((MethodInfo)null, typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod")));
+            this.testClassInfo.BaseClassCleanupMethodsStack.Push(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
+            StringAssert.StartsWith(
+                this.testClassInfo.RunClassCleanup(),
+                "Class Cleanup method DummyBaseTestClass.CleanupClassMethod failed. Error Message: System.ArgumentException: Argument Exception. Stack Trace:     at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions>");
         }
 
         [TestMethod]

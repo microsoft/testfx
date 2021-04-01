@@ -3,11 +3,11 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Globalization;
-    using System.Threading;
+    using global::System;
+    using global::System.Collections;
+    using global::System.Collections.Generic;
+    using global::System.Globalization;
+    using global::System.Threading;
 
     /// <summary>
     /// TestContext class. This class should be fully abstract and not contain any
@@ -36,6 +36,16 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// class name in addition to the name of the test method currently being executed.
         /// </remarks>
         public virtual string FullyQualifiedTestClassName => this.GetProperty<string>("FullyQualifiedTestClassName");
+
+        /// <summary>
+        /// Gets the fully specified type name metadata format.
+        /// </summary>
+        public virtual string ManagedType => this.GetProperty<string>(nameof(this.ManagedType));
+
+        /// <summary>
+        /// Gets the fully specified method name metadata format.
+        /// </summary>
+        public virtual string ManagedMethod => this.GetProperty<string>(nameof(this.ManagedMethod));
 
         /// <summary>
         /// Gets the Name of the test method currently being executed

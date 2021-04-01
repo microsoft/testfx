@@ -37,8 +37,15 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
 
             // Assert
-            Assert.IsTrue(result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
-            Assert.IsTrue(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
+            if (!string.IsNullOrWhiteSpace(VSInstallationUtilities.PathToPublicAssemblies))
+            {
+                Assert.IsTrue(result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
+            }
+
+            if (!string.IsNullOrWhiteSpace(VSInstallationUtilities.PathToPrivateAssemblies))
+            {
+                Assert.IsTrue(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
+            }
         }
 
         [TestMethod]

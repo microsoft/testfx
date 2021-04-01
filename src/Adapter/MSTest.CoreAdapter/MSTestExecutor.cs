@@ -44,6 +44,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from testcases.");
+
             ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
             ValidateArg.NotNullOrEmpty(tests, "tests");
 
@@ -76,6 +78,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
         {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
             ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
             ValidateArg.NotNullOrEmpty(sources, "sources");
 
