@@ -900,8 +900,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Tests whether the specified collections are equal and throws an exception
         /// if the two collections are not equal. Equality is defined as having the same
-        /// elements in the same order and quantity. Different references to the same
-        /// value are considered equal.
+        /// elements in the same order and quantity. Whether two elements are the same
+        /// is checked using <see cref="object.Equals(object, object)" /> method.
+        /// Different references to the same value are considered equal.
         /// </summary>
         /// <param name="expected">
         /// The first collection to compare. This is the collection the tests expects.
@@ -922,8 +923,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Tests whether the specified collections are equal and throws an exception
         /// if the two collections are not equal. Equality is defined as having the same
-        /// elements in the same order and quantity. Different references to the same
-        /// value are considered equal.
+        /// elements in the same order and quantity. Whether two elements are the same
+        /// is checked using <see cref="object.Equals(object, object)" /> method.
+        /// Different references to the same value are considered equal.
         /// </summary>
         /// <param name="expected">
         /// The first collection to compare. This is the collection the tests expects.
@@ -949,8 +951,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Tests whether the specified collections are equal and throws an exception
         /// if the two collections are not equal. Equality is defined as having the same
-        /// elements in the same order and quantity. Different references to the same
-        /// value are considered equal.
+        /// elements in the same order and quantity. Whether two elements are the same
+        /// is checked using <see cref="object.Equals(object, object)" /> method.
+        /// Different references to the same value are considered equal.
         /// </summary>
         /// <param name="expected">
         /// The first collection to compare. This is the collection the tests expects.
@@ -983,8 +986,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Tests whether the specified collections are unequal and throws an exception
         /// if the two collections are equal. Equality is defined as having the same
-        /// elements in the same order and quantity. Different references to the same
-        /// value are considered equal.
+        /// elements in the same order and quantity. Whether two elements are the same
+        /// is checked using <see cref="object.Equals(object, object)" /> method.
+        /// Different references to the same value are considered equal.
         /// </summary>
         /// <param name="notExpected">
         /// The first collection to compare. This is the collection the tests expects
@@ -1005,8 +1009,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Tests whether the specified collections are unequal and throws an exception
         /// if the two collections are equal. Equality is defined as having the same
-        /// elements in the same order and quantity. Different references to the same
-        /// value are considered equal.
+        /// elements in the same order and quantity. Whether two elements are the same
+        /// is checked using <see cref="object.Equals(object, object)" /> method.
+        /// Different references to the same value are considered equal.
         /// </summary>
         /// <param name="notExpected">
         /// The first collection to compare. This is the collection the tests expects
@@ -1032,8 +1037,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Tests whether the specified collections are unequal and throws an exception
         /// if the two collections are equal. Equality is defined as having the same
-        /// elements in the same order and quantity. Different references to the same
-        /// value are considered equal.
+        /// elements in the same order and quantity. Whether two elements are the same
+        /// is checked using <see cref="object.Equals(object, object)" /> method.
+        /// Different references to the same value are considered equal.
         /// </summary>
         /// <param name="notExpected">
         /// The first collection to compare. This is the collection the tests expects

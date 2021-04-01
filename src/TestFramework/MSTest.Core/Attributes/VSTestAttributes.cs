@@ -79,7 +79,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
         /// </summary>
         /// <param name="displayName">
-        /// Message specifies reason for ignoring.
+        /// Display Name for the Test Window
         /// </param>
         public TestMethodAttribute(string displayName)
         {
@@ -120,7 +120,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     }
 
     /// <summary>
-    /// The test cleanup attribute.
+    /// The test cleanup attribute marks methods that are executed after every test marked with a <see cref="TestMethodAttribute"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class TestCleanupAttribute : Attribute

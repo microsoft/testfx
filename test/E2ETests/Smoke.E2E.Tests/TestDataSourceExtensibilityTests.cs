@@ -15,9 +15,7 @@ namespace MSTestAdapter.Smoke.E2ETests
         public void ExecuteTestDataSourceExtensibilityTests()
         {
             this.InvokeVsTestForExecution(new string[] { TestAssembly });
-            this.ValidatePassedTestsContain(
-                "CustomTestDataSourceTestMethod1 (1,2,3)",
-                "CustomTestDataSourceTestMethod1 (4,5,6)");
+            this.ValidatePassedTestsContain("CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
         }
     }
 }

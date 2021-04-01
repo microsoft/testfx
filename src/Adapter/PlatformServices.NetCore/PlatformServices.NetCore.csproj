@@ -66,16 +66,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="15.0.0" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(TestPlatformVersion)" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj" />
+    <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj" />
     <ProjectReference Include="..\PlatformServices.Interface\PlatformServices.Interface.csproj" />
+    <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj" />
+    <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Extensions\" />
-  </ItemGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

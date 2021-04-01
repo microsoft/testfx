@@ -12,6 +12,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// </summary>
     public sealed class StringAssert
     {
+        private static readonly object[] Empty = new object[0];
+
         private static StringAssert that;
 
         #region Singleton constructor
@@ -63,7 +65,30 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Contains(string value, string substring)
         {
-            Contains(value, substring, string.Empty, null);
+            Contains(value, substring, string.Empty, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string contains the specified substring
+        /// and throws an exception if the substring does not occur within the
+        /// test string.
+        /// </summary>
+        /// <param name="value">
+        /// The string that is expected to contain <paramref name="substring"/>.
+        /// </param>
+        /// <param name="substring">
+        /// The string expected to occur within <paramref name="value"/>.
+        /// </param>
+        /// <param name="comparisonType">
+        /// The comparison method to compare strings <paramref name="comparisonType"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="substring"/> is not found in
+        /// <paramref name="value"/>.
+        /// </exception>
+        public static void Contains(string value, string substring, StringComparison comparisonType)
+        {
+            Contains(value, substring, string.Empty, comparisonType);
         }
 
         /// <summary>
@@ -88,7 +113,35 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Contains(string value, string substring, string message)
         {
-            Contains(value, substring, message, null);
+            Contains(value, substring, message, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string contains the specified substring
+        /// and throws an exception if the substring does not occur within the
+        /// test string.
+        /// </summary>
+        /// <param name="value">
+        /// The string that is expected to contain <paramref name="substring"/>.
+        /// </param>
+        /// <param name="substring">
+        /// The string expected to occur within <paramref name="value"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="substring"/>
+        /// is not in <paramref name="value"/>. The message is shown in
+        /// test results.
+        /// </param>
+        /// <param name="comparisonType">
+        /// The comparison method to compare strings <paramref name="comparisonType"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="substring"/> is not found in
+        /// <paramref name="value"/>.
+        /// </exception>
+        public static void Contains(string value, string substring, string message, StringComparison comparisonType)
+        {
+            Contains(value, substring, message, comparisonType, Empty);
         }
 
         /// <summary>
@@ -116,9 +169,40 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Contains(string value, string substring, string message, params object[] parameters)
         {
+            Contains(value, substring, message, StringComparison.Ordinal, parameters);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string contains the specified substring
+        /// and throws an exception if the substring does not occur within the
+        /// test string.
+        /// </summary>
+        /// <param name="value">
+        /// The string that is expected to contain <paramref name="substring"/>.
+        /// </param>
+        /// <param name="substring">
+        /// The string expected to occur within <paramref name="value"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="substring"/>
+        /// is not in <paramref name="value"/>. The message is shown in
+        /// test results.
+        /// </param>
+        /// <param name="comparisonType">
+        /// The comparison method to compare strings <paramref name="comparisonType"/>.
+        /// </param>
+        /// <param name="parameters">
+        /// An array of parameters to use when formatting <paramref name="message"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="substring"/> is not found in
+        /// <paramref name="value"/>.
+        /// </exception>
+        public static void Contains(string value, string substring, string message, StringComparison comparisonType, params object[] parameters)
+        {
             Assert.CheckParameterNotNull(value, "StringAssert.Contains", "value", string.Empty);
             Assert.CheckParameterNotNull(substring, "StringAssert.Contains", "substring", string.Empty);
-            if (value.IndexOf(substring, StringComparison.Ordinal) < 0)
+            if (value.IndexOf(substring, comparisonType) < 0)
             {
                 string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, message);
                 Assert.HandleFail("StringAssert.Contains", finalMessage, parameters);
@@ -142,7 +226,30 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void StartsWith(string value, string substring)
         {
-            StartsWith(value, substring, string.Empty, null);
+            StartsWith(value, substring, string.Empty, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string begins with the specified substring
+        /// and throws an exception if the test string does not start with the
+        /// substring.
+        /// </summary>
+        /// <param name="value">
+        /// The string that is expected to begin with <paramref name="substring"/>.
+        /// </param>
+        /// <param name="substring">
+        /// The string expected to be a prefix of <paramref name="value"/>.
+        /// </param>
+        /// <param name="comparisonType">
+        /// The comparison method to compare strings <paramref name="comparisonType"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="value"/> does not begin with
+        /// <paramref name="substring"/>.
+        /// </exception>
+        public static void StartsWith(string value, string substring, StringComparison comparisonType)
+        {
+            StartsWith(value, substring, string.Empty, comparisonType, Empty);
         }
 
         /// <summary>
@@ -167,7 +274,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void StartsWith(string value, string substring, string message)
         {
-            StartsWith(value, substring, message, null);
+            StartsWith(value, substring, message, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -195,9 +302,68 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void StartsWith(string value, string substring, string message, params object[] parameters)
         {
+            StartsWith(value, substring, message, StringComparison.Ordinal, parameters);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string begins with the specified substring
+        /// and throws an exception if the test string does not start with the
+        /// substring.
+        /// </summary>
+        /// <param name="value">
+        /// The string that is expected to begin with <paramref name="substring"/>.
+        /// </param>
+        /// <param name="substring">
+        /// The string expected to be a prefix of <paramref name="value"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="value"/>
+        /// does not begin with <paramref name="substring"/>. The message is
+        /// shown in test results.
+        /// </param>
+        /// <param name="comparisonType">
+        /// The comparison method to compare strings <paramref name="comparisonType"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="value"/> does not begin with
+        /// <paramref name="substring"/>.
+        /// </exception>
+        public static void StartsWith(string value, string substring, string message, StringComparison comparisonType)
+        {
+            StartsWith(value, substring, message, comparisonType, Empty);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string begins with the specified substring
+        /// and throws an exception if the test string does not start with the
+        /// substring.
+        /// </summary>
+        /// <param name="value">
+        /// The string that is expected to begin with <paramref name="substring"/>.
+        /// </param>
+        /// <param name="substring">
+        /// The string expected to be a prefix of <paramref name="value"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="value"/>
+        /// does not begin with <paramref name="substring"/>. The message is
+        /// shown in test results.
+        /// </param>
+        /// <param name="comparisonType">
+        /// The comparison method to compare strings <paramref name="comparisonType"/>.
+        /// </param>
+        /// <param name="parameters">
+        /// An array of parameters to use when formatting <paramref name="message"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="value"/> does not begin with
+        /// <paramref name="substring"/>.
+        /// </exception>
+        public static void StartsWith(string value, string substring, string message, StringComparison comparisonType, params object[] parameters)
+        {
             Assert.CheckParameterNotNull(value, "StringAssert.StartsWith", "value", string.Empty);
             Assert.CheckParameterNotNull(substring, "StringAssert.StartsWith", "substring", string.Empty);
-            if (!value.StartsWith(substring, StringComparison.Ordinal))
+            if (!value.StartsWith(substring, comparisonType))
             {
                 string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, substring, message);
                 Assert.HandleFail("StringAssert.StartsWith", finalMessage, parameters);
@@ -221,7 +387,30 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void EndsWith(string value, string substring)
         {
-            EndsWith(value, substring, string.Empty, null);
+            EndsWith(value, substring, string.Empty, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string ends with the specified substring
+        /// and throws an exception if the test string does not end with the
+        /// substring.
+        /// </summary>
+        /// <param name="value">
+        /// The string that is expected to end with <paramref name="substring"/>.
+        /// </param>
+        /// <param name="substring">
+        /// The string expected to be a suffix of <paramref name="value"/>.
+        /// </param>
+        /// <param name="comparisonType">
+        /// The comparison method to compare strings <paramref name="comparisonType"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="value"/> does not end with
+        /// <paramref name="substring"/>.
+        /// </exception>
+        public static void EndsWith(string value, string substring, StringComparison comparisonType)
+        {
+            EndsWith(value, substring, string.Empty, comparisonType, Empty);
         }
 
         /// <summary>
@@ -246,7 +435,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void EndsWith(string value, string substring, string message)
         {
-            EndsWith(value, substring, message, null);
+            EndsWith(value, substring, message, StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -274,9 +463,68 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void EndsWith(string value, string substring, string message, params object[] parameters)
         {
+            EndsWith(value, substring, message, StringComparison.Ordinal, parameters);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string ends with the specified substring
+        /// and throws an exception if the test string does not end with the
+        /// substring.
+        /// </summary>
+        /// <param name="value">
+        /// The string that is expected to end with <paramref name="substring"/>.
+        /// </param>
+        /// <param name="substring">
+        /// The string expected to be a suffix of <paramref name="value"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="value"/>
+        /// does not end with <paramref name="substring"/>. The message is
+        /// shown in test results.
+        /// </param>
+        /// <param name="comparisonType">
+        /// The comparison method to compare strings <paramref name="comparisonType"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="value"/> does not end with
+        /// <paramref name="substring"/>.
+        /// </exception>
+        public static void EndsWith(string value, string substring, string message, StringComparison comparisonType)
+        {
+            EndsWith(value, substring, message, comparisonType, Empty);
+        }
+
+        /// <summary>
+        /// Tests whether the specified string ends with the specified substring
+        /// and throws an exception if the test string does not end with the
+        /// substring.
+        /// </summary>
+        /// <param name="value">
+        /// The string that is expected to end with <paramref name="substring"/>.
+        /// </param>
+        /// <param name="substring">
+        /// The string expected to be a suffix of <paramref name="value"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="value"/>
+        /// does not end with <paramref name="substring"/>. The message is
+        /// shown in test results.
+        /// </param>
+        /// <param name="comparisonType">
+        /// The comparison method to compare strings <paramref name="comparisonType"/>.
+        /// </param>
+        /// <param name="parameters">
+        /// An array of parameters to use when formatting <paramref name="message"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="value"/> does not end with
+        /// <paramref name="substring"/>.
+        /// </exception>
+        public static void EndsWith(string value, string substring, string message, StringComparison comparisonType, params object[] parameters)
+        {
             Assert.CheckParameterNotNull(value, "StringAssert.EndsWith", "value", string.Empty);
             Assert.CheckParameterNotNull(substring, "StringAssert.EndsWith", "substring", string.Empty);
-            if (!value.EndsWith(substring, StringComparison.Ordinal))
+            if (!value.EndsWith(substring, comparisonType))
             {
                 string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, substring, message);
                 Assert.HandleFail("StringAssert.EndsWith", finalMessage, parameters);
@@ -304,7 +552,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Matches(string value, Regex pattern)
         {
-            Matches(value, pattern, string.Empty, null);
+            Matches(value, pattern, string.Empty);
         }
 
         /// <summary>
@@ -383,7 +631,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void DoesNotMatch(string value, Regex pattern)
         {
-            DoesNotMatch(value, pattern, string.Empty, null);
+            DoesNotMatch(value, pattern, string.Empty);
         }
 
         /// <summary>

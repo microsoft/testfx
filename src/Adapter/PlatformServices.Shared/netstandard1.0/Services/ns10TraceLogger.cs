@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
@@ -17,10 +18,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="format"> The format. </param>
         /// <param name="args"> The args. </param>
-        /// <exception cref="System.NotImplementedException"> This is currently not implemented. </exception>
         public void LogError(string format, params object[] args)
         {
-            // Do Nothing.
+            if (EqtTrace.IsErrorEnabled)
+            {
+                EqtTrace.Error(this.PrependAdapterName(format), args);
+            }
         }
 
         /// <summary>
@@ -28,10 +31,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="format"> The format. </param>
         /// <param name="args"> The args. </param>
-        /// <exception cref="System.NotImplementedException"> This is currently not implemented. </exception>
         public void LogWarning(string format, params object[] args)
         {
-            // Do Nothing.
+            if (EqtTrace.IsWarningEnabled)
+            {
+                EqtTrace.Warning(this.PrependAdapterName(format), args);
+            }
         }
 
         /// <summary>
@@ -39,10 +44,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="format"> The format. </param>
         /// <param name="args"> The args. </param>
-        /// <exception cref="System.NotImplementedException"> This is currently not implemented. </exception>
         public void LogInfo(string format, params object[] args)
         {
-            // Do Nothing.
+            if (EqtTrace.IsInfoEnabled)
+            {
+                EqtTrace.Info(this.PrependAdapterName(format), args);
+            }
+        }
+
+        private string PrependAdapterName(string format)
+        {
+            return $"MSTest - {format}";
         }
     }
 

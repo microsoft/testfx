@@ -70,7 +70,14 @@
   
   <!-- Localization for documentation files. -->
   <Target Name="CopyLocalizedXmls" BeforeTargets="BeforeBuild" Condition="$(LocDocumentationSubPath) != ''">
-    <Exec Command="xcopy /Y /I /S /E $(TestFxPackagesRoot)MSTest.Internal.TestFx.Localized.Documentation.1.0.0-build-20170420-1\contentFiles\any\any\$(LocDocumentationSubPath) $(OutDir)" />
+    <PropertyGroup>
+      <_SourcePath>$(TestFxPackagesRoot)MSTest.Internal.TestFx.Localized.Documentation.1.0.0-build-20170420-1\contentFiles\any\any\$(LocDocumentationSubPath)</_SourcePath>
+    </PropertyGroup>
+    <ItemGroup>
+      <_LocalizedFiles Include="$(_SourcePath)\**\*.*" />
+    </ItemGroup>
+    <Warning Text="Localized documentation doesn't exist: $(LocDocumentationSubPath), $(_SourcePath)" Condition="!Exists('$(_SourcePath)')" />
+    <Copy SourceFiles="@(_LocalizedFiles)" DestinationFiles="@(_LocalizedFiles->'$(OutDir)\%(RecursiveDir)%(Filename)%(Extension)')" Condition="Exists('$(_SourcePath)')" />
   </Target>
 
   <Target Name ="CopyStaticResourcesToOutput">

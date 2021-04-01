@@ -241,7 +241,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 if (this.sessionParameters != null && this.sessionParameters.Count > 0)
                 {
-                    sourceLevelParameters = sourceLevelParameters.Concat(this.sessionParameters).ToDictionary(x => x.Key, x => x.Value);
+                    sourceLevelParameters = this.sessionParameters.ConcatWithOverwrites(sourceLevelParameters);
                 }
 
                 TestAssemblySettingsProvider sourceSettingsProvider = null;
@@ -430,12 +430,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed cleanup methods.");
             if (cleanupResult != null)
             {
-                IList<string> warnings = cleanupResult.Warnings;
-
                 // Do not attach the standard output and error messages to any test result. It is not
                 // guaranteed that a test method of same class would have run last. We will end up
                 // adding stdout to test method of another class.
-                this.LogWarnings(testExecutionRecorder, warnings);
+                this.LogCleanupResult(testExecutionRecorder, cleanupResult);
             }
         }
 
@@ -469,20 +467,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Log the parameter warnings on the parameter logger
         /// </summary>
         /// <param name="testExecutionRecorder">Handle to record test start/end/results/messages.</param>
-        /// <param name="warnings">Any warnings during run operation.</param>
-        private void LogWarnings(ITestExecutionRecorder testExecutionRecorder, IEnumerable<string> warnings)
+        /// <param name="result">Result of the run operation.</param>
+        private void LogCleanupResult(ITestExecutionRecorder testExecutionRecorder, RunCleanupResult result)
         {
-            if (warnings == null)
-            {
-                return;
-            }
-
             Debug.Assert(testExecutionRecorder != null, "Logger should not be null");
 
-            // log the warnings
-            foreach (string warning in warnings)
+            if (!string.IsNullOrEmpty(result.StandardOut))
             {
-                testExecutionRecorder.SendMessage(TestMessageLevel.Warning, warning);
+                testExecutionRecorder.SendMessage(TestMessageLevel.Informational, result.StandardOut);
+            }
+
+            if (!string.IsNullOrEmpty(result.DebugTrace))
+            {
+                testExecutionRecorder.SendMessage(TestMessageLevel.Informational, result.DebugTrace);
+            }
+
+            if (!string.IsNullOrEmpty(result.StandardError))
+            {
+                testExecutionRecorder.SendMessage(
+                    MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,
+                    result.StandardError);
+            }
+
+            if (result.Warnings != null)
+            {
+                foreach (string warning in result.Warnings)
+                {
+                    testExecutionRecorder.SendMessage(
+                        MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,
+                        warning);
+                }
             }
         }
     }

@@ -57,6 +57,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             this.TestSettingsFile = null;
             this.DisableParallelization = false;
             this.TestTimeout = 0;
+            this.TreatClassAndAssemblyCleanupWarningsAsErrors = false;
         }
 
         /// <summary>
@@ -156,11 +157,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public int TestTimeout { get; private set; }
 
         /// <summary>
+        /// Gets a value indicating whether failures in class cleanups should be treated as errors.
+        /// </summary>
+        public bool TreatClassAndAssemblyCleanupWarningsAsErrors { get; private set; }
+
+        /// <summary>
         /// Populate settings based on existing settings object.
         /// </summary>
         /// <param name="settings">The existing settings object.</param>
         public static void PopulateSettings(MSTestSettings settings)
         {
+            if (settings == null)
+            {
+                return;
+            }
+
             CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;
             CurrentSettings.ForcedLegacyMode = settings.ForcedLegacyMode;
             CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
@@ -171,6 +182,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
             CurrentSettings.DisableParallelization = settings.DisableParallelization;
             CurrentSettings.TestTimeout = settings.TestTimeout;
+            CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors = settings.TreatClassAndAssemblyCleanupWarningsAsErrors;
         }
 
         /// <summary>
@@ -236,9 +248,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <param name="runsettingsXml"> The xml with the settings passed from the test platform. </param>
         /// <param name="settingName"> The name of the adapter settings to fetch - Its either MSTest or MSTestV2 </param>
         /// <returns> The settings if found. Null otherwise. </returns>
-        internal static MSTestSettings GetSettings(string runsettingsXml, string settingName)
+        internal static MSTestSettings GetSettings(string runSettingsXml, string settingName)
         {
-            using (var stringReader = new StringReader(runsettingsXml))
+            if (string.IsNullOrWhiteSpace(runSettingsXml))
+            {
+                return null;
+            }
+
+            using (var stringReader = new StringReader(runSettingsXml))
             {
                 XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
 
@@ -290,6 +307,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             //     <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
             //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
             //     <TestTimeout>5000</TestTimeout>
+            //     <TreatClassAndAssemblyCleanupWarningsAsErrors>false</TreatClassAndAssemblyCleanupWarningsAsErrors>
             //     <Parallelize>
             //        <Workers>4</Workers>
             //        <Scope>TestClass</Scope>
@@ -393,6 +411,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                 if (int.TryParse(reader.ReadInnerXml(), out int testTimeout) && testTimeout > 0)
                                 {
                                     settings.TestTimeout = testTimeout;
+                                }
+
+                                break;
+                            }
+
+                        case "TREATCLASSANDASSEMBLYCLEANUPWARNINGSASERRORS":
+                            {
+                                if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                {
+                                    settings.TreatClassAndAssemblyCleanupWarningsAsErrors = result;
                                 }
 
                                 break;

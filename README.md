@@ -8,13 +8,12 @@ This is a fully supported, open source and cross-platform implementation of the 
 
 ### Build status
 
-[![Build Status](https://dev.azure.com/vstestplatform/TestFx/_apis/build/status/TestFx.CI?branchName=master)](https://dev.azure.com/vstestplatform/TestFx/_build/latest?definitionId=8&branchName=master)
+[![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/Microsoft/testfx/microsoft.testfx.ci?branchName=master)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=937&branchName=master)
 
 ### Latest Builds
 |            | Framework | Adapter |
 |:----------:|:----------------:|:------------------:|
 |**nuget** <br> (official)  |[![#](https://img.shields.io/nuget/v/mstest.testframework.svg?style=flat)](http://www.nuget.org/packages/MSTest.TestFramework/)|[![#](https://img.shields.io/nuget/v/mstest.testadapter.svg?style=flat)](http://www.nuget.org/packages/MSTest.TestAdapter/)|
-|**myget** <br> (daily)  |[![#](https://img.shields.io/dotnet.myget/mstestv2/vpre/MSTest.TestFramework.svg?style=flat)](https://dotnet.myget.org/feed/mstestv2/package/nuget/MSTest.TestFramework)|[![#](https://img.shields.io/dotnet.myget/mstestv2/vpre/MSTest.TestAdapter.svg)](https://dotnet.myget.org/feed/mstestv2/package/nuget/MSTest.TestAdapter)|
 
 ### Contributing
 There are many ways to contribute to testfx

@@ -1,0 +1,40 @@
+{
+    "Projects": [
+        {
+            "LanguageSet": "VS_Main_Languages",
+            "LocItems": [
+                {
+                    "SourceFile": "src\\Adapter\\MSTest.CoreAdapter\\Resources\\xlf\\Resource.xlf",
+                    "Languages": "",
+                    "CopyOption": "LangIDOnName",
+                    "OutputPath": "src\\Adapter\\MSTest.CoreAdapter\\Resources\\xlf\\",
+                    "LclFile": "Localize\\lcl\\{Lang}\\src\\Adapter\\MSTest.CoreAdapter\\Resources\\xlf\\Resource.xlf.lcl"
+                }
+            ]
+        },
+        {
+            "LanguageSet": "VS_Main_Languages",
+            "LocItems": [
+                {
+                    "SourceFile": "src\\Adapter\\PlatformServices.Shared\\netstandard1.3\\Resources\\xlf\\Resource.xlf",
+                    "Languages": "",
+                    "CopyOption": "LangIDOnName",
+                    "OutputPath": "src\\Adapter\\PlatformServices.Shared\\netstandard1.3\\Resources\\xlf\\",
+                    "LclFile": "Localize\\lcl\\{Lang}\\src\\Adapter\\PlatformServices.Shared\\netstandard1.3\\Resources\\xlf\\Resource.xlf.lcl"
+                }
+            ]
+        },
+        {
+            "LanguageSet": "VS_Main_Languages",
+            "LocItems": [
+                {
+                    "SourceFile": "src\\TestFramework\\MSTest.Core\\Resources\\xlf\\FrameworkMessages.xlf",
+                    "Languages": "",
+                    "CopyOption": "LangIDOnName",
+                    "OutputPath": "src\\TestFramework\\MSTest.Core\\Resources\\xlf\\",
+                    "LclFile": "Localize\\lcl\\{Lang}\\src\\TestFramework\\MSTest.Core\\Resources\\xlf\\FrameworkMessages.xlf.lcl"
+                }
+            ]
+        }
+    ]
+}

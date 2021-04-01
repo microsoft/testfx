@@ -7,9 +7,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Reflection;
+
     using Extensions;
+
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+
     using ObjectModel;
+
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
     /// <summary>
@@ -25,9 +29,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Initializes a new instance of the <see cref="TestAssemblyInfo"/> class.
         /// </summary>
-        internal TestAssemblyInfo()
+        /// <param name="assembly">Sets the <see cref="Assembly"/> this class is representing. </param>
+        internal TestAssemblyInfo(Assembly assembly)
         {
             this.assemblyInfoExecuteSyncObject = new object();
+            this.Assembly = assembly;
         }
 
         /// <summary>
@@ -97,15 +103,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     return false;
                 }
 
-                // If assembly initialization was successful, then only call assembly cleanup.
-                if (this.AssemblyInitializationException != null)
-                {
-                    return false;
-                }
-
                 return true;
             }
         }
+
+        /// <summary>
+        /// Gets the <see cref="Assembly"/> this class represents.
+        /// </summary>
+        internal Assembly Assembly { get; }
 
         /// <summary>
         /// Runs assembly initialize method.

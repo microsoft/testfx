@@ -3,8 +3,11 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 {
+    using Microsoft.TestPlatform.AdapterUtilities;
+    using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
     using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
     /// <summary>
@@ -12,6 +15,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
     /// </summary>
     internal static class TestCaseExtensions
     {
+        internal static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
+            id: Contants.ManagedTypePropertyId,
+            label: Contants.ManagedTypeLabel,
+            category: string.Empty,
+            description: string.Empty,
+            valueType: typeof(string),
+            validateValueCallback: o => !string.IsNullOrWhiteSpace(o as string),
+            attributes: TestPropertyAttributes.Hidden,
+            owner: typeof(TestCase));
+
+        internal static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
+            id: Contants.ManagedMethodPropertyId,
+            label: Contants.ManagedMethodLabel,
+            category: string.Empty,
+            description: string.Empty,
+            valueType: typeof(string),
+            validateValueCallback: o => !string.IsNullOrWhiteSpace(o as string),
+            attributes: TestPropertyAttributes.Hidden,
+            owner: typeof(TestCase));
+
         /// <summary>
         /// The to unit test element.
         /// </summary>
@@ -24,9 +47,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             var testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
             var declaringClassName = testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) as string;
 
-            var parts = testCase.FullyQualifiedName.Split('.');
-            var name = parts[parts.Length - 1];
-            TestMethod testMethod = new TestMethod(name, testClassName, source, isAsync);
+            var fullyQualifiedName = testCase.FullyQualifiedName;
+
+            // Not using Replace because there can be multiple instances of that string.
+            var name = fullyQualifiedName.StartsWith($"{testClassName}.")
+                ? fullyQualifiedName.Remove(0, $"{testClassName}.".Length)
+                : fullyQualifiedName;
+
+            TestMethod testMethod;
+            if (testCase.ContainsManagedMethodAndType())
+            {
+                testMethod = new TestMethod(testCase.GetManagedType(), testCase.GetManagedMethod(), name, testClassName, source, isAsync);
+            }
+            else
+            {
+                testMethod = new TestMethod(name, testClassName, source, isAsync);
+            }
 
             if (declaringClassName != null && declaringClassName != testClassName)
             {
@@ -43,5 +79,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 
             return testElement;
         }
+
+        internal static string GetManagedType(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedTypeProperty, null);
+
+        internal static void SetManagedType(this TestCase testCase, string value) => testCase.SetPropertyValue<string>(ManagedTypeProperty, value);
+
+        internal static string GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
+
+        internal static void SetManagedMethod(this TestCase testCase, string value) => testCase.SetPropertyValue<string>(ManagedMethodProperty, value);
+
+        internal static bool ContainsManagedMethodAndType(this TestCase testCase) => !string.IsNullOrWhiteSpace(testCase.GetManagedMethod()) && !string.IsNullOrWhiteSpace(testCase.GetManagedType());
     }
 }
