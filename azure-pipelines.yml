@@ -4,16 +4,16 @@
 jobs:
 - job: Windows
   pool:
-    vmImage: 'vs2017-win2016'
+    vmImage: 'windows-2019'
   variables:
     buildConfiguration: 'Release'
 
   steps:
 
   - task: NuGetToolInstaller@0
-    displayName: 'Pull in NuGet 4.9.2'
+    displayName: 'Pull in NuGet 5.8.1'
     inputs:
-      versionSpec: 4.9.2
+      versionSpec: 5.8.1
   
   - powershell: |
       reg DELETE "HKLM\Software\Microsoft\StrongName\Verification" /f

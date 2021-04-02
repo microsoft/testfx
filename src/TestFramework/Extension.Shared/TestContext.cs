@@ -3,11 +3,11 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Globalization;
-    using System.Threading;
+    using global::System;
+    using global::System.Collections;
+    using global::System.Collections.Generic;
+    using global::System.Globalization;
+    using global::System.Threading;
 
     /// <summary>
     /// TestContext class. This class should be fully abstract and not contain any
