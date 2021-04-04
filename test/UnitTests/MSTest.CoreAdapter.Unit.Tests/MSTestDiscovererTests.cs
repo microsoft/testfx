@@ -71,7 +71,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         {
             IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
             Assert.IsNotNull(attributes);
-            Assert.AreEqual(1, attributes.Where(attribute => attribute.FileExtension == ".xap").Count());
+            Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".xap"));
         }
 
         [TestMethod]
@@ -79,7 +79,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         {
             IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
             Assert.IsNotNull(attributes);
-            Assert.AreEqual(1, attributes.Where(attribute => attribute.FileExtension == ".appx").Count());
+            Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".appx"));
         }
 
         [TestMethod]
@@ -87,7 +87,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         {
             IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
             Assert.IsNotNull(attributes);
-            Assert.AreEqual(1, attributes.Where(attribute => attribute.FileExtension == ".dll").Count());
+            Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".dll"));
         }
 
         [TestMethod]
@@ -95,7 +95,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         {
             IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
             Assert.IsNotNull(attributes);
-            Assert.AreEqual(1, attributes.Where(attribute => attribute.FileExtension == ".exe").Count());
+            Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".exe"));
         }
 
         [TestMethod]
