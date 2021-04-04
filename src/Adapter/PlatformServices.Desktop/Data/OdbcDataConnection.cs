@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             // Need open connection to get Connection.Driver.
             Debug.Assert(this.IsOpen(), "The connection must be open!");
 
-            this.isMSSql = this.Connection != null ? IsMSSql(this.Connection.Driver) : false;
+            this.isMSSql = this.Connection != null && IsMSSql(this.Connection.Driver);
         }
 
         public new OdbcCommandBuilder CommandBuilder
