@@ -245,7 +245,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <summary>
         /// Gets the adapter specific settings from the xml.
         /// </summary>
-        /// <param name="runsettingsXml"> The xml with the settings passed from the test platform. </param>
+        /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
         /// <param name="settingName"> The name of the adapter settings to fetch - Its either MSTest or MSTestV2 </param>
         /// <returns> The settings if found. Null otherwise. </returns>
         internal static MSTestSettings GetSettings(string runSettingsXml, string settingName)
