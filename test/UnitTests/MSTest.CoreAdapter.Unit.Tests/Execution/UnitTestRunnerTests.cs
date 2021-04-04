@@ -294,7 +294,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
 
             var cleanupresult = this.unitTestRunner.RunCleanup();
-            Assert.AreEqual(cleanupresult.DebugTrace, "DummyTrace");
+            Assert.AreEqual("DummyTrace", cleanupresult.DebugTrace);
         }
 
         [TestMethodV1]
