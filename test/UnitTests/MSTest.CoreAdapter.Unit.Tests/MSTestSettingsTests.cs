@@ -640,13 +640,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                         reader.Read();
                         while (reader.NodeType == XmlNodeType.Element)
                         {
-                            bool result;
                             string elementName = reader.Name.ToUpperInvariant();
                             switch (elementName)
                             {
                                 case "DUMMYPLATFORMSPECIFICSETTING":
                                     {
-                                        if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                        if (bool.TryParse(reader.ReadInnerXml(), out var result))
                                         {
                                             dummyPlatformSpecificSetting = result;
                                         }
@@ -697,13 +696,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                         reader.Read();
                         while (reader.NodeType == XmlNodeType.Element)
                         {
-                            bool result;
                             string elementName = reader.Name.ToUpperInvariant();
                             switch (elementName)
                             {
                                 case "DUMMYPLATFORMSPECIFICSETTING":
                                     {
-                                        if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                        if (bool.TryParse(reader.ReadInnerXml(), out var result))
                                         {
                                             dummyPlatformSpecificSetting = result;
                                         }
@@ -806,13 +804,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                         reader.Read();
                         while (reader.NodeType == XmlNodeType.Element)
                         {
-                            bool result;
                             string elementName = reader.Name.ToUpperInvariant();
                             switch (elementName)
                             {
                                 case "DUMMYPLATFORMSPECIFICSETTING":
                                     {
-                                        if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                        if (bool.TryParse(reader.ReadInnerXml(), out var result))
                                         {
                                             dummyPlatformSpecificSetting = result;
                                         }

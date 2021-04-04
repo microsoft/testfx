@@ -1181,8 +1181,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNotNull(testMethodInfo);
 
             // Verify that the first value gets set.
-            object value;
-            Assert.IsTrue(((IDictionary<string, object>)testContext.Properties).TryGetValue("WhoAmI", out value));
+            Assert.IsTrue(((IDictionary<string, object>)testContext.Properties).TryGetValue("WhoAmI", out var value));
             Assert.AreEqual("Me", value);
         }
 

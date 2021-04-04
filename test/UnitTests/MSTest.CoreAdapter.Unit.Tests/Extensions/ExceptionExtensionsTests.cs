@@ -177,10 +177,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         {
             var exception = new UTF.AssertInconclusiveException();
             UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
-            string exceptionMessage = null;
-            StackTraceInformation stackTraceInfo = null;
 
-            Assert.IsTrue(exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo));
+            Assert.IsTrue(exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo));
         }
 
         [TestMethod]
@@ -188,10 +186,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         {
             var exception = new NotImplementedException();
             UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
-            string exceptionMessage = null;
-            StackTraceInformation stackTraceInfo = null;
 
-            Assert.IsFalse(exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo));
+            Assert.IsFalse(exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo));
         }
 
         [TestMethod]
@@ -199,10 +195,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         {
             var exception = new UTF.AssertInconclusiveException("Dummy Message", new NotImplementedException("notImplementedException"));
             UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
-            string exceptionMessage = null;
-            StackTraceInformation stackTraceInfo = null;
 
-            exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo);
+            exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo);
 
             Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, outcome);
             Assert.AreEqual("Dummy Message", exceptionMessage);
@@ -213,10 +207,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         {
             var exception = new UTF.AssertFailedException("Dummy Message", new NotImplementedException("notImplementedException"));
             UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
-            string exceptionMessage = null;
-            StackTraceInformation stackTraceInfo = null;
 
-            exception.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out stackTraceInfo);
+            exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo);
 
             Assert.AreEqual(UTF.UnitTestOutcome.Failed, outcome);
             Assert.AreEqual("Dummy Message", exceptionMessage);

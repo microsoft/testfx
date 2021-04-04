@@ -601,9 +601,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             WriteDiagnostics("GetColumns for {0}", tableName);
             try
             {
-                string targetSchema;
-                string targetName;
-                this.SplitTableName(tableName, out targetSchema, out targetName);
+                this.SplitTableName(tableName, out var targetSchema, out var targetName);
 
                 // This lets us specifically query for columns from the appropriate table name
                 // but assumes all databases have the same restrictions on all the column

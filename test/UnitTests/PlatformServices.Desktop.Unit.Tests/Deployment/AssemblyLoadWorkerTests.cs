@@ -40,10 +40,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
                 .Returns(new TestableAssembly(v1AssemblyName.Name));
 
             var worker = new AssemblyLoadWorker(mockAssemblyUtility.Object);
-            IList<string> warnings;
 
             // Act.
-            var dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out warnings);
+            var dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out var warnings);
 
             // Assert.
             var utfassembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
@@ -103,10 +102,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment
                 });
 
             var worker = new AssemblyLoadWorker(mockAssemblyUtility.Object);
-            IList<string> warnings;
 
             // Act.
-            var dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out warnings);
+            var dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out var warnings);
 
             // Assert.
             var utfassembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");

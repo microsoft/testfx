@@ -648,10 +648,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
 
             // Search for a mismatched element.
-            int expectedCount;
-            int actualCount;
-            object mismatchedElement;
-            if (FindMismatchedElement(expected, actual, out expectedCount, out actualCount, out mismatchedElement))
+            if (FindMismatchedElement(expected, actual, out var expectedCount, out var actualCount, out var mismatchedElement))
             {
                 var finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
@@ -776,10 +773,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
 
             // Search for a mismatched element.
-            int expectedCount;
-            int actualCount;
-            object mismatchedElement;
-            if (!FindMismatchedElement(expected, actual, out expectedCount, out actualCount, out mismatchedElement))
+            if (!FindMismatchedElement(expected, actual, out var expectedCount, out var actualCount, out var mismatchedElement))
             {
                 var finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
@@ -1282,10 +1276,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
             // Count the occurrences of each object in both collections.
-            int subsetNulls;
-            Dictionary<object, int> subsetElements = GetElementCounts(subset, out subsetNulls);
-            int supersetNulls;
-            Dictionary<object, int> supersetElements = GetElementCounts(superset, out supersetNulls);
+            Dictionary<object, int> subsetElements = GetElementCounts(subset, out var subsetNulls);
+            Dictionary<object, int> supersetElements = GetElementCounts(superset, out var supersetNulls);
 
             if (subsetNulls > supersetNulls)
             {
@@ -1296,10 +1288,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             // in the superset.
             foreach (object element in subsetElements.Keys)
             {
-                int subsetCount;
-                subsetElements.TryGetValue(element, out subsetCount);
-                int supersetCount;
-                supersetElements.TryGetValue(element, out supersetCount);
+                subsetElements.TryGetValue(element, out var subsetCount);
+                supersetElements.TryGetValue(element, out var supersetCount);
 
                 if (subsetCount > supersetCount)
                 {
@@ -1340,8 +1330,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     continue;
                 }
 
-                int value;
-                elementCounts.TryGetValue(element, out value);
+                elementCounts.TryGetValue(element, out var value);
                 value++;
                 elementCounts[element] = value;
             }
@@ -1390,10 +1379,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
             // Count the occurrences of each object in the both collections
-            int expectedNulls;
-            Dictionary<object, int> expectedElements = GetElementCounts(expected, out expectedNulls);
-            int actualNulls;
-            Dictionary<object, int> actualElements = GetElementCounts(actual, out actualNulls);
+            Dictionary<object, int> expectedElements = GetElementCounts(expected, out var expectedNulls);
+            Dictionary<object, int> actualElements = GetElementCounts(actual, out var actualNulls);
 
             if (actualNulls != expectedNulls)
             {

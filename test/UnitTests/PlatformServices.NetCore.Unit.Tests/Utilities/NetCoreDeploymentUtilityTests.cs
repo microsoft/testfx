@@ -76,12 +76,11 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestMethod]
         public void DeployShouldNotDeployIfOutputDirectoryIsInvalid()
         {
-            TestRunDirectories testRunDirectories;
             var assemblyFullPath = Assembly.GetEntryAssembly().Location;
             var deploymentItemPath = "C:\\temp\\sample.dll";
             var deploymentItemOutputDirectory = "..\\..\\out";
 
-            var testCase = this.GetTestCaseAndTestRunDirectories(deploymentItemPath, deploymentItemOutputDirectory, out testRunDirectories);
+            var testCase = this.GetTestCaseAndTestRunDirectories(deploymentItemPath, deploymentItemOutputDirectory, out var testRunDirectories);
 
             // Setup mocks.
             this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
@@ -122,10 +121,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestMethod]
         public void DeployShouldDeployContentsOfADirectoryIfSpecified()
         {
-            TestRunDirectories testRunDirectories;
             var assemblyFullPath = Assembly.GetEntryAssembly().Location;
 
-            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out testRunDirectories);
+            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
             var content1 = Path.Combine(DefaultDeploymentItemPath, "directoryContents.dll");
             var directoryContentFiles = new List<string> { content1 };
 

@@ -422,8 +422,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>Property value</returns>
         private object GetPropertyValue(string propertyName)
         {
-            object propertyValue = null;
-            this.properties.TryGetValue(propertyName, out propertyValue);
+            this.properties.TryGetValue(propertyName, out var propertyValue);
 
             return propertyValue;
         }
@@ -435,8 +434,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>Property value</returns>
         private string GetStringPropertyValue(string propertyName)
         {
-            object propertyValue = null;
-            this.properties.TryGetValue(propertyName, out propertyValue);
+            this.properties.TryGetValue(propertyName, out var propertyValue);
             return propertyValue as string;
         }
 

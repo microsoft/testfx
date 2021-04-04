@@ -424,9 +424,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             lock (this.syncLock)
             {
                 // Since both normal and reflection only cache are accessed in same block, putting only one lock should be sufficient.
-                Assembly assembly = null;
 
-                if (this.TryLoadFromCache(assemblyNameToLoad, isReflectionOnly, out assembly))
+                if (this.TryLoadFromCache(assemblyNameToLoad, isReflectionOnly, out var assembly))
                 {
                     return assembly;
                 }
