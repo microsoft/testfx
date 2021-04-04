@@ -443,7 +443,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     }
 
                     // Skip the quote we just found
-                    here = here + 1;
+                    here++;
 
                     // If this the end?
                     if (here == end || text[here] != suffixChar)
@@ -453,7 +453,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     }
 
                     // We have a double quote, skip the second one, then keep looking
-                    here = here + 1;
+                    here++;
                 }
 
                 // If we fall off end of loop,
