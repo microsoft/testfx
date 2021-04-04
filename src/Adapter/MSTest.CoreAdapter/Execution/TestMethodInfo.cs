@@ -95,8 +95,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             Attribute[] attributeArray = ReflectHelper.GetCustomAttributes(this.TestMethod, typeof(TAttributeType), inherit);
 
-            TAttributeType[] tAttributeArray = attributeArray as TAttributeType[];
-            if (tAttributeArray != null)
+            if (attributeArray is TAttributeType[] tAttributeArray)
             {
                 return tAttributeArray;
             }
@@ -106,8 +105,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 foreach (Attribute attribute in attributeArray)
                 {
-                    TAttributeType tAttribute = attribute as TAttributeType;
-                    if (tAttribute != null)
+                    if (attribute is TAttributeType tAttribute)
                     {
                         tAttributeList.Add(tAttribute);
                     }

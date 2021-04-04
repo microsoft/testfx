@@ -483,11 +483,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 string finalMessage = message;
 
-                ValueType valExpected = expected as ValueType;
-                if (valExpected != null)
+                if (expected is ValueType valExpected)
                 {
-                    ValueType valActual = actual as ValueType;
-                    if (valActual != null)
+                    if (actual is ValueType valActual)
                     {
                         finalMessage = string.Format(
                             CultureInfo.CurrentCulture,
