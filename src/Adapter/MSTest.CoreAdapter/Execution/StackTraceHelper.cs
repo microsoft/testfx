@@ -97,13 +97,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             bool first = true;
             while (stackTraces.Count != 0)
             {
-                result.Append(
-                    string.Format(
+                result.AppendFormat(
                         CultureInfo.CurrentCulture,
                         "{0} {1}{2}",
                         first ? string.Empty : (Resource.UTA_EndOfInnerExceptionTrace + Environment.NewLine),
                         stackTraces.Pop(),
-                        Environment.NewLine));
+                        Environment.NewLine);
                 first = false;
             }
 
@@ -179,13 +178,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     msg = string.Format(CultureInfo.CurrentCulture, Resource.UTF_FailedToGetExceptionMessage, curException.GetType());
                 }
 
-                result.Append(
-                    string.Format(
+                result.AppendFormat(
                         CultureInfo.CurrentCulture,
                         "{0}{1}: {2}",
                         first ? string.Empty : " ---> ",
                         curException.GetType(),
-                        msg));
+                        msg);
                 first = false;
             }
 

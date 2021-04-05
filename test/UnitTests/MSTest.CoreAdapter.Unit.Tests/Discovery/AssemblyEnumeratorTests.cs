@@ -196,18 +196,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
                 new Exception[] { loaderException1, loaderException2 });
             StringBuilder errorDetails = new StringBuilder();
 
-            errorDetails.AppendLine(
-                string.Format(
+            errorDetails.AppendFormat(
                     CultureInfo.CurrentCulture,
                     Resource.EnumeratorLoadTypeErrorFormat,
                     loaderException1.GetType(),
-                    loaderException1.Message));
-            errorDetails.AppendLine(
-                string.Format(
+                    loaderException1.Message).AppendLine();
+            errorDetails.AppendFormat(
                     CultureInfo.CurrentCulture,
                     Resource.EnumeratorLoadTypeErrorFormat,
                     loaderException2.GetType(),
-                    loaderException2.Message));
+                    loaderException2.Message).AppendLine();
 
             Assert.AreEqual(errorDetails.ToString(), this.assemblyEnumerator.GetLoadExceptionDetails(exceptions));
         }
