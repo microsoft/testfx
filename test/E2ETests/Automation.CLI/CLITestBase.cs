@@ -343,7 +343,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
             string testMethodName = string.Empty;
 
             var splits = testFullName.Split('.');
-            if (splits.Count() >= 3)
+            if (splits.Length >= 3)
             {
                 testMethodName = splits[2];
             }

@@ -273,7 +273,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.AreEqual(1, assemblyCleanupCount);
             Assert.AreEqual(1, classCleanupCount);
-            Assert.AreEqual(2, cleanupresult.Warnings.Count());
+            Assert.AreEqual(2, cleanupresult.Warnings.Count);
             Assert.IsTrue(cleanupresult.Warnings.All(w => w.Contains("NotImplemented")));
         }
 
