@@ -46,7 +46,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="type">The wrapped Type to create.</param>
         public PrivateType(Type type)
         {
-            this.type = type ?? throw new ArgumentNullException("type");
+            this.type = type ?? throw new ArgumentNullException(nameof(type));
         }
 
         /// <summary>

@@ -100,12 +100,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             if (testMethod == null)
             {
-                throw new ArgumentNullException("testMethod");
+                throw new ArgumentNullException(nameof(testMethod));
             }
 
             if (testContext == null)
             {
-                throw new ArgumentNullException("testContext");
+                throw new ArgumentNullException(nameof(testContext));
             }
 
             // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)

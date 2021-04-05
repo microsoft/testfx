@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             if (numberOfObjects < 0)
             {
-                throw new ArgumentException(Resource.WrongNumberOfObjects, "numberOfObjects");
+                throw new ArgumentException(Resource.WrongNumberOfObjects, nameof(numberOfObjects));
             }
 
             this.numberOfObjects = numberOfObjects;

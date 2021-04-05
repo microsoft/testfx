@@ -37,7 +37,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Logging
             {
                 if (format == null)
                 {
-                    throw new ArgumentNullException("format");
+                    throw new ArgumentNullException(nameof(format));
                 }
 
                 string message = string.Format(CultureInfo.InvariantCulture, format, args);

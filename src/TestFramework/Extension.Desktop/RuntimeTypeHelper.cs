@@ -120,7 +120,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (match == null)
             {
-                throw new ArgumentNullException("match");
+                throw new ArgumentNullException(nameof(match));
             }
 
             int i;
