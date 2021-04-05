@@ -600,7 +600,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                       </MSTest>
                     </RunSettings>";
 
-            string expectedrunSettingxml = @"<DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>";
+            string expectedrunSettingxml = "<DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>";
             string observedxml = null;
 
             this.testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))

@@ -128,7 +128,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         public void CleanupShouldNotDeleteDirectoriesIfRunSettingsSpecifiesSo()
         {
             string runSettingxml =
-                @"<DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>";
+                "<DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
@@ -217,7 +217,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 this.mockFileUtility.Object);
 
             string runSettingxml =
-                 @"<DeploymentEnabled>False</DeploymentEnabled>";
+                 "<DeploymentEnabled>False</DeploymentEnabled>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
@@ -241,7 +241,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 this.mockFileUtility.Object);
 
             string runSettingxml =
-                @"<DeploymentEnabled>False</DeploymentEnabled>";
+                "<DeploymentEnabled>False</DeploymentEnabled>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
@@ -265,7 +265,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 this.mockFileUtility.Object);
 
             string runSettingxml =
-                @"<DeploymentEnabled>True</DeploymentEnabled>";
+                "<DeploymentEnabled>True</DeploymentEnabled>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
@@ -297,7 +297,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 this.mockFileUtility.Object);
 
             string runSettingxml =
-                @"<DeploymentEnabled>True</DeploymentEnabled>";
+                "<DeploymentEnabled>True</DeploymentEnabled>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
