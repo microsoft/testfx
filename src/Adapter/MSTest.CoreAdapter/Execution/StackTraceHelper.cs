@@ -120,7 +120,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </returns>
         internal static string TrimStackTrace(string stackTrace)
         {
-            Debug.Assert(stackTrace != null && stackTrace.Length > 0, "stack trace should be non-empty.");
+            Debug.Assert(!string.IsNullOrEmpty(stackTrace), "stack trace should be non-empty.");
 
             StringBuilder result = new StringBuilder(stackTrace.Length);
             string[] stackFrames = Regex.Split(stackTrace, Environment.NewLine);
