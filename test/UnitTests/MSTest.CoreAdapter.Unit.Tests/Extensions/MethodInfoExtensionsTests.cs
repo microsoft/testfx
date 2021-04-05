@@ -454,7 +454,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             public async Task DummyAsyncMethod(int x, int y)
             {
-                await DummyAsyncMethodBody(x, y);
+                await DummyAsyncMethodBody(x, y).ConfigureAwait(false);
             }
 
             public void PublicMethodWithParameters(int x, int y)
@@ -485,7 +485,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             public static async Task PublicStaticAsyncTaskMethodWithTC(UTFExtension.TestContext tc)
             {
-                await Task.FromResult(true);
+                await Task.FromResult(true).ConfigureAwait(false);
             }
 
             public static Task PublicStaticNonAsyncTaskMethodWithTC(UTFExtension.TestContext tc)
@@ -495,7 +495,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             public static async void PublicStaticAsyncVoidMethodWithTC(UTFExtension.TestContext tc)
             {
-                await Task.FromResult(true);
+                await Task.FromResult(true).ConfigureAwait(false);
             }
 
             public static int PublicStaticMethodReturningInt()
@@ -505,12 +505,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             public static async Task PublicStaticAsyncTaskMethod()
             {
-                await Task.FromResult(true);
+                await Task.FromResult(true).ConfigureAwait(false);
             }
 
             public static async void PublicStaticAsyncVoidMethod()
             {
-                await Task.FromResult(true);
+                await Task.FromResult(true).ConfigureAwait(false);
             }
 
             public static Task PublicStaticNonAsyncTaskMethod()
@@ -539,12 +539,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
             public async Task PublicAsyncTaskMethod()
             {
-                await Task.FromResult(true);
+                await Task.FromResult(true).ConfigureAwait(false);
             }
 
             public async void PublicAsyncVoidMethod()
             {
-                await Task.FromResult(true);
+                await Task.FromResult(true).ConfigureAwait(false);
             }
 
             public Task PublicNonAsyncTaskMethod()

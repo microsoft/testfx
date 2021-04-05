@@ -2244,7 +2244,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
             where T : Exception
         {
-            return await ThrowsExceptionAsync<T>(action, string.Empty, null);
+            return await ThrowsExceptionAsync<T>(action, string.Empty, null).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -2266,7 +2266,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
             where T : Exception
         {
-            return await ThrowsExceptionAsync<T>(action, message, null);
+            return await ThrowsExceptionAsync<T>(action, message, null).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -2305,7 +2305,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
             try
             {
-                await action();
+                await action().ConfigureAwait(false);
             }
             catch (Exception ex)
             {

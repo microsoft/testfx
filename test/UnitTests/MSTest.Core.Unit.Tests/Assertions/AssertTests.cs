@@ -71,12 +71,12 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
             Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
                 async () =>
                     {
-                        await Task.Delay(5);
+                        await Task.Delay(5).ConfigureAwait(false);
                         throw new ArgumentException();
                     });
 
             // Should not throw an exception.
-            await t;
+            await t.ConfigureAwait(false);
         }
 
         [TestMethod]
@@ -85,7 +85,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
             Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
                 async () =>
                 {
-                    await Task.Delay(5);
+                    await Task.Delay(5).ConfigureAwait(false);
                 });
             var ex = ActionUtility.PerformActionAndReturnException(() => t.Wait());
 
@@ -104,7 +104,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
             Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
                 async () =>
                 {
-                    await Task.Delay(5);
+                    await Task.Delay(5).ConfigureAwait(false);
                     throw new FormatException();
                 });
             var ex = ActionUtility.PerformActionAndReturnException(() => t.Wait());
@@ -124,7 +124,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
             Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
                 async () =>
                     {
-                        await Task.Delay(5);
+                        await Task.Delay(5).ConfigureAwait(false);
                     },
                 "The world is not on fire.");
             var ex = ActionUtility.PerformActionAndReturnException(() => t.Wait());
@@ -144,7 +144,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
             Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
                 async () =>
                 {
-                    await Task.Delay(5);
+                    await Task.Delay(5).ConfigureAwait(false);
                     throw new FormatException();
                 },
                 "Happily ever after.");
@@ -175,7 +175,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         {
             Action a = () =>
             {
-                Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(async () => { await Task.FromResult(true); }, null, null);
+                Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(async () => { await Task.FromResult(true).ConfigureAwait(false); }, null, null);
                 t.Wait();
             };
             ActionUtility.ActionShouldThrowInnerExceptionOfType(a, typeof(ArgumentNullException));
@@ -187,7 +187,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
             Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
                 async () =>
                 {
-                    await Task.Delay(5);
+                    await Task.Delay(5).ConfigureAwait(false);
                 },
                 "The world is not on fire {0}.{1}-{2}.",
                 "ta",
@@ -210,7 +210,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
             Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
                 async () =>
                 {
-                    await Task.Delay(5);
+                    await Task.Delay(5).ConfigureAwait(false);
                     throw new FormatException();
                 },
                 "Happily ever after. {0} {1}.",
