@@ -49,8 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
             // Most, but not all, connections are actually database based,
             // here we look for special cases
-            TestDataConnectionFactory factory;
-            if (specializedProviders.TryGetValue(invariantProviderName, out factory))
+            if (specializedProviders.TryGetValue(invariantProviderName, out var factory))
             {
                 Debug.Assert(factory != null, "factory");
                 return factory.Create(invariantProviderName, connectionString, dataFolders);

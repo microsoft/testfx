@@ -483,11 +483,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 string finalMessage = message;
 
-                ValueType valExpected = expected as ValueType;
-                if (valExpected != null)
+                if (expected is ValueType valExpected)
                 {
-                    ValueType valActual = actual as ValueType;
-                    if (valActual != null)
+                    if (actual is ValueType valActual)
                     {
                         finalMessage = string.Format(
                             CultureInfo.CurrentCulture,
@@ -2186,12 +2184,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             if (message == null)
             {
-                throw new ArgumentNullException("message");
+                throw new ArgumentNullException(nameof(message));
             }
 
             try
@@ -2246,7 +2244,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
             where T : Exception
         {
-            return await ThrowsExceptionAsync<T>(action, string.Empty, null);
+            return await ThrowsExceptionAsync<T>(action, string.Empty, null).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -2268,7 +2266,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
             where T : Exception
         {
-            return await ThrowsExceptionAsync<T>(action, message, null);
+            return await ThrowsExceptionAsync<T>(action, message, null).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -2297,17 +2295,17 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             if (message == null)
             {
-                throw new ArgumentNullException("message");
+                throw new ArgumentNullException(nameof(message));
             }
 
             try
             {
-                await action();
+                await action().ConfigureAwait(false);
             }
             catch (Exception ex)
             {

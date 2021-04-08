@@ -46,13 +46,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                         curException.GetType());
                 }
 
-                result.Append(
-                    string.Format(
+                result.AppendFormat(
                         CultureInfo.CurrentCulture,
                         "{0}{1}: {2}",
                         first ? string.Empty : " ---> ",
                         curException.GetType(),
-                        msg));
+                        msg);
                 first = false;
             }
 

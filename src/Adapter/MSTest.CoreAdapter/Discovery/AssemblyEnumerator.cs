@@ -92,10 +92,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
                 try
                 {
-                    ICollection<string> warningsFromTypeEnumerator;
-
                     typeFullName = type.FullName;
-                    var unitTestCases = this.GetTypeEnumerator(type, assemblyFileName).Enumerate(out warningsFromTypeEnumerator);
+                    var unitTestCases = this.GetTypeEnumerator(type, assemblyFileName).Enumerate(out var warningsFromTypeEnumerator);
 
                     if (warningsFromTypeEnumerator != null)
                     {

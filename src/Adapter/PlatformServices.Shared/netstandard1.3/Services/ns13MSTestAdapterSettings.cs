@@ -282,7 +282,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 while (reader.NodeType == XmlNodeType.Element)
                 {
-                    if (string.Compare("Directory", reader.Name, StringComparison.OrdinalIgnoreCase) == 0)
+                    if (string.Equals("Directory", reader.Name, StringComparison.OrdinalIgnoreCase))
                     {
                         string recursiveAttribute = reader.GetAttribute("includeSubDirectories");
 
@@ -292,7 +292,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         if (!string.IsNullOrEmpty(path))
                         {
                             // Do we have to look in sub directory for dependent dll.
-                            var includeSubDirectories = string.Compare(recursiveAttribute, "true", StringComparison.OrdinalIgnoreCase) == 0;
+                            var includeSubDirectories = string.Equals(recursiveAttribute, "true", StringComparison.OrdinalIgnoreCase);
                             this.SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
                         }
                     }

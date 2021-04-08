@@ -117,13 +117,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
                 while (reader.NodeType == XmlNodeType.Element)
                 {
-                    bool result;
                     string elementName = reader.Name.ToUpperInvariant();
                     switch (elementName)
                     {
                         case "COLLECTSOURCEINFORMATION":
                             {
-                                if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                if (bool.TryParse(reader.ReadInnerXml(), out var result))
                                 {
                                     settings.CollectSourceInformation = result;
                                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(

@@ -81,7 +81,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             if (directories == null || directories.Count == 0)
             {
-                throw new ArgumentNullException("directories");
+                throw new ArgumentNullException(nameof(directories));
             }
 
             this.searchDirectories = new List<string>(directories);
@@ -395,7 +395,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             if (string.IsNullOrEmpty(args?.Name))
             {
-                Debug.Assert(false, "AssemblyResolver.OnResolve: args.Name is null or empty.");
+                Debug.Fail("AssemblyResolver.OnResolve: args.Name is null or empty.");
                 return null;
             }
 
@@ -424,9 +424,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             lock (this.syncLock)
             {
                 // Since both normal and reflection only cache are accessed in same block, putting only one lock should be sufficient.
-                Assembly assembly = null;
-
-                if (this.TryLoadFromCache(assemblyNameToLoad, isReflectionOnly, out assembly))
+                if (this.TryLoadFromCache(assemblyNameToLoad, isReflectionOnly, out var assembly))
                 {
                     return assembly;
                 }

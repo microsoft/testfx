@@ -137,9 +137,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
 
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
 
-            object propValue;
-
-            Assert.IsTrue(this.testContextImplementation.TryGetPropertyValue("TestName", out propValue));
+            Assert.IsTrue(this.testContextImplementation.TryGetPropertyValue("TestName", out var propValue));
             Assert.AreEqual("M", propValue);
         }
 
@@ -148,9 +146,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         {
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new System.IO.StringWriter(), this.properties);
 
-            object propValue;
-
-            Assert.IsFalse(this.testContextImplementation.TryGetPropertyValue("Random", out propValue));
+            Assert.IsFalse(this.testContextImplementation.TryGetPropertyValue("Random", out var propValue));
             Assert.IsNull(propValue);
         }
 
