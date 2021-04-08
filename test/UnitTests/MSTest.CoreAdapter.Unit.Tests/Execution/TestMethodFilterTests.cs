@@ -112,8 +112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void GetFilterExpressionForNullRunContextReturnsNull()
         {
             TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
-            bool filterHasError;
-            var filterExpression = this.TestMethodFilter.GetFilterExpression(null, recorder, out filterHasError);
+            var filterExpression = this.TestMethodFilter.GetFilterExpression(null, recorder, out var filterHasError);
 
             Assert.IsNull(filterExpression);
             Assert.IsFalse(filterHasError);
@@ -125,8 +124,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
             var dummyFilterExpression = new TestableTestCaseFilterExpression();
             TestableRunContext runContext = new TestableRunContext(() => dummyFilterExpression);
-            bool filterHasError;
-            var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, recorder, out filterHasError);
+            var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, recorder, out var filterHasError);
 
             Assert.AreEqual(dummyFilterExpression, filterExpression);
             Assert.IsFalse(filterHasError);
@@ -141,8 +139,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
             var dummyFilterExpression = new TestableTestCaseFilterExpression();
             TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithGetTestCaseFilter(() => dummyFilterExpression);
-            bool filterHasError;
-            var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
+            var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out var filterHasError);
 
             Assert.AreEqual(dummyFilterExpression, filterExpression);
             Assert.IsFalse(filterHasError);
@@ -156,8 +153,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
             TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithoutGetTestCaseFilter();
-            bool filterHasError;
-            var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
+            var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out var filterHasError);
 
             Assert.IsNull(filterExpression);
             Assert.IsFalse(filterHasError);
@@ -168,8 +164,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
             TestableRunContext runContext = new TestableRunContext(() => { throw new TestPlatformFormatException("DummyException"); });
-            bool filterHasError;
-            var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, recorder, out filterHasError);
+            var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, recorder, out var filterHasError);
 
             Assert.IsNull(filterExpression);
             Assert.IsTrue(filterHasError);
@@ -185,8 +180,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
             TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithGetTestCaseFilter(() => { throw new TestPlatformFormatException("DummyException"); });
-            bool filterHasError;
-            var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out filterHasError);
+            var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out var filterHasError);
 
             Assert.IsNull(filterExpression);
             Assert.IsTrue(filterHasError);

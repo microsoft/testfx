@@ -312,7 +312,7 @@ function Replace-InFile($File, $RegEx, $ReplaceWith) {
 function Sync-PackageVersions {
   $versionsRegex = '(?mi)<(TestPlatformVersion.*?)>(.*?)<\/TestPlatformVersion>'
   $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform([0-9a-z.]+)?" version="([0-9a-z.-]*)"'
-  $sourceRegex = '(?mi)(.+[a-z =]+\@\")Microsoft\.TestPlatform\.([0-9.-a-z]+)\";'
+  $sourceRegex = '(?mi)(.+[a-z =]+\@?\")Microsoft\.TestPlatform\.([0-9.-a-z]+)\";'
 
   if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
     $TestPlatformVersion = (([XML](Get-Content $TF_VERSIONS_FILE)).Project.PropertyGroup.TestPlatformVersion).InnerText

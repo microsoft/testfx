@@ -45,14 +45,12 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         public void GetNavigationDataShouldReturnDataFromNavigationSession()
         {
             var diaSession = this.fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
-            int minLineNumber;
-            string fileName;
             this.fileOperations.GetNavigationData(
                 diaSession,
                 typeof(DesktopFileOperationsTests).FullName,
                 "GetNavigationDataShouldReturnDataFromNavigationSession",
-                out minLineNumber,
-                out fileName);
+                out var minLineNumber,
+                out var fileName);
 
             Assert.AreNotEqual(-1, minLineNumber);
             Assert.IsNotNull(fileName);
@@ -61,14 +59,12 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         [TestMethod]
         public void GetNavigationDataShouldNotThrowOnNullNavigationSession()
         {
-            int minLineNumber;
-            string fileName;
             this.fileOperations.GetNavigationData(
                 null,
                 typeof(DesktopFileOperationsTests).FullName,
                 "GetNavigationDataShouldReturnDataFromNavigationSession",
-                out minLineNumber,
-                out fileName);
+                out var minLineNumber,
+                out var fileName);
 
             Assert.AreEqual(-1, minLineNumber);
             Assert.IsNull(fileName);

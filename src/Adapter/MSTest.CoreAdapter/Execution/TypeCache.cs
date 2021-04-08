@@ -100,12 +100,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             if (testMethod == null)
             {
-                throw new ArgumentNullException("testMethod");
+                throw new ArgumentNullException(nameof(testMethod));
             }
 
             if (testContext == null)
             {
-                throw new ArgumentNullException("testContext");
+                throw new ArgumentNullException(nameof(testContext));
             }
 
             // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
@@ -682,9 +682,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 // Only find methods that match the given declaring name.
                 testMethodInfo =
-                    methodsInClass.Where(method => method.Name.Equals(testMethod.Name)
+                    Array.Find(methodsInClass, method => method.Name.Equals(testMethod.Name)
                                                 && method.DeclaringType.FullName.Equals(testMethod.DeclaringClassFullName)
-                                                && method.HasCorrectTestMethodSignature(true)).FirstOrDefault();
+                                                && method.HasCorrectTestMethodSignature(true));
             }
             else
             {

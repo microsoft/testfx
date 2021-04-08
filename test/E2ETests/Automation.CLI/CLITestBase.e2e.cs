@@ -218,7 +218,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
                 {
                     if (string.IsNullOrWhiteSpace(testFound.ErrorStackTrace))
                     {
-                        Assert.Fail($@"The test failure {testFound.DisplayName ?? testFound.TestCase.FullyQualifiedName} with message {testFound.ErrorMessage} lacks stacktrace.");
+                        Assert.Fail($"The test failure {testFound.DisplayName ?? testFound.TestCase.FullyQualifiedName} with message {testFound.ErrorMessage} lacks stacktrace.");
                     }
 
                     // Verify stack information as well.
@@ -259,7 +259,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
             string testMethodName = string.Empty;
 
             var splits = testFullName.Split('.');
-            if (splits.Count() >= 3)
+            if (splits.Length >= 3)
             {
                 testMethodName = splits[2];
             }

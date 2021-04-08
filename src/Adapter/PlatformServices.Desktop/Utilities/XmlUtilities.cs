@@ -109,7 +109,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             Debug.Assert(assemblyName != null, "assemblyName should not be null.");
             if (assemblyName == null)
             {
-                throw new ArgumentNullException("assemblyName");
+                throw new ArgumentNullException(nameof(assemblyName));
             }
 
             // Convert the public key token into a string.

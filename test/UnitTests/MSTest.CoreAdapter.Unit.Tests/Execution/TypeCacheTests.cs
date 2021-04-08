@@ -495,8 +495,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
-            Assert.IsNull(this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.First().Item2, "No base class cleanup");
-            Assert.AreEqual(baseType.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.First().Item1);
+            Assert.IsNull(this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item2, "No base class cleanup");
+            Assert.AreEqual(baseType.GetMethod("AssemblyInit"), this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item1);
         }
 
         [TestMethodV1]
@@ -543,8 +543,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.Count());
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Count);
-            Assert.IsNull(this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.First().Item1, "No base class init");
-            Assert.AreEqual(baseType.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.First().Item2);
+            Assert.IsNull(this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item1, "No base class init");
+            Assert.AreEqual(baseType.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item2);
         }
 
         [TestMethodV1]
@@ -610,8 +610,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.AreEqual(type.GetMethod("AssemblyCleanup"), this.typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
 
             Assert.AreEqual(1, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
-            Assert.AreEqual(baseInitializeMethod, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item1);
-            Assert.AreEqual(baseCleanupMethod, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.First().Item2);
+            Assert.AreEqual(baseInitializeMethod, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Peek().Item1);
+            Assert.AreEqual(baseCleanupMethod, this.typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Peek().Item2);
         }
 
         [TestMethodV1]
@@ -1181,8 +1181,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNotNull(testMethodInfo);
 
             // Verify that the first value gets set.
-            object value;
-            Assert.IsTrue(((IDictionary<string, object>)testContext.Properties).TryGetValue("WhoAmI", out value));
+            Assert.IsTrue(((IDictionary<string, object>)testContext.Properties).TryGetValue("WhoAmI", out var value));
             Assert.AreEqual("Me", value);
         }
 

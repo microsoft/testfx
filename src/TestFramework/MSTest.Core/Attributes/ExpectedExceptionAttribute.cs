@@ -38,14 +38,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (exceptionType == null)
             {
-                throw new ArgumentNullException("exceptionType");
+                throw new ArgumentNullException(nameof(exceptionType));
             }
 
             if (!typeof(Exception).GetTypeInfo().IsAssignableFrom(exceptionType.GetTypeInfo()))
             {
                 throw new ArgumentException(
                         FrameworkMessages.UTF_ExpectedExceptionTypeMustDeriveFromException,
-                        "exceptionType");
+                        nameof(exceptionType));
             }
 
             this.ExceptionType = exceptionType;

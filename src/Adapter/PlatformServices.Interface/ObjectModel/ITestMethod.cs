@@ -39,7 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// Gets the fully specified type name metadata format.
         /// </summary>
         /// <example>
-        ///     <code>NamespaceA.NamespaceB.ClassName`1+InnerClass`2</code>
+        ///     <c>NamespaceA.NamespaceB.ClassName`1+InnerClass`2</c>
         /// </example>
         string ManagedTypeName { get; }
 
@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// Gets the fully specified method name metadata format.
         /// </summary>
         /// <example>
-        ///     <code>MethodName`2(ParamTypeA,ParamTypeB,...)</code>
+        ///     <c>MethodName`2(ParamTypeA,ParamTypeB,...)</c>
         /// </example>
         string ManagedMethodName { get; }
 
