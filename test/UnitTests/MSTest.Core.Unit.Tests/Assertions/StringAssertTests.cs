@@ -7,6 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions
     extern alias FrameworkV2;
 
     using System;
+    using System.Text.RegularExpressions;
 
     using MSTestAdapter.TestUtilities;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -58,6 +59,16 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions
             var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.EndsWith(actual, notInString));
             Assert.IsNotNull(ex);
             TestFrameworkV1.StringAssert.Contains(ex.Message, "StringAssert.EndsWith failed");
+        }
+
+        [TestMethod]
+        public void StringAssertDoesNotMatch()
+        {
+            string actual = "The quick brown fox jumps over the lazy dog.";
+            Regex doesMatch = new Regex("quick brown fox");
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.DoesNotMatch(actual, doesMatch));
+            Assert.IsNotNull(ex);
+            TestFrameworkV1.StringAssert.Contains(ex.Message, "StringAssert.DoesNotMatch failed");
         }
 
         [TestMethod]

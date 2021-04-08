@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</AssemblyName>
+    <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
+    <Company>Microsoft Corporation</Company>
+    <Product>Extension.WinUI</Product>
+    <AssemblyTitle>Extension.WinUI</AssemblyTitle>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    
+    <TargetFramework>net5.0-windows10.0.18362.0</TargetFramework>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.18362.0</SupportedOSPlatformVersion>
+
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
+  </PropertyGroup>
+
+  <Import Project="..\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <ItemGroup>
+    <Compile Include="..\Extension.UWP\DeploymentItemAttribute.cs" Link="DeploymentItemAttribute.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ProjectReunion" Version="0.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MSTest.Core\MSTest.Core.csproj" />
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
+    <LocDocumentationSubPath>Extensions\WinUI</LocDocumentationSubPath>
+  </PropertyGroup>
+  
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+
+</Project>
