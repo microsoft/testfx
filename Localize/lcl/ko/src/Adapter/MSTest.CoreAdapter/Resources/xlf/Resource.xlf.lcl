@@ -574,7 +574,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Only data driven test methods can have parameters. Did you intend to use [DataRow]5D; or [DynamicData]5D;?]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[데이터 기반 테스트 메서드에만 매개 변수를 포함할 수 있습니다. [DataRow]5D; 또는 [DynamicData]5D;를 사용하려고 하셨습니까?]]></Val>
+            <Val><![CDATA[데이터 기반 테스트 메서드에만 매개 변수를 포함할 수 있습니다. [DataRow]5D; 또는 [DynamicData]5D;을(를) 사용하려고 하셨습니까?]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
