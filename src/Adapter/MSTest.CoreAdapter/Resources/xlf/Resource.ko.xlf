@@ -330,7 +330,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="UTA_TestMethodExpectedParameters">
         <source>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</source>
-        <target state="translated">데이터 기반 테스트 메서드에만 매개 변수를 포함할 수 있습니다. [DataRow] 또는 [DynamicData]을(를) 사용하려고 하셨습니까?</target>
+        <target state="translated">데이터 기반 테스트 메서드에만 매개 변수를 포함할 수 있습니다. [DataRow] 또는 [DynamicData]를 사용하려고 하셨습니까?</target>
         <note></note>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
