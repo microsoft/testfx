@@ -21,6 +21,7 @@
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs" Link="ns10RecursiveDirectoryPath.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs" Link="SerializableAttribute.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10FileOperations.cs" Link="Services\ns10FileOperations.cs" />
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadSafeStringWriter.cs" Link="Services\ns10ThreadSafeStringWriter.cs" />
     <Compile Include="Deployment\NetCoreTestRunDirectories.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs" Link="Services\ns10DiaSessionOperations.cs" />
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs" Link="Services\ns10MSTestSettingsProvider.cs" />

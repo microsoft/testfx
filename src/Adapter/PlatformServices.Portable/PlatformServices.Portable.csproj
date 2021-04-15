@@ -70,6 +70,9 @@
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs">
       <Link>Services\ns10ThreadOperations.cs</Link>
     </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadSafeStringWriter.cs">
+      <Link>Services\ns10ThreadSafeStringWriter.cs</Link>
+    </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs">
       <Link>Services\ns10TraceListener.cs</Link>
     </Compile>

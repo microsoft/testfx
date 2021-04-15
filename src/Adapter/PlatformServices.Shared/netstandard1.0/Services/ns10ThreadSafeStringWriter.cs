@@ -4,12 +4,15 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
     using System;
+    using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
+    using System.Text;
 
     /// <summary>
     /// StringWriter which has thread safe ToString().
     /// </summary>
-    internal class ThreadSafeStringWriter : StringWriter
+    public class ThreadSafeStringWriter : StringWriter
     {
         private readonly object lockObject = new object();
 
@@ -21,6 +24,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </param>
         public ThreadSafeStringWriter(IFormatProvider formatProvider)
             : base(formatProvider)
+        {
+        }
+
+        public static ThreadSafeStringWriter Instance { get; } = new ThreadSafeStringWriter(CultureInfo.InvariantCulture);
+
+        public static List<StringBuilder> AdditionalOutputs { get; } = new List<StringBuilder>();
+
+        public static StringBuilder AllOutput { get; } = new StringBuilder();
+
+        public static void SetStringBuilder(StringBuilder stringBuilder)
         {
         }
 
@@ -45,7 +58,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             lock (this.lockObject)
             {
-                InvokeBaseClass(() => base.Write(value));
             }
         }
 
@@ -54,8 +66,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             lock (this.lockObject)
             {
-                InvokeBaseClass(() => base.Write(value));
             }
+        }
+
+        public override void WriteLine(string value)
+        {
         }
 
         /// <inheritdoc/>
@@ -63,7 +78,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             lock (this.lockObject)
             {
-                InvokeBaseClass(() => base.Write(buffer, index, count));
+                // dunno
             }
         }
 

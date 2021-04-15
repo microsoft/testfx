@@ -76,6 +76,9 @@
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextPropertyStrings.cs">
       <Link>Services\ns10TestContextPropertyStrings.cs</Link>
     </Compile>
+    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadSafeStringWriter.cs">
+      <Link>Services\ns10ThreadSafeStringWriter.cs</Link>
+    </Compile>
     <Compile Include="..\PlatformServices.Shared\netstandard1.0\Utilities\ns10Validate.cs">
       <Link>Utilities\ns10Validate.cs</Link>
     </Compile>
