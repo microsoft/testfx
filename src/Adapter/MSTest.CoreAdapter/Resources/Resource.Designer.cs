@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resource {
@@ -495,7 +495,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}.
+        ///   Looks up a localized string similar to Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}.
         /// </summary>
         internal static string UTA_ExecuteThrewException {
             get {
@@ -637,6 +637,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string UTA_TypeLoadError {
             get {
                 return ResourceManager.GetString("UTA_TypeLoadError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The called code threw an exception that was caught, but the exception value was null.
+        /// </summary>
+        internal static string UTA_UserCodeThrewNullValueException {
+            get {
+                return ResourceManager.GetString("UTA_UserCodeThrewNullValueException", resourceCulture);
             }
         }
         
