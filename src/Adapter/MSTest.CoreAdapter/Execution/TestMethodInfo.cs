@@ -751,11 +751,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             return classInstance;
         }
 
-        private Exception NullReferenceException()
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Execute test with a timeout
         /// </summary>
