@@ -11,4 +11,4 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)netstandard*/**/*.cs" />
   </ItemGroup>
-</Project> 
+</Project>

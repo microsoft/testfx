@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+    <IncludeMicrosoftCommon>false</IncludeMicrosoftCommon>
+    <SourcePath>$(TestFxRoot)artifacts\$(Configuration)\</SourcePath>
+  </PropertyGroup>
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+
+  <PropertyGroup>
+    <TargetFramework>net452</TargetFramework>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <IsPackable>false</IsPackable>
+    <NoWarn>1685</NoWarn>
+    <SkipAppendingVersion>true</SkipAppendingVersion>
+    <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(TestFxRoot)test\E2ETests\Automation.CLI\CLITestBase.common.cs" Link="Utilities\CLITestBase.common.cs" />
+    <Compile Include="$(TestFxRoot)test\E2ETests\Automation.CLI\RunConfiguration.cs" Link="Utilities\RunConfiguration.cs" />
+    <Compile Include="$(TestFxRoot)test\E2ETests\Automation.CLI\XmlRunSettingsUtilities.cs" Link="Utilities\XmlRunSettingsUtilities.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(TestPlatformVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(TestPlatformVersion)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatformVersion)" />
+    <PackageReference Include="System.ValueTuple" Version="4.3.0" />
+
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter">
+      <HintPath>$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
+    </Reference>
+
+    <Reference Include="System.Collections.Concurrent">
+      <HintPath>$(SourcePath)MSTest.CoreAdapter\System.Collections.Concurrent.dll</HintPath>
+    </Reference>
+
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices">
+      <HintPath>$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
+    </Reference>
+    
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface">
+      <HintPath>$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll</HintPath>
+    </Reference>
+    
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework">
+      <HintPath>$(SourcePath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
+    </Reference>
+    
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions">
+      <HintPath>$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+</Project>

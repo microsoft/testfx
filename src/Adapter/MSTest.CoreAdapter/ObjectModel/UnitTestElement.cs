@@ -7,7 +7,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Globalization;
+    using System.IO;
+    using System.Linq;
 
+    using Microsoft.TestPlatform.AdapterUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -15,6 +18,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     /// The unit test element.
     /// </summary>
     [Serializable]
+    [DebuggerDisplay("{GetDisplayName()} ({TestMethod.ManagedTypeName})")]
     internal class UnitTestElement
     {
         /// <summary>
@@ -103,6 +107,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         internal string[] WorkItemIds { get; set; }
 
+        internal UnitTestElement Clone()
+        {
+            var clone = this.MemberwiseClone() as UnitTestElement;
+            if (this.TestMethod != null)
+            {
+                clone.TestMethod = this.TestMethod.Clone();
+            }
+
+            return clone;
+        }
+
         /// <summary>
         /// Convert the UnitTestElement instance to an Object Model testCase instance.
         /// </summary>
@@ -127,6 +142,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             else
             {
                 testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
+            }
+
+            var hierarchy = this.TestMethod.Hierarchy;
+            if (hierarchy != null && hierarchy.Count > 0)
+            {
+                testCase.SetHierarchy(hierarchy.ToArray());
             }
 
             // Set declaring type if present so the correct method info can be retrieved
@@ -189,6 +210,44 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             {
                 testCase.SetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, this.DoNotParallelize);
             }
+
+            // Store resolved data if any
+            if (this.TestMethod.DataType != DynamicDataType.None)
+            {
+                var data = Helpers.DataSerializationHelper.Serialize(this.TestMethod.Data);
+
+                testCase.SetPropertyValue(TestAdapter.Constants.TestDynamicDataTypeProperty, (int)this.TestMethod.DataType);
+                testCase.SetPropertyValue(TestAdapter.Constants.TestDynamicDataProperty, data);
+            }
+
+            string fileName = testCase.Source;
+            try
+            {
+                fileName = Path.GetFileName(fileName);
+            }
+            catch
+            {
+            }
+
+            var idProvider = new TestIdProvider();
+            idProvider.AppendString(testCase.ExecutorUri?.ToString());
+            idProvider.AppendString(fileName);
+            if (this.TestMethod.HasManagedMethodAndTypeProperties)
+            {
+                idProvider.AppendString(this.TestMethod.ManagedTypeName);
+                idProvider.AppendString(this.TestMethod.ManagedMethodName);
+            }
+            else
+            {
+                idProvider.AppendString(testCase.FullyQualifiedName);
+            }
+
+            if (this.TestMethod.DataType != DynamicDataType.None)
+            {
+                idProvider.AppendString(testCase.DisplayName);
+            }
+
+            testCase.Id = idProvider.GetId();
 
             return testCase;
         }

@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 {
     using System;
     using System.Security;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
@@ -13,7 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private ReflectHelper reflectHelper;
 
         public TestAssemblySettingsProvider()
-            : this(new ReflectHelper())
+            : this(ReflectHelper.Instance)
         {
         }
 

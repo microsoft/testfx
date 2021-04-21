@@ -320,6 +320,44 @@ Error: {1}</value>
   <data name="Execution_Test_Cancelled" xml:space="preserve">
     <value>Test '{0}' execution has been aborted.</value>
   </data>
+  <data name="CannotEnumerateDataSourceAttribute" xml:space="preserve">
+    <value>Exception occurred while enumarating DataSourceAttribute on "{0}.{1}": {2}</value>
+    <comment>{0}: TypeName with namespace, 
+{1}: Method name,
+{2}: Exception details</comment>
+  </data>
+  <data name="CannotEnumerateDataSourceAttribute_MoreThenOneDefined" xml:space="preserve">
+    <value>A test method can only contain one DataSourceAttribute, but found {2} on "{0}.{1}".</value>
+    <comment>{0}: TypeName with namespace, 
+{1}: Method name,
+{2}: Number of attributed defined.</comment>
+  </data>
+  <data name="CannotEnumerateIDataSourceAttribute" xml:space="preserve">
+    <value>Exception occurred while enumarating IDataSource attribute on "{0}.{1}": {2}</value>
+    <comment>{0}: TypeName with namespace, 
+{1}: Method name,
+{2}: Exception details</comment>
+  </data>
+  <data name="ExceptionOccuredWhileGettingTheExceptionDescription" xml:space="preserve">
+    <value>"{0}": (Failed to get exception description due to an exception of type "{1}".</value>
+    <comment>{0}: Type of the original exception that we're trying to get the desciption of.
+{1}: Thrown exception</comment>
+  </data>
+  <data name="ExceptionsThrown" xml:space="preserve">
+    <value>Exceptions thrown:</value>
+    <comment>This is usually preceeds by TestAssembly_AssemblyDiscoveryFailure message, and precceded by list of exceptions thrown in a test discovery session.</comment>
+  </data>
+  <data name="FailedFetchAttributeCache" xml:space="preserve">
+    <value>Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.</value>
+  </data>
+  <data name="FailedToGetCustomAttribute" xml:space="preserve">
+    <value>Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</value>
+    <comment>{0}: Attribute full type name.
+{1}: Exception description</comment>
+  </data>
+  <data name="OlderTFMVersionFound" xml:space="preserve">
+    <value>An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</value>
+  </data>
   <data name="UTA_UserCodeThrewNullValueException" xml:space="preserve">
     <value>The called code threw an exception that was caught, but the exception value was null</value>
   </data>

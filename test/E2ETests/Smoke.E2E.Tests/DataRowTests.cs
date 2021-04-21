@@ -23,10 +23,10 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "DataRowTestMethod (DerivedString1)",
                 "DataRowTestMethod (DerivedString2)");
 
-            // 4 tests of BaseClass.DataRowTestMethod - 3 data row results and 1 parent result
-            // 3 tests of DerivedClass.DataRowTestMethod - 2 data row results and 1 parent result
-            // Total 7 tests - Making sure that DerivedClass doesn't run BaseClass tests
-            this.ValidatePassedTestsCount(7);
+            // 3 tests of BaseClass.DataRowTestMethod - 3 data row results and no parent result
+            // 2 tests of DerivedClass.DataRowTestMethod - 2 data row results and no parent result
+            // Total 5 tests - Making sure that DerivedClass doesn't run BaseClass tests
+            this.ValidatePassedTestsCount(5);
         }
 
         [TestMethod]
@@ -38,8 +38,8 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "DataRowTestMethod (DerivedString1)",
                 "DataRowTestMethod (DerivedString2)");
 
-            // 3 tests of DerivedClass.DataRowTestMethod - 2 datarow result and 1 parent result
-            this.ValidatePassedTestsCount(3);
+            // 2 tests of DerivedClass.DataRowTestMethod - 2 datarow result and no parent result
+            this.ValidatePassedTestsCount(2);
         }
 
         [TestMethod]
@@ -52,8 +52,8 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString1)",
                 "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString2,DerivedOptionalString3)");
 
-            // 4 tests of DerivedClass.DataRowTestMethodWithSomeOptionalParameters - 3 datarow result and 1 parent result
-            this.ValidatePassedTestsCount(4);
+            // 3 tests of DerivedClass.DataRowTestMethodWithSomeOptionalParameters - 3 datarow result and no parent result
+            this.ValidatePassedTestsCount(3);
         }
 
         [TestMethod]
@@ -67,8 +67,8 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "DataRowTestMethodWithAllOptionalParameters (123,DerivedOptionalString4)",
                 "DataRowTestMethodWithAllOptionalParameters (123,DerivedOptionalString5,DerivedOptionalString6)");
 
-            // 5 tests of DerivedClass.DataRowTestMethodWithAllOptionalParameters - 4 datarow result and 1 parent result
-            this.ValidatePassedTestsCount(5);
+            // 4 tests of DerivedClass.DataRowTestMethodWithAllOptionalParameters - 4 datarow result and no parent result
+            this.ValidatePassedTestsCount(4);
         }
 
         [TestMethod]
@@ -82,8 +82,8 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2)",
                 "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2,DerivedParamsArg3)");
 
-            // 5 tests of DerivedClass.DataRowTestMethodWithParamsParameters - 4 datarow result and 1 parent result
-            this.ValidatePassedTestsCount(5);
+            // 4 tests of DerivedClass.DataRowTestMethodWithParamsParameters - 4 datarow result and no parent result
+            this.ValidatePassedTestsCount(4);
         }
 
         [TestMethod]
@@ -96,8 +96,8 @@ namespace MSTestAdapter.Smoke.E2ETests
                 "DataRowTestMethodFailsWithInvalidArguments (2)",
                 "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
 
-            // 4 tests of DerivedClass.DataRowTestMethodFailsWithInvalidArguments - 3 datarow result and 1 parent result
-            this.ValidatePassedTestsCount(4);
+            // 3 tests of DerivedClass.DataRowTestMethodFailsWithInvalidArguments - 3 datarow result and no parent result
+            this.ValidatePassedTestsCount(3);
         }
     }
 }

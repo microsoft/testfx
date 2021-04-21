@@ -71,6 +71,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exception occurred while enumarating DataSourceAttribute on &quot;{0}.{1}&quot;: {2}.
+        /// </summary>
+        internal static string CannotEnumerateDataSourceAttribute {
+            get {
+                return ResourceManager.GetString("CannotEnumerateDataSourceAttribute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A test method can only contain one DataSourceAttribute, but found {2} on &quot;{0}.{1}&quot;..
+        /// </summary>
+        internal static string CannotEnumerateDataSourceAttribute_MoreThenOneDefined {
+            get {
+                return ResourceManager.GetString("CannotEnumerateDataSourceAttribute_MoreThenOneDefined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exception occurred while enumarating IDataSource attribute on &quot;{0}.{1}&quot;: {2}.
+        /// </summary>
+        internal static string CannotEnumerateIDataSourceAttribute {
+            get {
+                return ResourceManager.GetString("CannotEnumerateIDataSourceAttribute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The parameter should not be null or empty..
         /// </summary>
         internal static string Common_CannotBeNullOrEmpty {
@@ -143,6 +170,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &quot;{0}&quot;: (Failed to get exception description due to an exception of type &quot;{1}&quot;..
+        /// </summary>
+        internal static string ExceptionOccuredWhileGettingTheExceptionDescription {
+            get {
+                return ResourceManager.GetString("ExceptionOccuredWhileGettingTheExceptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exceptions thrown:.
+        /// </summary>
+        internal static string ExceptionsThrown {
+            get {
+                return ResourceManager.GetString("ExceptionsThrown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test &apos;{0}&apos; execution has been aborted..
         /// </summary>
         internal static string Execution_Test_Cancelled {
@@ -157,6 +202,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string Execution_Test_Timeout {
             get {
                 return ResourceManager.GetString("Execution_Test_Timeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get attribute cache. Ignoring attribute inheritance and falling into &apos;type defines Attribute model&apos;, so that we have some data..
+        /// </summary>
+        internal static string FailedFetchAttributeCache {
+            get {
+                return ResourceManager.GetString("FailedFetchAttributeCache", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}.
+        /// </summary>
+        internal static string FailedToGetCustomAttribute {
+            get {
+                return ResourceManager.GetString("FailedToGetCustomAttribute", resourceCulture);
             }
         }
         
@@ -202,6 +265,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string LegacyScenariosNotSupportedWarning {
             get {
                 return ResourceManager.GetString("LegacyScenariosNotSupportedWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file..
+        /// </summary>
+        internal static string OlderTFMVersionFound {
+            get {
+                return ResourceManager.GetString("OlderTFMVersionFound", resourceCulture);
             }
         }
         
