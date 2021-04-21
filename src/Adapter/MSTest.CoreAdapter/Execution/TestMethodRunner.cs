@@ -233,6 +233,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 else
                 {
                     var testResults = this.ExecuteTest();
+
                     foreach (var testResult in testResults)
                     {
                         if (string.IsNullOrWhiteSpace(testResult.DisplayName))
@@ -414,7 +415,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 return new[]
                 {
-                    new UTF.TestResult() { TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex.Message), ex) }
+                    new UTF.TestResult() { 
+                        TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex?.Message, ex?.StackTrace), ex) }
                 };
             }
         }

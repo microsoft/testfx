@@ -209,7 +209,7 @@ Error: {1}</value>
     <value>Class Initialization method {0}.{1} threw exception. {2}: {3}.</value>
   </data>
   <data name="UTA_ExecuteThrewException" xml:space="preserve">
-    <value>Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}</value>
+    <value>Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}</value>
   </data>
   <data name="UTA_NoTestResult" xml:space="preserve">
     <value>Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.</value>
@@ -357,5 +357,8 @@ Error: {1}</value>
   </data>
   <data name="OlderTFMVersionFound" xml:space="preserve">
     <value>An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</value>
+  </data>
+  <data name="UTA_UserCodeThrewNullValueException" xml:space="preserve">
+    <value>The called code threw an exception that was caught, but the exception value was null</value>
   </data>
 </root>

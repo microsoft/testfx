@@ -697,11 +697,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             catch (Exception ex)
             {
+                if (ex == null)
+                {
+                    // It seems that ex can be null in some rare cases when initialization fails in native code.
+                    // Get our own exception with a stack trace to satisfy GetStackTraceInformation.
+                    try
+                    {
+                        throw new InvalidOperationException(Resource.UTA_UserCodeThrewNullValueException);
+                    }
+                    catch (Exception exception)
+                    {
+                        ex = exception;
+                    }
+                }
+
                 // In most cases, exception will be TargetInvocationException with real exception wrapped
-                // in the InnerException; or user code throws an exception
+                // in the InnerException; or user code throws an exception.
+                // It also seems that in rare cases the ex can be null.
                 var actualException = ex.InnerException ?? ex;
                 var exceptionMessage = StackTraceHelper.GetExceptionMessage(actualException);
                 var stackTraceInfo = StackTraceHelper.GetStackTraceInformation(actualException);
+
                 var errorMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.UTA_InstanceCreationError,

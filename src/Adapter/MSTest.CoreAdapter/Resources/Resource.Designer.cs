@@ -567,7 +567,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}.
+        ///   Looks up a localized string similar to Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}.
         /// </summary>
         internal static string UTA_ExecuteThrewException {
             get {
@@ -709,6 +709,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string UTA_TypeLoadError {
             get {
                 return ResourceManager.GetString("UTA_TypeLoadError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The called code threw an exception that was caught, but the exception value was null.
+        /// </summary>
+        internal static string UTA_UserCodeThrewNullValueException {
+            get {
+                return ResourceManager.GetString("UTA_UserCodeThrewNullValueException", resourceCulture);
             }
         }
         
