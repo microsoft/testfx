@@ -415,8 +415,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 return new[]
                 {
-                    new UTF.TestResult() { 
-                        TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex?.Message, ex?.StackTrace), ex) }
+                    new UTF.TestResult()
+                    {
+                        TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex?.Message, ex?.StackTrace), ex)
+                    }
                 };
             }
         }

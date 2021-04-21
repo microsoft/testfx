@@ -201,10 +201,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             testElement.Ignored = this.reflectHelper.IsAttributeDefined(method, typeof(IgnoreAttribute), false);
 
             // Get Deployment items if any.
-            testElement.DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(
-                method,
-                this.type,
-                warnings);
+            testElement.DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, this.type, warnings);
 
             // get DisplayName from TestMethodAttribute
             var testMethodAttribute = this.reflectHelper.GetCustomAttribute(method, typeof(TestMethodAttribute)) as TestMethodAttribute;

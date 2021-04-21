@@ -4,9 +4,12 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 {
     using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Reflection;
 
+    using Microsoft.TestPlatform.AdapterUtilities;
     using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 
     using MSTestAdapter.PlatformServices.Interface.ObjectModel;
@@ -17,18 +20,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     [Serializable]
     public sealed class TestMethod : ITestMethod
     {
+        /// <summary>
+        /// Number of elements in <see cref="Hierarchy"/>.
+        /// </summary>
+        public const int TotalHierarchyLevels = HierarchyConstants.Levels.TotalLevelCount;
+
         #region Fields
-
-        /// <summary>
-        /// Member field for the property 'DeclaringClassFullName'
-        /// </summary>
+        private IReadOnlyCollection<string> hierarchy;
         private string declaringClassFullName = null;
-
-        /// <summary>
-        /// Member field for the property 'DeclaringAssemblyName'
-        /// </summary>
         private string declaringAssemblyName = null;
-
         #endregion
 
         public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
@@ -45,6 +45,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             this.FullClassName = fullClassName;
             this.AssemblyName = assemblyName;
             this.IsAsync = isAsync;
+
+            var hierarchy = new string[HierarchyConstants.Levels.TotalLevelCount];
+            hierarchy[HierarchyConstants.Levels.NamespaceIndex] = fullClassName;
+            hierarchy[HierarchyConstants.Levels.ClassIndex] = name;
+
+            this.hierarchy = new ReadOnlyCollection<string>(hierarchy);
         }
 
         internal TestMethod(MethodBase method, string name, string fullClassName, string assemblyName, bool isAsync)
@@ -55,23 +61,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 throw new ArgumentNullException(nameof(method));
             }
 
-            ManagedNameHelper.GetManagedName(method, out var managedType, out var managedMethod);
+            ManagedNameHelper.GetManagedName(method, out var managedType, out var managedMethod, out var hierarchyValues);
             this.ManagedTypeName = managedType;
             this.ManagedMethodName = managedMethod;
+            this.hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
         }
 
-        internal TestMethod(string managedTypeName, string managedMethodName, string name, string fullClassName, string assemblyName, bool isAsync)
+        internal TestMethod(string managedTypeName, string managedMethodName, string[] hierarchyValues, string name, string fullClassName, string assemblyName, bool isAsync)
             : this(name, fullClassName, assemblyName, isAsync)
         {
             this.ManagedTypeName = managedTypeName;
             this.ManagedMethodName = managedMethodName;
+            this.hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
         }
 
         /// <inheritdoc />
-        public string Name { get; private set; }
+        public string Name { get; }
 
         /// <inheritdoc />
-        public string FullClassName { get; private set; }
+        public string FullClassName { get; }
 
         /// <summary>
         /// Gets or sets the declaring assembly full name. This will be used while getting navigation data.
@@ -127,6 +135,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <inheritdoc />
         public bool HasManagedMethodAndTypeProperties => !string.IsNullOrWhiteSpace(this.ManagedTypeName) && !string.IsNullOrWhiteSpace(this.ManagedMethodName);
 
+        /// <inheritdoc />
+        public IReadOnlyCollection<string> Hierarchy => this.hierarchy;
+
         /// <summary>
         /// Gets or sets type of dynamic data if any
         /// </summary>
@@ -136,6 +147,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// Gets or sets indices of dynamic data
         /// </summary>
         internal object[] Data { get; set; }
+
+        /// <summary>
+        /// Gets or sets the test group set during discovery
+        /// </summary>
+        internal string TestGroup { get; set; }
 
         /// <summary>
         /// Gets or sets the display name set during discovery

@@ -8,10 +8,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     using System.Diagnostics;
     using System.Globalization;
     using System.IO;
+    using System.Linq;
 
+    using Microsoft.TestPlatform.AdapterUtilities;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
     /// <summary>
     /// The unit test element.
@@ -143,6 +144,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
                 testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
             }
 
+            var hierarchy = this.TestMethod.Hierarchy;
+            if (hierarchy != null && hierarchy.Count > 0)
+            {
+                testCase.SetHierarchy(hierarchy.ToArray());
+            }
+
             // Set declaring type if present so the correct method info can be retrieved
             if (this.TestMethod.DeclaringClassFullName != null)
             {
@@ -222,25 +229,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             {
             }
 
-            var testFullId = new System.Text.StringBuilder();
-            testFullId.Append(testCase.ExecutorUri?.ToString());
-            testFullId.Append(fileName);
+            var idProvider = new TestIdProvider();
+            idProvider.AppendString(testCase.ExecutorUri?.ToString());
+            idProvider.AppendString(fileName);
             if (this.TestMethod.HasManagedMethodAndTypeProperties)
             {
-                testFullId.Append(this.TestMethod.ManagedTypeName);
-                testFullId.Append(this.TestMethod.ManagedMethodName);
+                idProvider.AppendString(this.TestMethod.ManagedTypeName);
+                idProvider.AppendString(this.TestMethod.ManagedMethodName);
             }
             else
             {
-                testFullId.Append(testCase.FullyQualifiedName);
+                idProvider.AppendString(testCase.FullyQualifiedName);
             }
 
             if (this.TestMethod.DataType != DynamicDataType.None)
             {
-                testFullId.Append(testCase.DisplayName);
+                idProvider.AppendString(testCase.DisplayName);
             }
 
-            testCase.Id = EqtHash.GuidFromString(testFullId.ToString());
+            testCase.Id = idProvider.GetId();
 
             return testCase;
         }

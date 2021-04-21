@@ -3,6 +3,8 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel
 {
+    using System.Collections.Generic;
+
     /// <summary>
     /// TestMethod structure that is shared between adapter and platform services only.
     /// </summary>
@@ -55,5 +57,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         /// Gets a value indicating whether both <see cref="ManagedTypeName"/> and <see cref="ManagedMethodName"/> are not null or whitespace.
         /// </summary>
         bool HasManagedMethodAndTypeProperties { get; }
+
+        /// <summary>
+        /// Gets the test case hierarchy parsed by the adapter.
+        /// </summary>
+        /// <remarks>
+        /// Contains four items in order: Namespace, class name, test group, display name.
+        /// </remarks>
+        IReadOnlyCollection<string> Hierarchy { get; }
     }
 }

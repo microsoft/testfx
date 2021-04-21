@@ -37,6 +37,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             attributes: TestPropertyAttributes.Hidden,
             owner: typeof(TestCase));
 
+        internal static readonly TestProperty HierarchyProperty = TestProperty.Register(
+            id: HierarchyConstants.HierarchyPropertyId,
+            label: HierarchyConstants.HierarchyLabel,
+            category: string.Empty,
+            description: string.Empty,
+            valueType: typeof(string[]),
+            validateValueCallback: null,
+            attributes: TestPropertyAttributes.Immutable,
+            owner: typeof(TestCase));
+
         /// <summary>
         /// The to unit test element.
         /// </summary>
@@ -59,7 +69,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             TestMethod testMethod;
             if (testCase.ContainsManagedMethodAndType())
             {
-                testMethod = new TestMethod(testCase.GetManagedType(), testCase.GetManagedMethod(), name, testClassName, source, isAsync);
+                testMethod = new TestMethod(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName, source, isAsync);
             }
             else
             {
@@ -139,5 +149,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         internal static void SetManagedMethod(this TestCase testCase, string value) => testCase.SetPropertyValue<string>(ManagedMethodProperty, value);
 
         internal static bool ContainsManagedMethodAndType(this TestCase testCase) => !string.IsNullOrWhiteSpace(testCase.GetManagedMethod()) && !string.IsNullOrWhiteSpace(testCase.GetManagedType());
+
+        internal static string[] GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
+
+        internal static void SetHierarchy(this TestCase testCase, params string[] value) => testCase.SetPropertyValue<string[]>(HierarchyProperty, value);
     }
 }
