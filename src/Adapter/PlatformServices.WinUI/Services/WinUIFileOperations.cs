@@ -108,7 +108,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </returns>
         public string GetFullFilePath(string assemblyFileName)
         {
-            return (SafeInvoke<string>(() => Path.GetFullPath(assemblyFileName)) as string) ?? assemblyFileName;
+            return (SafeInvoke<string>(() => Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, assemblyFileName)) as string) ?? assemblyFileName;
         }
 
         private static object SafeInvoke<T>(Func<T> action, string messageFormatOnException = null)
