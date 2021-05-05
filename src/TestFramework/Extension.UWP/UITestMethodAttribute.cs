@@ -25,7 +25,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
         public override TestResult[] Execute(ITestMethod testMethod)
         {
             var attrib = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
-            if (attrib.Length > 0)
+            if (attrib != null && attrib.Length > 0)
             {
                 throw new NotSupportedException(FrameworkMessages.AsyncUITestMethodNotSupported);
             }
