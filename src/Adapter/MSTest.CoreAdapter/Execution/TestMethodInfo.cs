@@ -93,7 +93,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
-            where TAttributeType : Attribute => ReflectHelper.GetAttributes<TAttributeType>(this.TestMethod, inherit);
+            where TAttributeType : Attribute
+            => ReflectHelper.GetAttributes<TAttributeType>(this.TestMethod, inherit)
+            ?? EmptyHolder<TAttributeType>.Array;
 
         /// <summary>
         /// Execute test method. Capture failures, handle async and return result.
@@ -783,6 +785,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 TestResult timeoutResult = new TestResult() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };
                 return timeoutResult;
             }
+        }
+
+        private static class EmptyHolder<T>
+        {
+            internal static readonly T[] Array = new T[0];
         }
     }
 }
