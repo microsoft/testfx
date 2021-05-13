@@ -183,7 +183,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     var filesToDeploy = new List<string>(1);
                     filesToDeploy.Add(deploymentItemFile);
 
-                    // Find dependencies of test deployment items and deploy them at the same time as master file.
+                    // Find dependencies of test deployment items and deploy them at the same time as the main file.
                     if (deploymentItem.OriginType == DeploymentItemOriginType.PerTestDeployment &&
                         this.AssemblyUtility.IsAssemblyExtension(Path.GetExtension(deploymentItemFile)))
                     {
