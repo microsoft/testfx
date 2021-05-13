@@ -99,7 +99,7 @@ $issues = $log | ForEach-Object {
 
 $output = @"
 
-See release notes [here](https://github.com/microsoft/testfx-docs/blob/master/docs/releases.md#$(("$v $date" -replace "\.", "" -replace "\W", "-").ToLowerInvariant())).
+See release notes [here](https://github.com/microsoft/testfx-docs/blob/main/docs/releases.md#$(("$v $date" -replace "\.", "" -replace "\W", "-").ToLowerInvariant())).
 
 ---
 
