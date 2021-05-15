@@ -33,7 +33,7 @@ function Verify-NugetPackages
     $artifactsDirectory = Join-Path $rootDirectory "artifacts"
     $artifactsConfigDirectory = Join-Path $artifactsDirectory $TPB_Configuration
     $packagesDirectory = Join-Path $artifactsConfigDirectory "MSTestPackages"
-    Get-ChildItem -Filter *.nupkg  $packagesDirectory | % {
+    Get-ChildItem -Filter *.nupkg  $packagesDirectory | ForEach-Object {
         & $nugetInstallPath verify -signature -CertificateFingerprint "3F9001EA83C560D712C24CF213C3D312CB3BFF51EE89435D3430BD06B5D0EECE;AA12DA22A49BCE7D5C1AE64CC1F3D892F150DA76140F210ABD2CBFFCA2C18A27;" $_.FullName
     }
     

@@ -119,6 +119,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Portable.Unit.Tests", "test\UnitTests\PlatformServices.Portable.Unit.Tests\PlatformServices.Portable.Unit.Tests.csproj", "{E3C630FE-AF89-4C95-B1B9-2409B1107208}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Universal.Unit.Tests", "test\UnitTests\PlatformServices.Universal.Unit.Tests\PlatformServices.Universal.Unit.Tests.csproj", "{FA7C719F-A400-45AF-8091-7C23435617A8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DF131865-84EE-4540-8112-E88ACEBDEA09} = {DF131865-84EE-4540-8112-E88ACEBDEA09}
+		{5D153CAA-80C2-4551-9549-6C406FCEEFB1} = {5D153CAA-80C2-4551-9549-6C406FCEEFB1}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Core.Unit.Tests", "test\UnitTests\MSTest.Core.Unit.Tests\MSTest.Core.Unit.Tests.csproj", "{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2}"
 EndProject

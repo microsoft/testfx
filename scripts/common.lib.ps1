@@ -3,26 +3,39 @@
 
 # Common utilities for building solution and running tests
 
+$TF_ROOT_DIR = (Get-Item (Split-Path $MyInvocation.MyCommand.Path)).Parent.FullName
+$TF_VERSIONS_FILE = "$TF_ROOT_DIR\scripts\build\TestFx.Versions.targets"
+$TF_OUT_DIR = Join-Path $TF_ROOT_DIR "artifacts"
+$TF_SRC_DIR = Join-Path $TF_ROOT_DIR "src"
+$TF_TEST_DIR = Join-Path $TF_ROOT_DIR "test"
+$TF_PACKAGES_DIR = Join-Path $TF_ROOT_DIR "packages"
+$TF_TOOLS_DIR = Join-Path $TF_ROOT_DIR "tools"
+
+function Get-PackageVersion ([string]$PackageName) {
+  $packages = ([XML](Get-Content $TF_VERSIONS_FILE)).Project.PropertyGroup
+  
+  return $packages[$PackageName].InnerText;
+}
+
 #
 # Global Variables
 #
-$global:msbuildVersion = "15.0"
-$global:nugetVersion = "5.8.1"
-$global:vswhereVersion = "2.0.2"
-$global:nugetUrl = "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/NuGet.exe"
+$global:nugetVersion = Get-PackageVersion -PackageName "NuGetFrameworksVersion"
+$global:vswhereVersion = Get-PackageVersion -PackageName "VsWhereVersion"
 
 #
 # Global Environment Variables
 #
-$env:TF_ROOT_DIR = (Get-Item (Split-Path $MyInvocation.MyCommand.Path)).Parent.FullName
-$env:TF_OUT_DIR = Join-Path $env:TF_ROOT_DIR "artifacts"
-$env:TF_SRC_DIR = Join-Path $env:TF_ROOT_DIR "src"
-$env:TF_TEST_DIR = Join-Path $env:TF_ROOT_DIR "test"
-$env:TF_PACKAGES_DIR = Join-Path $env:TF_ROOT_DIR "packages"
+$env:TF_ROOT_DIR = $TF_ROOT_DIR
+$env:TF_OUT_DIR = $TF_OUT_DIR 
+$env:TF_SRC_DIR = $TF_SRC_DIR
+$env:TF_TEST_DIR = $TF_TEST_DIR
+$env:TF_PACKAGES_DIR = $TF_PACKAGES_DIR
+$env:TF_TOOLS_DIR = $TF_TOOLS_DIR
+$env:DOTNET_CLI_VERSION = "6.0.100-alpha.1.21067.8"
 
-$TF_VERSIONS_FILE = "$PSScriptRoot\build\TestFx.Versions.targets"
 if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
-  $TestPlatformVersion = (([XML](Get-Content $TF_VERSIONS_FILE)).Project.PropertyGroup.TestPlatformVersion).InnerText
+  $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNetTestSdkVersion"
 }
 
 function Create-Directory([string[]] $path) {
@@ -50,7 +63,7 @@ function Locate-MSBuild($hasVsixExtension = "false") {
   $msbuild = Join-Path -path $msbuildPath -childPath "MSBuild.exe"
 
   if (!(Test-Path -path $msbuild)) {
-    throw "The specified MSBuild version ($msbuildVersion) could not be located."
+    throw "The specified MSBuild could not be located."
   }
 
   return Resolve-Path -path $msbuild
@@ -66,7 +79,7 @@ function Locate-MSBuildPath($hasVsixExtension = "false") {
   }
   catch {
     # Resolve-Path throws if the path does not exist, so use the VS2017 path as a fallback
-    $msbuildPath = Join-Path -path $vsInstallPath -childPath "MSBuild\$msbuildVersion\Bin"
+    $msbuildPath = Join-Path -path $vsInstallPath -childPath "MSBuild\15.0\Bin"
     $msbuildPath = Resolve-Path $msbuildPath
   }
 
@@ -74,7 +87,7 @@ function Locate-MSBuildPath($hasVsixExtension = "false") {
 }
 
 function Locate-NuGet {
-  $rootPath = $env:TF_ROOT_DIR
+  $rootPath = $env:TF_PACKAGES_DIR
   $nuget = Join-Path -path $rootPath -childPath "nuget.exe"
 
   if (Test-Path -path $nuget) {
@@ -88,7 +101,8 @@ function Locate-NuGet {
     Remove-Item -path $nuget | Out-Null
   }
 
-  Download-File -address $nugetUrl -fileName $nuget
+  New-Item $rootPath -ItemType Directory | Out-Null
+  Download-File -address "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/NuGet.exe" -fileName $nuget
 
   if (!(Test-Path -path $nuget)) {
     throw "The specified NuGet version ($nugetVersion) could not be downloaded."
@@ -105,7 +119,7 @@ function Locate-NuGetConfig {
 
 function Locate-Toolset {
   $rootPath = $env:TF_ROOT_DIR
-  $toolset = Join-Path -path $rootPath -childPath "scripts\Toolset\packages.config"
+  $toolset = Join-Path -path $rootPath -childPath "scripts\Toolset\tools.proj"
   return Resolve-Path -path $toolset
 }
 
@@ -120,7 +134,7 @@ function Locate-PackagesPath {
 function Locate-VsWhere {
   $packagesPath = Locate-PackagesPath 
 
-  $vswhere = Join-Path -path $packagesPath -childPath "vswhere.$vswhereVersion\tools\vswhere.exe"
+  $vswhere = Join-Path -path $packagesPath -childPath "vswhere\$vswhereVersion\tools\vswhere.exe"
 
   Write-Verbose "vswhere location is : $vswhere"
   return $vswhere
@@ -162,6 +176,14 @@ function Locate-Item([string] $relativePath) {
   return Resolve-Path -path $itemPath
 }
 
+function Get-VSTestPath
+{
+    $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNetTestSdkVersion"
+    $vstestPath = Join-Path -path (Locate-PackagesPath) "Microsoft.TestPlatform\$TestPlatformVersion\tools\net451\Common7\IDE\Extensions\TestPlatform\vstest.console.exe"
+
+    return Resolve-Path -path $vstestPath
+}
+
 function Start-Timer {
   return [System.Diagnostics.Stopwatch]::StartNew()
 }
@@ -178,6 +200,34 @@ function Write-Log ([string] $message, $messageColor = "Green") {
     Write-Output "... $message"
   }
   $Host.UI.RawUI.ForegroundColor = $currentColor
+}
+
+function Replace-InFile($File, $RegEx, $ReplaceWith) {
+  $content = Get-Content -Raw -Encoding utf8 $File 
+  $newContent = ($content -replace $RegEx, $ReplaceWith)
+  if (-not $content.Equals($newContent)) {
+    Write-Log "Updating TestPlatform version in $File"
+    $newContent | Set-Content -Encoding utf8 $File -NoNewline
+  }
+}
+
+function Sync-PackageVersions {
+  $versionsRegex = '(?mi)<(MicrosoftNetTestSdkVersion.*?)>(.*?)<\/MicrosoftNetTestSdkVersion>'
+  $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform([0-9a-z.]+)?" version="([0-9a-z.-]*)"'
+  $sourceRegex = '(?mi)(.+[a-z =]+\@?\")Microsoft\.TestPlatform\\([0-9.-a-z]+)\";'
+
+  if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
+    $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNetTestSdkVersion"
+  }
+  else {
+    Replace-InFile -File $TF_VERSIONS_FILE -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</MicrosoftNetTestSdkVersion>"
+  }
+
+  (Get-ChildItem "$PSScriptRoot\..\src\*packages.config", "$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
+    Replace-InFile -File $_ -RegEx $packageRegex -ReplaceWith ('<package id="Microsoft.TestPlatform$1" version="{0}"' -f $TestPlatformVersion)
+  }
+
+  Replace-InFile -File "$PSScriptRoot\..\test\E2ETests\Automation.CLI\CLITestBase.common.cs" -RegEx $sourceRegex -ReplaceWith ('$1Microsoft.TestPlatform\{0}";' -f $TestPlatformVersion)
 }
 
 function Install-DotNetCli {

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\</TestFxRoot>
   </PropertyGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
   <PropertyGroup>
@@ -29,35 +29,12 @@
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Microsoft.TestPlatform.CoreUtilities, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.$(TestPlatformVersion)\lib\net45\Microsoft.TestPlatform.CoreUtilities.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.TestPlatform.PlatformAbstractions, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.$(TestPlatformVersion)\lib\net45\Microsoft.TestPlatform.PlatformAbstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.$(TestPlatformVersion)\lib\net45\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
-    </Reference>
-    <Reference Include="NuGet.Frameworks, Version=5.0.0.6, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\NuGet.Frameworks.5.0.0\lib\net40\NuGet.Frameworks.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\System.Collections.Immutable.1.5.0\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
-    </Reference>
     <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.ComponentModel.Primitives, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\System.ComponentModel.Primitives.4.3.0\lib\net45\System.ComponentModel.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ComponentModel.TypeConverter, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\System.ComponentModel.TypeConverter.4.3.0\lib\net45\System.ComponentModel.TypeConverter.dll</HintPath>
-    </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Reflection.Metadata, Version=1.4.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\System.Reflection.Metadata.1.6.0\lib\portable-net45+win8\System.Reflection.Metadata.dll</HintPath>
-    </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -65,45 +42,78 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+
+    <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
+      <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
+      <Name>PlatformServices.Interface</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Desktop\Extension.Desktop.csproj">
+      <Project>{a7ea583b-a2b0-47da-a058-458f247c7575}</Project>
+      <Name>Extension.Desktop</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
+      <Project>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</Project>
+      <Name>MSTest.Core</Name>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs">
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNetTestSdkVersion)" />
+    <PackageReference Include="System.ComponentModel.EventBasedAsync" Version="$(SystemComponentModelEventBasedAsyncVersion)" />
+    <PackageReference Include="System.ComponentModel.TypeConverter" Version="$(SystemComponentModelTypeConverterVersion)" />
+    <PackageReference Include="System.Runtime" Version="$(SystemRuntimeVersion)" />
+    <PackageReference Include="System.Runtime.Serialization.Json" Version="$(SystemRuntimeSerializationJsonVersion)" />
+    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="$(SystemRuntimeSerializationPrimitivesVersion)" />
+
+    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs">
       <Link>ns10RecursiveDirectoryPath.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs">
       <Link>Services\ns10MSTestSettingsProvider.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextPropertyStrings.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextPropertyStrings.cs">
       <Link>Services\ns10TestContextPropertyStrings.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Utilities\ns10Validate.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Utilities\ns10Validate.cs">
       <Link>Utilities\ns10Validate.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Extensions\ns13ExceptionExtensions.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Extensions\ns13ExceptionExtensions.cs">
       <Link>Extensions\ns13ExceptionExtensions.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\ns13DeploymentItem.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\ns13DeploymentItem.cs">
       <Link>Deployment\ns13DeploymentItem.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
       <Link>Resources\Resource.Designer.cs</Link>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13MSTestAdapterSettings.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13MSTestAdapterSettings.cs">
       <Link>Services\ns13MSTestAdapterSettings.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TestDeployment.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TestDeployment.cs">
       <Link>Services\ns13TestDeployment.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentItemUtility.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentItemUtility.cs">
       <Link>Utilities\ns13DeploymentItemUtility.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentUtilityBase.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentUtilityBase.cs">
       <Link>Utilities\ns13DeploymentUtilityBase.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs">
       <Link>Utilities\ns13FileUtility.cs</Link>
     </Compile>
     <Compile Include="AssemblyResolver.cs" />
@@ -122,10 +132,10 @@
     <Compile Include="Utilities\AppDomainWrapper.cs" />
     <Compile Include="Utilities\IAppDomain.cs" />
     <Compile Include="Utilities\SequentialIntPermutation.cs" />
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs">
       <Link>Services\ns13TraceListener.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListenerManager.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListenerManager.cs">
       <Link>Services\ns13TraceListenerManager.cs</Link>
     </Compile>
     <Compile Include="Services\DesktopAdapterTraceLogger.cs" />
@@ -145,30 +155,11 @@
     <Compile Include="Utilities\DesktopReflectionUtility.cs" />
     <Compile Include="Utilities\VSInstallationUtilities.cs" />
     <Compile Include="Utilities\XmlUtilities.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\TestFramework\Extension.Desktop\Extension.Desktop.csproj">
-      <Project>{a7ea583b-a2b0-47da-a058-458f247c7575}</Project>
-      <Name>Extension.Desktop</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj">
-      <Project>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</Project>
-      <Name>MSTest.Core</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\PlatformServices.Interface\PlatformServices.Interface.csproj">
-      <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
-      <Name>PlatformServices.Interface</Name>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
+
     <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\PlatformServices.Shared\netstandard1.3\Resources\Resource.resx">
+    <EmbeddedResource Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.resx">
       <Link>Resources\Resource.resx</Link>
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
@@ -176,6 +167,5 @@
       <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>
