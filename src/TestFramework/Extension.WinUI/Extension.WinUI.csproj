@@ -18,22 +18,22 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\</TestFxRoot>
     <FrameworkIdentifier>NetCore</FrameworkIdentifier>
   </PropertyGroup>
 
-  <Import Project="..\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ProjectReunion" Version="$(MicrosoftProjectReunionVersion)" />
+  </ItemGroup>
+
+  <Import Project="$(TestFxRoot)src\TestFramework\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
   <ItemGroup>
-    <Compile Include="..\Extension.UWP\DeploymentItemAttribute.cs" Link="DeploymentItemAttribute.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.ProjectReunion" Version="0.5.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\MSTest.Core\MSTest.Core.csproj" />
+    <Compile Include="$(TestFxRoot)src\TestFramework\Extension.UWP\DeploymentItemAttribute.cs" Link="DeploymentItemAttribute.cs" />
   </ItemGroup>
   
   <PropertyGroup>

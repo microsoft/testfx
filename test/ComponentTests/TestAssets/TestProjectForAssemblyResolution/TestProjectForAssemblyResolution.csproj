@@ -1,7 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
+    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\..\</TestFxRoot>
   </PropertyGroup>
+
+  <Import Project="$(TestFxRoot)scripts\build\TestFx.Versions.targets" />
   
   <PropertyGroup>
     <TargetFramework>net452</TargetFramework>
@@ -14,8 +16,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="1.2.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Legacy__MicrosoftNetTestSdkVersion)" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(Legacy__MSTestTestAdapterVersion)" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(Legacy__MSTestTestFrameworkVersion)" />
   </ItemGroup>
 </Project>

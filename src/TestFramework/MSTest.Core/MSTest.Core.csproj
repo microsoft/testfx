@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\</TestFxRoot>
   </PropertyGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
   <PropertyGroup>
@@ -34,6 +34,16 @@
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.XML</DocumentationFile>
     <LocDocumentationSubPath>Core</LocDocumentationSubPath>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="Attributes\DoNotParallelizeAttribute.cs" />
     <Compile Include="Attributes\DynamicDataAttribute.cs" />
@@ -69,9 +79,7 @@
     <Compile Include="Internal\UtfHelper.cs" />
     <Compile Include="Attributes\VSTestAttributes.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
+  
   <ItemGroup>
     <EmbeddedResource Include="Resources\FrameworkMessages.resx">
       <Generator>ResXFileCodeGenerator</Generator>

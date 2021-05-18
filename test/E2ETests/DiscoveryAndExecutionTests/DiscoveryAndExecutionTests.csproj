@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\</TestFxRoot>
     <IncludeMicrosoftCommon>false</IncludeMicrosoftCommon>
-    <SourcePath>$(TestFxRoot)artifacts\$(Configuration)\</SourcePath>
+    <ArtifactsPath>$(TestFxRoot)artifacts\$(Configuration)\</ArtifactsPath>
   </PropertyGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
 
@@ -24,33 +24,33 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(TestPlatformVersion)" />
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(TestPlatformVersion)" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatformVersion)" />
-    <PackageReference Include="System.ValueTuple" Version="4.3.0" />
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNetTestSdkVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNetTestSdkVersion)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNetTestSdkVersion)" />
+    <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
 
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter">
-      <HintPath>$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
+      <HintPath>$(ArtifactsPath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
     </Reference>
 
     <Reference Include="System.Collections.Concurrent">
-      <HintPath>$(SourcePath)MSTest.CoreAdapter\System.Collections.Concurrent.dll</HintPath>
+      <HintPath>$(ArtifactsPath)MSTest.CoreAdapter\System.Collections.Concurrent.dll</HintPath>
     </Reference>
 
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices">
-      <HintPath>$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
+      <HintPath>$(ArtifactsPath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
     </Reference>
     
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface">
-      <HintPath>$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll</HintPath>
+      <HintPath>$(ArtifactsPath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll</HintPath>
     </Reference>
     
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework">
-      <HintPath>$(SourcePath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
+      <HintPath>$(ArtifactsPath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
     </Reference>
     
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions">
-      <HintPath>$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+      <HintPath>$(ArtifactsPath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
     </Reference>
   </ItemGroup>
   

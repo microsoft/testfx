@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
+    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\..\</TestFxRoot>
   </PropertyGroup>
 
   <PropertyGroup>

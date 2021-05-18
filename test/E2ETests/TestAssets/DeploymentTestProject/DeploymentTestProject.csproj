@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
-    <DependencyCopyBehavior Condition="$(DependencyCopyBehavior) == ''">Never</DependencyCopyBehavior>
+    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\..\</TestFxRoot>
+    <DependencyCopyBehavior Condition=" '$(DependencyCopyBehavior)' == '' ">Never</DependencyCopyBehavior>
   </PropertyGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Versions.targets" />
 
@@ -13,12 +13,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestPlatformVersion)" />
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" />
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" />
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNetTestSdkVersion)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,10 +37,10 @@
     </None>
   </ItemGroup>
 
-  <Target Name="CleanWithPreserveNewest" AfterTargets="Clean" Condition="$(DependencyCopyBehavior) == 'Never'">
+  <Target Name="CleanWithPreserveNewest" AfterTargets="Clean" Condition=" '$(DependencyCopyBehavior)' == 'Never' ">
     <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Clean" Properties="DependencyCopyBehavior=PreserveNewest" />
   </Target>
-  <Target Name="BuildWithPreserveNewest" AfterTargets="Rebuild;Build" Condition="$(DependencyCopyBehavior) == 'Never'">
+  <Target Name="BuildWithPreserveNewest" AfterTargets="Rebuild;Build" Condition=" '$(DependencyCopyBehavior)' == 'Never' ">
     <MSBuild Projects="$(MSBuildProjectFullPath)" Properties="DependencyCopyBehavior=PreserveNewest" />
   </Target>
 </Project>

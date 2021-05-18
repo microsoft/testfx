@@ -82,22 +82,6 @@ $TFB_Solutions = @(
   "TestFx.sln"
 )
 
-$TFB_NetCoreProjects = @(
-  "src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj"
-
-  "test\ComponentTests\TestAssets\TestProjectForAssemblyResolution\TestProjectForAssemblyResolution.csproj"
-  "test\E2ETests\TestAssets\CompatTestProject\CompatTestProject.csproj"
-  "test\E2ETests\TestAssets\DataRowTestProject\DataRowTestProject.csproj"
-  "test\E2ETests\TestAssets\DataSourceTestProject\DataSourceTestProject.csproj"
-  "test\E2ETests\TestAssets\DeploymentTestProject\DeploymentTestProject.csproj"
-  "test\E2ETests\TestAssets\DeploymentTestProjectNetCore\DeploymentTestProjectNetCore.csproj"
-  "test\E2ETests\TestAssets\DoNotParallelizeTestProject\DoNotParallelizeTestProject.csproj"
-  "test\E2ETests\TestAssets\FSharpTestProject\FSharpTestProject.fsproj"
-  "test\E2ETests\TestAssets\TimeoutTestProject\TimeoutTestProject.csproj"
-  "test\E2ETests\TestAssets\TimeoutTestProjectNetCore\TimeoutTestProjectNetCore.csproj"
-  "test\UnitTests\PlatformServices.NetCore.Unit.Tests\PlatformServices.NetCore.Unit.Tests.csproj"
-)
-
 #
 # Script Preferences
 #
@@ -154,13 +138,13 @@ function Perform-Restore {
   $toolset = Locate-Toolset
   
   if ($TFB_ClearPackageCache) {
-    Write-Log "    Clearing local package cache..."
+    Write-Log "Clearing local package cache..."
     & $nuget locals all -clear
   }
 
-  Write-Log "    Starting toolset restore..."
-  Write-Verbose "$nuget restore -msbuildVersion $msbuildVersion -verbosity normal -nonInteractive -configFile $nugetConfig $toolset"
-  & $nuget restore -msbuildVersion $msbuildVersion -verbosity normal -nonInteractive -configFile $nugetConfig $toolset
+  Write-Log "Starting toolset restore..."
+  Write-Verbose "$nuget restore -verbosity normal -nonInteractive -configFile $nugetConfig $toolset"
+  & $nuget restore -verbosity normal -nonInteractive -configFile $nugetConfig $toolset
   
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
@@ -168,27 +152,18 @@ function Perform-Restore {
 
   Write-Verbose "Locating MSBuild install path..."
   $msbuildPath = Locate-MSBuildPath 
+  Write-Verbose "MSBuild install path: $msbuildPath"
 
   Write-Verbose "Starting solution restore..."
   foreach ($solution in $TFB_Solutions) {
     $solutionPath = Locate-Item -relativePath $solution
 
-    Write-Verbose "$nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath"
-    & $nuget restore -msbuildPath $msbuildPath -verbosity quiet -nonInteractive -configFile $nugetConfig $solutionPath
+    Write-Verbose "$nuget restore -msbuildPath $msbuildPath -verbosity normal -nonInteractive -configFile $nugetConfig $solutionPath"
+    & $nuget restore -msbuildPath $msbuildPath -verbosity normal -nonInteractive -configFile $nugetConfig $solutionPath
   }
 
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
-  }
-  
-  $msbuild = Join-Path $msbuildPath "MSBuild.exe"
-  
-  Write-Verbose "Starting restore for NetCore Projects"
-  foreach ($project in $TFB_NetCoreProjects) {
-    $projectPath = Locate-Item -relativePath $project
-
-    Write-Verbose "$msbuild /t:restore -verbosity:minimal $projectPath /m"
-    & $msbuild /t:restore -verbosity:minimal $projectPath /m
   }
   
   if ($lastExitCode -ne 0) {
@@ -298,34 +273,6 @@ function Create-NugetPackages {
   }
 
   Write-Log "Create-NugetPackages: Complete. {$(Get-ElapsedTime($timer))}"
-}
-
-function Replace-InFile($File, $RegEx, $ReplaceWith) {
-  $content = Get-Content -Raw -Encoding utf8 $File 
-  $newContent = ($content -replace $RegEx, $ReplaceWith)
-  if (-not $content.Equals($newContent)) {
-    Write-Log "Updating TestPlatform version in $File"
-    $newContent | Set-Content -Encoding utf8 $File -NoNewline
-  }
-}
-
-function Sync-PackageVersions {
-  $versionsRegex = '(?mi)<(TestPlatformVersion.*?)>(.*?)<\/TestPlatformVersion>'
-  $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform([0-9a-z.]+)?" version="([0-9a-z.-]*)"'
-  $sourceRegex = '(?mi)(.+[a-z =]+\@?\")Microsoft\.TestPlatform\.([0-9.-a-z]+)\";'
-
-  if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
-    $TestPlatformVersion = (([XML](Get-Content $TF_VERSIONS_FILE)).Project.PropertyGroup.TestPlatformVersion).InnerText
-  }
-  else {
-    Replace-InFile -File $TF_VERSIONS_FILE -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</TestPlatformVersion>"
-  }
-
-  (Get-ChildItem "$PSScriptRoot\..\src\*packages.config", "$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
-    Replace-InFile -File $_ -RegEx $packageRegex -ReplaceWith ('<package id="Microsoft.TestPlatform$1" version="{0}"' -f $TestPlatformVersion)
-  }
-
-  Replace-InFile -File "$PSScriptRoot\..\test\E2ETests\Automation.CLI\CLITestBase.common.cs" -RegEx $sourceRegex -ReplaceWith ('$1Microsoft.TestPlatform.{0}";' -f $TestPlatformVersion)
 }
 
 function ShouldRunStep([string[]]$CurrentSteps) {

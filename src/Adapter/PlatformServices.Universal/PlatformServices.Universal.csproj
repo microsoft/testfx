@@ -1,9 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\</TestFxRoot>
   </PropertyGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+
   <PropertyGroup>
     <ProjectGuid>{5D153CAA-80C2-4551-9549-6C406FCEEFB1}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -14,136 +15,108 @@
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
-    <MinimumVisualStudioVersion>15</MinimumVisualStudioVersion>
+    <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
+    <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <NoWarn>;2008</NoWarn>
+    <NoWarn>2008</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+  
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <ResolveAssemblyReferencesSilent>true</ResolveAssemblyReferencesSilent>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <PlatformTarget>$(Platform)</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit Condition=" '$(Platform)' != 'AnyCPU' ">true</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PlatformTarget>$(Platform)</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UAP</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <UseVSHostingProcess Condition=" '$(Platform)' != 'AnyCPU' ">false</UseVSHostingProcess>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
-    <PlatformTarget>ARM</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP</DefineConstants>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>full</DebugType>
-    <PlatformTarget>ARM</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM'">
-    <PlatformTarget>ARM</PlatformTarget>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UAP</DefineConstants>
-    <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>ARM</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <PlatformTarget>x64</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP</DefineConstants>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <PlatformTarget>x64</PlatformTarget>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UAP</DefineConstants>
-    <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DefineConstants>DEBUG;TRACE;NETFX_CORE;WINDOWS_UAP</DefineConstants>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <PlatformTarget>x86</PlatformTarget>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UAP</DefineConstants>
-    <Optimize>true</Optimize>
-    <NoWarn>;2008</NoWarn>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>true</Prefer32Bit>
-  </PropertyGroup>
+
   <ItemGroup>
-    <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <None Include="project.json" />
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
+      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
+      <Name>MSTest.Core</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Core\Extension.Core.csproj">
+      <Project>{6c9fe494-8315-4667-b3f6-75dc62a62319}</Project>
+      <Name>Extension.Core</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
+      <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
+      <Name>PlatformServices.Interface</Name>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Constants.cs">
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNetTestSdkVersion)" />
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="$(MicrosoftNETCoreUniversalWindowsPlatformVersion)" targetFramework="net452" />
+
+    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Constants.cs">
       <Link>Constants.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs">
       <Link>MarshalByRefObject.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs">
       <Link>SerializableAttribute.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs">
       <Link>Services\ns10ReflectionOperations.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs">
       <Link>Services\ns10DiaSessionOperations.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10SettingsProvider.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10SettingsProvider.cs">
       <Link>Services\ns10SettingsProvider.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs">
       <Link>Services\ns10TestContextImplementation.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs">
       <Link>Services\ns10TestDataSource.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestDeployment.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDeployment.cs">
       <Link>Services\ns10TestDeployment.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TestSourceHost.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestSourceHost.cs">
       <Link>Services\ns10TestSourceHost.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs">
       <Link>Services\ns10ThreadOperations.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs">
       <Link>Services\ns10TraceListener.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs">
+    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs">
       <Link>Services\ns10TraceListenerManager.cs</Link>
     </Compile>
     <Compile Include="Friends.cs" />
@@ -152,23 +125,6 @@
     <Compile Include="Services\UniversalTestSource.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="Properties\ProviderService.UAP.rd.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\TestFramework\Extension.Core\Extension.Core.csproj">
-      <Project>{6c9fe494-8315-4667-b3f6-75dc62a62319}</Project>
-      <Name>Extension.Core</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\TestFramework\MSTest.Core\MSTest.Core.csproj">
-      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
-      <Name>MSTest.Core</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\PlatformServices.Interface\PlatformServices.Interface.csproj">
-      <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
-      <Name>PlatformServices.Interface</Name>
-      <Private>False</Private>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '15.0' ">
     <VisualStudioVersion>15.0</VisualStudioVersion>

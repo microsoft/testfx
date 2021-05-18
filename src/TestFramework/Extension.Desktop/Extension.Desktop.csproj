@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
+    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\</TestFxRoot>
   </PropertyGroup>
   <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
   <PropertyGroup>
@@ -32,9 +32,7 @@
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
     <LocDocumentationSubPath>Extensions\Desktop</LocDocumentationSubPath>
   </PropertyGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
+
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -45,14 +43,23 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MSTest.Core\MSTest.Core.csproj">
+
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
       <Project>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</Project>
       <Name>MSTest.Core</Name>
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  
   <ItemGroup>
     <Compile Include="Attributes\DeploymentItemAttribute.cs" />
     <Compile Include="ConfigurationSettings\ConfigurationNames.cs" />

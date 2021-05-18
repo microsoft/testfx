@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
+    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\..\</TestFxRoot>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -12,8 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" />
-    <ProjectReference Include="..\..\..\..\src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" />
+    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
