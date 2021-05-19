@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003"> 
   <PropertyGroup>
-    <MicrosoftNetTestSdkVersion Condition=" '$(MicrosoftNetTestSdkVersion)' == '' ">16.10.0-release-20210421-08</MicrosoftNetTestSdkVersion>
+    <MicrosoftNetTestSdkVersion Condition=" '$(MicrosoftNetTestSdkVersion)' == '' ">16.10.0-release-20210429-01</MicrosoftNetTestSdkVersion>
     
     <!-- Toolset -->
     <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
