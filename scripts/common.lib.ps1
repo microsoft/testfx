@@ -4,7 +4,7 @@
 # Common utilities for building solution and running tests
 
 $TF_ROOT_DIR = (Get-Item (Split-Path $MyInvocation.MyCommand.Path)).Parent.FullName
-$TF_VERSIONS_FILE = "$TF_ROOT_DIR\scripts\build\TestFx.Versions.targets"
+$TF_VERSIONS_FILE = "$TF_ROOT_DIR\scripts\build\TestFx.Versions.props"
 $TF_OUT_DIR = Join-Path $TF_ROOT_DIR "artifacts"
 $TF_SRC_DIR = Join-Path $TF_ROOT_DIR "src"
 $TF_TEST_DIR = Join-Path $TF_ROOT_DIR "test"
@@ -87,7 +87,7 @@ function Locate-MSBuildPath($hasVsixExtension = "false") {
 }
 
 function Locate-NuGet {
-  $rootPath = $env:TF_PACKAGES_DIR
+  $rootPath = Join-Path -path $env:TF_PACKAGES_DIR -childPath "toolset"
   $nuget = Join-Path -path $rootPath -childPath "nuget.exe"
 
   if (Test-Path -path $nuget) {
@@ -115,12 +115,6 @@ function Locate-NuGetConfig {
   $rootPath = $env:TF_ROOT_DIR
   $nugetConfig = Join-Path -path $rootPath -childPath "Nuget.config"
   return Resolve-Path -path $nugetConfig
-}
-
-function Locate-Toolset {
-  $rootPath = $env:TF_ROOT_DIR
-  $toolset = Join-Path -path $rootPath -childPath "scripts\Toolset\tools.proj"
-  return Resolve-Path -path $toolset
 }
 
 function Locate-PackagesPath {
@@ -174,6 +168,16 @@ function Locate-Item([string] $relativePath) {
   $rootPath = $env:TF_ROOT_DIR
   $itemPath = Join-Path -path $rootPath -childPath $relativePath
   return Resolve-Path -path $itemPath
+}
+
+function Get-LogsPath {
+  $artifacts = Join-Path -path $TF_OUT_DIR -childPath "logs"
+
+  if (-not (Test-Path $artifacts)) {
+    New-Item -Type Directory -Path $artifacts | Out-Null
+  }
+
+  return $artifacts
 }
 
 function Get-VSTestPath

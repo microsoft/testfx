@@ -2,20 +2,20 @@
 <Project ToolsVersion="12.0" DefaultTargets="SignNugetPackages" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <SignType Condition=" '$(SignType)' == '' ">Test</SignType>
+    <RepoRoot Condition=" '$(RepoRoot)' == '' ">$(MSBuildThisFileDirectory)..\..\..\</RepoRoot>
   </PropertyGroup>
 
   <PropertyGroup>
-    <RootDirectory>$(MSBuildThisFileDirectory)..\..\..\</RootDirectory>
     <BuildConfiguration Condition=" '$(BuildConfiguration)' == '' ">Release</BuildConfiguration>
-    <NugetPkgDirectory Condition=" '$(NugetPkgDirectory)' == '' ">$(RootDirectory)artifacts\$(BuildConfiguration)\MSTestPackages</NugetPkgDirectory>
-    <IntermediatesDirectory Condition=" '$(IntermediatesDirectory)' == '' ">$(RootDirectory)artifacts\obj\$(BuildConfiguration)\MSTestPackages</IntermediatesDirectory>
+    <NugetPkgDirectory Condition=" '$(NugetPkgDirectory)' == '' ">$(RepoRoot)artifacts\$(BuildConfiguration)\MSTestPackages</NugetPkgDirectory>
+    <IntermediatesDirectory Condition=" '$(IntermediatesDirectory)' == '' ">$(RepoRoot)artifacts\obj\$(BuildConfiguration)\MSTestPackages</IntermediatesDirectory>
   </PropertyGroup>
 
-  <Import Project="$(RootDirectory)\scripts\build\TestFx.Versions.targets" />
+  <Import Project="$(RepoRoot)\scripts\build\TestFx.Versions.props" />
 
   <ImportGroup>
-    <Import Project="$(RootDirectory)\packages\Microbuild.Core\$(MicroBuildCoreVersion)\build\Microbuild.Core.props" />
-    <Import Project="$(RootDirectory)\packages\Microbuild.Core\$(MicroBuildCoreVersion)\build\Microbuild.Core.targets" />
+    <Import Project="$(NuGetPackageRoot)\Microbuild.Core\$(MicroBuildCoreVersion)\build\Microbuild.Core.props" />
+    <Import Project="$(NuGetPackageRoot)\Microbuild.Core\$(MicroBuildCoreVersion)\build\Microbuild.Core.targets" />
   </ImportGroup>
 
   <Target Name="SignNugetPackages">

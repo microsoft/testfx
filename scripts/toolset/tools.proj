@@ -7,7 +7,7 @@
     <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true' And Exists('$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets')">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
   </PropertyGroup>
 
-  <Import Project="$(RepoRoot)scripts\build\TestFx.Versions.targets" />
+  <Import Project="$(RepoRoot)scripts\build\TestFx.Versions.props" />
 
   <!-- 
     Prevent NuGet from using cached packages 

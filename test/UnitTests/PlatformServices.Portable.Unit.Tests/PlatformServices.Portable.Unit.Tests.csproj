@@ -1,9 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\</TestFxRoot>
-  </PropertyGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+
   <PropertyGroup>
     <ProjectGuid>{E3C630FE-AF89-4C95-B1B9-2409B1107208}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -41,24 +39,24 @@
       <Aliases>FrameworkV1</Aliases>
     </Reference>
 
-    <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}</Project>
       <Name>PlatformServices.Interface</Name>
     </ProjectReference>
-    <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj">
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj">
       <Project>{58bdd63d-5e58-4d23-bdf5-592e5e03d29d}</Project>
       <Name>PlatformServices.Portable</Name>
     </ProjectReference>
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Core\Extension.Core.csproj">
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj">
       <Project>{6c9fe494-8315-4667-b3f6-75dc62a62319}</Project>
       <Name>Extension.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
       <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
       <Name>MSTest.Core</Name>
       <Aliases>FrameworkV2</Aliases>
     </ProjectReference>
-    <ProjectReference Include="$(TestFxRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj">
+    <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj">
       <Project>{f81c7549-e3a3-4770-ac3f-3bc7356e61e8}</Project>
       <Name>MSTest.CoreAdapter.TestUtilities</Name>
     </ProjectReference>
@@ -79,37 +77,38 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10AssemblyAttributes.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10AssemblyAttributes.cs">
       <Link>Services\ns10AssemblyAttributes.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs">
       <Link>Services\ns10FileOperationsTests.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs">
       <Link>Services\ns10DiaSessionOperationsTests.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs">
       <Link>Services\ns10ReflectionOperationsTests.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10SettingsProviderTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10SettingsProviderTests.cs">
       <Link>Services\ns10SettingsProviderTests.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestContextImplementationTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestContextImplementationTests.cs">
       <Link>Services\ns10TestContextImplementationTests.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs">
       <Link>Services\ns10TestSourceHostTests.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceTests.cs">
       <Link>Services\ns10TestSourceTests.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs">
       <Link>Services\ns10ThreadOperationsTests.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
 
     <None Include="app.config" />
   </ItemGroup>
+
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

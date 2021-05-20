@@ -1,18 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\..\</TestFxRoot>
-  </PropertyGroup>
-
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Versions.targets" />
-  
-  <PropertyGroup>
     <TargetFramework>net452</TargetFramework>
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(TestFxRoot)artifacts\TestAssets\ComponentTests</OutputPath>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(TestFxRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>true</DelaySign>
+    <OutputPath>$(RepoRoot)artifacts\TestAssets\ComponentTests</OutputPath>
+    <AssemblyOriginatorKeyFile>$(RepoRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

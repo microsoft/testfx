@@ -1,18 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" Condition=" '$(TargetFrameworkProfile)' == 'Profile259' " />
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" Condition=" '$(TargetPlatformIdentifier)' == 'UAP' " />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="($(TargetFrameworkProfile) == '' or $(TargetFrameworkProfile) != 'Profile259') and $(TargetPlatformIdentifier) != 'UAP' and $(FrameworkIdentifier) != 'NetCore' and $(IncludeMicrosoftCommon) == 'true'"/>
-    
-  <PropertyGroup>
-    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\</TestFxRoot>
-    <RepoRoot Condition=" '$(RepoRoot)' == '' ">..\..\</RepoRoot>
-    <TestFxPackagesRoot>$(TestFxRoot)packages\</TestFxPackagesRoot>
-    <IsLocalizationEnabled Condition=" '$(UpdateXlf)' == 'true' or '$(IsLocalizedBuild)' == 'true' ">true</IsLocalizationEnabled>
-  </PropertyGroup>
-
   <!-- Import localization specific Targets if enabled. -->
-  <Import Project="$(MSBuildThisFileDirectory)TestFx.Loc.targets" Condition=" ('$(IsTest)' == '' or '$(IsTest)' == 'false') and '$(IsLocalizationEnabled)' == 'true' "/>
+  <Import Project="$(MSBuildThisFileDirectory)TestFx.Loc.props" Condition=" ('$(IsTest)' == '' or '$(IsTest)' == 'false') and '$(IsLocalizationEnabled)' == 'true' "/>
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)key.snk">
@@ -23,13 +12,13 @@
 
   <!-- StyleCop settings. -->
   <ItemGroup Condition=" '$(ShouldEnableStyleCop)' != 'false' and '$(IsVsixProj)' != 'true'">
-    <AdditionalFiles Include="$(TestFxRoot)scripts\build\stylecop.json">
+    <AdditionalFiles Include="$(RepoRoot)scripts\build\stylecop.json">
       <Link>stylecop.json</Link>
     </AdditionalFiles>
     
-    <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
-    <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
-    <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
+    <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
+    <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
+    <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup> 
 
   <!-- Signing and Localization. -->

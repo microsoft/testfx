@@ -1,9 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\</TestFxRoot>
-  </PropertyGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+
   <PropertyGroup>
     <ProjectGuid>{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -32,17 +30,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
       <Name>PlatformServices.Interface</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
       <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
       <Name>MSTest.Core</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Core\Extension.Core.csproj">
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj">
       <Project>{6C9FE494-8315-4667-B3F6-75DC62A62319}</Project>
       <Name>Extension.Core</Name>
       <Private>False</Private>
@@ -61,52 +59,52 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Constants.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Constants.cs">
       <Link>Constants.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs">
       <Link>MarshalByRefObject.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs">
       <Link>SerializableAttribute.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs">
       <Link>Services\ns10DiaSessionOperations.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10FileOperations.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10FileOperations.cs">
       <Link>Services\ns10FileOperations.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs">
       <Link>Services\ns10ReflectionOperations.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10SettingsProvider.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10SettingsProvider.cs">
       <Link>Services\ns10SettingsProvider.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs">
       <Link>Services\ns10TestContextImplementation.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs">
       <Link>Services\ns10TestDataSource.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDeployment.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDeployment.cs">
       <Link>Services\ns10TestDeployment.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestSource.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestSource.cs">
       <Link>Services\ns10TestSource.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestSourceHost.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestSourceHost.cs">
       <Link>Services\ns10TestSourceHost.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs">
       <Link>Services\ns10ThreadOperations.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs">
       <Link>Services\ns10TraceListener.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs">
       <Link>Services\ns10TraceListenerManager.cs</Link>
     </Compile>
-    <Compile Include="$(TestFxRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceLogger.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceLogger.cs">
       <Link>Services\ns10TraceLogger.cs</Link>
     </Compile>
     <Compile Include="Friends.cs" />
@@ -114,5 +112,6 @@
 
     <None Include="app.config" />
   </ItemGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>
