@@ -7,7 +7,7 @@
     <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true' And Exists('$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets')">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
   </PropertyGroup>
 
-  <Import Project="$(RepoRoot)scripts\build\TestFx.Versions.props" />
+  <Import Project="$(RepoRoot)eng\Versions.props" />
 
   <!-- 
     Prevent NuGet from using cached packages 
@@ -38,14 +38,5 @@
   </PropertyGroup>
   
   <Import Project="$(_NuGetRestoreTargets)" />
-
-  <ItemGroup>
-    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  />
-    <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" />
-    <PackageReference Include="Microsoft.Internal.Dia.Interop" Version="$(MicrosoftInternalDiaInteropVersion)" />
-    <PackageReference Include="MSTest.Internal.TestFx.Localized.Documentation" Version="$(MsTestInternalTestFxLocalizedDocumentationVersion)" />
-    <PackageReference Include="vswhere" Version="$(VsWhereVersion)" />
-    <PackageReference Include="fmdev.xlftool" Version="$(FmDevXlfToolVersion)" />
-    <PackageReference Include="Microsoft.VisualStudio.QualityTools" Version="$(VisualStudioQualityToolsUnitTestFrameworkVersion)" developmentDependency="true" />
-  </ItemGroup>
+  <Import Project="$(RepoRoot)eng\Tools.props" />
 </Project>

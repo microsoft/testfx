@@ -6,7 +6,7 @@
     <IsLocalizationEnabled Condition=" '$(UpdateXlf)' == 'true' or '$(IsLocalizedBuild)' == 'true' ">true</IsLocalizationEnabled>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)TestFx.Versions.props" />
+  <Import Project="$(RepoRoot)eng\Versions.props" />
 
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>

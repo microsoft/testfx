@@ -11,7 +11,7 @@
     <IntermediatesDirectory Condition=" '$(IntermediatesDirectory)' == '' ">$(RepoRoot)artifacts\obj\$(BuildConfiguration)\MSTestPackages</IntermediatesDirectory>
   </PropertyGroup>
 
-  <Import Project="$(RepoRoot)\scripts\build\TestFx.Versions.props" />
+  <Import Project="$(RepoRoot)eng\Versions.props" />
 
   <ImportGroup>
     <Import Project="$(NuGetPackageRoot)\Microbuild.Core\$(MicroBuildCoreVersion)\build\Microbuild.Core.props" />

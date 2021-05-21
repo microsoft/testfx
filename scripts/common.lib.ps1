@@ -4,7 +4,7 @@
 # Common utilities for building solution and running tests
 
 $TF_ROOT_DIR = (Get-Item (Split-Path $MyInvocation.MyCommand.Path)).Parent.FullName
-$TF_VERSIONS_FILE = "$TF_ROOT_DIR\scripts\build\TestFx.Versions.props"
+$TF_VERSIONS_FILE = "$TF_ROOT_DIR\eng\Versions.props"
 $TF_OUT_DIR = Join-Path $TF_ROOT_DIR "artifacts"
 $TF_SRC_DIR = Join-Path $TF_ROOT_DIR "src"
 $TF_TEST_DIR = Join-Path $TF_ROOT_DIR "test"
@@ -35,7 +35,7 @@ $env:TF_TOOLS_DIR = $TF_TOOLS_DIR
 $env:DOTNET_CLI_VERSION = "6.0.100-alpha.1.21067.8"
 
 if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
-  $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNetTestSdkVersion"
+  $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
 }
 
 function Create-Directory([string[]] $path) {
@@ -182,7 +182,7 @@ function Get-LogsPath {
 
 function Get-VSTestPath
 {
-    $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNetTestSdkVersion"
+    $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
     $vstestPath = Join-Path -path (Locate-PackagesPath) "Microsoft.TestPlatform\$TestPlatformVersion\tools\net451\Common7\IDE\Extensions\TestPlatform\vstest.console.exe"
 
     return Resolve-Path -path $vstestPath
@@ -216,15 +216,15 @@ function Replace-InFile($File, $RegEx, $ReplaceWith) {
 }
 
 function Sync-PackageVersions {
-  $versionsRegex = '(?mi)<(MicrosoftNetTestSdkVersion.*?)>(.*?)<\/MicrosoftNetTestSdkVersion>'
+  $versionsRegex = '(?mi)<(MicrosoftNETTestSdkVersion.*?)>(.*?)<\/MicrosoftNETTestSdkVersion>'
   $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform([0-9a-z.]+)?" version="([0-9a-z.-]*)"'
   $sourceRegex = '(?mi)(.+[a-z =]+\@?\")Microsoft\.TestPlatform\\([0-9.-a-z]+)\";'
 
   if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
-    $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNetTestSdkVersion"
+    $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
   }
   else {
-    Replace-InFile -File $TF_VERSIONS_FILE -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</MicrosoftNetTestSdkVersion>"
+    Replace-InFile -File $TF_VERSIONS_FILE -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</MicrosoftNETTestSdkVersion>"
   }
 
   (Get-ChildItem "$PSScriptRoot\..\src\*packages.config", "$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {

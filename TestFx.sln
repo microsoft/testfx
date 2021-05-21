@@ -143,7 +143,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{F60B
 		scripts\build\TestFx.Loc.props = scripts\build\TestFx.Loc.props
 		scripts\build\TestFx.props = scripts\build\TestFx.props
 		scripts\build\TestFx.targets = scripts\build\TestFx.targets
-		scripts\build\TestFx.Versions.props = scripts\build\TestFx.Versions.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BCF525B1-E67F-486D-B091-06A8BB8A2793}"

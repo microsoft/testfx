@@ -31,9 +31,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform" Version="$(MicrosoftNetTestSdkVersion)" />
-    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNetTestSdkVersion)" />
-    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNetTestSdkVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
     
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="$(SystemRuntimeInteropServicesRuntimeInformationVersion)" />
@@ -85,7 +85,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNetTestSdkVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" />
+      <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNETTestSdkVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" />
       <FileToCopy Include="$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" KeepDuplicates="True" />
@@ -96,14 +96,14 @@
       <FileToCopy Include="$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" KeepDuplicates="True" />
-      <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNetTestSdkVersion)\lib\netstandard1.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" Folder="netcoreapp1.1" />
+      <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNETTestSdkVersion)\lib\netstandard1.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" Folder="netcoreapp1.1" />
       <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" KeepDuplicates="True" Folder="netcoreapp1.1" />
       <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" KeepDuplicates="True" Folder="netcoreapp1.1" />
       <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" Folder="netcoreapp1.1" />
       <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" Folder="netcoreapp1.1" />
       <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" KeepDuplicates="True" Folder="netcoreapp1.1" />
       <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" KeepDuplicates="True" Folder="netcoreapp1.1" />
-      <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNetTestSdkVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" Folder="netcoreapp2.1" />
+      <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNETTestSdkVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" Folder="netcoreapp2.1" />
       <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" KeepDuplicates="True" Folder="netcoreapp2.1" />
       <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" KeepDuplicates="True" Folder="netcoreapp2.1" />
       <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" Folder="netcoreapp2.1" />

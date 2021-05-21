@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Dependencies>
+  <ProductDependencies>
+    <Dependency Name="Microsoft.SymbolUploader.Build.Task" Version="1.1.156702">
+      <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
+      <Sha>861806bc0dc685441cb3e8f6bd1ce5ed31e6b32b</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.SymbolUploader" Version="1.1.152002">
+      <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
+      <Sha>165896e7efeecb70f01bd011257ead0f56d32c95</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.NET.Test.Sdk" Version="17.0.0-preview-20210520-02">
+      <Uri>https://github.com/microsoft/vstest</Uri>
+      <Sha>4ec8825c93fbea1bf66408c1bdfd1087c3590e4e</Sha>
+    </Dependency>
+  </ProductDependencies>
+  <ToolsetDependencies>
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="6.0.0-beta.21264.2">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>42de78a825b575a1ddeb73020a01fb8cd9311d09</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="6.0.0-beta.21264.2">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>42de78a825b575a1ddeb73020a01fb8cd9311d09</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="6.0.0-beta.21264.2">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>42de78a825b575a1ddeb73020a01fb8cd9311d09</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="6.0.0-beta.21264.2">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>42de78a825b575a1ddeb73020a01fb8cd9311d09</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="6.0.0-beta.21264.2">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>42de78a825b575a1ddeb73020a01fb8cd9311d09</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.20258.6">
+      <Uri>https://github.com/dotnet/arcade-services</Uri>
+      <Sha>869869342f1ec338de96adcea6e003b61f195256</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.20570.1">
+      <Uri>https://github.com/dotnet/arcade-services</Uri>
+      <Sha>cac955fe259cb611f6a29d09209bd717deb69037</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.21264.3">
+      <Uri>https://github.com/dotnet/xharness</Uri>
+      <Sha>2eef520188beb49e31460d0a7dbe040294428ff1</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.0.0-1.21270.4">
+      <Uri>https://github.com/dotnet/roslyn</Uri>
+      <Sha>1e347d3e229cf388249d342c72a1222bff0b5fdd</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.5.21268.2">
+      <Uri>https://github.com/mono/linker</Uri>
+      <Sha>30f2498c2a3de1f7e236d5793f5f1aca6e5ba456</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.1.0-beta-21228-01">
+      <Uri>https://github.com/dotnet/sourcelink</Uri>
+      <Sha>4b584dbc392bb1aad49c2eb1ab84d8b489b6dccc</Sha>
+      <SourceBuild RepoName="sourcelink" ManagedOnly="true" />
+    </Dependency>
+    <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="1.1.0-beta-21228-01">
+      <Uri>https://github.com/dotnet/sourcelink</Uri>
+      <Sha>4b584dbc392bb1aad49c2eb1ab84d8b489b6dccc</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DiaSymReader.Pdb2Pdb" Version="1.1.0-beta2-19575-01">
+      <Uri>https://github.com/dotnet/symreader-converter</Uri>
+      <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DiaSymReader.Converter" Version="1.1.0-beta2-19575-01">
+      <Uri>https://github.com/dotnet/symreader-converter</Uri>
+      <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
+    </Dependency>
+    <Dependency Name="XliffTasks" Version="1.0.0-beta.21265.1">
+      <Uri>https://github.com/dotnet/xliff-tasks</Uri>
+      <Sha>f4bfde77fb60daf52d8fec738d96d1d54e37dd88</Sha>
+    </Dependency>
+  </ToolsetDependencies>
+</Dependencies>
