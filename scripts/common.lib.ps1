@@ -4,7 +4,7 @@
 # Common utilities for building solution and running tests
 
 $TF_ROOT_DIR = (Get-Item (Split-Path $MyInvocation.MyCommand.Path)).Parent.FullName
-$TF_VERSIONS_FILE = "$TF_ROOT_DIR\scripts\build\TestFx.Versions.targets"
+$TF_VERSIONS_FILE = "$TF_ROOT_DIR\eng\Versions.props"
 $TF_OUT_DIR = Join-Path $TF_ROOT_DIR "artifacts"
 $TF_SRC_DIR = Join-Path $TF_ROOT_DIR "src"
 $TF_TEST_DIR = Join-Path $TF_ROOT_DIR "test"
@@ -35,7 +35,7 @@ $env:TF_TOOLS_DIR = $TF_TOOLS_DIR
 $env:DOTNET_CLI_VERSION = "6.0.100-alpha.1.21067.8"
 
 if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
-  $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNetTestSdkVersion"
+  $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
 }
 
 function Create-Directory([string[]] $path) {
@@ -87,7 +87,7 @@ function Locate-MSBuildPath($hasVsixExtension = "false") {
 }
 
 function Locate-NuGet {
-  $rootPath = $env:TF_PACKAGES_DIR
+  $rootPath = Join-Path -path $env:TF_PACKAGES_DIR -childPath "toolset"
   $nuget = Join-Path -path $rootPath -childPath "nuget.exe"
 
   if (Test-Path -path $nuget) {
@@ -115,12 +115,6 @@ function Locate-NuGetConfig {
   $rootPath = $env:TF_ROOT_DIR
   $nugetConfig = Join-Path -path $rootPath -childPath "Nuget.config"
   return Resolve-Path -path $nugetConfig
-}
-
-function Locate-Toolset {
-  $rootPath = $env:TF_ROOT_DIR
-  $toolset = Join-Path -path $rootPath -childPath "scripts\Toolset\tools.proj"
-  return Resolve-Path -path $toolset
 }
 
 function Locate-PackagesPath {
@@ -176,9 +170,19 @@ function Locate-Item([string] $relativePath) {
   return Resolve-Path -path $itemPath
 }
 
+function Get-LogsPath {
+  $artifacts = Join-Path -path $TF_OUT_DIR -childPath "logs"
+
+  if (-not (Test-Path $artifacts)) {
+    New-Item -Type Directory -Path $artifacts | Out-Null
+  }
+
+  return $artifacts
+}
+
 function Get-VSTestPath
 {
-    $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNetTestSdkVersion"
+    $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
     $vstestPath = Join-Path -path (Locate-PackagesPath) "Microsoft.TestPlatform\$TestPlatformVersion\tools\net451\Common7\IDE\Extensions\TestPlatform\vstest.console.exe"
 
     return Resolve-Path -path $vstestPath
@@ -212,15 +216,15 @@ function Replace-InFile($File, $RegEx, $ReplaceWith) {
 }
 
 function Sync-PackageVersions {
-  $versionsRegex = '(?mi)<(MicrosoftNetTestSdkVersion.*?)>(.*?)<\/MicrosoftNetTestSdkVersion>'
+  $versionsRegex = '(?mi)<(MicrosoftNETTestSdkVersion.*?)>(.*?)<\/MicrosoftNETTestSdkVersion>'
   $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform([0-9a-z.]+)?" version="([0-9a-z.-]*)"'
   $sourceRegex = '(?mi)(.+[a-z =]+\@?\")Microsoft\.TestPlatform\\([0-9.-a-z]+)\";'
 
   if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
-    $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNetTestSdkVersion"
+    $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
   }
   else {
-    Replace-InFile -File $TF_VERSIONS_FILE -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</MicrosoftNetTestSdkVersion>"
+    Replace-InFile -File $TF_VERSIONS_FILE -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</MicrosoftNETTestSdkVersion>"
   }
 
   (Get-ChildItem "$PSScriptRoot\..\src\*packages.config", "$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {

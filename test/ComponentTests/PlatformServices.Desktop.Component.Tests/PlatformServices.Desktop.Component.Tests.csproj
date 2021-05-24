@@ -1,9 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\</TestFxRoot>
-  </PropertyGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -47,27 +45,27 @@
       <Aliases>FrameworkV1</Aliases>
     </Reference>
     
-    <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj">
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj">
       <Project>{b0fce474-14bc-449a-91ea-a433342c0d63}</Project>
       <Name>PlatformServices.Desktop</Name>
     </ProjectReference>
-    <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
       <Name>PlatformServices.Interface</Name>
     </ProjectReference>
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
       <Project>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</Project>
       <Name>MSTest.Core</Name>
       <Aliases>FrameworkV2</Aliases>
     </ProjectReference>
-    <ProjectReference Include="$(TestFxRoot)test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj">
+    <ProjectReference Include="$(RepoRoot)test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj">
       <Project>{5c411bbf-fcc9-4430-ae08-07666d39fd04}</Project>
       <Name>SampleFrameworkExtensions</Name>
     </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNetTestSdkVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
     <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -84,6 +82,7 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

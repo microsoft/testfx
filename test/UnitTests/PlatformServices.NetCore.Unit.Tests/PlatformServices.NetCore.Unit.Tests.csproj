@@ -1,10 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\</TestFxRoot>
-    <CheckEolTargetFramework>false</CheckEolTargetFramework>
-  </PropertyGroup>
-  
-  <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
     <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <IsPackable>false</IsPackable>
@@ -12,42 +7,43 @@
     <AssemblyName>MSTestAdapter.PlatformServices.NetCore.UnitTests</AssemblyName>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     <NoWarn>CS1685</NoWarn>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <SkipAppendingVersion>true</SkipAppendingVersion> <!-- TODO: remove after full arcade transition -->
   </PropertyGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
 
   <ItemGroup>
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" Aliases="FrameworkV2Extension" />
-    <ProjectReference Include="$(TestFxRoot)src\Adapter\MSTest.CoreAdapter\MSTest.CoreAdapter.csproj" />
-    <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
-    <ProjectReference Include="$(TestFxRoot)src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" Aliases="FrameworkV2Extension" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.CoreAdapter\MSTest.CoreAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNetTestSdkVersion)" />
-    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNetTestSdkVersion)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
   </ItemGroup>
   
   <ItemGroup>
-    <Compile Include="$(TestFxRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\ActionUtility.cs" Link="ActionUtility.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10DeploymentItemTests.cs" Link="Deployment\ns10DeploymentItemTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10TestRunDirectoriesTests.cs" Link="Deployment\ns10TestRunDirectoriesTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Extensions\ns10ExceptionExtensionsTests.cs" Link="Extensions\ns10ExceptionExtensionsTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs" Link="Services\ns10FileOperationsTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs" Link="Services\ns10DiaSessionOperationsTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs" Link="Services\ns10ReflectionOperationsTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs" Link="Services\ns10TestSourceHostTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceTests.cs" Link="Services\ns10TestSourceTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs" Link="Services\ns10ThreadOperationsTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Services\ns10MSTestAdapterSettingsTests.cs" Link="Services\ns10MSTestAdapterSettingsTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Utilities\ns10DeploymentUtilityTests.cs" Link="Utilities\ns10DeploymentUtilityTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Utilities\ns10FileUtilityTests.cs" Link="Utilities\ns10FileUtilityTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerManagerTests.cs" Link="Services\ns13TraceListenerManagerTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerTests.cs" Link="Services\ns13TraceListenerTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13MSTestSettingsProviderTests.cs" Link="Services\ns13MSTestSettingsProviderTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13TestDeploymentTests.cs" Link="Services\ns13TestDeploymentTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13DeploymentItemUtilityTests.cs" Link="Utilities\ns13DeploymentItemUtilityTests.cs" />
-    <Compile Include="$(TestFxRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13ReflectionUtilityTests.cs" Link="Utilities\ns13ReflectionUtilityTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\ActionUtility.cs" Link="ActionUtility.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10DeploymentItemTests.cs" Link="Deployment\ns10DeploymentItemTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10TestRunDirectoriesTests.cs" Link="Deployment\ns10TestRunDirectoriesTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Extensions\ns10ExceptionExtensionsTests.cs" Link="Extensions\ns10ExceptionExtensionsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs" Link="Services\ns10FileOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs" Link="Services\ns10DiaSessionOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs" Link="Services\ns10ReflectionOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs" Link="Services\ns10TestSourceHostTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceTests.cs" Link="Services\ns10TestSourceTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs" Link="Services\ns10ThreadOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Services\ns10MSTestAdapterSettingsTests.cs" Link="Services\ns10MSTestAdapterSettingsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Utilities\ns10DeploymentUtilityTests.cs" Link="Utilities\ns10DeploymentUtilityTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Utilities\ns10FileUtilityTests.cs" Link="Utilities\ns10FileUtilityTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerManagerTests.cs" Link="Services\ns13TraceListenerManagerTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerTests.cs" Link="Services\ns13TraceListenerTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13MSTestSettingsProviderTests.cs" Link="Services\ns13MSTestSettingsProviderTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13TestDeploymentTests.cs" Link="Services\ns13TestDeploymentTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13DeploymentItemUtilityTests.cs" Link="Utilities\ns13DeploymentItemUtilityTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13ReflectionUtilityTests.cs" Link="Utilities\ns13ReflectionUtilityTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -61,5 +57,4 @@
     </ItemGroup>
   </Target>
 
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
 </Project>

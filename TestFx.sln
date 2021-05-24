@@ -140,10 +140,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "stylecop", "stylecop", "{FE
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{F60B647A-E14C-48AF-9BD6-89F44EB60115}"
 	ProjectSection(SolutionItems) = preProject
-		scripts\build\TestFx.Loc.targets = scripts\build\TestFx.Loc.targets
-		scripts\build\TestFx.Settings.targets = scripts\build\TestFx.Settings.targets
+		scripts\build\TestFx.Loc.props = scripts\build\TestFx.Loc.props
+		scripts\build\TestFx.props = scripts\build\TestFx.props
 		scripts\build\TestFx.targets = scripts\build\TestFx.targets
-		scripts\build\TestFx.Versions.targets = scripts\build\TestFx.Versions.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BCF525B1-E67F-486D-B091-06A8BB8A2793}"

@@ -1,4 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
+  </PropertyGroup>
 
   <PropertyGroup>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</AssemblyName>
@@ -7,6 +10,7 @@
     <Product>Extension.WinUI</Product>
     <AssemblyTitle>Extension.WinUI</AssemblyTitle>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <SkipAppendingVersion>true</SkipAppendingVersion> <!-- TODO: remove after full arcade transition -->
     
     <TargetFramework>net5.0-windows10.0.18362.0</TargetFramework>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
@@ -17,23 +21,17 @@
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\</TestFxRoot>
-    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
-  </PropertyGroup>
-
   <ItemGroup>
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ProjectReunion" Version="$(MicrosoftProjectReunionVersion)" />
   </ItemGroup>
 
-  <Import Project="$(TestFxRoot)src\TestFramework\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <Import Project="$(RepoRoot)src\TestFramework\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
   <ItemGroup>
-    <Compile Include="$(TestFxRoot)src\TestFramework\Extension.UWP\DeploymentItemAttribute.cs" Link="DeploymentItemAttribute.cs" />
+    <Compile Include="$(RepoRoot)src\TestFramework\Extension.UWP\DeploymentItemAttribute.cs" Link="DeploymentItemAttribute.cs" />
   </ItemGroup>
   
   <PropertyGroup>
@@ -41,6 +39,4 @@
     <LocDocumentationSubPath>Extensions\WinUI</LocDocumentationSubPath>
   </PropertyGroup>
   
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
-
 </Project>

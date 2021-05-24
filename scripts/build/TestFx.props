@@ -1,13 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\</TestFxRoot>
-    <RepoRoot Condition=" '$(RepoRoot)' == '' ">$(MSBuildThisFileDirectory)..\..\</RepoRoot>
-    <IncludeMicrosoftCommon Condition=" '$(IncludeMicrosoftCommon)' == '' ">true</IncludeMicrosoftCommon>
+    <RepoRoot Condition=" '$(RepoRoot)' == '' ">$([MSBuild]::NormalizeDirectory('$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'LICENSE'))'))</RepoRoot>
+    <ArtifactsBinDir Condition=" '$(ArtifactsBinDir)' == '' ">$(RepoRoot)artifacts\$(Configuration)\</ArtifactsBinDir>
+    <IsLocalizationEnabled Condition=" '$(UpdateXlf)' == 'true' or '$(IsLocalizedBuild)' == 'true' ">true</IsLocalizationEnabled>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props') and $(FrameworkIdentifier) != 'NetCore' and $(IncludeMicrosoftCommon) == 'true'" />
-  <Import Project="$(MSBuildThisFileDirectory)TestFx.Versions.targets" />
+  <Import Project="$(RepoRoot)eng\Versions.props" />
 
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -20,8 +19,8 @@
     <PublicSign Condition=" '$(IsLocalizedBuild)' == '' or '$(IsLocalizedBuild)' != 'true'">true</PublicSign>
     <!-- Temporarily turning on Delay signing for Localized builds because publickey = true is not passed on to the assembler to create resource assmblies.-->
     <DelaySign Condition=" '$(IsLocalizedBuild)' == 'true' ">true</DelaySign>
-    <OutputPath Condition=" '$(OutputPath)' == '' ">$(TestFxRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\</OutputPath>
-    <IntermediatePath Condition=" '$(IntermediatePath)' == '' ">$(TestFxRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\obj\</IntermediatePath>
+    <OutputPath Condition=" '$(OutputPath)' == '' ">$(RepoRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\</OutputPath>
+    <IntermediatePath Condition=" '$(IntermediatePath)' == '' ">$(RepoRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\obj\</IntermediatePath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 

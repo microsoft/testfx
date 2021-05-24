@@ -1,8 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <TestFxRoot Condition=" '$(TestFxRoot)' == '' ">..\..\..\..\</TestFxRoot>
-  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -17,7 +16,7 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
     <VSToolsPath Condition=" '$(VSToolsPath)' == '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
     <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
-    <OutputPath>$(TestFxRoot)artifacts\TestAssets\</OutputPath>
+    <OutputPath>$(RepoRoot)artifacts\TestAssets\</OutputPath>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
   </PropertyGroup>
@@ -45,11 +44,11 @@
   <ItemGroup>
     <Reference Include="System" />
 
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
       <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
       <Name>MSTest.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="$(TestFxRoot)test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj">
+    <ProjectReference Include="$(RepoRoot)test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj">
       <Project>{5c411bbf-fcc9-4430-ae08-07666d39fd04}</Project>
       <Name>SampleFrameworkExtensions</Name>
     </ProjectReference>

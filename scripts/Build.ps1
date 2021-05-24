@@ -135,8 +135,7 @@ function Perform-Restore {
 
   $nuget = Locate-NuGet
   $nugetConfig = Locate-NuGetConfig
-  $toolset = Locate-Toolset
-  
+  $toolset = ".\scripts\Toolset\tools.proj"
   if ($TFB_ClearPackageCache) {
     Write-Log "Clearing local package cache..."
     & $nuget locals all -clear
@@ -145,27 +144,7 @@ function Perform-Restore {
   Write-Log "Starting toolset restore..."
   Write-Verbose "$nuget restore -verbosity normal -nonInteractive -configFile $nugetConfig $toolset"
   & $nuget restore -verbosity normal -nonInteractive -configFile $nugetConfig $toolset
-  
-  if ($lastExitCode -ne 0) {
-    throw "The restore failed with an exit code of '$lastExitCode'."
-  }
 
-  Write-Verbose "Locating MSBuild install path..."
-  $msbuildPath = Locate-MSBuildPath 
-  Write-Verbose "MSBuild install path: $msbuildPath"
-
-  Write-Verbose "Starting solution restore..."
-  foreach ($solution in $TFB_Solutions) {
-    $solutionPath = Locate-Item -relativePath $solution
-
-    Write-Verbose "$nuget restore -msbuildPath $msbuildPath -verbosity normal -nonInteractive -configFile $nugetConfig $solutionPath"
-    & $nuget restore -msbuildPath $msbuildPath -verbosity normal -nonInteractive -configFile $nugetConfig $solutionPath
-  }
-
-  if ($lastExitCode -ne 0) {
-    throw "The restore failed with an exit code of '$lastExitCode'."
-  }
-  
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
   }
@@ -194,22 +173,37 @@ function Perform-Build {
     }
   }
 
-  Invoke-Build -solution "TestFx.sln"
+  Invoke-MSBuild -solution "TestFx.sln"
    
   Write-Log "Perform-Build: Completed. {$(Get-ElapsedTime($timer))}"
 }
 
-function Invoke-Build([string] $solution, $hasVsixExtension = "false") {
+function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExtension = "false", [switch]$NoRestore) {
   $msbuild = Locate-MSBuild -hasVsixExtension $hasVsixExtension
   $solutionPath = Locate-Item -relativePath $solution
-  $solutionDir = [System.IO.Path]::GetDirectoryName($solutionPath)
-  $solutionSummaryLog = Join-Path -path $solutionDir -childPath "msbuild.log"
-  $solutionWarningLog = Join-Path -path $solutionDir -childPath "msbuild.wrn"
-  $solutionFailureLog = Join-Path -path $solutionDir -childPath "msbuild.err"
+  $logsDir = Get-LogsPath
 
-  Write-Log "    Building $solution..."
-  Write-Verbose "$msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath /bl /m" 
-  & $msbuild /t:$Target /p:Configuration=$configuration /v:m /flp1:Summary`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionSummaryLog /flp2:WarningsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionWarningLog /flp3:ErrorsOnly`;Verbosity=diagnostic`;Encoding=UTF-8`;LogFile=$solutionFailureLog /p:IsLocalizedBuild=$TFB_IsLocalizedBuild /p:UpdateXlf=$TFB_UpdateXlf /p:BuildVersion=$TFB_BuildVersion $solutionPath /bl /m
+  $fileName = [System.IO.Path]::GetFileNameWithoutExtension($solution)
+  $binLog = Join-Path -path $logsDir -childPath "$fileName.$buildTarget.binlog"
+
+  $restore = "True"
+  if($NoRestore) {
+    $restore = "False"
+  }
+
+  $argument = @("-t:$buildTarget",
+                "-p:Configuration=$configuration",
+                "-v:m",
+                "-p:IsLocalizedBuild=$TFB_IsLocalizedBuild",
+                "-p:UpdateXlf=$TFB_UpdateXlf",
+                "-p:BuildVersion=$TFB_BuildVersion",
+                "-restore:$restore", 
+                "`"$solutionPath`"",
+                "-bl:`"$binLog`"",
+                "-m")
+
+  Write-Log "    $buildTarget`: $solution..."
+  & "$msbuild" $argument;
   
   if ($lastExitCode -ne 0) {
     throw "Build failed with an exit code of '$lastExitCode'."
