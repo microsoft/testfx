@@ -2,11 +2,11 @@
 <Project>
   <PropertyGroup>
     <!-- This repo version -->
-    <VersionPrefix>6.0.0</VersionPrefix>
-    <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
+    <VersionPrefix>2.2.4</VersionPrefix>
+    <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
-    <MicrosoftNETTestSdkVersion>17.0.0-preview-20210520-02</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>16.10.0</MicrosoftNETTestSdkVersion>
     <!-- Toolset -->
     <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
     <NuGetFrameworksVersion>5.9.1</NuGetFrameworksVersion>
