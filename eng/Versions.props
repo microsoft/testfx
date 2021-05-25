@@ -1,26 +1,23 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
     <!-- This repo version -->
     <VersionPrefix>6.0.0</VersionPrefix>
     <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
-
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
-    
-    <MicrosoftNETTestSdkVersion>17.0.0-preview-20210520-02</MicrosoftNETTestSdkVersion>
-
+    <MicrosoftNETTestSdkVersion>16.5.0-preview-20191115-01</MicrosoftNETTestSdkVersion>
     <!-- Toolset -->
-      <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
-      <NuGetFrameworksVersion>5.9.1</NuGetFrameworksVersion>
-      <VsWhereVersion>2.5.2</VsWhereVersion>
-      <MicrosoftInternalDiaInteropVersion>14.0.0</MicrosoftInternalDiaInteropVersion> <!-- keep in sync with test\UnitTests\PlatformServices.Desktop.Unit.Tests\Utilities\XmlUtilitiesTests.cs -->
-      <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-21064-01</MicrosoftDiaSymReaderPdb2PdbVersion>
-      <MsTestInternalTestFxLocalizedDocumentationVersion>1.0.0-build-20170420-1</MsTestInternalTestFxLocalizedDocumentationVersion>
-      <FmDevXlfToolVersion>0.1.3</FmDevXlfToolVersion>
-      <VisualStudioQualityToolsUnitTestFrameworkVersion>16.9.0-preview-4267359</VisualStudioQualityToolsUnitTestFrameworkVersion>
+    <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
+    <NuGetFrameworksVersion>5.9.1</NuGetFrameworksVersion>
+    <VsWhereVersion>2.5.2</VsWhereVersion>
+    <MicrosoftInternalDiaInteropVersion>14.0.0</MicrosoftInternalDiaInteropVersion>
+    <!-- keep in sync with test\UnitTests\PlatformServices.Desktop.Unit.Tests\Utilities\XmlUtilitiesTests.cs -->
+    <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-21064-01</MicrosoftDiaSymReaderPdb2PdbVersion>
+    <MsTestInternalTestFxLocalizedDocumentationVersion>1.0.0-build-20170420-1</MsTestInternalTestFxLocalizedDocumentationVersion>
+    <FmDevXlfToolVersion>0.1.3</FmDevXlfToolVersion>
+    <VisualStudioQualityToolsUnitTestFrameworkVersion>16.9.0-preview-4267359</VisualStudioQualityToolsUnitTestFrameworkVersion>
     <!-- / Toolset -->
-
     <!-- Try to keep all these in sync -->
     <SystemRuntimeVersion>4.3.0</SystemRuntimeVersion>
     <SystemRuntimeSerializationJsonVersion>4.3.0</SystemRuntimeSerializationJsonVersion>
@@ -31,28 +28,22 @@
     <SystemRuntimeInteropServicesRuntimeInformationVersion>4.3.0</SystemRuntimeInteropServicesRuntimeInformationVersion>
     <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>
     <!-- / Try to keep all these in sync -->
-
     <SystemCollectionsImmutableVersion>1.6.0</SystemCollectionsImmutableVersion>
     <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
-
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>5.3.0</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <MicrosoftProjectReunionVersion>0.5.0</MicrosoftProjectReunionVersion>
     <!-- / UWP and WinUI dependencies -->
-    
     <MoqVersion>4.8.3</MoqVersion>
     <CastleCoreVersion>4.3.0</CastleCoreVersion>
     <FluentAssertionsVersion>5.10.3</FluentAssertionsVersion>
     <StyleCopAnalyzersVersion>1.0.0</StyleCopAnalyzersVersion>
-
     <!-- These are used to test compability with legacy MSTest, please do not update -->
-      <Legacy__MicrosoftNETTestSdkVersion>15.7.0</Legacy__MicrosoftNETTestSdkVersion>
-      <Legacy__MSTestTestAdapterVersion>1.2.0</Legacy__MSTestTestAdapterVersion>
-      <Legacy__MSTestTestFrameworkVersion>1.2.0</Legacy__MSTestTestFrameworkVersion>
+    <Legacy__MicrosoftNETTestSdkVersion>15.7.0</Legacy__MicrosoftNETTestSdkVersion>
+    <Legacy__MSTestTestAdapterVersion>1.2.0</Legacy__MSTestTestAdapterVersion>
+    <Legacy__MSTestTestFrameworkVersion>1.2.0</Legacy__MSTestTestFrameworkVersion>
     <!-- / These are used to test compability with legacy MSTest, please do not update -->
-
     <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-
     <!-- Libs -->
     <CommandLineParserVersion>2.2.1</CommandLineParserVersion>
     <CredentialManagementVersion>1.0.2</CredentialManagementVersion>
