@@ -240,10 +240,6 @@ function Create-NugetPackages {
 
   Copy-Item -Path "$($env:TF_PACKAGES_DIR)\microsoft.testplatform.adapterutilities\$TestPlatformVersion\lib" -Destination "$($stagingDir)\Microsoft.TestPlatform.AdapterUtilities" -Recurse -Force
 
-  # Copy over LICENSE file to staging directory
-  $licenseFilePath = Join-Path $env:TF_ROOT_DIR "LICENSE"
-  Copy-Item $licenseFilePath $stagingDir -Force
-
   # Call nuget pack on these components.
   $nugetExe = Locate-Nuget
 
