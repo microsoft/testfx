@@ -94,7 +94,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         return new UnitTestResult[] { new UnitTestResult(UnitTestOutcome.NotRunnable, testMethodInfo.NotRunnableReason) };
                     }
 
-                    return new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces).Execute();
+                    var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                    return testMethodRunner.Execute();
                 }
             }
             catch (TypeInspectionException ex)

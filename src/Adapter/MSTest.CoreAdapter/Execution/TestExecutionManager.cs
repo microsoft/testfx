@@ -13,6 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -375,18 +376,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 var startTime = DateTimeOffset.Now;
 
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                    "Executing test {0}",
-                    unitTestElement.TestMethod.Name);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
 
                 // Run single test passing test context properties to it.
                 var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
                 var testContextProperties = this.GetTestContextProperties(tcmProperties, sourceLevelParameters);
                 var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
 
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                    "Executed test {0}",
-                    unitTestElement.TestMethod.Name);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 
                 var endTime = DateTimeOffset.Now;
 

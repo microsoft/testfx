@@ -526,10 +526,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                                 {
                                     if (EqtTrace.IsInfoEnabled)
                                     {
-                                        EqtTrace.Info(
-                                            "AssemblyResolver: {0}: Failed to load assembly. Reason:{1} ",
-                                            assemblyNameToLoad,
-                                            ex);
+                                        EqtTrace.Info("AssemblyResolver: {0}: Failed to load assembly. Reason: {1}", assemblyNameToLoad, ex);
                                     }
                                 });
                 }

@@ -265,6 +265,8 @@ namespace DiscoveryAndExecutionTests.Utilities
 
         private static bool EqualsComparer(string[] values, string value)
         {
+            if (values == null) return false;
+
             foreach (var v in values)
             {
                 if (v.Equals(value, StringComparison.OrdinalIgnoreCase))
@@ -278,6 +280,8 @@ namespace DiscoveryAndExecutionTests.Utilities
 
         private static bool ContainsComparer(string[] values, string value)
         {
+            if (values == null) return false;
+
             foreach (var v in values)
             {
                 if (v.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0)
