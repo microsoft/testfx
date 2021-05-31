@@ -214,7 +214,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             // Store resolved data if any
             if (this.TestMethod.DataType != DynamicDataType.None)
             {
-                var data = Helpers.DataSerializationHelper.Serialize(this.TestMethod.Data);
+                var data = this.TestMethod.SerializedData;
 
                 testCase.SetPropertyValue(TestAdapter.Constants.TestDynamicDataTypeProperty, (int)this.TestMethod.DataType);
                 testCase.SetPropertyValue(TestAdapter.Constants.TestDynamicDataProperty, data);

@@ -5,10 +5,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
 {
     using System;
     using System.IO;
-    using System.Linq;
     using System.Xml;
 
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     public partial class CLITestBase
@@ -29,6 +27,12 @@ namespace Microsoft.MSTestV2.CLIAutomation
         protected virtual string GetRelativeRepositoryRootPath() => E2ETestsRelativePath;
 
         /// <summary>
+        /// Gets the path of test assets folder
+        /// </summary>
+        /// <returns>Path to testassets folder</returns>
+        protected string GetAssetFolderPath() => Path.Combine(Environment.CurrentDirectory, this.GetRelativeRepositoryRootPath(), ArtifactsFolder, TestAssetsFolder);
+
+        /// <summary>
         /// Gets the full path to a test asset.
         /// </summary>
         /// <param name="assetName">Name of the asset with extension. E.g. <c>SimpleUnitTest.dll</c></param>
@@ -42,12 +46,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </remarks>
         protected string GetAssetFullPath(string assetName)
         {
-            var assetPath = Path.Combine(
-                Environment.CurrentDirectory,
-                this.GetRelativeRepositoryRootPath(),
-                ArtifactsFolder,
-                TestAssetsFolder,
-                assetName);
+            var assetPath = Path.Combine(this.GetAssetFolderPath(), assetName);
 
             Assert.IsTrue(File.Exists(assetPath), "GetTestAsset: Path not found: {0}.", assetPath);
 

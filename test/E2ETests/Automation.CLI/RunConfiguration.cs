@@ -16,11 +16,11 @@ namespace Microsoft.MSTestV2.CLIAutomation
         public string SettingsName { get; set; }
 
         /// <summary>
-        /// Gets or sets paths at which engine should look for test adapters
+        /// Gets the paths at which engine should look for test adapters
         /// </summary>
-        public string TestAdaptersPaths { get; set; }
+        public string[] TestAdaptersPaths { get; }
 
-        public RunConfiguration(string testAdapterPaths)
+        public RunConfiguration(params string[] testAdapterPaths)
         {
             this.SettingsName = Constants.RunConfigurationSettingsName;
             this.TestAdaptersPaths = testAdapterPaths;
@@ -35,9 +35,13 @@ namespace Microsoft.MSTestV2.CLIAutomation
             XmlDocument doc = new XmlDocument();
             XmlElement root = doc.CreateElement(this.SettingsName);
 
-            var testAdaptersPaths = doc.CreateElement("TestAdaptersPaths");
-            testAdaptersPaths.InnerXml = this.TestAdaptersPaths;
-            root.AppendChild(testAdaptersPaths);
+            foreach (var p in this.TestAdaptersPaths)
+            {
+                var testAdaptersPaths = doc.CreateElement("TestAdaptersPaths");
+                testAdaptersPaths.InnerText = p;
+
+                root.AppendChild(testAdaptersPaths);
+            }
 
             return root;
         }

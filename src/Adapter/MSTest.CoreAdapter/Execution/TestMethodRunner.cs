@@ -64,21 +64,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="captureDebugTraces">
         /// The capture debug traces.
         /// </param>
-        public TestMethodRunner(
-            TestMethodInfo testMethodInfo,
-            TestMethod testMethod,
-            ITestContext testContext,
-            bool captureDebugTraces)
+        public TestMethodRunner(TestMethodInfo testMethodInfo, TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
             : this(testMethodInfo, testMethod, testContext, captureDebugTraces, ReflectHelper.Instance)
         {
-            Debug.Assert(testMethodInfo != null, "testMethodInfo should not be null");
-            Debug.Assert(testMethod != null, "testMethod should not be null");
-            Debug.Assert(testContext != null, "testContext should not be null");
-
-            this.testMethodInfo = testMethodInfo;
-            this.test = testMethod;
-            this.testContext = testContext;
-            this.captureDebugTraces = captureDebugTraces;
         }
 
         /// <summary>
@@ -99,12 +87,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="reflectHelper">
         /// The reflect Helper object.
         /// </param>
-        public TestMethodRunner(
-            TestMethodInfo testMethodInfo,
-            TestMethod testMethod,
-            ITestContext testContext,
-            bool captureDebugTraces,
-            ReflectHelper reflectHelper)
+        public TestMethodRunner(TestMethodInfo testMethodInfo, TestMethod testMethod, ITestContext testContext, bool captureDebugTraces, ReflectHelper reflectHelper)
         {
             Debug.Assert(testMethodInfo != null, "testMethodInfo should not be null");
             Debug.Assert(testMethod != null, "testMethod should not be null");
@@ -223,7 +206,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 if (this.test.DataType == DynamicDataType.ITestDataSource)
                 {
-                    var testResults = this.ExecuteTestWithDataSource(null, this.test.Data);
+                    var data = DataSerializationHelper.Deserialize(this.test.SerializedData, this.testMethodInfo.Parent.Parent.Assembly);
+                    var testResults = this.ExecuteTestWithDataSource(null, data);
                     results.AddRange(testResults);
                 }
                 else if (this.ExecuteDataSourceBasedTests(results))
@@ -232,7 +216,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
                 else
                 {
-                    var testResults = this.ExecuteTest();
+                    var testResults = this.ExecuteTest(this.testMethodInfo);
 
                     foreach (var testResult in testResults)
                     {
@@ -358,7 +342,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var stopwatch = Stopwatch.StartNew();
 
             this.testMethodInfo.SetArguments(data);
-            var testResults = this.ExecuteTest();
+            var testResults = this.ExecuteTest(this.testMethodInfo);
             stopwatch.Stop();
 
             var hasDisplayName = !string.IsNullOrWhiteSpace(this.test.DisplayName);
@@ -387,13 +371,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         private UTF.TestResult[] ExecuteTestWithDataRow(object dataRow, int rowIndex)
         {
-            var stopwatch = Stopwatch.StartNew();
-
-            this.testContext.SetDataRow(dataRow);
-            var testResults = this.ExecuteTest();
-            stopwatch.Stop();
-
             var displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, this.test.DisplayName, rowIndex);
+            Stopwatch stopwatch = null;
+
+            UTF.TestResult[] testResults = null;
+            try
+            {
+                stopwatch = Stopwatch.StartNew();
+                this.testContext.SetDataRow(dataRow);
+                testResults = this.ExecuteTest(this.testMethodInfo);
+            }
+            finally
+            {
+                stopwatch?.Stop();
+                this.testContext.SetDataRow(null);
+            }
 
             foreach (var testResult in testResults)
             {
@@ -405,11 +397,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             return testResults;
         }
 
-        private UTF.TestResult[] ExecuteTest()
+        private UTF.TestResult[] ExecuteTest(TestMethodInfo testMethodInfo)
         {
             try
             {
-                return this.testMethodInfo.TestMethodOptions.Executor.Execute(this.testMethodInfo);
+                return this.testMethodInfo.TestMethodOptions.Executor.Execute(testMethodInfo);
             }
             catch (Exception ex)
             {
