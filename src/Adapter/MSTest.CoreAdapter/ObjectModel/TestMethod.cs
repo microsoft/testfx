@@ -144,9 +144,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         internal DynamicDataType DataType { get; set; }
 
         /// <summary>
-        /// Gets or sets indices of dynamic data
+        /// Gets or sets the serialized data
         /// </summary>
-        internal object[] Data { get; set; }
+        internal string[] SerializedData { get; set; }
 
         /// <summary>
         /// Gets or sets the test group set during discovery

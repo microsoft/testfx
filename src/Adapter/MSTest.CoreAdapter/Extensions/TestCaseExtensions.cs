@@ -82,7 +82,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
                 var data = testCase.GetPropertyValue<string[]>(Constants.TestDynamicDataProperty, null);
 
                 testMethod.DataType = dataType;
-                testMethod.Data = Helpers.DataSerializationHelper.Deserialize(data);
+                testMethod.SerializedData = data;
             }
 
             testMethod.DisplayName = testCase.DisplayName;

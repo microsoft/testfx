@@ -13,11 +13,20 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
 
     public static class AssertionExtensions
     {
+        public static void ContainsTestsDiscovered(this Assert _, IEnumerable<TestCase> actualTests, IEnumerable<string> expectedTests)
+            => ContainsTestsDiscovered(actualTests, expectedTests);
+
         public static void PassedTestCount(this Assert _, IEnumerable<TestResult> actual, int expectedCount)
             => AssertOutcomeCount(actual, TestOutcome.Passed, expectedCount);
 
         public static void FailedTestCount(this Assert _, IEnumerable<TestResult> actual, int expectedCount)
             => AssertOutcomeCount(actual, TestOutcome.Failed, expectedCount);
+
+        public static void TestsDiscovered(this Assert _, IEnumerable<TestCase> actualTests, IEnumerable<string> expectedTests)
+            => ContainsTestsDiscovered(actualTests, expectedTests, true);
+
+        public static void TestsDiscovered(this Assert _, IEnumerable<TestCase> actualTests, params string[] expectedTests)
+            => ContainsTestsDiscovered(actualTests, expectedTests, true);
 
         public static void TestsPassed(this Assert _, IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
             => ContainsExpectedTestsWithOutcome(actual, testCases, TestOutcome.Passed, expectedTests, true, settings);
@@ -43,14 +52,34 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
         public static void ContainsTestsFailed(this Assert _, IEnumerable<TestResult> actual, params string[] expectedTests)
             => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests);
 
+        private static void ContainsTestsDiscovered(IEnumerable<TestCase> discoveredTests, IEnumerable<string> expectedTests, bool matchCount = false)
+        {
+            if (matchCount)
+            {
+                var expectedCount = discoveredTests.Count();
+                var outcomedCount = expectedTests.Count();
+
+                AssertDiscoveryCount(outcomedCount, expectedCount);
+            }
+
+            foreach (var test in expectedTests)
+            {
+                var testFound = discoveredTests.Any(
+                    p => test.Equals(p.FullyQualifiedName)
+                         || test.Equals(p.DisplayName)
+                         || test.Equals(p.DisplayName));
+
+                Assert.IsTrue(testFound,
+                    $"Test Discovery run was expecting to discover \"{test}\", but it has not discovered.");
+            }
+        }
+
         private static void ContainsExpectedTestsWithOutcome(IEnumerable<TestResult> outcomedTests, IEnumerable<TestCase> testCases, TestOutcome expectedOutcome, IEnumerable<string> expectedTests, bool matchCount = false, MSTestSettings settings = null)
         {
             if (matchCount)
             {
                 var expectedCount = expectedTests.Count();
-                var outcomedCount = outcomedTests.Count();
-
-                AssertOutcomeCount(outcomedCount, expectedOutcome, expectedCount);
+                AssertOutcomeCount(outcomedTests, expectedOutcome, expectedCount);
             }
 
             foreach (var test in expectedTests)
@@ -108,11 +137,15 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
             var outcomedTests = actual.Where(i => i.Outcome == expectedOutcome);
             var actualCount = outcomedTests.Count();
 
-            AssertOutcomeCount(actualCount, expectedOutcome, expectedCount);
+            AssertOutcomeCount(actualCount, expectedCount);
         }
-        private static void AssertOutcomeCount(int actualCount, TestOutcome expectedOutcome, int expectedCount)
+        private static void AssertOutcomeCount(int actualCount, int expectedCount)
         {
             Assert.AreEqual(expectedCount, actualCount, $"Test run expected to contain {expectedCount} tests, but ran {actualCount}.");
+        }
+        private static void AssertDiscoveryCount(int actualCount, int expectedCount)
+        {
+            Assert.AreEqual(expectedCount, actualCount, $"Test discovery expected to contain {expectedCount} tests, but ran {actualCount}.");
         }
     }
 }

@@ -26,18 +26,13 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
             var testResults = RunTests(assemblyPath, testCases);
 
             // Assert
-            Assert.That.ContainsTestsPassed(testResults,
+            Assert.That.TestsPassed(testResults,
                 "DataRowTestMethod (BaseString1)",
                 "DataRowTestMethod (BaseString2)",
                 "DataRowTestMethod (BaseString3)",
                 "DataRowTestMethod (DerivedString1)",
                 "DataRowTestMethod (DerivedString2)"
             );
-
-            // 4 tests of BaseClass.DataRowTestMethod - 3 data row results and 1 parent result
-            // 3 tests of DerivedClass.DataRowTestMethod - 2 data row results and 1 parent result
-            // Total 7 tests - Making sure that DerivedClass doesn't run BaseClass tests
-            Assert.That.PassedTestCount(testResults, 7 - 2);
         }
 
         [TestMethod]
@@ -51,13 +46,10 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
             var testResults = RunTests(assemblyPath, testCases);
 
             // Assert
-            Assert.That.ContainsTestsPassed(testResults,
+            Assert.That.TestsPassed(testResults,
                 "DataRowTestMethod (DerivedString1)",
                 "DataRowTestMethod (DerivedString2)"
             );
-
-            // 3 tests of DerivedClass.DataRowTestMethod - 2 datarow result and 1 parent result
-            Assert.That.PassedTestCount(testResults, 3 - 1);
         }
 
         [TestMethod]
@@ -71,14 +63,11 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
             var testResults = RunTests(assemblyPath, testCases);
 
             // Assert
-            Assert.That.ContainsTestsPassed(testResults,
+            Assert.That.TestsPassed(testResults,
                 "DataRowTestMethodWithSomeOptionalParameters (123)",
                 "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString1)",
                 "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString2,DerivedOptionalString3)"
             );
-
-            // 4 tests of DerivedClass.DataRowTestMethodWithSomeOptionalParameters - 3 datarow result and 1 parent result
-            Assert.That.PassedTestCount(testResults, 4 - 1);
         }
 
         [TestMethod]
@@ -92,15 +81,12 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
             var testResults = RunTests(assemblyPath, testCases);
 
             // Assert
-            Assert.That.ContainsTestsPassed(testResults,
+            Assert.That.TestsPassed(testResults,
                 "DataRowTestMethodWithParamsParameters (2)",
                 "DataRowTestMethodWithParamsParameters (2,DerivedSingleParamsArg)",
                 "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2)",
                 "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2,DerivedParamsArg3)"
             );
-
-            // 5 tests of DerivedClass.DataRowTestMethodWithParamsParameters - 4 datarow result and 1 parent result
-            Assert.That.PassedTestCount(testResults, 5 - 1);
         }
 
         [TestMethod]
@@ -114,14 +100,85 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
             var testResults = RunTests(assemblyPath, testCases);
 
             // Assert
-            Assert.That.ContainsTestsPassed(testResults,
+            Assert.That.TestsPassed(testResults,
                 "DataRowTestMethodFailsWithInvalidArguments ()",
                 "DataRowTestMethodFailsWithInvalidArguments (2)",
                 "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)"
             );
+        }
 
-            // 4 tests of DerivedClass.DataRowTestMethodFailsWithInvalidArguments - 3 datarow result and 1 parent result
-            Assert.That.PassedTestCount(testResults, 4 - 1);
+        [TestMethod]
+        public void DataRowsShouldSerializeDoublesProperly()
+        {
+            // Arrange
+            var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+
+            // Act
+            var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTestDouble");
+            var testResults = RunTests(assemblyPath, testCases);
+
+            // Assert
+            Assert.That.TestsPassed(testResults,
+                "DataRowTestDouble (10.01,20.01)",
+                "DataRowTestDouble (10.02,20.02)"
+            );
+        }
+
+        [TestMethod]
+        public void DataRowsShouldSerializeMixedTypesProperly()
+        {
+            // Arrange
+            var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+
+            // Act
+            var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTestMixed");
+            var testResults = RunTests(assemblyPath, testCases);
+
+            // Assert
+            Assert.That.TestsPassed(testResults,
+                "DataRowTestMixed (10,10,10,10,10,10,10,10)"
+            );
+        }
+
+        [TestMethod]
+        public void DataRowsShouldSerializeEnumsProperly()
+        {
+            // Arrange
+            var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+
+            // Act
+            var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowEnums");
+            var testResults = RunTests(assemblyPath, testCases);
+
+            // Assert
+            Assert.That.TestsPassed(testResults,
+                "DataRowEnums ()",
+                "DataRowEnums (Alfa)",
+                "DataRowEnums (Beta)",
+                "DataRowEnums (Gamma)"
+            );
+        }
+
+        [TestMethod]
+        public void DataRowsShouldHandleNonSerializableValues()
+        {
+            // Arrange
+            var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+
+            // Act
+            var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowNonSerializable");
+            var testResults = RunTests(assemblyPath, testCases);
+
+            // Assert
+            Assert.That.TestsDiscovered(testCases,
+                "DataRowNonSerializable"
+            );
+
+            Assert.That.TestsPassed(testResults,
+                "DataRowNonSerializable (System.String)",
+                "DataRowNonSerializable (System.Int32)",
+                "DataRowNonSerializable (DataRowTestProject.DerivedClass)"
+            );
         }
     }
 }

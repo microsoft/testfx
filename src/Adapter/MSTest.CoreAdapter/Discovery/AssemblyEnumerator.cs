@@ -9,6 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.Serialization;
     using System.Security;
     using System.Text;
 
@@ -249,7 +250,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
         private bool DynamicDataAttached(IDictionary<string, object> sourceLevelParameters, Assembly assembly, UnitTestElement test, List<UnitTestElement> tests)
         {
-            // It should always be `true`, but any part of the chain is obsolete; it might not contain those. Since we depend on those properties, if they don't exist, we bail out early.
+            // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
+            // Since we depend on those properties, if they don't exist, we bail out early.
             if (!test.TestMethod.HasManagedMethodAndTypeProperties)
             {
                 return false;
@@ -320,7 +322,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     var discoveredTest = test.Clone();
                     discoveredTest.DisplayName = displayName;
                     discoveredTest.TestMethod.DataType = DynamicDataType.DataSourceAttribute;
-                    discoveredTest.TestMethod.Data = new[] { (object)rowIndex };
+                    discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(new[] { (object)rowIndex });
                     tests.Add(discoveredTest);
                 }
 
@@ -359,17 +361,37 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             foreach (var dataSource in testDataSources)
             {
                 var data = dataSource.GetData(methodInfo);
+                var discoveredTests = new List<UnitTestElement>();
+                var serializationFailed = false;
 
                 foreach (var d in data)
                 {
                     var discoveredTest = test.Clone();
                     discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d);
 
-                    discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
-                    discoveredTest.TestMethod.Data = d;
+                    try
+                    {
+                        discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
+                        discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
+                    }
+                    catch (SerializationException)
+                    {
+                        serializationFailed = true;
+                        break;
+                    }
 
-                    tests.Add(discoveredTest);
+                    discoveredTests.Add(discoveredTest);
                 }
+
+                // Serialization failed for the type, bail out.
+                if (serializationFailed)
+                {
+                    tests.Add(test);
+
+                    break;
+                }
+
+                tests.AddRange(discoveredTests);
             }
 
             return true;
