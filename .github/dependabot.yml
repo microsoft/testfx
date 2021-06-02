@@ -24,6 +24,17 @@ updates:
     #   - reviewer_one
 
   - package-ecosystem: 'nuget'
+    directory: 'eng/common/sdl'
+    open-pull-requests-limit: 10
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
     directory: 'samples/FxExtensibility'
     open-pull-requests-limit: 10
     schedule:
@@ -487,6 +498,17 @@ updates:
 
   - package-ecosystem: 'nuget'
     directory: 'test/UnitTests/PlatformServices.Universal.Unit.Tests'
+    open-pull-requests-limit: 10
+    schedule:
+      interval: 'daily'
+    # target-branch: 'develop'
+    # assignees:
+    #   - assignee_one
+    # reviewers:
+    #   - reviewer_one
+
+  - package-ecosystem: 'nuget'
+    directory: ''
     open-pull-requests-limit: 10
     schedule:
       interval: 'daily'
