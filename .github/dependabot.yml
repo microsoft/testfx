@@ -3,7 +3,6 @@ registries:
   visual-studio-securitytools:
     type: nuget-feed
     url: https://securitytools.pkgs.visualstudio.com/_packaging/Guardian/nuget/v3/index.json
-    # username: my-username
     # token: ${{ secrets.NUGET_PRIVATE_REG_TOKEN }}
 updates:
   - package-ecosystem: 'github-actions'
