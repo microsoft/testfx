@@ -120,6 +120,25 @@ function Print-Help {
   Exit 0
 }
 
+function Install-WindowsSDK {
+  Push-Location
+  $temp = [System.IO.Path]::GetTempFileName();
+  Remove-Item $temp
+  New-Item $temp -Type Directory | Out-Null
+  Set-Location $temp
+
+  try {
+    Invoke-WebRequest -Method Get -Uri https://go.microsoft.com/fwlink/p/?LinkId=838916 -OutFile sdksetup.exe -UseBasicParsing
+    Start-Process -Wait sdksetup.exe -ArgumentList "/q", "/norestart", "/ceip off", "/features OptionId.WindowsSoftwareDevelopmentKit"  -Wait -PassThru
+  }
+  finally {
+    Pop-Location
+    
+    Remove-Item $temp -Force -Recurse | Out-Null
+  }
+
+}
+
 #
 # Restores packages for the solutions.
 #
@@ -283,6 +302,10 @@ Print-Help
 
 if (ShouldRunStep @("UpdateTPVersion")) {
   Sync-PackageVersions
+}
+
+if (ShouldRunStep @("Install-WindowsSDK")) {
+  Install-WindowsSDK
 }
 
 if (ShouldRunStep @("UpdateTPVersion", "Restore")) {
