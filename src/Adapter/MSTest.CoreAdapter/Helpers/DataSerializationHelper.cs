@@ -85,18 +85,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             for (int i = 0; i < length; i++)
             {
                 var typeIndex = i * 2;
-                var dataIndex = typeIndex + 1;
+                var typeName = serializedData[typeIndex];
+                var serializedValue = serializedData[typeIndex + 1];
 
-                if (serializedData[i] == null)
+                if (serializedValue == null || typeName == null)
                 {
                     data[i] = null;
                     continue;
                 }
 
-                var typeName = serializedData[typeIndex];
                 var serializer = GetSerializer(typeName, assemblies);
 
-                var serialzedDataBytes = Encoding.UTF8.GetBytes(serializedData[dataIndex]);
+                var serialzedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
                 using (var memoryStream = new MemoryStream(serialzedDataBytes))
                 {
                     data[i] = serializer.ReadObject(memoryStream);
