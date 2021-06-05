@@ -44,11 +44,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 {
                     serializedData[typeIndex] = null;
                     serializedData[dataIndex] = null;
+
                     continue;
                 }
 
                 var type = data[i].GetType();
-                var typeName = type.FullName;
+                var typeName = type.AssemblyQualifiedName;
 
                 serializedData[typeIndex] = typeName;
 
@@ -70,9 +71,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// Deserialzes the data serialzed by <see cref="Serialize(object[])" /> method.
         /// </summary>
         /// <param name="serializedData">Serialized data array to deserialize.</param>
-        /// <param name="assemblies">Assemblies that serialized types defined in.</param>
         /// <returns>Deserialized array.</returns>
-        public static object[] Deserialize(string[] serializedData, params Assembly[] assemblies)
+        public static object[] Deserialize(string[] serializedData)
         {
             if (serializedData == null || serializedData.Length % 2 != 0)
             {
@@ -94,7 +94,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                     continue;
                 }
 
-                var serializer = GetSerializer(typeName, assemblies);
+                var serializer = GetSerializer(typeName);
 
                 var serialzedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
                 using (var memoryStream = new MemoryStream(serialzedDataBytes))
@@ -106,7 +106,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             return data;
         }
 
-        private static DataContractJsonSerializer GetSerializer(string typeName, Assembly[] assemblies)
+        private static DataContractJsonSerializer GetSerializer(string typeName)
         {
             var serializer = SerializerCache.SingleOrDefault(i => i.Key.FullName == typeName);
             if (serializer.Value != null)
@@ -118,18 +118,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             if (type != null)
             {
                 return GetSerializer(type);
-            }
-
-            if (assemblies != null)
-            {
-                foreach (var assembly in assemblies)
-                {
-                    type = assembly.GetType(typeName);
-                    if (type != null)
-                    {
-                        return GetSerializer(type);
-                    }
-                }
             }
 
             return GetSerializer(typeof(object));
