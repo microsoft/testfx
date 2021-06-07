@@ -206,7 +206,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 if (this.test.DataType == DynamicDataType.ITestDataSource)
                 {
-                    var data = DataSerializationHelper.Deserialize(this.test.SerializedData, this.testMethodInfo.Parent.Parent.Assembly);
+                    var data = DataSerializationHelper.Deserialize(this.test.SerializedData);
                     var testResults = this.ExecuteTestWithDataSource(null, data);
                     results.AddRange(testResults);
                 }
