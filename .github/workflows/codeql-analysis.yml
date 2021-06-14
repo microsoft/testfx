@@ -29,7 +29,7 @@ jobs:
       - name: Build solution
         id: build_solution
         run: |
-          msbuild .\TestFx.sln /p:UseSharedCompilation=false
+          .\build.cmd -configuration Debug -Full
 
       - name: Perform CodeQL Analysis
         id: analyze_codeql
