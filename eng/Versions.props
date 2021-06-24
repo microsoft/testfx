@@ -32,7 +32,7 @@
     <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>5.3.0</MicrosoftNETCoreUniversalWindowsPlatformVersion>
-    <MicrosoftProjectReunionVersion>0.5.0</MicrosoftProjectReunionVersion>
+    <MicrosoftProjectReunionVersion>0.8.0</MicrosoftProjectReunionVersion>
     <!-- / UWP and WinUI dependencies -->
     <MoqVersion>4.8.3</MoqVersion>
     <CastleCoreVersion>4.3.0</CastleCoreVersion>
