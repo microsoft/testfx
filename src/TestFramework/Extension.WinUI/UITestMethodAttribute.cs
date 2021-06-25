@@ -12,10 +12,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
     public class UITestMethodAttribute : TestMethodAttribute
     {
         /// <summary>
-        /// Gets or sets the <see cref="Microsoft.System.DispatcherQueue"/> that should be used to invoke the UITestMethodAttribute.
+        /// Gets or sets the <see cref="Microsoft.UI.Dispatching.DispatcherQueue"/> that should be used to invoke the UITestMethodAttribute.
         /// If none is provided, it will try to use the Microsoft.UI.Xaml.Window.Current.DispatcherQueue, which only works on UWP.
         /// </summary>
-        public static Microsoft.System.DispatcherQueue DispatcherQueue { get; set; }
+        public static Microsoft.UI.Dispatching.DispatcherQueue DispatcherQueue { get; set; }
 
         /// <summary>
         /// Executes the test method on the UI Thread.
@@ -59,7 +59,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
             {
                 var taskCompletionSource = new global::System.Threading.Tasks.TaskCompletionSource<object>();
 
-                if (!dispatcher.TryEnqueue(System.DispatcherQueuePriority.Normal, () =>
+                if (!dispatcher.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
                     {
                         try
                         {
