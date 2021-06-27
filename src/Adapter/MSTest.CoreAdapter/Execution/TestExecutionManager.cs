@@ -469,17 +469,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             Debug.Assert(testExecutionRecorder != null, "Logger should not be null");
 
-            if (!string.IsNullOrEmpty(result.StandardOut))
+            if (!string.IsNullOrWhiteSpace(result.StandardOut))
             {
                 testExecutionRecorder.SendMessage(TestMessageLevel.Informational, result.StandardOut);
             }
 
-            if (!string.IsNullOrEmpty(result.DebugTrace))
+            if (!string.IsNullOrWhiteSpace(result.DebugTrace))
             {
                 testExecutionRecorder.SendMessage(TestMessageLevel.Informational, result.DebugTrace);
             }
 
-            if (!string.IsNullOrEmpty(result.StandardError))
+            if (!string.IsNullOrWhiteSpace(result.StandardError))
             {
                 testExecutionRecorder.SendMessage(
                     MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,
@@ -490,9 +490,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 foreach (string warning in result.Warnings)
                 {
-                    testExecutionRecorder.SendMessage(
-                        MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,
-                        warning);
+                    if (!string.IsNullOrWhiteSpace(warning))
+                    {
+                        testExecutionRecorder.SendMessage(
+                            MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,
+                            warning);
+                    }
                 }
             }
         }
