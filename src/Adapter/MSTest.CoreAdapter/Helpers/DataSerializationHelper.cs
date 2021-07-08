@@ -17,7 +17,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         private static readonly DataContractJsonSerializerSettings SerializerSettings = new DataContractJsonSerializerSettings()
         {
             UseSimpleDictionaryFormat = true,
-            EmitTypeInformation = System.Runtime.Serialization.EmitTypeInformation.Always
+            EmitTypeInformation = System.Runtime.Serialization.EmitTypeInformation.Always,
+            DateTimeFormat = new System.Runtime.Serialization.DateTimeFormat("O", System.Globalization.CultureInfo.InvariantCulture)
         };
 
         /// <summary>
