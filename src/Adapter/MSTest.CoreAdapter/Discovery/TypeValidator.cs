@@ -21,14 +21,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         // since the later would require a load of the Test Framework extension assembly at this point.
         private const string TestContextFullName = "Microsoft.VisualStudio.TestTools.UnitTesting.TestContext";
         private readonly ReflectHelper reflectHelper;
+        private readonly bool discoverInternalTestClasses;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TypeValidator"/> class.
         /// </summary>
         /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
         internal TypeValidator(ReflectHelper reflectHelper)
+            : this(reflectHelper, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TypeValidator"/> class.
+        /// </summary>
+        /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
+        /// <param name="discoverInternalTestClasses">True to discover test classes which are declared internal in
+        /// addition to test classes which are declared public.</param>
+        internal TypeValidator(ReflectHelper reflectHelper, bool discoverInternalTestClasses)
         {
             this.reflectHelper = reflectHelper;
+            this.discoverInternalTestClasses = discoverInternalTestClasses;
         }
 
         /// <summary>
@@ -43,10 +56,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     (this.reflectHelper.IsAttributeDefined(type, typeof(TestClassAttribute), false) ||
                     this.reflectHelper.HasAttributeDerivedFrom(type, typeof(TestClassAttribute), false)))
             {
-                var isPublic = type.GetTypeInfo().IsPublic || (type.GetTypeInfo().IsNested && type.GetTypeInfo().IsNestedPublic);
-
-                // non-public class
-                if (!isPublic)
+                // inaccessible class
+                if (!this.TypeHasValidAccessibility(type.GetTypeInfo()))
                 {
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
                     warnings.Add(warning);
@@ -130,6 +141,32 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 }
             }
 
+            return true;
+        }
+
+        private bool TypeHasValidAccessibility(TypeInfo type)
+        {
+            if (type.IsVisible)
+            {
+                // The type is public or a public nested class of entirely public container classes.
+                return true;
+            }
+
+            if (!this.discoverInternalTestClasses)
+            {
+                // The type is not externally visible and internal test classes are not to be discovered.
+                return false;
+            }
+
+            // Either the type is not public or it is a nested class and itself or one of its containers is not public.
+            if (type.IsNested)
+            {
+                // IsNestedAssembly means "is nested and is visible only within its own assembly".
+                return type.IsNestedAssembly;
+            }
+
+            // The type is not public and is not nested, so, since only nested types can be private, it must be
+            // internal.
             return true;
         }
     }

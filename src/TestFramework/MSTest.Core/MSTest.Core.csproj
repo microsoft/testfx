@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-
   <PropertyGroup>
     <ProjectGuid>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -32,7 +31,6 @@
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.XML</DocumentationFile>
     <LocDocumentationSubPath>Core</LocDocumentationSubPath>
   </PropertyGroup>
-  
   <ItemGroup>
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -41,8 +39,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
   <ItemGroup>
+    <Compile Include="Attributes\DiscoverInternalTestClassesAttribute.cs" />
     <Compile Include="Attributes\DoNotParallelizeAttribute.cs" />
     <Compile Include="Attributes\DynamicDataAttribute.cs" />
     <Compile Include="Attributes\ParallelizeAttribute.cs" />
@@ -77,7 +75,6 @@
     <Compile Include="Internal\UtfHelper.cs" />
     <Compile Include="Attributes\VSTestAttributes.cs" />
   </ItemGroup>
-  
   <ItemGroup>
     <EmbeddedResource Include="Resources\FrameworkMessages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -86,6 +83,5 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
-  
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
 </Project>

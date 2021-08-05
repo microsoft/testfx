@@ -9,6 +9,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Reflection;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -116,6 +119,70 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         {
             this.SetupTestClass();
             Assert.IsTrue(this.typeValidator.IsValidTestClass(typeof(OuterClass.NestedPublicClass), this.warnings));
+        }
+
+        #endregion
+
+        #region Discovery of internal test classes enabled
+
+        [TestMethod]
+        public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnTrueForInternalTestClasses()
+        {
+            var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+
+            this.SetupTestClass();
+            Assert.IsTrue(typeValidator.IsValidTestClass(typeof(InternalTestClass), this.warnings));
+        }
+
+        [TestMethod]
+        public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldNotReportWarningForInternalTestClasses()
+        {
+            var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+
+            this.SetupTestClass();
+            typeValidator.IsValidTestClass(typeof(InternalTestClass), this.warnings);
+            Assert.AreEqual(0, this.warnings.Count);
+        }
+
+        [TestMethod]
+        public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnTrueForNestedInternalTestClasses()
+        {
+            var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+
+            this.SetupTestClass();
+            Assert.IsTrue(typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), this.warnings));
+        }
+
+        [TestMethod]
+        public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnFalseForPrivateTestClasses()
+        {
+            var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+
+            var nestedPrivateClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "NestedPrivateClass");
+
+            this.SetupTestClass();
+            Assert.IsFalse(typeValidator.IsValidTestClass(nestedPrivateClassType, this.warnings));
+        }
+
+        [TestMethod]
+        public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnFalseForInaccessibleTestClasses()
+        {
+            var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+
+            var inaccessibleClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "InaccessiblePublicClass");
+
+            this.SetupTestClass();
+            Assert.IsFalse(typeValidator.IsValidTestClass(inaccessibleClassType, this.warnings));
+        }
+
+        [TestMethod]
+        public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldNotReportWarningsForNestedInternalTestClasses()
+        {
+            var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+
+            this.SetupTestClass();
+            typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), this.warnings);
+            Assert.AreEqual(0, this.warnings.Count);
         }
 
         #endregion
@@ -327,6 +394,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
         internal class NestedInternalClass
         {
+        }
+
+        private class NestedPrivateClass
+        {
+            public class InaccessiblePublicClass
+            {
+            }
         }
     }
 
