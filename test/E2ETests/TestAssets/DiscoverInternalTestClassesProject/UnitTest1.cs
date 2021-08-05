@@ -5,6 +5,7 @@
 
 namespace DiscoverInternalTestClassesProject
 {
+    using System;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     [TestClass]
@@ -23,5 +24,29 @@ namespace DiscoverInternalTestClassesProject
             {
             }
         }
+    }
+
+    internal class FancyString
+    {
+    }
+
+    public abstract class CaseInsensitivityTests<T>
+    {
+        protected abstract Tuple<T, T> EquivalentInstancesDistinctInCase { get; }
+
+        [TestMethod]
+        public void EqualityIsCaseInsensitive()
+        {
+            var tuple = EquivalentInstancesDistinctInCase;
+
+            Assert.AreEqual(tuple.Item1, tuple.Item2);
+        }
+    }
+
+    [TestClass]
+    internal class FancyStringsAreCaseInsensitive : CaseInsensitivityTests<FancyString>
+    {
+        protected override Tuple<FancyString, FancyString> EquivalentInstancesDistinctInCase =>
+            new Tuple<FancyString, FancyString>(new FancyString(), new FancyString());
     }
 }

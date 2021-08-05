@@ -29,5 +29,21 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
                 "NestedInternalClass_TestMethod1"
             );
         }
+
+        [TestMethod]
+        public void AnInternalTestClassDerivedFromAPublicAbstractGenericBaseClassForAnInternalTypeIsDiscovered()
+        {
+            // Arrange
+            var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+
+            // Act
+            var testCases = DiscoverTests(assemblyPath);
+
+            // Assert
+            Assert.That.AtLeastTestsDiscovered(
+                testCases,
+                "EqualityIsCaseInsensitive"
+            );
+        }
     }
 }
