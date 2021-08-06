@@ -545,6 +545,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         internal class NestedInternalClass
         {
         }
+
+        private class NestedPrivateClass
+        {
+            public class InaccessiblePublicClass
+            {
+            }
+        }
     }
 
     public class PublicClass2
