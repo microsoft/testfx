@@ -57,7 +57,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     this.reflectHelper.HasAttributeDerivedFrom(type, typeof(TestClassAttribute), false)))
             {
                 // inaccessible class
-                if (!this.TypeHasValidAccessibility(type.GetTypeInfo()))
+                if (!this.TypeHasValidAccessibility(type.GetTypeInfo(), this.discoverInternalTestClasses))
                 {
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
                     warnings.Add(warning);
@@ -144,7 +144,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             return true;
         }
 
-        private bool TypeHasValidAccessibility(TypeInfo type)
+        internal bool TypeHasValidAccessibility(TypeInfo type, bool discoverInternalTestClasses)
         {
             if (type.IsVisible)
             {
@@ -152,7 +152,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 return true;
             }
 
-            if (!this.discoverInternalTestClasses)
+            if (!discoverInternalTestClasses)
             {
                 // The type is not externally visible and internal test classes are not to be discovered.
                 return false;
@@ -161,12 +161,54 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             // Either the type is not public or it is a nested class and itself or one of its containers is not public.
             if (type.IsNested)
             {
-                // IsNestedAssembly means "is nested and is visible only within its own assembly".
-                return type.IsNestedAssembly;
+                // Assembly is CLR term for internal visibility:
+                // Private == private,
+                // FamilyANDAssembly == private protected,
+                // Assembly == internal,
+                // Family == protected,
+                // FamilyORAssembly == protected internal,
+                // Public == public.
+                // So this reads IsNestedInternal || IsNestedPublic:
+                var isNestedPublicOrInternal = type.IsNestedAssembly || type.IsNestedPublic;
+
+                if (!isNestedPublicOrInternal)
+                {
+                    // This type is nested, but is not public or internal.
+                    return false;
+                }
+
+                // The type itself is nested and is public, or internal, but could be in hierarchy of types
+                // where some of the parent types is private (or other modifier that is not public and is not internal)
+                // if we looked for just public types we could just look at IsVisible, but internal type nested in internal type
+                // is not Visible, so we need to check all the parents and make sure they are all either public or internal.
+                var parentsArePublicOrInternal = true;
+                var declaringType = type.DeclaringType;
+                while (declaringType != null && parentsArePublicOrInternal)
+                {
+                    var declaringTypeIsPublicOrInternal =
+
+                        // Declaring type is non-nested type, and we are looking for internal or public, which are the only
+                        // two valid options that non-nested type can be.
+                        !declaringType.IsNested
+
+                        // Or the type is nested internal, or nested public type, but not any other
+                        // like nested protected internal type, or nested private type.
+                        || declaringType.GetTypeInfo().IsNestedAssembly || declaringType.GetTypeInfo().IsNestedPublic;
+
+                    if (!declaringTypeIsPublicOrInternal)
+                    {
+                        parentsArePublicOrInternal = false;
+                        break;
+                    }
+
+                    declaringType = declaringType.DeclaringType;
+                }
+
+                return parentsArePublicOrInternal;
             }
 
-            // The type is not public and is not nested, so, since only nested types can be private, it must be
-            // internal.
+            // The type is not public and is not nested. Non-nested types can be only public or internal
+            // so this type must be internal.
             return true;
         }
     }
