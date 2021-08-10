@@ -420,7 +420,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             // actual return value is irrelevant for these tests.
             mockAssembly
                 .Setup(a => a.GetCustomAttributes(
-                    typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalTestClassesAttribute),
+                    typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalsAttribute),
                     true))
                 .Returns(new Attribute[0]);
 
@@ -453,7 +453,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
         internal Mock<TypeEnumerator> MockTypeEnumerator { get; set; }
 
-        internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternalTestClasses)
+        internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals)
         {
             return this.MockTypeEnumerator.Object;
         }

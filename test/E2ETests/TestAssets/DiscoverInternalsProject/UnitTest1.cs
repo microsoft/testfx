@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-[assembly: Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalTestClasses]
+using System.Collections.Generic;
+using System.Runtime.Serialization;
 
-namespace DiscoverInternalTestClassesProject
+[assembly: Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternals]
+
+namespace DiscoverInternalsProject
 {
     using System;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -48,5 +51,26 @@ namespace DiscoverInternalTestClassesProject
     {
         protected override Tuple<FancyString, FancyString> EquivalentInstancesDistinctInCase =>
             new Tuple<FancyString, FancyString>(new FancyString(), new FancyString());
+    }
+
+    [DataContract]
+    internal class SerializableInternalType
+    {
+    }
+
+    [TestClass]
+    internal class DynamicDataTest
+    {
+        [DataTestMethod]
+        [DynamicData(nameof(DynamicData), DynamicDataSourceType.Property)]
+        internal void DynamicDataTestMethod(SerializableInternalType serializableInternalType)
+        {
+
+        }
+
+        public static IEnumerable<object[]> DynamicData => new []
+        {
+            new object[] { new SerializableInternalType() }
+        };
     }
 }

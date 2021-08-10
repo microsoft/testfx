@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         // since the later would require a load of the Test Framework extension assembly at this point.
         private const string TestContextFullName = "Microsoft.VisualStudio.TestTools.UnitTesting.TestContext";
         private readonly ReflectHelper reflectHelper;
-        private readonly bool discoverInternalTestClasses;
+        private readonly bool discoverInternals;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TypeValidator"/> class.
@@ -36,12 +36,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// Initializes a new instance of the <see cref="TypeValidator"/> class.
         /// </summary>
         /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
-        /// <param name="discoverInternalTestClasses">True to discover test classes which are declared internal in
+        /// <param name="discoverInternals">True to discover test classes which are declared internal in
         /// addition to test classes which are declared public.</param>
-        internal TypeValidator(ReflectHelper reflectHelper, bool discoverInternalTestClasses)
+        internal TypeValidator(ReflectHelper reflectHelper, bool discoverInternals)
         {
             this.reflectHelper = reflectHelper;
-            this.discoverInternalTestClasses = discoverInternalTestClasses;
+            this.discoverInternals = discoverInternals;
         }
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     this.reflectHelper.HasAttributeDerivedFrom(type, typeof(TestClassAttribute), false)))
             {
                 // inaccessible class
-                if (!this.TypeHasValidAccessibility(type.GetTypeInfo(), this.discoverInternalTestClasses))
+                if (!this.TypeHasValidAccessibility(type.GetTypeInfo(), this.discoverInternals))
                 {
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
                     warnings.Add(warning);
@@ -144,7 +144,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             return true;
         }
 
-        internal bool TypeHasValidAccessibility(TypeInfo type, bool discoverInternalTestClasses)
+        internal bool TypeHasValidAccessibility(TypeInfo type, bool discoverInternals)
         {
             if (type.IsVisible)
             {
@@ -152,7 +152,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 return true;
             }
 
-            if (!discoverInternalTestClasses)
+            if (!discoverInternals)
             {
                 // The type is not externally visible and internal test classes are not to be discovered.
                 return false;

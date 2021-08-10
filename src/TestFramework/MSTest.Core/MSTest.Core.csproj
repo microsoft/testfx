@@ -40,7 +40,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\DiscoverInternalTestClassesAttribute.cs" />
+    <Compile Include="Attributes\DiscoverInternalsAttribute.cs" />
     <Compile Include="Attributes\DoNotParallelizeAttribute.cs" />
     <Compile Include="Attributes\DynamicDataAttribute.cs" />
     <Compile Include="Attributes\ParallelizeAttribute.cs" />
