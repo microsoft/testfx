@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
     <!-- This repo version -->
@@ -6,7 +6,7 @@
     <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
-    <MicrosoftNETTestSdkVersion>16.11.0-release-20210626-04</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>16.11.0</MicrosoftNETTestSdkVersion>
     <!-- Toolset -->
     <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
     <NuGetFrameworksVersion>5.9.1</NuGetFrameworksVersion>
