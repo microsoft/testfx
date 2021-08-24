@@ -28,6 +28,9 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
         public static void TestsDiscovered(this Assert _, IEnumerable<TestCase> actualTests, params string[] expectedTests)
             => ContainsTestsDiscovered(actualTests, expectedTests, true);
 
+        public static void AtLeastTestsDiscovered(this Assert _, IEnumerable<TestCase> actualTests, params string[] expectedTests)
+            => ContainsTestsDiscovered(actualTests, expectedTests, false);
+
         public static void TestsPassed(this Assert _, IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
             => ContainsExpectedTestsWithOutcome(actual, testCases, TestOutcome.Passed, expectedTests, true, settings);
 

@@ -173,6 +173,36 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             Assert.IsTrue(this.testMethodValidator.IsValidTestMethod(methodInfo, this.type, this.warnings));
         }
 
+        #region Discovery of internals enabled
+
+        [TestMethod]
+        public void WhenDiscoveryOfInternalsIsEnabledIsValidTestMethodShouldReturnTrueForInternalMethods()
+        {
+            this.SetupTestMethod();
+            var methodInfo = typeof(DummyTestClass).GetMethod(
+                "InternalTestMethod",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+            var testMethodValidator = new TestMethodValidator(this.mockReflectHelper.Object, true);
+
+            Assert.IsTrue(testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), this.warnings));
+        }
+
+        [TestMethod]
+        public void WhenDiscoveryOfInternalsIsEnabledIsValidTestMethodShouldReturnFalseForPrivateMethods()
+        {
+            this.SetupTestMethod();
+            var methodInfo = typeof(DummyTestClass).GetMethod(
+                "PrivateTestMethod",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+
+            var testMethodValidator = new TestMethodValidator(this.mockReflectHelper.Object, true);
+
+            Assert.IsFalse(testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), this.warnings));
+        }
+
+        #endregion
+
         private void SetupTestMethod()
         {
             this.mockReflectHelper.Setup(
@@ -222,6 +252,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         internal void InternalTestMethod()
+        {
+        }
+
+        private void PrivateTestMethod()
         {
         }
     }

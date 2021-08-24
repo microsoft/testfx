@@ -70,8 +70,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// </summary>
         /// <param name="method">The method to verify.</param>
         /// <param name="ignoreParameterLength">Indicates whether parameter length is to be ignored.</param>
+        /// <param name="discoverInternals">True if internal test classes and test methods should be discovered in
+        /// addition to public test classes and methods.</param>
         /// <returns>True if the method has the right test method signature.</returns>
-        internal static bool HasCorrectTestMethodSignature(this MethodInfo method, bool ignoreParameterLength)
+        internal static bool HasCorrectTestMethodSignature(this MethodInfo method, bool ignoreParameterLength, bool discoverInternals = false)
         {
             Debug.Assert(method != null, "method should not be null.");
 
@@ -79,7 +81,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
                 !method.IsAbstract &&
                 !method.IsStatic &&
                 !method.IsGenericMethod &&
-                method.IsPublic &&
+                (method.IsPublic || (discoverInternals && method.IsAssembly)) &&
                 (method.GetParameters().Length == 0 || ignoreParameterLength) &&
                 method.IsVoidOrTaskReturnType(); // Match return type Task for async methods only. Else return type void.
         }
