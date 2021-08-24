@@ -18,14 +18,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     internal class TestMethodValidator
     {
         private readonly ReflectHelper reflectHelper;
+        private readonly bool discoverInternals;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TestMethodValidator"/> class.
         /// </summary>
         /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
         internal TestMethodValidator(ReflectHelper reflectHelper)
+            : this(reflectHelper, false)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestMethodValidator"/> class.
+        /// </summary>
+        /// <param name="reflectHelper">An instance to reflection helper for type information.</param>
+        /// <param name="discoverInternals">True to discover methods which are declared internal in addition to methods
+        /// which are declared public.</param>
+        internal TestMethodValidator(ReflectHelper reflectHelper, bool discoverInternals)
         {
             this.reflectHelper = reflectHelper;
+            this.discoverInternals = discoverInternals;
         }
 
         /// <summary>
@@ -51,10 +64,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 return false;
             }
 
+            var isAccessible = testMethodInfo.IsPublic
+                || (this.discoverInternals && testMethodInfo.IsAssembly);
+
             // Todo: Decide whether parameter count matters.
             // The isGenericMethod check below id to verify that there are no closed generic methods slipping through.
             // Closed generic methods being GenericMethod<int> and open being GenericMethod<T>.
-            var isValidTestMethod = testMethodInfo.IsPublic && !testMethodInfo.IsAbstract && !testMethodInfo.IsStatic
+            var isValidTestMethod = isAccessible && !testMethodInfo.IsAbstract && !testMethodInfo.IsStatic
                                     && !testMethodInfo.IsGenericMethod
                                     && testMethodInfo.IsVoidOrTaskReturnType();
 

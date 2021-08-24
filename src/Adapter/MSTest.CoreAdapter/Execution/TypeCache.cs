@@ -50,6 +50,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         private readonly ConcurrentDictionary<string, TestClassInfo> classInfoCache = new ConcurrentDictionary<string, TestClassInfo>(StringComparer.Ordinal);
 
+        private readonly ConcurrentDictionary<string, bool> discoverInternalsCache =
+            new ConcurrentDictionary<string, bool>();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="TypeCache"/> class.
         /// </summary>
@@ -635,9 +638,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns> The <see cref="MethodInfo"/>. </returns>
         private MethodInfo GetMethodInfoForTestMethod(TestMethod testMethod, TestClassInfo testClassInfo)
         {
+            var discoverInternals = this.discoverInternalsCache.GetOrAdd(
+                testMethod.AssemblyName,
+                _ => testClassInfo.Parent.Assembly.GetCustomAttribute<DiscoverInternalsAttribute>() != null);
+
             var testMethodInfo = testMethod.HasManagedMethodAndTypeProperties
-                               ? this.GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo)
-                               : this.GetMethodInfoUsingRuntimeMethods(testMethod, testClassInfo);
+                               ? this.GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo, discoverInternals)
+                               : this.GetMethodInfoUsingRuntimeMethods(testMethod, testClassInfo, discoverInternals);
 
             // if correct method is not found, throw appropriate
             // exception about what is wrong.
@@ -650,7 +657,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             return testMethodInfo;
         }
 
-        private MethodInfo GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo)
+        private MethodInfo GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
         {
             MethodInfo testMethodInfo = null;
             var methodBase = ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName, testMethod.ManagedMethodName);
@@ -665,14 +672,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 testMethodInfo = methodBase.DeclaringType.GetRuntimeMethod(methodBase.Name, parameters);
             }
 
-            testMethodInfo = testMethodInfo?.HasCorrectTestMethodSignature(true) ?? false
+            testMethodInfo = testMethodInfo?.HasCorrectTestMethodSignature(true, discoverInternals) ?? false
                            ? testMethodInfo
                            : null;
 
             return testMethodInfo;
         }
 
-        private MethodInfo GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo)
+        private MethodInfo GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
         {
             MethodInfo testMethodInfo;
 
@@ -684,7 +691,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 testMethodInfo =
                     Array.Find(methodsInClass, method => method.Name.Equals(testMethod.Name)
                                                 && method.DeclaringType.FullName.Equals(testMethod.DeclaringClassFullName)
-                                                && method.HasCorrectTestMethodSignature(true));
+                                                && method.HasCorrectTestMethodSignature(true, discoverInternals));
             }
             else
             {
@@ -693,7 +700,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Prioritize the former while maintaining previous behavior for the latter.
                 var className = testClassInfo.ClassType.FullName;
                 testMethodInfo =
-                    methodsInClass.Where(method => method.Name.Equals(testMethod.Name) && method.HasCorrectTestMethodSignature(true))
+                    methodsInClass.Where(method => method.Name.Equals(testMethod.Name) && method.HasCorrectTestMethodSignature(true, discoverInternals))
                         .OrderByDescending(method => method.DeclaringType.FullName.Equals(className)).FirstOrDefault();
             }
 
