@@ -1,0 +1,18 @@
+{
+  "tools": {
+    "vs": {
+      "version": "16.0",
+      "components": [
+        "Microsoft.Net.Component.4.5.2.TargetingPack",
+        "Microsoft.VisualStudio.Windows.Build",
+        "Microsoft.VisualStudio.Component.VSSDK"
+      ]
+    },
+    "dotnet": "6.0.100-rc.1.21379.2",
+    "vswhere": "2.5.2"
+  },
+  "msbuild-sdks": {
+    "Microsoft.DotNet.Arcade.Sdk": "6.0.0-beta.21420.4",
+    "Microsoft.DotNet.Helix.Sdk": "6.0.0-beta.21420.4"
+  }
+}

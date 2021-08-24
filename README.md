@@ -8,7 +8,7 @@ This is a fully supported, open source and cross-platform implementation of the 
 
 ### Build status
 
-[![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/Microsoft/testfx/microsoft.testfx.ci?branchName=master)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=937&branchName=master)
+[![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/Microsoft/testfx/microsoft.testfx.ci?branchName=main)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=937&branchName=main)
 
 ### Latest Builds
 |            | Framework | Adapter |
@@ -19,22 +19,22 @@ This is a fully supported, open source and cross-platform implementation of the 
 There are many ways to contribute to testfx
 - [Submit issues](https://github.com/Microsoft/testfx/issues) and help verify fixes as they are checked in.
 - Review the [source code changes](https://github.com/Microsoft/testfx/pulls).
-- [Contribute features and fixes](https://github.com/Microsoft/testfx-docs/blob/master/docs/contribute.md).
+- [Contribute features and fixes](https://github.com/Microsoft/testfx-docs/blob/main/docs/contribute.md).
 - Contribute to the [documentation](https://github.com/Microsoft/testfx-docs).
 
 ### Building
 testfx can be built from within Visual Studio or from the CLI.
-- [Building with Visual Studio](https://github.com/Microsoft/testfx-docs/blob/master/docs/contribute.md#building-with-visual-studiovs)
-- [Building with CLI](https://github.com/Microsoft/testfx-docs/blob/master/docs/contribute.md#building-with-command-linecli)
+- [Building with Visual Studio](https://github.com/Microsoft/testfx-docs/blob/main/docs/contribute.md#building-with-visual-studiovs)
+- [Building with CLI](https://github.com/Microsoft/testfx-docs/blob/main/docs/contribute.md#building-with-command-linecli)
 
 ### Microsoft Open Source Code of Conduct
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 ### License
-testfx platform is licensed under the [MIT license](https://github.com/Microsoft/testfx/blob/master/LICENSE)
+testfx platform is licensed under the [MIT license](https://github.com/Microsoft/testfx/blob/main/LICENSE)
 
 ### Issue Tracking
-Please see [issue tracking](https://github.com/Microsoft/testfx-docs/blob/master/issuetracking.md) for a description of the workflow we use to process issues.
+Please see [issue tracking](https://github.com/Microsoft/testfx-docs/blob/main/issuetracking.md) for a description of the workflow we use to process issues.
 
 ### Roadmap
-For information on shipped and upcoming features/enhancements please refer to our [Releases](https://github.com/Microsoft/testfx-docs/blob/master/docs/releases.md) and [Quarterly Checkin reports](https://github.com/Microsoft/testfx-docs/tree/master/Quarterly%20Checkins).
+For information on shipped and upcoming features/enhancements please refer to our [Releases](https://github.com/Microsoft/testfx-docs/blob/main/docs/releases.md) and [Quarterly Checkin reports](https://github.com/Microsoft/testfx-docs/tree/main/Quarterly%20Checkins).

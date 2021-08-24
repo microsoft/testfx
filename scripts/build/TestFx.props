@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <RepoRoot Condition=" '$(RepoRoot)' == '' ">$([MSBuild]::NormalizeDirectory('$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'LICENSE'))'))</RepoRoot>
+    <ArtifactsBinDir Condition=" '$(ArtifactsBinDir)' == '' ">$(RepoRoot)artifacts\$(Configuration)\</ArtifactsBinDir>
+    <IsLocalizationEnabled Condition=" '$(UpdateXlf)' == 'true' or '$(IsLocalizedBuild)' == 'true' ">true</IsLocalizationEnabled>
+  </PropertyGroup>
+
+  <Import Project="$(RepoRoot)eng\Versions.props" />
+
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <FileAlignment>512</FileAlignment>
+    <GenerateLCE>true</GenerateLCE>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)key.snk</AssemblyOriginatorKeyFile>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign Condition=" '$(IsLocalizedBuild)' == '' or '$(IsLocalizedBuild)' != 'true'">true</PublicSign>
+    <!-- Temporarily turning on Delay signing for Localized builds because publickey = true is not passed on to the assembler to create resource assmblies.-->
+    <DelaySign Condition=" '$(IsLocalizedBuild)' == 'true' ">true</DelaySign>
+    <OutputPath Condition=" '$(OutputPath)' == '' ">$(RepoRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\</OutputPath>
+    <IntermediatePath Condition=" '$(IntermediatePath)' == '' ">$(RepoRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\obj\</IntermediatePath>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsTest Condition="$(MSBuildProjectDirectory.Contains('\test\'))">true</IsTest>
+  </PropertyGroup>
+
+  <!-- Code analysis settings -->
+  <PropertyGroup>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)stylecop.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition=" '$(IsTest)' == 'true' ">$(MSBuildThisFileDirectory)stylecop.test.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+</Project>

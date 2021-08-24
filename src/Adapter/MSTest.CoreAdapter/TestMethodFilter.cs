@@ -65,8 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <returns>a TestProperty instance.</returns>
         internal TestProperty PropertyProvider(string propertyName)
         {
-            TestProperty testProperty;
-            this.supportedProperties.TryGetValue(propertyName, out testProperty);
+            this.supportedProperties.TryGetValue(propertyName, out var testProperty);
             Debug.Assert(testProperty != null, "Invalid property queried");
             return testProperty;
         }
@@ -81,8 +80,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             if (currentTest != null && propertyName != null)
             {
-                TestProperty testProperty;
-                if (this.supportedProperties.TryGetValue(propertyName, out testProperty))
+                if (this.supportedProperties.TryGetValue(propertyName, out var testProperty))
                 {
                     // Test case might not have defined this property. In that case GetPropertyValue()
                     // would return default value. For filtering, if property is not defined return null.

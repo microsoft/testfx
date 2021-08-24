@@ -31,19 +31,14 @@ Param(
 #
 $ErrorActionPreference = "Stop"
 
-$CurrentScriptDir = (Get-Item (Split-Path $MyInvocation.MyCommand.Path))
-
 #
 # Variables
 #
-$env:TF_ROOT_DIR = $CurrentScriptDir.Parent.FullName
-$env:TF_TOOLS_DIR = Join-Path $env:TF_ROOT_DIR "tools"
-$env:DOTNET_CLI_VERSION = "6.0.100-alpha.1.21067.8"
-$env:TF_TESTS_OUTDIR_PATTERN = "*.Tests"
+$env:TF_TESTS_OUTDIR_PATTERN = "*Tests"
 $env:TF_UNITTEST_FILES_PATTERN = "*.UnitTests*.dll"
 $env:TF_COMPONENTTEST_FILES_PATTERN = "*.ComponentTests*.dll"
 $env:TF_E2ETEST_FILES_PATTERN = "*.E2ETests*.dll"
-$env:TF_NetCoreContainers =@("MSTestAdapter.PlatformServices.NetCore.UnitTests.dll")
+$env:TF_NetCoreContainers = @("MSTestAdapter.PlatformServices.NetCore.UnitTests.dll")
 
 #
 # Test configuration
@@ -95,7 +90,7 @@ function Invoke-Test
     # Get test assemblies from these folders that match the pattern specified.
     foreach($container in $testFolders)
     {
-        $testContainer = Get-ChildItem $container\* -Recurse -Include $env:TF_UNITTEST_FILES_PATTERN, $env:TF_COMPONENTTEST_FILES_PATTERN, $env:TF_E2ETEST_FILES_PATTERN
+        $testContainer = Get-ChildItem $container\* -Recurse -Include $env:TF_UNITTEST_FILES_PATTERN, $env:TF_COMPONENTTEST_FILES_PATTERN, $env:TF_E2ETEST_FILES_PATTERN, "DiscoveryAndExecutionTests.dll"
         
         $testContainerName = $testContainer.Name
         $testContainerPath = $testContainer.FullName
@@ -189,16 +184,6 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
             throw "Tests failed."
         }
     }
-}
-
-function Get-VSTestPath
-{
-    $versionsFile = "$PSScriptRoot\build\TestFx.Versions.targets"
-    $TestPlatformVersion = (([XML](Get-Content $versionsFile)).Project.PropertyGroup.TestPlatformVersion).InnerText
-
-    $vsInstallPath = "$PSScriptRoot\..\packages\Microsoft.TestPlatform.$TestPlatformVersion\"
-    $vstestPath = Join-Path -path $vsInstallPath "tools\net451\Common7\IDE\Extensions\TestPlatform\vstest.console.exe"
-    return Resolve-Path -path $vstestPath
 }
 
 Print-Help

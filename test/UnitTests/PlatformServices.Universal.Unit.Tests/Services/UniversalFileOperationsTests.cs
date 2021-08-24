@@ -108,10 +108,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
         [TestMethod]
         public void GetNavigationDataShouldReturnNullFileName()
         {
-            int minLineNumber;
-            string fileName;
-
-            this.fileOperations.GetNavigationData(null, null, null, out minLineNumber, out fileName);
+            this.fileOperations.GetNavigationData(null, null, null, out var minLineNumber, out var fileName);
             Assert.IsNull(fileName);
             Assert.AreEqual(-1, minLineNumber);
         }

@@ -1,21 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
-  </PropertyGroup>
-  
-  <PropertyGroup>
     <TargetFramework>net452</TargetFramework>
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(TestFxRoot)artifacts\TestAssets\ComponentTests</OutputPath>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(TestFxRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
-    <DelaySign>true</DelaySign>
+    <OutputPath>$(RepoRoot)artifacts\TestAssets\ComponentTests</OutputPath>
+    <AssemblyOriginatorKeyFile>$(RepoRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="1.2.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Legacy__MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(Legacy__MSTestTestAdapterVersion)" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(Legacy__MSTestTestFrameworkVersion)" />
   </ItemGroup>
 </Project>

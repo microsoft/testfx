@@ -49,7 +49,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// </summary>
         /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
         /// <returns> list of test cases.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "0#", Justification = "This is only for internal use.")]
         internal virtual ICollection<UnitTestElement> Enumerate(out ICollection<string> warnings)
         {
             warnings = new Collection<string>();
@@ -199,11 +198,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString()).ToArray();
             }
 
+            testElement.Ignored = this.reflectHelper.IsAttributeDefined(method, typeof(IgnoreAttribute), false);
+
             // Get Deployment items if any.
-            testElement.DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(
-                method,
-                this.type,
-                warnings);
+            testElement.DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, this.type, warnings);
 
             // get DisplayName from TestMethodAttribute
             var testMethodAttribute = this.reflectHelper.GetCustomAttribute(method, typeof(TestMethodAttribute)) as TestMethodAttribute;

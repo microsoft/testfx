@@ -54,11 +54,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         [TestMethod]
         public void DeployShouldDeployFilesInASourceAndReturnTrue()
         {
-            TestRunDirectories testRunDirectories;
             var testCase = this.GetTestCase(Assembly.GetExecutingAssembly().Location);
 
             // Setup mocks.
-            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out testRunDirectories);
+            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
             var mockRunContext = new Mock<IRunContext>();
             mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -79,13 +78,12 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         [TestMethod]
         public void DeployShouldDeployFilesInMultipleSourcesAndReturnTrue()
         {
-            TestRunDirectories testRunDirectories;
             var testCase1 = this.GetTestCase(Assembly.GetExecutingAssembly().Location);
             var sourceFile2 = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "a.dll");
             var testCase2 = this.GetTestCase(sourceFile2);
 
             // Setup mocks.
-            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out testRunDirectories);
+            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
             var mockRunContext = new Mock<IRunContext>();
             mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -113,11 +111,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         [TestMethod]
         public void DeployShouldCreateDeploymentDirectories()
         {
-            TestRunDirectories testRunDirectories;
             var testCase = this.GetTestCase(typeof(DesktopTestDeploymentTests).GetTypeInfo().Assembly.Location);
 
             // Setup mocks.
-            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out testRunDirectories);
+            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
             var mockRunContext = new Mock<IRunContext>();
             mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);

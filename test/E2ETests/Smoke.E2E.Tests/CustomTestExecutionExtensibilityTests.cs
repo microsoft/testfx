@@ -15,6 +15,7 @@ namespace MSTestAdapter.Smoke.E2ETests
         public void ExecuteCustomTestExtensibilityTests()
         {
             this.InvokeVsTestForExecution(new string[] { TestAssembly });
+
             this.ValidatePassedTestsContain(
                 "CustomTestMethod1 - Execution number 1",
                 "CustomTestMethod1 - Execution number 2",
@@ -35,13 +36,12 @@ namespace MSTestAdapter.Smoke.E2ETests
         public void ExecuteCustomTestExtensibilityWithTestDataTests()
         {
             this.InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~CustomTestExTests.CustomTestMethod2");
+
             this.ValidatePassedTests(
                 "CustomTestMethod2 (B)",
                 "CustomTestMethod2 (B)",
                 "CustomTestMethod2 (B)");
-
-            // Parent results should fail and thus failed count should be 7.
-            this.ValidateFailedTestsCount(7);
+            this.ValidateFailedTestsCount(6);
             this.ValidateFailedTestsContain(
                 TestAssembly,
                 true,

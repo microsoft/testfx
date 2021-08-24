@@ -1,9 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
-  </PropertyGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -31,48 +29,26 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Microsoft.TestPlatform.AdapterUtilities, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.AdapterUtilities.$(TestPlatformVersion)\lib\net45\Microsoft.TestPlatform.AdapterUtilities.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.TestPlatform.CommunicationUtilities, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.TranslationLayer.$(TestPlatformVersion)\lib\net451\Microsoft.TestPlatform.CommunicationUtilities.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.TestPlatform.CoreUtilities, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.TranslationLayer.$(TestPlatformVersion)\lib\net451\Microsoft.TestPlatform.CoreUtilities.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.TestPlatform.PlatformAbstractions, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.TranslationLayer.$(TestPlatformVersion)\lib\net451\Microsoft.TestPlatform.PlatformAbstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.TestPlatform.VsTestConsole.TranslationLayer, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.TranslationLayer.$(TestPlatformVersion)\lib\net451\Microsoft.TestPlatform.VsTestConsole.TranslationLayer.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.Common, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.TranslationLayer.$(TestPlatformVersion)\lib\net451\Microsoft.VisualStudio.TestPlatform.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Microsoft.TestPlatform.ObjectModel.$(TestPlatformVersion)\lib\net451\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="NuGet.Frameworks, Version=5.0.0.6, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\NuGet.Frameworks.5.0.0\lib\net40\NuGet.Frameworks.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
+    
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="$(SystemRuntimeInteropServicesRuntimeInformationVersion)" />
+    <PackageReference Include="Moq" Version="$(MoqVersion)" />
+
+    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\System.Collections.Immutable.1.5.0\lib\netstandard1.3\System.Collections.Immutable.dll</HintPath>
-    </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Reflection.Metadata, Version=1.4.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\System.Reflection.Metadata.1.6.0\lib\portable-net45+win8\System.Reflection.Metadata.dll</HintPath>
-    </Reference>
     <Reference Include="System.Runtime" />
-    <Reference Include="System.Runtime.InteropServices.RuntimeInformation, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\System.Runtime.InteropServices.RuntimeInformation.4.3.0\lib\net45\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -80,56 +56,69 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="$(TestFxRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
+
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
       <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
       <Name>MSTest.Core</Name>
     </ProjectReference>
   </ItemGroup>
+  
   <ItemGroup>
+    <Compile Include="CLITestBase.common.cs" />
+    <Compile Include="CLITestBase.e2e.cs" />
     <Compile Include="DiscoveryEventsHandler.cs" />
     <Compile Include="RunConfiguration.cs" />
     <Compile Include="RunEventsHandler.cs" />
-    <Compile Include="CLITestBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XmlRunSettingsUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="packages.config" />
   </ItemGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
-  <PropertyGroup>
-    <SourcePath>$(TargetDir)..\</SourcePath>
-    <DestinationPath>$(TargetDir)..\..\TestAssets</DestinationPath>
-    <PackagesPath>$(TestFxRoot)\packages</PackagesPath>
-    <PostBuildEvent>
-      xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities.$(TestPlatformVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities.$(TestPlatformVersion)\lib\netstandard1.0\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)\netcoreapp1.1\"
-      xcopy /Y /I "$(PackagesPath)\microsoft.testplatform.adapterutilities.$(TestPlatformVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" "$(DestinationPath)\netcoreapp2.1\"
-      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" "$(DestinationPath)\netcoreapp1.1\"
-      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" "$(DestinationPath)\netcoreapp1.1\"
-      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" "$(DestinationPath)\netcoreapp1.1\"
-      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" "$(DestinationPath)\netcoreapp1.1\"
-      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" "$(DestinationPath)\netcoreapp1.1\"
-      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" "$(DestinationPath)\netcoreapp1.1\"
-      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" "$(DestinationPath)\netcoreapp2.1\"
-      xcopy /Y /I "$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" "$(DestinationPath)\netcoreapp2.1\"
-      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" "$(DestinationPath)\netcoreapp2.1\"
-      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" "$(DestinationPath)\netcoreapp2.1\"
-      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" "$(DestinationPath)\netcoreapp2.1\"
-      xcopy /Y /I "$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" "$(DestinationPath)\netcoreapp2.1\"
-      xcopy /Y /I "$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" "$(DestinationPath)"
-      xcopy /Y /I "$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" "$(DestinationPath)"
-    </PostBuildEvent>
-  </PropertyGroup>
+  
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  
+  <Target Name="CopyMSBuildScriptsFiles" DependsOnTargets="CoreCompile" AfterTargets="CoreCompile">
+    <PropertyGroup>
+      <SourcePath>$(TargetDir)..\</SourcePath>
+      <DestinationPath>$(TargetDir)..\..\TestAssets</DestinationPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNETTestSdkVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" KeepDuplicates="True" />
+      <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNETTestSdkVersion)\lib\netstandard1.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" Folder="netcoreapp1.1" />
+      <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" KeepDuplicates="True" Folder="netcoreapp1.1" />
+      <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" KeepDuplicates="True" Folder="netcoreapp1.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" Folder="netcoreapp1.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" Folder="netcoreapp1.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" KeepDuplicates="True" Folder="netcoreapp1.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" KeepDuplicates="True" Folder="netcoreapp1.1" />
+      <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNETTestSdkVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" Folder="netcoreapp2.1" />
+      <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" KeepDuplicates="True" Folder="netcoreapp2.1" />
+      <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" KeepDuplicates="True" Folder="netcoreapp2.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" Folder="netcoreapp2.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" Folder="netcoreapp2.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" KeepDuplicates="True" Folder="netcoreapp2.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" KeepDuplicates="True" Folder="netcoreapp2.1" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(FileToCopy)" 
+          DestinationFiles="$(DestinationPath)\%(FileToCopy.Folder)\%(Filename)%(Extension)"
+          SkipUnchangedFiles="True" OverwriteReadOnlyFiles="True" Retries="3" RetryDelayMilliseconds="500"
+          UseHardlinksIfPossible="False" UseSymboliclinksIfPossible="False" ErrorIfLinkFails="False"
+          Condition="@(FileToCopy->Count()) > 0">
+      
+      <Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
+    </Copy>
+  </Target>
 </Project>

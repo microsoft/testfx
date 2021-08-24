@@ -28,7 +28,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
         public UnitTestRunner(MSTestSettings settings)
-            : this(settings, new ReflectHelper())
+            : this(settings, ReflectHelper.Instance)
         {
         }
 
@@ -68,7 +68,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             if (testMethod == null)
             {
-                throw new ArgumentNullException("testMethod");
+                throw new ArgumentNullException(nameof(testMethod));
             }
 
             try
@@ -94,7 +94,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         return new UnitTestResult[] { new UnitTestResult(UnitTestOutcome.NotRunnable, testMethodInfo.NotRunnableReason) };
                     }
 
-                    return new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces).Execute();
+                    var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                    return testMethodRunner.Execute();
                 }
             }
             catch (TypeInspectionException ex)

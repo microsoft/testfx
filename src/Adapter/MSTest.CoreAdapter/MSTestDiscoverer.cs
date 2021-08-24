@@ -80,7 +80,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                     source =>
                     PlatformServiceProvider.Instance.TestSource.ValidSourceExtensions.Any(
                         extension =>
-                        string.Compare(Path.GetExtension(source), extension, StringComparison.OrdinalIgnoreCase) == 0));
+                        string.Equals(Path.GetExtension(source), extension, StringComparison.OrdinalIgnoreCase)));
         }
     }
 }

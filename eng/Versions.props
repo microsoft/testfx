@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <!-- This repo version -->
+    <VersionPrefix>6.0.0</VersionPrefix>
+    <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
+    <!-- Opt-out repo features -->
+    <UsingToolXliff>false</UsingToolXliff>
+    <MicrosoftNETTestSdkVersion>17.0.0-preview-20210817-02</MicrosoftNETTestSdkVersion>
+    <!-- Toolset -->
+    <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
+    <NuGetFrameworksVersion>5.9.1</NuGetFrameworksVersion>
+    <VsWhereVersion>2.5.2</VsWhereVersion>
+    <MicrosoftInternalDiaInteropVersion>14.0.0</MicrosoftInternalDiaInteropVersion>
+    <!-- keep in sync with test\UnitTests\PlatformServices.Desktop.Unit.Tests\Utilities\XmlUtilitiesTests.cs -->
+    <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-21064-01</MicrosoftDiaSymReaderPdb2PdbVersion>
+    <MsTestInternalTestFxLocalizedDocumentationVersion>1.0.0-build-20170420-1</MsTestInternalTestFxLocalizedDocumentationVersion>
+    <FmDevXlfToolVersion>0.1.3</FmDevXlfToolVersion>
+    <VisualStudioQualityToolsUnitTestFrameworkVersion>16.9.0-preview-4267359</VisualStudioQualityToolsUnitTestFrameworkVersion>
+    <!-- / Toolset -->
+    <!-- Try to keep all these in sync -->
+    <SystemRuntimeVersion>4.3.0</SystemRuntimeVersion>
+    <SystemRuntimeSerializationJsonVersion>4.3.0</SystemRuntimeSerializationJsonVersion>
+    <SystemRuntimeSerializationPrimitivesVersion>4.3.0</SystemRuntimeSerializationPrimitivesVersion>
+    <SystemComponentModelEventBasedAsyncVersion>4.3.0</SystemComponentModelEventBasedAsyncVersion>
+    <SystemComponentModelTypeConverterVersion>4.3.0</SystemComponentModelTypeConverterVersion>
+    <SystemDiagnosticsTextWriterTraceListenerVersion>4.3.0</SystemDiagnosticsTextWriterTraceListenerVersion>
+    <SystemRuntimeInteropServicesRuntimeInformationVersion>4.3.0</SystemRuntimeInteropServicesRuntimeInformationVersion>
+    <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>
+    <!-- / Try to keep all these in sync -->
+    <SystemCollectionsImmutableVersion>1.6.0</SystemCollectionsImmutableVersion>
+    <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
+    <!-- UWP and WinUI dependencies -->
+    <MicrosoftNETCoreUniversalWindowsPlatformVersion>5.3.0</MicrosoftNETCoreUniversalWindowsPlatformVersion>
+    <MicrosoftProjectReunionVersion>0.8.0</MicrosoftProjectReunionVersion>
+    <!-- / UWP and WinUI dependencies -->
+    <MoqVersion>4.8.3</MoqVersion>
+    <CastleCoreVersion>4.3.0</CastleCoreVersion>
+    <FluentAssertionsVersion>5.10.3</FluentAssertionsVersion>
+    <StyleCopAnalyzersVersion>1.0.0</StyleCopAnalyzersVersion>
+    <!-- These are used to test compability with legacy MSTest, please do not update -->
+    <Legacy__MicrosoftNETTestSdkVersion>15.7.0</Legacy__MicrosoftNETTestSdkVersion>
+    <Legacy__MSTestTestAdapterVersion>1.2.0</Legacy__MSTestTestAdapterVersion>
+    <Legacy__MSTestTestFrameworkVersion>1.2.0</Legacy__MSTestTestFrameworkVersion>
+    <!-- / These are used to test compability with legacy MSTest, please do not update -->
+    <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
+    <!-- Libs -->
+    <CommandLineParserVersion>2.2.1</CommandLineParserVersion>
+    <CredentialManagementVersion>1.0.2</CredentialManagementVersion>
+    <HandlebarsNetVersion>1.10.1</HandlebarsNetVersion>
+    <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
+    <log4netVersion>2.0.10</log4netVersion>
+    <SystemNetHttpVersion>4.3.4</SystemNetHttpVersion>
+    <AzureStorageBlobsVersion>12.3.0</AzureStorageBlobsVersion>
+    <MicrosoftApplicationInsightsVersion>2.16.0</MicrosoftApplicationInsightsVersion>
+    <MicrosoftAzureKeyVaultVersion>3.0.0</MicrosoftAzureKeyVaultVersion>
+    <MicrosoftAzureServicesAppAuthenticationVersion>1.3.1</MicrosoftAzureServicesAppAuthenticationVersion>
+    <MicrosoftDataAnalysisVersion>0.1.0</MicrosoftDataAnalysisVersion>
+    <MicrosoftBuildVersion>15.7.179</MicrosoftBuildVersion>
+    <MicrosoftBuildFrameworkVersion>15.7.179</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildTasksCoreVersion>15.7.179</MicrosoftBuildTasksCoreVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>15.7.179</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftCodeAnalysisAnalyzersVersion>2.6.3</MicrosoftCodeAnalysisAnalyzersVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>2.9.0</MicrosoftCodeAnalysisCSharpVersion>
+    <MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>3.8.0</MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.17.2</MicrosoftIdentityModelClientsActiveDirectoryVersion>
+    <MicrosoftRestClientRuntimeVersion>2.3.13</MicrosoftRestClientRuntimeVersion>
+    <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>
+    <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>2.1.1</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>2.1.1</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
+    <MicrosoftExtensionsLoggingConsoleVersion>2.1.1</MicrosoftExtensionsLoggingConsoleVersion>
+    <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
+    <MicrosoftNetCompilersToolsetVersion>4.0.0-1.21270.4</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftNETILLinkTasksVersion>6.0.100-preview.5.21268.2</MicrosoftNETILLinkTasksVersion>
+    <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
+    <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
+    <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
+    <SystemTextJsonVersion>4.7.0</SystemTextJsonVersion>
+    <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
+    <NuGetVersion>5.6.0-preview.2.6489</NuGetVersion>
+    <OctokitVersion>0.32.0</OctokitVersion>
+    <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
+    <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
+    <SystemBuffersVersion>4.5.0</SystemBuffersVersion>
+    <SystemDiagnosticsTraceSourceVersion>4.0.0</SystemDiagnosticsTraceSourceVersion>
+    <SystemIOCompressionVersion>4.3.0</SystemIOCompressionVersion>
+    <SystemIOPackagingVersion>4.5.0</SystemIOPackagingVersion>
+    <SystemIOFileSystemPrimitivesVersion>4.3.0</SystemIOFileSystemPrimitivesVersion>
+    <SystemMemoryVersion>4.5.3</SystemMemoryVersion>
+    <SystemNumericsVectorsVersion>4.5.0</SystemNumericsVectorsVersion>
+    <SystemRuntimeCompilerServicesUnsafeVersion>4.7.0</SystemRuntimeCompilerServicesUnsafeVersion>
+    <SystemRuntimeInteropServicesRuntimeInformation>4.3.0</SystemRuntimeInteropServicesRuntimeInformation>
+    <SystemTextEncodingsWebVersion>4.7.2</SystemTextEncodingsWebVersion>
+    <SystemThreadingTasksExtensionVersion>4.5.2</SystemThreadingTasksExtensionVersion>
+    <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
+    <XUnitVersion>2.4.1</XUnitVersion>
+    <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
+    <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.21420.4</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>6.0.0-beta.21420.4</MicrosoftDotNetSignToolVersion>
+    <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
+    <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
+    <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
+    <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.6.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
+    <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
+    <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
+    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.20258.6</MicrosoftDotNetMaestroClientVersion>
+    <MicrosoftSourceLinkGitHubVersion>1.1.0-beta-21228-01</MicrosoftSourceLinkGitHubVersion>
+    <MicrosoftSourceLinkAzureReposGitVersion>1.1.0-beta-21228-01</MicrosoftSourceLinkAzureReposGitVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>6.0.0-beta.21420.4</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <XliffTasksVersion>1.0.0-beta.21265.1</XliffTasksVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.21228.1</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21264.3</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftSymbolUploaderBuildTaskVersion>1.1.156402</MicrosoftSymbolUploaderBuildTaskVersion>
+    <MicrosoftSymbolUploaderVersion>1.1.152002</MicrosoftSymbolUploaderVersion>
+    <MicrosoftNetSdkWorkloadManifestReaderVersion>6.0.100-preview.5.21254.11</MicrosoftNetSdkWorkloadManifestReaderVersion>
+  </PropertyGroup>
+</Project>

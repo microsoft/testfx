@@ -8,22 +8,36 @@
     <authors>Microsoft</authors>
     <owners>Microsoft</owners>
     <description>
-  This is MSTest V2, the evolution of Microsoft's Test Framework.
+      This is MSTest V2, the evolution of Microsoft's Test Framework.
 
-  Supported platforms:
-  - .NET 4.5.0+
-  - .NET Core 1.0+ (Universal Windows Apps 10+, DNX Core 5+)
-  - ASP.NET Core 1.0+
+      Supported platforms:
+      - .NET 4.5.0+
+      - .NET Core 1.0+ (Universal Windows Apps 10+)
+      - .NET 5.0 Windows.17763+ (WinUI Desktop Apps) (Visual Studio 2019)
+      - ASP.NET Core 1.0+
 
-  To discover and execute tests install MSTest.TestAdapter. 
-
-  To discover and execute tests for project.json based projects install dotnet-test-mstest.
+      To discover and execute tests install MSTest.TestAdapter.
     </description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
-    <license type="file">LICENSE</license>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
+    <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework </tags>
+   
+    <dependencies>
+      <group targetFramework="netstandard1.0">
+        <dependency id="NETStandard.Library" version="1.6.1" />
+        <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
+      </group>
+
+      <group targetFramework="net45" />
+
+      <group targetFramework="uap10.0" />
+
+      <group targetFramework="net5.0-windows10.0.18362.0" />
+    </dependencies>
   </metadata>
   <files>
 
@@ -35,7 +49,7 @@
     <!-- Symbols -->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\netstandard1.0\" />
     <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\netstandard1.0" />
-  
+
     <!-- net45 -->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net45\" />
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net45\" />
@@ -46,21 +60,30 @@
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\net45\" />
     <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\net45\" />
 
-    <!-- UWP -->
+    <!-- uap10.0 -->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\uap10.0\" />
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\uap10.0\" />
     <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\uap10.0\" />
     <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\uap10.0\" />
-    
+
     <!-- Symbols -->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\uap10.0\" />
     <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\uap10.0\" />
 
+    <!-- WinUI -->
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net5.0-windows10.0.18362.0\" />
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net5.0-windows10.0.18362.0\" />
+    <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\net5.0-windows10.0.18362.0\" />
+    <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net5.0-windows10.0.18362.0\" />
+
+    <!-- Symbols -->
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\net5.0-windows10.0.18362.0\" />
+    <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\net5.0-windows10.0.18362.0\" />
+
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />
 
-    <!-- LICENSE -->
-    <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
-    <file src="LICENS*" target="" />
+    <!-- Icon -->
+    <file src="Icon.png" target="" />
   </files>
 </package>

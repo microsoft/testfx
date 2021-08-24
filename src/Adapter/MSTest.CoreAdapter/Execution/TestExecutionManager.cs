@@ -13,6 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -375,18 +376,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 var startTime = DateTimeOffset.Now;
 
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                    "Executing test {0}",
-                    unitTestElement.TestMethod.Name);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
 
                 // Run single test passing test context properties to it.
                 var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
                 var testContextProperties = this.GetTestContextProperties(tcmProperties, sourceLevelParameters);
                 var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
 
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                    "Executed test {0}",
-                    unitTestElement.TestMethod.Name);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 
                 var endTime = DateTimeOffset.Now;
 
@@ -472,17 +469,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             Debug.Assert(testExecutionRecorder != null, "Logger should not be null");
 
-            if (!string.IsNullOrEmpty(result.StandardOut))
+            if (!string.IsNullOrWhiteSpace(result.StandardOut))
             {
                 testExecutionRecorder.SendMessage(TestMessageLevel.Informational, result.StandardOut);
             }
 
-            if (!string.IsNullOrEmpty(result.DebugTrace))
+            if (!string.IsNullOrWhiteSpace(result.DebugTrace))
             {
                 testExecutionRecorder.SendMessage(TestMessageLevel.Informational, result.DebugTrace);
             }
 
-            if (!string.IsNullOrEmpty(result.StandardError))
+            if (!string.IsNullOrWhiteSpace(result.StandardError))
             {
                 testExecutionRecorder.SendMessage(
                     MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,
@@ -493,9 +490,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 foreach (string warning in result.Warnings)
                 {
-                    testExecutionRecorder.SendMessage(
-                        MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,
-                        warning);
+                    if (!string.IsNullOrWhiteSpace(warning))
+                    {
+                        testExecutionRecorder.SendMessage(
+                            MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,
+                            warning);
+                    }
                 }
             }
         }

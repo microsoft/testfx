@@ -10,8 +10,10 @@
     <summary>This is a private nuget package that contains the xml documentation files for MSTest V2 Framework.</summary>
     <description>This is a private nuget package that contains the xml documentation files for MSTest V2 Framework.</description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
-    <license type="file">LICENSE</license>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
     <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
+    <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework MSTestV2</tags>
   </metadata>
@@ -21,9 +23,9 @@
     <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Core" />
     <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Desktop" />
     <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\UWP" />
+    <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\WinUI" />
 
-    <!-- LICENSE -->
-    <!-- Workaround for https://github.com/NuGet/Home/issues/7601 -->
-    <file src="LICENS*" target="" />
+    <!-- Icon -->
+    <file src="Icon.png" target="" />
   </files>
 </package>

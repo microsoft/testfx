@@ -167,6 +167,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <param name="settings">The existing settings object.</param>
         public static void PopulateSettings(MSTestSettings settings)
         {
+            if (settings == null)
+            {
+                return;
+            }
+
             CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;
             CurrentSettings.ForcedLegacyMode = settings.ForcedLegacyMode;
             CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
@@ -240,12 +245,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <summary>
         /// Gets the adapter specific settings from the xml.
         /// </summary>
-        /// <param name="runsettingsXml"> The xml with the settings passed from the test platform. </param>
+        /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
         /// <param name="settingName"> The name of the adapter settings to fetch - Its either MSTest or MSTestV2 </param>
         /// <returns> The settings if found. Null otherwise. </returns>
-        internal static MSTestSettings GetSettings(string runsettingsXml, string settingName)
+        internal static MSTestSettings GetSettings(string runSettingsXml, string settingName)
         {
-            using (var stringReader = new StringReader(runsettingsXml))
+            if (string.IsNullOrWhiteSpace(runSettingsXml))
+            {
+                return null;
+            }
+
+            using (var stringReader = new StringReader(runSettingsXml))
             {
                 XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
 

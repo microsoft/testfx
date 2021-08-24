@@ -1,9 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
-  </PropertyGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+
   <PropertyGroup>
     <ProjectGuid>{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -12,8 +10,8 @@
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+    <VSToolsPath Condition=" '$(VSToolsPath)' == '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
     <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
@@ -33,35 +31,32 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Castle.Core, Version=3.3.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
-      <HintPath>$(TestFxRoot)packages\Castle.Core.3.3.3\lib\net45\Castle.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Moq, Version=4.5.21.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
-      <HintPath>$(TestFxRoot)packages\Moq.4.5.21\lib\net45\Moq.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\src\TestFramework\MSTest.Core\MSTest.Core.csproj">
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Aliases>FrameworkV1</Aliases>
+    </Reference>
+
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
       <Project>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</Project>
       <Name>MSTest.Core</Name>
       <Aliases>FrameworkV2</Aliases>
     </ProjectReference>
-    <ProjectReference Include="..\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj">
+    <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj">
       <Project>{F81C7549-E3A3-4770-AC3F-3BC7356E61E8}</Project>
       <Name>MSTest.CoreAdapter.TestUtilities</Name>
     </ProjectReference>
   </ItemGroup>
+
   <ItemGroup>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework">
-      <Aliases>FrameworkV1</Aliases>
-    </Reference>
+    <PackageReference Include="Moq" Version="$(MoqVersion)" />
+
+    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-  </ItemGroup>
+  
   <ItemGroup>
     <Compile Include="Assertions\AssertTests.cs" />
     <Compile Include="Assertions\CollectionAssertTests.cs" />
@@ -73,9 +68,7 @@
     <Compile Include="GenericParameterHelperTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
+
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

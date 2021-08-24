@@ -5,7 +5,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.IO;
     using System.Reflection;
@@ -22,8 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <summary>
         /// Assembly name for UTF
         /// </summary>
-        private static readonly AssemblyName UnitTestFrameworkAssemblyName =
-            typeof(TestMethodAttribute).GetTypeInfo().Assembly.GetName();
+        private static readonly AssemblyName UnitTestFrameworkAssemblyName = typeof(TestMethodAttribute).GetTypeInfo().Assembly.GetName();
 
         /// <summary>
         /// Gets test elements from an assembly.
@@ -32,12 +30,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <param name="runSettings"> The run Settings. </param>
         /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
         /// <returns> A collection of test elements. </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Catching a generic exception since it is a requirement to not abort discovery in case of any errors.")]
-        [SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "3#", Justification = "This is only for internal use.")]
-        internal ICollection<UnitTestElement> GetTests(
-            string assemblyFileName,
-            IRunSettings runSettings,
-            out ICollection<string> warnings)
+        internal ICollection<UnitTestElement> GetTests(string assemblyFileName, IRunSettings runSettings, out ICollection<string> warnings)
         {
             warnings = new List<string>();
 
@@ -52,16 +45,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             {
                 if (!PlatformServiceProvider.Instance.FileOperations.DoesFileExist(fullFilePath))
                 {
-                    var message = string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.TestAssembly_FileDoesNotExist,
-                        fullFilePath);
+                    var message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath);
                     throw new FileNotFoundException(message);
                 }
 
-                if (!PlatformServiceProvider.Instance.TestSource.IsAssemblyReferenced(
-                        UnitTestFrameworkAssemblyName,
-                        fullFilePath))
+                if (!PlatformServiceProvider.Instance.TestSource.IsAssemblyReferenced(UnitTestFrameworkAssemblyName, fullFilePath))
                 {
                     return null;
                 }
@@ -71,33 +59,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             }
             catch (FileNotFoundException ex)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
-                    "MSTestDiscoverer.TryGetTests: Failed to discover tests from {0}. Reason:{1}",
-                    fullFilePath,
-                    ex);
-
-                var message = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.TestAssembly_AssemblyDiscoveryFailure,
-                    fullFilePath,
-                    ex.Message);
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
                 warnings.Add(message);
 
                 return null;
             }
             catch (ReflectionTypeLoadException ex)
             {
-                var message = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.TestAssembly_AssemblyDiscoveryFailure,
-                    fullFilePath,
-                    ex.Message);
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.ExceptionsThrown);
                 warnings.Add(message);
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
-                    "MSPhoneTestDiscoverer.TryGetTests: Failed to discover tests from {0}. Reason:{1}",
-                    assemblyFileName,
-                    ex);
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("Exceptions thrown from the Loader :");
 
                 if (ex.LoaderExceptions != null)
                 {
@@ -120,17 +93,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 // Discover test doesn't work if there is a managed C++ project in solution
                 // Assembly.Load() fails to load the managed cpp executable, with FileLoadException. It can load the dll
                 // successfully though. This is known CLR issue.
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
-                    "MSTestDiscoverer.TryGetTests: Failed to discover tests from {0}. Reason:{1}",
-                    assemblyFileName,
-                    ex);
-                var message = ex is FileNotFoundException fileNotFoundEx
-                    ? fileNotFoundEx.Message
-                    : string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.TestAssembly_AssemblyDiscoveryFailure,
-                        fullFilePath,
-                        ex.Message);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
+                var message = ex is FileNotFoundException fileNotFoundEx ? fileNotFoundEx.Message : string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
+
                 warnings.Add(message);
                 return null;
             }
@@ -141,8 +106,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null))
             {
                 // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
-                var assemblyEnumerator = isolationHost.CreateInstanceForType(
-                    typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings }) as AssemblyEnumerator;
+                var assemblyEnumerator = isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings }) as AssemblyEnumerator;
+
+                // This might not be supported if an older version of "PlatformServices" (Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices) assembly is already loaded into the App Domain.
+                try
+                {
+                    assemblyEnumerator.RunSettingsXml = runSettings?.SettingsXml;
+                }
+                catch
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFound);
+                }
 
                 return assemblyEnumerator.EnumerateAssembly(fullFilePath, out warnings);
             }

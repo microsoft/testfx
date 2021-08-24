@@ -170,8 +170,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             {
                 if (this.DoesFileExist(pdbSource))
                 {
-                    string warning;
-                    pdbDestination = this.CopyFileOverwrite(pdbSource, pdbDestination, out warning);
+                    pdbDestination = this.CopyFileOverwrite(pdbSource, pdbDestination, out var warning);
                     if (!string.IsNullOrEmpty(pdbDestination))
                     {
                         destToSource.Add(relativePdbDestination, pdbSource);

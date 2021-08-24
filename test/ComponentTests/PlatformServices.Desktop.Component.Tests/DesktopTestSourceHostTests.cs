@@ -22,18 +22,6 @@ namespace PlatformServices.Desktop.ComponentTests
     public class DesktopTestSourceHostTests
     {
         private TestSourceHost testSourceHost;
-        private string testSource;
-
-        public DesktopTestSourceHostTests()
-        {
-            var currentAssemblyPath = Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location);
-            var testAssetPath =
-                Path.Combine(
-                    Directory.GetParent(Directory.GetParent(Directory.GetParent(currentAssemblyPath).FullName).FullName).FullName,
-                    "artifacts",
-                    "TestAssets");
-            this.testSource = Path.Combine(testAssetPath, "DesktopTestProjectx86Debug.dll");
-        }
 
         [TestMethod]
         public void ParentDomainShouldHonourSearchDirectoriesSpecifiedInRunsettings()
@@ -52,7 +40,8 @@ namespace PlatformServices.Desktop.ComponentTests
                 </MSTestV2>
              </RunSettings>";
 
-            this.testSourceHost = new TestSourceHost(this.testSource, this.GetMockedIRunSettings(runSettingxml).Object, null);
+            var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
+            this.testSourceHost = new TestSourceHost(testSource, this.GetMockedIRunSettings(runSettingxml).Object, null);
             this.testSourceHost.SetupHost();
 
             // Loading TestProjectForAssemblyResolution.dll should not throw.
@@ -77,19 +66,24 @@ namespace PlatformServices.Desktop.ComponentTests
                 </MSTestV2>
              </RunSettings>";
 
-            this.testSourceHost = new TestSourceHost(this.testSource, this.GetMockedIRunSettings(runSettingxml).Object, null);
-
+            var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
+            this.testSourceHost = new TestSourceHost(testSource, this.GetMockedIRunSettings(runSettingxml).Object, null);
             this.testSourceHost.SetupHost();
+
+            var assemblyResolution = "ComponentTests\\TestProjectForAssemblyResolution.dll";
+            var asm = Assembly.LoadFrom(assemblyResolution);
+            var type = asm.GetType("PlatformServices.Desktop.ComponentTests.TestProjectForAssemblyResolution");
 
             // Creating instance of TestProjectForAssemblyResolution should not throw.
             // It is present in  <Directory path = ".\ComponentTests" />  specified in runsettings
-            AppDomainUtilities.CreateInstance(this.testSourceHost.AppDomain, typeof(TestProjectForAssemblyResolution), null);
+            AppDomainUtilities.CreateInstance(this.testSourceHost.AppDomain, type, null);
         }
 
         [TestMethod]
         public void DisposeShouldUnloadChildAppDomain()
         {
-            this.testSourceHost = new TestSourceHost(this.testSource, null, null);
+            var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
+            this.testSourceHost = new TestSourceHost(testSource, null, null);
             this.testSourceHost.SetupHost();
 
             // Check that child appdomain was indeed created
@@ -98,6 +92,14 @@ namespace PlatformServices.Desktop.ComponentTests
 
             // Check that child-appdomain is now unloaded.
             Assert.IsNull(this.testSourceHost.AppDomain);
+        }
+
+        private static string GetTestAssemblyPath(string assemblyName)
+        {
+            var currentAssemblyPath = Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location);
+            var testAssetPath = Path.Combine(Directory.GetParent(Directory.GetParent(Directory.GetParent(currentAssemblyPath).FullName).FullName).FullName, "artifacts", "TestAssets");
+
+            return Path.Combine(testAssetPath, assemblyName);
         }
 
         private Mock<IRunSettings> GetMockedIRunSettings(string runSettingxml)

@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Initializes a new instance of the <see cref="TypeCache"/> class.
         /// </summary>
         internal TypeCache()
-            : this(new ReflectHelper())
+            : this(ReflectHelper.Instance)
         {
         }
 
@@ -100,12 +100,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             if (testMethod == null)
             {
-                throw new ArgumentNullException("testMethod");
+                throw new ArgumentNullException(nameof(testMethod));
             }
 
             if (testContext == null)
             {
-                throw new ArgumentNullException("testContext");
+                throw new ArgumentNullException(nameof(testContext));
             }
 
             // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
@@ -323,7 +323,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="type"> The type. </param>
         /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Discoverer should continue with remaining sources.")]
         private TestAssemblyInfo GetAssemblyInfo(Type type)
         {
             var assembly = type.GetTypeInfo().Assembly;
@@ -683,9 +682,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 // Only find methods that match the given declaring name.
                 testMethodInfo =
-                    methodsInClass.Where(method => method.Name.Equals(testMethod.Name)
+                    Array.Find(methodsInClass, method => method.Name.Equals(testMethod.Name)
                                                 && method.DeclaringType.FullName.Equals(testMethod.DeclaringClassFullName)
-                                                && method.HasCorrectTestMethodSignature(true)).FirstOrDefault();
+                                                && method.HasCorrectTestMethodSignature(true));
             }
             else
             {

@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</AssemblyName>
+    <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
+    <Company>Microsoft Corporation</Company>
+    <Product>Extension.WinUI</Product>
+    <AssemblyTitle>Extension.WinUI</AssemblyTitle>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <SkipAppendingVersion>true</SkipAppendingVersion> <!-- TODO: remove after full arcade transition -->
+    
+    <TargetFramework>net5.0-windows10.0.18362.0</TargetFramework>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+  
+  <ItemGroup> 
+    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" RuntimeFrameworkVersion="10.0.18362.16" /> 
+    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" TargetingPackVersion="10.0.18362.16" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ProjectReunion" Version="$(MicrosoftProjectReunionVersion)" />
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)src\TestFramework\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\TestFramework\Extension.UWP\DeploymentItemAttribute.cs" Link="DeploymentItemAttribute.cs" />
+  </ItemGroup>
+  
+  <PropertyGroup>
+    <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
+    <LocDocumentationSubPath>Extensions\WinUI</LocDocumentationSubPath>
+  </PropertyGroup>
+  
+</Project>

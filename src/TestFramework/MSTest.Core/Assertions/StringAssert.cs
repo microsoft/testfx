@@ -655,7 +655,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void DoesNotMatch(string value, Regex pattern, string message)
         {
-            DoesNotMatch(value, pattern, message);
+            DoesNotMatch(value, pattern, message, null);
         }
 
         /// <summary>

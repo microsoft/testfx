@@ -443,7 +443,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     }
 
                     // Skip the quote we just found
-                    here = here + 1;
+                    here++;
 
                     // If this the end?
                     if (here == end || text[here] != suffixChar)
@@ -453,7 +453,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     }
 
                     // We have a double quote, skip the second one, then keep looking
-                    here = here + 1;
+                    here++;
                 }
 
                 // If we fall off end of loop,
@@ -601,9 +601,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             WriteDiagnostics("GetColumns for {0}", tableName);
             try
             {
-                string targetSchema;
-                string targetName;
-                this.SplitTableName(tableName, out targetSchema, out targetName);
+                this.SplitTableName(tableName, out var targetSchema, out var targetName);
 
                 // This lets us specifically query for columns from the appropriate table name
                 // but assumes all databases have the same restrictions on all the column
@@ -728,7 +726,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         public bool IsOpen()
 #pragma warning restore SA1202 // Elements must be ordered by access
         {
-            return this.connection != null ? this.connection.State == ConnectionState.Open : false;
+            return this.connection != null && this.connection.State == ConnectionState.Open;
         }
 
         /// <summary>
