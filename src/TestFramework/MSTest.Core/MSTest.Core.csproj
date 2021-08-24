@@ -45,6 +45,8 @@
     <Compile Include="Attributes\DynamicDataAttribute.cs" />
     <Compile Include="Attributes\ParallelizeAttribute.cs" />
     <Compile Include="Attributes\ExecutionScope.cs" />
+    <Compile Include="Attributes\TestDataSourceDiscoveryAttribute.cs" />
+    <Compile Include="Attributes\TestDataSourceDiscoveryOption.cs" />
     <Compile Include="Interfaces\ITestDataSource.cs" />
     <Compile Include="Interfaces\ITestMethod.cs" />
     <Compile Include="Internal\Helper.cs" />

@@ -102,6 +102,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var types = this.GetTypes(assembly, assemblyFileName, warningMessages);
 
             var discoverInternals = assembly.GetCustomAttribute<UTF.DiscoverInternalsAttribute>() != null;
+            var testDataSourceDiscovery = assembly.GetCustomAttribute<UTF.TestDataSourceDiscoveryAttribute>()?.DiscoveryOption ?? UTF.TestDataSourceDiscoveryOption.DuringDiscovery;
 
             foreach (var type in types)
             {
@@ -110,7 +111,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     continue;
                 }
 
-                var testsInType = this.DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals);
+                var testsInType = this.DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals, testDataSourceDiscovery);
                 tests.AddRange(testsInType);
             }
 
@@ -206,7 +207,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator);
         }
 
-        private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly, Type type, List<string> warningMessages, bool discoverInternals = false)
+        private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly, Type type, List<string> warningMessages, bool discoverInternals = false, UTF.TestDataSourceDiscoveryOption discoveryOption = UTF.TestDataSourceDiscoveryOption.DuringExecution)
         {
             var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
             sourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(sourceLevelParameters)
@@ -231,9 +232,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 {
                     foreach (var test in unitTestCases)
                     {
-                        if (this.DynamicDataAttached(sourceLevelParameters, assembly, test, tests))
+                        if (discoveryOption == UTF.TestDataSourceDiscoveryOption.DuringDiscovery)
                         {
-                            continue;
+                            if (this.DynamicDataAttached(sourceLevelParameters, assembly, test, tests))
+                            {
+                                continue;
+                            }
                         }
 
                         tests.Add(test);
