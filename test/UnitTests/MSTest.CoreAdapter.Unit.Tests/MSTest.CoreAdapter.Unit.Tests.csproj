@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-
   <PropertyGroup>
     <ProjectGuid>{1CEB5743-70BF-475E-91BC-0AEBD63835B7}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -32,18 +31,15 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <Aliases>FrameworkV1</Aliases>
       <Private>True</Private>
     </Reference>
-
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
       <Name>PlatformServices.Interface</Name>
@@ -77,18 +73,15 @@
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
     <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
-    
     <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
   <ItemGroup>
     <Compile Include="Discovery\AssemblyEnumeratorTests.cs" />
     <Compile Include="Discovery\AssemblyEnumeratorWrapperTests.cs" />
@@ -131,10 +124,8 @@
     <Compile Include="RunConfigurationSettingsTests.cs" />
     <Compile Include="TestableImplementations\TestableReflectHelper.cs" />
     <Compile Include="TestableImplementations\TestablePlatformServiceProvider.cs" />
-
     <None Include="App.config" />
   </ItemGroup>
-
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
