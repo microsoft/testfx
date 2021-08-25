@@ -102,6 +102,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
             var types = this.GetTypes(assembly, assemblyFileName, warningMessages);
 
+            var discoverInternals = assembly.GetCustomAttribute<UTF.DiscoverInternalsAttribute>() != null;
+
             foreach (var type in types)
             {
                 if (type == null)
@@ -109,7 +111,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     continue;
                 }
 
-                var testsInType = this.DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages);
+                var testsInType = this.DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals);
                 tests.AddRange(testsInType);
             }
 
@@ -194,16 +196,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// </summary>
         /// <param name="type">The type to enumerate.</param>
         /// <param name="assemblyFileName">The reflected assembly name.</param>
+        /// <param name="discoverInternals">True to discover test classes which are declared internal in
+        /// addition to test classes which are declared public.</param>
         /// <returns>a TypeEnumerator instance.</returns>
-        internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName)
+        internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals = false)
         {
-            var typeValidator = new TypeValidator(ReflectHelper);
-            var testMethodValidator = new TestMethodValidator(ReflectHelper);
+            var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
+            var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
 
             return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator);
         }
 
-        private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly, Type type, List<string> warningMessages)
+        private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly, Type type, List<string> warningMessages, bool discoverInternals = false)
         {
             var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
             sourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(sourceLevelParameters)
@@ -216,7 +220,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             try
             {
                 typeFullName = type.FullName;
-                var unitTestCases = this.GetTypeEnumerator(type, assemblyFileName).Enumerate(out var warningsFromTypeEnumerator);
+                var unitTestCases = this.GetTypeEnumerator(type, assemblyFileName, discoverInternals).Enumerate(out var warningsFromTypeEnumerator);
                 var typeIgnored = ReflectHelper.IsAttributeDefined(type, typeof(UTF.IgnoreAttribute), false);
 
                 if (warningsFromTypeEnumerator != null)
