@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
     using System.IO;
@@ -9,7 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     /// <summary>
     /// StringWriter which has thread safe ToString().
     /// </summary>
-    internal class ThreadSafeStringWriter : StringWriter
+    public class ThreadSafeStringWriter : StringWriter
     {
         private readonly object lockObject = new object();
 
@@ -19,7 +19,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="formatProvider">
         /// The format provider.
         /// </param>
-        public ThreadSafeStringWriter(IFormatProvider formatProvider)
+        /// <param name="outputType">
+        /// Id of the session.
+        /// </param>
+        public ThreadSafeStringWriter(IFormatProvider formatProvider, string outputType)
             : base(formatProvider)
         {
         }
@@ -37,6 +40,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 {
                     return default(string);
                 }
+            }
+        }
+
+        public void Clear()
+        {
+            lock (this.lockObject)
+            {
+                InvokeBaseClass(() => this.GetStringBuilder().Clear());
             }
         }
 

@@ -8,7 +8,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System;
     using System.Globalization;
     using System.Threading.Tasks;
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+    using FluentAssertions;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
@@ -16,14 +17,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     [TestClass]
     public class ThreadSafeStringWriterTests
     {
+        private bool task2flag;
+
         [TestMethod]
         public void ThreadSafeStringWriterWriteLineHasContentFromMultipleThreads()
         {
-            using (var stringWriter = new ThreadSafeStringWriter(CultureInfo.InvariantCulture))
+            using (var stringWriter = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out"))
             {
+                var count = 100;
                 Action<string> action = (string x) =>
                     {
-                        for (var i = 0; i < 100000; i++)
+                        for (var i = 0; i < count; i++)
                         {
                             // Choose WriteLine since it calls the entire sequence:
                             // Write(string) -> Write(char[]) -> Write(char)
@@ -31,14 +35,43 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                         }
                     };
 
-                var task1 = Task.Run(() => action("content1"));
-                var task2 = Task.Run(() => action("content2"));
+                var task1 = Task.Run(() =>
+                {
+                    action("content1");
+                    action("content1");
+                    action("content1");
+                    action("content1");
+                    while (this.task2flag != true)
+                    {
+                    }
+                    action("content1");
+                    action("content1");
+                    action("content1");
+                    action("content1");
+                });
+                var task2 = Task.Run(() =>
+                {
+                    action("content2");
+                    action("content2");
+                    action("content2");
+                    action("content2");
+                    this.task2flag = true;
+                    action("content2");
+                    action("content2");
+                    action("content2");
+                    action("content2");
+                });
 
                 task1.Wait();
                 task2.Wait();
 
+                var content = stringWriter.ToString();
+                content.Should().NotBeNullOrWhiteSpace();
+
                 // Validate that only whole lines are written, not a mix of random chars
-                foreach (var line in stringWriter.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+                var lines = content.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                lines.Should().HaveCountGreaterThan(0);
+                foreach (var line in lines)
                 {
                     Assert.IsTrue(line.Equals("content1") || line.Equals("content2"));
                 }

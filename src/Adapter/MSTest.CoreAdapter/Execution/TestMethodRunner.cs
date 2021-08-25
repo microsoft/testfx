@@ -145,9 +145,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     }
                     finally
                     {
-                        initLogs = logListener.StandardOutput;
-                        initTrace = logListener.DebugTrace;
-                        initErrorLogs = logListener.StandardError;
+                        initLogs = logListener.GetAndClearStandardOutput();
+                        initTrace = logListener.GetAndClearDebugTrace();
+                        initErrorLogs = logListener.GetAndClearStandardError();
                         inittestContextMessages = this.testContext.GetAndClearDiagnosticMessages();
                     }
                 }
