@@ -103,16 +103,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         public string GetAndClearStandardError()
         {
-            var output = this.redirectLoggerOut.ToString();
-            this.redirectLoggerOut.Clear();
+            var output = this.redirectStdErr.ToString();
+            this.redirectStdErr.Clear();
             return output;
         }
 
         public string GetAndClearDebugTrace()
         {
-            var output = this.redirectLoggerOut.ToString();
-            this.redirectLoggerOut.Clear();
-            return output;
+            var writer = this.traceListener?.GetWriter();
+            if (writer == null)
+            {
+                return null;
+            }
+
+            if (writer is StringWriter sw)
+            {
+                var sb = sw.GetStringBuilder();
+                var output = sb.ToString();
+                sb.Clear();
+                return output;
+            }
+
+            // we cannot clear it because it is just a text writer
+            return writer.ToString();
         }
 
         public void Dispose()
