@@ -119,8 +119,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             if (writer is StringWriter sw)
             {
                 var sb = sw.GetStringBuilder();
-                var output = sb.ToString();
-                sb.Clear();
+                var output = sb?.ToString();
+                sb?.Clear();
                 return output;
             }
 
