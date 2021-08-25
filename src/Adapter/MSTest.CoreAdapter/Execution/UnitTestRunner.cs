@@ -12,6 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
     /// <summary>
     /// The runner that runs a single unit test. Also manages the assembly and class cleanup methods at the end of the run.
@@ -73,7 +74,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             try
             {
-                using (var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture))
+                using (var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context"))
                 {
                     var properties = new Dictionary<string, object>(testContextProperties);
                     var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
@@ -133,9 +134,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 {
                     // Replacing the null character with a string.replace should work.
                     // If this does not work for a specific dotnet version a custom function doing the same needs to be put in place.
-                    result.StandardOut = redirector.StandardOutput?.Replace("\0", "\\0");
-                    result.StandardError = redirector.StandardError?.Replace("\0", "\\0");
-                    result.DebugTrace = redirector.DebugTrace?.Replace("\0", "\\0");
+                    result.StandardOut = redirector.GetAndClearStandardOutput()?.Replace("\0", "\\0");
+                    result.StandardError = redirector.GetAndClearStandardError()?.Replace("\0", "\\0");
+                    result.DebugTrace = redirector.GetAndClearDebugTrace()?.Replace("\0", "\\0");
                 }
             }
 

@@ -16,6 +16,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -257,7 +258,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 return false;
             }
 
-            using (var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture))
+            using (var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "all"))
             {
                 var testMethod = test.TestMethod;
                 var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);

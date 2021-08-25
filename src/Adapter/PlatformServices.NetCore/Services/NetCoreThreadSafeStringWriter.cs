@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
     using System.Collections.Generic;
     using System.Globalization;
     using System.IO;
+    using System.Linq;
     using System.Text;
     using System.Threading;
 
@@ -15,8 +16,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     /// </summary>
     public class ThreadSafeStringWriter : StringWriter
     {
-        private static AsyncLocal<StringBuilder> state = new AsyncLocal<StringBuilder>();
-
+#if DEBUG
+        private static readonly StringBuilder AllOutput = new StringBuilder();
+#endif
+        private static readonly AsyncLocal<Dictionary<string, StringBuilder>> State = new AsyncLocal<Dictionary<string, StringBuilder>>();
+        private readonly string outputType;
         private readonly object lockObject = new object();
 
         /// <summary>
@@ -25,20 +29,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <param name="formatProvider">
         /// The format provider.
         /// </param>
-        public ThreadSafeStringWriter(IFormatProvider formatProvider)
+        /// <param name="outputType">
+        /// Id of the session.
+        /// </param>
+        public ThreadSafeStringWriter(IFormatProvider formatProvider, string outputType)
             : base(formatProvider)
         {
-        }
-
-        public static ThreadSafeStringWriter Instance { get; } = new ThreadSafeStringWriter(CultureInfo.InvariantCulture);
-
-        public static List<StringBuilder> AdditionalOutputs { get; } = new List<StringBuilder>();
-
-        public static StringBuilder AllOutput { get; } = new StringBuilder();
-
-        public static void SetStringBuilder(StringBuilder stringBuilder)
-        {
-            state.Value = stringBuilder;
+            this.outputType = outputType;
         }
 
         /// <inheritdoc/>
@@ -48,7 +45,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 try
                 {
-                    return base.ToString();
+                    return this.GetStringBuilderOrNull()?.ToString();
                 }
                 catch (ObjectDisposedException)
                 {
@@ -57,20 +54,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
         }
 
+        public void Clear()
+        {
+            lock (this.lockObject)
+            {
+                this.GetStringBuilderOrNull()?.Clear();
+            }
+        }
+
         /// <inheritdoc/>
         public override void Write(char value)
         {
             lock (this.lockObject)
             {
+#if DEBUG
                 AllOutput.Append(value);
-                if (state?.Value == null)
-                {
-                    var sb = new StringBuilder();
-                    AdditionalOutputs.Add(sb);
-                    state.Value = sb;
-                }
-
-                state.Value.Append(value);
+#endif
+                this.GetOrAddStringBuilder().Append(value);
             }
         }
 
@@ -79,29 +79,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             lock (this.lockObject)
             {
+#if DEBUG
                 AllOutput.Append(value);
-                if (state?.Value == null)
-                {
-                    var sb = new StringBuilder();
-                    AdditionalOutputs.Add(sb);
-                    state.Value = sb;
-                }
-
-                state.Value.Append(value);
+#endif
+                this.GetOrAddStringBuilder().Append(value);
             }
         }
 
         public override void WriteLine(string value)
         {
-            AllOutput.Append(value);
-            if (state?.Value == null)
+            lock (this.lockObject)
             {
-                var sb = new StringBuilder();
-                AdditionalOutputs.Add(sb);
-                state.Value = sb;
+#if DEBUG
+                AllOutput.AppendLine(value);
+#endif
+                this.GetOrAddStringBuilder().AppendLine(value);
             }
-
-            state.Value.Append(value);
         }
 
         /// <inheritdoc/>
@@ -109,8 +102,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             lock (this.lockObject)
             {
-                // dunno
+#if DEBUG
+                AllOutput.Append(buffer, index, count);
+#endif
+                this.GetOrAddStringBuilder().Append(buffer, index, count);
             }
+        }
+
+        // <inheritdoc/>
+        public override StringBuilder GetStringBuilder()
+        {
+            return this.GetStringBuilderOrNull();
         }
 
         /// <inheritdoc/>
@@ -118,6 +120,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             lock (this.lockObject)
             {
+                ThreadSafeStringWriter.State?.Value?.Remove(this.outputType);
                 InvokeBaseClass(() => base.Dispose(disposing));
             }
         }
@@ -130,6 +133,50 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             catch (ObjectDisposedException)
             {
+            }
+        }
+
+        // Avoiding name GetStringBuilder because it is already present on the base class.
+        private StringBuilder GetStringBuilderOrNull()
+        {
+            if (State.Value == null)
+            {
+                return null;
+            }
+            else if (!State.Value.TryGetValue(this.outputType, out var stringBuilder))
+            {
+                return null;
+            }
+            else
+            {
+                return stringBuilder;
+            }
+        }
+
+        private StringBuilder GetOrAddStringBuilder()
+        {
+            if (State.Value == null)
+            {
+                // The storage for the current async operation is empty
+                // create the array and appropriate stringbuilder.
+                // Avoid looking up the value after we add it to the dictionary.
+                var sb = new StringBuilder();
+                State.Value = new Dictionary<string, StringBuilder> { [this.outputType] = sb };
+                return sb;
+            }
+            else if (!State.Value.TryGetValue(this.outputType, out var stringBuilder))
+            {
+                // The storage for the current async operation has the dictionary, but not the key
+                // for the output type, add it, and avoid looking up the value again.
+                var sb = new StringBuilder();
+                State.Value.Add(this.outputType, sb);
+                return sb;
+            }
+            else
+            {
+                // The storage for the current async operation has the dictionary, and the key
+                // for the output type, just return it.
+                return stringBuilder;
             }
         }
     }

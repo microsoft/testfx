@@ -55,6 +55,7 @@
     <Compile Include="Friends.cs" />
     <Compile Include="Services\NetCoreTestContextImplementation.cs" />
     <Compile Include="Services\NetCoreTestSourceHost.cs" />
+    <Compile Include="Services\NetCoreThreadSafeStringWriter.cs" />
     <Compile Include="Utilities\NetCoreAssemblyUtility.cs" />
     <Compile Include="Utilities\NetCoreDeploymentUtility.cs" />
     <Compile Include="Utilities\NetCoreReflectionUtility.cs" />
