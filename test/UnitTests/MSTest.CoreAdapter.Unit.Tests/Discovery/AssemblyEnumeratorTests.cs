@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 {
     extern alias FrameworkV1;
+    extern alias FrameworkV2;
 
     using System;
     using System.Collections.Generic;
@@ -19,7 +20,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
     using Moq;
 
@@ -236,7 +236,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void EnumerateAssemblyShouldReturnEmptyListWhenNoDeclaredTypes()
         {
-            Mock<TestableAssembly> mockAssembly = new Mock<TestableAssembly>();
+            var mockAssembly = CreateMockTestableAssembly();
 
             // Setup mocks
             mockAssembly.Setup(a => a.DefinedTypes).Returns(new List<TypeInfo>());
@@ -249,7 +249,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void EnumerateAssemblyShouldReturnEmptyListWhenNoTestElementsInAType()
         {
-            var mockAssembly = new Mock<TestableAssembly>();
+            var mockAssembly = CreateMockTestableAssembly();
             var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
 
             // Setup mocks
@@ -266,7 +266,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void EnumerateAssemblyShouldReturnTestElementsForAType()
         {
-            var mockAssembly = new Mock<TestableAssembly>();
+            var mockAssembly = CreateMockTestableAssembly();
             var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
             var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
 
@@ -286,7 +286,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void EnumerateAssemblyShouldLoadExeContainersInReflectionOnlyContext()
         {
-            var mockAssembly = new Mock<TestableAssembly>();
+            var mockAssembly = CreateMockTestableAssembly();
             var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
             var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
 
@@ -306,7 +306,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForAType()
         {
-            var mockAssembly = new Mock<TestableAssembly>();
+            var mockAssembly = CreateMockTestableAssembly();
             var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
             var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
             var expectedTestElements = new Collection<UnitTestElement> { unitTestElement, unitTestElement };
@@ -327,7 +327,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForMoreThanOneType()
         {
-            var mockAssembly = new Mock<TestableAssembly>();
+            var mockAssembly = CreateMockTestableAssembly();
             var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
             var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
             var expectedTestElements = new Collection<UnitTestElement> { unitTestElement, unitTestElement };
@@ -350,7 +350,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void EnumerateAssemblyShouldNotLogWarningsIfNonePresent()
         {
-            var mockAssembly = new Mock<TestableAssembly>();
+            var mockAssembly = CreateMockTestableAssembly();
             var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
             ICollection<string> warningsFromTypeEnumerator = null;
 
@@ -368,7 +368,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void EnumerateAssemblyShouldLogWarningsIfPresent()
         {
-            var mockAssembly = new Mock<TestableAssembly>();
+            var mockAssembly = CreateMockTestableAssembly();
             var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
             ICollection<string> warningsFromTypeEnumerator = new Collection<string>();
 
@@ -389,7 +389,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void EnumerateAssemblyShouldHandleExceptionsWhileEnumeratingAType()
         {
-            var mockAssembly = new Mock<TestableAssembly>();
+            var mockAssembly = CreateMockTestableAssembly();
             var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
             var exception = new Exception("TypeEnumerationException");
 
@@ -410,6 +410,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
                     typeof(InternalTestClass),
                     "DummyAssembly",
                     exception.Message));
+        }
+
+        private static Mock<TestableAssembly> CreateMockTestableAssembly()
+        {
+            var mockAssembly = new Mock<TestableAssembly>();
+
+            // The mock must be configured with a return value for GetCustomAttributes for this attribute type, but the
+            // actual return value is irrelevant for these tests.
+            mockAssembly
+                .Setup(a => a.GetCustomAttributes(
+                    typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalsAttribute),
+                    true))
+                .Returns(new Attribute[0]);
+
+            return mockAssembly;
         }
 
         #endregion
@@ -438,7 +453,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
 
         internal Mock<TypeEnumerator> MockTypeEnumerator { get; set; }
 
-        internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName)
+        internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals)
         {
             return this.MockTypeEnumerator.Object;
         }
