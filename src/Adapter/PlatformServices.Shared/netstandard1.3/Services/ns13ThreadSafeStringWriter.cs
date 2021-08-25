@@ -36,6 +36,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             : base(formatProvider)
         {
             this.outputType = outputType;
+
+            // Ensure that State.Value is populated, so we can inherit it to the child
+            // async flow, and also keep reference to it here in the parent flow.
+            // otherwise if there is `async Task` test method, the method will run as child async flow
+            // populate it but the parent will remain null, because the changes to context only flow downwards
+            // and not upwards.
+            this.GetOrAddStringBuilder();
         }
 
         /// <inheritdoc/>
