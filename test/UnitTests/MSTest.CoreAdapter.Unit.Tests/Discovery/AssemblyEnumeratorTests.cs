@@ -424,6 +424,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
                     true))
                 .Returns(new Attribute[0]);
 
+            mockAssembly
+                .Setup(a => a.GetCustomAttributes(
+                    typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceDiscoveryAttribute),
+                    true))
+                .Returns(new Attribute[0]);
+
             return mockAssembly;
         }
 
