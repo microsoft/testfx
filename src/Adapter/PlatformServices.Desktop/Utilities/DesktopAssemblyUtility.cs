@@ -190,7 +190,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: start.");
 
             AppDomainSetup setupInfo = new AppDomainSetup();
-            setupInfo.ApplicationBase = Path.GetDirectoryName(Path.GetFullPath(assemblyPath));
+            var dllDirectory = Path.GetDirectoryName(Path.GetFullPath(assemblyPath));
+            setupInfo.ApplicationBase = dllDirectory;
 
             Debug.Assert(string.IsNullOrEmpty(configFile) || File.Exists(configFile), "Config file is specified but does not exist: {0}", configFile);
 
@@ -227,7 +228,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
                     EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
 
-                    return worker.GetFullPathToDependentAssemblies(assemblyPath, out warnings);
+                    var allDependencies = worker.GetFullPathToDependentAssemblies(assemblyPath, out warnings);
+                    var dependenciesFromDllDirectory = new List<string>();
+                    var dllDirectoryUppercase = dllDirectory.ToUpperInvariant();
+                    foreach (var dependency in allDependencies)
+                    {
+                        if (dependency.ToUpperInvariant().Contains(dllDirectoryUppercase))
+                        {
+                            dependenciesFromDllDirectory.Add(dependency);
+                        }
+                    }
+
+                    return dependenciesFromDllDirectory.ToArray();
                 }
             }
             finally

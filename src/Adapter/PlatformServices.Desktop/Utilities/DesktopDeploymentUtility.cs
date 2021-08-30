@@ -219,6 +219,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             Debug.Assert(deploymentItems != null, "deploymentItems should not be null.");
             Debug.Assert(Path.IsPathRooted(testSource), "path should be rooted.");
 
+            var sw = Stopwatch.StartNew();
+
             // Note: if this is not an assembly we simply return empty array, also:
             //       we do recursive search and report missing.
             string[] references = this.AssemblyUtility.GetFullPathToDependentAssemblies(testSource, configFile, out var warningList);
@@ -230,6 +232,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             if (EqtTrace.IsInfoEnabled)
             {
                 EqtTrace.Info("DeploymentManager: Source:{0} has following references", testSource);
+                EqtTrace.Info("DeploymentManager: Resolving dependencies took {0} ms", sw.ElapsedMilliseconds);
             }
 
             foreach (string reference in references)
