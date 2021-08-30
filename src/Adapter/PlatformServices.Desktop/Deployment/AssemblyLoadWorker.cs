@@ -154,7 +154,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// <param name="result"> The result. </param>
         /// <param name="visitedAssemblies"> The visited Assemblies. </param>
         /// <param name="warnings"> The warnings. </param>
-        private void ProcessChildren(Assembly assembly, IList<string> result, HashSet<string> visitedAssemblies, IList<string> warnings)
+        private void ProcessChildren(Assembly assembly, IList<string> result, ISet<string> visitedAssemblies, IList<string> warnings)
         {
             Debug.Assert(assembly != null, "assembly");
 
@@ -226,7 +226,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// <param name="visitedAssemblies"> The visited Assemblies. </param>
         /// <param name="warnings"> The warnings. </param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        private void GetDependentAssembliesInternal(string assemblyString, IList<string> result, HashSet<string> visitedAssemblies, IList<string> warnings)
+        private void GetDependentAssembliesInternal(string assemblyString, IList<string> result, ISet<string> visitedAssemblies, IList<string> warnings)
         {
             Debug.Assert(!string.IsNullOrEmpty(assemblyString), "assemblyString");
 
