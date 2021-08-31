@@ -46,11 +46,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             Assembly assembly = null;
             try
             {
+                EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Reflection loading {assemblyPath}.");
+
                 // First time we load in LoadFromContext to avoid issues.
                 assembly = this.assemblyUtility.ReflectionOnlyLoadFrom(assemblyPath);
             }
             catch (Exception ex)
             {
+                EqtTrace.Error($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Reflection loading of {assemblyPath} failed:");
+                EqtTrace.Error(ex);
+
                 warnings.Add(ex.Message);
                 return new string[0]; // Otherwise just return no dependencies.
             }
@@ -58,7 +63,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             Debug.Assert(assembly != null, "assembly");
 
             List<string> result = new List<string>();
-            List<string> visitedAssemblies = new List<string>();
+            HashSet<string> visitedAssemblies = new HashSet<string>();
 
             visitedAssemblies.Add(assembly.FullName);
 
@@ -149,9 +154,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// <param name="result"> The result. </param>
         /// <param name="visitedAssemblies"> The visited Assemblies. </param>
         /// <param name="warnings"> The warnings. </param>
-        private void ProcessChildren(Assembly assembly, IList<string> result, IList<string> visitedAssemblies, IList<string> warnings)
+        private void ProcessChildren(Assembly assembly, IList<string> result, ISet<string> visitedAssemblies, IList<string> warnings)
         {
             Debug.Assert(assembly != null, "assembly");
+
+            EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Processing assembly {assembly.FullName}.");
             foreach (AssemblyName reference in assembly.GetReferencedAssemblies())
             {
                 this.GetDependentAssembliesInternal(reference.FullName, result, visitedAssemblies, warnings);
@@ -161,6 +168,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             var modules = new Module[0];
             try
             {
+                EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Getting modules of {assembly.FullName}.");
                 modules = assembly.GetModules();
             }
             catch (FileNotFoundException e)
@@ -192,12 +200,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
                         continue;
                     }
 
-                    if (visitedAssemblies.Contains(m.Name))
+                    if (!visitedAssemblies.Add(m.Name))
                     {
+                        // The assembly was already in the set, meaning that we already visited it.
                         continue;
                     }
-
-                    visitedAssemblies.Add(m.Name);
 
                     if (!File.Exists(m.FullyQualifiedName))
                     {
@@ -219,20 +226,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// <param name="visitedAssemblies"> The visited Assemblies. </param>
         /// <param name="warnings"> The warnings. </param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        private void GetDependentAssembliesInternal(string assemblyString, IList<string> result, IList<string> visitedAssemblies, IList<string> warnings)
+        private void GetDependentAssembliesInternal(string assemblyString, IList<string> result, ISet<string> visitedAssemblies, IList<string> warnings)
         {
             Debug.Assert(!string.IsNullOrEmpty(assemblyString), "assemblyString");
 
-            if (visitedAssemblies.Contains(assemblyString))
+            if (!visitedAssemblies.Add(assemblyString))
             {
+                // The assembly was already in the hashset, so we already visited it.
                 return;
             }
-
-            visitedAssemblies.Add(assemblyString);
 
             Assembly assembly = null;
             try
             {
+                EqtTrace.Verbose($"AssemblyLoadWorker.GetDependentAssembliesInternal: Reflection loading {assemblyString}.");
+
                 string postPolicyAssembly = AppDomain.CurrentDomain.ApplyPolicy(assemblyString);
                 Debug.Assert(!string.IsNullOrEmpty(postPolicyAssembly), "postPolicyAssembly");
 
@@ -241,17 +249,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             }
             catch (Exception ex)
             {
+                EqtTrace.Error($"AssemblyLoadWorker.GetDependentAssembliesInternal: Reflection loading {assemblyString} failed:.");
+                EqtTrace.Error(ex);
+
                 string warning = string.Format(CultureInfo.CurrentCulture, Resource.MissingDeploymentDependency, assemblyString, ex.Message);
                 warnings.Add(warning);
                 return;
             }
 
-            // As soon as we find GAC or internal assembly we do not look further.
-            if (assembly.GlobalAssemblyCache)
-            {
-                return;
-            }
-
+            EqtTrace.Verbose($"AssemblyLoadWorker.GetDependentAssembliesInternal: Assembly {assemblyString} was added as dependency.");
             result.Add(assembly.Location);
 
             this.ProcessChildren(assembly, result, visitedAssemblies, warnings);
