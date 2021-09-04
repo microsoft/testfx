@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
 # Common utilities for building solution and running tests
 
 $TF_ROOT_DIR = (Get-Item (Split-Path $MyInvocation.MyCommand.Path)).Parent.FullName
@@ -294,4 +296,11 @@ function Install-DotNetCli {
   }
   catch {}
   Write-Log "Install-DotNetCli: Complete."
+}
+
+function Unzip
+{
+    param([string]$zipfile, [string]$outpath)
+
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath)
 }
