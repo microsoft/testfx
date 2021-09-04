@@ -222,7 +222,10 @@ function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExten
                 "-m")
 
   Write-Log "    $buildTarget`: $solution..."
-  & "$msbuild" $argument;
+  & { 
+    $PSNativeCommandArgumentPassing = 'Legacy'
+    & "$msbuild" $argument;
+  }
   
   if ($lastExitCode -ne 0) {
     throw "Build failed with an exit code of '$lastExitCode'."
