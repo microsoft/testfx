@@ -4,38 +4,37 @@
 namespace Microsoft.MSTestV2.CLIAutomation
 {
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
     public class RunEventsHandler : ITestRunEventsHandler
     {
+        private readonly List<TestResult> passedTests = new List<TestResult>();
+        private readonly List<TestResult> failedTests = new List<TestResult>();
+        private readonly List<TestResult> skippedTests = new List<TestResult>();
+        private readonly List<string> errors = new List<string>();
+
         /// <summary>
         /// Gets a list of Tests which passed.
         /// </summary>
-        public IList<TestResult> PassedTests { get; private set; }
+        public ReadOnlyCollection<TestResult> PassedTests => this.passedTests.AsReadOnly();
 
         /// <summary>
         /// Gets a list of Tests which failed.
         /// </summary>
-        public IList<TestResult> FailedTests { get; private set; }
+        public ReadOnlyCollection<TestResult> FailedTests => this.failedTests.AsReadOnly();
 
         /// <summary>
         /// Gets a list of Tests which skipped.
         /// </summary>
-        public IList<TestResult> SkippedTests { get; private set; }
+        public ReadOnlyCollection<TestResult> SkippedTests => this.skippedTests.AsReadOnly();
 
-        public IList<string> Errors { get; private set; }
+        public ReadOnlyCollection<string> Errors => this.errors.AsReadOnly();
 
         public double ElapsedTimeInRunningTests { get; private set; }
-
-        public RunEventsHandler()
-        {
-            this.PassedTests = new List<TestResult>();
-            this.FailedTests = new List<TestResult>();
-            this.SkippedTests = new List<TestResult>();
-            this.Errors = new List<string>();
-        }
 
         public void HandleLogMessage(TestMessageLevel level, string message)
         {
@@ -48,7 +47,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
                     EqtTrace.Warning(message);
                     break;
                 case TestMessageLevel.Error:
-                    this.Errors.Add(message);
+                    this.errors.Add(message);
                     EqtTrace.Error(message);
                     break;
                 default:
@@ -70,13 +69,13 @@ namespace Microsoft.MSTestV2.CLIAutomation
                     switch (testResult.Outcome)
                     {
                         case TestOutcome.Passed:
-                            this.PassedTests.Add(testResult);
+                            this.passedTests.Add(testResult);
                             break;
                         case TestOutcome.Failed:
-                            this.FailedTests.Add(testResult);
+                            this.failedTests.Add(testResult);
                             break;
                         case TestOutcome.Skipped:
-                            this.SkippedTests.Add(testResult);
+                            this.skippedTests.Add(testResult);
                             break;
                     }
                 }
@@ -94,13 +93,13 @@ namespace Microsoft.MSTestV2.CLIAutomation
                     switch (testResult.Outcome)
                     {
                         case TestOutcome.Passed:
-                            this.PassedTests.Add(testResult);
+                            this.passedTests.Add(testResult);
                             break;
                         case TestOutcome.Failed:
-                            this.FailedTests.Add(testResult);
+                            this.failedTests.Add(testResult);
                             break;
                         case TestOutcome.Skipped:
-                            this.SkippedTests.Add(testResult);
+                            this.skippedTests.Add(testResult);
                             break;
                         default:
                             break;

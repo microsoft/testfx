@@ -7,9 +7,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Reflection;
+
     using Extensions;
+
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+
     using ObjectModel;
+
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
     /// <summary>
@@ -25,9 +29,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Initializes a new instance of the <see cref="TestAssemblyInfo"/> class.
         /// </summary>
-        internal TestAssemblyInfo()
+        /// <param name="assembly">Sets the <see cref="Assembly"/> this class is representing. </param>
+        internal TestAssemblyInfo(Assembly assembly)
         {
             this.assemblyInfoExecuteSyncObject = new object();
+            this.Assembly = assembly;
         }
 
         /// <summary>
@@ -102,6 +108,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         }
 
         /// <summary>
+        /// Gets the <see cref="Assembly"/> this class represents.
+        /// </summary>
+        internal Assembly Assembly { get; }
+
+        /// <summary>
         /// Runs assembly initialize method.
         /// </summary>
         /// <param name="testContext"> The test context. </param>
@@ -162,9 +173,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                 ?? this.AssemblyInitializationException;
 
             var outcome = UnitTestOutcome.Failed;
-            string errorMessage = null;
-            StackTraceInformation stackTraceInfo = null;
-            if (!realException.TryGetUnitTestAssertException(out outcome, out errorMessage, out stackTraceInfo))
+            if (!realException.TryGetUnitTestAssertException(out outcome, out var errorMessage, out var stackTraceInfo))
             {
                 var exception = realException.GetType().ToString();
                 var message = StackTraceHelper.GetExceptionMessage(realException);

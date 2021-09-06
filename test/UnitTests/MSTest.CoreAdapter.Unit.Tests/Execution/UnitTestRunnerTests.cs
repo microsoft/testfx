@@ -332,8 +332,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     It.IsAny<bool>())).Returns(true);
 
             var validator = 1;
-            DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => { validator = validator << 2; };
-            DummyTestClassWithInitializeMethods.ClassInitializeMethodBody = () => { validator = validator >> 2; };
+            DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => { validator <<= 2; };
+            DummyTestClassWithInitializeMethods.ClassInitializeMethodBody = () => { validator >>= 2; };
 
             this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
 
@@ -381,7 +381,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.AreEqual(1, assemblyCleanupCount);
             Assert.AreEqual(1, classCleanupCount);
-            Assert.AreEqual(2, cleanupresult.Warnings.Count());
+            Assert.AreEqual(2, cleanupresult.Warnings.Count);
             Assert.IsTrue(cleanupresult.Warnings.All(w => w.Contains("NotImplemented")));
         }
 
@@ -402,7 +402,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
 
             var cleanupresult = this.unitTestRunner.RunCleanup();
-            Assert.AreEqual(cleanupresult.DebugTrace, "DummyTrace");
+            Assert.AreEqual("DummyTrace", cleanupresult.DebugTrace);
         }
 
         [TestMethodV1]

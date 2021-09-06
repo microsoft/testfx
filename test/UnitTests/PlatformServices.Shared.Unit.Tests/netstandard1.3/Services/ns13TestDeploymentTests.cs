@@ -4,7 +4,8 @@
 namespace MSTestAdapter.PlatformServices.Tests.Services
 {
     extern alias FrameworkV2Extension;
-#if NETCOREAPP1_1
+
+#if NETCOREAPP
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
     extern alias FrameworkV1;
@@ -127,17 +128,16 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         public void CleanupShouldNotDeleteDirectoriesIfRunSettingsSpecifiesSo()
         {
             string runSettingxml =
-                @"<DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>";
+                "<DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
             mstestSettingsProvider.Load(reader);
 
-            TestRunDirectories testRunDirectories;
             var testCase = this.GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
 
             // Setup mocks.
-            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out testRunDirectories);
+            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
             var mockRunContext = new Mock<IRunContext>();
             mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -152,11 +152,10 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void CleanupShouldDeleteRootDeploymentDirectory()
         {
-            TestRunDirectories testRunDirectories;
             var testCase = this.GetTestCase(typeof(DeploymentUtilityTests).GetTypeInfo().Assembly.Location);
 
             // Setup mocks.
-            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out testRunDirectories);
+            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
             var mockRunContext = new Mock<IRunContext>();
             mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -182,11 +181,10 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void GetDeploymentDirectoryShouldReturnDeploymentOutputDirectory()
         {
-            TestRunDirectories testRunDirectories;
             var testCase = this.GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
 
             // Setup mocks.
-            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out testRunDirectories);
+            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
             var mockRunContext = new Mock<IRunContext>();
             mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -219,7 +217,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 this.mockFileUtility.Object);
 
             string runSettingxml =
-                 @"<DeploymentEnabled>False</DeploymentEnabled>";
+                 "<DeploymentEnabled>False</DeploymentEnabled>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
@@ -243,7 +241,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 this.mockFileUtility.Object);
 
             string runSettingxml =
-                @"<DeploymentEnabled>False</DeploymentEnabled>";
+                "<DeploymentEnabled>False</DeploymentEnabled>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
@@ -267,7 +265,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 this.mockFileUtility.Object);
 
             string runSettingxml =
-                @"<DeploymentEnabled>True</DeploymentEnabled>";
+                "<DeploymentEnabled>True</DeploymentEnabled>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
@@ -299,7 +297,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 this.mockFileUtility.Object);
 
             string runSettingxml =
-                @"<DeploymentEnabled>True</DeploymentEnabled>";
+                "<DeploymentEnabled>True</DeploymentEnabled>";
             StringReader stringReader = new StringReader(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
@@ -368,11 +366,10 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNull()
         {
             // Arrange.
-            TestRunDirectories testRunDirectories;
             var testCase = this.GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
 
             // Setup mocks.
-            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out testRunDirectories);
+            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
             var mockRunContext = new Mock<IRunContext>();
             mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -429,11 +426,10 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNotNull()
         {
             // Arrange.
-            TestRunDirectories testRunDirectories;
             var testCase = this.GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
 
             // Setup mocks.
-            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out testRunDirectories);
+            var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
             var mockRunContext = new Mock<IRunContext>();
             mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -529,7 +525,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
             this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
             var mockAssemblyUtility = new Mock<AssemblyUtility>();
-#if !NETCOREAPP1_1
+#if !NETCOREAPP
              mockAssemblyUtility.Setup(
                 au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
                 .Returns(new string[] { });

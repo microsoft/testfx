@@ -91,8 +91,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 return false;
             }
 
-            if (sourcePath.IndexOfAny(Path.GetInvalidPathChars()) != -1 ||
-                relativeOutputDirectory.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+            if (this.IsInvalidPath(sourcePath) || this.IsInvalidPath(relativeOutputDirectory))
             {
                 warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItemContainsInvalidCharacters, sourcePath, relativeOutputDirectory);
                 return false;
@@ -152,14 +151,37 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
         }
 
+        private bool IsInvalidPath(string path)
+        {
+            if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+            {
+                return true;
+            }
+
+            try
+            {
+                var fileName = Path.GetFileName(path);
+
+                if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         private IList<DeploymentItem> GetDeploymentItems(object[] deploymentItemAttributes, ICollection<string> warnings)
         {
             var deploymentItems = new List<DeploymentItem>();
 
             foreach (DeploymentItemAttribute deploymentItemAttribute in deploymentItemAttributes)
             {
-                string warning;
-                if (this.IsValidDeploymentItem(deploymentItemAttribute.Path, deploymentItemAttribute.OutputDirectory, out warning))
+                if (this.IsValidDeploymentItem(deploymentItemAttribute.Path, deploymentItemAttribute.OutputDirectory, out var warning))
                 {
                     this.AddDeploymentItem(deploymentItems, new DeploymentItem(deploymentItemAttribute.Path, deploymentItemAttribute.OutputDirectory));
                 }

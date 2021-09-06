@@ -4,7 +4,13 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 {
     using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
+    using System.Reflection;
+
+    using Microsoft.TestPlatform.AdapterUtilities;
+    using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 
     using MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
@@ -14,21 +20,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     [Serializable]
     public sealed class TestMethod : ITestMethod
     {
+        /// <summary>
+        /// Number of elements in <see cref="Hierarchy"/>.
+        /// </summary>
+        public const int TotalHierarchyLevels = HierarchyConstants.Levels.TotalLevelCount;
+
         #region Fields
-
-        /// <summary>
-        /// Member field for the property 'DeclaringClassFullName'
-        /// </summary>
+        private IReadOnlyCollection<string> hierarchy;
         private string declaringClassFullName = null;
-
-        /// <summary>
-        /// Member field for the property 'DeclaringAssemblyName'
-        /// </summary>
         private string declaringAssemblyName = null;
-
         #endregion
 
-        public TestMethod(string name, string fullClassName, string assemblyName,  bool isAsync)
+        public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
         {
             if (string.IsNullOrEmpty(assemblyName))
             {
@@ -42,20 +45,44 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             this.FullClassName = fullClassName;
             this.AssemblyName = assemblyName;
             this.IsAsync = isAsync;
+
+            var hierarchy = new string[HierarchyConstants.Levels.TotalLevelCount];
+            hierarchy[HierarchyConstants.Levels.NamespaceIndex] = fullClassName;
+            hierarchy[HierarchyConstants.Levels.ClassIndex] = name;
+
+            this.hierarchy = new ReadOnlyCollection<string>(hierarchy);
         }
 
-        /// <summary>
-        /// Gets the name of the test method
-        /// </summary>
-        public string Name { get; private set; }
+        internal TestMethod(MethodBase method, string name, string fullClassName, string assemblyName, bool isAsync)
+            : this(name, fullClassName, assemblyName, isAsync)
+        {
+            if (method == null)
+            {
+                throw new ArgumentNullException(nameof(method));
+            }
+
+            ManagedNameHelper.GetManagedName(method, out var managedType, out var managedMethod, out var hierarchyValues);
+            this.ManagedTypeName = managedType;
+            this.ManagedMethodName = managedMethod;
+            this.hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
+        }
+
+        internal TestMethod(string managedTypeName, string managedMethodName, string[] hierarchyValues, string name, string fullClassName, string assemblyName, bool isAsync)
+            : this(name, fullClassName, assemblyName, isAsync)
+        {
+            this.ManagedTypeName = managedTypeName;
+            this.ManagedMethodName = managedMethodName;
+            this.hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
+        }
+
+        /// <inheritdoc />
+        public string Name { get; }
+
+        /// <inheritdoc />
+        public string FullClassName { get; }
 
         /// <summary>
-        /// Gets the full classname of the test method
-        /// </summary>
-        public string FullClassName { get; private set; }
-
-        /// <summary>
-        /// Gets or sets the declaring class full name. This will be used while getting navigation data.
+        /// Gets or sets the declaring assembly full name. This will be used while getting navigation data.
         /// This will be null if AssemblyName is same as DeclaringAssemblyName.
         /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
         /// </summary>
@@ -93,14 +120,44 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             }
         }
 
-        /// <summary>
-        /// Gets the name of the test assembly
-        /// </summary>
+        /// <inheritdoc />
         public string AssemblyName { get; private set; }
 
-        /// <summary>
-        /// Gets a value indicating whether specifies test method is async
-        /// </summary>
+        /// <inheritdoc />
         public bool IsAsync { get; private set; }
+
+        /// <inheritdoc />
+        public string ManagedTypeName { get; }
+
+        /// <inheritdoc />
+        public string ManagedMethodName { get; }
+
+        /// <inheritdoc />
+        public bool HasManagedMethodAndTypeProperties => !string.IsNullOrWhiteSpace(this.ManagedTypeName) && !string.IsNullOrWhiteSpace(this.ManagedMethodName);
+
+        /// <inheritdoc />
+        public IReadOnlyCollection<string> Hierarchy => this.hierarchy;
+
+        /// <summary>
+        /// Gets or sets type of dynamic data if any
+        /// </summary>
+        internal DynamicDataType DataType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the serialized data
+        /// </summary>
+        internal string[] SerializedData { get; set; }
+
+        /// <summary>
+        /// Gets or sets the test group set during discovery
+        /// </summary>
+        internal string TestGroup { get; set; }
+
+        /// <summary>
+        /// Gets or sets the display name set during discovery
+        /// </summary>
+        internal string DisplayName { get; set; }
+
+        internal TestMethod Clone() => this.MemberwiseClone() as TestMethod;
     }
 }

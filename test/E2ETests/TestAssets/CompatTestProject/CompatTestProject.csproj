@@ -1,21 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\..\</TestFxRoot>
-  </PropertyGroup>
-
   <PropertyGroup>
     <TargetFramework>net452</TargetFramework>
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(TestFxRoot)artifacts\TestAssets\CompatTests</OutputPath>
-
+    <OutputPath>$(RepoRoot)artifacts\TestAssets\CompatTests</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="1.2.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="1.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Legacy__MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(Legacy__MSTestTestAdapterVersion)" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(Legacy__MSTestTestFrameworkVersion)" />
   </ItemGroup>
 
 </Project>

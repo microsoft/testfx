@@ -1,9 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\..\</TestFxRoot>
-  </PropertyGroup>
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.Settings.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+
   <PropertyGroup>
     <ProjectGuid>{FA7C719F-A400-45AF-8091-7C23435617A8}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -12,12 +10,18 @@
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP.UnitTests</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+    <VSToolsPath Condition=" '$(VSToolsPath)' == '' ">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
     <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
     <NoWarn>1685</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <ResolveAssemblyReferencesSilent>true</ResolveAssemblyReferencesSilent>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -34,76 +38,86 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Castle.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Castle.Core.4.0.0\lib\net45\Castle.Core.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="System" />
+    <Reference Include="System.Collections" Private="True" />
+    <Reference Include="System.Diagnostics.Debug" Private="True" />
+    <Reference Include="System.Runtime" Private="True" />
+    <Reference Include="System.Runtime.Extensions" Private="True" />
+    <Reference Include="System.Reflection" Private="True" />
+    <Reference Include="System.IO" Private="True" />
+    <Reference Include="System.Globalization" Private="True" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.ReaderWriter" Private="True" />
+    <Reference Include="System.Threading.Tasks" Private="True" />
+    <Reference Include="System.Xml.Linq" />
+
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices">
+      <HintPath>$(ArtifactsBinDir)PlatformServices.Universal\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions">
+      <HintPath>$(ArtifactsBinDir)Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <Aliases>FrameworkV1</Aliases>
     </Reference>
-    <Reference Include="Moq, Version=4.7.8.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
-      <HintPath>..\..\..\packages\Moq.4.7.8\lib\net45\Moq.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="$(TestFxRoot)packages\Microsoft.Internal.TestPlatform.ObjectModel.14.0.0\lib\uap10.0\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll" />
+
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
+      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
+      <Name>MSTest.Core</Name>
+      <Aliases>FrameworkV2</Aliases>
+    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
+      <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
+      <Name>PlatformServices.Interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj">
+      <Project>{f81c7549-e3a3-4770-ac3f-3bc7356e61e8}</Project>
+      <Name>MSTest.CoreAdapter.TestUtilities</Name>
+    </ProjectReference>
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" targetFramework="net451" />
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" targetFramework="uap10.0" />
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
+    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetFrameworksVersion)" />
+    <PackageReference Include="Castle.Core" Version="$(CastleCoreVersion)" />
+    <PackageReference Include="Moq" Version="$(MoqVersion)" />
+
+    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10AssemblyAttributes.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10AssemblyAttributes.cs">
       <Link>Services\ns10AssemblyAttributes.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs">
       <Link>Services\ns10DiaSessionOperationsTests.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs">
       <Link>Services\ns10ReflectionOperationsTests.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10SettingsProviderTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10SettingsProviderTests.cs">
       <Link>Services\ns10SettingsProviderTests.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestContextImplementationTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestContextImplementationTests.cs">
       <Link>Services\ns10TestContextImplementationTests.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs">
       <Link>Services\ns10TestSourceHostTests.cs</Link>
     </Compile>
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs">
       <Link>Services\ns10ThreadOperationsTests.cs</Link>
     </Compile>
     <Compile Include="Services\UniversalFileOperationsTests.cs" />
     <Compile Include="Services\UniversalTestSourceTests.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
-      <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
-      <Name>PlatformServices.Interface</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\src\Adapter\PlatformServices.Universal\PlatformServices.Universal.csproj">
-      <Project>{5D153CAA-80C2-4551-9549-6C406FCEEFB1}</Project>
-      <Name>PlatformServices.Universal</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj">
-      <Project>{f81c7549-e3a3-4770-ac3f-3bc7356e61e8}</Project>
-      <Name>MSTest.CoreAdapter.TestUtilities</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\src\TestFramework\MSTest.Core\MSTest.Core.csproj">
-      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
-      <Name>MSTest.Core</Name>
-      <Aliases>FrameworkV2</Aliases>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\src\TestFramework\Extension.UWP\Extension.UWP.csproj">
-      <Project>{DF131865-84EE-4540-8112-E88ACEBDEA09}</Project>
-      <Name>Extension.UWP</Name>
-    </ProjectReference>
-  </ItemGroup>
+  
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
-  <Import Project="$(TestFxRoot)scripts\build\TestFx.targets" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

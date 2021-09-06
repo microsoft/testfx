@@ -10,6 +10,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
     using System.Linq;
     using System.Reflection;
     using System.Security;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -17,10 +18,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
     internal class ReflectHelper : MarshalByRefObject
     {
+        private static readonly Lazy<ReflectHelper> InstanceValue = new Lazy<ReflectHelper>(() => new ReflectHelper());
+
         /// <summary>
         /// Contains the memberInfo Vs the name/type of the attributes defined on that member. (FYI: - MemberInfo denotes properties, fields, methods, events)
         /// </summary>
-        private Dictionary<MemberInfo, Dictionary<string, object>> attributeCache = new Dictionary<MemberInfo, Dictionary<string, object>>();
+        private readonly Dictionary<MemberInfo, Dictionary<string, object>> attributeCache = new Dictionary<MemberInfo, Dictionary<string, object>>();
+
+        internal ReflectHelper()
+        {
+        }
+
+        public static ReflectHelper Instance => InstanceValue.Value;
 
         /// <summary>
         /// Checks to see if the parameter memberInfo contains the parameter attribute or not.
@@ -112,7 +121,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
             if (attributes == null)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("ReflectHelper.HasAttributeDerivedFrom: Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.");
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(ReflectHelper)}.{nameof(GetAttributes)}: {Resource.FailedFetchAttributeCache}");
 
                 return this.IsAttributeDefined(memberInfo, baseAttributeType, inherit);
             }
@@ -120,7 +129,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             // Try to find the attribute that is derived from baseAttrType.
             foreach (object attribute in attributes.Values)
             {
-                Debug.Assert(attribute != null, "ReflectHeler.DefinesAttributeDerivedFrom: internal error: wrong value in the attrs dictionary.");
+                Debug.Assert(attribute != null, $"{nameof(ReflectHelper)}.{nameof(GetAttributes)}: internal error: wrong value in the attrs dictionary.");
 
                 Type attributeType = attribute.GetType();
                 if (attributeType.GetTypeInfo().IsSubclassOf(baseAttributeType))
@@ -197,6 +206,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         public override object InitializeLifetimeService()
         {
             return null;
+        }
+
+        internal static T[] GetAttributes<T>(MethodBase methodBase, bool inherit)
+            where T : Attribute
+        {
+            Attribute[] attributeArray = GetCustomAttributes(methodBase, typeof(T), inherit);
+            if (attributeArray == null || attributeArray.Length == 0)
+            {
+                return null;
+            }
+
+            if (attributeArray is T[] attributes)
+            {
+                return attributes;
+            }
+
+            return attributeArray.Where(a => a is T).Cast<T>().ToArray();
         }
 
         /// <summary>
@@ -655,7 +681,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <param name="memberInfo">The member to inspect.</param>
         /// <param name="inherit">Look at inheritance chain.</param>
         /// <returns>attributes defined.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
         private Dictionary<string, object> GetAttributes(MemberInfo memberInfo, bool inherit)
         {
             // If the information is cached, then use it otherwise populate the cache using
@@ -684,16 +709,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                         }
                         catch (Exception ex2)
                         {
-                            description =
-                                ex.GetType().FullName +
-                                ": (Failed to get exception description due to an exception of type " +
-                                    ex2.GetType().FullName + ')';
+                            description = string.Format(CultureInfo.CurrentCulture, Resource.ExceptionOccuredWhileGettingTheExceptionDescription, ex.GetType().FullName, ex2.GetType().FullName);                               // ex.GetType().FullName +
                         }
 
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
-                            "Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}",
-                            memberInfo.GetType().FullName,
-                            description);
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.FailedToGetCustomAttribute, memberInfo.GetType().FullName, description);
 
                         // Since we cannot check by attribute names, do it in reflection way.
                         // Note 1: this will not work for different version of assembly but it is better than nothing.

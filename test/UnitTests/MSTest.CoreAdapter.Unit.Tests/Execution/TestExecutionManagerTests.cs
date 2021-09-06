@@ -194,7 +194,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
-        public void RunTestsShouldLogResultCleanupWarnings()
+        public void RunTestsShouldLogResultCleanupWarningsAsErrorsWhenTreatClassCleanupWarningsAsErrorsIsTrue()
+        {
+            this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                         @"<RunSettings> 
+                                              <MSTest>
+                                                 <TreatClassAndAssemblyCleanupWarningsAsErrors>true</TreatClassAndAssemblyCleanupWarningsAsErrors>
+                                              </MSTest>
+                                            </RunSettings>");
+            MSTestSettings.PopulateSettings(this.runContext);
+
+            var testCase = this.GetTestCase(typeof(DummyTestClassWithCleanupMethods), "TestMethod");
+            TestCase[] tests = new[] { testCase };
+
+            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
+
+            // Warnings should get logged.
+            Assert.AreEqual(1, this.frameworkHandle.MessageList.Count);
+            StringAssert.StartsWith(this.frameworkHandle.MessageList[0], "Error");
+            Assert.IsTrue(this.frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
+        }
+
+        [TestMethodV1]
+        public void RunTestsShouldLogResultOutput()
         {
             var testCase = this.GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
             TestCase[] tests = new[] { testCase };
@@ -203,6 +225,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             // Warnings should get logged.
             Assert.AreEqual(1, this.frameworkHandle.MessageList.Count);
+            StringAssert.StartsWith(this.frameworkHandle.MessageList[0], "Warning");
             Assert.IsTrue(this.frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
         }
 

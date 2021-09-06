@@ -92,8 +92,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         [TestMethod]
         public void DeployShouldDeploySourceAndItsConfigFile()
         {
-            TestRunDirectories testRunDirectories;
-            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out testRunDirectories);
+            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
 
             // Setup mocks.
             this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
@@ -139,8 +138,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         {
             var dependencyFile = "C:\\temp\\dependency.dll";
 
-            TestRunDirectories testRunDirectories;
-            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out testRunDirectories);
+            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
 
             // Setup mocks.
             this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
@@ -176,8 +174,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         [TestMethod]
         public void DeployShouldDeploySatelliteAssemblies()
         {
-            TestRunDirectories testRunDirectories;
-            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out testRunDirectories);
+            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
             var assemblyFullPath = Assembly.GetExecutingAssembly().Location;
             var satelliteFullPath = Path.Combine(Path.GetDirectoryName(assemblyFullPath), "de", "satellite.dll");
 
@@ -215,12 +212,11 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         [TestMethod]
         public void DeployShouldNotDeployIfOutputDirectoryIsInvalid()
         {
-            TestRunDirectories testRunDirectories;
             var assemblyFullPath = Assembly.GetExecutingAssembly().Location;
             var deploymentItemPath = "C:\\temp\\sample.dll";
             var deploymentItemOutputDirectory = "..\\..\\out";
 
-            var testCase = this.GetTestCaseAndTestRunDirectories(deploymentItemPath, deploymentItemOutputDirectory, out testRunDirectories);
+            var testCase = this.GetTestCaseAndTestRunDirectories(deploymentItemPath, deploymentItemOutputDirectory, out var testRunDirectories);
 
             // Setup mocks.
             this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
@@ -267,10 +263,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         [TestMethod]
         public void DeployShouldDeployContentsOfADirectoryIfSpecified()
         {
-            TestRunDirectories testRunDirectories;
             var assemblyFullPath = Assembly.GetExecutingAssembly().Location;
 
-            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out testRunDirectories);
+            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
             var content1 = Path.Combine(DefaultDeploymentItemPath, "directoryContents.dll");
             var directoryContentFiles = new List<string> { content1 };
 
@@ -312,8 +307,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         [TestMethod]
         public void DeployShouldDeployPdbWithSourceIfPdbFileIsPresentInSourceDirectory()
         {
-            TestRunDirectories testRunDirectories;
-            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out testRunDirectories);
+            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
 
             // Setup mocks.
             this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
@@ -369,8 +363,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
             // Path for pdb file of dependent assembly if pdb file is present.
             var pdbFile = Path.ChangeExtension(dependencyFile, "pdb");
 
-            TestRunDirectories testRunDirectories;
-            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out testRunDirectories);
+            var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
 
             // Setup mocks.
             this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);

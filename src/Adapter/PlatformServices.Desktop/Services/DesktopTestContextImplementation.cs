@@ -14,8 +14,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.IO;
     using System.Linq;
     using System.Threading;
+
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -209,6 +211,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <inheritdoc/>
+        public override string ManagedType
+        {
+            get
+            {
+                return this.GetStringPropertyValue(TestContextPropertyStrings.ManagedType);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string ManagedMethod
+        {
+            get
+            {
+                return this.GetStringPropertyValue(TestContextPropertyStrings.ManagedMethod);
+            }
+        }
+
+        /// <inheritdoc/>
         public override string TestName
         {
             get
@@ -230,7 +250,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             if (string.IsNullOrEmpty(fileName))
             {
-                throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, "fileName");
+                throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
             }
 
             this.testResultFiles.Add(Path.GetFullPath(fileName));
@@ -407,7 +427,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>Results files generated in run.</returns>
         public IList<string> GetResultFiles()
         {
-            if (this.testResultFiles.Count() == 0)
+            if (!this.testResultFiles.Any())
             {
                 return null;
             }
@@ -450,40 +470,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             switch (outcome)
             {
                 case UTF.UnitTestOutcome.Error:
-                    {
-                        return UTF.UnitTestOutcome.Error;
-                    }
-
                 case UTF.UnitTestOutcome.Failed:
-                    {
-                        return UTF.UnitTestOutcome.Failed;
-                    }
-
                 case UTF.UnitTestOutcome.Inconclusive:
-                    {
-                        return UTF.UnitTestOutcome.Inconclusive;
-                    }
-
                 case UTF.UnitTestOutcome.Passed:
-                    {
-                        return UTF.UnitTestOutcome.Passed;
-                    }
-
                 case UTF.UnitTestOutcome.Timeout:
-                    {
-                        return UTF.UnitTestOutcome.Timeout;
-                    }
-
                 case UTF.UnitTestOutcome.InProgress:
-                    {
-                        return UTF.UnitTestOutcome.InProgress;
-                    }
+                    return outcome;
 
                 default:
-                    {
-                        Debug.Fail("Unknown outcome " + outcome);
-                        return UTF.UnitTestOutcome.Unknown;
-                    }
+                    Debug.Fail("Unknown outcome " + outcome);
+                    return UTF.UnitTestOutcome.Unknown;
             }
         }
 
@@ -494,8 +490,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>Property value</returns>
         private string GetStringPropertyValue(string propertyName)
         {
-            object propertyValue = null;
-            this.properties.TryGetValue(propertyName, out propertyValue);
+            this.properties.TryGetValue(propertyName, out var propertyValue);
             return propertyValue as string;
         }
 
@@ -505,6 +500,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private void InitializeProperties()
         {
             this.properties[TestContextPropertyStrings.FullyQualifiedTestClassName] = this.testMethod.FullClassName;
+            this.properties[TestContextPropertyStrings.ManagedType] = this.testMethod.ManagedTypeName;
+            this.properties[TestContextPropertyStrings.ManagedMethod] = this.testMethod.ManagedMethodName;
             this.properties[TestContextPropertyStrings.TestName] = this.testMethod.Name;
         }
     }

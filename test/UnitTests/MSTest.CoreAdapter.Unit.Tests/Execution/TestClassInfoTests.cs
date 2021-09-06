@@ -10,10 +10,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System;
     using System.Linq;
     using System.Reflection;
+
     using global::MSTestAdapter.TestUtilities;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+
     using Moq;
+
     using MSTest.TestAdapter.ObjectModel;
+
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
@@ -46,7 +51,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testClassConstructor = this.testClassType.GetConstructors().First();
             this.testContextProperty = this.testClassType.GetProperties().First();
             this.testClassAttribute = (UTF.TestClassAttribute)this.testClassType.GetCustomAttributes().First();
-            this.testAssemblyInfo = new TestAssemblyInfo();
+            this.testAssemblyInfo = new TestAssemblyInfo(this.testClassType.Assembly);
 
             this.testClassInfo = new TestClassInfo(
                 this.testClassType,

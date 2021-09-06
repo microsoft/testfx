@@ -26,8 +26,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </remarks>
     public class TestContextImplementation : UTF.TestContext, ITestContext
     {
-        private static readonly string FullyQualifiedTestClassNameLabel = "FullyQualifiedTestClassName";
-        private static readonly string TestNameLabel = "TestName";
+        private static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
+        private static readonly string ManagedTypeLabel = nameof(ManagedType);
+        private static readonly string ManagedMethodLabel = nameof(ManagedMethod);
+        private static readonly string TestNameLabel = nameof(TestName);
 
         /// <summary>
         /// Properties
@@ -327,8 +329,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>Property value</returns>
         private object GetPropertyValue(string propertyName)
         {
-            object propertyValue = null;
-            this.properties.TryGetValue(propertyName, out propertyValue);
+            this.properties.TryGetValue(propertyName, out var propertyValue);
 
             return propertyValue;
         }
@@ -339,6 +340,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private void InitializeProperties()
         {
             this.properties[FullyQualifiedTestClassNameLabel] = this.testMethod.FullClassName;
+            this.properties[ManagedTypeLabel] = this.testMethod.ManagedTypeName;
+            this.properties[ManagedMethodLabel] = this.testMethod.ManagedMethodName;
             this.properties[TestNameLabel] = this.testMethod.Name;
         }
     }

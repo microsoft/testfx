@@ -1,69 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" Condition="$(TargetFrameworkProfile) == 'Profile259'" />
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" Condition="$(TargetPlatformIdentifier) == 'UAP'" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="($(TargetFrameworkProfile) == '' or $(TargetFrameworkProfile) != 'Profile259') and $(TargetPlatformIdentifier) != 'UAP' and $(FrameworkIdentifier) != 'NetCore'"/>
-    
-  <PropertyGroup>
-    <TestFxRoot Condition="$(TestFxRoot) == ''">..\..\</TestFxRoot>
-    <RepoRoot Condition="$(RepoRoot) == ''">..\..\</RepoRoot>
-    <TestFxPackagesRoot>$(TestFxRoot)packages\</TestFxPackagesRoot>
-    <IsLocalizationEnabled Condition="'$(UpdateXlf)' == 'true' or '$(IsLocalizedBuild)' == 'true'">true</IsLocalizationEnabled>
-  </PropertyGroup>
-
-  <!-- Import props/targets with $(RepoRoot) since msbuild takes the relative path based on settings.targets and not with respect to the project. -->
-  <Import Project="$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets" Condition="Exists('$(RepoRoot)packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
-
   <!-- Import localization specific Targets if enabled. -->
-  <Import Project="$(RepoRoot)scripts\build\TestFx.Loc.targets" Condition="($(IsTest) == '' or $(IsTest) == 'false') and $(IsLocalizationEnabled) == 'true'"/>
-
-  <ItemGroup>
-    <None Include="$(TestFxRoot)scripts\build\key.snk">
-      <!-- Do not have this show up in Solution Explorer in VS -->
-      <InProject>false</InProject>
-    </None>
-  </ItemGroup>
+  <Import Project="$(MSBuildThisFileDirectory)TestFx.Loc.props" Condition=" ('$(IsTest)' == '' or '$(IsTest)' == 'false') and '$(IsLocalizationEnabled)' == 'true' "/>
+  <Import Project="$(RepoRoot)scripts\build\TestFx.Sign.targets" Condition=" '$(TestFxSigningTargetsImported)' != 'true' " />
 
   <!-- StyleCop settings. -->
-  <ItemGroup Condition="$(ShouldEnableStyleCop) != 'false' and $(IsVsixProj) != 'true'">
-    <AdditionalFiles Include="$(TestFxRoot)scripts\build\stylecop.json">
+  <ItemGroup Condition=" '$(ShouldEnableStyleCop)' != 'false' and '$(IsVsixProj)' != 'true'">
+    <AdditionalFiles Include="$(RepoRoot)scripts\build\stylecop.json">
       <Link>stylecop.json</Link>
     </AdditionalFiles>
     
-    <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
-    <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
-    <Analyzer Include="$(TestFxPackagesRoot)StyleCop.Analyzers.1.0.0\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
+    <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
+    <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
+    <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup> 
-
-  <!-- Signing and Localization. -->
-  <ItemGroup Condition="$(IsTest) == '' or $(IsTest) == 'false'">
-    <FilesToSign Include="$(OutDir)\$(AssemblyName).dll" Condition="'$(IsVsixProj)' == '' or '$(IsVsixProj)' != 'true'">
-      <Authenticode>Microsoft402400</Authenticode>
-      <StrongName>StrongName</StrongName>
-    </FilesToSign>
-
-    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning">
-      <!-- Do not have this show up in Solution Explorer in VS -->
-      <InProject>false</InProject>
-    </SignFilesDependsOn>
-  </ItemGroup>
-
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.props')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.props'))" />
-    <Error Condition="!Exists('$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(TestFxPackagesRoot)MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets'))" />
-  </Target>
-
-  <Target Name="GatherLocalizedOutputsForSigning" DependsOnTargets="TestFxLocalization">
-    <ItemGroup>
-      <FilesToSign Include="$(OutDir)\**\$(AssemblyName).resources.dll">
-        <Authenticode>Microsoft402400</Authenticode>
-        <StrongName>StrongName</StrongName>
-      </FilesToSign>
-    </ItemGroup>
-  </Target>
 
   <!-- Generate AssemblyInfo.cs -->
   <PropertyGroup>
@@ -84,7 +34,7 @@
     </AssemblyVersionAttribute>
   </ItemGroup>
   <Target Name="GenerateAssemblyInfoFile">
-    <WriteCodeFragment AssemblyAttributes="@(AssemblyVersionAttribute)" Language="C#" OutputFile="$(MSBuildProjectDirectory)\GlobalAssemblyInfo.cs">
+    <WriteCodeFragment AssemblyAttributes="@(AssemblyVersionAttribute)" Language="C#" OutputFile="$(MSBuildProjectDirectory)\GlobalAssemblyInfo.cs" Condition=" '$(SkipAppendingVersion)' != 'true' ">
       <Output TaskParameter="OutputFile" ItemName="Compile" />
       <Output TaskParameter="OutputFile" ItemName="FileWrites" />
     </WriteCodeFragment>

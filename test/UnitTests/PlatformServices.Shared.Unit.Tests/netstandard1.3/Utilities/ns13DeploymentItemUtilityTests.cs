@@ -5,7 +5,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
 {
     extern alias FrameworkV2Extension;
 
-#if NETCOREAPP1_1
+#if NETCOREAPP
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
     extern alias FrameworkV1;
@@ -354,8 +354,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestMethod]
         public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsNull()
         {
-            string warning;
-            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(null, this.defaultDeploymentItemOutputDirectory, out warning));
+            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(null, this.defaultDeploymentItemOutputDirectory, out var warning));
 
             StringAssert.Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty, warning);
         }
@@ -363,8 +362,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestMethod]
         public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsEmpty()
         {
-            string warning;
-            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(string.Empty, this.defaultDeploymentItemOutputDirectory, out warning));
+            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(string.Empty, this.defaultDeploymentItemOutputDirectory, out var warning));
 
             StringAssert.Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty, warning);
         }
@@ -372,8 +370,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestMethod]
         public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsNull()
         {
-            string warning;
-            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, null, out warning));
+            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, null, out var warning));
 
             StringAssert.Contains(Resource.DeploymentItemOutputDirectoryCannotBeNull, warning);
         }
@@ -381,8 +378,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestMethod]
         public void IsValidDeploymentItemShouldReportWarningIfSourcePathHasInvalidCharacters()
         {
-            string warning;
-            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem("C:<>", this.defaultDeploymentItemOutputDirectory, out warning));
+            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem("C:<>", this.defaultDeploymentItemOutputDirectory, out var warning));
 
             StringAssert.Contains(
                 string.Format(
@@ -395,8 +391,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestMethod]
         public void IsValidDeploymentItemShouldReportWarningIfOutputDirectoryHasInvalidCharacters()
         {
-            string warning;
-            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, "<>", out warning));
+            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, "<>", out var warning));
 
             StringAssert.Contains(
                 string.Format(
@@ -409,8 +404,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestMethod]
         public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsRooted()
         {
-            string warning;
-            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, "C:\\temp", out warning));
+            Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, "C:\\temp", out var warning));
 
             StringAssert.Contains(
                string.Format(
@@ -422,8 +416,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestMethod]
         public void IsValidDeploymentItemShouldReturnTrueForAValidDeploymentItem()
         {
-            string warning;
-            Assert.IsTrue(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, this.defaultDeploymentItemOutputDirectory, out warning));
+            Assert.IsTrue(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, this.defaultDeploymentItemOutputDirectory, out var warning));
 
             Assert.IsTrue(string.Empty.Equals(warning));
         }

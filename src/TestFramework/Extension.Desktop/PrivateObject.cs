@@ -770,13 +770,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             this.methodCache = new Dictionary<string, LinkedList<MethodInfo>>();
 
             MethodInfo[] members = t.GetMethods(BindToEveryThing);
-            LinkedList<MethodInfo> listByName; // automatically initialized to null
 
             foreach (MethodInfo member in members)
             {
                 if (member.IsGenericMethod || member.IsGenericMethodDefinition)
                 {
-                    if (!this.GenericMethodCache.TryGetValue(member.Name, out listByName))
+                    // automatically initialized to null
+                    if (!this.GenericMethodCache.TryGetValue(member.Name, out LinkedList<MethodInfo> listByName))
                     {
                         listByName = new LinkedList<MethodInfo>();
                         this.GenericMethodCache.Add(member.Name, listByName);
@@ -837,9 +837,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Debug.Assert(typeArguments != null, "typeArguments should not be null.");
 
             LinkedList<MethodInfo> methodCandidates = new LinkedList<MethodInfo>();
-            LinkedList<MethodInfo> methods = null;
 
-            if (!this.GenericMethodCache.TryGetValue(methodName, out methods))
+            if (!this.GenericMethodCache.TryGetValue(methodName, out var methods))
             {
                 return methodCandidates;
             }

@@ -11,10 +11,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Reflection;
     using System.Text;
     using System.Threading;
+
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+
     using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -92,30 +94,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
             where TAttributeType : Attribute
-        {
-            Attribute[] attributeArray = ReflectHelper.GetCustomAttributes(this.TestMethod, typeof(TAttributeType), inherit);
-
-            TAttributeType[] tAttributeArray = attributeArray as TAttributeType[];
-            if (tAttributeArray != null)
-            {
-                return tAttributeArray;
-            }
-
-            List<TAttributeType> tAttributeList = new List<TAttributeType>();
-            if (attributeArray != null)
-            {
-                foreach (Attribute attribute in attributeArray)
-                {
-                    TAttributeType tAttribute = attribute as TAttributeType;
-                    if (tAttribute != null)
-                    {
-                        tAttributeList.Add(tAttribute);
-                    }
-                }
-            }
-
-            return tAttributeList.ToArray();
-        }
+            => ReflectHelper.GetAttributes<TAttributeType>(this.TestMethod, inherit)
+            ?? EmptyHolder<TAttributeType>.Array;
 
         /// <summary>
         /// Execute test method. Capture failures, handle async and return result.
@@ -453,11 +433,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             // Get the real exception thrown by the test method
             Exception realException = this.GetRealException(ex);
-            string exceptionMessage = null;
-            StackTraceInformation exceptionStackTraceInfo = null;
             var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
 
-            if (realException.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out exceptionStackTraceInfo))
+            if (realException.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var exceptionStackTraceInfo))
             {
                 return new TestFailedException(outcome.ToUnitTestOutcome(), exceptionMessage, exceptionStackTraceInfo, realException);
             }
@@ -546,11 +524,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 Exception realException = ex.GetInnerExceptionOrDefault();
-                string exceptionMessage = null;
-                StackTraceInformation realExceptionStackTraceInfo = null;
 
                 // special case UnitTestAssertException to trim off part of the stack trace
-                if (!realException.TryGetUnitTestAssertException(out cleanupOutcome, out exceptionMessage, out realExceptionStackTraceInfo))
+                if (!realException.TryGetUnitTestAssertException(out cleanupOutcome, out var exceptionMessage, out var realExceptionStackTraceInfo))
                 {
                     cleanupOutcome = UTF.UnitTestOutcome.Failed;
                     exceptionMessage = this.GetTestCleanUpExceptionMessage(testCleanupMethod, realException);
@@ -632,11 +608,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             catch (Exception ex)
             {
                 var innerException = ex.GetInnerExceptionOrDefault();
-                string exceptionMessage = null;
-                StackTraceInformation exceptionStackTraceInfo = null;
                 var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
 
-                if (innerException.TryGetUnitTestAssertException(out outcome, out exceptionMessage, out exceptionStackTraceInfo))
+                if (innerException.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var exceptionStackTraceInfo))
                 {
                     result.Outcome = outcome;
                     result.TestFailureException = new TestFailedException(
@@ -725,11 +699,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             catch (Exception ex)
             {
+                if (ex == null)
+                {
+                    // It seems that ex can be null in some rare cases when initialization fails in native code.
+                    // Get our own exception with a stack trace to satisfy GetStackTraceInformation.
+                    try
+                    {
+                        throw new InvalidOperationException(Resource.UTA_UserCodeThrewNullValueException);
+                    }
+                    catch (Exception exception)
+                    {
+                        ex = exception;
+                    }
+                }
+
                 // In most cases, exception will be TargetInvocationException with real exception wrapped
-                // in the InnerException; or user code throws an exception
+                // in the InnerException; or user code throws an exception.
+                // It also seems that in rare cases the ex can be null.
                 var actualException = ex.InnerException ?? ex;
                 var exceptionMessage = StackTraceHelper.GetExceptionMessage(actualException);
                 var stackTraceInfo = StackTraceHelper.GetStackTraceInformation(actualException);
+
                 var errorMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.UTA_InstanceCreationError,
@@ -795,6 +785,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 TestResult timeoutResult = new TestResult() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };
                 return timeoutResult;
             }
+        }
+
+        private static class EmptyHolder<T>
+        {
+            internal static readonly T[] Array = new T[0];
         }
     }
 }

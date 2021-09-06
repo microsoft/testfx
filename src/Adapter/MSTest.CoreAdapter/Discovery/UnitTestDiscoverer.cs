@@ -58,9 +58,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             ITestCaseDiscoverySink discoverySink,
             IDiscoveryContext discoveryContext)
         {
-            ICollection<string> warnings;
-
-            var testElements = this.assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out warnings);
+            var testElements = this.assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out var warnings);
 
             // log the warnings
             foreach (var warning in warnings)
@@ -100,8 +98,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 }
 
                 // Get filter expression and skip discovery in case filter expression has parsing error.
-                bool filterHasError = false;
-                ITestCaseFilterExpression filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, logger, out filterHasError);
+                ITestCaseFilterExpression filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, logger, out var filterHasError);
                 if (filterHasError)
                 {
                     return;
@@ -117,12 +114,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                         continue;
                     }
 
-                    object testNavigationSession;
                     if (shouldCollectSourceInformation)
                     {
                         string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
 
-                        if (!navigationSessions.TryGetValue(testSource, out testNavigationSession))
+                        if (!navigationSessions.TryGetValue(testSource, out var testNavigationSession))
                         {
                             testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
                             navigationSessions.Add(testSource, testNavigationSession);
@@ -144,15 +140,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                 methodName = "MoveNext";
                             }
 
-                            int minLineNumber;
-                            string fileName;
-
                             PlatformServiceProvider.Instance.FileOperations.GetNavigationData(
                                 testNavigationSession,
                                 className,
                                 methodName,
-                                out minLineNumber,
-                                out fileName);
+                                out var minLineNumber,
+                                out var fileName);
 
                             if (!string.IsNullOrEmpty(fileName))
                             {

@@ -106,8 +106,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public int CompareTo(object obj)
         {
-            GenericParameterHelper gpf = obj as GenericParameterHelper;
-            if (gpf != null)
+            if (obj is GenericParameterHelper gpf)
             {
                 return this.Data.CompareTo(gpf.Data);
             }

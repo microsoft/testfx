@@ -1,0 +1,1 @@
+This file is kept to commit Resources directory as language specific resx files needs to be copied here.

@@ -254,6 +254,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
 
         [TestMethod]
+        public void TreatClassCleanupWarningsAsErrorsShouldBeFalseByDefault()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.IsFalse(adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
+        }
+
+        [TestMethod]
+        public void TreatClassCleanupWarningsAsErrorsShouldBeConsumedFromRunSettingsWhenSpecified()
+        {
+            string runSettingxml =
+                @"<RunSettings>
+                    <MSTestV2>
+                        <TreatClassAndAssemblyCleanupWarningsAsErrors>True</TreatClassAndAssemblyCleanupWarningsAsErrors>
+                    </MSTestV2>
+                  </RunSettings>";
+
+            MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+            Assert.IsTrue(adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
+        }
+
+        [TestMethod]
         public void ParallelizationSettingsShouldNotBeSetByDefault()
         {
             string runSettingxml =
@@ -571,7 +600,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                       </MSTest>
                     </RunSettings>";
 
-            string expectedrunSettingxml = @"<DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>";
+            string expectedrunSettingxml = "<DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>";
             string observedxml = null;
 
             this.testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
@@ -611,13 +640,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                         reader.Read();
                         while (reader.NodeType == XmlNodeType.Element)
                         {
-                            bool result;
                             string elementName = reader.Name.ToUpperInvariant();
                             switch (elementName)
                             {
                                 case "DUMMYPLATFORMSPECIFICSETTING":
                                     {
-                                        if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                        if (bool.TryParse(reader.ReadInnerXml(), out var result))
                                         {
                                             dummyPlatformSpecificSetting = result;
                                         }
@@ -668,13 +696,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                         reader.Read();
                         while (reader.NodeType == XmlNodeType.Element)
                         {
-                            bool result;
                             string elementName = reader.Name.ToUpperInvariant();
                             switch (elementName)
                             {
                                 case "DUMMYPLATFORMSPECIFICSETTING":
                                     {
-                                        if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                        if (bool.TryParse(reader.ReadInnerXml(), out var result))
                                         {
                                             dummyPlatformSpecificSetting = result;
                                         }
@@ -777,13 +804,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                         reader.Read();
                         while (reader.NodeType == XmlNodeType.Element)
                         {
-                            bool result;
                             string elementName = reader.Name.ToUpperInvariant();
                             switch (elementName)
                             {
                                 case "DUMMYPLATFORMSPECIFICSETTING":
                                     {
-                                        if (bool.TryParse(reader.ReadInnerXml(), out result))
+                                        if (bool.TryParse(reader.ReadInnerXml(), out var result))
                                         {
                                             dummyPlatformSpecificSetting = result;
                                         }
@@ -864,6 +890,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
                    <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
                    <ForcedLegacyMode>true</ForcedLegacyMode>
                    <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+                   <TreatClassAndAssemblyCleanupWarningsAsErrors>true</TreatClassAndAssemblyCleanupWarningsAsErrors>
                  </MSTest>
                </RunSettings>";
 
@@ -876,6 +903,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             Assert.IsTrue(MSTestSettings.CurrentSettings.MapNotRunnableToFailed);
             Assert.IsTrue(MSTestSettings.CurrentSettings.ForcedLegacyMode);
             Assert.IsTrue(MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
+            Assert.IsTrue(MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
             Assert.IsFalse(string.IsNullOrEmpty(MSTestSettings.CurrentSettings.TestSettingsFile));
         }
 

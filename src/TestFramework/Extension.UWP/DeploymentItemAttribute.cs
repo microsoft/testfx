@@ -3,7 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
-    using System;
+    using global::System;
 
     /// <summary>
     /// Used to specify deployment item (file or directory) for per-test deployment.

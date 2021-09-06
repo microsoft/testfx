@@ -1,4 +1,6 @@
-﻿# Copyright (c) Microsoft. All rights reserved.
+﻿# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 # Portable to Full PDB conversion script for Test Platform.
 
 [CmdletBinding()]
@@ -8,27 +10,26 @@ Param(
     [System.String] $Configuration = "Release"
 )
 
+. $PSScriptRoot\common.lib.ps1
+
 #
 # Variables
 #
 Write-Verbose "Setup environment variables."
-$TF_ROOT_DIR = (Get-Item (Split-Path $MyInvocation.MyCommand.Path)).Parent.FullName
-$TF_PACKAGES_DIR = Join-Path $TF_ROOT_DIR "packages"
-$TF_OUT_DIR = Join-Path $TF_ROOT_DIR "artifacts"
-$TF_PortablePdbs =@("PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb")
+$TF_PortablePdbs = @("PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb")
 
-$PdbConverterToolVersion = "1.1.0-beta1-62316-01"
+$PdbConverterToolVersion = Get-PackageVersion -PackageName "MicrosoftDiaSymReaderPdb2PdbVersion"
 
 function Locate-PdbConverterTool
 {
-    $pdbConverter = Join-Path -path $TF_PACKAGES_DIR -ChildPath "Pdb2Pdb.$PdbConverterToolVersion\tools\Pdb2Pdb.exe"
+    $pdbConverter = Join-Path -path $TF_PACKAGES_DIR -ChildPath "Microsoft.DiaSymReader.Pdb2Pdb\$PdbConverterToolVersion\tools\Pdb2Pdb.exe"
 
     if (!(Test-Path -path $pdbConverter)) 
     {
-       throw "Unable to locate Pdb2Pdb converter exe in path '$pdbConverter'."
+       throw "Unable to locate Microsoft.DiaSymReader.Pdb2Pdb converter exe in path '$pdbConverter'."
     }
 
-    Write-Verbose "Pdb2Pdb converter path is : $pdbConverter"
+    Write-Verbose "Microsoft.DiaSymReader.Pdb2Pdb converter path is : $pdbConverter"
     return $pdbConverter
 
 }
