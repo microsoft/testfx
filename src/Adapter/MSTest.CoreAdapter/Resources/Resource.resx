@@ -365,4 +365,7 @@ Error: {1}</value>
   <data name="UTA_UserCodeThrewNullValueException" xml:space="preserve">
     <value>The called code threw an exception that was caught, but the exception value was null</value>
   </data>
+  <data name="OlderTFMVersionFoundClassCleanup" xml:space="preserve">
+    <value>An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest pacakges newer then version 2.2.8.</value>
+  </data>
 </root>

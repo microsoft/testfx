@@ -206,15 +206,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; specified for &apos;ClassCleanupLifecycle&apos;. Supported scopes are {1}..
-        /// </summary>
-        internal static string InvalidClassCleanupLifecycleValue {
-            get {
-                return ResourceManager.GetString("InvalidClassCleanupLifecycleValue", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Failed to get attribute cache. Ignoring attribute inheritance and falling into &apos;type defines Attribute model&apos;, so that we have some data..
         /// </summary>
         internal static string FailedFetchAttributeCache {
@@ -229,6 +220,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string FailedToGetCustomAttribute {
             get {
                 return ResourceManager.GetString("FailedToGetCustomAttribute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; specified for &apos;ClassCleanupLifecycle&apos;. Supported scopes are {1}..
+        /// </summary>
+        internal static string InvalidClassCleanupLifecycleValue {
+            get {
+                return ResourceManager.GetString("InvalidClassCleanupLifecycleValue", resourceCulture);
             }
         }
         
@@ -283,6 +283,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string OlderTFMVersionFound {
             get {
                 return ResourceManager.GetString("OlderTFMVersionFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest pacakges newer then version 2.2.8..
+        /// </summary>
+        internal static string OlderTFMVersionFoundClassCleanup {
+            get {
+                return ResourceManager.GetString("OlderTFMVersionFoundClassCleanup", resourceCulture);
             }
         }
         

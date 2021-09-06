@@ -196,6 +196,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestsShouldLogResultCleanupWarningsAsErrorsWhenTreatClassCleanupWarningsAsErrorsIsTrue()
         {
+            // Arrange
             this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                          @"<RunSettings> 
                                               <MSTest>
@@ -203,13 +204,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                                               </MSTest>
                                             </RunSettings>");
             MSTestSettings.PopulateSettings(this.runContext);
-
-            var testCase = this.GetTestCase(typeof(DummyTestClassWithCleanupMethods), "TestMethod");
+            var testCase = this.GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
             TestCase[] tests = new[] { testCase };
 
+            // Act
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
 
-            // Warnings should get logged.
+            // Assert
+            CollectionAssert.Contains(this.frameworkHandle.TestCaseEndList, "TestMethod:Passed");
             Assert.AreEqual(1, this.frameworkHandle.MessageList.Count);
             StringAssert.StartsWith(this.frameworkHandle.MessageList[0], "Error");
             Assert.IsTrue(this.frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
@@ -768,46 +770,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             {
                 DummyTestClassForParallelize.Cleanup();
             }
-        }
-
-        [TestMethodV1]
-        public void RunTestsForMultipleClassesShouldRunClassCleanupAfterEachClass()
-        {
-            var testCase1 = this.GetTestCase(typeof(DummyTestClassWithCleanupMethods), "TestMethod");
-            var testCase2 = this.GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
-
-            TestCase[] tests = new[] { testCase1, testCase2 };
-            MSTestSettings.PopulateSettings(this.runContext);
-            var testablePlatformService = this.SetupTestablePlatformService();
-            testablePlatformService.SetupMockReflectionOperations();
-
-            var originalReflectionOperation = new ReflectionOperations();
-
-            testablePlatformService.MockReflectionOperations.Setup(
-                ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).Returns(
-                (Assembly asm, Type type) =>
-                {
-                    if (type.FullName.Equals(typeof(UTF.ClassCleanupSequencingAttribute).FullName))
-                    {
-                        return new object[]
-                        {
-                            new UTF.ClassCleanupSequencingAttribute
-                                { LifecyclePosition = UTF.ClassCleanupLifecycle.EndOfClass }
-                        };
-                    }
-
-                    return originalReflectionOperation.GetCustomAttributes(asm, type);
-                });
-
-            testablePlatformService.MockReflectionOperations.Setup(
-                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).Returns(
-                (MemberInfo memberInfo, bool inherit) =>
-                {
-                    return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
-                });
-
-            this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
-            Assert.IsNull(this.callers); // TODO JBH - I don't know how to validate this properly.
         }
 
         // This is tracked by https://github.com/Microsoft/testfx/issues/320.

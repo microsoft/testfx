@@ -80,12 +80,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         /// <param name="testsToRun">the list of tests that will be run in this execution</param>
         /// <param name="classCleanupLifecycle">The assembly level class cleanup lifecycle</param>
-        internal void InitializeClassCleanupManager(ICollection<UnitTestElement> testsToRun, ClassCleanupLifecycle classCleanupLifecycle)
+        internal void InitializeClassCleanupManager(ICollection<UnitTestElement> testsToRun, int? classCleanupLifecycle)
         {
+            // We can't transport the enum across AppDomain boundaries because of backwards and forwards compatibility.
+            // So we're converting here if we can, or falling back to the default.
+            var lifecycle = ClassCleanupLifecycle.EndOfAssembly;
+
+            if (classCleanupLifecycle != null && Enum.IsDefined(typeof(ClassCleanupLifecycle), classCleanupLifecycle))
+            {
+                lifecycle = (ClassCleanupLifecycle)classCleanupLifecycle;
+            }
+
             this.classCleanupManager = new ClassCleanupManager(
                 testsToRun,
                 MSTestSettings.CurrentSettings.ClassCleanupLifecycle,
-                classCleanupLifecycle,
+                lifecycle,
                 this.reflectHelper);
         }
 
@@ -116,6 +125,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         testContext,
                         MSTestSettings.CurrentSettings.CaptureDebugTraces);
 
+                    if (this.classCleanupManager == null && testMethodInfo != null && testMethodInfo.Parent.HasExecutableCleanupMethod)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFoundClassCleanup);
+                    }
+
                     if (!this.IsTestMethodRunnable(testMethod, testMethodInfo, out var notRunnableResult))
                     {
                         bool shouldRunClassCleanup = false;
@@ -128,12 +142,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         return notRunnableResult;
                     }
 
-                    var result = new TestMethodRunner(
-                        testMethodInfo,
-                        testMethod,
-                        testContext,
-                        MSTestSettings.CurrentSettings.CaptureDebugTraces,
-                        this.reflectHelper).Execute();
+                    var result = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces, this.reflectHelper).Execute();
                     this.RunClassCleanupIfEndOfClass(testMethodInfo, result);
                     return result;
                 }

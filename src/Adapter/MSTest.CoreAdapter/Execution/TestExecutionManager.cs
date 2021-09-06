@@ -6,7 +6,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
@@ -256,9 +255,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
                 catch (Exception ex)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                        "Could not create TestAssemblySettingsProvider instance in child app-domain",
-                        ex);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
                 }
 
                 var sourceSettings = (sourceSettingsProvider != null) ? sourceSettingsProvider.GetSettings(source) : new TestAssemblySettings();
@@ -305,6 +302,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                             case ExecutionScope.MethodLevel:
                                 queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }));
                                 break;
+
                             case ExecutionScope.ClassLevel:
                                 queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.TestClassNameProperty) as string));
                                 break;
@@ -352,20 +350,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 this.RunCleanup(frameworkHandle, testRunner);
 
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                    "Executed tests belonging to source {0}",
-                    source);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
             }
         }
 
-        private void InitializeClassCleanupManager(
-            string source,
-            UnitTestRunner testRunner,
-            ICollection<TestCase> testsToRun,
-            TestAssemblySettings sourceSettings)
+        private void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, ICollection<TestCase> testsToRun, TestAssemblySettings sourceSettings)
         {
-            var unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
-            testRunner.InitializeClassCleanupManager(unitTestElements, sourceSettings.ClassCleanupLifecycle);
+            try
+            {
+                var unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
+                testRunner.InitializeClassCleanupManager(unitTestElements, (int)sourceSettings.ClassCleanupLifecycle);
+            }
+            catch (Exception ex)
+            {
+                // source might not support this if it's legacy make sure it's supported by checking for the type
+                if (ex.GetType().FullName != "System.Runtime.Remoting.RemotingException")
+                {
+                    throw;
+                }
+            }
         }
 
         private void ExecuteTestsWithTestRunner(
