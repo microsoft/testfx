@@ -81,9 +81,6 @@
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Constants.cs">
       <Link>Constants.cs</Link>
     </Compile>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Constants.cs">
-      <Link>Constants.cs</Link>
-    </Compile>
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs">
       <Link>MarshalByRefObject.cs</Link>
     </Compile>
