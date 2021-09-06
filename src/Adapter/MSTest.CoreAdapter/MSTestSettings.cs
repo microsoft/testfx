@@ -365,7 +365,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                         case "CLASSCLEANUPLIFECYCLE":
                             {
                                 var value = reader.ReadInnerXml();
-                                if (Enum.TryParse(value, out ClassCleanupLifecycle lifecycle))
+                                if (TryParseEnum(value, out ClassCleanupLifecycle lifecycle))
                                 {
                                     settings.ClassCleanupLifecycle = lifecycle;
                                 }
@@ -374,7 +374,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                     throw new AdapterSettingsException(
                                         string.Format(
                                             CultureInfo.CurrentCulture,
-                                            Resource.InvalidParallelScopeValue,
+                                            Resource.InvalidClassCleanupLifecycleValue,
                                             value,
                                             string.Join(", ", Enum.GetNames(typeof(ClassCleanupLifecycle)))));
                                 }
@@ -516,7 +516,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                         case "SCOPE":
                             {
                                 var value = reader.ReadInnerXml();
-                                if (Enum.TryParse(value, out ExecutionScope scope))
+                                if (TryParseEnum(value, out ExecutionScope scope))
                                 {
                                     settings.ParallelizationScope = scope;
                                 }
@@ -556,6 +556,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             {
                 settings.ParallelizationScope = ExecutionScope.ClassLevel;
             }
+        }
+
+        private static bool TryParseEnum<T>(string value, out T result)
+            where T : struct, Enum
+        {
+            return Enum.TryParse<T>(value, true, out result) && Enum.IsDefined(typeof(T), result);
         }
 
         private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings)

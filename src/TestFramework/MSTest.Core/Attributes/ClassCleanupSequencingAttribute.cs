@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System;
 
     /// <summary>
-    /// Specification for parallelization level for a test run.
+    /// Specification for when to run class cleanup methods.
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
     public class ClassCleanupSequencingAttribute : Attribute
@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Gets or sets the number of workers to be used for the parallel run.
+        /// Gets or sets when to run class cleanup methods.
         /// </summary>
         public ClassCleanupLifecycle LifecyclePosition
         {

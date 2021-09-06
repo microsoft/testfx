@@ -4,7 +4,7 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     /// <summary>
-    /// Where during test lifecycle should ClassCleanup happen
+    /// When to run ClassCleanup during test execution
     /// </summary>
     public enum ClassCleanupLifecycle
     {

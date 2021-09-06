@@ -17,7 +17,6 @@
 .vs/
 .vscode/
 *.cache
-.idea/
 
 # Build results
 [Bb]in/

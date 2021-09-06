@@ -61,6 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
             var name = fullyQualifiedName.StartsWith($"{testClassName}.")
                 ? fullyQualifiedName.Remove(0, $"{testClassName}.".Length)
                 : fullyQualifiedName;
+
             return name;
         }
 
