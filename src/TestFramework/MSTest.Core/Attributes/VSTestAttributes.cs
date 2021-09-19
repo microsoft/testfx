@@ -235,8 +235,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// ClassCleanupAttribute
         /// </summary>
         public ClassCleanupAttribute()
+            : this(InheritanceBehavior.None)
         {
-            this.InheritanceBehavior = InheritanceBehavior.None;
         }
 
         /// <summary>

@@ -226,7 +226,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
                 // Default test set is filtered tests based on user provided filter criteria
-                IEnumerable<TestCase> testsToRun = Enumerable.Empty<TestCase>();
+                ICollection<TestCase> testsToRun = new TestCase[0];
                 var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
                 if (filterHasError)
                 {
@@ -234,7 +234,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     return;
                 }
 
-                testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter));
+                testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter)).ToArray();
 
                 // this is done so that appropriate values of test context properties are set at source level
                 // and are merged with session level parameters
@@ -255,14 +255,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
                 catch (Exception ex)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                        "Could not create TestAssemblySettingsProvider instance in child app-domain",
-                        ex);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
                 }
 
                 var sourceSettings = (sourceSettingsProvider != null) ? sourceSettingsProvider.GetSettings(source) : new TestAssemblySettings();
                 var parallelWorkers = sourceSettings.Workers;
                 var parallelScope = sourceSettings.Scope;
+                this.InitializeClassCleanupManager(source, testRunner, testsToRun, sourceSettings);
 
                 if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
                 {
@@ -303,6 +302,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                             case ExecutionScope.MethodLevel:
                                 queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }));
                                 break;
+
                             case ExecutionScope.ClassLevel:
                                 queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.TestClassNameProperty) as string));
                                 break;
@@ -350,9 +350,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 this.RunCleanup(frameworkHandle, testRunner);
 
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                    "Executed tests belonging to source {0}",
-                    source);
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
+            }
+        }
+
+        private void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, ICollection<TestCase> testsToRun, TestAssemblySettings sourceSettings)
+        {
+            try
+            {
+                var unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
+                testRunner.InitializeClassCleanupManager(unitTestElements, (int)sourceSettings.ClassCleanupLifecycle);
+            }
+            catch (Exception ex)
+            {
+                // source might not support this if it's legacy make sure it's supported by checking for the type
+                if (ex.GetType().FullName != "System.Runtime.Remoting.RemotingException")
+                {
+                    throw;
+                }
             }
         }
 
@@ -372,6 +387,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 var unitTestElement = currentTest.ToUnitTestElement(source);
+
                 testExecutionRecorder.RecordStart(currentTest);
 
                 var startTime = DateTimeOffset.Now;

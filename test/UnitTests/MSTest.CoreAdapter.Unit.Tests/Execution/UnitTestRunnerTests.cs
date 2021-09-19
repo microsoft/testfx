@@ -147,6 +147,114 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
+        public void ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassAndHasMessage()
+        {
+            var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassWithMessage);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+
+            Assert.IsNotNull(results);
+            Assert.AreEqual(1, results.Length);
+            Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual("IgnoreTestClassMessage", results[0].ErrorMessage);
+        }
+
+        [TestMethodV1]
+        public void ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassButHasNoMessage()
+        {
+            var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClass);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+
+            Assert.IsNotNull(results);
+            Assert.AreEqual(1, results.Length);
+            Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual(string.Empty, results[0].ErrorMessage);
+        }
+
+        [TestMethodV1]
+        public void ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodAndHasMessage()
+        {
+            var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreTestWithMessage);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+
+            Assert.IsNotNull(results);
+            Assert.AreEqual(1, results.Length);
+            Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual("IgnoreTestMessage", results[0].ErrorMessage);
+        }
+
+        [TestMethodV1]
+        public void ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodButHasNoMessage()
+        {
+            var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreTest);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+
+            Assert.IsNotNull(results);
+            Assert.AreEqual(1, results.Length);
+            Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual(string.Empty, results[0].ErrorMessage);
+        }
+
+        [TestMethodV1]
+        public void ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethod()
+        {
+            var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassAndIgnoreTestWithMessage);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+
+            Assert.IsNotNull(results);
+            Assert.AreEqual(1, results.Length);
+            Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual("IgnoreTestClassMessage", results[0].ErrorMessage);
+        }
+
+        [TestMethodV1]
+        public void ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethodButClassHasNoMessage()
+        {
+            var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassWithNoMessageAndIgnoreTestWithMessage);
+            var methodInfo = type.GetMethod("TestMethod");
+            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+
+            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+                .Returns(Assembly.GetExecutingAssembly());
+
+            var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+
+            Assert.IsNotNull(results);
+            Assert.AreEqual(1, results.Length);
+            Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
+            Assert.AreEqual("IgnoreTestMessage", results[0].ErrorMessage);
+        }
+
+        [TestMethodV1]
         public void RunSingleTestShouldReturnTestResultIndicatingFailureIfThereIsAnyTypeInspectionExceptionWhenInspectingTestMethod()
         {
             var type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
