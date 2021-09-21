@@ -14,7 +14,7 @@
       Supported platforms:
       - .NET 4.5.0+
       - .NET Core 1.0+ (Universal Windows Apps 10+, DNX Core 5+)
-      - .NET 5.0 Windows.17763+ (WinUI Desktop Apps) (Visual Studio 2019)
+      - .NET 5.0 Windows.18362+ (WinUI Desktop Apps) (Visual Studio 2019)
       - ASP.NET Core 1.0+
 
       To discover and execute tests install MSTest.TestAdapter.
