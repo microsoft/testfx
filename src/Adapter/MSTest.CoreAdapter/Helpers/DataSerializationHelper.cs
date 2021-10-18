@@ -33,12 +33,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             }
 
             var serializedData = new string[data.Length * 2];
-
             for (int i = 0; i < data.Length; i++)
             {
                 var typeIndex = i * 2;
                 var dataIndex = typeIndex + 1;
-
                 if (data[i] == null)
                 {
                     serializedData[typeIndex] = null;
@@ -84,16 +82,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             for (int i = 0; i < length; i++)
             {
                 var typeIndex = i * 2;
-                var typeName = serializedData[typeIndex];
+                var assemblyQualifiedName = serializedData[typeIndex];
                 var serializedValue = serializedData[typeIndex + 1];
 
-                if (serializedValue == null || typeName == null)
+                if (serializedValue == null || assemblyQualifiedName == null)
                 {
                     data[i] = null;
                     continue;
                 }
 
-                var serializer = GetSerializer(typeName);
+                var serializer = GetSerializer(assemblyQualifiedName);
 
                 var serialzedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
                 using (var memoryStream = new MemoryStream(serialzedDataBytes))
@@ -105,15 +103,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             return data;
         }
 
-        private static DataContractJsonSerializer GetSerializer(string typeName)
+        private static DataContractJsonSerializer GetSerializer(string assemblyQualifiedName)
         {
             return SerializerCache.GetOrAdd(
-                typeName,
-                _ =>
-                {
-                    var type = Type.GetType(typeName) ?? typeof(object);
-                    return new DataContractJsonSerializer(type, SerializerSettings);
-                });
+                assemblyQualifiedName,
+                _ => new DataContractJsonSerializer(Type.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings));
         }
 
         private static DataContractJsonSerializer GetSerializer(Type type)
