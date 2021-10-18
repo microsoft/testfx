@@ -4,16 +4,14 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 {
     using System;
-    using System.Collections.Generic;
+    using System.Collections.Concurrent;
     using System.IO;
-    using System.Linq;
-    using System.Reflection;
     using System.Runtime.Serialization.Json;
     using System.Text;
 
     internal static class DataSerializationHelper
     {
-        private static readonly Dictionary<Type, DataContractJsonSerializer> SerializerCache = new Dictionary<Type, DataContractJsonSerializer>();
+        private static readonly ConcurrentDictionary<string, DataContractJsonSerializer> SerializerCache = new ConcurrentDictionary<string, DataContractJsonSerializer>();
         private static readonly DataContractJsonSerializerSettings SerializerSettings = new DataContractJsonSerializerSettings()
         {
             UseSimpleDictionaryFormat = true,
@@ -35,12 +33,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             }
 
             var serializedData = new string[data.Length * 2];
-
             for (int i = 0; i < data.Length; i++)
             {
                 var typeIndex = i * 2;
                 var dataIndex = typeIndex + 1;
-
                 if (data[i] == null)
                 {
                     serializedData[typeIndex] = null;
@@ -86,16 +82,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             for (int i = 0; i < length; i++)
             {
                 var typeIndex = i * 2;
-                var typeName = serializedData[typeIndex];
+                var assemblyQualifiedName = serializedData[typeIndex];
                 var serializedValue = serializedData[typeIndex + 1];
 
-                if (serializedValue == null || typeName == null)
+                if (serializedValue == null || assemblyQualifiedName == null)
                 {
                     data[i] = null;
                     continue;
                 }
 
-                var serializer = GetSerializer(typeName);
+                var serializer = GetSerializer(assemblyQualifiedName);
 
                 var serialzedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
                 using (var memoryStream = new MemoryStream(serialzedDataBytes))
@@ -107,31 +103,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             return data;
         }
 
-        private static DataContractJsonSerializer GetSerializer(string typeName)
+        private static DataContractJsonSerializer GetSerializer(string assemblyQualifiedName)
         {
-            var serializer = SerializerCache.SingleOrDefault(i => i.Key.FullName == typeName);
-            if (serializer.Value != null)
-            {
-                return serializer.Value;
-            }
-
-            var type = Type.GetType(typeName);
-            if (type != null)
-            {
-                return GetSerializer(type);
-            }
-
-            return GetSerializer(typeof(object));
+            return SerializerCache.GetOrAdd(
+                assemblyQualifiedName,
+                _ => new DataContractJsonSerializer(Type.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings));
         }
 
         private static DataContractJsonSerializer GetSerializer(Type type)
         {
-            if (SerializerCache.ContainsKey(type))
-            {
-                return SerializerCache[type];
-            }
-
-            return SerializerCache[type] = new DataContractJsonSerializer(type, SerializerSettings);
+            return SerializerCache.GetOrAdd(
+                type.AssemblyQualifiedName,
+                _ => new DataContractJsonSerializer(type, SerializerSettings));
         }
     }
 }
