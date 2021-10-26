@@ -6,10 +6,10 @@
     <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
-    <MicrosoftNETTestSdkVersion>17.0.0-release-20210923-02</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>17.1.0-dev</MicrosoftNETTestSdkVersion>
     <!-- Toolset -->
     <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
-    <NuGetFrameworksVersion>5.9.1</NuGetFrameworksVersion>
+    <NuGetFrameworksVersion>5.11.0</NuGetFrameworksVersion>
     <VsWhereVersion>2.5.2</VsWhereVersion>
     <MicrosoftInternalDiaInteropVersion>14.0.0</MicrosoftInternalDiaInteropVersion>
     <!-- keep in sync with test\UnitTests\PlatformServices.Desktop.Unit.Tests\Utilities\XmlUtilitiesTests.cs -->
