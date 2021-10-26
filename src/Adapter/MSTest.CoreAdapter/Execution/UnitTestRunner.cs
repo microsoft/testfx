@@ -364,8 +364,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testsByClass.Remove(testMethod.TestMethodName);
                     if (testsByClass.Count == 0 && testMethod.Parent.HasExecutableCleanupMethod)
                     {
-                        var cleanupLifecycle = this.reflectHelper.GetClassCleanupBehavior(testMethod.Parent.ClassType.GetTypeInfo())
-                            ?? this.lifecycleFromMsTest ?? this.lifecycleFromAssembly;
+                        var cleanupLifecycle = this.reflectHelper.GetClassCleanupBehavior(testMethod.Parent)
+                            ?? this.lifecycleFromMsTest
+                            ?? this.lifecycleFromAssembly;
+
                         shouldCleanup = cleanupLifecycle == ClassCleanupBehavior.EndOfClass;
                     }
                 }

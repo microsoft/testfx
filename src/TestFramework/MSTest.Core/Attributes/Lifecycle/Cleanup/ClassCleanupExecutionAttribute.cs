@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// <summary>
     /// Specification for when to run class cleanup methods.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = true)]
     public class ClassCleanupExecutionAttribute : Attribute
     {
         /// <summary>

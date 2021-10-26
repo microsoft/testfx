@@ -547,18 +547,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// <summary>
         /// Gets the class cleanup lifecycle for the class, if set.
         /// </summary>
-        /// <param name="classCleanupLifecycleProvider">The member to inspect.</param>
+        /// <param name="classInfo">The class to inspect.</param>
         /// <returns>Returns <see cref="ClassCleanupBehavior"/> if provided, otherwise <c>null</c>.</returns>
-        internal virtual ClassCleanupBehavior? GetClassCleanupBehavior(MemberInfo classCleanupLifecycleProvider)
+        internal virtual ClassCleanupBehavior? GetClassCleanupBehavior(TestClassInfo classInfo)
         {
-            var sequencingAttribute = GetCustomAttributes(classCleanupLifecycleProvider, typeof(ClassCleanupExecutionAttribute), true);
-
-            if (!sequencingAttribute.Any())
+            if (classInfo.ClassCleanupMethod == null)
             {
                 return null;
             }
 
-            return (sequencingAttribute?.FirstOrDefault() as ClassCleanupExecutionAttribute)?.CleanupBehavior;
+            var sequencingAttribute = GetCustomAttributes(classInfo.ClassCleanupMethod, typeof(ClassCleanupAttribute), true)?.FirstOrDefault() as ClassCleanupAttribute;
+
+            return sequencingAttribute?.CleanupBehavior;
         }
 
         /// <summary>
