@@ -6,7 +6,7 @@
     <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
-    <MicrosoftNETTestSdkVersion>17.1.0-preview-20210908-01</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>17.0.0-release-20210923-02</MicrosoftNETTestSdkVersion>
     <!-- Toolset -->
     <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
     <NuGetFrameworksVersion>5.9.1</NuGetFrameworksVersion>
@@ -31,8 +31,8 @@
     <SystemCollectionsImmutableVersion>1.6.0</SystemCollectionsImmutableVersion>
     <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
     <!-- UWP and WinUI dependencies -->
-    <MicrosoftNETCoreUniversalWindowsPlatformVersion>5.3.0</MicrosoftNETCoreUniversalWindowsPlatformVersion>
-    <MicrosoftProjectReunionVersion>0.8.0</MicrosoftProjectReunionVersion>
+    <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.12</MicrosoftNETCoreUniversalWindowsPlatformVersion>
+    <MicrosoftWindowsAppSDKVersion>1.0.0-preview2</MicrosoftWindowsAppSDKVersion>
     <!-- / UWP and WinUI dependencies -->
     <MoqVersion>4.8.3</MoqVersion>
     <CastleCoreVersion>4.3.0</CastleCoreVersion>
@@ -97,8 +97,8 @@
     <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>7.0.0-beta.21456.1</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>7.0.0-beta.21456.1</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>7.0.0-beta.21518.1</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>7.0.0-beta.21518.1</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
@@ -108,7 +108,7 @@
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.20258.6</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftSourceLinkGitHubVersion>1.1.0-beta-21228-01</MicrosoftSourceLinkGitHubVersion>
     <MicrosoftSourceLinkAzureReposGitVersion>1.1.0-beta-21228-01</MicrosoftSourceLinkAzureReposGitVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.21456.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.21518.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <XliffTasksVersion>1.0.0-beta.21265.1</XliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.21228.1</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21264.3</MicrosoftDotNetXHarnessCLIVersion>

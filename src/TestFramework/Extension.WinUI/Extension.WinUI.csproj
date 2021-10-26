@@ -26,17 +26,19 @@
     <Import Project="$(NuGetPackageRoot)\Microbuild.Core\$(MicroBuildCoreVersion)\build\Microbuild.Core.props" />
   </ImportGroup>
   
-  <ItemGroup> 
-    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" RuntimeFrameworkVersion="10.0.18362.16" /> 
-    <FrameworkReference Update="Microsoft.Windows.SDK.NET.Ref" TargetingPackVersion="10.0.18362.16" />
-  </ItemGroup>
+  <!-- Workaround for https://github.com/microsoft/WindowsAppSDK/issues/1217 -->
+  <Target Name="FixBinPlaceBootstrapDll" BeforeTargets="BinPlaceBootstrapDll">
+    <PropertyGroup>
+      <_WindowsAppSDKFoundationPlatform>x86</_WindowsAppSDKFoundationPlatform>
+    </PropertyGroup>
+  </Target>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.ProjectReunion" Version="$(MicrosoftProjectReunionVersion)" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWindowsAppSDKVersion)" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)src\TestFramework\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
