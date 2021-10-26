@@ -4,8 +4,6 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System.Diagnostics.CodeAnalysis;
-#pragma warning disable SA1402 // FileMayOnlyContainASingleType
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
     /// <summary>
     /// Enumeration for timeouts, that can be used with the <see cref="TimeoutAttribute"/> class.
