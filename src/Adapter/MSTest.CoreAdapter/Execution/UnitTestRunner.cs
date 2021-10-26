@@ -84,11 +84,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             // We can't transport the enum across AppDomain boundaries because of backwards and forwards compatibility.
             // So we're converting here if we can, or falling back to the default.
-            var lifecycle = ClassCleanupLifecycle.EndOfAssembly;
-
-            if (classCleanupLifecycle != null && Enum.IsDefined(typeof(ClassCleanupLifecycle), classCleanupLifecycle))
+            var lifecycle = ClassCleanupBehavior.EndOfAssembly;
+            if (classCleanupLifecycle != null && Enum.IsDefined(typeof(ClassCleanupBehavior), classCleanupLifecycle))
             {
-                lifecycle = (ClassCleanupLifecycle)classCleanupLifecycle;
+                lifecycle = (ClassCleanupBehavior)classCleanupLifecycle;
             }
 
             this.classCleanupManager = new ClassCleanupManager(
@@ -136,7 +135,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         this.classCleanupManager?.MarkTestComplete(testMethodInfo, out shouldRunClassCleanup);
                         if (shouldRunClassCleanup)
                         {
-                            testMethodInfo.Parent.RunClassCleanup(ClassCleanupLifecycle.EndOfClass);
+                            testMethodInfo.Parent.RunClassCleanup(ClassCleanupBehavior.EndOfClass);
                         }
 
                         return notRunnableResult;
@@ -209,7 +208,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         try
                         {
                             // Class cleanup can throw exceptions in which case we need to ensure that we fail the test.
-                            testMethodInfo.Parent.RunClassCleanup(ClassCleanupLifecycle.EndOfClass);
+                            testMethodInfo.Parent.RunClassCleanup(ClassCleanupBehavior.EndOfClass);
                         }
                         finally
                         {
@@ -336,15 +335,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         private class ClassCleanupManager
         {
-            private readonly ClassCleanupLifecycle? lifecycleFromMsTest;
-            private readonly ClassCleanupLifecycle lifecycleFromAssembly;
+            private readonly ClassCleanupBehavior? lifecycleFromMsTest;
+            private readonly ClassCleanupBehavior lifecycleFromAssembly;
             private readonly ReflectHelper reflectHelper;
             private readonly Dictionary<string, HashSet<string>> remainingTestsByClass;
 
             public ClassCleanupManager(
                 IEnumerable<UnitTestElement> testsToRun,
-                ClassCleanupLifecycle? lifecycleFromMsTest,
-                ClassCleanupLifecycle lifecycleFromAssembly,
+                ClassCleanupBehavior? lifecycleFromMsTest,
+                ClassCleanupBehavior lifecycleFromAssembly,
                 ReflectHelper reflectHelper = null)
             {
                 this.remainingTestsByClass = testsToRun.GroupBy(t => t.TestMethod.FullClassName)
@@ -365,15 +364,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     testsByClass.Remove(testMethod.TestMethodName);
                     if (testsByClass.Count == 0 && testMethod.Parent.HasExecutableCleanupMethod)
                     {
-                        var cleanupLifecycle = this.reflectHelper.GetClassCleanupSequence(testMethod.Parent.ClassType.GetTypeInfo())
+                        var cleanupLifecycle = this.reflectHelper.GetClassCleanupBehavior(testMethod.Parent.ClassType.GetTypeInfo())
                             ?? this.lifecycleFromMsTest ?? this.lifecycleFromAssembly;
-                        shouldCleanup = cleanupLifecycle == ClassCleanupLifecycle.EndOfClass;
+                        shouldCleanup = cleanupLifecycle == ClassCleanupBehavior.EndOfClass;
                     }
                 }
             }
-
-            private static string ClassNameForTest(TPOM.TestCase testCase) =>
-                testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
         }
     }
 }

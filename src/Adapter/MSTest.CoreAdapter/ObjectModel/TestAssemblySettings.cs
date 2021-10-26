@@ -32,6 +32,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <summary>
         /// Gets or sets the class cleanup lifecycle timing.
         /// </summary>
-        internal ClassCleanupLifecycle ClassCleanupLifecycle { get; set; }
+        internal ClassCleanupBehavior ClassCleanupLifecycle { get; set; }
     }
 }

@@ -346,8 +346,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>
         /// Any exception that can be thrown as part of a class cleanup as warning messages.
         /// </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        public string RunClassCleanup(ClassCleanupLifecycle classCleanupLifecycle = ClassCleanupLifecycle.EndOfAssembly)
+        public string RunClassCleanup(ClassCleanupBehavior classCleanupLifecycle = ClassCleanupBehavior.EndOfAssembly)
         {
             if (this.ClassCleanupMethod is null && this.BaseClassInitAndCleanupMethods.All(p => p.Item2 == null))
             {
@@ -410,7 +409,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                 errorMessage,
                                 exceptionStackTraceInfo?.ErrorStackTrace);
 
-                            if (classCleanupLifecycle == ClassCleanupLifecycle.EndOfClass)
+                            if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
                             {
                                 var testFailedException = new TestFailedException(UnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
                                 this.ClassCleanupException = testFailedException;

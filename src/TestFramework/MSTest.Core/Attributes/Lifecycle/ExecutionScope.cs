@@ -4,18 +4,19 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     /// <summary>
-    /// When to run ClassCleanup during test execution
+    /// Parallel execution mode.
     /// </summary>
-    public enum ClassCleanupLifecycle
+    public enum ExecutionScope
     {
         /// <summary>
-        /// Run at end of assembly
+        /// Each thread of execution will be handed a TestClass worth of tests to execute.
+        /// Within the TestClass, the test methods will execute serially.
         /// </summary>
-        EndOfAssembly,
+        ClassLevel = 0,
 
         /// <summary>
-        /// Run at end of class
+        /// Each thread of execution will be handed TestMethods to execute.
         /// </summary>
-        EndOfClass,
+        MethodLevel = 1
     }
 }

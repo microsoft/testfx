@@ -396,9 +396,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// </summary>
         /// <param name="assembly"> The test assembly. </param>
         /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
-        internal ClassCleanupSequencingAttribute GetClassCleanupAttribute(Assembly assembly)
+        internal ClassCleanupExecutionAttribute GetClassCleanupAttribute(Assembly assembly)
         {
-            return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupSequencingAttribute)).OfType<ClassCleanupSequencingAttribute>().FirstOrDefault();
+            return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute)).OfType<ClassCleanupExecutionAttribute>().FirstOrDefault();
         }
 
         /// <summary>
@@ -548,17 +548,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// Gets the class cleanup lifecycle for the class, if set.
         /// </summary>
         /// <param name="classCleanupLifecycleProvider">The member to inspect.</param>
-        /// <returns>Class Cleanup Lifecycle, if provided. Null otherwise.</returns>
-        internal virtual ClassCleanupLifecycle? GetClassCleanupSequence(MemberInfo classCleanupLifecycleProvider)
+        /// <returns>Returns <see cref="ClassCleanupBehavior"/> if provided, otherwise <c>null</c>.</returns>
+        internal virtual ClassCleanupBehavior? GetClassCleanupBehavior(MemberInfo classCleanupLifecycleProvider)
         {
-            var sequencingAttribute = GetCustomAttributes(classCleanupLifecycleProvider, typeof(ClassCleanupSequencingAttribute), true);
+            var sequencingAttribute = GetCustomAttributes(classCleanupLifecycleProvider, typeof(ClassCleanupExecutionAttribute), true);
 
             if (!sequencingAttribute.Any())
             {
                 return null;
             }
 
-            return (sequencingAttribute?.FirstOrDefault() as ClassCleanupSequencingAttribute)?.LifecyclePosition;
+            return (sequencingAttribute?.FirstOrDefault() as ClassCleanupExecutionAttribute)?.CleanupBehavior;
         }
 
         /// <summary>

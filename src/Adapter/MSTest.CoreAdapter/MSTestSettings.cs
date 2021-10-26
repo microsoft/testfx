@@ -136,7 +136,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <summary>
         /// Gets a value indicating where class cleanup should occur.
         /// </summary>
-        public ClassCleanupLifecycle? ClassCleanupLifecycle { get; private set; }
+        public ClassCleanupBehavior? ClassCleanupLifecycle { get; private set; }
 
         /// <summary>
         /// Gets the number of threads/workers to be used for parallelization.
@@ -365,7 +365,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                         case "CLASSCLEANUPLIFECYCLE":
                             {
                                 var value = reader.ReadInnerXml();
-                                if (TryParseEnum(value, out ClassCleanupLifecycle lifecycle))
+                                if (TryParseEnum(value, out ClassCleanupBehavior lifecycle))
                                 {
                                     settings.ClassCleanupLifecycle = lifecycle;
                                 }
@@ -376,7 +376,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                             CultureInfo.CurrentCulture,
                                             Resource.InvalidClassCleanupLifecycleValue,
                                             value,
-                                            string.Join(", ", Enum.GetNames(typeof(ClassCleanupLifecycle)))));
+                                            string.Join(", ", Enum.GetNames(typeof(ClassCleanupBehavior)))));
                                 }
 
                                 break;

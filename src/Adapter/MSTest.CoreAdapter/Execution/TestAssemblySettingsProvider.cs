@@ -60,7 +60,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             var classCleanupSequencingAttribute = this.reflectHelper.GetClassCleanupAttribute(testAssembly);
             if (classCleanupSequencingAttribute != null)
             {
-                testAssemblySettings.ClassCleanupLifecycle = classCleanupSequencingAttribute.LifecyclePosition;
+                testAssemblySettings.ClassCleanupLifecycle = classCleanupSequencingAttribute.CleanupBehavior;
             }
 
             return testAssemblySettings;
