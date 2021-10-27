@@ -196,6 +196,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestsShouldLogResultCleanupWarningsAsErrorsWhenTreatClassCleanupWarningsAsErrorsIsTrue()
         {
+            // Arrange
             this.runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                          @"<RunSettings> 
                                               <MSTest>
@@ -203,13 +204,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                                               </MSTest>
                                             </RunSettings>");
             MSTestSettings.PopulateSettings(this.runContext);
-
-            var testCase = this.GetTestCase(typeof(DummyTestClassWithCleanupMethods), "TestMethod");
+            var testCase = this.GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
             TestCase[] tests = new[] { testCase };
 
+            // Act
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
 
-            // Warnings should get logged.
+            // Assert
+            CollectionAssert.Contains(this.frameworkHandle.TestCaseEndList, "TestMethod:Passed");
             Assert.AreEqual(1, this.frameworkHandle.MessageList.Count);
             StringAssert.StartsWith(this.frameworkHandle.MessageList[0], "Error");
             Assert.IsTrue(this.frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
@@ -218,7 +220,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestsShouldLogResultOutput()
         {
-            var testCase = this.GetTestCase(typeof(DummyTestClassWithCleanupMethods), "TestMethod");
+            var testCase = this.GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
             TestCase[] tests = new[] { testCase };
 
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
@@ -925,12 +927,33 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [DummyTestClass]
-        private class DummyTestClassWithCleanupMethods
+        private class DummyTestClassWithFailingCleanupMethods
         {
             [UTF.ClassCleanup]
             public static void ClassCleanup()
             {
                 throw new Exception("ClassCleanupException");
+            }
+
+            [UTF.TestMethod]
+            public void TestMethod()
+            {
+            }
+        }
+
+        [DummyTestClass]
+        private class DummyTestClassWithCleanupMethods
+        {
+            public static int ClassCleanupCount => classCleanupCount;
+
+            public static void Cleanup() => classCleanupCount = 0;
+
+            private static int classCleanupCount = 0;
+
+            [UTF.ClassCleanup]
+            public static void ClassCleanup()
+            {
+                classCleanupCount++;
             }
 
             [UTF.TestMethod]
