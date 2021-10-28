@@ -57,6 +57,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             testAssemblySettings.CanParallelizeAssembly = !this.reflectHelper.IsDoNotParallelizeSet(testAssembly);
 
+            var classCleanupSequencingAttribute = this.reflectHelper.GetClassCleanupAttribute(testAssembly);
+            if (classCleanupSequencingAttribute != null)
+            {
+                testAssemblySettings.ClassCleanupLifecycle = classCleanupSequencingAttribute.CleanupBehavior;
+            }
+
             return testAssemblySettings;
         }
     }

@@ -224,6 +224,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; specified for &apos;ClassCleanupLifecycle&apos;. Supported scopes are {1}..
+        /// </summary>
+        internal static string InvalidClassCleanupLifecycleValue {
+            get {
+                return ResourceManager.GetString("InvalidClassCleanupLifecycleValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid value &apos;{0}&apos; specified for &apos;Scope&apos;. Supported scopes are {1}..
         /// </summary>
         internal static string InvalidParallelScopeValue {
@@ -274,6 +283,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string OlderTFMVersionFound {
             get {
                 return ResourceManager.GetString("OlderTFMVersionFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest pacakges newer then version 2.2.8..
+        /// </summary>
+        internal static string OlderTFMVersionFoundClassCleanup {
+            get {
+                return ResourceManager.GetString("OlderTFMVersionFoundClassCleanup", resourceCulture);
             }
         }
         
