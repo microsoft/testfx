@@ -4,6 +4,8 @@
     <RepoRoot Condition=" '$(RepoRoot)' == '' ">$([MSBuild]::NormalizeDirectory('$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'LICENSE'))'))</RepoRoot>
     <ArtifactsBinDir Condition=" '$(ArtifactsBinDir)' == '' ">$(RepoRoot)artifacts\$(Configuration)\</ArtifactsBinDir>
     <IsLocalizationEnabled Condition=" '$(UpdateXlf)' == 'true' or '$(IsLocalizedBuild)' == 'true' ">true</IsLocalizationEnabled>
+    <IsTest Condition="$(MSBuildProjectDirectory.Contains('\test\'))">true</IsTest>
+    <IsTest Condition=" '$(IsTest)' == '' ">false</IsTest>
   </PropertyGroup>
 
   <Import Project="$(RepoRoot)eng\Versions.props" />
@@ -17,10 +19,6 @@
     <GenerateLCE>true</GenerateLCE>
     <IntermediatePath Condition=" '$(IntermediatePath)' == '' ">$(RepoRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\obj\</IntermediatePath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <IsTest Condition="$(MSBuildProjectDirectory.Contains('\test\'))">true</IsTest>
   </PropertyGroup>
 
   <!-- Code analysis settings -->
