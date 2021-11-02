@@ -60,7 +60,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
         /// </exception>
-        public static void IsTrue(bool condition)
+        public static void IsTrue([DoesNotReturnIf(false)] bool condition)
         {
             IsTrue(condition, string.Empty, null);
         }
@@ -75,7 +75,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
         /// </exception>
-        public static void IsTrue(bool? condition)
+        public static void IsTrue([DoesNotReturnIf(false)] bool? condition)
         {
             IsTrue(condition, string.Empty, null);
         }
@@ -94,7 +94,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
         /// </exception>
-        public static void IsTrue(bool condition, string message)
+        public static void IsTrue([DoesNotReturnIf(false)] bool condition, string message)
         {
             IsTrue(condition, message, null);
         }
@@ -113,7 +113,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
         /// </exception>
-        public static void IsTrue(bool? condition, string message)
+        public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string message)
         {
             IsTrue(condition, message, null);
         }
@@ -135,7 +135,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
         /// </exception>
-        public static void IsTrue(bool condition, string message, params object[] parameters)
+        public static void IsTrue([DoesNotReturnIf(false)] bool condition, string message, params object[] parameters)
         {
             if (!condition)
             {
@@ -160,7 +160,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
         /// </exception>
-        public static void IsTrue(bool? condition, string message, params object[] parameters)
+        public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string message, params object[] parameters)
         {
             if (condition == false || condition == null)
             {
@@ -178,7 +178,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
         /// </exception>
-        public static void IsFalse(bool condition)
+        public static void IsFalse([DoesNotReturnIf(true)] bool condition)
         {
             IsFalse(condition, string.Empty, null);
         }
@@ -193,7 +193,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
         /// </exception>
-        public static void IsFalse(bool? condition)
+        public static void IsFalse([DoesNotReturnIf(true)] bool? condition)
         {
             IsFalse(condition, string.Empty, null);
         }
@@ -212,7 +212,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
         /// </exception>
-        public static void IsFalse(bool condition, string message)
+        public static void IsFalse([DoesNotReturnIf(true)] bool condition, string message)
         {
             IsFalse(condition, message, null);
         }
@@ -231,7 +231,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
         /// </exception>
-        public static void IsFalse(bool? condition, string message)
+        public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string message)
         {
             IsFalse(condition, message, null);
         }
@@ -253,7 +253,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
         /// </exception>
-        public static void IsFalse(bool condition, string message, params object[] parameters)
+        public static void IsFalse([DoesNotReturnIf(true)] bool condition, string message, params object[] parameters)
         {
             if (condition)
             {
@@ -278,7 +278,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
         /// </exception>
-        public static void IsFalse(bool? condition, string message, params object[] parameters)
+        public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string message, params object[] parameters)
         {
             if (condition == true || condition == null)
             {
@@ -1905,6 +1905,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Always thrown.
         /// </exception>
+        [DoesNotReturn]
         public static void Fail()
         {
             Fail(string.Empty, null);
@@ -1920,6 +1921,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Always thrown.
         /// </exception>
+        [DoesNotReturn]
         public static void Fail(string message)
         {
             Fail(message, null);
@@ -1938,6 +1940,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Always thrown.
         /// </exception>
+        [DoesNotReturn]
         public static void Fail(string message, params object[] parameters)
         {
             HandleFail("Assert.Fail", message, parameters);
@@ -2374,6 +2377,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="parameters">
         /// The parameters.
         /// </param>
+        [DoesNotReturn]
         internal static void HandleFail(string assertionName, string message, params object[] parameters)
         {
             string finalMessage = string.Empty;
