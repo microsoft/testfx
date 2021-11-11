@@ -31,7 +31,7 @@
     <SystemCollectionsImmutableVersion>1.6.0</SystemCollectionsImmutableVersion>
     <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
     <!-- UWP and WinUI dependencies -->
-    <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.12</MicrosoftNETCoreUniversalWindowsPlatformVersion>
+    <MicrosoftNETCoreUniversalWindowsPlatformVersion>5.4.7</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <MicrosoftWindowsAppSDKVersion>1.0.0-preview2</MicrosoftWindowsAppSDKVersion>
     <!-- / UWP and WinUI dependencies -->
     <MoqVersion>4.8.3</MoqVersion>
