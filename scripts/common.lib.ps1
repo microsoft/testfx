@@ -148,14 +148,14 @@ function Locate-VsInstallPath($hasVsixExtension = "false") {
     $requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK" 
   }
 
-  Write-Verbose "$vswhere -latest -products * -requires $requiredPackageIds -property installationPath"
+  Write-Verbose "$vswhere -version [16.0.0, 17.1.0)  -products * -requires $requiredPackageIds -property installationPath"
   try {
     if ($Official -or $DisallowPrereleaseMSBuild) {
-      $vsInstallPath = & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
+      $vsInstallPath = & $vswhere -version "[16.0.0, 17.1.0)" -products * -requires $requiredPackageIds -property installationPath | Select-Object -First 1
     }
     else {
       # Allow using pre release versions of VS for dev builds
-      $vsInstallPath = & $vswhere -latest -prerelease -products * -requires $requiredPackageIds -property installationPath
+      $vsInstallPath = & $vswhere -version "[16.0.0, 17.1.0)" -prerelease -products * -requires $requiredPackageIds -property installationPath | Select-Object -First 1
     }
   }
   catch [System.Management.Automation.MethodInvocationException] {
