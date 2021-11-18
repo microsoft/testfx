@@ -496,86 +496,119 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void RunClassCleanupShouldInvokeIfClassCleanupMethod()
         {
+            // Arrange
             var classcleanupCallCount = 0;
             DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
-            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
-            Assert.IsNull(this.testClassInfo.RunClassCleanup());
+            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
+
+            // Act
+            var classCleanup = this.testClassInfo.RunClassCleanup();
+
+            // Assert
+            Assert.IsNull(classCleanup);
             Assert.AreEqual(1, classcleanupCallCount);
         }
 
         [TestMethod]
         public void RunClassCleanupShouldNotInvokeIfClassCleanupIsNull()
         {
+            // Arrange
             var classcleanupCallCount = 0;
             DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
-
             this.testClassInfo.ClassCleanupMethod = null;
 
-            Assert.IsNull(this.testClassInfo.RunClassCleanup());
+            // Act
+            var classCleanup = this.testClassInfo.RunClassCleanup();
+
+            // Assert
+            Assert.IsNull(classCleanup);
             Assert.AreEqual(0, classcleanupCallCount);
         }
 
         [TestMethod]
         public void RunClassCleanupShouldReturnAssertFailureExceptionDetails()
         {
-            DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Fail("Test Failure.");
+            // Arrange
+            DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Fail("Test Failure");
+            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
-            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
+            // Act
+            var classCleanup = this.testClassInfo.RunClassCleanup();
 
-            StringAssert.StartsWith(
-                this.testClassInfo.RunClassCleanup(),
-                "Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: Assert.Fail failed. Test Failure.. Stack Trace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassCleanupShouldReturnAssertFailureExceptionDetails>");
+            // Assert
+            StringAssert.StartsWith(classCleanup, "Class Cleanup method DummyTestClass.ClassCleanupMethod failed.");
+            StringAssert.Contains(classCleanup, "Error Message: Assert.Fail failed. Test Failure.");
+            StringAssert.Contains(classCleanup, $"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertFailureExceptionDetails)}>");
         }
 
         [TestMethod]
         public void RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails()
         {
-            DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Inconclusive("Test Inconclusive.");
+            // Arrange
+            DummyTestClass.ClassCleanupMethodBody = () => UTF.Assert.Inconclusive("Test Inconclusive");
+            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
-            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
-            StringAssert.StartsWith(
-                this.testClassInfo.RunClassCleanup(),
-                "Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: Assert.Inconclusive failed. Test Inconclusive.. Stack Trace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails>");
+            // Act
+            var classCleanup = this.testClassInfo.RunClassCleanup();
+
+            // Assert
+            StringAssert.StartsWith(classCleanup, "Class Cleanup method DummyTestClass.ClassCleanupMethod failed.");
+            StringAssert.Contains(classCleanup, "Error Message: Assert.Inconclusive failed. Test Inconclusive.");
+            StringAssert.Contains(classCleanup, $"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnAssertInconclusiveExceptionDetails)}>");
         }
 
         [TestMethod]
         public void RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
         {
+            // Arrange
             DummyTestClass.ClassCleanupMethodBody = () => { throw new ArgumentException("Argument Exception"); };
+            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
-            this.testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
-            StringAssert.StartsWith(
-                this.testClassInfo.RunClassCleanup(),
-                "Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: System.ArgumentException: Argument Exception. Stack Trace:     at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions>");
+            // Act
+            var classCleanup = this.testClassInfo.RunClassCleanup();
+
+            // Assert
+            StringAssert.StartsWith(classCleanup, "Class Cleanup method DummyTestClass.ClassCleanupMethod failed.");
+            StringAssert.Contains(classCleanup, "Error Message: System.ArgumentException: Argument Exception. Stack Trace:");
+            StringAssert.Contains(classCleanup, $"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions)}>");
         }
 
         [TestMethod]
         public void RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
         {
+            // Arrange
             DummyBaseTestClass.ClassCleanupMethodBody = () => { throw new ArgumentException("Argument Exception"); };
-
+            var baseClassCleanupMethod = typeof(DummyBaseTestClass).GetMethod(nameof(DummyBaseTestClass.CleanupClassMethod));
             this.testClassInfo.ClassCleanupMethod = null;
-            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
-                Tuple.Create((MethodInfo)null, typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod")));
-            this.testClassInfo.BaseClassCleanupMethodsStack.Push(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
-            StringAssert.StartsWith(
-                this.testClassInfo.RunClassCleanup(),
-                "Class Cleanup method DummyBaseTestClass.CleanupClassMethod failed. Error Message: System.ArgumentException: Argument Exception. Stack Trace:     at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions>");
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(Tuple.Create((MethodInfo)null, baseClassCleanupMethod));
+            this.testClassInfo.BaseClassCleanupMethodsStack.Push(baseClassCleanupMethod);
+
+            // Act
+            var classCleanup = this.testClassInfo.RunClassCleanup();
+
+            // Assert
+            StringAssert.StartsWith(classCleanup, "Class Cleanup method DummyBaseTestClass.CleanupClassMethod failed.");
+            StringAssert.Contains(classCleanup, "Error Message: System.ArgumentException: Argument Exception. Stack Trace:");
+            StringAssert.Contains(classCleanup, $"{typeof(TestClassInfoTests).FullName}.<>c.<{nameof(this.RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions)}>");
         }
 
         [TestMethod]
         public void RunBaseClassCleanupEvenIfThereIsNoDerivedClassCleanup()
         {
+            // Arrange
             var classcleanupCallCount = 0;
             DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
-
+            var baseClassCleanupMethod = typeof(DummyBaseTestClass).GetMethod(nameof(DummyBaseTestClass.CleanupClassMethod));
             this.testClassInfo.ClassCleanupMethod = null;
-            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
-                Tuple.Create((MethodInfo)null, typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod")));
-            this.testClassInfo.BaseClassCleanupMethodsStack.Push(typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod"));
+            this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(Tuple.Create((MethodInfo)null, baseClassCleanupMethod));
+            this.testClassInfo.BaseClassCleanupMethodsStack.Push(baseClassCleanupMethod);
 
+            // Act
+            var classCleanup = this.testClassInfo.RunClassCleanup();
+
+            // Assert
             Assert.IsTrue(this.testClassInfo.HasExecutableCleanupMethod);
-            Assert.IsNull(this.testClassInfo.RunClassCleanup());
+            Assert.IsNull(classCleanup);
             Assert.AreEqual(1, classcleanupCallCount, "DummyBaseTestClass.CleanupClassMethod call count");
         }
 
