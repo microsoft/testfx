@@ -26,13 +26,6 @@
     <Import Project="$(NuGetPackageRoot)\Microbuild.Core\$(MicroBuildCoreVersion)\build\Microbuild.Core.props" />
   </ImportGroup>
   
-  <!-- Workaround for https://github.com/microsoft/WindowsAppSDK/issues/1217 -->
-  <Target Name="FixBinPlaceBootstrapDll" BeforeTargets="BinPlaceBootstrapDll">
-    <PropertyGroup>
-      <_WindowsAppSDKFoundationPlatform>x86</_WindowsAppSDKFoundationPlatform>
-    </PropertyGroup>
-  </Target>
-
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
