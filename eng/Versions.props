@@ -6,10 +6,10 @@
     <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
-    <MicrosoftNETTestSdkVersion>17.0.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>17.1.0-preview-20211118-01</MicrosoftNETTestSdkVersion>
     <!-- Toolset -->
     <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
-    <NuGetFrameworksVersion>5.9.1</NuGetFrameworksVersion>
+    <NuGetFrameworksVersion>5.11.0</NuGetFrameworksVersion>
     <VsWhereVersion>2.5.2</VsWhereVersion>
     <MicrosoftInternalDiaInteropVersion>14.0.0</MicrosoftInternalDiaInteropVersion>
     <!-- keep in sync with test\UnitTests\PlatformServices.Desktop.Unit.Tests\Utilities\XmlUtilitiesTests.cs -->
@@ -31,7 +31,7 @@
     <SystemCollectionsImmutableVersion>1.6.0</SystemCollectionsImmutableVersion>
     <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
     <!-- UWP and WinUI dependencies -->
-    <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.12</MicrosoftNETCoreUniversalWindowsPlatformVersion>
+    <MicrosoftNETCoreUniversalWindowsPlatformVersion>5.4.7</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <MicrosoftWindowsAppSDKVersion>1.0.0-preview2</MicrosoftWindowsAppSDKVersion>
     <!-- / UWP and WinUI dependencies -->
     <MoqVersion>4.8.3</MoqVersion>
