@@ -11,7 +11,7 @@
     </Dependency>
     <Dependency Name="Microsoft.NET.Test.Sdk" Version="17.1.0-preview-20211118-01">
       <Uri>https://github.com/microsoft/vstest</Uri>
-      <Sha>68bd10d3aee862a9fbb0bac8b3d474bc323024f3</Sha>
+      <Sha>f2fc23087011e30596c83976d73b3bff2ed92881</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
