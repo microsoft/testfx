@@ -63,6 +63,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FluentAssertions">
+      <Version>5.10.3</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
     <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all">
@@ -105,6 +108,9 @@
     </Compile>
     <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13ReflectionUtilityTests.cs">
       <Link>Utilities\ns13ReflectionUtilityTests.cs</Link>
+    </Compile>
+    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13ThreadSafeStringWriterTests.cs">
+      <Link>Services\ns13ThreadSafeStringWriterTests.cs</Link>
     </Compile>
     <Compile Include="AssemblyResolverTests.cs" />
     <Compile Include="Deployment\AssemblyLoadWorkerTests.cs" />

@@ -9,6 +9,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -389,20 +390,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunCleanupShouldReturnCleanupResultsWithDebugTraceLogsSetIfDebugTraceEnabled()
         {
             this.unitTestRunner = new UnitTestRunner(this.GetSettingsWithDebugTrace(true));
-            var type = typeof(DummyTestClassWithCleanupMethods);
-            var methodInfo = type.GetMethod("TestMethod");
-            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
+            try
+            {
+                var type = typeof(DummyTestClassWithCleanupMethods);
+                var testMethod = new TestMethod(nameof(DummyTestClassWithCleanupMethods.TestMethod), type.FullName, "A", isAsync: false);
 
-            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
-                .Returns(Assembly.GetExecutingAssembly());
+                this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+                    .Returns(Assembly.GetExecutingAssembly());
 
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
-            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
+                StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
 
-            this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+                DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = () =>
+                {
+                    writer.Write("ClassCleanup");
+                };
 
-            var cleanupresult = this.unitTestRunner.RunCleanup();
-            Assert.AreEqual("DummyTrace", cleanupresult.DebugTrace);
+                this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
+
+                var testResult = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters).FirstOrDefault();
+                Assert.IsNotNull(testResult);
+                Assert.AreEqual("DummyTrace", testResult.DebugTrace);
+
+                var cleanupresult = this.unitTestRunner.RunCleanup();
+                Assert.AreEqual("ClassCleanup", cleanupresult.DebugTrace);
+            }
+            finally
+            {
+                DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = null;
+            }
         }
 
         [TestMethodV1]
@@ -421,7 +436,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
 
             var cleanupresult = this.unitTestRunner.RunCleanup();
-            Assert.AreEqual(cleanupresult.DebugTrace, string.Empty);
+            Assert.AreEqual(null, cleanupresult.DebugTrace);
         }
 
         #endregion
