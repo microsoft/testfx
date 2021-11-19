@@ -134,6 +134,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
 
         /// <summary>
+        /// Gets a value indicating where class cleanup should occur.
+        /// </summary>
+        public ClassCleanupBehavior? ClassCleanupLifecycle { get; private set; }
+
+        /// <summary>
         /// Gets the number of threads/workers to be used for parallelization.
         /// </summary>
         public int? ParallelizationWorkers { get; private set; }
@@ -178,6 +183,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
             CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
             CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
+            CurrentSettings.ClassCleanupLifecycle = settings.ClassCleanupLifecycle;
             CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
             CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
             CurrentSettings.DisableParallelization = settings.DisableParallelization;
@@ -356,6 +362,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                                 break;
                             }
 
+                        case "CLASSCLEANUPLIFECYCLE":
+                            {
+                                var value = reader.ReadInnerXml();
+                                if (TryParseEnum(value, out ClassCleanupBehavior lifecycle))
+                                {
+                                    settings.ClassCleanupLifecycle = lifecycle;
+                                }
+                                else
+                                {
+                                    throw new AdapterSettingsException(
+                                        string.Format(
+                                            CultureInfo.CurrentCulture,
+                                            Resource.InvalidClassCleanupLifecycleValue,
+                                            value,
+                                            string.Join(", ", Enum.GetNames(typeof(ClassCleanupBehavior)))));
+                                }
+
+                                break;
+                            }
+
                         case "FORCEDLEGACYMODE":
                             {
                                 if (bool.TryParse(reader.ReadInnerXml(), out result))
@@ -490,7 +516,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                         case "SCOPE":
                             {
                                 var value = reader.ReadInnerXml();
-                                if (Enum.TryParse(value, out ExecutionScope scope))
+                                if (TryParseEnum(value, out ExecutionScope scope))
                                 {
                                     settings.ParallelizationScope = scope;
                                 }
@@ -530,6 +556,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             {
                 settings.ParallelizationScope = ExecutionScope.ClassLevel;
             }
+        }
+
+        private static bool TryParseEnum<T>(string value, out T result)
+            where T : struct, Enum
+        {
+            return Enum.TryParse<T>(value, true, out result) && Enum.IsDefined(typeof(T), result);
         }
 
         private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings)

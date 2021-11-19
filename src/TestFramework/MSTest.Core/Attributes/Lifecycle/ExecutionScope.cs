@@ -17,6 +17,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Each thread of execution will be handed TestMethods to execute.
         /// </summary>
-        MethodLevel = 1,
+        MethodLevel = 1
     }
 }

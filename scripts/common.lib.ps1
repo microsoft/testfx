@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
 # Common utilities for building solution and running tests
 
 $TF_ROOT_DIR = (Get-Item (Split-Path $MyInvocation.MyCommand.Path)).Parent.FullName
@@ -146,14 +148,14 @@ function Locate-VsInstallPath($hasVsixExtension = "false") {
     $requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK" 
   }
 
-  Write-Verbose "$vswhere -latest -products * -requires $requiredPackageIds -property installationPath"
+  Write-Verbose "$vswhere -version [16.0.0, 17.1.0)  -products * -requires $requiredPackageIds -property installationPath"
   try {
     if ($Official -or $DisallowPrereleaseMSBuild) {
-      $vsInstallPath = & $vswhere -latest -products * -requires $requiredPackageIds -property installationPath
+      $vsInstallPath = & $vswhere -version "[16.0.0, 17.1.0)" -products * -requires $requiredPackageIds -property installationPath | Select-Object -First 1
     }
     else {
       # Allow using pre release versions of VS for dev builds
-      $vsInstallPath = & $vswhere -latest -prerelease -products * -requires $requiredPackageIds -property installationPath
+      $vsInstallPath = & $vswhere -version "[16.0.0, 17.1.0)" -prerelease -products * -requires $requiredPackageIds -property installationPath | Select-Object -First 1
     }
   }
   catch [System.Management.Automation.MethodInvocationException] {
@@ -294,4 +296,11 @@ function Install-DotNetCli {
   }
   catch {}
   Write-Log "Install-DotNetCli: Complete."
+}
+
+function Unzip
+{
+    param([string]$zipfile, [string]$outpath)
+
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath)
 }

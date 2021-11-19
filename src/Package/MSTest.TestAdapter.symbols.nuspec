@@ -76,7 +76,7 @@
     <!-- net45 -->
     <file src="Build\Desktop\MSTest.TestAdapter.props" target="build\net45\MSTest.TestAdapter.symbols.props" />
     <file src="Build\Desktop\MSTest.TestAdapter.targets" target="build\net45\MSTest.TestAdapter.symbols.targets" />
-    <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard2.0\" target="build\net45\" />
+    <file src="Microsoft.TestPlatform.AdapterUtilities\net45\" target="build\net45\" />
 
     <!-- Symbols -->
     <file src="MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" target="build\_common\" />

@@ -1,14 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- Import localization specific Targets if enabled. -->
-  <Import Project="$(MSBuildThisFileDirectory)TestFx.Loc.props" Condition=" ('$(IsTest)' == '' or '$(IsTest)' == 'false') and '$(IsLocalizationEnabled)' == 'true' "/>
-
-  <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)key.snk">
-      <!-- Do not have this show up in Solution Explorer in VS -->
-      <InProject>false</InProject>
-    </None>
-  </ItemGroup>
+  <Import Project="$(MSBuildThisFileDirectory)TestFx.Loc.props" Condition=" '$(IsTest)' == 'false' and '$(IsLocalizationEnabled)' == 'true' "/>
+  <Import Project="$(RepoRoot)scripts\build\TestFx.Sign.targets" Condition=" '$(TestFxSigningTargetsImported)' != 'true' " />
 
   <!-- StyleCop settings. -->
   <ItemGroup Condition=" '$(ShouldEnableStyleCop)' != 'false' and '$(IsVsixProj)' != 'true'">
@@ -20,28 +14,6 @@
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup> 
-
-  <!-- Signing and Localization. -->
-  <ItemGroup Condition=" '$(IsTest)' == '' or '$(IsTest)' == 'false' ">
-    <FilesToSign Include="$(OutDir)\$(AssemblyName).dll" Condition=" '$(IsVsixProj)' == '' or '$(IsVsixProj)' != 'true' ">
-      <Authenticode>Microsoft400</Authenticode>
-      <StrongName>StrongName</StrongName>
-    </FilesToSign>
-
-    <SignFilesDependsOn Include="GatherLocalizedOutputsForSigning">
-      <!-- Do not have this show up in Solution Explorer in VS -->
-      <InProject>false</InProject>
-    </SignFilesDependsOn>
-  </ItemGroup>
-
-  <Target Name="GatherLocalizedOutputsForSigning" DependsOnTargets="TestFxLocalization">
-    <ItemGroup>
-      <FilesToSign Include="$(OutDir)\**\$(AssemblyName).resources.dll">
-        <Authenticode>Microsoft400</Authenticode>
-        <StrongName>StrongName</StrongName>
-      </FilesToSign>
-    </ItemGroup>
-  </Target>
 
   <!-- Generate AssemblyInfo.cs -->
   <PropertyGroup>

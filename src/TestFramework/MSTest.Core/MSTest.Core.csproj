@@ -40,27 +40,52 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\DiscoverInternalsAttribute.cs" />
-    <Compile Include="Attributes\DoNotParallelizeAttribute.cs" />
-    <Compile Include="Attributes\DynamicDataAttribute.cs" />
-    <Compile Include="Attributes\ParallelizeAttribute.cs" />
-    <Compile Include="Attributes\ExecutionScope.cs" />
+    <Compile Include="Attributes\Lifecycle\Cleanup\AssemblyCleanupAttribute.cs" />
+    <Compile Include="Attributes\Lifecycle\Initialization\AssemblyInitializeAttribute.cs" />
+    <Compile Include="Attributes\Lifecycle\Cleanup\ClassCleanupAttribute.cs" />
+    <Compile Include="Attributes\Lifecycle\Cleanup\ClassCleanupBehavior.cs" />
+    <Compile Include="Attributes\Lifecycle\Cleanup\ClassCleanupExecutionAttribute.cs" />
+    <Compile Include="Attributes\Lifecycle\Initialization\ClassInitializeAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\CssIterationAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\CssProjectStructureAttribute.cs" />
+    <Compile Include="Attributes\DataSource\DataTestMethodAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\DescriptionAttribute.cs" />
+    <Compile Include="Attributes\Lifecycle\Initialization\DiscoverInternalsAttribute.cs" />
+    <Compile Include="Attributes\Lifecycle\DoNotParallelizeAttribute.cs" />
+    <Compile Include="Attributes\DataSource\DynamicDataAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\IgnoreAttribute.cs" />
+    <Compile Include="Attributes\Lifecycle\InheritanceBehavior.cs" />
+    <Compile Include="Attributes\TestMethod\OwnerAttribute.cs" />
+    <Compile Include="Attributes\Lifecycle\ParallelizeAttribute.cs" />
+    <Compile Include="Attributes\Lifecycle\ExecutionScope.cs" />
+    <Compile Include="Attributes\TestMethod\PriorityAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\TestClassAttribute.cs" />
+    <Compile Include="Attributes\Lifecycle\Cleanup\TestCleanupAttribute.cs" />
+    <Compile Include="Attributes\DataSource\TestDataSourceDiscoveryAttribute.cs" />
+    <Compile Include="Attributes\DataSource\TestDataSourceDiscoveryOption.cs" />
+    <Compile Include="Attributes\Lifecycle\Initialization\TestInitializeAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\TestMethodAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\TestPropertyAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\TestResult.cs" />
+    <Compile Include="Attributes\TestMethod\TestTimeout.cs" />
+    <Compile Include="Attributes\TestMethod\TimeoutAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\WorkItemAttribute.cs" />
     <Compile Include="Interfaces\ITestDataSource.cs" />
     <Compile Include="Interfaces\ITestMethod.cs" />
     <Compile Include="Internal\Helper.cs" />
     <Compile Include="DataAccessMethod.cs" />
-    <Compile Include="Attributes\DataRowAttribute.cs" />
+    <Compile Include="Attributes\DataSource\DataRowAttribute.cs" />
     <Compile Include="Exceptions\AssertInconclusiveException.cs" />
     <Compile Include="Exceptions\InternalTestFailureException.cs" />
-    <Compile Include="Attributes\ExpectedExceptionAttribute.cs" />
-    <Compile Include="Attributes\ExpectedExceptionBaseAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\ExpectedExceptionAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\ExpectedExceptionBaseAttribute.cs" />
     <Compile Include="Friends.cs" />
     <Compile Include="GenericParameterHelper.cs" />
     <Compile Include="Internal\NullableAttributes.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Attributes\TestCategoryAttribute.cs" />
-    <Compile Include="Attributes\TestCategoryBaseAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\TestCategoryAttribute.cs" />
+    <Compile Include="Attributes\TestMethod\TestCategoryBaseAttribute.cs" />
     <Compile Include="Exceptions\AssertFailedException.cs" />
     <Compile Include="Assertions\Assert.cs" />
     <Compile Include="Assertions\StringAssert.cs" />
@@ -73,7 +98,7 @@
     </Compile>
     <Compile Include="UnitTestOutcome.cs" />
     <Compile Include="Internal\UtfHelper.cs" />
-    <Compile Include="Attributes\VSTestAttributes.cs" />
+    <Compile Include="Attributes\DataSource\DataSourceAttribute.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\FrameworkMessages.resx">

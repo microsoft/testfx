@@ -392,6 +392,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
+        /// Gets the class cleanup lifecycle set on an assembly.
+        /// </summary>
+        /// <param name="assembly"> The test assembly. </param>
+        /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
+        internal ClassCleanupExecutionAttribute GetClassCleanupAttribute(Assembly assembly)
+        {
+            return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute)).OfType<ClassCleanupExecutionAttribute>().FirstOrDefault();
+        }
+
+        /// <summary>
         /// Gets custom attributes at the class and assembly for a method.
         /// </summary>
         /// <param name="attributeProvider">Method Info or Member Info or a Type</param>
@@ -532,6 +542,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
             }
 
             return (ignoreAttribute?.FirstOrDefault() as IgnoreAttribute).IgnoreMessage;
+        }
+
+        /// <summary>
+        /// Gets the class cleanup lifecycle for the class, if set.
+        /// </summary>
+        /// <param name="classInfo">The class to inspect.</param>
+        /// <returns>Returns <see cref="ClassCleanupBehavior"/> if provided, otherwise <c>null</c>.</returns>
+        internal virtual ClassCleanupBehavior? GetClassCleanupBehavior(TestClassInfo classInfo)
+        {
+            if (classInfo.ClassCleanupMethod == null)
+            {
+                return null;
+            }
+
+            var sequencingAttribute = GetCustomAttributes(classInfo.ClassCleanupMethod, typeof(ClassCleanupAttribute), true)?.FirstOrDefault() as ClassCleanupAttribute;
+
+            return sequencingAttribute?.CleanupBehavior;
         }
 
         /// <summary>
