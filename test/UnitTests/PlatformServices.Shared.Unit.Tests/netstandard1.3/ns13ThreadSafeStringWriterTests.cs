@@ -19,6 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 #endif
 
     using System;
+    using System.Diagnostics;
     using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
@@ -44,11 +45,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 {
                     var task1 = Task.Run(() =>
                     {
+                        var timeout = Stopwatch.StartNew();
                         stringWriter.WriteLine("content1");
                         stringWriter.WriteLine("content1");
                         stringWriter.WriteLine("content1");
                         stringWriter.WriteLine("content1");
-                        while (this.task2flag != true)
+                        while (this.task2flag != true && timeout.Elapsed < TimeSpan.FromSeconds(5))
                         {
                         }
                         stringWriter.WriteLine("content1");
