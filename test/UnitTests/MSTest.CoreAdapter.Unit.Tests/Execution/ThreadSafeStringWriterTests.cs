@@ -62,8 +62,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     action("content2");
                 });
 
-                task1.Wait();
-                task2.Wait();
+                task1.GetAwaiter().GetResult();
+                task2.GetAwaiter().GetResult();
 
                 var content = stringWriter.ToString();
                 content.Should().NotBeNullOrWhiteSpace();
