@@ -7,6 +7,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
     using System;
     using System.Globalization;
+    using System.Threading;
     using System.Threading.Tasks;
     using FluentAssertions;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
