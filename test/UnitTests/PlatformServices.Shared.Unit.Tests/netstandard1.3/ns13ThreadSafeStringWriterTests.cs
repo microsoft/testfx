@@ -71,8 +71,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                         return stringWriter.ToString();
                     });
 
-                    var task1Output = task1.GetAwaiter().GetResult();
                     var task2Output = task2.GetAwaiter().GetResult();
+                    var task1Output = task1.GetAwaiter().GetResult();
 
                     // there was no output in the current task, the output should be empty
                     var content = stringWriter.ToString();
