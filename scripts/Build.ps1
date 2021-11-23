@@ -247,12 +247,7 @@ function Create-NugetPackages {
   "" > "$stagingDir\_._"
 
   # Copy over the nuspecs to the staging directory
-  if ($TFB_Official) {
-    $nuspecFiles = @("MSTest.TestAdapter.nuspec", "MSTest.TestAdapter.symbols.nuspec", "MSTest.TestFramework.nuspec", "MSTest.TestFramework.symbols.nuspec", "MSTest.Internal.TestFx.Documentation.nuspec")
-  }
-  else {
-    $nuspecFiles = @("MSTest.TestAdapter.Enu.nuspec", "MSTest.TestFramework.enu.nuspec")
-  }
+  $nuspecFiles = @("MSTest.TestAdapter.nuspec", "MSTest.TestAdapter.symbols.nuspec", "MSTest.TestFramework.nuspec", "MSTest.TestFramework.symbols.nuspec", "MSTest.Internal.TestFx.Documentation.nuspec")
 
   foreach ($file in $nuspecFiles) {
     Copy-Item $tfSrcPackageDir\$file $stagingDir -Force
