@@ -9,9 +9,9 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>165896e7efeecb70f01bd011257ead0f56d32c95</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Test.Sdk" Version="17.1.0-preview-20211118-01">
+    <Dependency Name="Microsoft.NET.Test.Sdk" Version="17.0.1-release-20211109-01">
       <Uri>https://github.com/microsoft/vstest</Uri>
-      <Sha>f2fc23087011e30596c83976d73b3bff2ed92881</Sha>
+      <Sha>742433312efff3e088b39c3d477c18a4ec5ee67b</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
@@ -47,9 +47,9 @@
       <Uri>https://github.com/dotnet/xharness</Uri>
       <Sha>2eef520188beb49e31460d0a7dbe040294428ff1</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.0.0-1.21270.4">
+    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.0.1-1.21569.2">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>1e347d3e229cf388249d342c72a1222bff0b5fdd</Sha>
+      <Sha>52021b4b3a9dcfd7b955102adb2901524a62a371</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.5.21268.2">
       <Uri>https://github.com/mono/linker</Uri>
