@@ -25,6 +25,10 @@
     <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework </tags>
+    <repository type="git" 
+                url="https://github.com/microsoft/testfx" 
+                branch="$BranchName$" 
+                commit="$CommitId$" />
    
     <dependencies>
       <group targetFramework="netstandard1.0">
