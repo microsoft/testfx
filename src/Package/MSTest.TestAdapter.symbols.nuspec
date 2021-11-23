@@ -23,6 +23,11 @@
     <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
+    <repository type="git" 
+                url="https://github.com/microsoft/testfx" 
+                branch="$BranchName$" 
+                commit="$CommitId$" />
+                
     <dependencies>
       <group targetFramework="netcoreapp1.0">
         <dependency id="NETStandard.Library" version="1.6.1" />

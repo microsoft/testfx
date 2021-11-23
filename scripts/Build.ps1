@@ -77,6 +77,23 @@ $TFB_Full = $Full
 $TFB_Official = $Official
 $TFB_UpdateXlf = $UpdateXlf
 $TFB_IsLocalizedBuild = $IsLocalizedBuild -or $TFB_Official
+$TPB_BRANCH = "LOCALBRANCH"
+$TPB_COMMIT = "LOCALBUILD"
+try {
+    $TPB_BRANCH = $env:BUILD_SOURCEBRANCH -replace "^refs/heads/"  
+    if ([string]::IsNullOrWhiteSpace($TPB_BRANCH)) { 
+        $TPB_BRANCH = git -C "." rev-parse --abbrev-ref HEAD
+    }
+}
+catch { }
+
+try {
+    $TPB_COMMIT = $env:BUILD_SOURCEVERSION
+    if ([string]::IsNullOrWhiteSpace($TPB_COMMIT)) { 
+        $TPB_COMMIT = git -C "." rev-parse HEAD
+    }
+}
+catch { }
 
 $TFB_Solutions = @(
   "TestFx.sln"
@@ -272,8 +289,8 @@ function Create-NugetPackages {
       $version = $version + "-" + $versionSuffix
     }
 
-    Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version``;Srcroot=$env:TF_SRC_DIR``;Packagesroot=$env:TF_PACKAGES_DIR``;TestPlatformVersion=$TestPlatformVersion``;NOWARN=`"NU5127,NU5128,NU5129`""
-    & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR`;TestPlatformVersion=$TestPlatformVersion`;NOWARN="NU5127,NU5128,NU5129"
+    Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version``;Srcroot=$env:TF_SRC_DIR``;Packagesroot=$env:TF_PACKAGES_DIR``;TestPlatformVersion=$TestPlatformVersion``;NOWARN=`"NU5127,NU5128,NU5129`"``;BranchName=$TPB_BRANCH``;CommitId=$TPB_COMMIT"
+    & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR`;TestPlatformVersion=$TestPlatformVersion`;NOWARN="NU5127,NU5128,NU5129"`;BranchName=$TPB_BRANCH`;CommitId=$TPB_COMMIT
     if ($lastExitCode -ne 0) {
       throw "Nuget pack failed with an exit code of '$lastExitCode'."
     }

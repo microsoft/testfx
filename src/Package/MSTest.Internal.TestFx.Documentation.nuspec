@@ -16,6 +16,10 @@
     <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework MSTestV2</tags>
+    <repository type="git" 
+                url="https://github.com/microsoft/testfx" 
+                branch="$BranchName$" 
+                commit="$CommitId$" />
   </metadata>
   <files>
     <!--DotNet-->
