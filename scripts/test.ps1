@@ -144,7 +144,7 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 {	
     $vstestPath = Get-VSTestPath
  
-    $additionalArguments = ''
+    $additionalArguments = @('/Blame:CollectHangDump;TestTimeout=5min')
     if($TFT_Parallel)
     {
        $additionalArguments += "/parallel"
