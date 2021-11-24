@@ -23,6 +23,11 @@
     <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
+    <repository type="git" 
+                url="https://github.com/microsoft/testfx" 
+                branch="$BranchName$" 
+                commit="$CommitId$" />
+                
     <dependencies>
       <group targetFramework="netcoreapp1.0">
         <dependency id="NETStandard.Library" version="1.6.1" />
@@ -47,7 +52,7 @@
   <files>
     <file src="MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\_common\" />
     <file src="PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="build\_common\" />
-    <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
+    <file src="PlatformServices.Desktop.Legacy\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\_common\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard2.0\" target="build\_common\" />
 
@@ -74,14 +79,20 @@
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard2.0\" target="build\net5.0-windows10.0.18362.0\" />
 
     <!-- net45 -->
-    <file src="Build\Desktop\MSTest.TestAdapter.props" target="build\net45\MSTest.TestAdapter.symbols.props" />
-    <file src="Build\Desktop\MSTest.TestAdapter.targets" target="build\net45\MSTest.TestAdapter.symbols.targets" />
+    <file src="Build\Desktop.Legacy\MSTest.TestAdapter.props" target="build\net45\MSTest.TestAdapter.symbols.props" />
+    <file src="Build\Desktop.Legacy\MSTest.TestAdapter.targets" target="build\net45\MSTest.TestAdapter.symbols.targets" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\net45\" target="build\net45\" />
+
+    <!-- net46 -->
+    <file src="Build\Desktop\MSTest.TestAdapter.props" target="build\net46\" />
+    <file src="Build\Desktop\MSTest.TestAdapter.targets" target="build\net46\" />
+    <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net46\" />
+    <file src="Microsoft.TestPlatform.AdapterUtilities\net45\" target="build\net46\" />
 
     <!-- Symbols -->
     <file src="MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" target="build\_common\" />
     <file src="PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" target="build\_common\" />
-    <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\_common\" />
+    <file src="PlatformServices.Desktop.Legacy\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\_common\" />
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="build\_common\" />
 
     <!-- netcoreapp1.0 -->
@@ -101,7 +112,7 @@
 
     <!-- Resources -->
     <file src="MSTest.CoreAdapter\**\*.resources.dll" target="\build\_common\" />
-    <file src="PlatformServices.Desktop\**\*.resources.dll" target="\build\_common\" />
+    <file src="PlatformServices.Desktop.Legacy\**\*.resources.dll" target="\build\_common\" />
     <file src="MSTest.Core\**\*.resources.dll" target="build\_common\" />
 
     <!-- Icon -->

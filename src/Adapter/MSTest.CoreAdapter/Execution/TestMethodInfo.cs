@@ -137,9 +137,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     if (result != null)
                     {
                         result.Duration = watch.Elapsed;
-                        result.DebugTrace = listener.DebugTrace;
-                        result.LogOutput = listener.StandardOutput;
-                        result.LogError = listener.StandardError;
+                        result.DebugTrace = listener.GetAndClearDebugTrace();
+                        result.LogOutput = listener.GetAndClearStandardOutput();
+                        result.LogError = listener.GetAndClearStandardError();
                         result.TestContextMessages = this.TestMethodOptions.TestContext.GetAndClearDiagnosticMessages();
                         result.ResultFiles = this.TestMethodOptions.TestContext.GetResultFiles();
                     }

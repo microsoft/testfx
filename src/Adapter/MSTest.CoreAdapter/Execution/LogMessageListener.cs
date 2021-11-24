@@ -6,7 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System;
     using System.Globalization;
     using System.IO;
-
+    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
@@ -18,8 +18,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     {
         private static LogMessageListener activeRedirector;
         private readonly LogMessageListener previousRedirector;
-        private readonly TextWriter redirectLoggerOut;
-        private readonly TextWriter redirectStdErr;
+        private readonly ThreadSafeStringWriter redirectLoggerOut;
+        private readonly ThreadSafeStringWriter redirectStdErr;
         private readonly bool captureDebugTraces;
 
         /// <summary>
@@ -41,8 +41,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.captureDebugTraces = captureDebugTraces;
 
             // Cache the original output/error streams and replace it with the own stream.
-            this.redirectLoggerOut = new ThreadSafeStringWriter(CultureInfo.InvariantCulture);
-            this.redirectStdErr = new ThreadSafeStringWriter(CultureInfo.InvariantCulture);
+            this.redirectLoggerOut = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out");
+            this.redirectStdErr = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "err");
 
             Logger.OnLogMessage += this.redirectLoggerOut.WriteLine;
 
@@ -51,7 +51,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             if (this.captureDebugTraces)
             {
-                this.traceListener = PlatformServiceProvider.Instance.GetTraceListener(new ThreadSafeStringWriter(CultureInfo.InvariantCulture));
+                this.traceListener = PlatformServiceProvider.Instance.GetTraceListener(new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "trace"));
                 this.traceListenerManager = PlatformServiceProvider.Instance.GetTraceListenerManager(this.redirectLoggerOut, this.redirectStdErr);
 
                 // If there was a previous LogMessageListener active, remove its
@@ -92,6 +92,40 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return (this.traceListener == null || this.traceListener.GetWriter() == null) ?
                     string.Empty : this.traceListener.GetWriter().ToString();
             }
+        }
+
+        public string GetAndClearStandardOutput()
+        {
+            var output = this.redirectLoggerOut.ToString();
+            this.redirectLoggerOut.Clear();
+            return output;
+        }
+
+        public string GetAndClearStandardError()
+        {
+            var output = this.redirectStdErr.ToString();
+            this.redirectStdErr.Clear();
+            return output;
+        }
+
+        public string GetAndClearDebugTrace()
+        {
+            var writer = this.traceListener?.GetWriter();
+            if (writer == null)
+            {
+                return null;
+            }
+
+            if (writer is StringWriter sw)
+            {
+                var sb = sw.GetStringBuilder();
+                var output = sb?.ToString();
+                sb?.Clear();
+                return output;
+            }
+
+            // we cannot clear it because it is just a text writer
+            return writer.ToString();
         }
 
         public void Dispose()

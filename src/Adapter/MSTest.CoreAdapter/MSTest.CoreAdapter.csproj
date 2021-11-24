@@ -106,7 +106,6 @@
     <Compile Include="ObjectModel\StackTraceInformation.cs" />
     <Compile Include="ObjectModel\TestMethod.cs" />
     <Compile Include="Execution\TestMethodInfo.cs" />
-    <Compile Include="Execution\ThreadSafeStringWriter.cs" />
     <Compile Include="ObjectModel\TestMethodOptions.cs" />
     <Compile Include="ObjectModel\TypeInspectionException.cs" />
     <Compile Include="Helpers\UnitTestOutcomeHelper.cs" />
