@@ -307,7 +307,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public void ClearDiagnosticMessages()
         {
             var sb = this.stringWriter.GetStringBuilder();
-            sb.Remove(0, sb.Length);
+            sb?.Remove(0, sb.Length);
         }
 
         public void SetDataRow(object dataRow)

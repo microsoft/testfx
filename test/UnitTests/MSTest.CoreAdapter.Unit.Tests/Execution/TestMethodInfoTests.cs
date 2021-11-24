@@ -243,7 +243,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 PlatformServiceProvider.Instance = testablePlatformServiceProvider;
                 var result = method.Invoke(null);
 
-                Assert.AreEqual(string.Empty, result.DebugTrace);
+                Assert.IsNull(result.DebugTrace);
             });
         }
 
