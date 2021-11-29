@@ -26,6 +26,10 @@
     <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework </tags>
+    <repository type="git" 
+                url="https://github.com/microsoft/testfx" 
+                branch="$BranchName$" 
+                commit="$CommitId$" />
 
     <dependencies>
       <group targetFramework="netstandard1.0">
@@ -43,33 +47,29 @@
   <files>
     <!-- netstandard1.0 -->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard1.0\" />
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\" />
     <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard1.0\" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\" />
+    
     <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\" />
     <file src="Extension.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0\" />
 
     <!-- net45 -->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net45\" />
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net45\" />
     <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\net45\" />
-    <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net45\" />
+    
     <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net45\" />
     <file src="Extension.Desktop\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net45\" />
 
     <!-- uap10.0 -->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\uap10.0\" />
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\uap10.0\" />
     <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\uap10.0\" />
-    <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\uap10.0\" />
+    
     <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\uap10.0\" />
     <file src="Extension.UWP\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\uap10.0\" />
 
     <!-- WinUI -->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net5.0-windows10.0.18362.0\" />
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net5.0-windows10.0.18362.0\" />
     <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\net5.0-windows10.0.18362.0\" />
-    <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net5.0-windows10.0.18362.0\" />
+
     <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net5.0-windows10.0.18362.0\" />
     <file src="Extension.WinUI\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net5.0-windows10.0.18362.0\" />
 
