@@ -39,12 +39,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             lock (this.lockObject)
             {
-                    // Ensure that State.Value is populated, so we can inherit it to the child
-                    // async flow, and also keep reference to it here in the parent flow.
-                    // otherwise if there is `async Task` test method, the method will run as child async flow
-                    // populate it but the parent will remain null, because the changes to context only flow downwards
-                    // and not upwards.
-                    this.GetOrAddStringBuilder();
+                // Ensure that State.Value is populated, so we can inherit it to the child
+                // async flow, and also keep reference to it here in the parent flow.
+                // otherwise if there is `async Task` test method, the method will run as child async flow
+                // populate it but the parent will remain null, because the changes to context only flow downwards
+                // and not upwards.
+                this.GetOrAddStringBuilder();
             }
         }
 
@@ -64,11 +64,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        public void Clear()
+        public string ToStringAndClear()
         {
             lock (this.lockObject)
             {
-                this.GetStringBuilderOrNull()?.Clear();
+                try
+                {
+                    var sb = this.GetStringBuilderOrNull();
+
+                    if (sb == null)
+                    {
+                        return default(string);
+                    }
+
+                    var output = sb.ToString();
+                    sb.Clear();
+                    return output;
+                }
+                catch (ObjectDisposedException)
+                {
+                    return default(string);
+                }
             }
         }
 

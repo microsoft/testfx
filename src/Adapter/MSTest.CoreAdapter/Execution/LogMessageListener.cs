@@ -96,15 +96,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         public string GetAndClearStandardOutput()
         {
-            var output = this.redirectLoggerOut.ToString();
-            this.redirectLoggerOut.Clear();
+            var output = this.redirectLoggerOut.ToStringAndClear();
             return output;
         }
 
         public string GetAndClearStandardError()
         {
-            var output = this.redirectStdErr.ToString();
-            this.redirectStdErr.Clear();
+            var output = this.redirectStdErr.ToStringAndClear();
             return output;
         }
 
@@ -116,11 +114,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 return null;
             }
 
-            if (writer is StringWriter sw)
+            if (writer is ThreadSafeStringWriter tssw)
             {
-                var sb = sw.GetStringBuilder();
-                var output = sb?.ToString();
-                sb?.Clear();
+                var output = tssw.ToStringAndClear();
                 return output;
             }
 
