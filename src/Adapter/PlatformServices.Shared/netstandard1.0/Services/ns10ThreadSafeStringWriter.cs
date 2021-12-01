@@ -27,6 +27,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
         }
 
+        public bool Shared { get; } = false;
+
         /// <inheritdoc/>
         public override string ToString()
         {

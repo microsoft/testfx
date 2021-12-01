@@ -48,6 +48,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
+        public bool Shared { get; } = true;
+
         /// <inheritdoc/>
         public override string ToString()
         {
