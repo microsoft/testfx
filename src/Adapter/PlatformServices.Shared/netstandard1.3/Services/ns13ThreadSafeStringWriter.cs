@@ -48,6 +48,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
+        public override StringBuilder GetStringBuilder()
+        {
+            throw new NotSupportedException("GetStringBuilder is not supported, because it does not allow us to clean the string builder in thread safe way.");
+        }
+
         /// <inheritdoc/>
         public override string ToString()
         {
@@ -133,12 +138,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 #endif
                 this.GetOrAddStringBuilder().Append(buffer, index, count);
             }
-        }
-
-        // <inheritdoc/>
-        public override StringBuilder GetStringBuilder()
-        {
-            return this.GetStringBuilderOrNull();
         }
 
         /// <inheritdoc/>
