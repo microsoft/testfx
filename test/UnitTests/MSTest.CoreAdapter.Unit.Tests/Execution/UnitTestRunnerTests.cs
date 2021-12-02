@@ -398,18 +398,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
                     .Returns(Assembly.GetExecutingAssembly());
 
-                StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
+                StringWriter writer = new StringWriter(new StringBuilder());
 
                 DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = () =>
                 {
                     writer.Write("ClassCleanup");
                 };
 
-                this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
+                DummyTestClassWithCleanupMethods.TestMethodBody = (t) =>
+                {
+                    t.Write("ClassCleanup");
+                };
 
-                var testResult = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters).FirstOrDefault();
-                Assert.IsNotNull(testResult);
-                Assert.AreEqual("DummyTrace", testResult.DebugTrace);
+                this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
 
                 var cleanupresult = this.unitTestRunner.RunCleanup();
                 Assert.AreEqual("ClassCleanup", cleanupresult.DebugTrace);
@@ -417,6 +418,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             finally
             {
                 DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = null;
+                DummyTestClassWithCleanupMethods.TestMethodBody = null;
             }
         }
 
@@ -510,28 +512,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [DummyTestClass]
         private class DummyTestClassWithCleanupMethods
         {
+            public DummyTestClassWithCleanupMethods()
+            {
+            }
+
             public static Action AssemblyCleanupMethodBody { get; set; }
 
             public static Action ClassCleanupMethodBody { get; set; }
 
+            public static Action<UTFExtension.TestContext> TestMethodBody { get; set; }
+
+            public UTFExtension.TestContext TestContext { get; set; }
+
             [UTF.AssemblyCleanup]
             public static void AssemblyCleanup()
             {
-                if (AssemblyCleanupMethodBody != null)
-                {
-                    AssemblyCleanupMethodBody.Invoke();
-                }
+                AssemblyCleanupMethodBody?.Invoke();
             }
 
             [UTF.ClassCleanup]
             public static void ClassCleanup()
             {
-                ClassCleanupMethodBody.Invoke();
+                ClassCleanupMethodBody?.Invoke();
             }
 
             [UTF.TestMethod]
             public void TestMethod()
             {
+                TestMethodBody?.Invoke(this.TestContext);
             }
         }
 
