@@ -53,33 +53,30 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void NoTraceListenerOperationShouldBePerformedIfDebugTraceIsNotEnabled()
         {
-            var logMessageListener = new LogMessageListener(false);
-            this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Add(It.IsAny<ITraceListener>()), Times.Never);
+            using (var logMessageListener = new LogMessageListener(false))
+            {
+                this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Add(It.IsAny<ITraceListener>()), Times.Never);
+            }
         }
 
         [TestMethod]
         public void AddTraceListenerOperationShouldBePerformedIfDebugTraceIsEnabled()
         {
-            var logMessageListener = new LogMessageListener(true);
-            this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Add(this.testablePlatformServiceProvider.MockTraceListener.Object), Times.Once);
-        }
-
-        [TestMethod]
-        public void DebugTraceShouldReturnTraceOutput()
-        {
-            var logMessageListener = new LogMessageListener(true);
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
-            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-            Assert.AreEqual("DummyTrace", logMessageListener.DebugTrace);
+            using (var logMessageListener = new LogMessageListener(true))
+            {
+                this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Add(this.testablePlatformServiceProvider.MockTraceListener.Object), Times.Once);
+            }
         }
 
         #region Dispose Tests
         [TestMethod]
         public void DisposeShouldNotRemoveTraceListenerIfDebugTracesIsNotEnabled()
         {
-            var logMessageListener = new LogMessageListener(false);
-            logMessageListener.Dispose();
-            this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Remove(It.IsAny<ITraceListener>()), Times.Never);
+            using (var logMessageListener = new LogMessageListener(false))
+            {
+                logMessageListener.Dispose();
+                this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Remove(It.IsAny<ITraceListener>()), Times.Never);
+            }
         }
 
         [TestMethod]
@@ -97,9 +94,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void DisposeShouldDisposeTraceListener()
         {
-            var logMessageListener = new LogMessageListener(true);
-            logMessageListener.Dispose();
-            this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Dispose(this.testablePlatformServiceProvider.MockTraceListener.Object), Times.Once);
+            using (var logMessageListener = new LogMessageListener(true))
+            {
+                logMessageListener.Dispose();
+                this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Dispose(this.testablePlatformServiceProvider.MockTraceListener.Object), Times.Once);
+            }
         }
 
         #endregion

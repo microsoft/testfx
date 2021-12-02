@@ -198,56 +198,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
-        public void TestMethodInfoInvokeShouldListenForDebugAndTraceLogsWhenEnabled()
-        {
-            this.testMethodOptions.CaptureDebugTraces = true;
-
-            StringWriter writer = new StringWriter(new StringBuilder());
-            DummyTestClass.TestMethodBody = o => { writer.Write("Trace logs"); };
-
-            var method = new TestMethodInfo(
-                this.methodInfo,
-                this.testClassInfo,
-                this.testMethodOptions);
-
-            var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-            this.RunWithTestablePlatformService(testablePlatformServiceProvider, () =>
-            {
-                testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-
-                PlatformServiceProvider.Instance = testablePlatformServiceProvider;
-                var result = method.Invoke(null);
-
-                Assert.AreEqual("Trace logs", result.DebugTrace);
-            });
-        }
-
-        [TestMethodV1]
-        public void TestMethodInfoInvokeShouldNotListenForDebugAndTraceLogsWhenDisabled()
-        {
-            this.testMethodOptions.CaptureDebugTraces = false;
-
-            var method = new TestMethodInfo(
-                this.methodInfo,
-                this.testClassInfo,
-                this.testMethodOptions);
-            StringWriter writer = new StringWriter(new StringBuilder());
-
-            DummyTestClass.TestMethodBody = o => { writer.Write("Trace logs"); };
-
-            var testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-            this.RunWithTestablePlatformService(testablePlatformServiceProvider, () =>
-            {
-                testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-
-                PlatformServiceProvider.Instance = testablePlatformServiceProvider;
-                var result = method.Invoke(null);
-
-                Assert.IsNull(result.DebugTrace);
-            });
-        }
-
-        [TestMethodV1]
         public void TestMethodInfoInvokeShouldReportTestContextMessages()
         {
             DummyTestClass.TestMethodBody = o => { this.testContextImplementation.WriteLine("TestContext"); };

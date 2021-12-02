@@ -33,6 +33,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Trace listener Manager to perform operation on tracelistener objects.
         /// </summary>
         private ITraceListenerManager traceListenerManager;
+        private bool isDisposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LogMessageListener"/> class.
@@ -139,8 +140,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         private void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && !this.isDisposed)
             {
+                this.isDisposed = true;
                 Logger.OnLogMessage -= this.redirectedStandardOutput.WriteLine;
                 Logger.OnLogMessage -= this.redirectedStandardError.WriteLine;
 

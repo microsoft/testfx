@@ -386,61 +386,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsTrue(cleanupresult.Warnings.All(w => w.Contains("NotImplemented")));
         }
 
-        [TestMethodV1]
-        public void RunCleanupShouldReturnCleanupResultsWithDebugTraceLogsSetIfDebugTraceEnabled()
-        {
-            this.unitTestRunner = new UnitTestRunner(this.GetSettingsWithDebugTrace(true));
-            try
-            {
-                var type = typeof(DummyTestClassWithCleanupMethods);
-                var testMethod = new TestMethod(nameof(DummyTestClassWithCleanupMethods.TestMethod), type.FullName, "A", isAsync: false);
-
-                this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
-                    .Returns(Assembly.GetExecutingAssembly());
-
-                StringWriter writer = new StringWriter(new StringBuilder());
-
-                DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = () =>
-                {
-                    writer.Write("ClassCleanup");
-                };
-
-                DummyTestClassWithCleanupMethods.TestMethodBody = (t) =>
-                {
-                    t.Write("ClassCleanup");
-                };
-
-                this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-
-                var cleanupresult = this.unitTestRunner.RunCleanup();
-                Assert.AreEqual("ClassCleanup", cleanupresult.DebugTrace);
-            }
-            finally
-            {
-                DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = null;
-                DummyTestClassWithCleanupMethods.TestMethodBody = null;
-            }
-        }
-
-        [TestMethodV1]
-        public void RunCleanupShouldReturnCleanupResultsWithNoDebugAndTraceLogsSetIfDebugTraceDisabled()
-        {
-            var type = typeof(DummyTestClassWithCleanupMethods);
-            var methodInfo = type.GetMethod("TestMethod");
-            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
-
-            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
-                .Returns(Assembly.GetExecutingAssembly());
-
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
-            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-
-            this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
-
-            var cleanupresult = this.unitTestRunner.RunCleanup();
-            Assert.AreEqual(null, cleanupresult.DebugTrace);
-        }
-
         #endregion
 
         #region private helpers
