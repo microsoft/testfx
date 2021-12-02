@@ -43,9 +43,15 @@ namespace TimeoutTestProject
         public async Task TestMethod1()
         {
             WriteLines("UnitTest2 - TestMethod1");
-            await Task.Delay(rng.Next(0,3));
+            // This makes the outputs more likely to run into each other 
+            // when running in parallel.
+            // It also makes the test longer, because we check in the test
+            // that all tests started before any test finished (to make sure
+            // they actually run in parallel), and this gives us more leeway
+            // on slower machines.
+            await Task.Delay(rng.Next(20, 50));
             WriteLines("UnitTest2 - TestMethod1");
-            await Task.Delay(rng.Next(0, 3));
+            await Task.Delay(rng.Next(20, 50));
             WriteLines("UnitTest2 - TestMethod1");
         }
 
@@ -53,9 +59,9 @@ namespace TimeoutTestProject
         public async Task TestMethod2()
         {
             WriteLines("UnitTest2 - TestMethod2");
-            await Task.Delay(rng.Next(0, 3));
+            await Task.Delay(rng.Next(20, 50));
             WriteLines("UnitTest2 - TestMethod2");
-            await Task.Delay(rng.Next(0, 3));
+            await Task.Delay(rng.Next(20, 50));
             WriteLines("UnitTest2 - TestMethod2");
         }
 
@@ -63,9 +69,9 @@ namespace TimeoutTestProject
         public async Task TestMethod3()
         {
             WriteLines("UnitTest2 - TestMethod3");
-            await Task.Delay(rng.Next(0, 3));
+            await Task.Delay(rng.Next(20, 50));
             WriteLines("UnitTest2 - TestMethod3");
-            await Task.Delay(rng.Next(0, 3));
+            await Task.Delay(rng.Next(20, 50));
             WriteLines("UnitTest2 - TestMethod3");
         }
 

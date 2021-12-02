@@ -42,9 +42,15 @@ namespace TimeoutTestProject
         public void TestMethod1()
         {
             WriteLines("UnitTest1 - TestMethod1");
-            Thread.Sleep(rng.Next(0,3));
+            // This makes the outputs more likely to run into each other 
+            // when running in parallel.
+            // It also makes the test longer, because we check in the test
+            // that all tests started before any test finished (to make sure
+            // they actually run in parallel), and this gives us more leeway
+            // on slower machines.
+            Thread.Sleep(rng.Next(20, 50));
             WriteLines("UnitTest1 - TestMethod1");
-            Thread.Sleep(rng.Next(0, 3));
+            Thread.Sleep(rng.Next(20, 50));
             WriteLines("UnitTest1 - TestMethod1");
         }
 
@@ -52,9 +58,9 @@ namespace TimeoutTestProject
         public void TestMethod2()
         {
             WriteLines("UnitTest1 - TestMethod2");
-            Thread.Sleep(rng.Next(0, 3));
+            Thread.Sleep(rng.Next(20, 50));
             WriteLines("UnitTest1 - TestMethod2");
-            Thread.Sleep(rng.Next(0, 3));
+            Thread.Sleep(rng.Next(20, 50));
             WriteLines("UnitTest1 - TestMethod2");
         }
 
@@ -62,9 +68,9 @@ namespace TimeoutTestProject
         public void TestMethod3()
         {
             WriteLines("UnitTest1 - TestMethod3");
-            Thread.Sleep(rng.Next(0, 3));
+            Thread.Sleep(rng.Next(20, 50));
             WriteLines("UnitTest1 - TestMethod3");
-            Thread.Sleep(rng.Next(0, 3));
+            Thread.Sleep(rng.Next(20, 50));
             WriteLines("UnitTest1 - TestMethod3");
         }
 
