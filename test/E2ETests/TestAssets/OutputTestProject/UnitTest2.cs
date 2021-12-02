@@ -77,7 +77,7 @@ namespace TimeoutTestProject
 
         private static void WriteLines(string message)
         {
-            Debug.WriteLine(message);
+            Trace.WriteLine(message);
             Console.WriteLine(message);
             Console.Error.WriteLine(message);
         }
