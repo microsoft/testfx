@@ -82,7 +82,7 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
             var testMethod = testResults.Single(t => t.DisplayName == methodName);
             Assert.IsNotNull(testMethod, $"Test method {methodName} was not found.");
             var message = testMethod.Messages.SingleOrDefault(messageFilter);
-            Assert.IsNotNull(message, $"Message for {testMethod.DisplayName} was not found.");
+            Assert.IsNotNull(message, $"Message for {testMethod.DisplayName} was not found. All messages: { string.Join(Environment.NewLine, testMethod.Messages.Select(m=> $"{m.Category} - {m.Text}")) }");
             StringAssert.Matches(message.Text, new Regex(methodName), testMethod.DisplayName);
             StringAssert.Matches(message.Text, new Regex("TestInitialize"), testMethod.DisplayName);
             StringAssert.Matches(message.Text, new Regex("TestCleanup"), testMethod.DisplayName);
