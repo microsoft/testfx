@@ -46,10 +46,10 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
             // Assert
             Assert.AreEqual(3, testResults.Count);
 
-            // Ensure that tests are running in parallel, because otherwise the output just works correctly.
+            // Ensure that some tests are running in parallel, because otherwise the output just works correctly.
             var firstEnd = testResults.Min(t => t.EndTime);
-            var allStartedBeforeFirstEnded = testResults.All(t => firstEnd > t.StartTime);
-            Assert.IsTrue(allStartedBeforeFirstEnded, "Tests must run in parallel, but there were some tests that did not start before the first one ended.");
+            var someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
+            Assert.IsTrue(someStartedBeforeFirstEnded, "Tests must run in parallel, but there were no other tests that started, before the first one ended.");
 
             ValidateOutputsAreNotMixed(testResults, "TestMethod1", new[] { "TestMethod2", "TestMethod3" });
             ValidateOutputsAreNotMixed(testResults, "TestMethod2", new[] { "TestMethod1", "TestMethod3" });
