@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TimeoutTestProject
+namespace OutputTestProject
 {
 
     [TestClass]
