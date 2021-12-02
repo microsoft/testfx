@@ -11,6 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using System.Globalization;
     using System.IO;
     using System.Linq;
+    using System.Net.Sockets;
     using System.Threading;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
@@ -51,7 +52,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         private ITestMethod testMethod;
 
-        private StringWriter stringWriter;
+        private ThreadSafeStringWriter threadSafeStringWriter;
         private bool stringWriterDisposed;
 
         /// <summary>
@@ -67,7 +68,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             this.testMethod = testMethod;
             this.properties = new Dictionary<string, object>(properties);
-            this.stringWriter = writer;
+
+            // Cannot get this type in constructor directly, because all sigantures for all platforms need to be the same.
+            this.threadSafeStringWriter = (ThreadSafeStringWriter)writer;
             this.InitializeProperties();
             this.testResultFiles = new List<string>();
             this.CancellationTokenSource = new CancellationTokenSource();
@@ -306,7 +309,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             try
             {
                 var msg = message?.Replace("\0", "\\0");
-                this.stringWriter.Write(msg);
+                this.threadSafeStringWriter.Write(msg);
             }
             catch (ObjectDisposedException)
             {
@@ -330,7 +333,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             try
             {
                 string message = string.Format(CultureInfo.CurrentCulture, format?.Replace("\0", "\\0"), args);
-                this.stringWriter.Write(message);
+                this.threadSafeStringWriter.Write(message);
             }
             catch (ObjectDisposedException)
             {
@@ -353,7 +356,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             try
             {
                 var msg = message?.Replace("\0", "\\0");
-                this.stringWriter.WriteLine(msg);
+                this.threadSafeStringWriter.WriteLine(msg);
             }
             catch (ObjectDisposedException)
             {
@@ -377,7 +380,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             try
             {
                 string message = string.Format(CultureInfo.CurrentCulture, format?.Replace("\0", "\\0"), args);
-                this.stringWriter.WriteLine(message);
+                this.threadSafeStringWriter.WriteLine(message);
             }
             catch (ObjectDisposedException)
             {
@@ -391,7 +394,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>The test context messages added so far.</returns>
         public string GetDiagnosticMessages()
         {
-            return this.stringWriter.ToString();
+            return this.threadSafeStringWriter.ToString();
         }
 
         /// <summary>
@@ -399,8 +402,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         public void ClearDiagnosticMessages()
         {
-            var sb = this.stringWriter.GetStringBuilder();
-            sb?.Remove(0, sb.Length);
+           this.threadSafeStringWriter.ToStringAndClear();
         }
 
         public void SetDataRow(object dataRow)

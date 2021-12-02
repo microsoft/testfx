@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System;
     using System.Globalization;
     using System.IO;
+    using System.Threading;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
@@ -16,21 +17,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     /// </summary>
     public class LogMessageListener : IDisposable
     {
-        private static LogMessageListener activeRedirector;
-        private readonly LogMessageListener previousRedirector;
-        private readonly ThreadSafeStringWriter redirectLoggerOut;
-        private readonly ThreadSafeStringWriter redirectStdErr;
-        private readonly bool captureDebugTraces;
+        private static object traceLock = new object();
+        private static int listenerCount;
+        private static ThreadSafeStringWriter redirectedDebugTrace;
 
         /// <summary>
         /// Trace listener to capture Trace.WriteLines in the test cases
         /// </summary>
-        private ITraceListener traceListener;
+        private static ITraceListener traceListener;
+        private readonly ThreadSafeStringWriter redirectedStandardOutput;
+        private readonly ThreadSafeStringWriter redirectedStandardError;
+        private readonly bool captureDebugTraces;
 
         /// <summary>
         /// Trace listener Manager to perform operation on tracelistener objects.
         /// </summary>
         private ITraceListenerManager traceListenerManager;
+        private bool isDisposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LogMessageListener"/> class.
@@ -41,30 +44,43 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.captureDebugTraces = captureDebugTraces;
 
             // Cache the original output/error streams and replace it with the own stream.
-            this.redirectLoggerOut = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out");
-            this.redirectStdErr = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "err");
+            this.redirectedStandardOutput = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out");
+            this.redirectedStandardError = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "err");
 
-            Logger.OnLogMessage += this.redirectLoggerOut.WriteLine;
-
-            // Cache the previous redirector if any and replace the trace listener.
-            this.previousRedirector = activeRedirector;
+            Logger.OnLogMessage += this.redirectedStandardOutput.WriteLine;
 
             if (this.captureDebugTraces)
             {
-                this.traceListener = PlatformServiceProvider.Instance.GetTraceListener(new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "trace"));
-                this.traceListenerManager = PlatformServiceProvider.Instance.GetTraceListenerManager(this.redirectLoggerOut, this.redirectStdErr);
+                // This is awkward, it has a side-effect of setting up Console output redirection, but the naming is suggesting that we are
+                // just getting TraceListener manager.
+                this.traceListenerManager = PlatformServiceProvider.Instance.GetTraceListenerManager(this.redirectedStandardOutput, this.redirectedStandardError);
 
-                // If there was a previous LogMessageListener active, remove its
-                // TraceListener (it will be restored when this one is disposed).
-                if (this.previousRedirector != null && this.previousRedirector.traceListener != null)
+                // The Debug listener uses Debug.WriteLine and Debug.Write to write the messages, which end up written into Trace.Listeners.
+                // These listeners are static and hence shared across the whole process. We need to capture Debug output only for the current
+                // test, which was historically done by registering a listener in constructor of this class, and by removing the listener on Dispose.
+                // The newly created listener replaced previously registered listener, which was remembered, and put back on dispose.
+                //
+                // This works well as long as there are no tests running in parallel. But as soon as there are tests running in parallel. Then all the
+                // debug output of all tests will be output into the test that was most recently created (because it registered the listener most recently).
+                //
+                // To prevent mixing of outputs, the ThreadSafeStringWriter was re-implemented for net46 and newer to leverage AsyncLocal, which allows the writer to
+                // write only to the output of the current test. This leaves the LogMessageListener with only one task. Make sure that a trace listener is registered
+                // as long as there is any active test. This is still done by constructor and Dispose, but instead of replacing the listener every time, we use listenerCount
+                // to only add the listerner when there is none, and remove it when we are the last one to dispose.
+                //
+                // This would break the behavior for net451, but that functionality was moved further into ThreadSafeStringWriter.
+                lock (traceLock)
                 {
-                    this.traceListenerManager.Remove(this.previousRedirector.traceListener);
+                    if (listenerCount == 0)
+                    {
+                        redirectedDebugTrace = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "trace");
+                        traceListener = PlatformServiceProvider.Instance.GetTraceListener(redirectedDebugTrace);
+                        this.traceListenerManager.Add(traceListener);
+                    }
+
+                    listenerCount++;
                 }
-
-                this.traceListenerManager.Add(this.traceListener);
             }
-
-            activeRedirector = this;
         }
 
         ~LogMessageListener()
@@ -75,12 +91,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Gets logger output
         /// </summary>
-        public string StandardOutput => this.redirectLoggerOut.ToString();
+        public string StandardOutput => this.redirectedStandardOutput.ToString();
 
         /// <summary>
         /// Gets 'Error' Output from the redirected stream
         /// </summary>
-        public string StandardError => this.redirectStdErr.ToString();
+        public string StandardError => this.redirectedStandardError.ToString();
 
         /// <summary>
         /// Gets 'Trace' Output from the redirected stream
@@ -89,43 +105,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             get
             {
-                return (this.traceListener == null || this.traceListener.GetWriter() == null) ?
-                    string.Empty : this.traceListener.GetWriter().ToString();
+                return redirectedDebugTrace?.ToString();
             }
         }
 
         public string GetAndClearStandardOutput()
         {
-            var output = this.redirectLoggerOut.ToString();
-            this.redirectLoggerOut.Clear();
+            var output = this.redirectedStandardOutput.ToStringAndClear();
             return output;
         }
 
         public string GetAndClearStandardError()
         {
-            var output = this.redirectStdErr.ToString();
-            this.redirectStdErr.Clear();
+            var output = this.redirectedStandardError.ToStringAndClear();
             return output;
         }
 
         public string GetAndClearDebugTrace()
         {
-            var writer = this.traceListener?.GetWriter();
-            if (writer == null)
+            if (redirectedDebugTrace == null)
             {
                 return null;
             }
 
-            if (writer is StringWriter sw)
-            {
-                var sb = sw.GetStringBuilder();
-                var output = sb?.ToString();
-                sb?.Clear();
-                return output;
-            }
-
-            // we cannot clear it because it is just a text writer
-            return writer.ToString();
+            var output = redirectedDebugTrace.ToStringAndClear();
+            return output;
         }
 
         public void Dispose()
@@ -136,47 +140,46 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         private void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && !this.isDisposed)
             {
-                Logger.OnLogMessage -= this.redirectLoggerOut.WriteLine;
-                Logger.OnLogMessage -= this.redirectStdErr.WriteLine;
+                this.isDisposed = true;
+                Logger.OnLogMessage -= this.redirectedStandardOutput.WriteLine;
+                Logger.OnLogMessage -= this.redirectedStandardError.WriteLine;
 
-                this.redirectLoggerOut.Dispose();
-                this.redirectStdErr.Dispose();
+                this.redirectedStandardOutput.Dispose();
+                this.redirectedStandardError.Dispose();
 
                 if (this.captureDebugTraces)
                 {
-                    try
+                    lock (traceLock)
                     {
-                        if (this.traceListener != null)
+                        if (listenerCount == 1)
                         {
-                            this.traceListenerManager.Remove(this.traceListener);
+                            try
+                            {
+                                if (traceListener != null)
+                                {
+                                    this.traceListenerManager.Remove(traceListener);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                // Catch all exceptions since Dispose should not throw.
+                                PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("ConsoleOutputRedirector.Dispose threw exception: {0}", e);
+                            }
+
+                            if (traceListener != null)
+                            {
+                                // Dispose trace manager and listeners
+                                this.traceListenerManager.Dispose(traceListener);
+                                this.traceListenerManager = null;
+                                traceListener = null;
+                            }
                         }
 
-                        // Restore the previous LogMessageListener's TraceListener (if there was one)
-                        if (this.previousRedirector != null && this.previousRedirector.traceListener != null)
-                        {
-                            this.traceListenerManager.Add(this.previousRedirector.traceListener);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        // Catch all exceptions since Dispose should not throw.
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
-                            "ConsoleOutputRedirector.Dispose threw exception: {0}",
-                            e);
-                    }
-
-                    if (this.traceListener != null)
-                    {
-                        // Dispose trace manager and listeners
-                        this.traceListenerManager.Dispose(this.traceListener);
-                        this.traceListenerManager = null;
-                        this.traceListener = null;
+                        listenerCount--;
                     }
                 }
-
-                activeRedirector = this.previousRedirector;
             }
         }
     }
