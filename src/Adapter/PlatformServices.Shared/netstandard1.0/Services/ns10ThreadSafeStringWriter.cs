@@ -43,11 +43,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
         }
 
-        public void Clear()
+        public string ToStringAndClear()
         {
             lock (this.lockObject)
             {
-                InvokeBaseClass(() => this.GetStringBuilder().Clear());
+                try
+                {
+                    var sb = this.GetStringBuilder();
+                    var output = sb.ToString();
+                    sb.Clear();
+                    return output;
+                }
+                catch (ObjectDisposedException)
+                {
+                    return default(string);
+                }
             }
         }
 
