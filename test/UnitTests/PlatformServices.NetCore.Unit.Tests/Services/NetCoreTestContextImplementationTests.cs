@@ -47,7 +47,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void TestContextConstructorShouldInitializeProperties()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             Assert.IsNotNull(this.testContextImplementation.Properties);
         }
@@ -58,7 +58,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             this.testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
             this.testMethod.Setup(tm => tm.Name).Returns("M");
 
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             Assert.IsNotNull(this.testContextImplementation.Properties);
 
@@ -73,7 +73,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void CurrentTestOutcomeShouldReturnDefaultOutcome()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             Assert.AreEqual(UnitTestOutcome.Failed, this.testContextImplementation.CurrentTestOutcome);
         }
@@ -81,7 +81,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void CurrentTestOutcomeShouldReturnOutcomeSet()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             this.testContextImplementation.SetOutcome(UnitTestOutcome.InProgress);
 
@@ -93,7 +93,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         {
             this.testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
 
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             Assert.AreEqual("A.C.M", this.testContextImplementation.FullyQualifiedTestClassName);
         }
@@ -103,7 +103,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         {
             this.testMethod.Setup(tm => tm.Name).Returns("M");
 
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             Assert.AreEqual("M", this.testContextImplementation.TestName);
         }
@@ -117,7 +117,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             this.properties.Add(property1);
             this.properties.Add(property2);
 
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             CollectionAssert.Contains(this.testContextImplementation.Properties, property1);
             CollectionAssert.Contains(this.testContextImplementation.Properties, property2);
@@ -128,7 +128,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         {
             this.testMethod.Setup(tm => tm.Name).Returns("M");
 
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             Assert.IsNotNull(this.testContextImplementation.Context);
             Assert.AreEqual("M", this.testContextImplementation.Context.TestName);
@@ -139,7 +139,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         {
             this.testMethod.Setup(tm => tm.Name).Returns("M");
 
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
             Assert.IsTrue(this.testContextImplementation.TryGetPropertyValue("TestName", out object propValue));
             Assert.AreEqual("M", propValue);
         }
@@ -147,7 +147,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void TryGetPropertyValueShouldReturnFalseIfPropertyIsNotPresent()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
             Assert.IsFalse(this.testContextImplementation.TryGetPropertyValue("Random", out object propValue));
             Assert.IsNull(propValue);
         }
@@ -155,7 +155,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void AddPropertyShouldAddPropertiesToThePropertyBag()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             this.testContextImplementation.AddProperty("SomeNewProperty", "SomeValue");
 
@@ -167,7 +167,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteShouldWriteToStringWriter()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
             this.testContextImplementation.Write("{0} Testing write", 1);
             StringAssert.Contains(stringWriter.ToString(), "1 Testing write");
@@ -176,7 +176,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteShouldWriteToStringWriterForNullCharacters()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
             this.testContextImplementation.Write("{0} Testing \0 write \0", 1);
             StringAssert.Contains(stringWriter.ToString(), "1 Testing \\0 write \\0");
@@ -185,7 +185,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteShouldNotThrowIfStringWriterIsDisposed()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
             stringWriter.Dispose();
             this.testContextImplementation.Write("{0} Testing write", 1);
@@ -197,7 +197,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteWithMessageShouldWriteToStringWriter()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
             this.testContextImplementation.Write("1 Testing write");
             StringAssert.Contains(stringWriter.ToString(), "1 Testing write");
@@ -206,7 +206,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteWithMessageShouldWriteToStringWriterForNullCharacters()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
             this.testContextImplementation.Write("1 Testing \0 write \0");
             StringAssert.Contains(stringWriter.ToString(), "1 Testing \\0 write \\0");
@@ -215,7 +215,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteWithMessageShouldNotThrowIfStringWriterIsDisposed()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
             stringWriter.Dispose();
             this.testContextImplementation.Write("1 Testing write");
@@ -227,7 +227,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteWithMessageShouldWriteToStringWriterForReturnCharacters()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
             this.testContextImplementation.Write("2 Testing write \n\r");
             this.testContextImplementation.Write("3 Testing write\n\r");
@@ -237,7 +237,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteLineShouldWriteToStringWriter()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
 
             this.testContextImplementation.WriteLine("{0} Testing write", 1);
@@ -248,7 +248,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteLineShouldWriteToStringWriterForNullCharacters()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
 
             this.testContextImplementation.WriteLine("{0} Testing \0 write \0", 1);
@@ -259,7 +259,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteLineShouldNotThrowIfStringWriterIsDisposed()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
 
             stringWriter.Dispose();
@@ -273,7 +273,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteLineWithMessageShouldWriteToStringWriter()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
 
             this.testContextImplementation.WriteLine("1 Testing write");
@@ -284,7 +284,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteLineWithMessageShouldWriteToStringWriterForNullCharacters()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
 
             this.testContextImplementation.WriteLine("1 Testing \0 write \0");
@@ -295,7 +295,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void WriteLineWithMessageShouldNotThrowIfStringWriterIsDisposed()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
 
             stringWriter.Dispose();
@@ -309,7 +309,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void GetDiagnosticMessagesShouldReturnMessagesFromWriteLine()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             this.testContextImplementation.WriteLine("1 Testing write");
             this.testContextImplementation.WriteLine("2 Its a happy day");
@@ -321,7 +321,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void ClearDiagnosticMessagesShouldClearMessagesFromWriteLine()
         {
-            var stringWriter = new StringWriter();
+            var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
 
             this.testContextImplementation.WriteLine("1 Testing write");
@@ -335,7 +335,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void AddResultFileShouldAddFiletoResultsFiles()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             this.testContextImplementation.AddResultFile("C:\\files\\myfile.txt");
             var resultFile = this.testContextImplementation.GetResultFiles();
@@ -346,7 +346,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void AddResultFileShouldThrowIfFileNameIsNull()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             var exception = ActionUtility.PerformActionAndReturnException(() => this.testContextImplementation.AddResultFile(null));
 
@@ -357,7 +357,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void AddResultFileShouldThrowIfFileNameIsEmpty()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             var exception = ActionUtility.PerformActionAndReturnException(() => this.testContextImplementation.AddResultFile(string.Empty));
 
@@ -368,7 +368,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void AddResultFileShouldAddMultipleFilestoResultsFiles()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             this.testContextImplementation.AddResultFile("C:\\files\\file1.txt");
             this.testContextImplementation.AddResultFile("C:\\files\\files2.html");
@@ -382,7 +382,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void GetResultFilesShouldReturnNullIfNoAddedResultFiles()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             var resultFile = this.testContextImplementation.GetResultFiles();
 
@@ -392,7 +392,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void GetResultFilesShouldReturnListOfAddedResultFiles()
         {
-            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new StringWriter(), this.properties);
+            this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, new ThreadSafeStringWriter(null, "test"), this.properties);
 
             this.testContextImplementation.AddResultFile("C:\\files\\myfile.txt");
             this.testContextImplementation.AddResultFile("C:\\files\\myfile2.txt");

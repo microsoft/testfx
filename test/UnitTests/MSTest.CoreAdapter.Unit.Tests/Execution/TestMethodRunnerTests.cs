@@ -211,42 +211,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         }
 
         [TestMethodV1]
-        public void ExecuteShouldFillInDebugAndTraceLogsFromClassInitialize()
-        {
-            StringWriter writer = new StringWriter(new StringBuilder());
-            DummyTestClass.ClassInitializeMethodBody = (UTFExtension.TestContext tc) =>
-                                                            {
-                                                                writer.Write("ClassInit trace");
-                                                            };
-            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("DummyClassInit");
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
-            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, true);
-
-            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-
-            var results = testMethodRunner.Execute();
-            Assert.AreEqual("ClassInit trace", results[0].DebugTrace);
-        }
-
-        [TestMethodV1]
-        public void ExecuteShouldFillInDebugAndTraceLogsFromAssemblyInitialize()
-        {
-            StringWriter writer = new StringWriter(new StringBuilder());
-            DummyTestClass.AssemblyInitializeMethodBody = (UTFExtension.TestContext tc) =>
-            {
-                writer.Write("AssemblyInit trace");
-            };
-            this.testClassInfo.Parent.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("DummyAssemblyInit");
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
-            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, true);
-
-            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-
-            var results = testMethodRunner.Execute();
-            Assert.AreEqual("AssemblyInit trace", results[0].DebugTrace);
-        }
-
-        [TestMethodV1]
         public void ExecuteShouldNotFillInDebugAndTraceLogsIfDebugTraceDisabled()
         {
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
@@ -281,28 +245,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var results = testMethodRunner.Execute();
 
             Assert.AreEqual(string.Empty, results[0].DebugTrace);
-        }
-
-        [TestMethodV1]
-        public void ExecuteShouldFillInLogsIfAssemblyInitializeThrows()
-        {
-            StringWriter writer = new StringWriter(new StringBuilder());
-            DummyTestClass.AssemblyInitializeMethodBody = (UTFExtension.TestContext tc) =>
-            {
-                writer.Write("Hills");
-                tc.WriteLine("Valleys");
-                throw new ArgumentException();
-            };
-            this.testClassInfo.Parent.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("DummyAssemblyInit");
-            var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
-            var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, true);
-
-            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-
-            var results = testMethodRunner.Execute();
-
-            Assert.AreEqual("Hills", results[0].DebugTrace);
-            StringAssert.Contains(results[0].TestContextMessages, "Valleys");
         }
 
         [TestMethodV1]

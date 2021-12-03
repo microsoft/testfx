@@ -386,59 +386,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsTrue(cleanupresult.Warnings.All(w => w.Contains("NotImplemented")));
         }
 
-        [TestMethodV1]
-        public void RunCleanupShouldReturnCleanupResultsWithDebugTraceLogsSetIfDebugTraceEnabled()
-        {
-            this.unitTestRunner = new UnitTestRunner(this.GetSettingsWithDebugTrace(true));
-            try
-            {
-                var type = typeof(DummyTestClassWithCleanupMethods);
-                var testMethod = new TestMethod(nameof(DummyTestClassWithCleanupMethods.TestMethod), type.FullName, "A", isAsync: false);
-
-                this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
-                    .Returns(Assembly.GetExecutingAssembly());
-
-                StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
-
-                DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = () =>
-                {
-                    writer.Write("ClassCleanup");
-                };
-
-                this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-
-                var testResult = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters).FirstOrDefault();
-                Assert.IsNotNull(testResult);
-                Assert.AreEqual("DummyTrace", testResult.DebugTrace);
-
-                var cleanupresult = this.unitTestRunner.RunCleanup();
-                Assert.AreEqual("ClassCleanup", cleanupresult.DebugTrace);
-            }
-            finally
-            {
-                DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = null;
-            }
-        }
-
-        [TestMethodV1]
-        public void RunCleanupShouldReturnCleanupResultsWithNoDebugAndTraceLogsSetIfDebugTraceDisabled()
-        {
-            var type = typeof(DummyTestClassWithCleanupMethods);
-            var methodInfo = type.GetMethod("TestMethod");
-            var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
-
-            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
-                .Returns(Assembly.GetExecutingAssembly());
-
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
-            this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
-
-            this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
-
-            var cleanupresult = this.unitTestRunner.RunCleanup();
-            Assert.AreEqual(null, cleanupresult.DebugTrace);
-        }
-
         #endregion
 
         #region private helpers
@@ -510,28 +457,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [DummyTestClass]
         private class DummyTestClassWithCleanupMethods
         {
+            public DummyTestClassWithCleanupMethods()
+            {
+            }
+
             public static Action AssemblyCleanupMethodBody { get; set; }
 
             public static Action ClassCleanupMethodBody { get; set; }
 
+            public static Action<UTFExtension.TestContext> TestMethodBody { get; set; }
+
+            public UTFExtension.TestContext TestContext { get; set; }
+
             [UTF.AssemblyCleanup]
             public static void AssemblyCleanup()
             {
-                if (AssemblyCleanupMethodBody != null)
-                {
-                    AssemblyCleanupMethodBody.Invoke();
-                }
+                AssemblyCleanupMethodBody?.Invoke();
             }
 
             [UTF.ClassCleanup]
             public static void ClassCleanup()
             {
-                ClassCleanupMethodBody.Invoke();
+                ClassCleanupMethodBody?.Invoke();
             }
 
             [UTF.TestMethod]
             public void TestMethod()
             {
+                TestMethodBody?.Invoke(this.TestContext);
             }
         }
 
