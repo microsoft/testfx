@@ -350,7 +350,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 this.remainingTestsByClass = testsToRun.GroupBy(t => t.TestMethod.FullClassName)
                     .ToDictionary(
                         g => g.Key,
-                        g => new HashSet<string>(g.Select(t => t.DisplayName)));
+                        g => new HashSet<string>(g.Select(t => t.TestMethod.Name)));
                 this.lifecycleFromMsTest = lifecycleFromMsTest;
                 this.lifecycleFromAssembly = lifecycleFromAssembly;
                 this.reflectHelper = reflectHelper ?? new ReflectHelper();
