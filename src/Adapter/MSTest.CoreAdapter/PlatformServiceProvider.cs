@@ -146,7 +146,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// The run Settings for the session.
         /// </param>
         /// <param name="frameworkHandle">
-        /// The handle to the the test platform.
+        /// The handle to the test platform.
         /// </param>
         /// <returns>
         /// Returns the host for the source provided.

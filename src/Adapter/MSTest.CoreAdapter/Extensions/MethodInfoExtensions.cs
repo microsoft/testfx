@@ -50,7 +50,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         }
 
         /// <summary>
-        /// Verifies that the test Initiailize/cleanup has the correct signature
+        /// Verifies that the test Initialize/cleanup has the correct signature
         /// </summary>
         /// <param name="method">The method to verify.</param>
         /// <returns>True if the method has the right test init/cleanup signature.</returns>

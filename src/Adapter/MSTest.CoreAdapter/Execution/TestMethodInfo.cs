@@ -187,7 +187,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             // If all the parameters are required, we have fewer arguments
             // supplied than required, or more arguments than the method takes
-            // and it doesn't have a params paramenter don't try and resolve anything
+            // and it doesn't have a params parameter don't try and resolve anything
             if (requiredParameterCount == parameterInfos.Length ||
                 arguments.Length < requiredParameterCount ||
                 (!hasParamsValue && arguments.Length > parameterInfos.Length))

@@ -176,7 +176,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>The expanded path.</returns>
         internal string ResolveEnvironmentVariableAndReturnFullPathIfExist(string path, string baseDirectory)
         {
-            // Trim begining and trailing white space from the path.
+            // Trim beginning and trailing white space from the path.
             path = path.Trim(' ', '\t');
 
             if (!string.IsNullOrEmpty(path))

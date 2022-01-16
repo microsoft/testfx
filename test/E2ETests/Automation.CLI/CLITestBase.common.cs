@@ -65,7 +65,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         }
 
         /// <summary>
-        /// Gets the RunSettingXml having testadapterpath filled in specified by arguement.
+        /// Gets the RunSettingXml having testadapterpath filled in specified by argument.
         /// Inserts testAdapterPath in existing runSetting if not present already,
         /// or generates new runSettings with testAdapterPath if runSettings is Empty.
         /// </summary>

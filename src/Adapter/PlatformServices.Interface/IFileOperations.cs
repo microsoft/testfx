@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         object CreateNavigationSession(string source);
 
         /// <summary>
-        /// Get's the navigation data for a navigation session.
+        /// Gets the navigation data for a navigation session.
         /// </summary>
         /// <param name="navigationSession"> The navigation session. </param>
         /// <param name="className"> The class name. </param>
@@ -68,7 +68,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
         void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string fileName);
 
         /// <summary>
-        /// Dispose's the navigation session instance.
+        /// Disposes the navigation session instance.
         /// </summary>
         /// <param name="navigationSession"> The navigation session. </param>
         /// <remarks>

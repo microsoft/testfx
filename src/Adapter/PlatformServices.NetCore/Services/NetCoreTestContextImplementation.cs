@@ -69,7 +69,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.testMethod = testMethod;
             this.properties = new Dictionary<string, object>(properties);
 
-            // Cannot get this type in constructor directly, because all sigantures for all platforms need to be the same.
+            // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
             this.threadSafeStringWriter = (ThreadSafeStringWriter)writer;
             this.InitializeProperties();
             this.testResultFiles = new List<string>();

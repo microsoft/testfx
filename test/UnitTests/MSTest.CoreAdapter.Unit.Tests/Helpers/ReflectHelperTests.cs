@@ -315,7 +315,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         }
     }
 
-    #region Dummy Implmentations
+    #region Dummy Implementations
 
     public class TestableExtendedTestMethod : UTF.TestMethodAttribute
     {
