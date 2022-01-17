@@ -31,7 +31,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="$(SystemDiagnosticsTextWriterTraceListenerVersion)" />
-    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <!-- CVE-2019-0820 -->
+    <PackageReference Include="System.Text.RegularExpressions" Version="$(SystemTextRegularExpressionsVersion)" />
   </ItemGroup>
 
   <ItemGroup>

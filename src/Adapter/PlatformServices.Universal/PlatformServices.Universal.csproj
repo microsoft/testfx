@@ -68,8 +68,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="$(MicrosoftNETCoreUniversalWindowsPlatformVersion)" targetFramework="net452" />
-    <PackageReference Include="System.Net.WebSockets.Client" Version="4.3.1" />
-    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <!-- CVE-2017-0247 -->
+    <PackageReference Include="System.Net.WebSockets.Client" Version="$(SystemNetWebSocketsClientVersion)" />
+    <!-- CVE-2019-0820 -->
+    <PackageReference Include="System.Text.RegularExpressions" Version="$(SystemTextRegularExpressionsVersion)" />
     
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

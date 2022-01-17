@@ -26,7 +26,12 @@
     <SystemComponentModelTypeConverterVersion>4.3.0</SystemComponentModelTypeConverterVersion>
     <SystemDiagnosticsTextWriterTraceListenerVersion>4.3.0</SystemDiagnosticsTextWriterTraceListenerVersion>
     <SystemRuntimeInteropServicesRuntimeInformationVersion>4.3.0</SystemRuntimeInteropServicesRuntimeInformationVersion>
+    <SystemNetNameResolutionVersion>4.3.0</SystemNetNameResolutionVersion>
     <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>
+    <!-- CVE-2019-0820 -->
+    <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
+    <!-- CVE-2017-0247 -->
+    <SystemNetWebSocketsClientVersion>4.3.1</SystemNetWebSocketsClientVersion>
     <!-- / Try to keep all these in sync -->
     <SystemCollectionsImmutableVersion>1.6.0</SystemCollectionsImmutableVersion>
     <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
