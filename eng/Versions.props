@@ -32,6 +32,8 @@
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
     <!-- CVE-2017-0247 -->
     <SystemNetWebSocketsClientVersion>4.3.1</SystemNetWebSocketsClientVersion>
+    <!-- CVE-2019-0981, CVE-2019-0980, CVE-2019-0657 -->
+    <SystemPrivateUriVersion>4.3.2</SystemPrivateUriVersion>
     <!-- / Try to keep all these in sync -->
     <SystemCollectionsImmutableVersion>1.6.0</SystemCollectionsImmutableVersion>
     <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
