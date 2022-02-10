@@ -54,7 +54,23 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// To capture output of class clean-up method in logs
         /// <paramref name="cleanupBehavior"/> must be set to <see cref="ClassCleanupBehavior.EndOfClass"/>.
         /// </param>
-        public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior, ClassCleanupBehavior? cleanupBehavior)
+        public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior, ClassCleanupBehavior cleanupBehavior)
+            : this(inheritanceBehavior, new ClassCleanupBehavior?(cleanupBehavior))
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
+        /// </summary>
+        /// <param name="inheritanceBehavior">
+        /// Specifies the ClassCleanup Inheritance Behavior
+        /// </param>
+        /// <param name="cleanupBehavior">
+        /// Specifies the class clean-up behavior.
+        /// To capture output of class clean-up method in logs
+        /// <paramref name="cleanupBehavior"/> must be set to <see cref="ClassCleanupBehavior.EndOfClass"/>.
+        /// </param>
+        private ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior, ClassCleanupBehavior? cleanupBehavior)
         {
             this.InheritanceBehavior = inheritanceBehavior;
             this.CleanupBehavior = cleanupBehavior;
