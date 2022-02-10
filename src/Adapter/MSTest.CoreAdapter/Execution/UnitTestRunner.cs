@@ -133,7 +133,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     if (!this.IsTestMethodRunnable(testMethod, testMethodInfo, out var notRunnableResult))
                     {
                         bool shouldRunClassCleanup = false;
-                        this.classCleanupManager?.MarkTestComplete(testMethodInfo, out shouldRunClassCleanup);
+                        this.classCleanupManager?.MarkTestComplete(testMethodInfo, testMethod, out shouldRunClassCleanup);
                         if (shouldRunClassCleanup)
                         {
                             testMethodInfo.Parent.RunClassCleanup(ClassCleanupBehavior.EndOfClass);
@@ -143,7 +143,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     }
 
                     var result = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces, this.reflectHelper).Execute();
-                    this.RunClassCleanupIfEndOfClass(testMethodInfo, result);
+                    this.RunClassCleanupIfEndOfClass(testMethodInfo, testMethod, result);
                     return result;
                 }
             }
@@ -191,10 +191,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             return result;
         }
 
-        private void RunClassCleanupIfEndOfClass(TestMethodInfo testMethodInfo, UnitTestResult[] results)
+        private void RunClassCleanupIfEndOfClass(TestMethodInfo testMethodInfo, TestMethod testMethod, UnitTestResult[] results)
         {
             bool shouldRunClassCleanup = false;
-            this.classCleanupManager?.MarkTestComplete(testMethodInfo, out shouldRunClassCleanup);
+            this.classCleanupManager?.MarkTestComplete(testMethodInfo, testMethod, out shouldRunClassCleanup);
             if (shouldRunClassCleanup)
             {
                 string cleanupLogs = string.Empty;
@@ -356,16 +356,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 this.reflectHelper = reflectHelper ?? new ReflectHelper();
             }
 
-            public void MarkTestComplete(TestMethodInfo testMethod, out bool shouldCleanup)
+            public void MarkTestComplete(TestMethodInfo testMethodInfo, TestMethod testMethod, out bool shouldCleanup)
             {
                 shouldCleanup = false;
-                var testsByClass = this.remainingTestsByClass[testMethod.TestClassName];
+                var testsByClass = this.remainingTestsByClass[testMethodInfo.TestClassName];
                 lock (testsByClass)
                 {
-                    testsByClass.Remove(testMethod.TestMethodName);
-                    if (testsByClass.Count == 0 && testMethod.Parent.HasExecutableCleanupMethod)
+                    testsByClass.Remove(testMethod.DisplayName);
+                    if (testsByClass.Count == 0 && testMethodInfo.Parent.HasExecutableCleanupMethod)
                     {
-                        var cleanupLifecycle = this.reflectHelper.GetClassCleanupBehavior(testMethod.Parent)
+                        var cleanupLifecycle = this.reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)
                             ?? this.lifecycleFromMsTest
                             ?? this.lifecycleFromAssembly;
 
