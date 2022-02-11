@@ -400,6 +400,28 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         }
 
         [TestMethod]
+        public void AreNotEqualShouldFailWhenNotEqualDecimal()
+        {
+            Action action = () => TestFrameworkV2.Assert.AreNotEqual(0.1M, 0.1M);
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        }
+
+        [TestMethod]
+        public void AreNotEqualShouldFailWhenNotEqualDecimalWithMessage()
+        {
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreNotEqual(0.1M, 0.1M, "A Message"));
+            Assert.IsNotNull(ex);
+            StringAssert.Contains(ex.Message, "A Message");
+        }
+
+        [TestMethod]
+        public void AreNotEqualShouldFailWhenNotEqualDecimalWithDelta()
+        {
+            Action action = () => TestFrameworkV2.Assert.AreNotEqual(0.1M, 0.2M, 0.1M);
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        }
+
+        [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualDouble()
         {
             Action action = () => TestFrameworkV2.Assert.AreNotEqual(0.1, 0.1);
@@ -538,6 +560,28 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         public void AreEqualShouldFailWhenNotEqualDoubleWithDelta()
         {
             Action action = () => TestFrameworkV2.Assert.AreEqual(0.1, 0.2, 0.05);
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        }
+
+        [TestMethod]
+        public void AreEqualShouldFailWhenNotEqualDecimal()
+        {
+            Action action = () => TestFrameworkV2.Assert.AreEqual(0.1M, 0.2M);
+            ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        }
+
+        [TestMethod]
+        public void AreEqualShouldFailWhenNotEqualDecimalWithMessage()
+        {
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(0.1M, 0.2M, "A Message"));
+            Assert.IsNotNull(ex);
+            StringAssert.Contains(ex.Message, "A Message");
+        }
+
+        [TestMethod]
+        public void AreEqualShouldFailWhenNotEqualDecimalWithDelta()
+        {
+            Action action = () => TestFrameworkV2.Assert.AreEqual(0.1M, 0.2M, 0.05M);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 

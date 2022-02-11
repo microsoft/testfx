@@ -1125,6 +1125,386 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
+        /// Tests whether the specified decimals are equal and throws an exception
+        /// if they are not equal.
+        /// </summary>
+        /// <param name="expected">
+        /// The first decimal to compare. This is the decimal the tests expects.
+        /// </param>
+        /// <param name="actual">
+        /// The second decimal to compare. This is the decimal produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="expected"/>
+        /// by more than <paramref name="delta"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="expected"/> is not equal to
+        /// <paramref name="actual"/>.
+        /// </exception>
+        public static void AreEqual(decimal expected, decimal actual, decimal delta)
+        {
+            AreEqual(expected, actual, delta, string.Empty, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified decimals are equal and throws an exception
+        /// if they are not equal.
+        /// </summary>
+        /// <param name="expected">
+        /// The first decimal to compare. This is the decimal the tests expects.
+        /// </param>
+        /// <param name="actual">
+        /// The second decimal to compare. This is the decimal produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="expected"/>
+        /// by more than <paramref name="delta"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is different than <paramref name="expected"/> by more than
+        /// <paramref name="delta"/>. The message is shown in test results.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="expected"/> is not equal to
+        /// <paramref name="actual"/>.
+        /// </exception>
+        public static void AreEqual(decimal expected, decimal actual, decimal delta, string message)
+        {
+            AreEqual(expected, actual, delta, message, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified decimals are equal and throws an exception
+        /// if they are not equal.
+        /// </summary>
+        /// <param name="expected">
+        /// The first decimal to compare. This is the decimal the tests expects.
+        /// </param>
+        /// <param name="actual">
+        /// The second decimal to compare. This is the decimal produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="expected"/>
+        /// by more than <paramref name="delta"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is different than <paramref name="expected"/> by more than
+        /// <paramref name="delta"/>. The message is shown in test results.
+        /// </param>
+        /// <param name="parameters">
+        /// An array of parameters to use when formatting <paramref name="message"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="expected"/> is not equal to
+        /// <paramref name="actual"/>.
+        /// </exception>
+        public static void AreEqual(decimal expected, decimal actual, decimal delta, string message, params object[] parameters)
+        {
+            if (Math.Abs(expected - actual) > delta)
+            {
+                string finalMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreEqualDeltaFailMsg,
+                    message == null ? string.Empty : ReplaceNulls(message),
+                    expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
+                    actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
+                    delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
+                HandleFail("Assert.AreEqual", finalMessage, parameters);
+            }
+        }
+
+        /// <summary>
+        /// Tests whether the specified decimals are unequal and throws an exception
+        /// if they are equal.
+        /// </summary>
+        /// <param name="notExpected">
+        /// The first decimal to compare. This is the decimal the test expects not to
+        /// match <paramref name="actual"/>.
+        /// </param>
+        /// <param name="actual">
+        /// The second decimal to compare. This is the decimal produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="notExpected"/>
+        /// by at most <paramref name="delta"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+        /// </exception>
+        public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta)
+        {
+            AreNotEqual(notExpected, actual, delta, string.Empty, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified decimals are unequal and throws an exception
+        /// if they are equal.
+        /// </summary>
+        /// <param name="notExpected">
+        /// The first decimal to compare. This is the decimal the test expects not to
+        /// match <paramref name="actual"/>.
+        /// </param>
+        /// <param name="actual">
+        /// The second decimal to compare. This is the decimal produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="notExpected"/>
+        /// by at most <paramref name="delta"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/> or different by less than
+        /// <paramref name="delta"/>. The message is shown in test results.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+        /// </exception>
+        public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string message)
+        {
+            AreNotEqual(notExpected, actual, delta, message, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified decimals are unequal and throws an exception
+        /// if they are equal.
+        /// </summary>
+        /// <param name="notExpected">
+        /// The first decimal to compare. This is the decimal the test expects not to
+        /// match <paramref name="actual"/>.
+        /// </param>
+        /// <param name="actual">
+        /// The second decimal to compare. This is the decimal produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="notExpected"/>
+        /// by at most <paramref name="delta"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/> or different by less than
+        /// <paramref name="delta"/>. The message is shown in test results.
+        /// </param>
+        /// <param name="parameters">
+        /// An array of parameters to use when formatting <paramref name="message"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+        /// </exception>
+        public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string message, params object[] parameters)
+        {
+            if (Math.Abs(notExpected - actual) <= delta)
+            {
+                var finalMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreNotEqualDeltaFailMsg,
+                    message == null ? string.Empty : ReplaceNulls(message),
+                    notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
+                    actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
+                    delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
+                HandleFail("Assert.AreNotEqual", finalMessage, parameters);
+            }
+        }
+
+        /// <summary>
+        /// Tests whether the specified longs are equal and throws an exception
+        /// if they are not equal.
+        /// </summary>
+        /// <param name="expected">
+        /// The first long to compare. This is the long the tests expects.
+        /// </param>
+        /// <param name="actual">
+        /// The second long to compare. This is the long produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="expected"/>
+        /// by more than <paramref name="delta"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="expected"/> is not equal to
+        /// <paramref name="actual"/>.
+        /// </exception>
+        public static void AreEqual(long expected, long actual, long delta)
+        {
+            AreEqual(expected, actual, delta, string.Empty, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified longs are equal and throws an exception
+        /// if they are not equal.
+        /// </summary>
+        /// <param name="expected">
+        /// The first long to compare. This is the long the tests expects.
+        /// </param>
+        /// <param name="actual">
+        /// The second long to compare. This is the long produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="expected"/>
+        /// by more than <paramref name="delta"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is different than <paramref name="expected"/> by more than
+        /// <paramref name="delta"/>. The message is shown in test results.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="expected"/> is not equal to
+        /// <paramref name="actual"/>.
+        /// </exception>
+        public static void AreEqual(long expected, long actual, long delta, string message)
+        {
+            AreEqual(expected, actual, delta, message, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified longs are equal and throws an exception
+        /// if they are not equal.
+        /// </summary>
+        /// <param name="expected">
+        /// The first long to compare. This is the long the tests expects.
+        /// </param>
+        /// <param name="actual">
+        /// The second long to compare. This is the long produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="expected"/>
+        /// by more than <paramref name="delta"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is different than <paramref name="expected"/> by more than
+        /// <paramref name="delta"/>. The message is shown in test results.
+        /// </param>
+        /// <param name="parameters">
+        /// An array of parameters to use when formatting <paramref name="message"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="expected"/> is not equal to
+        /// <paramref name="actual"/>.
+        /// </exception>
+        public static void AreEqual(long expected, long actual, long delta, string message, params object[] parameters)
+        {
+            if (Math.Abs(expected - actual) > delta)
+            {
+                string finalMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreEqualDeltaFailMsg,
+                    message == null ? string.Empty : ReplaceNulls(message),
+                    expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
+                    actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
+                    delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
+                HandleFail("Assert.AreEqual", finalMessage, parameters);
+            }
+        }
+
+        /// <summary>
+        /// Tests whether the specified longs are unequal and throws an exception
+        /// if they are equal.
+        /// </summary>
+        /// <param name="notExpected">
+        /// The first long to compare. This is the long the test expects not to
+        /// match <paramref name="actual"/>.
+        /// </param>
+        /// <param name="actual">
+        /// The second long to compare. This is the long produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="notExpected"/>
+        /// by at most <paramref name="delta"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+        /// </exception>
+        public static void AreNotEqual(long notExpected, long actual, long delta)
+        {
+            AreNotEqual(notExpected, actual, delta, string.Empty, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified longs are unequal and throws an exception
+        /// if they are equal.
+        /// </summary>
+        /// <param name="notExpected">
+        /// The first long to compare. This is the long the test expects not to
+        /// match <paramref name="actual"/>.
+        /// </param>
+        /// <param name="actual">
+        /// The second long to compare. This is the long produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="notExpected"/>
+        /// by at most <paramref name="delta"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/> or different by less than
+        /// <paramref name="delta"/>. The message is shown in test results.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+        /// </exception>
+        public static void AreNotEqual(long notExpected, long actual, long delta, string message)
+        {
+            AreNotEqual(notExpected, actual, delta, message, null);
+        }
+
+        /// <summary>
+        /// Tests whether the specified longs are unequal and throws an exception
+        /// if they are equal.
+        /// </summary>
+        /// <param name="notExpected">
+        /// The first long to compare. This is the long the test expects not to
+        /// match <paramref name="actual"/>.
+        /// </param>
+        /// <param name="actual">
+        /// The second long to compare. This is the long produced by the code under test.
+        /// </param>
+        /// <param name="delta">
+        /// The required accuracy. An exception will be thrown only if
+        /// <paramref name="actual"/> is different than <paramref name="notExpected"/>
+        /// by at most <paramref name="delta"/>.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/> or different by less than
+        /// <paramref name="delta"/>. The message is shown in test results.
+        /// </param>
+        /// <param name="parameters">
+        /// An array of parameters to use when formatting <paramref name="message"/>.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+        /// </exception>
+        public static void AreNotEqual(long notExpected, long actual, long delta, string message, params object[] parameters)
+        {
+            if (Math.Abs(notExpected - actual) <= delta)
+            {
+                var finalMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreNotEqualDeltaFailMsg,
+                    message == null ? string.Empty : ReplaceNulls(message),
+                    notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
+                    actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
+                    delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
+                HandleFail("Assert.AreNotEqual", finalMessage, parameters);
+            }
+        }
+
+        /// <summary>
         /// Tests whether the specified doubles are equal and throws an exception
         /// if they are not equal.
         /// </summary>
