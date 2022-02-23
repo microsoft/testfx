@@ -48,7 +48,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
             {
                 try
                 {
-                    result = testMethod.Invoke(Array.Empty<object>());
+                    result = testMethod.Invoke(null);
                 }
                 catch (Exception e)
                 {

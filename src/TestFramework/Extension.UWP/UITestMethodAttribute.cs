@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
                 Windows.UI.Core.CoreDispatcherPriority.Normal,
                 () =>
                 {
-                    result = testMethod.Invoke(new object[] { });
+                    result = testMethod.Invoke(null);
                 }).AsTask().GetAwaiter().GetResult();
 
             return new TestResult[] { result };
