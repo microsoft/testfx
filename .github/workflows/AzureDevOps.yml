@@ -10,7 +10,7 @@ jobs:
     if: github.event.label.name == 'sprint'
     runs-on: ubuntu-latest
     steps:
-      - uses: pavelhorak/github-actions-issue-to-work-item@master
+      - uses: pavelhorak/github-actions-issue-to-work-item@main
         env:
           ado_token: "${{ secrets.ADO_PERSONAL_ACCESS_TOKEN }}"
           github_token: "${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}"
