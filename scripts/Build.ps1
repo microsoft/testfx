@@ -146,7 +146,7 @@ function Install-WindowsSDK {
 
   try {
     Invoke-WebRequest -Method Get -Uri https://go.microsoft.com/fwlink/p/?LinkId=838916 -OutFile sdksetup.exe -UseBasicParsing
-    Start-Process -Wait sdksetup.exe -ArgumentList "/q", "/norestart", "/ceip off", "/features OptionId.WindowsSoftwareDevelopmentKit"  -Wait -PassThru
+    Start-Process -Wait sdksetup.exe -ArgumentList "/q", "/norestart", "/ceip off", "/features OptionId.WindowsSoftwareDevelopmentKit" -PassThru
   }
   finally {
     Pop-Location
@@ -169,6 +169,7 @@ function Perform-Restore {
     return;
   }
 
+  $msbuild = Locate-MSBuildPath
   $nuget = Locate-NuGet
   $nugetConfig = Locate-NuGetConfig
   $toolset = ".\scripts\Toolset\tools.proj"
@@ -178,8 +179,8 @@ function Perform-Restore {
   }
 
   Write-Log "Starting toolset restore..."
-  Write-Verbose "$nuget restore -verbosity normal -nonInteractive -configFile $nugetConfig $toolset"
-  & $nuget restore -verbosity normal -nonInteractive -configFile $nugetConfig $toolset
+  Write-Verbose "$nuget restore -verbosity normal -nonInteractive -configFile $nugetConfig -msbuildpath $msbuild $toolset"
+  & $nuget restore -verbosity normal -nonInteractive -configFile $nugetConfig -msbuildpath $msbuild $toolset
 
   if ($lastExitCode -ne 0) {
     throw "The restore failed with an exit code of '$lastExitCode'."
