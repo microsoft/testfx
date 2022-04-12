@@ -86,22 +86,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var warningMessages = new List<string>();
             var tests = new List<UnitTestElement>();
 
-            Assembly assembly;
-            if (assemblyFileName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-            {
-                // We only want to load the source assembly in reflection only context in UWP scenarios where it is always an exe.
-                // For normal test assemblies continue loading it in the default context since:
-                // 1. There isn't much benefit in terms of Performance loading the assembly in a Reflection Only context during discovery.
-                // 2. Loading it in Reflection only context entails a bunch of custom logic to identify custom attributes which is over-kill for normal desktop users.
-                assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: true);
-            }
-            else
-            {
-                assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
-            }
+            var assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
             var types = this.GetTypes(assembly, assemblyFileName, warningMessages);
-
             var discoverInternals = assembly.GetCustomAttribute<UTF.DiscoverInternalsAttribute>() != null;
             var testDataSourceDiscovery = assembly.GetCustomAttribute<UTF.TestDataSourceDiscoveryAttribute>()?.DiscoveryOption ?? UTF.TestDataSourceDiscoveryOption.DuringDiscovery;
 

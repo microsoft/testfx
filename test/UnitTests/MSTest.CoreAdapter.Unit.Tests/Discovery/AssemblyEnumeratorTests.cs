@@ -284,26 +284,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         }
 
         [TestMethodV1]
-        public void EnumerateAssemblyShouldLoadExeContainersInReflectionOnlyContext()
-        {
-            var mockAssembly = CreateMockTestableAssembly();
-            var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
-            var unitTestElement = new UnitTestElement(new TestMethod("DummyMethod", "DummyClass", "DummyAssembly", false));
-
-            // Setup mocks
-            mockAssembly.Setup(a => a.DefinedTypes)
-                .Returns(new List<TypeInfo>() { typeof(DummyTestClass).GetTypeInfo() });
-            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly.exe", true))
-                .Returns(mockAssembly.Object);
-            testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out this.warnings))
-                .Returns(new Collection<UnitTestElement> { unitTestElement });
-
-            var testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly.exe", out this.warnings);
-
-            CollectionAssert.AreEqual(new Collection<UnitTestElement> { unitTestElement }, testElements.ToList());
-        }
-
-        [TestMethodV1]
         public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForAType()
         {
             var mockAssembly = CreateMockTestableAssembly();
