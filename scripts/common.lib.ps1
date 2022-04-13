@@ -131,6 +131,13 @@ function Locate-VsWhere {
   $packagesPath = Locate-PackagesPath 
 
   $vswhere = Join-Path -path $packagesPath -childPath "vswhere\$vswhereVersion\tools\vswhere.exe"
+  if(-not (Test-Path $vswhere)) {
+    $nuget = Locate-NuGet
+    $nugetConfig = Locate-NuGetConfig
+
+    Write-Verbose "$nuget install vswhere -version $vswhereVersion -OutputDirectory $packagesPath -ConfigFile $nugetConfig -ExcludeVersion"
+    & $nuget install vswhere -version $vswhereVersion -OutputDirectory $packagesPath -ConfigFile $nugetConfig -ExcludeVersion | Out-Null
+  }
 
   Write-Verbose "vswhere location is : $vswhere"
   return $vswhere
