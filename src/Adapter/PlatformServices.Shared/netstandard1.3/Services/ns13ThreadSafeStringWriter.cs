@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private static readonly AsyncLocal<Dictionary<string, ThreadSafeStringBuilder>> State = new AsyncLocal<Dictionary<string, ThreadSafeStringBuilder>>();
 
         // This static lock guards access to the state and getting values from dictionary. There can be multiple different instances of ThreadSafeStringWriter
-        // acessing the state at the same time, and we need to give them the correct state for their async context. Non-concurrect dictionary is used to store the
+        // accessing the state at the same time, and we need to give them the correct state for their async context. Non-concurrent dictionary is used to store the
         // state because we need to lock around it anyway, to ensure that the State is populated, but not overwritten by every new instance of ThreadSafeStringWriter.
         private static readonly object StaticLockObject = new object();
         private readonly string outputType;
