@@ -5,23 +5,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.IO;
-    using System.Linq;
     using System.Text;
     using System.Threading;
 
     /// <summary>
-    /// StringWriter which has thread safe ToString().
+    /// AsyncContext aware, thread safe string writer that allows output writes from different threads to end up in the same async local context.
     /// </summary>
     public class ThreadSafeStringWriter : StringWriter
     {
 #if DEBUG
-        private static readonly StringBuilder AllOutput = new StringBuilder();
+        private static readonly ThreadSafeStringBuilder AllOutput = new ThreadSafeStringBuilder();
 #endif
-        private static readonly AsyncLocal<Dictionary<string, StringBuilder>> State = new AsyncLocal<Dictionary<string, StringBuilder>>();
+        private static readonly AsyncLocal<Dictionary<string, ThreadSafeStringBuilder>> State = new AsyncLocal<Dictionary<string, ThreadSafeStringBuilder>>();
+
+        // This static lock guards access to the state and getting values from dictionary. There can be multiple different instances of ThreadSafeStringWriter
+        // accessing the state at the same time, and we need to give them the correct state for their async context. Non-concurrent dictionary is used to store the
+        // state because we need to lock around it anyway, to ensure that the State is populated, but not overwritten by every new instance of ThreadSafeStringWriter.
+        private static readonly object StaticLockObject = new object();
         private readonly string outputType;
-        private readonly object lockObject = new object();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ThreadSafeStringWriter"/> class.
@@ -37,15 +39,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             this.outputType = outputType;
 
-            lock (this.lockObject)
-            {
-                    // Ensure that State.Value is populated, so we can inherit it to the child
-                    // async flow, and also keep reference to it here in the parent flow.
-                    // otherwise if there is `async Task` test method, the method will run as child async flow
-                    // populate it but the parent will remain null, because the changes to context only flow downwards
-                    // and not upwards.
-                    this.GetOrAddStringBuilder();
-            }
+            // Ensure that State.Value is populated, so we can inherit it to the child
+            // async flow, and also keep reference to it here in the parent flow.
+            // otherwise if there is `async Task` test method, the method will run as child async flow
+            // populate it but the parent will remain null, because the changes to context only flow downwards
+            // and not upwards.
+            this.GetOrAddStringBuilder();
         }
 
         public override StringBuilder GetStringBuilder()
@@ -56,152 +55,193 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <inheritdoc/>
         public override string ToString()
         {
-            lock (this.lockObject)
+            try
             {
-                try
-                {
-                    return this.GetStringBuilderOrNull()?.ToString();
-                }
-                catch (ObjectDisposedException)
-                {
-                    return default(string);
-                }
+                return this.GetStringBuilderOrNull()?.ToString();
+            }
+            catch (ObjectDisposedException)
+            {
+                return default(string);
             }
         }
 
         public string ToStringAndClear()
         {
-            lock (this.lockObject)
+            try
             {
-                try
-                {
-                    var sb = this.GetStringBuilderOrNull();
-
-                    if (sb == null)
-                    {
-                        return default(string);
-                    }
-
-                    var output = sb.ToString();
-                    sb.Clear();
-                    return output;
-                }
-                catch (ObjectDisposedException)
-                {
-                    return default(string);
-                }
+                return this.GetStringBuilderOrNull()?.ToStringAndClear();
+            }
+            catch (ObjectDisposedException)
+            {
+                return default(string);
             }
         }
 
         /// <inheritdoc/>
         public override void Write(char value)
         {
-            lock (this.lockObject)
-            {
 #if DEBUG
-                AllOutput.Append(value);
+            AllOutput.Append(value);
 #endif
-                this.GetOrAddStringBuilder().Append(value);
-            }
+            this.GetOrAddStringBuilder().Append(value);
         }
 
         /// <inheritdoc/>
         public override void Write(string value)
         {
-            lock (this.lockObject)
-            {
 #if DEBUG
-                AllOutput.Append(value);
+            AllOutput.Append(value);
 #endif
-                this.GetOrAddStringBuilder().Append(value);
-            }
+            this.GetOrAddStringBuilder().Append(value);
         }
 
         public override void WriteLine(string value)
         {
-            lock (this.lockObject)
-            {
 #if DEBUG
-                AllOutput.AppendLine(value);
+            AllOutput.AppendLine(value);
 #endif
-                this.GetOrAddStringBuilder().AppendLine(value);
-            }
+            this.GetOrAddStringBuilder().AppendLine(value);
         }
 
         /// <inheritdoc/>
         public override void Write(char[] buffer, int index, int count)
         {
-            lock (this.lockObject)
-            {
 #if DEBUG
-                AllOutput.Append(buffer, index, count);
+            AllOutput.Append(buffer, index, count);
 #endif
-                this.GetOrAddStringBuilder().Append(buffer, index, count);
-            }
+            this.GetOrAddStringBuilder().Append(buffer, index, count);
         }
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            lock (this.lockObject)
+            lock (StaticLockObject)
             {
                 ThreadSafeStringWriter.State?.Value?.Remove(this.outputType);
-                InvokeBaseClass(() => base.Dispose(disposing));
-            }
-        }
-
-        private static void InvokeBaseClass(Action action)
-        {
-            try
-            {
-                action();
-            }
-            catch (ObjectDisposedException)
-            {
+                try
+                {
+                   base.Dispose(disposing);
+                }
+                catch (ObjectDisposedException)
+                {
+                }
             }
         }
 
         // Avoiding name GetStringBuilder because it is already present on the base class.
-        private StringBuilder GetStringBuilderOrNull()
+        private ThreadSafeStringBuilder GetStringBuilderOrNull()
         {
-            if (State.Value == null)
+            lock (StaticLockObject)
             {
-                return null;
-            }
-            else if (!State.Value.TryGetValue(this.outputType, out var stringBuilder))
-            {
-                return null;
-            }
-            else
-            {
-                return stringBuilder;
+                if (State.Value == null)
+                {
+                    return null;
+                }
+                else if (!State.Value.TryGetValue(this.outputType, out var stringBuilder))
+                {
+                    return null;
+                }
+                else
+                {
+                    return stringBuilder;
+                }
             }
         }
 
-        private StringBuilder GetOrAddStringBuilder()
+        private ThreadSafeStringBuilder GetOrAddStringBuilder()
         {
-            if (State.Value == null)
+            lock (StaticLockObject)
             {
-                // The storage for the current async operation is empty
-                // create the array and appropriate stringbuilder.
-                // Avoid looking up the value after we add it to the dictionary.
-                var sb = new StringBuilder();
-                State.Value = new Dictionary<string, StringBuilder> { [this.outputType] = sb };
-                return sb;
+                if (State.Value == null)
+                {
+                    // The storage for the current async operation is empty
+                    // create the dictionary and appropriate stringbuilder.
+                    // Avoid looking up the value after we add it to the dictionary.
+                    var sb = new ThreadSafeStringBuilder();
+                    State.Value = new Dictionary<string, ThreadSafeStringBuilder> { [this.outputType] = sb };
+                    return sb;
+                }
+                else if (!State.Value.TryGetValue(this.outputType, out var stringBuilder))
+                {
+                    // The storage for the current async operation has the dictionary, but not the key
+                    // for the output type, add it, and avoid looking up the value again.
+                    var sb = new ThreadSafeStringBuilder();
+                    State.Value.Add(this.outputType, sb);
+                    return sb;
+                }
+                else
+                {
+                    // The storage for the current async operation has the dictionary, and the key
+                    // for the output type, just return it.
+                    return stringBuilder;
+                }
             }
-            else if (!State.Value.TryGetValue(this.outputType, out var stringBuilder))
+        }
+
+        /// <summary>
+        /// This StringBuilder puts locks around all the methods to avoid conflicts when writing or reading from multiple threads.
+        /// </summary>
+        private class ThreadSafeStringBuilder
+        {
+            private readonly StringBuilder stringBuilder = new StringBuilder();
+            private readonly object instanceLockObject = new object();
+
+            public void Append(string value)
             {
-                // The storage for the current async operation has the dictionary, but not the key
-                // for the output type, add it, and avoid looking up the value again.
-                var sb = new StringBuilder();
-                State.Value.Add(this.outputType, sb);
-                return sb;
+                lock (this.instanceLockObject)
+                {
+                    this.stringBuilder.Append(value);
+                }
             }
-            else
+
+            public void Append(char[] buffer, int index, int count)
             {
-                // The storage for the current async operation has the dictionary, and the key
-                // for the output type, just return it.
-                return stringBuilder;
+                lock (this.instanceLockObject)
+                {
+                    this.stringBuilder.Append(buffer, index, count);
+                }
+            }
+
+            public void Append(char value)
+            {
+                lock (this.instanceLockObject)
+                {
+                    this.stringBuilder.Append(value);
+                }
+            }
+
+            public void AppendLine(string value)
+            {
+                lock (this.instanceLockObject)
+                {
+                    this.stringBuilder.AppendLine(value);
+                }
+            }
+
+            public void Clear()
+            {
+                lock (this.instanceLockObject)
+                {
+                    this.stringBuilder.Clear();
+                }
+            }
+
+            public override string ToString()
+            {
+                lock (this.instanceLockObject)
+                {
+                    return this.stringBuilder.ToString();
+                }
+            }
+
+            internal string ToStringAndClear()
+            {
+                lock (this.instanceLockObject)
+                {
+                    var output = this.stringBuilder.ToString();
+                    this.stringBuilder.Clear();
+                    return output;
+                }
             }
         }
     }
