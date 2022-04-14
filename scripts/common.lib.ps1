@@ -154,21 +154,21 @@ function Locate-VsInstallPath($hasVsixExtension = "false") {
   if ($hasVsixExtension -eq 'true') {
     $requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK" 
   }
+  $version = "[16.0.0, 18.0.0)" 
+  Write-Verbose "$vswhere -version $version -products * -requires $requiredPackageIds -property installationPath"
 
-  Write-Verbose "$vswhere -version [16.0.0, 17.1.0)  -products * -requires $requiredPackageIds -property installationPath"
-  try {
-    if ($Official -or $DisallowPrereleaseMSBuild) {
-      $vsInstallPath = & $vswhere -version "[16.0.0, 17.1.0)" -products * -requires $requiredPackageIds -property installationPath | Select-Object -First 1
-    }
-    else {
-      # Allow using pre release versions of VS for dev builds
-      $vsInstallPath = & $vswhere -version "[16.0.0, 17.1.0)" -prerelease -products * -requires $requiredPackageIds -property installationPath | Select-Object -First 1
-    }
+  if ($Official -or $DisallowPrereleaseMSBuild) {
+    $vsInstallPath = & $vswhere -version $version -products * -requires $requiredPackageIds -property installationPath | Select-Object -First 1
   }
-  catch [System.Management.Automation.MethodInvocationException] {
-    Write-Error "Failed to find VS installation with requirements : $requiredPackageIds."
+  else {
+    # Allow using pre release versions of VS for dev builds
+    $vsInstallPath = & $vswhere -version $version -prerelease -products * -requires $requiredPackageIds -property installationPath | Select-Object -First 1
   }
 
+  if (-not $vsInstallPath)
+  {
+    throw "Could not find any VisualStudio with version $version and capabilities: $($requiredPackageIds -join ", ")"
+  }
   Write-Verbose "VSInstallPath is : $vsInstallPath"
   return Resolve-Path -path $vsInstallPath
 }
