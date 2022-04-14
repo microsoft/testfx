@@ -66,7 +66,7 @@
     <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\uap10.0\" />
     <file src="Extension.UWP\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\uap10.0\" />
 
-    <!-- WinUI -->
+    <!-- net5.0 -->
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net5.0\" />
     <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net5.0\" />
 
