@@ -11,7 +11,7 @@
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions">
       <HintPath>$(_TestFrameworkExtensionsRoot)Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <!-- <Visible>False</Visible> -->
+      <Visible>False</Visible>
     </Reference>
   </ItemGroup>
 </Project>

@@ -3,19 +3,48 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
 {
-    using global::System;
-    using global::System.Runtime.CompilerServices;
+    using System;
+    using System.Reflection;
+    using System.Runtime.CompilerServices;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    using Microsoft.UI.Xaml;
 
     /// <summary>
     /// Execute test code in UI thread for Windows store apps.
     /// </summary>
     public class UITestMethodAttribute : TestMethodAttribute
     {
+        private static Type applicationType;
+        private static bool isApplicationInitialized = false;
+        private static UI.Dispatching.DispatcherQueue applicationDispatcherQueue;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
+        /// </summary>
+        /// <param name="displayName">
+        /// Display Name for the Test Window
+        /// </param>
+        public UITestMethodAttribute(string displayName)
+            : base(displayName)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
+        /// </summary>
+        public UITestMethodAttribute()
+            : base()
+        {
+        }
+
         /// <summary>
         /// Gets or sets the <see cref="Microsoft.UI.Dispatching.DispatcherQueue"/> that should be used to invoke the UITestMethodAttribute.
-        /// If none is provided, it will try to use the Microsoft.UI.Xaml.Window.Current.DispatcherQueue, which only works on UWP.
+        /// If none is provided <see cref="UITestMethodAttribute"/> will check for <see cref="WinUITestTargetAttribute" />, if the attribute is defined it will start the App and use its <see cref="Microsoft.UI.Dispatching.DispatcherQueue"/>.
+        /// <see cref="UITestMethodAttribute"/> will try to use <c>Microsoft.UI.Xaml.Window.Current.DispatcherQueue</c> for the last resort, but that will only work on UWP.
         /// </summary>
-        public static Microsoft.UI.Dispatching.DispatcherQueue DispatcherQueue { get; set; }
+        public static UI.Dispatching.DispatcherQueue DispatcherQueue { get; set; }
 
         /// <summary>
         /// Executes the test method on the UI Thread.
@@ -38,7 +67,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
 
             TestResult result = null;
 
-            var dispatcher = DispatcherQueue ?? global::Microsoft.UI.Xaml.Window.Current?.DispatcherQueue;
+            var dispatcher = UITestMethodAttribute.GetDispatcherQueue(testMethod.MethodInfo.DeclaringType.Assembly);
             if (dispatcher == null)
             {
                 throw new InvalidOperationException(FrameworkMessages.AsyncUITestMethodWithNoDispatcherQueue);
@@ -80,6 +109,107 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
             }
 
             return new TestResult[] { result };
+        }
+
+        private static Type TryGetApplicationType(Assembly assembly)
+        {
+            if (applicationType != null)
+            {
+                return applicationType;
+            }
+
+            var attribute = assembly.GetCustomAttribute<WinUITestTargetAttribute>();
+            if (attribute == null || attribute.ApplicationType == null)
+            {
+                return null;
+            }
+
+            applicationType = attribute.ApplicationType;
+            return applicationType;
+        }
+
+        private static UI.Dispatching.DispatcherQueue TryCreateApplicationDispatcherQueue(Assembly assembly)
+        {
+            if (applicationDispatcherQueue != null)
+            {
+                return applicationDispatcherQueue;
+            }
+
+            if (isApplicationInitialized)
+            {
+                return null;
+            }
+
+            applicationType = TryGetApplicationType(assembly);
+            if (applicationType == null)
+            {
+                return null;
+            }
+
+            // We need to initialize the SDK before calling Application.Start
+            try
+            {
+                // We need to execute all module initializers before doing any WinRT calls.
+                // This will cause the [ModuleInitialzer]s to execute, if they haven't yet.
+                var id = applicationType.Assembly.GetType("Microsoft.WindowsAppSDK.Runtime.Identity");
+                if (id != null)
+                {
+                    _ = Activator.CreateInstance(id);
+                }
+            }
+            catch
+            {
+            }
+
+            var tsc = new TaskCompletionSource<UI.Dispatching.DispatcherQueue>();
+            var uiMagicThread = new Thread(new ThreadStart(() =>
+            {
+                Application.Start(p =>
+                {
+                    // TODO: @haplois before merging this PR
+                    // ADD ERROR HANDLING HERE
+                    isApplicationInitialized = true;
+                    var dispatcher = UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+                    var context = new UI.Dispatching.DispatcherQueueSynchronizationContext(dispatcher);
+                    SynchronizationContext.SetSynchronizationContext(context);
+
+                    _ = Activator.CreateInstance(applicationType) as UI.Xaml.Application;
+                    applicationDispatcherQueue = dispatcher;
+                    tsc.SetResult(dispatcher);
+                });
+            }));
+
+            uiMagicThread.Name = "UI Thread for Tests";
+            uiMagicThread.Start();
+            tsc.Task.Wait();
+
+            return tsc.Task.Result;
+        }
+
+        private static UI.Dispatching.DispatcherQueue GetDispatcherQueue(Assembly assembly)
+        {
+            if (DispatcherQueue != null)
+            {
+                return DispatcherQueue;
+            }
+
+            if (TryCreateApplicationDispatcherQueue(assembly) is { } appQueue)
+            {
+                return appQueue;
+            }
+
+            try
+            {
+                if (Window.Current?.DispatcherQueue is { } queue)
+                {
+                    return queue;
+                }
+            }
+            catch
+            {
+            }
+
+            return null;
         }
     }
 }
