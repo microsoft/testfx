@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         public FileOperations()
         {
-            this.isPackaged = PackageHelpers.IsPackagedProcess();
+            this.isPackaged = AppContainer.AppModel.IsPackagedProcess();
         }
 
         /// <summary>
@@ -109,52 +109,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </returns>
         public string GetFullFilePath(string assemblyFileName)
         {
-            string packagedPath()
+            var packagePath = AppContainer.AppModel.GetCurrentPackagePath();
+            if (packagePath == null)
             {
-                return SafeInvoke<string>(() => Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, assemblyFileName)) as string ?? assemblyFileName;
+                return assemblyFileName;
             }
 
-            return this.isPackaged
-                   ? packagedPath()
-                   : assemblyFileName;
-        }
-
-        private static object SafeInvoke<T>(Func<T> action, string messageFormatOnException = null)
-        {
-            try
-            {
-                return action.Invoke();
-            }
-            catch (Exception exception)
-            {
-                if (string.IsNullOrEmpty(messageFormatOnException))
-                {
-                    messageFormatOnException = "{0}";
-                }
-
-                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, messageFormatOnException, exception.Message);
-            }
-
-            return null;
+            return Path.Combine(packagePath, assemblyFileName);
         }
 
         private bool DoesFileExistPackaged(string assemblyFileName)
         {
-            var fileExists = false;
-
-            try
-            {
-                var fileNameWithoutPath = Path.GetFileName(assemblyFileName);
-                var searchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFileAsync(fileNameWithoutPath).AsTask();
-                searchTask.Wait();
-                fileExists = searchTask.Result != null;
-            }
-            catch (Exception)
-            {
-                // ignore
-            }
-
-            return fileExists;
+            var path = this.GetFullFilePath(assemblyFileName);
+            return File.Exists(path);
         }
     }
 

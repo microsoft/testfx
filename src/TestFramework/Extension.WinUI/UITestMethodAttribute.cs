@@ -16,26 +16,25 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
     /// </summary>
     public class UITestMethodAttribute : TestMethodAttribute
     {
-        private static Type applicationType;
         private static bool isApplicationInitialized = false;
         private static UI.Dispatching.DispatcherQueue applicationDispatcherQueue;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
         /// </summary>
-        /// <param name="displayName">
-        /// Display Name for the Test Window
-        /// </param>
-        public UITestMethodAttribute(string displayName)
-            : base(displayName)
+        public UITestMethodAttribute()
+            : base()
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
         /// </summary>
-        public UITestMethodAttribute()
-            : base()
+        /// <param name="displayName">
+        /// Display Name for the test.
+        /// </param>
+        public UITestMethodAttribute(string displayName)
+            : base(displayName)
         {
         }
 
@@ -86,9 +85,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
             }
             else
             {
-                var taskCompletionSource = new global::System.Threading.Tasks.TaskCompletionSource<object>();
+                var taskCompletionSource = new TaskCompletionSource<object>();
 
-                if (!dispatcher.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+                if (!dispatcher.TryEnqueue(UI.Dispatching.DispatcherQueuePriority.Normal, () =>
                     {
                         try
                         {
@@ -111,24 +110,18 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
             return new TestResult[] { result };
         }
 
-        private static Type TryGetApplicationType(Assembly assembly)
+        private static Type GetApplicationType(Assembly assembly)
         {
-            if (applicationType != null)
-            {
-                return applicationType;
-            }
-
             var attribute = assembly.GetCustomAttribute<WinUITestTargetAttribute>();
             if (attribute == null || attribute.ApplicationType == null)
             {
                 return null;
             }
 
-            applicationType = attribute.ApplicationType;
-            return applicationType;
+            return attribute.ApplicationType;
         }
 
-        private static UI.Dispatching.DispatcherQueue TryCreateApplicationDispatcherQueue(Assembly assembly)
+        private static UI.Dispatching.DispatcherQueue GetApplicationDispatcherQueue(Assembly assembly)
         {
             if (applicationDispatcherQueue != null)
             {
@@ -140,7 +133,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
                 return null;
             }
 
-            applicationType = TryGetApplicationType(assembly);
+            var applicationType = GetApplicationType(assembly);
             if (applicationType == null)
             {
                 return null;
@@ -193,16 +186,16 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
                 return DispatcherQueue;
             }
 
-            if (TryCreateApplicationDispatcherQueue(assembly) is { } appQueue)
+            if (GetApplicationDispatcherQueue(assembly) is { } appDispatcherQueue)
             {
-                return appQueue;
+                return appDispatcherQueue;
             }
 
             try
             {
-                if (Window.Current?.DispatcherQueue is { } queue)
+                if (Window.Current?.DispatcherQueue is { } windowDispatcherQueue)
                 {
-                    return queue;
+                    return windowDispatcherQueue;
                 }
             }
             catch

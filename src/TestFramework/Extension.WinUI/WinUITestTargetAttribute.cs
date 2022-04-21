@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
 {
     using System;
+    using System.Globalization;
 
     /// <summary>
     /// Specifies <see cref="Microsoft.UI.Xaml.Application" /> derived class to run UI tests on.
@@ -11,32 +12,30 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
     public class WinUITestTargetAttribute : Attribute
     {
-        private readonly Type applicationType;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="WinUITestTargetAttribute"/> class.
         /// </summary>
-        /// <param name="application">
+        /// <param name="applicationType">
         /// Specifies <see cref="Microsoft.UI.Xaml.Application" /> derived class to run UI tests on.
         /// </param>
-        public WinUITestTargetAttribute(Type application)
+        public WinUITestTargetAttribute(Type applicationType)
         {
-            if (application == null)
+            if (applicationType == null)
             {
-                throw new ArgumentNullException(nameof(application));
+                throw new ArgumentNullException(nameof(applicationType));
             }
 
-            if (!typeof(Microsoft.UI.Xaml.Application).IsAssignableFrom(application))
+            if (!typeof(UI.Xaml.Application).IsAssignableFrom(applicationType))
             {
-                throw new ArgumentException(string.Format(FrameworkMessages.ArgumentXMustDeriveFromClassY, nameof(application), "Microsoft.UI.Xaml.Application"), nameof(application));
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ArgumentXMustDeriveFromClassY, nameof(applicationType), "Microsoft.UI.Xaml.Application"), nameof(applicationType));
             }
 
-            this.applicationType = application;
+            this.ApplicationType = applicationType;
         }
 
         /// <summary>
         /// Gets the <see cref="Microsoft.UI.Xaml.Application" /> class.
         /// </summary>
-        public Type ApplicationType => this.applicationType;
+        public Type ApplicationType { get; }
     }
 }
