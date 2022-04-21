@@ -60,9 +60,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns> The <see cref="bool"/>. </returns>
         public bool DoesFileExist(string assemblyFileName)
         {
-            return this.isPackaged
-                 ? this.DoesFileExistPackaged(assemblyFileName)
-                 : File.Exists(assemblyFileName);
+            var path = this.GetFullFilePath(assemblyFileName);
+            return File.Exists(path);
         }
 
         /// <summary>
@@ -116,12 +115,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             return Path.Combine(packagePath, assemblyFileName);
-        }
-
-        private bool DoesFileExistPackaged(string assemblyFileName)
-        {
-            var path = this.GetFullFilePath(assemblyFileName);
-            return File.Exists(path);
         }
     }
 
