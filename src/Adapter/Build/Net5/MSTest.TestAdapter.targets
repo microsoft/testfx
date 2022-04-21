@@ -64,7 +64,7 @@
       <MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_common\*.dll" />
     </ItemGroup>
 	
-	  <ItemGroup>
+    <ItemGroup>
       <Content Include="@(MSTestV2Files->'%(RootDir)%(Directory)$(CurrentUICultureHierarchy)\%(FileName).resources.dll')" 
                Condition="Exists('%(RootDir)%(Directory)$(CurrentUICultureHierarchy)\%(FileName).resources.dll')">
          <Link>$(CurrentUICultureHierarchy)\%(FileName).resources.dll</Link>
