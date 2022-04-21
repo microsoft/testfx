@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.App
     using System.Text;
 
     /// <summary>
-    /// Global helpers for queriying package information
+    /// Provides package information about the application.
     /// </summary>
     internal static class AppModel
     {
