@@ -49,9 +49,9 @@
       <Name>MSTest.Core</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj">
-      <Project>{6c9fe494-8315-4667-b3f6-75dc62a62319}</Project>
-      <Name>Extension.Core</Name>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.UWP\Extension.UWP.csproj">
+      <Project>{df131865-84ee-4540-8112-e88acebdea09}</Project>
+      <Name>Extension.UWP</Name>
       <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">

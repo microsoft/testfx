@@ -270,22 +270,22 @@ function Install-DotNetCli {
   New-Item -ItemType directory -Path $dotnetInstallPath -Force | Out-Null
   & $dotnetInstallScript -Channel "master" -InstallDir $dotnetInstallPath -Version $env:DOTNET_CLI_VERSION
     
-  & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '2.1.0' -Channel '2.1.0' -Architecture x64 -NoPath
+  & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '2.1.30' -Channel '2.1.30' -Architecture x64 -NoPath
   $env:DOTNET_ROOT = $dotnetInstallPath
 
-  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '2.1.0' -Channel '2.1.0' -Architecture x86 -NoPath
+  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '2.1.30' -Channel '2.1.30' -Architecture x86 -NoPath
   ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
     
-  & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '3.1.0' -Channel '3.1.0' -Architecture x64 -NoPath
+  & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '3.1.24' -Channel '3.1.24' -Architecture x64 -NoPath
   $env:DOTNET_ROOT = $dotnetInstallPath
 
-  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '3.1.0' -Channel '3.1.0' -Architecture x86 -NoPath
+  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '3.1.24' -Channel '3.1.24' -Architecture x86 -NoPath
   ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
 
-  & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '5.0.1' -Channel '5.0.1' -Architecture x64 -NoPath
+  & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '5.0.16' -Channel '5.0.16' -Architecture x64 -NoPath
   $env:DOTNET_ROOT = $dotnetInstallPath
 
-  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '5.0.1' -Channel '5.0.1' -Architecture x86 -NoPath
+  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '5.0.16' -Channel '5.0.16' -Architecture x86 -NoPath
   ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
 
   $env:DOTNET_MULTILEVEL_LOOKUP = 0

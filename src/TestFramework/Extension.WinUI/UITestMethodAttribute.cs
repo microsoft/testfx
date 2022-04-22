@@ -9,6 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Microsoft.UI.Dispatching;
     using Microsoft.UI.Xaml;
 
     /// <summary>
@@ -121,7 +122,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
             return attribute.ApplicationType;
         }
 
-        private static UI.Dispatching.DispatcherQueue GetApplicationDispatcherQueue(Assembly assembly)
+        private static DispatcherQueue GetApplicationDispatcherQueue(Assembly assembly)
         {
             if (applicationDispatcherQueue != null)
             {
@@ -154,32 +155,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
             {
             }
 
-            var tsc = new TaskCompletionSource<UI.Dispatching.DispatcherQueue>();
-            var uiMagicThread = new Thread(new ThreadStart(() =>
-            {
-                Application.Start(p =>
-                {
-                    // TODO: @haplois before merging this PR
-                    // ADD ERROR HANDLING HERE
-                    isApplicationInitialized = true;
-                    var dispatcher = UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-                    var context = new UI.Dispatching.DispatcherQueueSynchronizationContext(dispatcher);
-                    SynchronizationContext.SetSynchronizationContext(context);
-
-                    _ = Activator.CreateInstance(applicationType) as UI.Xaml.Application;
-                    applicationDispatcherQueue = dispatcher;
-                    tsc.SetResult(dispatcher);
-                });
-            }));
-
-            uiMagicThread.Name = "UI Thread for Tests";
-            uiMagicThread.Start();
-            tsc.Task.Wait();
-
-            return tsc.Task.Result;
+            return InitializeApplication(applicationType);
         }
 
-        private static UI.Dispatching.DispatcherQueue GetDispatcherQueue(Assembly assembly)
+        private static DispatcherQueue GetDispatcherQueue(Assembly assembly)
         {
             if (DispatcherQueue != null)
             {
@@ -203,6 +182,36 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
             }
 
             return null;
+        }
+
+        private static DispatcherQueue InitializeApplication(Type applicationType)
+        {
+            var tsc = new TaskCompletionSource<DispatcherQueue>();
+            void onApplicationInitialized(ApplicationInitializationCallbackParams e)
+            {
+                try
+                {
+                    isApplicationInitialized = true;
+                    var dispatcher = DispatcherQueue.GetForCurrentThread();
+                    var context = new DispatcherQueueSynchronizationContext(dispatcher);
+                    SynchronizationContext.SetSynchronizationContext(context);
+
+                    _ = Activator.CreateInstance(applicationType) as Application;
+                    applicationDispatcherQueue = dispatcher;
+                    tsc.SetResult(dispatcher);
+                }
+                catch
+                {
+                }
+            }
+
+            var treadStart = new ThreadStart(() => Application.Start(onApplicationInitialized));
+            var uiThread = new Thread(treadStart);
+            uiThread.Name = "UI Thread for Tests";
+            uiThread.Start();
+            tsc.Task.Wait();
+
+            return tsc.Task.Result;
         }
     }
 }
