@@ -58,10 +58,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
 
         /// <summary>
-        /// Adds a file name to the list in TestResult.ResultFileNames
+        /// Adds a file name to the list in TestResult.ResultFileNames.
         /// </summary>
         /// <param name="fileName">
-        /// The file Name.
+        /// The file name.
         /// </param>
         public abstract void AddResultFile(string fileName);
 
