@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>MSTest</id>
+    <version>1.1.17</version>
+    <title>MSTest</title>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <description>
+      A meta package to simplify test projects.
+
+      Supported platforms:
+      - .NET 4.5.0+
+      - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017)
+      - .NET 5.0 (Visual Studio 2019)
+      - .NET 5.0 Windows.18362+ (WinUI Desktop Apps) (Visual Studio 2019)
+      - ASP.NET Core 1.0+ (Visual Studio 2017)
+    </description>
+    <projectUrl>https://github.com/microsoft/testfx</projectUrl>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <iconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</iconUrl>
+    <icon>Icon.png</icon>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
+    <repository type="git" 
+                url="https://github.com/microsoft/testfx" 
+                branch="$BranchName$" 
+                commit="$CommitId$" />
+
+    <dependencies>
+      <group targetFramework="netcoreapp1.0">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" />
+      </group>
+
+      <group targetFramework="netstandard1.5">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" />
+      </group>
+
+      <group targetFramework="net45">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" />
+      </group>
+
+      <group targetFramework="uap10.0">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <!-- Microsoft.NET.Test.Sdk package is referenced by build system, so omitting it. -->
+        <!-- <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" /> -->
+      </group>
+
+      <group targetFramework="net5.0">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="Icon.png" target="" />
+  </files>
+</package>
