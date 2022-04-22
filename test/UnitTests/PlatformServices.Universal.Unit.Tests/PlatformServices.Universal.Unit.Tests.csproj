@@ -50,6 +50,7 @@
     <Reference Include="System.Globalization" Private="True" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.ReaderWriter" Private="True" />
+    <Reference Include="System.Threading" Private="True" />
     <Reference Include="System.Threading.Tasks" Private="True" />
     <Reference Include="System.Xml.Linq" />
 

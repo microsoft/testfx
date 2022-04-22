@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+    <!-- 
+        Directives here are moved to MSTest.TestAdapter.targets file to make sure they are 
+        included after WinUI properties are specified.
+    -->
+</Project>

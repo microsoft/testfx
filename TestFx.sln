@@ -83,10 +83,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Package", "Package", "{E374A3A6-C364-4890-B315-D60F5C682B6E}"
 	ProjectSection(SolutionItems) = preProject
 		src\Package\MSTest.Internal.TestFx.Documentation.nuspec = src\Package\MSTest.Internal.TestFx.Documentation.nuspec
-		src\Package\MSTest.TestAdapter.Enu.nuspec = src\Package\MSTest.TestAdapter.Enu.nuspec
 		src\Package\MSTest.TestAdapter.nuspec = src\Package\MSTest.TestAdapter.nuspec
 		src\Package\MSTest.TestAdapter.symbols.nuspec = src\Package\MSTest.TestAdapter.symbols.nuspec
-		src\Package\MSTest.TestFramework.enu.nuspec = src\Package\MSTest.TestFramework.enu.nuspec
 		src\Package\MSTest.TestFramework.nuspec = src\Package\MSTest.TestFramework.nuspec
 		src\Package\MSTest.TestFramework.symbols.nuspec = src\Package\MSTest.TestFramework.symbols.nuspec
 	EndProjectSection
@@ -210,10 +208,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetCore", "NetCore", "{D11C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.WinUI", "src\Adapter\PlatformServices.WinUI\PlatformServices.WinUI.csproj", "{F4E2876F-6E42-4DCF-B629-041A9DF7C579}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WinUI", "WinUI", "{35D010CC-CDF2-4115-BCFB-E2E3D21C1055}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Net5", "Net5", "{35D010CC-CDF2-4115-BCFB-E2E3D21C1055}"
 	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\WinUI\MSTest.TestAdapter.props = src\Adapter\Build\WinUI\MSTest.TestAdapter.props
-		src\Adapter\Build\WinUI\MSTest.TestAdapter.targets = src\Adapter\Build\WinUI\MSTest.TestAdapter.targets
+		src\Adapter\Build\Net5\MSTest.TestAdapter.props = src\Adapter\Build\Net5\MSTest.TestAdapter.props
+		src\Adapter\Build\Net5\MSTest.TestAdapter.targets = src\Adapter\Build\Net5\MSTest.TestAdapter.targets
+		src\Adapter\Build\Net5\MSTest.TestFramework.targets = src\Adapter\Build\Net5\MSTest.TestFramework.targets
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReferencedProjectFromDataSourceTest", "test\E2ETests\TestAssets\ReferencedProjectFromDataSourceTest\ReferencedProjectFromDataSourceTest.csproj", "{6B4DE65C-4162-4C52-836A-8F9FA901814A}"
@@ -223,6 +222,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Desktop.Legacy", "src\Adapter\PlatformServices.Desktop.Legacy\PlatformServices.Desktop.Legacy.csproj", "{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OutputTestProject", "test\E2ETests\TestAssets\OutputTestProject\OutputTestProject.csproj", "{66608D86-416A-49AF-A937-C47F7E4586AE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop.Legacy", "Desktop.Legacy", "{DE6887A6-D4B8-4D77-98D3-CC87A8F21C2E}"
+	ProjectSection(SolutionItems) = preProject
+		src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.props = src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.props
+		src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.targets = src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.targets
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -1447,6 +1452,7 @@ Global
 		{44A504D9-A0D6-427D-BFB2-DB144A74F0D5} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
 		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4} = {24088844-2107-4DB2-8F3F-CBCA94FC4B28}
 		{66608D86-416A-49AF-A937-C47F7E4586AE} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
+		{DE6887A6-D4B8-4D77-98D3-CC87A8F21C2E} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}

@@ -79,7 +79,9 @@
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs">
       <Link>Services\ns10TraceListenerManager.cs</Link>
     </Compile>
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13ThreadSafeStringWriter.cs" Link="Services\ns13ThreadSafeStringWriter.cs" />
     <Compile Include="Friends.cs" />
+    <Compile Include="AppModel.cs" />
     <Compile Include="Services\WinUIAdapterTraceLogger.cs" />
     <Compile Include="Services\WinUIFileOperations.cs" />
     <Compile Include="Services\WinUITestSource.cs" />

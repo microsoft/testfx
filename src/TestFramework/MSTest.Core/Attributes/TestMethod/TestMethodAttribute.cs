@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
         /// </summary>
         /// <param name="displayName">
-        /// Display Name for the Test Window
+        /// Display name for the test.
         /// </param>
         public TestMethodAttribute(string displayName)
         {
@@ -31,9 +31,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         }
 
         /// <summary>
-        /// Gets display Name for the Test Window
+        /// Gets display name for the test.
         /// </summary>
-        public string DisplayName { get; private set; }
+        public string DisplayName { get; }
 
         /// <summary>
         /// Executes a test method.

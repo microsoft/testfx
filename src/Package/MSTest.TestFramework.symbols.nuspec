@@ -12,9 +12,10 @@
 
       Supported platforms:
       - .NET 4.5.0+
-      - .NET Core 1.0+ (Universal Windows Apps 10+)
+      - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017)
+      - .NET 5.0 (Visual Studio 2019)
       - .NET 5.0 Windows.18362+ (WinUI Desktop Apps) (Visual Studio 2019)
-      - ASP.NET Core 1.0+
+      - ASP.NET Core 1.0+ (Visual Studio 2017)
 
       To discover and execute tests install MSTest.TestAdapter.
     </description>
@@ -40,7 +41,7 @@
 
       <group targetFramework="uap10.0" />
 
-      <group targetFramework="net5.0-windows10.0.18362.0" />
+      <group targetFramework="net5.0" />
     </dependencies>
   </metadata>
   <files>
@@ -74,15 +75,20 @@
     <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\uap10.0\" />
     <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\uap10.0\" />
 
-    <!-- WinUI -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net5.0-windows10.0.18362.0\" />
-    <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\net5.0-windows10.0.18362.0\" />
-    <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net5.0-windows10.0.18362.0\" />
-    <file src="Extension.WinUI\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net5.0-windows10.0.18362.0\" />
+    <!-- net5.0 -->
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net5.0\" />
+    <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net5.0\" />
+    <file src="Build\Net5\MSTest.TestFramework.targets" target="build\net5.0\" />
+    
+    <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net5.0\winui\" />
+    <file src="Extension.WinUI\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net5.0\winui\" />
+    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net5.0\" />
+    <file src="Extension.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net5.0\" />
 
     <!-- Symbols -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\net5.0-windows10.0.18362.0\" />
-    <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\net5.0-windows10.0.18362.0\" />
+    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\net5.0\" />
+    <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="build\net5.0\winui\" />
+    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="build\net5.0\" />
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />

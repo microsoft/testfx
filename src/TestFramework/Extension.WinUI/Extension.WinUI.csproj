@@ -37,6 +37,7 @@
   <Import Project="$(RepoRoot)src\TestFramework\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\TestFramework\Extension.UWP\DeploymentItemAttribute.cs" Link="DeploymentItemAttribute.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.WinUI\AppModel.cs" Link="AppModel.cs" />
   </ItemGroup>
   
   <PropertyGroup>

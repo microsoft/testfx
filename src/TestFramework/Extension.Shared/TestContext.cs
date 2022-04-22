@@ -58,6 +58,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
 
         /// <summary>
+        /// Adds a file name to the list in TestResult.ResultFileNames.
+        /// </summary>
+        /// <param name="fileName">
+        /// The file name.
+        /// </param>
+        public abstract void AddResultFile(string fileName);
+
+        /// <summary>
         /// Used to write trace messages while the test is running
         /// </summary>
         /// <param name="message">formatted message string</param>
