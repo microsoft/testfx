@@ -12,6 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" Aliases="FrameworkV2Extension" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.CoreAdapter\MSTest.CoreAdapter.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
@@ -51,12 +52,4 @@
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
-  
-  <!-- Workaround for https://github.com/dotnet/sdk/issues/364 -->
-  <Target Name="WorkAroundPackageAndProjectReferenceConflict" BeforeTargets="ResolveLockFileReferences">
-    <ItemGroup>
-      <ResolvedCompileFileDefinitions Remove="@(ResolvedCompileFileDefinitions)" Condition="'%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions' or '%(ResolvedCompileFileDefinitions.Filename)' == 'Microsoft.VisualStudio.TestPlatform.TestFramework'" />
-    </ItemGroup>
-  </Target>
-
 </Project>

@@ -292,4 +292,11 @@ Stack Trace: {4}</value>
   <data name="DynamicDataIEnumerableEmpty" xml:space="preserve">
     <value>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</value>
   </data>
+  <data name="ArgumentXMustDeriveFromClassY" xml:space="preserve">
+    <value>Type '{0}' is not assignable to '{1}'.</value>
+    <comment>
+      - {0} argument name like "applicationType"
+      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
+    </comment>
+  </data>
 </root>

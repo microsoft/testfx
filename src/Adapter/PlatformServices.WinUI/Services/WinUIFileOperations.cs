@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     using global::System;
     using global::System.IO;
     using global::System.Reflection;
+
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -16,6 +17,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </summary>
     public class FileOperations : IFileOperations
     {
+        private readonly bool isPackaged;
+
+        public FileOperations()
+        {
+            this.isPackaged = AppContainer.AppModel.IsPackagedProcess();
+        }
+
         /// <summary>
         /// Loads an assembly.
         /// </summary>
@@ -26,6 +34,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns> The <see cref="Assembly"/>. </returns>
         public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly)
         {
+            if (!this.isPackaged && Path.IsPathRooted(assemblyName))
+            {
+                return Assembly.LoadFrom(assemblyName);
+            }
+
             string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
             return Assembly.Load(new AssemblyName(fileNameWithoutExtension));
         }
@@ -47,21 +60,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns> The <see cref="bool"/>. </returns>
         public bool DoesFileExist(string assemblyFileName)
         {
-            var fileExists = false;
-
-            try
-            {
-                var fileNameWithoutPath = Path.GetFileName(assemblyFileName);
-                var searchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFileAsync(fileNameWithoutPath).AsTask();
-                searchTask.Wait();
-                fileExists = searchTask.Result != null;
-            }
-            catch (Exception)
-            {
-                // ignore
-            }
-
-            return fileExists;
+            var path = this.GetFullFilePath(assemblyFileName);
+            return File.Exists(path);
         }
 
         /// <summary>
@@ -108,26 +108,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </returns>
         public string GetFullFilePath(string assemblyFileName)
         {
-            return (SafeInvoke<string>(() => Path.Combine(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, assemblyFileName)) as string) ?? assemblyFileName;
-        }
-
-        private static object SafeInvoke<T>(Func<T> action, string messageFormatOnException = null)
-        {
-            try
+            var packagePath = AppContainer.AppModel.GetCurrentPackagePath();
+            if (packagePath == null)
             {
-                return action.Invoke();
-            }
-            catch (Exception exception)
-            {
-                if (string.IsNullOrEmpty(messageFormatOnException))
-                {
-                    messageFormatOnException = "{0}";
-                }
-
-                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, messageFormatOnException, exception.Message);
+                return assemblyFileName;
             }
 
-            return null;
+            return Path.Combine(packagePath, assemblyFileName);
         }
     }
 
