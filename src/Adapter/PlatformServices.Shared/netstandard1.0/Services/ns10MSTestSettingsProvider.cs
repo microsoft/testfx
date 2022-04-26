@@ -37,10 +37,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Reset the settings to its default.
         /// </summary>
-        public static void Reset()
-        {
-            settings = null;
-        }
+        public static void Reset() => settings = null;
 
         /// <summary>
         /// Load the settings from the reader.
@@ -52,9 +49,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             settings = MSTestAdapterSettings.ToSettings(reader);
         }
 
-        public IDictionary<string, object> GetProperties(string source)
-        {
-            return TestDeployment.GetDeploymentInformation(source);
-        }
+        public IDictionary<string, object> GetProperties(string source) => TestDeployment.GetDeploymentInformation(source);
     }
 }

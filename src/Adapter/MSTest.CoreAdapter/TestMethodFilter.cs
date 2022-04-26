@@ -20,8 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         private readonly Dictionary<string, TestProperty> supportedProperties;
 
         internal TestMethodFilter()
-        {
-            supportedProperties = new Dictionary<string, TestProperty>(StringComparer.OrdinalIgnoreCase)
+            => supportedProperties = new Dictionary<string, TestProperty>(StringComparer.OrdinalIgnoreCase)
             {
                 [Constants.TestCategoryProperty.Label] = Constants.TestCategoryProperty,
                 [Constants.PriorityProperty.Label] = Constants.PriorityProperty,
@@ -29,7 +28,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 [TestCaseProperties.DisplayName.Label] = TestCaseProperties.DisplayName,
                 [Constants.TestClassNameProperty.Label] = Constants.TestClassNameProperty
             };
-        }
 
         /// <summary>
         /// Returns ITestCaseFilterExpression for TestProperties supported by adapter.
@@ -99,10 +97,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </summary>
         /// <param name="context">Run context</param>
         /// <returns>Filter expression.</returns>
-        private ITestCaseFilterExpression GetTestCaseFilterFromRunContext(IRunContext context)
-        {
-            return context.GetTestCaseFilter(supportedProperties.Keys, PropertyProvider);
-        }
+        private ITestCaseFilterExpression GetTestCaseFilterFromRunContext(IRunContext context) => context.GetTestCaseFilter(supportedProperties.Keys, PropertyProvider);
 
         /// <summary>
         /// Gets filter expression from discovery context.

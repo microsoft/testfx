@@ -31,12 +31,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
             }
 
             TestResult result = null;
-            Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-                Windows.UI.Core.CoreDispatcherPriority.Normal,
-                () =>
-                {
-                    result = testMethod.Invoke(null);
-                }).AsTask().GetAwaiter().GetResult();
+            Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher
+                .RunAsync(
+                    Windows.UI.Core.CoreDispatcherPriority.Normal,
+                    () => result = testMethod.Invoke(null))
+                .AsTask()
+                .GetAwaiter()
+                .GetResult();
 
             return new TestResult[] { result };
         }

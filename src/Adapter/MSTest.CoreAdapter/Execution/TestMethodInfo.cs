@@ -87,10 +87,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         internal TestMethodOptions TestMethodOptions { get; private set; }
 
-        public Attribute[] GetAllAttributes(bool inherit)
-        {
-            return ReflectHelper.GetCustomAttributes(TestMethod, inherit) as Attribute[];
-        }
+        public Attribute[] GetAllAttributes(bool inherit) => ReflectHelper.GetCustomAttributes(TestMethod, inherit) as Attribute[];
 
         public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
             where TAttributeType : Attribute

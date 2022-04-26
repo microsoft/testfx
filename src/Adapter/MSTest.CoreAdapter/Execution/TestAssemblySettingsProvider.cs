@@ -18,10 +18,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
         }
 
-        internal TestAssemblySettingsProvider(ReflectHelper reflectHelper)
-        {
-            this.reflectHelper = reflectHelper;
-        }
+        internal TestAssemblySettingsProvider(ReflectHelper reflectHelper) => this.reflectHelper = reflectHelper;
 
         /// <summary>
         /// Returns object to be used for controlling lifetime, null means infinite lifetime.
@@ -30,10 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// The <see cref="object"/>.
         /// </returns>
         [SecurityCritical]
-        public override object InitializeLifetimeService()
-        {
-            return null;
-        }
+        public override object InitializeLifetimeService() => null;
 
         internal TestAssemblySettings GetSettings(string source)
         {

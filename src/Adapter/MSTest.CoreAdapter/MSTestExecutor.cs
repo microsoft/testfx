@@ -111,9 +111,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             cancellationToken = null;
         }
 
-        public void Cancel()
-        {
-            cancellationToken?.Cancel();
-        }
+        public void Cancel() => cancellationToken?.Cancel();
     }
 }

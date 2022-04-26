@@ -19,10 +19,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="timeout">
         /// The timeout in milliseconds.
         /// </param>
-        public TimeoutAttribute(int timeout)
-        {
-            Timeout = timeout;
-        }
+        public TimeoutAttribute(int timeout) => Timeout = timeout;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeoutAttribute"/> class with a preset timeout
@@ -30,10 +27,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="timeout">
         /// The timeout
         /// </param>
-        public TimeoutAttribute(TestTimeout timeout)
-        {
-            Timeout = (int)timeout;
-        }
+        public TimeoutAttribute(TestTimeout timeout) => Timeout = (int)timeout;
 
         #endregion
 

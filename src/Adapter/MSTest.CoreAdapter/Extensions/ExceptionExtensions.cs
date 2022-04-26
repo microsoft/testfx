@@ -22,10 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <returns>
         /// An <see cref="Exception"/> instance.
         /// </returns>
-        internal static Exception GetInnerExceptionOrDefault(this Exception exception)
-        {
-            return exception?.InnerException ?? exception;
-        }
+        internal static Exception GetInnerExceptionOrDefault(this Exception exception) => exception?.InnerException ?? exception;
 
         /// <summary>
         /// Get the exception message if available, empty otherwise.

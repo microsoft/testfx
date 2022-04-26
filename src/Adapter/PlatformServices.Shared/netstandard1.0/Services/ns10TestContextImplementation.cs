@@ -76,13 +76,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         // Returns:
         //     A Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome that states
         //     the outcome of a test that has run.
-        public override UTF.UnitTestOutcome CurrentTestOutcome
-        {
-            get
-            {
-                return outcome;
-            }
-        }
+        public override UTF.UnitTestOutcome CurrentTestOutcome => outcome;
 
         /// <summary>
         /// Gets fully-qualified name of the class containing the test method currently being executed
@@ -93,24 +87,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// in the test results. Users can benefit from messages that include the fully-qualified
         /// class name in addition to the name of the test method currently being executed.
         /// </remarks>
-        public override string FullyQualifiedTestClassName
-        {
-            get
-            {
-                return GetPropertyValue(FullyQualifiedTestClassNameLabel) as string;
-            }
-        }
+        public override string FullyQualifiedTestClassName => GetPropertyValue(FullyQualifiedTestClassNameLabel) as string;
 
         /// <summary>
         /// Gets name of the test method currently being executed
         /// </summary>
-        public override string TestName
-        {
-            get
-            {
-                return GetPropertyValue(TestNameLabel) as string;
-            }
-        }
+        public override string TestName => GetPropertyValue(TestNameLabel) as string;
 
         /// <summary>
         /// Gets the test properties when overridden in a derived class.
@@ -119,21 +101,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// An System.Collections.IDictionary object that contains key/value pairs that
         ///  represent the test properties.
         /// </returns>
-        public override IDictionary Properties
-        {
-            get
-            {
-                return properties as IDictionary;
-            }
-        }
+        public override IDictionary Properties => properties as IDictionary;
 
-        public UTF.TestContext Context
-        {
-            get
-            {
-                return this as UTF.TestContext;
-            }
-        }
+        public UTF.TestContext Context => this as UTF.TestContext;
 
         /// <summary>
         /// Adds a file name to the list in TestResult.ResultFileNames
@@ -152,10 +122,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Set the unit-test outcome
         /// </summary>
         /// <param name="outcome">The test outcome.</param>
-        public void SetOutcome(UTF.UnitTestOutcome outcome)
-        {
-            this.outcome = outcome;
-        }
+        public void SetOutcome(UTF.UnitTestOutcome outcome) => this.outcome = outcome;
 
         /// <summary>
         /// Returns whether property with parameter name is present or not
@@ -287,27 +254,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Returns null as this feature is not supported in ASP .net and UWP
         /// </summary>
         /// <returns>List of result files. Null presently.</returns>
-        public IList<string> GetResultFiles()
-        {
-            return null;
-        }
+        public IList<string> GetResultFiles() => null;
 
         /// <summary>
         /// Gets messages from the testContext writeLines
         /// </summary>
         /// <returns>The test context messages added so far.</returns>
-        public string GetDiagnosticMessages()
-        {
-            return threadSafeStringWriter.ToString();
-        }
+        public string GetDiagnosticMessages() => threadSafeStringWriter.ToString();
 
         /// <summary>
         /// Clears the previous testContext writeline messages.
         /// </summary>
-        public void ClearDiagnosticMessages()
-        {
-            threadSafeStringWriter.ToStringAndClear();
-        }
+        public void ClearDiagnosticMessages() => threadSafeStringWriter.ToStringAndClear();
 
         public void SetDataRow(object dataRow)
         {

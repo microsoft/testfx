@@ -101,13 +101,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Gets 'Trace' Output from the redirected stream
         /// </summary>
-        public string DebugTrace
-        {
-            get
-            {
-                return redirectedDebugTrace?.ToString();
-            }
-        }
+        public string DebugTrace => redirectedDebugTrace?.ToString();
 
         public string GetAndClearStandardOutput()
         {

@@ -104,17 +104,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         private static DataContractJsonSerializer GetSerializer(string assemblyQualifiedName)
-        {
-            return SerializerCache.GetOrAdd(
+            => SerializerCache.GetOrAdd(
                 assemblyQualifiedName,
                 _ => new DataContractJsonSerializer(Type.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings));
-        }
 
         private static DataContractJsonSerializer GetSerializer(Type type)
-        {
-            return SerializerCache.GetOrAdd(
+            => SerializerCache.GetOrAdd(
                 type.AssemblyQualifiedName,
                 _ => new DataContractJsonSerializer(type, SerializerSettings));
-        }
     }
 }

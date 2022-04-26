@@ -72,13 +72,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             isAppDomainCreationDisabled = (this.runSettings != null) && MSTestAdapterSettings.IsAppDomainCreationDisabled(this.runSettings.SettingsXml);
         }
 
-        internal AppDomain AppDomain
-        {
-            get
-            {
-                return domain;
-            }
-        }
+        internal AppDomain AppDomain => domain;
 
         /// <summary>
         /// Setup the isolation host.
@@ -282,15 +276,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return resolutionPaths;
         }
 
-        internal virtual string GetTargetFrameworkVersionString(string sourceFileName)
-        {
-            return AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
-        }
+        internal virtual string GetTargetFrameworkVersionString(string sourceFileName) => AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
 
-        private string GetConfigFileForTestSource(string sourceFileName)
-        {
-            return new DeploymentUtility().GetConfigFile(sourceFileName);
-        }
+        private string GetConfigFileForTestSource(string sourceFileName) => new DeploymentUtility().GetConfigFile(sourceFileName);
 
         /// <summary>
         /// Sets context required for running tests.

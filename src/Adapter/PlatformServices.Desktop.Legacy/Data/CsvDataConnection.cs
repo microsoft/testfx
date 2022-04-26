@@ -33,14 +33,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             this.fileName = fileName;
         }
 
-        private string TableName
-        {
-            get
-            {
+        private string TableName =>
                 // Only one table based on the name of the file, with dots converted to # signs
-                return Path.GetFileName(fileName).Replace('.', '#');
-            }
-        }
+                Path.GetFileName(fileName).Replace('.', '#');
 
         public override List<string> GetDataTablesAndViews()
         {
@@ -162,9 +157,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             }
         }
 
-        public override DataTable ReadTable(string tableName, IEnumerable columns)
-        {
-            return ReadTable(tableName, columns, -1);
-        }
+        public override DataTable ReadTable(string tableName, IEnumerable columns) => ReadTable(tableName, columns, -1);
     }
 }

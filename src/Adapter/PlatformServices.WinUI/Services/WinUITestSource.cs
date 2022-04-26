@@ -60,14 +60,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="assemblyName"> The assembly name. </param>
         /// <param name="source"> The source. </param>
         /// <returns> True if the assembly is referenced. </returns>
-        public bool IsAssemblyReferenced(AssemblyName assemblyName, string source)
-        {
+        public bool IsAssemblyReferenced(AssemblyName assemblyName, string source) =>
             // This code will get hit when Discovery happens during Run Tests.
             // Since Discovery during Discover Tests would have validated the presence of Unit Test Framework as reference,
             // no need to do validation again.
             // Simply return true.
-            return true;
-        }
+            true;
 
         /// <summary>
         /// Gets the set of sources (dll's/exe's) that contain tests. If a source is a package(appx), return the file(dll/exe) that contains tests from it.

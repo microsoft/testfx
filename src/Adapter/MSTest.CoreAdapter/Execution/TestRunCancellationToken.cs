@@ -27,10 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </summary>
         public bool Canceled
         {
-            get
-            {
-                return canceled;
-            }
+            get => canceled;
 
             private set
             {
@@ -45,10 +42,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <summary>
         /// Cancels the execution of a test run.
         /// </summary>
-        public void Cancel()
-        {
-            Canceled = true;
-        }
+        public void Cancel() => Canceled = true;
 
         /// <summary>
         /// Registers a callback method to be invoked when canceled.
@@ -66,9 +60,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <summary>
         /// Unregister the callback method.
         /// </summary>
-        public void Unregister()
-        {
-            registeredCallback = null;
-        }
+        public void Unregister() => registeredCallback = null;
     }
 }

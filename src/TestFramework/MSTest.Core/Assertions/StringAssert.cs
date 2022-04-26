@@ -63,10 +63,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="substring"/> is not found in
         /// <paramref name="value"/>.
         /// </exception>
-        public static void Contains(string value, string substring)
-        {
-            Contains(value, substring, string.Empty, StringComparison.Ordinal);
-        }
+        public static void Contains(string value, string substring) => Contains(value, substring, string.Empty, StringComparison.Ordinal);
 
         /// <summary>
         /// Tests whether the specified string contains the specified substring
@@ -86,10 +83,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="substring"/> is not found in
         /// <paramref name="value"/>.
         /// </exception>
-        public static void Contains(string value, string substring, StringComparison comparisonType)
-        {
-            Contains(value, substring, string.Empty, comparisonType);
-        }
+        public static void Contains(string value, string substring, StringComparison comparisonType) => Contains(value, substring, string.Empty, comparisonType);
 
         /// <summary>
         /// Tests whether the specified string contains the specified substring
@@ -111,10 +105,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="substring"/> is not found in
         /// <paramref name="value"/>.
         /// </exception>
-        public static void Contains(string value, string substring, string message)
-        {
-            Contains(value, substring, message, StringComparison.Ordinal);
-        }
+        public static void Contains(string value, string substring, string message) => Contains(value, substring, message, StringComparison.Ordinal);
 
         /// <summary>
         /// Tests whether the specified string contains the specified substring
@@ -139,10 +130,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="substring"/> is not found in
         /// <paramref name="value"/>.
         /// </exception>
-        public static void Contains(string value, string substring, string message, StringComparison comparisonType)
-        {
-            Contains(value, substring, message, comparisonType, Empty);
-        }
+        public static void Contains(string value, string substring, string message, StringComparison comparisonType) => Contains(value, substring, message, comparisonType, Empty);
 
         /// <summary>
         /// Tests whether the specified string contains the specified substring
@@ -167,10 +155,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="substring"/> is not found in
         /// <paramref name="value"/>.
         /// </exception>
-        public static void Contains(string value, string substring, string message, params object[] parameters)
-        {
-            Contains(value, substring, message, StringComparison.Ordinal, parameters);
-        }
+        public static void Contains(string value, string substring, string message, params object[] parameters) => Contains(value, substring, message, StringComparison.Ordinal, parameters);
 
         /// <summary>
         /// Tests whether the specified string contains the specified substring
@@ -224,10 +209,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not begin with
         /// <paramref name="substring"/>.
         /// </exception>
-        public static void StartsWith(string value, string substring)
-        {
-            StartsWith(value, substring, string.Empty, StringComparison.Ordinal);
-        }
+        public static void StartsWith(string value, string substring) => StartsWith(value, substring, string.Empty, StringComparison.Ordinal);
 
         /// <summary>
         /// Tests whether the specified string begins with the specified substring
@@ -247,10 +229,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not begin with
         /// <paramref name="substring"/>.
         /// </exception>
-        public static void StartsWith(string value, string substring, StringComparison comparisonType)
-        {
-            StartsWith(value, substring, string.Empty, comparisonType, Empty);
-        }
+        public static void StartsWith(string value, string substring, StringComparison comparisonType) => StartsWith(value, substring, string.Empty, comparisonType, Empty);
 
         /// <summary>
         /// Tests whether the specified string begins with the specified substring
@@ -272,10 +251,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not begin with
         /// <paramref name="substring"/>.
         /// </exception>
-        public static void StartsWith(string value, string substring, string message)
-        {
-            StartsWith(value, substring, message, StringComparison.Ordinal);
-        }
+        public static void StartsWith(string value, string substring, string message) => StartsWith(value, substring, message, StringComparison.Ordinal);
 
         /// <summary>
         /// Tests whether the specified string begins with the specified substring
@@ -300,10 +276,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not begin with
         /// <paramref name="substring"/>.
         /// </exception>
-        public static void StartsWith(string value, string substring, string message, params object[] parameters)
-        {
-            StartsWith(value, substring, message, StringComparison.Ordinal, parameters);
-        }
+        public static void StartsWith(string value, string substring, string message, params object[] parameters) => StartsWith(value, substring, message, StringComparison.Ordinal, parameters);
 
         /// <summary>
         /// Tests whether the specified string begins with the specified substring
@@ -328,10 +301,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not begin with
         /// <paramref name="substring"/>.
         /// </exception>
-        public static void StartsWith(string value, string substring, string message, StringComparison comparisonType)
-        {
-            StartsWith(value, substring, message, comparisonType, Empty);
-        }
+        public static void StartsWith(string value, string substring, string message, StringComparison comparisonType) => StartsWith(value, substring, message, comparisonType, Empty);
 
         /// <summary>
         /// Tests whether the specified string begins with the specified substring
@@ -385,10 +355,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not end with
         /// <paramref name="substring"/>.
         /// </exception>
-        public static void EndsWith(string value, string substring)
-        {
-            EndsWith(value, substring, string.Empty, StringComparison.Ordinal);
-        }
+        public static void EndsWith(string value, string substring) => EndsWith(value, substring, string.Empty, StringComparison.Ordinal);
 
         /// <summary>
         /// Tests whether the specified string ends with the specified substring
@@ -408,10 +375,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not end with
         /// <paramref name="substring"/>.
         /// </exception>
-        public static void EndsWith(string value, string substring, StringComparison comparisonType)
-        {
-            EndsWith(value, substring, string.Empty, comparisonType, Empty);
-        }
+        public static void EndsWith(string value, string substring, StringComparison comparisonType) => EndsWith(value, substring, string.Empty, comparisonType, Empty);
 
         /// <summary>
         /// Tests whether the specified string ends with the specified substring
@@ -433,10 +397,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not end with
         /// <paramref name="substring"/>.
         /// </exception>
-        public static void EndsWith(string value, string substring, string message)
-        {
-            EndsWith(value, substring, message, StringComparison.Ordinal);
-        }
+        public static void EndsWith(string value, string substring, string message) => EndsWith(value, substring, message, StringComparison.Ordinal);
 
         /// <summary>
         /// Tests whether the specified string ends with the specified substring
@@ -461,10 +422,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not end with
         /// <paramref name="substring"/>.
         /// </exception>
-        public static void EndsWith(string value, string substring, string message, params object[] parameters)
-        {
-            EndsWith(value, substring, message, StringComparison.Ordinal, parameters);
-        }
+        public static void EndsWith(string value, string substring, string message, params object[] parameters) => EndsWith(value, substring, message, StringComparison.Ordinal, parameters);
 
         /// <summary>
         /// Tests whether the specified string ends with the specified substring
@@ -489,10 +447,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not end with
         /// <paramref name="substring"/>.
         /// </exception>
-        public static void EndsWith(string value, string substring, string message, StringComparison comparisonType)
-        {
-            EndsWith(value, substring, message, comparisonType, Empty);
-        }
+        public static void EndsWith(string value, string substring, string message, StringComparison comparisonType) => EndsWith(value, substring, message, comparisonType, Empty);
 
         /// <summary>
         /// Tests whether the specified string ends with the specified substring
@@ -550,10 +505,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not match
         /// <paramref name="pattern"/>.
         /// </exception>
-        public static void Matches(string value, Regex pattern)
-        {
-            Matches(value, pattern, string.Empty);
-        }
+        public static void Matches(string value, Regex pattern) => Matches(value, pattern, string.Empty);
 
         /// <summary>
         /// Tests whether the specified string matches a regular expression and
@@ -575,10 +527,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> does not match
         /// <paramref name="pattern"/>.
         /// </exception>
-        public static void Matches(string value, Regex pattern, string message)
-        {
-            Matches(value, pattern, message, null);
-        }
+        public static void Matches(string value, Regex pattern, string message) => Matches(value, pattern, message, null);
 
         /// <summary>
         /// Tests whether the specified string matches a regular expression and
@@ -629,10 +578,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> matches <paramref name="pattern"/>.
         /// </exception>
-        public static void DoesNotMatch(string value, Regex pattern)
-        {
-            DoesNotMatch(value, pattern, string.Empty);
-        }
+        public static void DoesNotMatch(string value, Regex pattern) => DoesNotMatch(value, pattern, string.Empty);
 
         /// <summary>
         /// Tests whether the specified string does not match a regular expression
@@ -653,10 +599,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> matches <paramref name="pattern"/>.
         /// </exception>
-        public static void DoesNotMatch(string value, Regex pattern, string message)
-        {
-            DoesNotMatch(value, pattern, message, null);
-        }
+        public static void DoesNotMatch(string value, Regex pattern, string message) => DoesNotMatch(value, pattern, message, null);
 
         /// <summary>
         /// Tests whether the specified string does not match a regular expression

@@ -88,10 +88,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         public MethodInfo ClassInitializeMethod
         {
-            get
-            {
-                return classInitializeMethod;
-            }
+            get => classInitializeMethod;
 
             internal set
             {
@@ -135,10 +132,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         public MethodInfo ClassCleanupMethod
         {
-            get
-            {
-                return classCleanupMethod;
-            }
+            get => classCleanupMethod;
 
             internal set
             {
@@ -185,10 +179,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         public MethodInfo TestInitializeMethod
         {
-            get
-            {
-                return testInitializeMethod;
-            }
+            get => testInitializeMethod;
 
             internal set
             {
@@ -207,10 +198,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         public MethodInfo TestCleanupMethod
         {
-            get
-            {
-                return testCleanupMethod;
-            }
+            get => testCleanupMethod;
 
             internal set
             {

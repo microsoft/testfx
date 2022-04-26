@@ -40,10 +40,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 return xmlUtilities;
             }
 
-            set
-            {
-                xmlUtilities = value;
-            }
+            set => xmlUtilities = value;
         }
 
         /// <summary>

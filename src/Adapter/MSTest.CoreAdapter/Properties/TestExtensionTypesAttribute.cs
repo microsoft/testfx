@@ -11,10 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform
     [AttributeUsage(AttributeTargets.Assembly, Inherited = false, AllowMultiple = false)]
     internal sealed class TestExtensionTypesAttribute : Attribute
     {
-        public TestExtensionTypesAttribute(params Type[] types)
-        {
-            Types = types;
-        }
+        public TestExtensionTypesAttribute(params Type[] types) => Types = types;
 
         public Type[] Types { get; }
     }

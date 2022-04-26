@@ -62,20 +62,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         #region Data Properties
 
-        public override DbConnection Connection
-        {
-            get { return connection; }
-        }
+        public override DbConnection Connection => connection;
 
-        protected DbCommandBuilder CommandBuilder
-        {
-            get { return commandBuilder; }
-        }
+        protected DbCommandBuilder CommandBuilder => commandBuilder;
 
-        protected DbProviderFactory Factory
-        {
-            get { return factory; }
-        }
+        protected DbProviderFactory Factory => factory;
 
         #endregion
 
@@ -139,10 +130,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 return quotePrefix;
             }
 
-            set
-            {
-                quotePrefix = value;
-            }
+            set => quotePrefix = value;
         }
 
         public virtual string QuoteSuffix
@@ -157,10 +145,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 return quoteSuffix;
             }
 
-            set
-            {
-                quoteSuffix = value;
-            }
+            set => quoteSuffix = value;
         }
 
         private char CatalogSeperatorChar
@@ -397,10 +382,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// <param name="text">The string.</param>
         /// <param name="from">Index.</param>
         /// <returns>Location of the separator.</returns>
-        private int FindSeperators(string text, int from)
-        {
-            return text.IndexOfAny(new char[] { SchemaSeperatorChar, CatalogSeperatorChar }, from);
-        }
+        private int FindSeperators(string text, int from) => text.IndexOfAny(new char[] { SchemaSeperatorChar, CatalogSeperatorChar }, from);
 
         /// <summary>
         /// Given a string and a position in that string, assumed
@@ -483,10 +465,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// Can throw.
         /// </summary>
         /// <returns>The default database schema.</returns>
-        public virtual string GetDefaultSchema()
-        {
-            return null;
-        }
+        public virtual string GetDefaultSchema() => null;
 
 #pragma warning restore SA1202 // Elements must be ordered by access
 
@@ -724,24 +703,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         #region Helpers
 
 #pragma warning disable SA1202 // Elements must be ordered by access
-        public bool IsOpen()
-#pragma warning restore SA1202 // Elements must be ordered by access
-        {
-            return connection != null && connection.State == ConnectionState.Open;
-        }
+        public bool IsOpen() => connection != null && connection.State == ConnectionState.Open;
 
         /// <summary>
         /// Returns true when given provider (OLEDB or ODBC) is for MSSql.
         /// </summary>
         /// <param name="providerName">OLEDB or ODBC provider.</param>
         /// <returns>True if provider is for MSSql.</returns>
-        protected static bool IsMSSql(string providerName)
-        {
-            return (!string.IsNullOrEmpty(providerName) &&
+        protected static bool IsMSSql(string providerName) => (!string.IsNullOrEmpty(providerName) &&
                 (providerName.StartsWith(KnownOleDbProviderNames.SqlOleDb, StringComparison.OrdinalIgnoreCase) ||
                  providerName.StartsWith(KnownOleDbProviderNames.MSSqlNative, StringComparison.OrdinalIgnoreCase))) ||
                  string.Equals(providerName, KnownOdbcDrivers.MSSql, StringComparison.OrdinalIgnoreCase);
-        }
 
         /// <summary>
         /// Classify a table schema as being hidden from the user
@@ -749,11 +721,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// </summary>
         /// <param name="tableSchema">A candidate table schema</param>
         /// <returns>True always.</returns>
-        protected virtual bool IsUserSchema(string tableSchema)
-        {
+        protected virtual bool IsUserSchema(string tableSchema) =>
             // Default is to allow all schemas
-            return true;
-        }
+            true;
 
         /// <summary>
         /// Returns default database schema. Returns null for error

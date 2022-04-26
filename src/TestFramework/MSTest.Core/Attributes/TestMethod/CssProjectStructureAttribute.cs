@@ -15,10 +15,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Initializes a new instance of the <see cref="CssProjectStructureAttribute"/> class for CSS Project Structure URI.
         /// </summary>
         /// <param name="cssProjectStructure">The CSS Project Structure URI.</param>
-        public CssProjectStructureAttribute(string cssProjectStructure)
-        {
-            CssProjectStructure = cssProjectStructure;
-        }
+        public CssProjectStructureAttribute(string cssProjectStructure) => CssProjectStructure = cssProjectStructure;
 
         /// <summary>
         /// Gets the CSS Project Structure URI.

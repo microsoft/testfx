@@ -25,10 +25,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="message">
         /// Message specifies reason for ignoring.
         /// </param>
-        public IgnoreAttribute(string message)
-        {
-            IgnoreMessage = message;
-        }
+        public IgnoreAttribute(string message) => IgnoreMessage = message;
 
         /// <summary>
         /// Gets the owner.

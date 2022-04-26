@@ -39,20 +39,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <remarks>
         /// This constructor initializes the Data property to a random value.
         /// </remarks>
-        public GenericParameterHelper()
-        {
-            Data = Randomizer.Next();
-        }
+        public GenericParameterHelper() => Data = Randomizer.Next();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GenericParameterHelper"/> class that
         /// initializes the Data property to a user-supplied value.
         /// </summary>
         /// <param name="data">Any integer value</param>
-        public GenericParameterHelper(int data)
-        {
-            Data = data;
-        }
+        public GenericParameterHelper(int data) => Data = data;
         #endregion
 
         #region Public Properties
@@ -62,8 +56,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         public int Data
         {
-            get { return data; }
-            set { data = value; }
+            get => data;
+            set => data = value;
         }
         #endregion
 
@@ -86,10 +80,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Returns a hashcode for this object.
         /// </summary>
         /// <returns>The hash code.</returns>
-        public override int GetHashCode()
-        {
-            return Data.GetHashCode();
-        }
+        public override int GetHashCode() => Data.GetHashCode();
         #endregion
 
         #region IComparable Members

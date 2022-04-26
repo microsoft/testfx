@@ -75,10 +75,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 return currentSettings;
             }
 
-            private set
-            {
-                currentSettings = value;
-            }
+            private set => currentSettings = value;
         }
 
         /// <summary>
@@ -96,10 +93,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 return runConfigurationSettings;
             }
 
-            private set
-            {
-                runConfigurationSettings = value;
-            }
+            private set => runConfigurationSettings = value;
         }
 
         /// <summary>
@@ -560,9 +554,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
 
         private static bool TryParseEnum<T>(string value, out T result)
             where T : struct, Enum
-        {
-            return Enum.TryParse<T>(value, true, out result) && Enum.IsDefined(typeof(T), result);
-        }
+            => Enum.TryParse<T>(value, true, out result)
+            && Enum.IsDefined(typeof(T), result);
 
         private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings)
         {

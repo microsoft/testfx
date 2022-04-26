@@ -25,10 +25,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="displayName">
         /// Display name for the test.
         /// </param>
-        public TestMethodAttribute(string displayName)
-        {
-            DisplayName = displayName;
-        }
+        public TestMethodAttribute(string displayName) => DisplayName = displayName;
 
         /// <summary>
         /// Gets display name for the test.
@@ -41,9 +38,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="testMethod">The test method to execute.</param>
         /// <returns>An array of TestResult objects that represent the outcome(s) of the test.</returns>
         /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
-        public virtual TestResult[] Execute(ITestMethod testMethod)
-        {
-            return new TestResult[] { testMethod.Invoke(null) };
-        }
+        public virtual TestResult[] Execute(ITestMethod testMethod) => new TestResult[] { testMethod.Invoke(null) };
     }
 }

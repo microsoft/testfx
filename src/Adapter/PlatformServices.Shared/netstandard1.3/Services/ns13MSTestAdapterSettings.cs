@@ -248,10 +248,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="path">path</param>
         /// <returns>True if directory exists.</returns>
         /// <remarks>Only present for unit testing scenarios.</remarks>
-        protected virtual bool DoesDirectoryExist(string path)
-        {
-            return Directory.Exists(path);
-        }
+        protected virtual bool DoesDirectoryExist(string path) => Directory.Exists(path);
 
         /// <summary>
         /// Expands any environment variables in the path provided.
@@ -259,10 +256,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="path">path</param>
         /// <returns>expanded string</returns>
         /// <remarks>Only present for unit testing scenarios.</remarks>
-        protected virtual string ExpandEnvironmentVariables(string path)
-        {
-            return Environment.ExpandEnvironmentVariables(path);
-        }
+        protected virtual string ExpandEnvironmentVariables(string path) => Environment.ExpandEnvironmentVariables(path);
 
         private void ReadAssemblyResolutionPath(XmlReader reader)
         {

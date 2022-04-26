@@ -57,9 +57,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 #if NET5_0
         [Obsolete]
 #endif
-        public override object InitializeLifetimeService()
-        {
-            return null;
-        }
+        public override object InitializeLifetimeService() => null;
     }
 }

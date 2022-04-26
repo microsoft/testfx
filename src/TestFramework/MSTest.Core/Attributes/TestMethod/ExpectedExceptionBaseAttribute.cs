@@ -19,10 +19,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Initializes a new instance of the <see cref="ExpectedExceptionBaseAttribute"/> class with a default no-exception message
         /// </summary>
         protected ExpectedExceptionBaseAttribute()
-            : this(string.Empty)
-        {
-            SpecifiedNoExceptionMessage = string.Empty;
-        }
+            : this(string.Empty) => SpecifiedNoExceptionMessage = string.Empty;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExpectedExceptionBaseAttribute"/> class with a no-exception message
@@ -32,12 +29,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// exception
         /// </param>
         protected ExpectedExceptionBaseAttribute(string noExceptionMessage)
-        {
-            SpecifiedNoExceptionMessage =
-                noExceptionMessage == null ?
-                    string.Empty :
-                    noExceptionMessage.Trim();
-        }
+            => SpecifiedNoExceptionMessage = noExceptionMessage == null
+                ? string.Empty
+                : noExceptionMessage.Trim();
 
         #endregion
 
@@ -79,12 +73,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="expectedExceptionAttributeTypeName">The ExpectedException attribute type name</param>
         /// <returns>The default no-exception message</returns>
         internal static string GetDefaultNoExceptionMessage(string expectedExceptionAttributeTypeName)
-        {
-            return string.Format(
+            => string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.UTF_TestMethodNoExceptionDefault,
                 expectedExceptionAttributeTypeName);
-        }
 
         /// <summary>
         /// Determines whether the exception is expected. If the method returns, then it is

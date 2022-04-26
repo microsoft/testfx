@@ -21,10 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="attributeProvider"> The member to reflect on. </param>
         /// <param name="type"> The attribute type. </param>
         /// <returns> The vale of the custom attribute. </returns>
-        internal virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
-        {
-            return GetCustomAttributes(attributeProvider, type, true);
-        }
+        internal virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type) => GetCustomAttributes(attributeProvider, type, true);
 
         /// <summary>
         /// Gets all the custom attributes adorned on a member.
@@ -32,10 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="memberInfo"> The member. </param>
         /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
         /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-        internal object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
-        {
-            return GetCustomAttributes(memberInfo, type: null, inherit: inherit);
-        }
+        internal object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit) => GetCustomAttributes(memberInfo, type: null, inherit: inherit);
 
         /// <summary>
         /// Get custom attributes on a member for both normal and reflection only load.

@@ -22,10 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="memberInfo"> The member. </param>
         /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
         /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-        public object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
-        {
-            return memberInfo.GetCustomAttributes(inherit).ToArray<object>();
-        }
+        public object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit) => memberInfo.GetCustomAttributes(inherit).ToArray<object>();
 
         /// <summary>
         /// Gets all the custom attributes of a given type adorned on a member.
@@ -34,10 +31,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="type"> The attribute type. </param>
         /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
         /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-        public object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
-        {
-            return memberInfo.GetCustomAttributes(type, inherit).ToArray<object>();
-        }
+        public object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit) => memberInfo.GetCustomAttributes(type, inherit).ToArray<object>();
 
         /// <summary>
         /// Gets all the custom attributes of a given type on an assembly.
@@ -45,10 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="assembly"> The assembly. </param>
         /// <param name="type"> The attribute type. </param>
         /// <returns> The list of attributes of the given type on the member. Empty list if none found. </returns>
-        public object[] GetCustomAttributes(Assembly assembly, Type type)
-        {
-            return assembly.GetCustomAttributes(type).ToArray<object>();
-        }
+        public object[] GetCustomAttributes(Assembly assembly, Type type) => assembly.GetCustomAttributes(type).ToArray<object>();
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

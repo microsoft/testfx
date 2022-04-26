@@ -14,10 +14,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Initializes a new instance of the <see cref="TestResult"/> class.
         /// </summary>
-        public TestResult()
-        {
-            DatarowIndex = -1;
-        }
+        public TestResult() => DatarowIndex = -1;
 
         /// <summary>
         /// Gets or sets the display name of the result. Useful when returning multiple results.

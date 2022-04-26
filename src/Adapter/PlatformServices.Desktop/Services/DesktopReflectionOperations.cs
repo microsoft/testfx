@@ -24,10 +24,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Initializes a new instance of the <see cref="ReflectionOperations"/> class.
         /// </summary>
-        public ReflectionOperations()
-        {
-            reflectionUtility = new ReflectionUtility();
-        }
+        public ReflectionOperations() => reflectionUtility = new ReflectionUtility();
 
         /// <summary>
         /// Gets all the custom attributes adorned on a member.
@@ -35,10 +32,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="memberInfo"> The member. </param>
         /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
         /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-        public object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
-        {
-            return reflectionUtility.GetCustomAttributes(memberInfo, inherit);
-        }
+        public object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit) => reflectionUtility.GetCustomAttributes(memberInfo, inherit);
 
         /// <summary>
         /// Gets all the custom attributes of a given type adorned on a member.
@@ -47,10 +41,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="type"> The attribute type. </param>
         /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
         /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-        public object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
-        {
-            return reflectionUtility.GetCustomAttributes(memberInfo, type, inherit);
-        }
+        public object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit) => reflectionUtility.GetCustomAttributes(memberInfo, type, inherit);
 
         /// <summary>
         /// Gets all the custom attributes of a given type on an assembly.
@@ -58,10 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="assembly"> The assembly. </param>
         /// <param name="type"> The attribute type. </param>
         /// <returns> The list of attributes of the given type on the member. Empty list if none found. </returns>
-        public object[] GetCustomAttributes(Assembly assembly, Type type)
-        {
-            return reflectionUtility.GetCustomAttributes(assembly, type);
-        }
+        public object[] GetCustomAttributes(Assembly assembly, Type type) => reflectionUtility.GetCustomAttributes(assembly, type);
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

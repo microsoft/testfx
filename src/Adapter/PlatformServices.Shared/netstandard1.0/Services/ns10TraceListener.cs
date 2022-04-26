@@ -47,10 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Returning null as this feature is not supported in ASP .net and UWP
         /// </summary>
         /// <returns>A TextWriter instance. Null for now since this is unsupported.</returns>
-        public TextWriter GetWriter()
-        {
-            return null;
-        }
+        public TextWriter GetWriter() => null;
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

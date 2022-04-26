@@ -70,10 +70,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// The <see cref="object"/>.
         /// </returns>
         [SecurityCritical]
-        public override object InitializeLifetimeService()
-        {
-            return null;
-        }
+        public override object InitializeLifetimeService() => null;
 
         /// <summary>
         /// Initialized the class cleanup manager for the unit test runner. Note, this can run over process-isolation,

@@ -65,10 +65,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="element"/> is not found in
         /// <paramref name="collection"/>.
         /// </exception>
-        public static void Contains(ICollection collection, object element)
-        {
-            Contains(collection, element, string.Empty, null);
-        }
+        public static void Contains(ICollection collection, object element) => Contains(collection, element, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified collection contains the specified element
@@ -89,10 +86,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="element"/> is not found in
         /// <paramref name="collection"/>.
         /// </exception>
-        public static void Contains(ICollection collection, object element, string message)
-        {
-            Contains(collection, element, message, null);
-        }
+        public static void Contains(ICollection collection, object element, string message) => Contains(collection, element, message, null);
 
         /// <summary>
         /// Tests whether the specified collection contains the specified element
@@ -145,10 +139,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="element"/> is found in
         /// <paramref name="collection"/>.
         /// </exception>
-        public static void DoesNotContain(ICollection collection, object element)
-        {
-            DoesNotContain(collection, element, string.Empty, null);
-        }
+        public static void DoesNotContain(ICollection collection, object element) => DoesNotContain(collection, element, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified collection does not contain the specified
@@ -169,10 +160,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="element"/> is found in
         /// <paramref name="collection"/>.
         /// </exception>
-        public static void DoesNotContain(ICollection collection, object element, string message)
-        {
-            DoesNotContain(collection, element, message, null);
-        }
+        public static void DoesNotContain(ICollection collection, object element, string message) => DoesNotContain(collection, element, message, null);
 
         /// <summary>
         /// Tests whether the specified collection does not contain the specified
@@ -219,10 +207,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if a null element is found in <paramref name="collection"/>.
         /// </exception>
-        public static void AllItemsAreNotNull(ICollection collection)
-        {
-            AllItemsAreNotNull(collection, string.Empty, null);
-        }
+        public static void AllItemsAreNotNull(ICollection collection) => AllItemsAreNotNull(collection, string.Empty, null);
 
         /// <summary>
         /// Tests whether all items in the specified collection are non-null and throws
@@ -238,10 +223,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if a null element is found in <paramref name="collection"/>.
         /// </exception>
-        public static void AllItemsAreNotNull(ICollection collection, string message)
-        {
-            AllItemsAreNotNull(collection, message, null);
-        }
+        public static void AllItemsAreNotNull(ICollection collection, string message) => AllItemsAreNotNull(collection, message, null);
 
         /// <summary>
         /// Tests whether all items in the specified collection are non-null and throws
@@ -283,10 +265,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if a two or more equal elements are found in
         /// <paramref name="collection"/>.
         /// </exception>
-        public static void AllItemsAreUnique(ICollection collection)
-        {
-            AllItemsAreUnique(collection, string.Empty, null);
-        }
+        public static void AllItemsAreUnique(ICollection collection) => AllItemsAreUnique(collection, string.Empty, null);
 
         /// <summary>
         /// Tests whether all items in the specified collection are unique or not and
@@ -304,10 +283,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if a two or more equal elements are found in
         /// <paramref name="collection"/>.
         /// </exception>
-        public static void AllItemsAreUnique(ICollection collection, string message)
-        {
-            AllItemsAreUnique(collection, message, null);
-        }
+        public static void AllItemsAreUnique(ICollection collection, string message) => AllItemsAreUnique(collection, message, null);
 
         /// <summary>
         /// Tests whether all items in the specified collection are unique or not and
@@ -395,10 +371,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if an element in <paramref name="subset"/> is not found in
         /// <paramref name="superset"/>.
         /// </exception>
-        public static void IsSubsetOf(ICollection subset, ICollection superset)
-        {
-            IsSubsetOf(subset, superset, string.Empty, null);
-        }
+        public static void IsSubsetOf(ICollection subset, ICollection superset) => IsSubsetOf(subset, superset, string.Empty, null);
 
         /// <summary>
         /// Tests whether one collection is a subset of another collection and
@@ -420,10 +393,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if an element in <paramref name="subset"/> is not found in
         /// <paramref name="superset"/>.
         /// </exception>
-        public static void IsSubsetOf(ICollection subset, ICollection superset, string message)
-        {
-            IsSubsetOf(subset, superset, message, null);
-        }
+        public static void IsSubsetOf(ICollection subset, ICollection superset, string message) => IsSubsetOf(subset, superset, message, null);
 
         /// <summary>
         /// Tests whether one collection is a subset of another collection and
@@ -473,10 +443,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if every element in <paramref name="subset"/> is also found in
         /// <paramref name="superset"/>.
         /// </exception>
-        public static void IsNotSubsetOf(ICollection subset, ICollection superset)
-        {
-            IsNotSubsetOf(subset, superset, string.Empty, null);
-        }
+        public static void IsNotSubsetOf(ICollection subset, ICollection superset) => IsNotSubsetOf(subset, superset, string.Empty, null);
 
         /// <summary>
         /// Tests whether one collection is not a subset of another collection and
@@ -498,10 +465,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if every element in <paramref name="subset"/> is also found in
         /// <paramref name="superset"/>.
         /// </exception>
-        public static void IsNotSubsetOf(ICollection subset, ICollection superset, string message)
-        {
-            IsNotSubsetOf(subset, superset, message, null);
-        }
+        public static void IsNotSubsetOf(ICollection subset, ICollection superset, string message) => IsNotSubsetOf(subset, superset, message, null);
 
         /// <summary>
         /// Tests whether one collection is not a subset of another collection and
@@ -557,10 +521,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if an element was found in one of the collections but not
         /// the other.
         /// </exception>
-        public static void AreEquivalent(ICollection expected, ICollection actual)
-        {
-            AreEquivalent(expected, actual, string.Empty, null);
-        }
+        public static void AreEquivalent(ICollection expected, ICollection actual) => AreEquivalent(expected, actual, string.Empty, null);
 
         /// <summary>
         /// Tests whether two collections contain the same elements and throws an
@@ -584,10 +545,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if an element was found in one of the collections but not
         /// the other.
         /// </exception>
-        public static void AreEquivalent(ICollection expected, ICollection actual, string message)
-        {
-            AreEquivalent(expected, actual, message, null);
-        }
+        public static void AreEquivalent(ICollection expected, ICollection actual, string message) => AreEquivalent(expected, actual, message, null);
 
         /// <summary>
         /// Tests whether two collections contain the same elements and throws an
@@ -680,10 +638,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if the two collections contained the same elements, including
         /// the same number of duplicate occurrences of each element.
         /// </exception>
-        public static void AreNotEquivalent(ICollection expected, ICollection actual)
-        {
-            AreNotEquivalent(expected, actual, string.Empty, null);
-        }
+        public static void AreNotEquivalent(ICollection expected, ICollection actual) => AreNotEquivalent(expected, actual, string.Empty, null);
 
         /// <summary>
         /// Tests whether two collections contain the different elements and throws an
@@ -707,10 +662,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if the two collections contained the same elements, including
         /// the same number of duplicate occurrences of each element.
         /// </exception>
-        public static void AreNotEquivalent(ICollection expected, ICollection actual, string message)
-        {
-            AreNotEquivalent(expected, actual, message, null);
-        }
+        public static void AreNotEquivalent(ICollection expected, ICollection actual, string message) => AreNotEquivalent(expected, actual, message, null);
 
         /// <summary>
         /// Tests whether two collections contain the different elements and throws an
@@ -804,10 +756,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <paramref name="expectedType"/> is not in the inheritance hierarchy
         /// of an element in <paramref name="collection"/>.
         /// </exception>
-        public static void AllItemsAreInstancesOfType(ICollection collection, Type expectedType)
-        {
-            AllItemsAreInstancesOfType(collection, expectedType, string.Empty, null);
-        }
+        public static void AllItemsAreInstancesOfType(ICollection collection, Type expectedType) => AllItemsAreInstancesOfType(collection, expectedType, string.Empty, null);
 
         /// <summary>
         /// Tests whether all elements in the specified collection are instances
@@ -831,10 +780,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <paramref name="expectedType"/> is not in the inheritance hierarchy
         /// of an element in <paramref name="collection"/>.
         /// </exception>
-        public static void AllItemsAreInstancesOfType(ICollection collection, Type expectedType, string message)
-        {
-            AllItemsAreInstancesOfType(collection, expectedType, message, null);
-        }
+        public static void AllItemsAreInstancesOfType(ICollection collection, Type expectedType, string message) => AllItemsAreInstancesOfType(collection, expectedType, message, null);
 
         /// <summary>
         /// Tests whether all elements in the specified collection are instances
@@ -887,7 +833,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
         }
 
-#endregion
+        #endregion
 
         #region AreEqual
 
@@ -909,10 +855,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(ICollection expected, ICollection actual)
-        {
-            AreEqual(expected, actual, string.Empty, null);
-        }
+        public static void AreEqual(ICollection expected, ICollection actual) => AreEqual(expected, actual, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified collections are equal and throws an exception
@@ -937,10 +880,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(ICollection expected, ICollection actual, string message)
-        {
-            AreEqual(expected, actual, message, null);
-        }
+        public static void AreEqual(ICollection expected, ICollection actual, string message) => AreEqual(expected, actual, message, null);
 
         /// <summary>
         /// Tests whether the specified collections are equal and throws an exception
@@ -995,10 +935,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(ICollection notExpected, ICollection actual)
-        {
-            AreNotEqual(notExpected, actual, string.Empty, null);
-        }
+        public static void AreNotEqual(ICollection notExpected, ICollection actual) => AreNotEqual(notExpected, actual, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified collections are unequal and throws an exception
@@ -1023,10 +960,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(ICollection notExpected, ICollection actual, string message)
-        {
-            AreNotEqual(notExpected, actual, message, null);
-        }
+        public static void AreNotEqual(ICollection notExpected, ICollection actual, string message) => AreNotEqual(notExpected, actual, message, null);
 
         /// <summary>
         /// Tests whether the specified collections are unequal and throws an exception
@@ -1083,10 +1017,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(ICollection expected, ICollection actual, IComparer comparer)
-        {
-            AreEqual(expected, actual, comparer, string.Empty, null);
-        }
+        public static void AreEqual(ICollection expected, ICollection actual, IComparer comparer) => AreEqual(expected, actual, comparer, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified collections are equal and throws an exception
@@ -1113,10 +1044,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(ICollection expected, ICollection actual, IComparer comparer, string message)
-        {
-            AreEqual(expected, actual, comparer, message, null);
-        }
+        public static void AreEqual(ICollection expected, ICollection actual, IComparer comparer, string message) => AreEqual(expected, actual, comparer, message, null);
 
         /// <summary>
         /// Tests whether the specified collections are equal and throws an exception
@@ -1175,10 +1103,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(ICollection notExpected, ICollection actual, IComparer comparer)
-        {
-            AreNotEqual(notExpected, actual, comparer, string.Empty, null);
-        }
+        public static void AreNotEqual(ICollection notExpected, ICollection actual, IComparer comparer) => AreNotEqual(notExpected, actual, comparer, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified collections are unequal and throws an exception
@@ -1205,10 +1130,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(ICollection notExpected, ICollection actual, IComparer comparer, string message)
-        {
-            AreNotEqual(notExpected, actual, comparer, message, null);
-        }
+        public static void AreNotEqual(ICollection notExpected, ICollection actual, IComparer comparer, string message) => AreNotEqual(notExpected, actual, comparer, message, null);
 
         /// <summary>
         /// Tests whether the specified collections are unequal and throws an exception

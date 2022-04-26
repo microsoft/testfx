@@ -16,10 +16,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     {
         private readonly AssemblyUtility assemblyUtility;
 
-        public FileUtility()
-        {
-            assemblyUtility = new AssemblyUtility();
-        }
+        public FileUtility() => assemblyUtility = new AssemblyUtility();
 
         /// <summary>
         /// Replaces the invalid file/path characters from the parameter file name with '_'
@@ -203,10 +200,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return null;
         }
 
-        public virtual List<string> AddFilesFromDirectory(string directoryPath, bool ignoreIOExceptions)
-        {
-            return AddFilesFromDirectory(directoryPath, null, ignoreIOExceptions);
-        }
+        public virtual List<string> AddFilesFromDirectory(string directoryPath, bool ignoreIOExceptions) => AddFilesFromDirectory(directoryPath, null, ignoreIOExceptions);
 
         public virtual List<string> AddFilesFromDirectory(string directoryPath, Func<string, bool> ignoreDirectory, bool ignoreIOExceptions)
         {
@@ -262,30 +256,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
         }
 
-        public virtual bool DoesDirectoryExist(string deploymentDirectory)
-        {
-            return Directory.Exists(deploymentDirectory);
-        }
+        public virtual bool DoesDirectoryExist(string deploymentDirectory) => Directory.Exists(deploymentDirectory);
 
-        public virtual bool DoesFileExist(string testSource)
-        {
-            return File.Exists(testSource);
-        }
+        public virtual bool DoesFileExist(string testSource) => File.Exists(testSource);
 
-        public virtual void SetAttributes(string path, FileAttributes fileAttributes)
-        {
-            File.SetAttributes(path, fileAttributes);
-        }
+        public virtual void SetAttributes(string path, FileAttributes fileAttributes) => File.SetAttributes(path, fileAttributes);
 
-        public virtual string[] GetFilesInADirectory(string directoryPath)
-        {
-            return Directory.GetFiles(directoryPath);
-        }
+        public virtual string[] GetFilesInADirectory(string directoryPath) => Directory.GetFiles(directoryPath);
 
-        public virtual string[] GetDirectoriesInADirectory(string directoryPath)
-        {
-            return Directory.GetDirectories(directoryPath);
-        }
+        public virtual string[] GetDirectoriesInADirectory(string directoryPath) => Directory.GetDirectories(directoryPath);
 
         /// <summary>
         /// Returns either PDB file name from inside compiled binary or null if this cannot be done.

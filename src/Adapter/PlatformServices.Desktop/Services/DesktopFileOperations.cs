@@ -39,20 +39,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="assembly">The assembly.</param>
         /// <returns>Path to the .DLL of the assembly.</returns>
-        public string GetAssemblyPath(Assembly assembly)
-        {
-            return assembly.Location;
-        }
+        public string GetAssemblyPath(Assembly assembly) => assembly.Location;
 
         /// <summary>
         /// Verify if a file exists in the current context.
         /// </summary>
         /// <param name="assemblyFileName"> The assembly file name. </param>
         /// <returns> true if the file exists. </returns>
-        public bool DoesFileExist(string assemblyFileName)
-        {
-            return (SafeInvoke<bool>(() => File.Exists(assemblyFileName)) as bool?) ?? false;
-        }
+        public bool DoesFileExist(string assemblyFileName) => (SafeInvoke<bool>(() => File.Exists(assemblyFileName)) as bool?) ?? false;
 
         /// <summary>
         /// Creates a Navigation session for the source file.
@@ -105,10 +99,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="assemblyFileName"> The file name. </param>
         /// <returns> The full file path. </returns>
-        public string GetFullFilePath(string assemblyFileName)
-        {
-            return (SafeInvoke<string>(() => Path.GetFullPath(assemblyFileName)) as string) ?? assemblyFileName;
-        }
+        public string GetFullFilePath(string assemblyFileName) => (SafeInvoke<string>(() => Path.GetFullPath(assemblyFileName)) as string) ?? assemblyFileName;
 
         private static object SafeInvoke<T>(Func<T> action, string messageFormatOnException = null)
         {

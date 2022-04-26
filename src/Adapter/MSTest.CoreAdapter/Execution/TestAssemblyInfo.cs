@@ -41,10 +41,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         public MethodInfo AssemblyInitializeMethod
         {
-            get
-            {
-                return assemblyInitializeMethod;
-            }
+            get => assemblyInitializeMethod;
 
             internal set
             {
@@ -63,10 +60,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         public MethodInfo AssemblyCleanupMethod
         {
-            get
-            {
-                return assemblyCleanupMethod;
-            }
+            get => assemblyCleanupMethod;
 
             internal set
             {

@@ -76,6 +76,9 @@ dotnet_style_readonly_field = true
 # CA1822: Mark members as static
 dotnet_diagnostic.CA1822.severity = warning
 
+# SA1515: SingleLineCommentsMustBePrecededByBlankLine
+dotnet_diagnostic.SA1515.severity = silent
+
 #### Naming styles ####
 
 # Naming styles
@@ -85,3 +88,14 @@ dotnet_style_qualification_for_property = false:warning
 dotnet_style_qualification_for_method = false:warning
 dotnet_style_qualification_for_event = false:warning
 dotnet_diagnostic.SA1101.severity = silent
+
+# Coding styles
+
+csharp_style_expression_bodied_methods = true:warning
+csharp_style_expression_bodied_constructors = true:warning
+csharp_style_expression_bodied_operators = true:warning
+csharp_style_expression_bodied_properties = true:warning
+csharp_style_expression_bodied_indexers = true:warning
+csharp_style_expression_bodied_accessors = true:warning
+csharp_style_expression_bodied_lambdas = true:warning
+csharp_style_expression_bodied_local_functions = false:warning

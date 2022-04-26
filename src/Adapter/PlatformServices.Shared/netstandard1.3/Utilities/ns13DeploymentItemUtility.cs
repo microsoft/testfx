@@ -157,11 +157,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="testCase"> The test Case. </param>
         /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>. </returns>
         private static KeyValuePair<string, string>[] GetDeploymentItems(TestCase testCase)
-        {
-            return
-                testCase.GetPropertyValue(PlatformServices.Constants.DeploymentItemsProperty) as
-                KeyValuePair<string, string>[];
-        }
+            => testCase.GetPropertyValue(PlatformServices.Constants.DeploymentItemsProperty) as KeyValuePair<string, string>[];
 
         private static KeyValuePair<string, string>[] ToKeyValuePairs(IList<DeploymentItem> deploymentItemList)
         {

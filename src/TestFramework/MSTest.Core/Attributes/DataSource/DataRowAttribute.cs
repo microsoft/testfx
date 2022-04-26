@@ -18,20 +18,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
         /// </summary>
-        public DataRowAttribute()
-        {
-            Data = new object[0];
-        }
+        public DataRowAttribute() => Data = new object[0];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
         /// </summary>
         /// <param name="data1"> The data object. </param>
-        public DataRowAttribute(object data1)
-        {
+        public DataRowAttribute(object data1) =>
             // Need to have this constructor explicitly to fix a CLS compliance error.
             Data = new object[] { data1 };
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
@@ -62,10 +57,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public string DisplayName { get; set; }
 
         /// <inheritdoc />
-        public IEnumerable<object[]> GetData(MethodInfo methodInfo)
-        {
-            return new[] { Data };
-        }
+        public IEnumerable<object[]> GetData(MethodInfo methodInfo) => new[] { Data };
 
         /// <inheritdoc />
         public string GetDisplayName(MethodInfo methodInfo, object[] data)

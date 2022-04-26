@@ -32,9 +32,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Gets the test categories that has been applied to the test.
         /// </summary>
-        public override IList<string> TestCategories
-        {
-            get { return testCategories; }
-        }
+        public override IList<string> TestCategories => testCategories;
     }
 }

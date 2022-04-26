@@ -47,10 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             GetOrAddStringBuilder();
         }
 
-        public override StringBuilder GetStringBuilder()
-        {
-            throw new NotSupportedException("GetStringBuilder is not supported, because it does not allow us to clean the string builder in thread safe way.");
-        }
+        public override StringBuilder GetStringBuilder() => throw new NotSupportedException("GetStringBuilder is not supported, because it does not allow us to clean the string builder in thread safe way.");
 
         /// <inheritdoc/>
         public override string ToString()

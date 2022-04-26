@@ -20,20 +20,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Gets the set of valid extensions for sources targeting this platform.
         /// </summary>
-        public IEnumerable<string> ValidSourceExtensions
-        {
-            get
+        public IEnumerable<string> ValidSourceExtensions =>
+            // Since desktop Platform service would also discover other platform tests on desktop,
+            // this extension list needs to be updated with all platforms supported file extensions.
+            new List<string>
             {
-                // Since desktop Platform service would also discover other platform tests on desktop,
-                // this extension list needs to be updated with all platforms supported file extensions.
-                return new List<string>
-                           {
-                               Constants.DllExtension,
-                               Constants.PhoneAppxPackageExtension,
-                               Constants.ExeExtension
-                           };
-            }
-        }
+                Constants.DllExtension,
+                Constants.PhoneAppxPackageExtension,
+                Constants.ExeExtension
+            };
 
         /// <summary>
         /// Verifies if the assembly provided is referenced by the source.
@@ -60,10 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="sources"> Sources given to the adapter.  </param>
         /// <returns> Sources that contains tests. <see cref="IEnumerable{T}"/>. </returns>
-        public IEnumerable<string> GetTestSources(IEnumerable<string> sources)
-        {
-            return sources;
-        }
+        public IEnumerable<string> GetTestSources(IEnumerable<string> sources) => sources;
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

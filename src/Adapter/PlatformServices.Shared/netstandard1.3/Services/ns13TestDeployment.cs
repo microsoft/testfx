@@ -74,10 +74,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="type"> The type. </param>
         /// <param name="warnings"> The warnings. </param>
         /// <returns> A string of deployment items. </returns>
-        public KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings)
-        {
-            return deploymentItemUtility.GetDeploymentItems(method, deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
-        }
+        public KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings) => deploymentItemUtility.GetDeploymentItems(method, deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
 
         /// <summary>
         /// The cleanup.
@@ -99,10 +96,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Gets the deployment output directory where the source file along with all its dependencies is dropped.
         /// </summary>
         /// <returns> The deployment output directory. </returns>
-        public string GetDeploymentDirectory()
-        {
-            return RunDirectories?.OutDirectory;
-        }
+        public string GetDeploymentDirectory() => RunDirectories?.OutDirectory;
 
         /// <summary>
         /// Deploy files related to the list of tests specified.
@@ -206,10 +200,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Reset the static variable to default values. Used only for testing purposes.
         /// </summary>
-        internal static void Reset()
-        {
-            RunDirectories = null;
-        }
+        internal static void Reset() => RunDirectories = null;
 
         /// <summary>
         /// Returns whether deployment can happen or not

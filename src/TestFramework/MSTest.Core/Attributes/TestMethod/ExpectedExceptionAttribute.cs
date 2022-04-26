@@ -78,16 +78,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Gets the message to include in the test result if the test fails due to not throwing an exception
         /// </summary>
         protected internal override string NoExceptionMessage
-        {
-            get
-            {
-                return string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.UTF_TestMethodNoException,
-                    ExceptionType.FullName,
-                    SpecifiedNoExceptionMessage);
-            }
-        }
+            => string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.UTF_TestMethodNoException,
+                ExceptionType.FullName,
+                SpecifiedNoExceptionMessage);
 
         #endregion
 

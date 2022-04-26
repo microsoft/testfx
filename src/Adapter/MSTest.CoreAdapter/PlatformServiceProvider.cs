@@ -35,105 +35,51 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <summary>
         /// Gets an instance to the platform service validator for test sources.
         /// </summary>
-        public ITestSource TestSource
-        {
-            get
-            {
-                return testSource ?? (testSource = new TestSource());
-            }
-        }
+        public ITestSource TestSource => testSource ?? (testSource = new TestSource());
 
         /// <summary>
         /// Gets an instance to the platform service validator for data sources for tests.
         /// </summary>
-        public ITestDataSource TestDataSource
-        {
-            get
-            {
-                return testDataSource ?? (testDataSource = new TestDataSource());
-            }
-        }
+        public ITestDataSource TestDataSource => testDataSource ?? (testDataSource = new TestDataSource());
 
         /// <summary>
         /// Gets an instance to the platform service for file operations.
         /// </summary>
-        public IFileOperations FileOperations
-        {
-            get
-            {
-                return fileOperations ?? (fileOperations = new FileOperations());
-            }
-        }
+        public IFileOperations FileOperations => fileOperations ?? (fileOperations = new FileOperations());
 
         /// <summary>
         /// Gets an instance to the platform service for trace logging.
         /// </summary>
-        public IAdapterTraceLogger AdapterTraceLogger
-        {
-            get
-            {
-                return traceLogger ?? (traceLogger = new AdapterTraceLogger());
-            }
-        }
+        public IAdapterTraceLogger AdapterTraceLogger => traceLogger ?? (traceLogger = new AdapterTraceLogger());
 
         /// <summary>
         /// Gets an instance of the test deployment service.
         /// </summary>
-        public ITestDeployment TestDeployment
-        {
-            get
-            {
-                return testDeployment ?? (testDeployment = new TestDeployment());
-            }
-        }
+        public ITestDeployment TestDeployment => testDeployment ?? (testDeployment = new TestDeployment());
 
         /// <summary>
         /// Gets an instance to the platform service for a Settings Provider.
         /// </summary>
-        public ISettingsProvider SettingsProvider
-        {
-            get
-            {
-                return settingsProvider ?? (settingsProvider = new MSTestSettingsProvider());
-            }
-        }
+        public ISettingsProvider SettingsProvider => settingsProvider ?? (settingsProvider = new MSTestSettingsProvider());
 
         /// <summary>
         /// Gets an instance to the platform service for thread operations.
         /// </summary>
-        public IThreadOperations ThreadOperations
-        {
-            get
-            {
-                return threadOperations ?? (threadOperations = new ThreadOperations());
-            }
-        }
+        public IThreadOperations ThreadOperations => threadOperations ?? (threadOperations = new ThreadOperations());
 
         /// <summary>
         /// Gets an instance to the platform service for reflection operations specific to a platform.
         /// </summary>
-        public IReflectionOperations ReflectionOperations
-        {
-            get
-            {
-                return reflectionOperations ?? (reflectionOperations = new ReflectionOperations());
-            }
-        }
+        public IReflectionOperations ReflectionOperations => reflectionOperations ?? (reflectionOperations = new ReflectionOperations());
 
         /// <summary>
         /// Gets or sets the instance for the platform service.
         /// </summary>
         internal static IPlatformServiceProvider Instance
         {
-            get
-            {
-                return instance ?? (instance = new PlatformServiceProvider());
-            }
+            get => instance ?? (instance = new PlatformServiceProvider());
 
-            set
-            {
-                instance = value;
-            }
+            set => instance = value;
         }
 
         /// <summary>
@@ -172,10 +118,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <returns>
         /// The <see cref="ITraceListener"/>.
         /// </returns>
-        public ITraceListener GetTraceListener(TextWriter textWriter)
-        {
-           return new TraceListenerWrapper(textWriter);
-        }
+        public ITraceListener GetTraceListener(TextWriter textWriter) => new TraceListenerWrapper(textWriter);
 
         /// <summary>
         /// Gets an instance to the platform service trace-listener manager which updates the output/error streams
@@ -190,10 +133,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <returns>
         /// The manager for trace listeners.
         /// </returns>
-        public ITraceListenerManager GetTraceListenerManager(TextWriter outputWriter, TextWriter errorWriter)
-        {
-            return new TraceListenerManager(outputWriter, errorWriter);
-        }
+        public ITraceListenerManager GetTraceListenerManager(TextWriter outputWriter, TextWriter errorWriter) => new TraceListenerManager(outputWriter, errorWriter);
 
         /// <summary>
         /// Gets the TestContext object for a platform.
@@ -213,9 +153,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <remarks>
         /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
         /// </remarks>
-        public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties)
-        {
-            return new TestContextImplementation(testMethod, writer, properties);
-        }
+        public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties) => new TestContextImplementation(testMethod, writer, properties);
     }
 }

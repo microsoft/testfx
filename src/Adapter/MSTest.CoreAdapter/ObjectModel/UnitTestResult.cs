@@ -20,10 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// <summary>
         /// Initializes a new instance of the <see cref="UnitTestResult"/> class.
         /// </summary>
-        internal UnitTestResult()
-        {
-            DatarowIndex = -1;
-        }
+        internal UnitTestResult() => DatarowIndex = -1;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UnitTestResult"/> class.

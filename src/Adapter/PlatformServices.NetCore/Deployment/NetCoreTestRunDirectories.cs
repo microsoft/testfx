@@ -39,35 +39,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// <summary>
         /// Gets the In directory
         /// </summary>
-        public string InDirectory
-        {
-            get
-            {
-                return Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
-            }
-        }
+        public string InDirectory => Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
 
         /// <summary>
         /// Gets the Out directory
         /// </summary>
         [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Keep as instance member.")]
-        public string OutDirectory
-        {
-            get
-            {
-                return Directory.GetCurrentDirectory();
-            }
-        }
+        public string OutDirectory => Directory.GetCurrentDirectory();
 
         /// <summary>
         /// Gets In\MachineName directory
         /// </summary>
-        public string InMachineNameDirectory
-        {
-            get
-            {
-                return Path.Combine(Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
-            }
-        }
+        public string InMachineNameDirectory => Path.Combine(Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
     }
 }

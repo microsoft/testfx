@@ -88,10 +88,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         public string DeclaringAssemblyName
         {
-            get
-            {
-                return declaringAssemblyName;
-            }
+            get => declaringAssemblyName;
 
             set
             {
@@ -108,10 +105,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         public string DeclaringClassFullName
         {
-            get
-            {
-                return declaringClassFullName;
-            }
+            get => declaringClassFullName;
 
             set
             {

@@ -24,23 +24,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             isMSSql = Connection != null && IsMSSql(Connection.Driver);
         }
 
-        public new OdbcCommandBuilder CommandBuilder
-        {
-            get { return (OdbcCommandBuilder)base.CommandBuilder; }
-        }
+        public new OdbcCommandBuilder CommandBuilder => (OdbcCommandBuilder)base.CommandBuilder;
 
-        public new OdbcConnection Connection
-        {
-            get { return (OdbcConnection)base.Connection; }
-        }
+        public new OdbcConnection Connection => (OdbcConnection)base.Connection;
 
         /// <summary>
         /// This is overridden because we need manually get quote literals, OleDb does not fill those automatically.
         /// </summary>
-        public override void GetQuoteLiterals()
-        {
-            GetQuoteLiteralsHelper();
-        }
+        public override void GetQuoteLiterals() => GetQuoteLiteralsHelper();
 
         public override string GetDefaultSchema()
         {

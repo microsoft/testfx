@@ -25,10 +25,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="runContext"> The run context. </param>
         /// <param name="frameworkHandle"> The framework handle. </param>
         /// <returns> True if deployment is done. </returns>
-        public bool Deploy(IEnumerable<TestCase> testCases, IRunContext runContext, IFrameworkHandle frameworkHandle)
-        {
-            return false;
-        }
+        public bool Deploy(IEnumerable<TestCase> testCases, IRunContext runContext, IFrameworkHandle frameworkHandle) => false;
 
         /// <summary>
         /// Gets the set of deployment items on a method and its corresponding class.
@@ -37,10 +34,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="type"> The type. </param>
         /// <param name="warnings"> The warnings. </param>
         /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/> of deployment items. </returns>
-        public KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings)
-        {
-            return null;
-        }
+        public KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings) => null;
 
         /// <summary>
         /// Cleanup deployment item directories.
@@ -53,10 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Gets the deployment output directory where the source file along with all its dependencies is dropped.
         /// </summary>
         /// <returns> The deployment output directory. </returns>
-        public string GetDeploymentDirectory()
-        {
-            return null;
-        }
+        public string GetDeploymentDirectory() => null;
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

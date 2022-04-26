@@ -60,10 +60,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
         /// </exception>
-        public static void IsTrue([DoesNotReturnIf(false)] bool condition)
-        {
-            IsTrue(condition, string.Empty, null);
-        }
+        public static void IsTrue([DoesNotReturnIf(false)] bool condition) => IsTrue(condition, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified condition is true and throws an exception
@@ -75,29 +72,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
         /// </exception>
-        public static void IsTrue([DoesNotReturnIf(false)] bool? condition)
-        {
-            IsTrue(condition, string.Empty, null);
-        }
-
-        /// <summary>
-        /// Tests whether the specified condition is true and throws an exception
-        /// if the condition is false.
-        /// </summary>
-        /// <param name="condition">
-        /// The condition the test expects to be true.
-        /// </param>
-        /// <param name="message">
-        /// The message to include in the exception when <paramref name="condition"/>
-        /// is false. The message is shown in test results.
-        /// </param>
-        /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="condition"/> is false.
-        /// </exception>
-        public static void IsTrue([DoesNotReturnIf(false)] bool condition, string message)
-        {
-            IsTrue(condition, message, null);
-        }
+        public static void IsTrue([DoesNotReturnIf(false)] bool? condition) => IsTrue(condition, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified condition is true and throws an exception
@@ -113,10 +88,23 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
         /// </exception>
-        public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string message)
-        {
-            IsTrue(condition, message, null);
-        }
+        public static void IsTrue([DoesNotReturnIf(false)] bool condition, string message) => IsTrue(condition, message, null);
+
+        /// <summary>
+        /// Tests whether the specified condition is true and throws an exception
+        /// if the condition is false.
+        /// </summary>
+        /// <param name="condition">
+        /// The condition the test expects to be true.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is false. The message is shown in test results.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="condition"/> is false.
+        /// </exception>
+        public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string message) => IsTrue(condition, message, null);
 
         /// <summary>
         /// Tests whether the specified condition is true and throws an exception
@@ -178,10 +166,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
         /// </exception>
-        public static void IsFalse([DoesNotReturnIf(true)] bool condition)
-        {
-            IsFalse(condition, string.Empty, null);
-        }
+        public static void IsFalse([DoesNotReturnIf(true)] bool condition) => IsFalse(condition, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified condition is false and throws an exception
@@ -193,29 +178,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
         /// </exception>
-        public static void IsFalse([DoesNotReturnIf(true)] bool? condition)
-        {
-            IsFalse(condition, string.Empty, null);
-        }
-
-        /// <summary>
-        /// Tests whether the specified condition is false and throws an exception
-        /// if the condition is true.
-        /// </summary>
-        /// <param name="condition">
-        /// The condition the test expects to be false.
-        /// </param>
-        /// <param name="message">
-        /// The message to include in the exception when <paramref name="condition"/>
-        /// is true. The message is shown in test results.
-        /// </param>
-        /// <exception cref="AssertFailedException">
-        /// Thrown if <paramref name="condition"/> is true.
-        /// </exception>
-        public static void IsFalse([DoesNotReturnIf(true)] bool condition, string message)
-        {
-            IsFalse(condition, message, null);
-        }
+        public static void IsFalse([DoesNotReturnIf(true)] bool? condition) => IsFalse(condition, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified condition is false and throws an exception
@@ -231,10 +194,23 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
         /// </exception>
-        public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string message)
-        {
-            IsFalse(condition, message, null);
-        }
+        public static void IsFalse([DoesNotReturnIf(true)] bool condition, string message) => IsFalse(condition, message, null);
+
+        /// <summary>
+        /// Tests whether the specified condition is false and throws an exception
+        /// if the condition is true.
+        /// </summary>
+        /// <param name="condition">
+        /// The condition the test expects to be false.
+        /// </param>
+        /// <param name="message">
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is true. The message is shown in test results.
+        /// </param>
+        /// <exception cref="AssertFailedException">
+        /// Thrown if <paramref name="condition"/> is true.
+        /// </exception>
+        public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string message) => IsFalse(condition, message, null);
 
         /// <summary>
         /// Tests whether the specified condition is false and throws an exception
@@ -300,10 +276,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is not null.
         /// </exception>
-        public static void IsNull(object value)
-        {
-            IsNull(value, string.Empty, null);
-        }
+        public static void IsNull(object value) => IsNull(value, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified object is null and throws an exception
@@ -319,10 +292,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is not null.
         /// </exception>
-        public static void IsNull(object value, string message)
-        {
-            IsNull(value, message, null);
-        }
+        public static void IsNull(object value, string message) => IsNull(value, message, null);
 
         /// <summary>
         /// Tests whether the specified object is null and throws an exception
@@ -359,10 +329,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is null.
         /// </exception>
-        public static void IsNotNull([NotNull] object value)
-        {
-            IsNotNull(value, string.Empty, null);
-        }
+        public static void IsNotNull([NotNull] object value) => IsNotNull(value, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified object is non-null and throws an exception
@@ -378,10 +345,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is null.
         /// </exception>
-        public static void IsNotNull([NotNull] object value, string message)
-        {
-            IsNotNull(value, message, null);
-        }
+        public static void IsNotNull([NotNull] object value, string message) => IsNotNull(value, message, null);
 
         /// <summary>
         /// Tests whether the specified object is non-null and throws an exception
@@ -426,10 +390,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> does not refer to the same object
         /// as <paramref name="actual"/>.
         /// </exception>
-        public static void AreSame(object expected, object actual)
-        {
-            AreSame(expected, actual, string.Empty, null);
-        }
+        public static void AreSame(object expected, object actual) => AreSame(expected, actual, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified objects both refer to the same object and
@@ -450,10 +411,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> does not refer to the same object
         /// as <paramref name="actual"/>.
         /// </exception>
-        public static void AreSame(object expected, object actual, string message)
-        {
-            AreSame(expected, actual, message, null);
-        }
+        public static void AreSame(object expected, object actual, string message) => AreSame(expected, actual, message, null);
 
         /// <summary>
         /// Tests whether the specified objects both refer to the same object and
@@ -513,10 +471,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="notExpected"/> refers to the same object
         /// as <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotSame(object notExpected, object actual)
-        {
-            AreNotSame(notExpected, actual, string.Empty, null);
-        }
+        public static void AreNotSame(object notExpected, object actual) => AreNotSame(notExpected, actual, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified objects refer to different objects and
@@ -538,10 +493,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="notExpected"/> refers to the same object
         /// as <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotSame(object notExpected, object actual, string message)
-        {
-            AreNotSame(notExpected, actual, message, null);
-        }
+        public static void AreNotSame(object notExpected, object actual, string message) => AreNotSame(notExpected, actual, message, null);
 
         /// <summary>
         /// Tests whether the specified objects refer to different objects and
@@ -595,10 +547,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual<T>(T expected, T actual)
-        {
-            AreEqual(expected, actual, string.Empty, null);
-        }
+        public static void AreEqual<T>(T expected, T actual) => AreEqual(expected, actual, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified values are equal and throws an exception
@@ -623,10 +572,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual<T>(T expected, T actual, string message)
-        {
-            AreEqual(expected, actual, message, null);
-        }
+        public static void AreEqual<T>(T expected, T actual, string message) => AreEqual(expected, actual, message, null);
 
         /// <summary>
         /// Tests whether the specified values are equal and throws an exception
@@ -703,10 +649,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual<T>(T notExpected, T actual)
-        {
-            AreNotEqual(notExpected, actual, string.Empty, null);
-        }
+        public static void AreNotEqual<T>(T notExpected, T actual) => AreNotEqual(notExpected, actual, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified values are unequal and throws an exception
@@ -731,10 +674,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual<T>(T notExpected, T actual, string message)
-        {
-            AreNotEqual(notExpected, actual, message, null);
-        }
+        public static void AreNotEqual<T>(T notExpected, T actual, string message) => AreNotEqual(notExpected, actual, message, null);
 
         /// <summary>
         /// Tests whether the specified values are unequal and throws an exception
@@ -791,10 +731,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(object expected, object actual)
-        {
-            AreEqual(expected, actual, string.Empty, null);
-        }
+        public static void AreEqual(object expected, object actual) => AreEqual(expected, actual, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified objects are equal and throws an exception
@@ -816,10 +753,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(object expected, object actual, string message)
-        {
-            AreEqual(expected, actual, message, null);
-        }
+        public static void AreEqual(object expected, object actual, string message) => AreEqual(expected, actual, message, null);
 
         /// <summary>
         /// Tests whether the specified objects are equal and throws an exception
@@ -844,10 +778,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(object expected, object actual, string message, params object[] parameters)
-        {
-            AreEqual<object>(expected, actual, message, parameters);
-        }
+        public static void AreEqual(object expected, object actual, string message, params object[] parameters) => AreEqual<object>(expected, actual, message, parameters);
 
         /// <summary>
         /// Tests whether the specified objects are unequal and throws an exception
@@ -864,10 +795,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(object notExpected, object actual)
-        {
-            AreNotEqual(notExpected, actual, string.Empty, null);
-        }
+        public static void AreNotEqual(object notExpected, object actual) => AreNotEqual(notExpected, actual, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified objects are unequal and throws an exception
@@ -889,10 +817,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(object notExpected, object actual, string message)
-        {
-            AreNotEqual(notExpected, actual, message, null);
-        }
+        public static void AreNotEqual(object notExpected, object actual, string message) => AreNotEqual(notExpected, actual, message, null);
 
         /// <summary>
         /// Tests whether the specified objects are unequal and throws an exception
@@ -917,10 +842,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(object notExpected, object actual, string message, params object[] parameters)
-        {
-            AreNotEqual<object>(notExpected, actual, message, parameters);
-        }
+        public static void AreNotEqual(object notExpected, object actual, string message, params object[] parameters) => AreNotEqual<object>(notExpected, actual, message, parameters);
 
         /// <summary>
         /// Tests whether the specified floats are equal and throws an exception
@@ -941,10 +863,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(float expected, float actual, float delta)
-        {
-            AreEqual(expected, actual, delta, string.Empty, null);
-        }
+        public static void AreEqual(float expected, float actual, float delta) => AreEqual(expected, actual, delta, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified floats are equal and throws an exception
@@ -970,10 +889,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(float expected, float actual, float delta, string message)
-        {
-            AreEqual(expected, actual, delta, message, null);
-        }
+        public static void AreEqual(float expected, float actual, float delta, string message) => AreEqual(expected, actual, delta, message, null);
 
         /// <summary>
         /// Tests whether the specified floats are equal and throws an exception
@@ -1048,10 +964,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(float notExpected, float actual, float delta)
-        {
-            AreNotEqual(notExpected, actual, delta, string.Empty, null);
-        }
+        public static void AreNotEqual(float notExpected, float actual, float delta) => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified floats are unequal and throws an exception
@@ -1077,10 +990,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(float notExpected, float actual, float delta, string message)
-        {
-            AreNotEqual(notExpected, actual, delta, message, null);
-        }
+        public static void AreNotEqual(float notExpected, float actual, float delta, string message) => AreNotEqual(notExpected, actual, delta, message, null);
 
         /// <summary>
         /// Tests whether the specified floats are unequal and throws an exception
@@ -1143,10 +1053,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(decimal expected, decimal actual, decimal delta)
-        {
-            AreEqual(expected, actual, delta, string.Empty, null);
-        }
+        public static void AreEqual(decimal expected, decimal actual, decimal delta) => AreEqual(expected, actual, delta, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified decimals are equal and throws an exception
@@ -1172,10 +1079,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(decimal expected, decimal actual, decimal delta, string message)
-        {
-            AreEqual(expected, actual, delta, message, null);
-        }
+        public static void AreEqual(decimal expected, decimal actual, decimal delta, string message) => AreEqual(expected, actual, delta, message, null);
 
         /// <summary>
         /// Tests whether the specified decimals are equal and throws an exception
@@ -1238,10 +1142,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta)
-        {
-            AreNotEqual(notExpected, actual, delta, string.Empty, null);
-        }
+        public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta) => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified decimals are unequal and throws an exception
@@ -1267,10 +1168,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string message)
-        {
-            AreNotEqual(notExpected, actual, delta, message, null);
-        }
+        public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string message) => AreNotEqual(notExpected, actual, delta, message, null);
 
         /// <summary>
         /// Tests whether the specified decimals are unequal and throws an exception
@@ -1333,10 +1231,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(long expected, long actual, long delta)
-        {
-            AreEqual(expected, actual, delta, string.Empty, null);
-        }
+        public static void AreEqual(long expected, long actual, long delta) => AreEqual(expected, actual, delta, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified longs are equal and throws an exception
@@ -1362,10 +1257,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(long expected, long actual, long delta, string message)
-        {
-            AreEqual(expected, actual, delta, message, null);
-        }
+        public static void AreEqual(long expected, long actual, long delta, string message) => AreEqual(expected, actual, delta, message, null);
 
         /// <summary>
         /// Tests whether the specified longs are equal and throws an exception
@@ -1428,10 +1320,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(long notExpected, long actual, long delta)
-        {
-            AreNotEqual(notExpected, actual, delta, string.Empty, null);
-        }
+        public static void AreNotEqual(long notExpected, long actual, long delta) => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified longs are unequal and throws an exception
@@ -1457,10 +1346,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(long notExpected, long actual, long delta, string message)
-        {
-            AreNotEqual(notExpected, actual, delta, message, null);
-        }
+        public static void AreNotEqual(long notExpected, long actual, long delta, string message) => AreNotEqual(notExpected, actual, delta, message, null);
 
         /// <summary>
         /// Tests whether the specified longs are unequal and throws an exception
@@ -1523,10 +1409,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="expected"/> is not equal to
         /// <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(double expected, double actual, double delta)
-        {
-            AreEqual(expected, actual, delta, string.Empty, null);
-        }
+        public static void AreEqual(double expected, double actual, double delta) => AreEqual(expected, actual, delta, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified doubles are equal and throws an exception
@@ -1551,10 +1434,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(double expected, double actual, double delta, string message)
-        {
-            AreEqual(expected, actual, delta, message, null);
-        }
+        public static void AreEqual(double expected, double actual, double delta, string message) => AreEqual(expected, actual, delta, message, null);
 
         /// <summary>
         /// Tests whether the specified doubles are equal and throws an exception
@@ -1628,10 +1508,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(double notExpected, double actual, double delta)
-        {
-            AreNotEqual(notExpected, actual, delta, string.Empty, null);
-        }
+        public static void AreNotEqual(double notExpected, double actual, double delta) => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified doubles are unequal and throws an exception
@@ -1657,10 +1534,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(double notExpected, double actual, double delta, string message)
-        {
-            AreNotEqual(notExpected, actual, delta, message, null);
-        }
+        public static void AreNotEqual(double notExpected, double actual, double delta, string message) => AreNotEqual(notExpected, actual, delta, message, null);
 
         /// <summary>
         /// Tests whether the specified doubles are unequal and throws an exception
@@ -1721,10 +1595,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(string expected, string actual, bool ignoreCase)
-        {
-            Assert.AreEqual(expected, actual, ignoreCase, string.Empty, null);
-        }
+        public static void AreEqual(string expected, string actual, bool ignoreCase) => Assert.AreEqual(expected, actual, ignoreCase, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified strings are equal and throws an exception
@@ -1748,10 +1619,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(string expected, string actual, bool ignoreCase, string message)
-        {
-            AreEqual(expected, actual, ignoreCase, message, null);
-        }
+        public static void AreEqual(string expected, string actual, bool ignoreCase, string message) => AreEqual(expected, actual, ignoreCase, message, null);
 
         /// <summary>
         /// Tests whether the specified strings are equal and throws an exception
@@ -1778,10 +1646,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(string expected, string actual, bool ignoreCase, string message, params object[] parameters)
-        {
-            AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
-        }
+        public static void AreEqual(string expected, string actual, bool ignoreCase, string message, params object[] parameters) => AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
 
         /// <summary>
         /// Tests whether the specified strings are equal and throws an exception
@@ -1803,10 +1668,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(string expected, string actual, bool ignoreCase, CultureInfo culture)
-        {
-            AreEqual(expected, actual, ignoreCase, culture, string.Empty, null);
-        }
+        public static void AreEqual(string expected, string actual, bool ignoreCase, CultureInfo culture) => AreEqual(expected, actual, ignoreCase, culture, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified strings are equal and throws an exception
@@ -1833,10 +1695,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreEqual(string expected, string actual, bool ignoreCase, CultureInfo culture, string message)
-        {
-            AreEqual(expected, actual, ignoreCase, culture, message, null);
-        }
+        public static void AreEqual(string expected, string actual, bool ignoreCase, CultureInfo culture, string message) => AreEqual(expected, actual, ignoreCase, culture, message, null);
 
         /// <summary>
         /// Tests whether the specified strings are equal and throws an exception
@@ -1916,10 +1775,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(string notExpected, string actual, bool ignoreCase)
-        {
-            AreNotEqual(notExpected, actual, ignoreCase, string.Empty, null);
-        }
+        public static void AreNotEqual(string notExpected, string actual, bool ignoreCase) => AreNotEqual(notExpected, actual, ignoreCase, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified strings are unequal and throws an exception
@@ -1944,10 +1800,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, string message)
-        {
-            AreNotEqual(notExpected, actual, ignoreCase, message, null);
-        }
+        public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, string message) => AreNotEqual(notExpected, actual, ignoreCase, message, null);
 
         /// <summary>
         /// Tests whether the specified strings are unequal and throws an exception
@@ -1975,10 +1828,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, string message, params object[] parameters)
-        {
-            AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
-        }
+        public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, string message, params object[] parameters) => AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
 
         /// <summary>
         /// Tests whether the specified strings are unequal and throws an exception
@@ -2001,10 +1851,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, CultureInfo culture)
-        {
-            AreNotEqual(notExpected, actual, ignoreCase, culture, string.Empty, null);
-        }
+        public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, CultureInfo culture) => AreNotEqual(notExpected, actual, ignoreCase, culture, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified strings are unequal and throws an exception
@@ -2032,10 +1879,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
         /// </exception>
-        public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, CultureInfo culture, string message)
-        {
-            AreNotEqual(notExpected, actual, ignoreCase, culture, message, null);
-        }
+        public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, CultureInfo culture, string message) => AreNotEqual(notExpected, actual, ignoreCase, culture, message, null);
 
         /// <summary>
         /// Tests whether the specified strings are unequal and throws an exception
@@ -2101,10 +1945,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <paramref name="expectedType"/> is not in the inheritance hierarchy
         /// of <paramref name="value"/>.
         /// </exception>
-        public static void IsInstanceOfType(object value, Type expectedType)
-        {
-            IsInstanceOfType(value, expectedType, string.Empty, null);
-        }
+        public static void IsInstanceOfType(object value, Type expectedType) => IsInstanceOfType(value, expectedType, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified object is an instance of the expected
@@ -2127,10 +1968,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <paramref name="expectedType"/> is not in the inheritance hierarchy
         /// of <paramref name="value"/>.
         /// </exception>
-        public static void IsInstanceOfType(object value, Type expectedType, string message)
-        {
-            IsInstanceOfType(value, expectedType, message, null);
-        }
+        public static void IsInstanceOfType(object value, Type expectedType, string message) => IsInstanceOfType(value, expectedType, message, null);
 
         /// <summary>
         /// Tests whether the specified object is an instance of the expected
@@ -2193,10 +2031,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <paramref name="wrongType"/> is in the inheritance hierarchy
         /// of <paramref name="value"/>.
         /// </exception>
-        public static void IsNotInstanceOfType(object value, Type wrongType)
-        {
-            IsNotInstanceOfType(value, wrongType, string.Empty, null);
-        }
+        public static void IsNotInstanceOfType(object value, Type wrongType) => IsNotInstanceOfType(value, wrongType, string.Empty, null);
 
         /// <summary>
         /// Tests whether the specified object is not an instance of the wrong
@@ -2219,10 +2054,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <paramref name="wrongType"/> is in the inheritance hierarchy
         /// of <paramref name="value"/>.
         /// </exception>
-        public static void IsNotInstanceOfType(object value, Type wrongType, string message)
-        {
-            IsNotInstanceOfType(value, wrongType, message, null);
-        }
+        public static void IsNotInstanceOfType(object value, Type wrongType, string message) => IsNotInstanceOfType(value, wrongType, message, null);
 
         /// <summary>
         /// Tests whether the specified object is not an instance of the wrong
@@ -2286,10 +2118,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Always thrown.
         /// </exception>
         [DoesNotReturn]
-        public static void Fail()
-        {
-            Fail(string.Empty, null);
-        }
+        public static void Fail() => Fail(string.Empty, null);
 
         /// <summary>
         /// Throws an AssertFailedException.
@@ -2302,10 +2131,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Always thrown.
         /// </exception>
         [DoesNotReturn]
-        public static void Fail(string message)
-        {
-            Fail(message, null);
-        }
+        public static void Fail(string message) => Fail(message, null);
 
         /// <summary>
         /// Throws an AssertFailedException.
@@ -2321,10 +2147,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Always thrown.
         /// </exception>
         [DoesNotReturn]
-        public static void Fail(string message, params object[] parameters)
-        {
-            HandleFail("Assert.Fail", message, parameters);
-        }
+        public static void Fail(string message, params object[] parameters) => HandleFail("Assert.Fail", message, parameters);
 
         #endregion
 
@@ -2336,10 +2159,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertInconclusiveException">
         /// Always thrown.
         /// </exception>
-        public static void Inconclusive()
-        {
-            Inconclusive(string.Empty, null);
-        }
+        public static void Inconclusive() => Inconclusive(string.Empty, null);
 
         /// <summary>
         /// Throws an AssertInconclusiveException.
@@ -2351,10 +2171,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertInconclusiveException">
         /// Always thrown.
         /// </exception>
-        public static void Inconclusive(string message)
-        {
-            Inconclusive(message, null);
-        }
+        public static void Inconclusive(string message) => Inconclusive(message, null);
 
         /// <summary>
         /// Throws an AssertInconclusiveException.
@@ -2428,10 +2245,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The exception that was thrown.
         /// </returns>
         public static T ThrowsException<T>(Action action)
-            where T : Exception
-        {
-            return ThrowsException<T>(action, string.Empty, null);
-        }
+            where T : Exception => ThrowsException<T>(action, string.Empty, null);
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -2454,10 +2268,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The exception that was thrown.
         /// </returns>
         public static T ThrowsException<T>(Action action, string message)
-            where T : Exception
-        {
-            return ThrowsException<T>(action, message, null);
-        }
+            where T : Exception => ThrowsException<T>(action, message, null);
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -2476,10 +2287,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The exception that was thrown.
         /// </returns>
         public static T ThrowsException<T>(Func<object> action)
-            where T : Exception
-        {
-            return ThrowsException<T>(action, string.Empty, null);
-        }
+            where T : Exception => ThrowsException<T>(action, string.Empty, null);
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -2502,10 +2310,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The exception that was thrown.
         /// </returns>
         public static T ThrowsException<T>(Func<object> action, string message)
-            where T : Exception
-        {
-            return ThrowsException<T>(action, message, null);
-        }
+            where T : Exception => ThrowsException<T>(action, message, null);
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -2532,9 +2337,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </returns>
         public static T ThrowsException<T>(Func<object> action, string message, params object[] parameters)
             where T : Exception
-        {
-            return ThrowsException<T>(() => { action(); }, message, parameters);
-        }
+            => ThrowsException<T>(() => action(), message, parameters);
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -2625,10 +2428,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The <see cref="Task"/> executing the delegate.
         /// </returns>
         public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
-            where T : Exception
-        {
-            return await ThrowsExceptionAsync<T>(action, string.Empty, null).ConfigureAwait(false);
-        }
+            where T : Exception => await ThrowsExceptionAsync<T>(action, string.Empty, null).ConfigureAwait(false);
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -2647,10 +2447,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The <see cref="Task"/> executing the delegate.
         /// </returns>
         public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
-            where T : Exception
-        {
-            return await ThrowsExceptionAsync<T>(action, message, null).ConfigureAwait(false);
-        }
+            where T : Exception => await ThrowsExceptionAsync<T>(action, message, null).ConfigureAwait(false);
 
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -2835,10 +2632,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
         }
 
-        private static int CompareInternal(string expected, string actual, bool ignoreCase, CultureInfo culture)
-        {
-            return string.Compare(expected, actual, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-        }
+        private static int CompareInternal(string expected, string actual, bool ignoreCase, CultureInfo culture) => string.Compare(expected, actual, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
         #endregion
     }

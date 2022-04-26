@@ -34,14 +34,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="assembly">The assembly.</param>
         /// <returns>Path to the .DLL of the assembly.</returns>
-        public string GetAssemblyPath(Assembly assembly)
-        {
+        public string GetAssemblyPath(Assembly assembly) =>
 #if NETSTANDARD1_5
-            return assembly.Location;
+            assembly.Location;
 #else
-                return null;
+            null;
 #endif
-        }
 
         /// <summary>
         /// Verifies if file exists in context.
@@ -49,12 +47,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="assemblyFileName"> The assembly file name. </param>
         /// <returns> true if file exists. </returns>
         /// <exception cref="NotImplementedException"> This is currently not implemented. </exception>
-        public bool DoesFileExist(string assemblyFileName)
-        {
+        public bool DoesFileExist(string assemblyFileName) =>
             // For projectK these assemblies can be created on the fly which means the file might not exist on disk.
             // Depend on Assembly Load failures instead of this validation.
-            return true;
-        }
+            true;
 
         /// <summary>
         /// Creates a Navigation session for the source file.
@@ -62,10 +58,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="source"> The source file. </param>
         /// <returns> A Navigation session instance for the current platform. </returns>
-        public object CreateNavigationSession(string source)
-        {
-            return DiaSessionOperations.CreateNavigationSession(source);
-        }
+        public object CreateNavigationSession(string source) => DiaSessionOperations.CreateNavigationSession(source);
 
         /// <summary>
         /// Gets the navigation data for a navigation session.
@@ -75,29 +68,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="methodName"> The method name. </param>
         /// <param name="minLineNumber"> The min line number. </param>
         /// <param name="fileName"> The file name. </param>
-        public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string fileName)
-        {
-            DiaSessionOperations.GetNavigationData(navigationSession, className, methodName, out minLineNumber, out fileName);
-        }
+        public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string fileName) => DiaSessionOperations.GetNavigationData(navigationSession, className, methodName, out minLineNumber, out fileName);
 
         /// <summary>
         /// Disposes the navigation session instance.
         /// </summary>
         /// <param name="navigationSession"> The navigation session. </param>
-        public void DisposeNavigationSession(object navigationSession)
-        {
-            DiaSessionOperations.DisposeNavigationSession(navigationSession);
-        }
+        public void DisposeNavigationSession(object navigationSession) => DiaSessionOperations.DisposeNavigationSession(navigationSession);
 
         /// <summary>
         /// Gets the full file path of an assembly file.
         /// </summary>
         /// <param name="assemblyFileName"> The file name. </param>
         /// <returns> The full file path. </returns>
-        public string GetFullFilePath(string assemblyFileName)
-        {
-            return assemblyFileName;
-        }
+        public string GetFullFilePath(string assemblyFileName) => assemblyFileName;
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

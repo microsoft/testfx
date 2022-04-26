@@ -49,12 +49,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Execute an action with handling for Thread Aborts (if possible) so the main thread of the adapter does not die.
         /// </summary>
         /// <param name="action"> The action to execute. </param>
-        public void ExecuteWithAbortSafety(Action action)
-        {
+        public void ExecuteWithAbortSafety(Action action) =>
             // There is no Thread abort scenarios yet in .Net Core. Once we move the core platform service to support Thread abort related API's
             // then this logic would be similar to the desktop platform service. UWP would then be the only diverging platform service since it does not have Thread APIs exposed.
             action.Invoke();
-        }
     }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

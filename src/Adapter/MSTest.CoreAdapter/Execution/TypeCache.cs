@@ -65,10 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Initializes a new instance of the <see cref="TypeCache"/> class.
         /// </summary>
         /// <param name="reflectionHelper"> An instance to the <see cref="ReflectHelper"/> object. </param>
-        internal TypeCache(ReflectHelper reflectionHelper)
-        {
-            this.reflectionHelper = reflectionHelper;
-        }
+        internal TypeCache(ReflectHelper reflectionHelper) => this.reflectionHelper = reflectionHelper;
 
         /// <summary>
         /// Gets Class Info cache which has cleanup methods to execute
@@ -132,10 +129,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// The <see cref="object"/>.
         /// </returns>
         [SecurityCritical]
-        public override object InitializeLifetimeService()
-        {
-            return null;
-        }
+        public override object InitializeLifetimeService() => null;
 
         #region ClassInfo creation and cache logic.
 

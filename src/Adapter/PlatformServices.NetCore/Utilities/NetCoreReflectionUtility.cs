@@ -35,14 +35,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="memberInfo"> The member. </param>
         /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
         /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-        internal static object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
-        {
-            return GetCustomAttributes(memberInfo, type: null, inherit: inherit);
-        }
+        internal static object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit) => GetCustomAttributes(memberInfo, type: null, inherit: inherit);
 
-        internal virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
-        {
-            return GetCustomAttributes(attributeProvider, type, true);
-        }
+        internal virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type) => GetCustomAttributes(attributeProvider, type, true);
     }
 }

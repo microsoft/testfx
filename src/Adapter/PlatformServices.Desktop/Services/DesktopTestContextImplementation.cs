@@ -93,159 +93,58 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         #region TestContext impl
 
         /// <inheritdoc/>
-        public override UTF.UnitTestOutcome CurrentTestOutcome
-        {
-            get
-            {
-                return outcome;
-            }
-        }
+        public override UTF.UnitTestOutcome CurrentTestOutcome => outcome;
 
         /// <inheritdoc/>
-        public override DbConnection DataConnection
-        {
-            get
-            {
-                return dbConnection;
-            }
-        }
+        public override DbConnection DataConnection => dbConnection;
 
         /// <inheritdoc/>
-        public override DataRow DataRow
-        {
-            get
-            {
-                return dataRow;
-            }
-        }
+        public override DataRow DataRow => dataRow;
 
         /// <inheritdoc/>
-        public override IDictionary Properties
-        {
-            get
-            {
-                return properties as IDictionary;
-            }
-        }
+        public override IDictionary Properties => properties as IDictionary;
 
         /// <inheritdoc/>
-        public override string TestRunDirectory
-        {
-            get
-            {
-                return GetStringPropertyValue(TestContextPropertyStrings.TestRunDirectory);
-            }
-        }
+        public override string TestRunDirectory => GetStringPropertyValue(TestContextPropertyStrings.TestRunDirectory);
 
         /// <inheritdoc/>
-        public override string DeploymentDirectory
-        {
-            get
-            {
-                return GetStringPropertyValue(TestContextPropertyStrings.DeploymentDirectory);
-            }
-        }
+        public override string DeploymentDirectory => GetStringPropertyValue(TestContextPropertyStrings.DeploymentDirectory);
 
         /// <inheritdoc/>
-        public override string ResultsDirectory
-        {
-            get
-            {
-                return GetStringPropertyValue(TestContextPropertyStrings.ResultsDirectory);
-            }
-        }
+        public override string ResultsDirectory => GetStringPropertyValue(TestContextPropertyStrings.ResultsDirectory);
 
         /// <inheritdoc/>
-        public override string TestRunResultsDirectory
-        {
-            get
-            {
-                return GetStringPropertyValue(TestContextPropertyStrings.TestRunResultsDirectory);
-            }
-        }
+        public override string TestRunResultsDirectory => GetStringPropertyValue(TestContextPropertyStrings.TestRunResultsDirectory);
 
         /// <inheritdoc/>
         [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", Justification = "TestResultsDirectory is what we need.")]
-        public override string TestResultsDirectory
-        {
-            get
-            {
+        public override string TestResultsDirectory =>
                 // In MSTest, it is actually "In\697105f7-004f-42e8-bccf-eb024870d3e9\User1", but
                 // we are setting it to "In" only because MSTest does not create this directory.
-                return GetStringPropertyValue(TestContextPropertyStrings.TestResultsDirectory);
-            }
-        }
+                GetStringPropertyValue(TestContextPropertyStrings.TestResultsDirectory);
 
         /// <inheritdoc/>
-        public override string TestDir
-        {
-            get
-            {
-                return GetStringPropertyValue(TestContextPropertyStrings.TestDir);
-            }
-        }
+        public override string TestDir => GetStringPropertyValue(TestContextPropertyStrings.TestDir);
 
         /// <inheritdoc/>
-        public override string TestDeploymentDir
-        {
-            get
-            {
-                return GetStringPropertyValue(TestContextPropertyStrings.TestDeploymentDir);
-            }
-        }
+        public override string TestDeploymentDir => GetStringPropertyValue(TestContextPropertyStrings.TestDeploymentDir);
 
         /// <inheritdoc/>
-        public override string TestLogsDir
-        {
-            get
-            {
-                return GetStringPropertyValue(TestContextPropertyStrings.TestLogsDir);
-            }
-        }
+        public override string TestLogsDir => GetStringPropertyValue(TestContextPropertyStrings.TestLogsDir);
 
         /// <inheritdoc/>
-        public override string FullyQualifiedTestClassName
-        {
-            get
-            {
-                return GetStringPropertyValue(TestContextPropertyStrings.FullyQualifiedTestClassName);
-            }
-        }
+        public override string FullyQualifiedTestClassName => GetStringPropertyValue(TestContextPropertyStrings.FullyQualifiedTestClassName);
 
         /// <inheritdoc/>
-        public override string ManagedType
-        {
-            get
-            {
-                return GetStringPropertyValue(TestContextPropertyStrings.ManagedType);
-            }
-        }
+        public override string ManagedType => GetStringPropertyValue(TestContextPropertyStrings.ManagedType);
 
         /// <inheritdoc/>
-        public override string ManagedMethod
-        {
-            get
-            {
-                return GetStringPropertyValue(TestContextPropertyStrings.ManagedMethod);
-            }
-        }
+        public override string ManagedMethod => GetStringPropertyValue(TestContextPropertyStrings.ManagedMethod);
 
         /// <inheritdoc/>
-        public override string TestName
-        {
-            get
-            {
-                return GetStringPropertyValue(TestContextPropertyStrings.TestName);
-            }
-        }
+        public override string TestName => GetStringPropertyValue(TestContextPropertyStrings.TestName);
 
-        public UTF.TestContext Context
-        {
-            get
-            {
-                return this as UTF.TestContext;
-            }
-        }
+        public UTF.TestContext Context => this as UTF.TestContext;
 
         /// <inheritdoc/>
         public override void AddResultFile(string fileName)
@@ -259,16 +158,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <inheritdoc/>
-        public override void BeginTimer(string timerName)
-        {
-            throw new NotSupportedException();
-        }
+        public override void BeginTimer(string timerName) => throw new NotSupportedException();
 
         /// <inheritdoc/>
-        public override void EndTimer(string timerName)
-        {
-            throw new NotSupportedException();
-        }
+        public override void EndTimer(string timerName) => throw new NotSupportedException();
 
         /// <summary>
         /// When overridden in a derived class, used to write trace messages while the
@@ -368,28 +261,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Set the unit-test outcome
         /// </summary>
         /// <param name="outcome">The test outcome.</param>
-        public void SetOutcome(UTF.UnitTestOutcome outcome)
-        {
-            this.outcome = ToUTF(outcome);
-        }
+        public void SetOutcome(UTF.UnitTestOutcome outcome) => this.outcome = ToUTF(outcome);
 
         /// <summary>
         /// Set data row for particular run of TestMethod.
         /// </summary>
         /// <param name="dataRow">data row.</param>
-        public void SetDataRow(object dataRow)
-        {
-            this.dataRow = dataRow as DataRow;
-        }
+        public void SetDataRow(object dataRow) => this.dataRow = dataRow as DataRow;
 
         /// <summary>
         /// Set connection for TestContext
         /// </summary>
         /// <param name="dbConnection">db Connection.</param>
-        public void SetDataConnection(object dbConnection)
-        {
-            this.dbConnection = dbConnection as DbConnection;
-        }
+        public void SetDataConnection(object dbConnection) => this.dbConnection = dbConnection as DbConnection;
 
         /// <summary>
         /// Returns whether property with parameter name is present or not
@@ -446,18 +330,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Gets messages from the testContext writeLines
         /// </summary>
         /// <returns>The test context messages added so far.</returns>
-        public string GetDiagnosticMessages()
-        {
-            return threadSafeStringWriter.ToString();
-        }
+        public string GetDiagnosticMessages() => threadSafeStringWriter.ToString();
 
         /// <summary>
         /// Clears the previous testContext writeline messages.
         /// </summary>
-        public void ClearDiagnosticMessages()
-        {
-            threadSafeStringWriter.ToStringAndClear();
-        }
+        public void ClearDiagnosticMessages() => threadSafeStringWriter.ToStringAndClear();
 
         #endregion
 

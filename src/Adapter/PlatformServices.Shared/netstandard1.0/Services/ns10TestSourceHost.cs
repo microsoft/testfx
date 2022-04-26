@@ -41,10 +41,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>  An instance of the type created in the host.
         /// <see cref="object"/>.
         /// </returns>
-        public object CreateInstanceForType(Type type, object[] args)
-        {
-            return Activator.CreateInstance(type, args);
-        }
+        public object CreateInstanceForType(Type type, object[] args) => Activator.CreateInstance(type, args);
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

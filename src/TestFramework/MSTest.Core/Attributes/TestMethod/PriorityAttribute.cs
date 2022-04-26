@@ -17,10 +17,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="priority">
         /// The priority.
         /// </param>
-        public PriorityAttribute(int priority)
-        {
-            Priority = priority;
-        }
+        public PriorityAttribute(int priority) => Priority = priority;
 
         /// <summary>
         /// Gets the priority.

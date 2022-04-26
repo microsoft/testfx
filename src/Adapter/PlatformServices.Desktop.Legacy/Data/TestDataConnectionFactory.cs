@@ -66,18 +66,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         private class XmlTestDataConnectionFactory : TestDataConnectionFactory
         {
-            public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders)
-            {
-                return new XmlDataConnection(connectionString, dataFolders);
-            }
+            public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders) => new XmlDataConnection(connectionString, dataFolders);
         }
 
         private class CsvTestDataConnectionFactory : TestDataConnectionFactory
         {
-            public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders)
-            {
-                return new CsvDataConnection(connectionString, dataFolders);
-            }
+            public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders) => new CsvDataConnection(connectionString, dataFolders);
         }
 
         #endregion TestDataConnectionFactories

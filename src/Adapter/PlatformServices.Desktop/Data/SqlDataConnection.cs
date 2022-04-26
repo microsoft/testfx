@@ -21,10 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// this.Connection must be already opened.
         /// </summary>
         /// <returns>The default database schema.</returns>
-        public override string GetDefaultSchema()
-        {
-            return GetDefaultSchemaMSSql();
-        }
+        public override string GetDefaultSchema() => GetDefaultSchemaMSSql();
 
         protected override SchemaMetaData[] GetSchemaMetaData()
         {

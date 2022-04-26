@@ -26,13 +26,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="name">The key of the element to return.</param>
         /// <returns>The System.Configuration.ConfigurationElement with the specified key; otherwise, null.</returns>
-        public new DataSourceElement this[string name]
-        {
-            get
-            {
-                return (DataSourceElement)BaseGet(name);
-            }
-        }
+        public new DataSourceElement this[string name] => (DataSourceElement)BaseGet(name);
 
         /// <summary>
         /// Gets the configuration element at the specified index location.
@@ -40,10 +34,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="index">The index location of the System.Configuration.ConfigurationElement to return.</param>
         public DataSourceElement this[int index]
         {
-            get
-            {
-                return (DataSourceElement)BaseGet(index);
-            }
+            get => (DataSourceElement)BaseGet(index);
 
             set
             {
@@ -60,10 +51,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Adds a configuration element to the configuration element collection.
         /// </summary>
         /// <param name="element">The System.Configuration.ConfigurationElement to add.</param>
-        public void Add(DataSourceElement element)
-        {
-            BaseAdd(element, false);
-        }
+        public void Add(DataSourceElement element) => BaseAdd(element, false);
 
         /// <summary>
         /// Removes a System.Configuration.ConfigurationElement from the collection.
@@ -81,27 +69,18 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Removes a System.Configuration.ConfigurationElement from the collection.
         /// </summary>
         /// <param name="name">The key of the System.Configuration.ConfigurationElement to remove.</param>
-        public void Remove(string name)
-        {
-            BaseRemove(name);
-        }
+        public void Remove(string name) => BaseRemove(name);
 
         /// <summary>
         /// Removes all configuration element objects from the collection.
         /// </summary>
-        public void Clear()
-        {
-            BaseClear();
-        }
+        public void Clear() => BaseClear();
 
         /// <summary>
         /// Creates a new <see cref="DataSourceElement"/>.
         /// </summary>
         /// <returns>A new <see cref="DataSourceElement"/>.</returns>
-        protected override ConfigurationElement CreateNewElement()
-        {
-            return new DataSourceElement();
-        }
+        protected override ConfigurationElement CreateNewElement() => new DataSourceElement();
 
         /// <summary>
         /// Gets the element key for a specified configuration element.
@@ -118,10 +97,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Adds a configuration element to the configuration element collection.
         /// </summary>
         /// <param name="element">The System.Configuration.ConfigurationElement to add.</param>
-        protected override void BaseAdd(ConfigurationElement element)
-        {
-            BaseAdd(element, false);
-        }
+        protected override void BaseAdd(ConfigurationElement element) => BaseAdd(element, false);
 
         /// <summary>
         /// Adds a configuration element to the configuration element collection.

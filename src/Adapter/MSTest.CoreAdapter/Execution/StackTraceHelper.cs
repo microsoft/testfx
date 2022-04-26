@@ -26,13 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Gets the types whose methods should be ignored in the reported call stacks.
         /// This is used to remove our stack that the user will not care about.
         /// </summary>
-        private static List<string> TypeToBeExcluded
-        {
-            get
-            {
-                return TypesToBeExcluded;
-            }
-        }
+        private static List<string> TypeToBeExcluded => TypesToBeExcluded;
 
         /// <summary>
         /// Gets the stack trace for an exception, including all stack traces for inner

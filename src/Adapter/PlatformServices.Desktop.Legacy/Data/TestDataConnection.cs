@@ -27,19 +27,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         // List of places to look for files when substituting |DataDirectory|
         private readonly List<string> dataFolders;
 
-        internal protected TestDataConnection(List<string> dataFolders)
-        {
-            this.dataFolders = dataFolders;
-        }
+        internal protected TestDataConnection(List<string> dataFolders) => this.dataFolders = dataFolders;
 
         /// <summary>
         /// Gets the connection.
         /// </summary>
         /// <remarks>This will only return non-null for true DB based connections (TestDataConnectionSql)</remarks>
-        public virtual DbConnection Connection
-        {
-            get { return null; }
-        }
+        public virtual DbConnection Connection => null;
 
         private static bool ExtendedDiagnosticsEnabled
         {
@@ -89,10 +83,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         // It is critical that is class be disposed of properly, otherwise
         // data connections may be left open. In general it is best to use create instances
         // in a "using"
-        public virtual void Dispose()
-        {
-            GC.SuppressFinalize(this);
-        }
+        public virtual void Dispose() => GC.SuppressFinalize(this);
 
         internal static bool PathNeedsFixup(string path)
         {
@@ -160,9 +151,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             }
         }
 
-        protected string FixPath(string path)
-        {
-            return FixPath(path, dataFolders);
-        }
+        protected string FixPath(string path) => FixPath(path, dataFolders);
     }
 }

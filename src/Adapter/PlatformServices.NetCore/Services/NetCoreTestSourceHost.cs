@@ -42,10 +42,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public void Dispose()
-        {
-            ResetContext();
-        }
+        public void Dispose() => ResetContext();
 
         /// <summary>
         /// Creates an instance of a given type in the test source host.
@@ -58,10 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>  An instance of the type created in the host.
         /// <see cref="object"/>.
         /// </returns>
-        public object CreateInstanceForType(Type type, object[] args)
-        {
-            return Activator.CreateInstance(type, args);
-        }
+        public object CreateInstanceForType(Type type, object[] args) => Activator.CreateInstance(type, args);
 
         /// <summary>
         /// Sets context required for running tests.
