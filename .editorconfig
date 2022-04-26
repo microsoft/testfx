@@ -91,6 +91,8 @@ dotnet_diagnostic.SA1101.severity = silent
 
 # Coding styles
 
+csharp_using_directive_placement = inside_namespace:warning
+
 csharp_style_expression_bodied_methods = true:warning
 csharp_style_expression_bodied_constructors = true:warning
 csharp_style_expression_bodied_operators = true:warning
