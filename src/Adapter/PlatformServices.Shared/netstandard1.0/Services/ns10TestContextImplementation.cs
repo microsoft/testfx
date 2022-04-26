@@ -32,6 +32,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private static readonly string TestNameLabel = nameof(TestName);
 
         /// <summary>
+        /// Test Method
+        /// </summary>
+        private readonly ITestMethod testMethod;
+        private readonly ThreadSafeStringWriter threadSafeStringWriter;
+
+        /// <summary>
         /// Properties
         /// </summary>
         private IDictionary<string, object> properties;
@@ -41,12 +47,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         private UTF.UnitTestOutcome outcome;
 
-        /// <summary>
-        /// Test Method
-        /// </summary>
-        private ITestMethod testMethod;
-
-        private ThreadSafeStringWriter threadSafeStringWriter;
         private bool stringWriterDisposed;
 
         /// <summary>

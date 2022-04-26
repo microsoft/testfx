@@ -13,7 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </summary>
     internal class RandomIntPermutation : IEnumerable<int>
     {
-        private int[] objects;
+        private readonly int[] objects;
 
         public RandomIntPermutation(int numberOfObjects)
         {

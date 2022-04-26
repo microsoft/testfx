@@ -43,27 +43,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// This will have the list of all directories read from runsettings.
         /// </summary>
-        private Queue<RecursiveDirectoryPath> directoryList;
+        private readonly Queue<RecursiveDirectoryPath> directoryList;
 
         /// <summary>
         /// The directories to look for assemblies to resolve.
         /// </summary>
-        private List<string> searchDirectories;
+        private readonly List<string> searchDirectories;
 
         /// <summary>
         /// Dictionary of Assemblies discovered to date.
         /// </summary>
-        private Dictionary<string, Assembly> resolvedAssemblies = new Dictionary<string, Assembly>();
+        private readonly Dictionary<string, Assembly> resolvedAssemblies = new Dictionary<string, Assembly>();
 
         /// <summary>
         /// Dictionary of Reflection-Only Assemblies discovered to date.
         /// </summary>
-        private Dictionary<string, Assembly> reflectionOnlyResolvedAssemblies = new Dictionary<string, Assembly>();
+        private readonly Dictionary<string, Assembly> reflectionOnlyResolvedAssemblies = new Dictionary<string, Assembly>();
 
         /// <summary>
         /// lock for the loaded assemblies cache.
         /// </summary>
-        private object syncLock = new object();
+        private readonly object syncLock = new object();
 
         private bool disposed;
 

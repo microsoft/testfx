@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public const int TotalHierarchyLevels = HierarchyConstants.Levels.TotalLevelCount;
 
         #region Fields
-        private IReadOnlyCollection<string> hierarchy;
+        private readonly IReadOnlyCollection<string> hierarchy;
         private string declaringClassFullName = null;
         private string declaringAssemblyName = null;
         #endregion

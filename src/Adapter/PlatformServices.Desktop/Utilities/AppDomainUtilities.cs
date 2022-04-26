@@ -20,8 +20,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     {
         private const string ObjectModelVersionBuiltAgainst = "11.0.0.0";
 
-        private static Version defaultVersion = new Version();
-        private static Version version45 = new Version("4.5");
+        private static readonly Version DefaultVersion = new Version();
+        private static readonly Version Version45 = new Version("4.5");
 
         private static XmlUtilities xmlUtilities = null;
 
@@ -55,7 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
         internal static void SetAppDomainFrameworkVersionBasedOnTestSource(AppDomainSetup setup, string frameworkVersionString)
         {
-            if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(version45) > 0)
+            if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(Version45) > 0)
             {
                 PropertyInfo pInfo = typeof(AppDomainSetup).GetProperty(PlatformServices.Constants.TargetFrameworkName);
                 if (pInfo != null)
@@ -246,7 +246,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 EqtTrace.Warning(string.Format("AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{0}' due to error '{1}':", version, ex.Message));
             }
 
-            return defaultVersion;
+            return DefaultVersion;
         }
     }
 }

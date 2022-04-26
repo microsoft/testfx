@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     {
         private const string SystemAssembliesPrefix = "system.";
 
-        private static IEnumerable<string> executableExtensions = new HashSet<string>()
+        private static readonly IEnumerable<string> ExecutableExtensions = new HashSet<string>()
         {
              Constants.ExeExtension,
 
@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
              // Constants.DllExtension
         };
 
-        private static HashSet<string> systemAssemblies = new HashSet<string>(new string[]
+        private static readonly HashSet<string> SystemAssemblies = new HashSet<string>(new string[]
         {
             "MICROSOFT.CSHARP.DLL",
             "MICROSOFT.VISUALBASIC.DLL",
@@ -37,7 +37,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         });
 
         // Well known platform assemblies.
-        private static HashSet<string> platformAssemblies = new HashSet<string>(new string[]
+        private static readonly HashSet<string> PlatformAssemblies = new HashSet<string>(new string[]
         {
             "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.DLL",
             "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.EXTENSIONS.CORE.DLL",
@@ -89,11 +89,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 {
                     var fileName = filePath.Name;
                     var isExtSupported =
-                        executableExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
+                        ExecutableExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
 
                     if (isExtSupported && !fileName.StartsWith(SystemAssembliesPrefix, StringComparison.OrdinalIgnoreCase)
-                            && !platformAssemblies.Contains(fileName.ToUpperInvariant())
-                            && !systemAssemblies.Contains(fileName.ToUpperInvariant()))
+                            && !PlatformAssemblies.Contains(fileName.ToUpperInvariant())
+                            && !SystemAssemblies.Contains(fileName.ToUpperInvariant()))
                     {
                         // Required only for store 8.1
                         // If a source package(appx) has both dll and exe files that contains tests, then add any one of them and not both.

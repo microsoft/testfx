@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Type that need to be excluded.
         /// </summary>
-        private static List<string> typesToBeExcluded = new List<string>() { typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Namespace, typeof(MSTestExecutor).Namespace };
+        private static readonly List<string> TypesToBeExcluded = new List<string>() { typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Namespace, typeof(MSTestExecutor).Namespace };
 
         /// <summary>
         /// Gets the types whose methods should be ignored in the reported call stacks.
@@ -30,7 +30,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             get
             {
-                return typesToBeExcluded;
+                return TypesToBeExcluded;
             }
         }
 

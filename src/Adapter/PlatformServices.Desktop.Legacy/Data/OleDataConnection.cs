@@ -14,7 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
     [SuppressMessage("Microsoft.Naming", "CA1706", Justification = "OleDb instead of Oledb to match System.Data.OleDb")]
     internal sealed class OleDataConnection : TestDataConnectionSql
     {
-        private bool isMSSql;
+        private readonly bool isMSSql;
 
         public OleDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
             : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)

@@ -10,12 +10,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// </summary>
     public static class TestConfiguration
     {
-        private static TestConfigurationSection configurationSection = LoadConfiguration();
+        private static readonly TestConfigurationSection ConfigurationSectionValue = LoadConfiguration();
 
         /// <summary>
         /// Gets the configuration section for tests.
         /// </summary>
-        public static TestConfigurationSection ConfigurationSection => configurationSection;
+        public static TestConfigurationSection ConfigurationSection => ConfigurationSectionValue;
 
         private static TestConfigurationSection LoadConfiguration()
         {

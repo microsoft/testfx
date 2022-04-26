@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// - the key (provider name is case-sensitive).
         /// - other providers can be registered using RegisterProvider (per app domain).
         /// </summary>
-        private static Dictionary<string, TestDataConnectionFactory> specializedProviders = new Dictionary<string, TestDataConnectionFactory>
+        private static readonly Dictionary<string, TestDataConnectionFactory> SpecializedProviders = new Dictionary<string, TestDataConnectionFactory>
         {
             // The XML case is quite unlike all others, as there is no real DB connection at all!
             { XmlProvider, new XmlTestDataConnectionFactory() },
@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
             // Most, but not all, connections are actually database based,
             // here we look for special cases
-            if (specializedProviders.TryGetValue(invariantProviderName, out var factory))
+            if (SpecializedProviders.TryGetValue(invariantProviderName, out var factory))
             {
                 Debug.Assert(factory != null, "factory");
                 return factory.Create(invariantProviderName, connectionString, dataFolders);

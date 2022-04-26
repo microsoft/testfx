@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </summary>
     public class TestSourceHost : ITestSourceHost
     {
-        private string sourceFileName;
+        private readonly string sourceFileName;
         private string currentDirectory = null;
 
         /// <summary>

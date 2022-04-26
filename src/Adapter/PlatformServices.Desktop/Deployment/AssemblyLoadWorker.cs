@@ -18,7 +18,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
     /// </summary>
     internal class AssemblyLoadWorker : MarshalByRefObject
     {
-        private IAssemblyUtility assemblyUtility;
+        private readonly IAssemblyUtility assemblyUtility;
 
         public AssemblyLoadWorker()
             : this(new AssemblyUtility())

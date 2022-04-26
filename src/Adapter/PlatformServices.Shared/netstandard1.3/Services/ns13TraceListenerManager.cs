@@ -20,12 +20,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Original output stream
         /// </summary>
-        private TextWriter origStdOut;
+        private readonly TextWriter origStdOut;
 
         /// <summary>
         /// Original error stream
         /// </summary>
-        private TextWriter origStdErr;
+        private readonly TextWriter origStdErr;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TraceListenerManager"/> class.

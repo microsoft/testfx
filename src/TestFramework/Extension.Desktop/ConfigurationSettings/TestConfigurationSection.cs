@@ -11,12 +11,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public sealed class TestConfigurationSection : ConfigurationSection
     {
         private static readonly ConfigurationProperty DataSourcesValue = new ConfigurationProperty(ConfigurationNames.DataSourcesSectionName, typeof(DataSourceElementCollection), null);
-        private static ConfigurationPropertyCollection properties;
+        private static readonly ConfigurationPropertyCollection PropertiesValue;
 
         static TestConfigurationSection()
         {
-            properties = new ConfigurationPropertyCollection();
-            properties.Add(DataSourcesValue);
+            PropertiesValue = new ConfigurationPropertyCollection();
+            PropertiesValue.Add(DataSourcesValue);
         }
 
         /// <summary>
@@ -31,6 +31,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The <see cref="T:System.Configuration.ConfigurationPropertyCollection"/> of properties for the element.
         /// </returns>
-        protected override ConfigurationPropertyCollection Properties => properties;
+        protected override ConfigurationPropertyCollection Properties => PropertiesValue;
     }
 }

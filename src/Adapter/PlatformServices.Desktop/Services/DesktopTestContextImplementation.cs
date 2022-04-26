@@ -30,7 +30,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// List of result files associated with the test
         /// </summary>
-        private IList<string> testResultFiles;
+        private readonly IList<string> testResultFiles;
+
+        /// <summary>
+        /// Test Method
+        /// </summary>
+        private readonly ITestMethod testMethod;
+
+        /// <summary>
+        /// Writer on which the messages given by the user should be written
+        /// </summary>
+        private readonly ThreadSafeStringWriter threadSafeStringWriter;
 
         /// <summary>
         /// Properties
@@ -43,19 +53,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         private UTF.UnitTestOutcome outcome;
 
         /// <summary>
-        /// Writer on which the messages given by the user should be written
-        /// </summary>
-        private ThreadSafeStringWriter threadSafeStringWriter;
-
-        /// <summary>
         /// Specifies whether the writer is disposed or not
         /// </summary>
         private bool stringWriterDisposed = false;
-
-        /// <summary>
-        /// Test Method
-        /// </summary>
-        private ITestMethod testMethod;
 
         /// <summary>
         /// DB connection for test context

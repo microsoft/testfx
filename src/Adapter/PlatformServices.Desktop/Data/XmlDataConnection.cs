@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
     /// </summary>
     internal sealed class XmlDataConnection : TestDataConnection
     {
-        private string fileName;
+        private readonly string fileName;
 
         public XmlDataConnection(string fileName, List<string> dataFolders)
             : base(dataFolders)

@@ -21,10 +21,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     /// </summary>
     public class TestAssemblyInfo
     {
-        private MethodInfo assemblyCleanupMethod;
+        private readonly object assemblyInfoExecuteSyncObject;
 
+        private MethodInfo assemblyCleanupMethod;
         private MethodInfo assemblyInitializeMethod;
-        private object assemblyInfoExecuteSyncObject;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TestAssemblyInfo"/> class.

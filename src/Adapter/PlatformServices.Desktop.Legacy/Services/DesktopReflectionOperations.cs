@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </remarks>
     public class ReflectionOperations : IReflectionOperations
     {
-        private ReflectionUtility reflectionUtility;
+        private readonly ReflectionUtility reflectionUtility;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReflectionOperations"/> class.

@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Helper for reflection API's.
         /// </summary>
-        private ReflectHelper reflectHelper;
+        private readonly ReflectHelper reflectHelper;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TestMethodRunner"/> class.

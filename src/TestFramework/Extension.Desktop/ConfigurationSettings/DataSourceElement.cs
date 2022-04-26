@@ -14,16 +14,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         private static readonly ConfigurationProperty ConnectionStringValue = new ConfigurationProperty(ConfigurationNames.ConnectionStringAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
         private static readonly ConfigurationProperty DataTableNameValue = new ConfigurationProperty(ConfigurationNames.DataTableAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
         private static readonly ConfigurationProperty DataAccessMethodValue = new ConfigurationProperty(ConfigurationNames.DataAccessMethodAttributeName, typeof(string), string.Empty);
-
-        private static ConfigurationPropertyCollection properties;
+        private static readonly ConfigurationPropertyCollection PropertiesValue;
 
         static DataSourceElement()
         {
-            properties = new ConfigurationPropertyCollection();
-            properties.Add(NameValue);
-            properties.Add(ConnectionStringValue);
-            properties.Add(DataAccessMethodValue);
-            properties.Add(DataTableNameValue);
+            PropertiesValue = new ConfigurationPropertyCollection();
+            PropertiesValue.Add(NameValue);
+            PropertiesValue.Add(ConnectionStringValue);
+            PropertiesValue.Add(DataAccessMethodValue);
+            PropertiesValue.Add(DataTableNameValue);
         }
 
         /// <summary>
@@ -77,6 +76,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Gets the configuration properties.
         /// </summary>
-        protected override ConfigurationPropertyCollection Properties => properties;
+        protected override ConfigurationPropertyCollection Properties => PropertiesValue;
     }
 }

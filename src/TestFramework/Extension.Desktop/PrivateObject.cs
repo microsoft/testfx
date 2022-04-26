@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         // bind everything
         private const BindingFlags BindToEveryThing = BindingFlags.Default | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
 
-        private static BindingFlags constructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.NonPublic;
+        private static readonly BindingFlags ConstructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.NonPublic;
 
         private object target;     // automatically initialized to null
         private Type originalType; // automatically initialized to null
@@ -138,7 +138,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             }
             else
             {
-                o = Activator.CreateInstance(type, constructorFlags, null, args, null);
+                o = Activator.CreateInstance(type, ConstructorFlags, null, args, null);
             }
 
             ConstructFrom(o);

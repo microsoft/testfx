@@ -17,7 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     /// </summary>
     public class LogMessageListener : IDisposable
     {
-        private static object traceLock = new object();
+        private static readonly object TraceLock = new object();
         private static int listenerCount;
         private static ThreadSafeStringWriter redirectedDebugTrace;
 
@@ -69,7 +69,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // to only add the listener when there is none, and remove it when we are the last one to dispose.
                 //
                 // This would break the behavior for net451, but that functionality was moved further into ThreadSafeStringWriter.
-                lock (traceLock)
+                lock (TraceLock)
                 {
                     if (listenerCount == 0)
                     {
@@ -151,7 +151,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 if (captureDebugTraces)
                 {
-                    lock (traceLock)
+                    lock (TraceLock)
                     {
                         if (listenerCount == 1)
                         {

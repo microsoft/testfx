@@ -23,11 +23,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
     /// </summary>
     internal class TestDataConnectionSql : TestDataConnection
     {
+        private readonly DbCommandBuilder commandBuilder;
+        private readonly DbConnection connection;
+        private readonly DbProviderFactory factory;
+
         private string quoteSuffix;
         private string quotePrefix;
-        private DbCommandBuilder commandBuilder;
-        private DbConnection connection;
-        private DbProviderFactory factory;
 
         #region Constructor
 

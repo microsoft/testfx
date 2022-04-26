@@ -28,14 +28,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     public class TestExecutionManager
     {
         /// <summary>
+        /// Dictionary for test run parameters
+        /// </summary>
+        private readonly IDictionary<string, object> sessionParameters;
+
+        /// <summary>
         /// Specifies whether the test run is canceled or not
         /// </summary>
         private TestRunCancellationToken cancellationToken;
-
-        /// <summary>
-        /// Dictionary for test run parameters
-        /// </summary>
-        private IDictionary<string, object> sessionParameters;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Justification = "Need to over-write the keys in dictionary.")]
         public TestExecutionManager()
