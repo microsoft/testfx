@@ -65,6 +65,10 @@ dotnet_diagnostic.IDE0054.severity = warning
 # IDE0074: Use coalesce compound assignment
 dotnet_diagnostic.IDE0074.severity = warning
 
+# IDE0031: Use null propagation
+dotnet_diagnostic.IDE0031.severity = warning
+dotnet_style_null_propagation = true
+
 #### Naming styles ####
 
 # Naming styles
