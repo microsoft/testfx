@@ -8,11 +8,11 @@ Write-Host "Installing Windows SDK, if setup requests elevation please approve."
 $process = Start-Process -Wait sdksetup.exe -ArgumentList "/quiet", "/norestart", "/ceip off", "/features OptionId.WindowsSoftwareDevelopmentKit"  -PassThru
 Remove-Item sdksetup.exe -Force
 
-if($process.ExitCode -eq 0) 
+if($process.ExitCode -eq 0)
 {
     Write-Host "Done" -ForegroundColor Green
 }
-else 
+else
 {
     Write-Error "Failed to install Windows SDK (Exit code: $($process.ExitCode))"
 }

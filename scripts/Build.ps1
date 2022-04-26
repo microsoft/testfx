@@ -4,26 +4,26 @@
 # Build script for MSTest Test Framework.
 
 [CmdletBinding(PositionalBinding = $false)]
-Param(  
+Param(
   [ValidateSet("Debug", "Release")]
   [Alias("c")]
   [string] $Configuration = "Debug",
 
   [Alias("fv")]
   [string] $FrameworkVersion = "99.99.99",
-  
+
   [Alias("av")]
   [string] $AdapterVersion = "99.99.99",
 
   [Alias("vs")]
   [string] $VersionSuffix = "dev",
-  
+
   [string] $BuildVersionPrefix = "14.0",
 
   [string] $BuildVersionSuffix = "9999.99",
-  
+
   [string] $Target = "Build",
-  
+
   [Alias("h")]
   [Switch] $Help,
 
@@ -53,7 +53,7 @@ Param(
   [Switch] $DisallowPrereleaseMSBuild,
 
   [Alias("f")]
-  [Switch] $Force, 
+  [Switch] $Force,
 
   [Alias("s")]
   [String[]] $Steps = @("UpdateTPVersion", "Restore", "Build", "Publish")
@@ -80,8 +80,8 @@ $TFB_IsLocalizedBuild = $IsLocalizedBuild -or $TFB_Official
 $TPB_BRANCH = "LOCALBRANCH"
 $TPB_COMMIT = "LOCALBUILD"
 try {
-    $TPB_BRANCH = $env:BUILD_SOURCEBRANCH -replace "^refs/heads/"  
-    if ([string]::IsNullOrWhiteSpace($TPB_BRANCH)) { 
+    $TPB_BRANCH = $env:BUILD_SOURCEBRANCH -replace "^refs/heads/"
+    if ([string]::IsNullOrWhiteSpace($TPB_BRANCH)) {
         $TPB_BRANCH = git -C "." rev-parse --abbrev-ref HEAD
     }
 }
@@ -89,7 +89,7 @@ catch { }
 
 try {
     $TPB_COMMIT = $env:BUILD_SOURCEVERSION
-    if ([string]::IsNullOrWhiteSpace($TPB_COMMIT)) { 
+    if ([string]::IsNullOrWhiteSpace($TPB_COMMIT)) {
         $TPB_COMMIT = git -C "." rev-parse HEAD
     }
 }
@@ -124,7 +124,7 @@ function Print-Help {
   Write-Host -object "  Official                         - [switch]   - Indicates that this is an official build. Only used in CI builds."
   Write-Host -object "  Full                             - [switch]   - Indicates to perform a full build which includes Adapter, Framework"
   Write-Host -object "  DisallowPrereleaseMSBuild (-np)  - [switch]   - Uses an RTM version of MSBuild to build the projects"
-  Write-Host -object ""                                               
+  Write-Host -object ""
   Write-Host -object "  Configuration (-c)               - [string]   - Specifies the build configuration. Defaults to 'Debug'."
   Write-Host -object "  FrameworkVersion (-fv)           - [string]   - Specifies the version of the Test Framework nuget package."
   Write-Host -object "  AdapterVersion (-av)             - [string]   - Specifies the version of the Test Adapter nuget package."
@@ -150,7 +150,7 @@ function Install-WindowsSDK {
   }
   finally {
     Pop-Location
-    
+
     Remove-Item $temp -Force -Recurse | Out-Null
   }
 
@@ -163,7 +163,7 @@ function Perform-Restore {
   $timer = Start-Timer
 
   Write-Log "Perform-Restore: Started."
-  
+
   if ($TFB_SkipRestore) {
     Write-Log "Perform-Restore: Skipped."
     return;
@@ -202,7 +202,7 @@ function Perform-Build {
     Write-Log "    Clean build requested."
     foreach ($folder in $foldersToDel) {
       $outDir = Join-Path $env:TF_OUT_DIR -ChildPath $folder
-      
+
       if (Test-Path $outDir) {
         Write-Output "    Deleting $outDir"
         Remove-Item -Recurse -Force $outDir
@@ -211,7 +211,7 @@ function Perform-Build {
   }
 
   Invoke-MSBuild -solution "TestFx.sln"
-   
+
   Write-Log "Perform-Build: Completed. {$(Get-ElapsedTime($timer))}"
 }
 
@@ -234,17 +234,17 @@ function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExten
                 "-p:IsLocalizedBuild=$TFB_IsLocalizedBuild",
                 "-p:UpdateXlf=$TFB_UpdateXlf",
                 "-p:BuildVersion=$TFB_BuildVersion",
-                "-restore:$restore", 
+                "-restore:$restore",
                 "`"$solutionPath`"",
                 "-bl:`"$binLog`"",
                 "-m")
 
   Write-Log "    $buildTarget`: $solution..."
-  & { 
+  & {
     $PSNativeCommandArgumentPassing = 'Legacy'
     & "$msbuild" $argument;
   }
-  
+
   if ($lastExitCode -ne 0) {
     throw "Build failed with an exit code of '$lastExitCode'."
   }
@@ -266,18 +266,18 @@ function Create-NugetPackages {
 
   # Copy over the nuspecs to the staging directory
   $nuspecFiles = @(
-    "MSTest.nuspec", 
-    "MSTest.TestAdapter.nuspec", 
-    "MSTest.TestAdapter.symbols.nuspec", 
-    "MSTest.TestFramework.nuspec", 
-    "MSTest.TestFramework.symbols.nuspec", 
+    "MSTest.nuspec",
+    "MSTest.TestAdapter.nuspec",
+    "MSTest.TestAdapter.symbols.nuspec",
+    "MSTest.TestFramework.nuspec",
+    "MSTest.TestFramework.symbols.nuspec",
     "MSTest.Internal.TestFx.Documentation.nuspec"
   )
 
   foreach ($file in $nuspecFiles) {
     Copy-Item $tfSrcPackageDir\$file $stagingDir -Force
   }
-  
+
   Copy-Item (Join-Path $tfSrcPackageDir "Icon.png") $stagingDir -Force
 
   Copy-Item -Path "$($env:TF_PACKAGES_DIR)\microsoft.testplatform.adapterutilities\$TestPlatformVersion\lib" -Destination "$($stagingDir)\Microsoft.TestPlatform.AdapterUtilities" -Recurse -Force
@@ -287,7 +287,7 @@ function Create-NugetPackages {
 
   foreach ($file in $nuspecFiles) {
     $version = $TFB_FrameworkVersion
-        
+
     if ($file.Contains("TestAdapter")) {
       $version = $TFB_AdapterVersion
     }
@@ -311,7 +311,7 @@ function ShouldRunStep([string[]]$CurrentSteps) {
   if ($Force) {
     return $true
   }
-  
+
   foreach ($step in $CurrentSteps) {
     if ($Steps -contains $step) {
       return $true

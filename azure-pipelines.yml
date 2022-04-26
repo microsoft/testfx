@@ -14,7 +14,7 @@ jobs:
     displayName: 'Pull in NuGet 5.8.1'
     inputs:
       versionSpec: 5.8.1
-  
+
   - powershell: |
       reg DELETE "HKLM\Software\Microsoft\StrongName\Verification" /f
       reg ADD "HKLM\Software\Microsoft\StrongName\Verification\*,*" /f
@@ -35,7 +35,7 @@ jobs:
       filename: test.cmd
       arguments: '-configuration $(BuildConfiguration) -all -parallel'
       modifyEnvironment: false
-  
+
   - task: ComponentGovernanceComponentDetection@0
     displayName: 'Component Governance'
     inputs:

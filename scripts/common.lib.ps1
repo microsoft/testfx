@@ -15,7 +15,7 @@ $TF_TOOLS_DIR = Join-Path $TF_ROOT_DIR "tools"
 
 function Get-PackageVersion ([string]$PackageName) {
   $packages = ([XML](Get-Content $TF_VERSIONS_FILE)).Project.PropertyGroup
-  
+
   return $packages[$PackageName].InnerText;
 }
 
@@ -29,7 +29,7 @@ $global:vswhereVersion = Get-PackageVersion -PackageName "VsWhereVersion"
 # Global Environment Variables
 #
 $env:TF_ROOT_DIR = $TF_ROOT_DIR
-$env:TF_OUT_DIR = $TF_OUT_DIR 
+$env:TF_OUT_DIR = $TF_OUT_DIR
 $env:TF_SRC_DIR = $TF_SRC_DIR
 $env:TF_TEST_DIR = $TF_TEST_DIR
 $env:TF_PACKAGES_DIR = $TF_PACKAGES_DIR
@@ -122,13 +122,13 @@ function Locate-NuGetConfig {
 function Locate-PackagesPath {
   $rootPath = $env:TF_ROOT_DIR
   $packagesPath = Join-Path -path $rootPath -childPath "packages"
-  
+
   Create-Directory -path $packagesPath
   return Resolve-Path -path $packagesPath
 }
 
 function Locate-VsWhere {
-  $packagesPath = Locate-PackagesPath 
+  $packagesPath = Locate-PackagesPath
 
   $vswhere = Join-Path -path $packagesPath -childPath "vswhere\$vswhereVersion\tools\vswhere.exe"
   if(-not (Test-Path $vswhere)) {
@@ -147,14 +147,14 @@ function Locate-VsInstallPath($hasVsixExtension = "false") {
   $vswhere = Locate-VsWhere
   $requiredPackageIds = @()
 
-  $requiredPackageIds += "Microsoft.Component.MSBuild" 
+  $requiredPackageIds += "Microsoft.Component.MSBuild"
   $requiredPackageIds += "Microsoft.Net.Component.4.5.2.TargetingPack"
   $requiredPackageIds += "Microsoft.VisualStudio.Windows.Build"
 
   if ($hasVsixExtension -eq 'true') {
-    $requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK" 
+    $requiredPackageIds += "Microsoft.VisualStudio.Component.VSSDK"
   }
-  $version = "[16.0.0, 18.0.0)" 
+  $version = "[16.0.0, 18.0.0)"
   Write-Verbose "$vswhere -version $version -products * -requires $requiredPackageIds -property installationPath"
 
   if ($Official -or $DisallowPrereleaseMSBuild) {
@@ -216,7 +216,7 @@ function Write-Log ([string] $message, $messageColor = "Green") {
 }
 
 function Replace-InFile($File, $RegEx, $ReplaceWith) {
-  $content = Get-Content -Raw -Encoding utf8 $File 
+  $content = Get-Content -Raw -Encoding utf8 $File
   $newContent = ($content -replace $RegEx, $ReplaceWith)
   if (-not $content.Equals($newContent)) {
     Write-Log "Updating TestPlatform version in $File"
@@ -269,13 +269,13 @@ function Install-DotNetCli {
   $dotnetInstallPath = Join-Path $env:TF_TOOLS_DIR "dotnet"
   New-Item -ItemType directory -Path $dotnetInstallPath -Force | Out-Null
   & $dotnetInstallScript -Channel "master" -InstallDir $dotnetInstallPath -Version $env:DOTNET_CLI_VERSION
-    
+
   & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '2.1.30' -Channel '2.1.30' -Architecture x64 -NoPath
   $env:DOTNET_ROOT = $dotnetInstallPath
 
   & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Version '2.1.30' -Channel '2.1.30' -Architecture x86 -NoPath
   ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
-    
+
   & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Version '3.1.24' -Channel '3.1.24' -Architecture x64 -NoPath
   $env:DOTNET_ROOT = $dotnetInstallPath
 
@@ -292,7 +292,7 @@ function Install-DotNetCli {
 
   "---- dotnet environment variables"
   Get-ChildItem "Env:\dotnet_*"
-    
+
   "`n`n---- x64 dotnet"
   & "$env:DOTNET_ROOT\dotnet.exe" --info
 
