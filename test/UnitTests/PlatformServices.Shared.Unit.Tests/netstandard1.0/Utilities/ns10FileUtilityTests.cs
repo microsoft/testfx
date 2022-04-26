@@ -47,7 +47,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
             Assert.AreEqual("galaxy__far_far_away", this.fileUtility.Object.ReplaceInvalidFileNameCharacters(fileName));
         }
 
-#region AddFilesFromDirectory tests
+        #region AddFilesFromDirectory tests
 
         [TestMethod]
         public void AddFilesInADirectoryShouldReturnAllTopLevelFilesInADirectory()
@@ -206,6 +206,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
             });
         }
 
-#endregion
+        #endregion
     }
 }

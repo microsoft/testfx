@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers
                     </MSTestV2>
                   </RunSettings>";
 
-           this.adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+            this.adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
         }
 
         [TestMethod]

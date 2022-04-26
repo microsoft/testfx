@@ -5,7 +5,7 @@ namespace ParallelMethodsTestProject
 {
     using System.Threading;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    
+
     [TestClass]
     public class UnitTest1
     {

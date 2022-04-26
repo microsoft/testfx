@@ -70,7 +70,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             }
             catch (Exception exception)
             {
-               EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for CSV data source " + this.fileName);
+                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for CSV data source " + this.fileName);
             }
 
             return null;

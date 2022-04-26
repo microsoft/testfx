@@ -38,7 +38,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             MSTestSettingsProvider.Reset();
         }
 
-#region ResolveEnvironmentVariableAndReturnFullPathIfExist tests.
+        #region ResolveEnvironmentVariableAndReturnFullPathIfExist tests.
 
         [TestMethod]
         public void ResolveEnvironmentVariableShouldResolvePathWhenPassedAbsolutePath()
@@ -155,9 +155,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             Assert.IsNull(result);
         }
 
-#endregion
+        #endregion
 
-#region GetDirectoryListWithRecursiveProperty tests.
+        #region GetDirectoryListWithRecursiveProperty tests.
 
         [TestMethod]
         public void GetDirectoryListWithRecursivePropertyShouldReadRunSettingCorrectly()
@@ -183,9 +183,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             }
         }
 
-#endregion
+        #endregion
 
-#region ToSettings tests.
+        #region ToSettings tests.
 
         [TestMethod]
         public void ToSettingsShouldNotThrowExceptionWhenRunSettingsXmlUnderTagMSTestv2IsWrong()
@@ -230,9 +230,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(SettingsException));
         }
 
-#endregion
+        #endregion
 
-#region DeploymentEnabled tests.
+        #region DeploymentEnabled tests.
 
         [TestMethod]
         public void DeploymentEnabledIsByDefaultTrueWhenNotSpecified()
@@ -261,9 +261,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             Assert.IsFalse(adapterSettings.DeploymentEnabled);
         }
 
-#endregion
+        #endregion
 
-#region DeployTestSourceDependencies tests
+        #region DeployTestSourceDependencies tests
 
         [TestMethod]
         public void DeployTestSourceDependenciesIsEnabledByDefault()
@@ -306,7 +306,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             Assert.IsTrue(adapterSettings.DeployTestSourceDependencies);
         }
 
-#endregion
+        #endregion
     }
 
     public class TestableMSTestAdapterSettings : MSTestAdapterSettings

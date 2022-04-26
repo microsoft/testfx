@@ -68,7 +68,7 @@ namespace DiscoverInternalsProject
 
         }
 
-        public static IEnumerable<object[]> DynamicData => new []
+        public static IEnumerable<object[]> DynamicData => new[]
         {
             new object[] { new SerializableInternalType() }
         };

@@ -83,7 +83,7 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
             var testMethod = testResults.Single(t => t.DisplayName == methodName);
             Assert.IsNotNull(testMethod, $"Test method {methodName} was not found.");
             var message = testMethod.Messages.SingleOrDefault(messageFilter);
-            Assert.IsNotNull(message, $"Message for {testMethod.DisplayName} was not found. All messages: { string.Join(Environment.NewLine, testMethod.Messages.Select(m=> $"{m.Category} - {m.Text}")) }");
+            Assert.IsNotNull(message, $"Message for {testMethod.DisplayName} was not found. All messages: { string.Join(Environment.NewLine, testMethod.Messages.Select(m => $"{m.Category} - {m.Text}")) }");
             StringAssert.Matches(message.Text, new Regex(methodName), testMethod.DisplayName);
             StringAssert.Matches(message.Text, new Regex("TestInitialize"), testMethod.DisplayName);
             StringAssert.Matches(message.Text, new Regex("TestCleanup"), testMethod.DisplayName);
@@ -93,7 +93,7 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
         private static void ValidateInitializeAndCleanup(ReadOnlyCollection<OM.TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
         {
             // It is not deterministic where the class initialize and class cleanup will run, so we look at all tests, to make sure it is includes somewhere.
-            var output = string.Join(Environment.NewLine, testResults.SelectMany(r=>r.Messages).Where(messageFilter).Select(m=>m.Text));
+            var output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));
             Assert.IsNotNull(output);
             StringAssert.Matches(output, new Regex("ClassInitialize"));
             StringAssert.Matches(output, new Regex("ClassCleanup"));

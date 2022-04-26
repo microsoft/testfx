@@ -106,7 +106,7 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
         }
 
         [TestMethod]
-        public void BailOutWhenDuplicateTestDisplayName() 
+        public void BailOutWhenDuplicateTestDisplayName()
         {
             // Arrange
             var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);

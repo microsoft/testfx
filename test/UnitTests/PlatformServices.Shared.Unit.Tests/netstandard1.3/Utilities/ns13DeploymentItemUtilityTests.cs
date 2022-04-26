@@ -60,7 +60,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
             this.warnings = new List<string>();
         }
 
-#region GetClassLevelDeploymentItems tests
+        #region GetClassLevelDeploymentItems tests
 
         [TestMethod]
         public void GetClassLevelDeploymentItemsShouldReturnEmptyListWhenNoDeploymentItems()
@@ -181,9 +181,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
             StringAssert.Contains(this.warnings.ToArray()[0], Resource.DeploymentItemPathCannotBeNullOrEmpty);
         }
 
-#endregion
+        #endregion
 
-#region GetDeploymentItems tests
+        #region GetDeploymentItems tests
 
         [TestMethod]
         public void GetDeploymentItemsShouldReturnNullOnNoDeploymentItems()
@@ -347,9 +347,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
             CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
         }
 
-#endregion
+        #endregion
 
-#region IsValidDeploymentItem tests
+        #region IsValidDeploymentItem tests
 
         [TestMethod]
         public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsNull()
@@ -420,9 +420,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
 
             Assert.IsTrue(string.Empty.Equals(warning));
         }
-#endregion
+        #endregion
 
-#region HasDeployItems tests
+        #region HasDeployItems tests
 
         [TestMethod]
         public void HasDeployItemsShouldReturnFalseForNoDeploymentItems()
@@ -448,9 +448,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
             Assert.IsTrue(this.deploymentItemUtility.HasDeploymentItems(testCase));
         }
 
-#endregion
+        #endregion
 
-#region private methods
+        #region private methods
 
         private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
         {
@@ -468,6 +468,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
                     typeof(TestFrameworkV2Extension.DeploymentItemAttribute))).Returns((object[])deploymentItemAttributes.ToArray());
         }
 
-#endregion
+        #endregion
     }
 }
