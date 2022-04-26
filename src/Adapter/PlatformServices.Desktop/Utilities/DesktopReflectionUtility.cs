@@ -190,8 +190,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     constructorParameters.Add(parameterType);
                     if (parameterType.IsArray)
                     {
-                        IEnumerable enumerable = parameter.Value as IEnumerable;
-                        if (enumerable != null)
+                        if (parameter.Value is IEnumerable enumerable)
                         {
                             ArrayList list = new ArrayList();
                             foreach (var item in enumerable)
@@ -259,13 +258,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     Attribute attributeInstance = CreateAttributeInstance(attribute);
                     if (attributeInstance != null)
                     {
-                        var attributeUsageAttribute =
-                            this.GetCustomAttributes(
-                                attributeInstance.GetType().GetTypeInfo(),
-                                typeof(AttributeUsageAttribute),
-                                true).FirstOrDefault() as AttributeUsageAttribute;
-
-                        if (attributeUsageAttribute != null && !attributeUsageAttribute.AllowMultiple)
+                        if (this.GetCustomAttributes(attributeInstance.GetType().GetTypeInfo(), typeof(AttributeUsageAttribute), true).FirstOrDefault() is AttributeUsageAttribute attributeUsageAttribute
+                            && !attributeUsageAttribute.AllowMultiple)
                         {
                             if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))
                             {

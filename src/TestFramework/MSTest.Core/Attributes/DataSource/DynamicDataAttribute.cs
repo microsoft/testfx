@@ -127,9 +127,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                         this.dynamicDataDeclaringType.FullName));
             }
 
-            IEnumerable<object[]> enumerable = obj as IEnumerable<object[]>;
-
-            if (enumerable == null)
+#pragma warning disable SA1119 // Statement must not use unnecessary parenthesis - BUG with StyleCop
+            if (!(obj is IEnumerable<object[]> enumerable))
+#pragma warning restore SA1119 // Statement must not use unnecessary parenthesis
             {
                 throw new ArgumentNullException(
                     string.Format(

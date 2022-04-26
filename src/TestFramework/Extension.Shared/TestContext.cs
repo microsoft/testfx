@@ -99,7 +99,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 return null;
             }
 
+#pragma warning disable IDE0078 // Use pattern matching - Cannot be used because of UWP project
             if (propertyValue != null && !(propertyValue is T))
+#pragma warning restore IDE0078 // Use pattern matching
             {
                 // If o has a value, but it's not the right type
                 throw new InvalidCastException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.InvalidPropertyType, name, propertyValue.GetType(), typeof(T)));

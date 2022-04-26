@@ -107,8 +107,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// <returns> True if the two objects are equal. </returns>
         public override bool Equals(object obj)
         {
-            DeploymentItem otherItem = obj as DeploymentItem;
-            if (otherItem == null)
+#pragma warning disable IDE0078 // Use pattern matching - Cannot be used because some projects are stuck with C# 7.3
+#pragma warning disable SA1119 // Statement must not use unnecessary parenthesis - BUG in StyleCop
+            if (!(obj is DeploymentItem otherItem))
+#pragma warning restore SA1119 // Statement must not use unnecessary parenthesis
+#pragma warning restore IDE0078 // Use pattern matching
             {
                 return false;
             }

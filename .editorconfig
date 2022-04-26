@@ -52,3 +52,9 @@ trim_trailing_whitespace = true
 
 # IDE0034: Simplify 'default' expression
 dotnet_diagnostic.IDE0034.severity = warning
+
+# IDE0019: Use pattern matching
+dotnet_diagnostic.IDE0019.severity = warning
+
+# IDE0078: Use pattern matching
+dotnet_diagnostic.IDE0078.severity = warning

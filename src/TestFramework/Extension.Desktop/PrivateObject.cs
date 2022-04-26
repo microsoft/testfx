@@ -43,8 +43,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Helper.CheckParameterNotNull(obj, "obj", string.Empty);
             ValidateAccessString(memberToAccess);
 
-            PrivateObject temp = obj as PrivateObject;
-            if (temp == null)
+#pragma warning disable SA1119 // Statement must not use unnecessary parenthesis - BUG with StyleCop
+            if (!(obj is PrivateObject temp))
+#pragma warning restore SA1119 // Statement must not use unnecessary parenthesis
             {
                 temp = new PrivateObject(obj);
             }
