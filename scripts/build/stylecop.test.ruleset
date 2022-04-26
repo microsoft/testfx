@@ -10,7 +10,7 @@
     <!-- Allow use of multiple types defined in a single file -->
     <Rule Id="SA1402" Action="None" />
 
-    <!-- Allow interfaces to be defined after types to accomodate dummy implementations in the same test file. -->
+    <!-- Allow interfaces to be defined after types to accommodate dummy implementations in the same test file. -->
     <Rule Id="SA1201" Action="None" />
     <Rule Id="SA1649" Action="None" />
   </Rules>

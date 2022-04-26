@@ -146,7 +146,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
                 // Check if the satellite exists in this dir.
                 // We check filenames like: MyAssembly.dll -> MyAssembly.resources.dll.
-                // Suprisingly, but both DLL and EXE are found by resource manager.
+                // Surprisingly, but both DLL and EXE are found by resource manager.
                 foreach (var extension in this.assemblyExtensions)
                 {
                     // extension contains leading dot.

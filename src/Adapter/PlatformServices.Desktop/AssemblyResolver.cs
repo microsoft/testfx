@@ -575,7 +575,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Call logger APIs safely. We do not want a stackoverflow when objectmodel assembly itself
         /// is being resolved and an EqtTrace message prompts the load of the same dll again.
-        /// CLR does not trigger a load when the EqtTrace messages are in a lamda expression. Leaving it that way
+        /// CLR does not trigger a load when the EqtTrace messages are in a lambda expression. Leaving it that way
         /// to preserve readability instead of creating wrapper functions.
         /// </summary>
         /// <param name="assemblyName">The assembly being resolved.</param>

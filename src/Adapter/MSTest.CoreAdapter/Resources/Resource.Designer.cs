@@ -71,7 +71,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception occurred while enumarating DataSourceAttribute on &quot;{0}.{1}&quot;: {2}.
+        ///   Looks up a localized string similar to Exception occurred while enumerating DataSourceAttribute on &quot;{0}.{1}&quot;: {2}.
         /// </summary>
         internal static string CannotEnumerateDataSourceAttribute {
             get {
@@ -89,7 +89,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception occurred while enumarating IDataSource attribute on &quot;{0}.{1}&quot;: {2}.
+        ///   Looks up a localized string similar to Exception occurred while enumerating IDataSource attribute on &quot;{0}.{1}&quot;: {2}.
         /// </summary>
         internal static string CannotEnumerateIDataSourceAttribute {
             get {
@@ -287,7 +287,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest pacakges newer then version 2.2.8..
+        ///   Looks up a localized string similar to An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8..
         /// </summary>
         internal static string OlderTFMVersionFoundClassCleanup {
             get {

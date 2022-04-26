@@ -66,7 +66,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // To prevent mixing of outputs, the ThreadSafeStringWriter was re-implemented for net46 and newer to leverage AsyncLocal, which allows the writer to
                 // write only to the output of the current test. This leaves the LogMessageListener with only one task. Make sure that a trace listener is registered
                 // as long as there is any active test. This is still done by constructor and Dispose, but instead of replacing the listener every time, we use listenerCount
-                // to only add the listerner when there is none, and remove it when we are the last one to dispose.
+                // to only add the listener when there is none, and remove it when we are the last one to dispose.
                 //
                 // This would break the behavior for net451, but that functionality was moved further into ThreadSafeStringWriter.
                 lock (traceLock)

@@ -372,7 +372,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             string quoted = this.QuoteIdentifier(s);
             string[] parts = quoted.Split(new string[] { s }, StringSplitOptions.None);
 
-            Debug.Assert(parts != null && parts.Length == 2, "TestDataConnectionSql.GetQuotesLiteralHelper: Failure when trying to quote an indentifier!");
+            Debug.Assert(parts != null && parts.Length == 2, "TestDataConnectionSql.GetQuotesLiteralHelper: Failure when trying to quote an identifier!");
             Debug.Assert(!string.IsNullOrEmpty(parts[0]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuotePrefix!");
             Debug.Assert(!string.IsNullOrEmpty(parts[1]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuoteSuffix!");
 

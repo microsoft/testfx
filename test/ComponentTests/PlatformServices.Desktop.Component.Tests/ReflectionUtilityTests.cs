@@ -285,7 +285,7 @@ namespace PlatformServices.Desktop.ComponentTests
             string assemblyNameToLoad = AppDomain.CurrentDomain.ApplyPolicy(args.Name);
 
             // Put it in the resolved assembly cache so that if the Load call below
-            // triggers another assembly resolution, then we dont end up in stack overflow.
+            // triggers another assembly resolution, then we don't end up in stack overflow.
             this.resolvedAssemblies[assemblyNameToLoad] = null;
 
             var assembly = Assembly.ReflectionOnlyLoad(assemblyNameToLoad);

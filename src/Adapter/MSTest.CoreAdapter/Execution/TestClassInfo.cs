@@ -259,7 +259,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             // If class initialization is not done, then do it.
             if (!this.IsClassInitializeExecuted)
             {
-                // Aquiring a lock is usually a costly operation which does not need to be
+                // Acquiring a lock is usually a costly operation which does not need to be
                 // performed every time if the class init is already executed.
                 lock (this.testClassExecuteSyncObject)
                 {
