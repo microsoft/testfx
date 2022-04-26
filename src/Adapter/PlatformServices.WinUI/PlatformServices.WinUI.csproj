@@ -31,7 +31,7 @@
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="$(SystemDiagnosticsTextWriterTraceListenerVersion)" />
@@ -88,7 +88,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\WinUITestSourceHost.cs" />
     <Folder Include="Resources\" />
-    
+
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
       <Link>Resources\Resource.Designer.cs</Link>
       <AutoGen>True</AutoGen>

@@ -2,7 +2,7 @@
   <PropertyGroup>
     <FrameworkIdentifier>NetCore</FrameworkIdentifier>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
@@ -12,7 +12,8 @@
     <UseSharedResources>true</UseSharedResources>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
-    <SkipAppendingVersion>true</SkipAppendingVersion> <!-- TODO: remove after full arcade transition -->
+    <!-- TODO: remove after full arcade transition -->
+    <SkipAppendingVersion>true</SkipAppendingVersion>
   </PropertyGroup>
 
   <ImportGroup>
@@ -36,6 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="**/*.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Constants.cs" Link="Constants.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs" Link="MarshalByRefObject.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs" Link="ns10RecursiveDirectoryPath.cs" />
@@ -60,15 +62,6 @@
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentUtilityBase.cs" Link="Utilities\ns13DeploymentUtilityBase.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs" Link="Utilities\ns13FileUtility.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13ThreadSafeStringWriter.cs" Link="Services\ns13ThreadSafeStringWriter.cs" />
-    <Compile Include="Deployment\NetCoreTestRunDirectories.cs" />
-    <Compile Include="Friends.cs" />
-    <Compile Include="Services\NetCoreTestContextImplementation.cs" />
-    <Compile Include="Services\NetCoreTestSourceHost.cs" />
-    <Compile Include="Utilities\NetCoreAssemblyUtility.cs" />
-    <Compile Include="Utilities\NetCoreDeploymentUtility.cs" />
-    <Compile Include="Utilities\NetCoreReflectionUtility.cs" />
-    <Folder Include="Resources\" />
-    
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
       <Link>Resources\Resource.Designer.cs</Link>
       <AutoGen>True</AutoGen>
