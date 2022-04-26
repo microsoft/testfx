@@ -70,7 +70,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         {
             if (string.IsNullOrWhiteSpace(settingsXml))
             {
-                return default(T);
+                return default;
             }
 
             // use XmlReader to avoid loading of the plugins in client code (mainly from VS).
@@ -97,7 +97,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 }
             }
 
-            return default(T);
+            return default;
         }
     }
 }

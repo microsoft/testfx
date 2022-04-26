@@ -38,7 +38,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 }
                 catch (ObjectDisposedException)
                 {
-                    return default(string);
+                    return default;
                 }
             }
         }
@@ -56,7 +56,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 }
                 catch (ObjectDisposedException)
                 {
-                    return default(string);
+                    return default;
                 }
             }
         }

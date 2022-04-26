@@ -47,3 +47,8 @@ indent_size = 4
 tab_width = 4
 insert_final_newline = true
 trim_trailing_whitespace = true
+
+#### .NET Coding Conventions ####
+
+# IDE0034: Simplify 'default' expression
+dotnet_diagnostic.IDE0034.severity = warning
