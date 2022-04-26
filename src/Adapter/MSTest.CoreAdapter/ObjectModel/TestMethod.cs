@@ -41,10 +41,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             Debug.Assert(!string.IsNullOrEmpty(name), "TestName cannot be empty");
             Debug.Assert(!string.IsNullOrEmpty(fullClassName), "Full className cannot be empty");
 
-            this.Name = name;
-            this.FullClassName = fullClassName;
-            this.AssemblyName = assemblyName;
-            this.IsAsync = isAsync;
+            Name = name;
+            FullClassName = fullClassName;
+            AssemblyName = assemblyName;
+            IsAsync = isAsync;
 
             var hierarchy = new string[HierarchyConstants.Levels.TotalLevelCount];
             hierarchy[HierarchyConstants.Levels.NamespaceIndex] = fullClassName;
@@ -62,17 +62,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             }
 
             ManagedNameHelper.GetManagedName(method, out var managedType, out var managedMethod, out var hierarchyValues);
-            this.ManagedTypeName = managedType;
-            this.ManagedMethodName = managedMethod;
-            this.hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
+            ManagedTypeName = managedType;
+            ManagedMethodName = managedMethod;
+            hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
         }
 
         internal TestMethod(string managedTypeName, string managedMethodName, string[] hierarchyValues, string name, string fullClassName, string assemblyName, bool isAsync)
             : this(name, fullClassName, assemblyName, isAsync)
         {
-            this.ManagedTypeName = managedTypeName;
-            this.ManagedMethodName = managedMethodName;
-            this.hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
+            ManagedTypeName = managedTypeName;
+            ManagedMethodName = managedMethodName;
+            hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
         }
 
         /// <inheritdoc />
@@ -90,13 +90,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         {
             get
             {
-                return this.declaringAssemblyName;
+                return declaringAssemblyName;
             }
 
             set
             {
-                Debug.Assert(value != this.AssemblyName, "DeclaringAssemblyName should not be the same as AssemblyName.");
-                this.declaringAssemblyName = value;
+                Debug.Assert(value != AssemblyName, "DeclaringAssemblyName should not be the same as AssemblyName.");
+                declaringAssemblyName = value;
             }
         }
 
@@ -110,13 +110,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         {
             get
             {
-                return this.declaringClassFullName;
+                return declaringClassFullName;
             }
 
             set
             {
-                Debug.Assert(value != this.FullClassName, "DeclaringClassFullName should not be the same as FullClassName.");
-                this.declaringClassFullName = value;
+                Debug.Assert(value != FullClassName, "DeclaringClassFullName should not be the same as FullClassName.");
+                declaringClassFullName = value;
             }
         }
 
@@ -133,10 +133,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         public string ManagedMethodName { get; }
 
         /// <inheritdoc />
-        public bool HasManagedMethodAndTypeProperties => !string.IsNullOrWhiteSpace(this.ManagedTypeName) && !string.IsNullOrWhiteSpace(this.ManagedMethodName);
+        public bool HasManagedMethodAndTypeProperties => !string.IsNullOrWhiteSpace(ManagedTypeName) && !string.IsNullOrWhiteSpace(ManagedMethodName);
 
         /// <inheritdoc />
-        public IReadOnlyCollection<string> Hierarchy => this.hierarchy;
+        public IReadOnlyCollection<string> Hierarchy => hierarchy;
 
         /// <summary>
         /// Gets or sets type of dynamic data if any
@@ -158,6 +158,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         /// </summary>
         internal string DisplayName { get; set; }
 
-        internal TestMethod Clone() => this.MemberwiseClone() as TestMethod;
+        internal TestMethod Clone() => MemberwiseClone() as TestMethod;
     }
 }

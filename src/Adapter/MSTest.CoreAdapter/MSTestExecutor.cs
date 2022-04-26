@@ -28,8 +28,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </summary>
         public MSTestExecutor()
         {
-            this.TestExecutionManager = new TestExecutionManager();
-            this.MSTestDiscoverer = new MSTestDiscoverer();
+            TestExecutionManager = new TestExecutionManager();
+            MSTestDiscoverer = new MSTestDiscoverer();
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
             ValidateArg.NotNullOrEmpty(tests, "tests");
 
-            if (!this.MSTestDiscoverer.AreValidSources(from test in tests select test.Source))
+            if (!MSTestDiscoverer.AreValidSources(from test in tests select test.Source))
             {
                 throw new NotSupportedException();
             }
@@ -71,9 +71,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
                 return;
             }
 
-            this.cancellationToken = new TestRunCancellationToken();
-            this.TestExecutionManager.RunTests(tests, runContext, frameworkHandle, this.cancellationToken);
-            this.cancellationToken = null;
+            cancellationToken = new TestRunCancellationToken();
+            TestExecutionManager.RunTests(tests, runContext, frameworkHandle, cancellationToken);
+            cancellationToken = null;
         }
 
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
@@ -82,7 +82,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
             ValidateArg.NotNullOrEmpty(sources, "sources");
 
-            if (!this.MSTestDiscoverer.AreValidSources(sources))
+            if (!MSTestDiscoverer.AreValidSources(sources))
             {
                 throw new NotSupportedException();
             }
@@ -105,15 +105,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             }
 
             sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);
-            this.cancellationToken = new TestRunCancellationToken();
-            this.TestExecutionManager.RunTests(sources, runContext, frameworkHandle, this.cancellationToken);
+            cancellationToken = new TestRunCancellationToken();
+            TestExecutionManager.RunTests(sources, runContext, frameworkHandle, cancellationToken);
 
-            this.cancellationToken = null;
+            cancellationToken = null;
         }
 
         public void Cancel()
         {
-            this.cancellationToken?.Cancel();
+            cancellationToken?.Cancel();
         }
     }
 }

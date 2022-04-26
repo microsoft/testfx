@@ -34,8 +34,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="errorWriter">A writer instance to log error messages.</param>
         public TraceListenerManager(TextWriter outputWriter, TextWriter errorWriter)
         {
-            this.origStdOut = Console.Out;
-            this.origStdErr = Console.Error;
+            origStdOut = Console.Out;
+            origStdErr = Console.Error;
 
             // Update the output/error streams with redirected streams
             Console.SetOut(outputWriter);
@@ -70,8 +70,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public void Dispose(ITraceListener traceListener)
         {
             traceListener.Dispose();
-            Console.SetOut(this.origStdOut);
-            Console.SetError(this.origStdErr);
+            Console.SetOut(origStdOut);
+            Console.SetError(origStdErr);
         }
     }
 

@@ -31,7 +31,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         public override List<string> GetDataTablesAndViews()
         {
-            DataSet dataSet = this.LoadDataSet(true);
+            DataSet dataSet = LoadDataSet(true);
 
             if (dataSet != null)
             {
@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         public override List<string> GetColumns(string tableName)
         {
-            DataSet dataSet = this.LoadDataSet(true);
+            DataSet dataSet = LoadDataSet(true);
             if (dataSet != null)
             {
                 DataTable table = dataSet.Tables[tableName];
@@ -85,7 +85,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             // so there is inefficiency since we will reload the entire file
             // once for every table in it. Oh well. Reading XML is pretty quick
             // compared to other forms of data source
-            DataSet ds = this.LoadDataSet(false);
+            DataSet ds = LoadDataSet(false);
             return ds != null ? ds.Tables[tableName] : null;
         }
 
@@ -97,7 +97,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             {
                 DataSet dataSet = new DataSet();
                 dataSet.Locale = CultureInfo.CurrentCulture;
-                string path = this.FixPath(this.fileName) ?? Path.GetFullPath(this.fileName);
+                string path = FixPath(fileName) ?? Path.GetFullPath(fileName);
                 if (schemaOnly)
                 {
                     dataSet.ReadXmlSchema(path);
@@ -111,16 +111,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             }
             catch (SecurityException securityException)
             {
-                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, securityException.Message + " for XML data source " + this.fileName);
+                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, securityException.Message + " for XML data source " + fileName);
             }
             catch (XmlException xmlException)
             {
-                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, xmlException.Message + " for XML data source " + this.fileName);
+                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, xmlException.Message + " for XML data source " + fileName);
             }
             catch (Exception exception)
             {
                 // Yes, we get other exceptions too!
-                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for XML data source " + this.fileName);
+                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for XML data source " + fileName);
             }
 
             return null;

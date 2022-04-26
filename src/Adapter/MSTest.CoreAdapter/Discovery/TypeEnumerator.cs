@@ -53,13 +53,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         {
             warnings = new Collection<string>();
 
-            if (!this.typeValidator.IsValidTestClass(this.type, warnings))
+            if (!typeValidator.IsValidTestClass(type, warnings))
             {
                 return null;
             }
 
             // If test class is valid, then get the tests
-            return this.GetTests(warnings);
+            return GetTests(warnings);
         }
 
         /// <summary>
@@ -74,9 +74,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var tests = new Collection<UnitTestElement>();
 
             // Test class is already valid. Verify methods.
-            foreach (var method in this.type.GetRuntimeMethods())
+            foreach (var method in type.GetRuntimeMethods())
             {
-                var isMethodDeclaredInTestTypeAssembly = this.reflectHelper.IsMethodDeclaredInSameAssemblyAsType(method, this.type);
+                var isMethodDeclaredInTestTypeAssembly = reflectHelper.IsMethodDeclaredInSameAssemblyAsType(method, type);
                 var enableMethodsFromOtherAssemblies = MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies;
 
                 if (!isMethodDeclaredInTestTypeAssembly && !enableMethodsFromOtherAssemblies)
@@ -84,10 +84,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     continue;
                 }
 
-                if (this.testMethodValidator.IsValidTestMethod(method, this.type, warnings))
+                if (testMethodValidator.IsValidTestMethod(method, type, warnings))
                 {
                     foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.Name);
-                    tests.Add(this.GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings));
+                    tests.Add(GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings));
                 }
             }
 
@@ -99,7 +99,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             // Remove duplicate test methods by taking the first one of each name
             // that is declared closest to the test class in the hierarchy.
             var inheritanceDepths = new Dictionary<string, int>();
-            var currentType = this.type;
+            var currentType = type;
             int currentDepth = 0;
 
             while (currentType != null)
@@ -127,14 +127,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         internal UnitTestElement GetTestFromMethod(MethodInfo method, bool isDeclaredInTestTypeAssembly, ICollection<string> warnings)
         {
             // null if the current instance represents a generic type parameter.
-            Debug.Assert(this.type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
+            Debug.Assert(type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
             // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.
             var isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
 
-            var testMethod = new TestMethod(method, method.Name, this.type.FullName, this.assemblyName, isAsync);
+            var testMethod = new TestMethod(method, method.Name, type.FullName, assemblyName, isAsync);
 
-            if (!method.DeclaringType.FullName.Equals(this.type.FullName))
+            if (!method.DeclaringType.FullName.Equals(type.FullName))
             {
                 testMethod.DeclaringClassFullName = method.DeclaringType.FullName;
             }
@@ -152,21 +152,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             var asyncTypeName = method.GetAsyncTypeName();
             testElement.AsyncTypeName = asyncTypeName;
 
-            testElement.TestCategory = this.reflectHelper.GetCategories(method, this.type);
+            testElement.TestCategory = reflectHelper.GetCategories(method, type);
 
-            testElement.DoNotParallelize = this.reflectHelper.IsDoNotParallelizeSet(method, this.type);
+            testElement.DoNotParallelize = reflectHelper.IsDoNotParallelizeSet(method, type);
 
-            var traits = this.reflectHelper.GetTestPropertiesAsTraits(method);
+            var traits = reflectHelper.GetTestPropertiesAsTraits(method);
 
-            var ownerTrait = this.reflectHelper.GetTestOwnerAsTraits(method);
+            var ownerTrait = reflectHelper.GetTestOwnerAsTraits(method);
             if (ownerTrait != null)
             {
                 traits = traits.Concat(new[] { ownerTrait });
             }
 
-            testElement.Priority = this.reflectHelper.GetPriority(method);
+            testElement.Priority = reflectHelper.GetPriority(method);
 
-            var priorityTrait = this.reflectHelper.GetTestPriorityAsTraits(testElement.Priority);
+            var priorityTrait = reflectHelper.GetTestPriorityAsTraits(testElement.Priority);
             if (priorityTrait != null)
             {
                 traits = traits.Concat(new[] { priorityTrait });
@@ -174,34 +174,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
             testElement.Traits = traits.ToArray();
 
-            if (this.reflectHelper.GetCustomAttribute(method, typeof(CssIterationAttribute)) is CssIterationAttribute cssIteration)
+            if (reflectHelper.GetCustomAttribute(method, typeof(CssIterationAttribute)) is CssIterationAttribute cssIteration)
             {
                 testElement.CssIteration = cssIteration.CssIteration;
             }
 
-            if (this.reflectHelper.GetCustomAttribute(method, typeof(CssProjectStructureAttribute)) is CssProjectStructureAttribute cssProjectStructure)
+            if (reflectHelper.GetCustomAttribute(method, typeof(CssProjectStructureAttribute)) is CssProjectStructureAttribute cssProjectStructure)
             {
                 testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
             }
 
-            if (this.reflectHelper.GetCustomAttribute(method, typeof(DescriptionAttribute)) is DescriptionAttribute descriptionAttribute)
+            if (reflectHelper.GetCustomAttribute(method, typeof(DescriptionAttribute)) is DescriptionAttribute descriptionAttribute)
             {
                 testElement.Description = descriptionAttribute.Description;
             }
 
-            var workItemAttributes = this.reflectHelper.GetCustomAttributes(method, typeof(WorkItemAttribute)).Cast<WorkItemAttribute>().ToArray();
+            var workItemAttributes = reflectHelper.GetCustomAttributes(method, typeof(WorkItemAttribute)).Cast<WorkItemAttribute>().ToArray();
             if (workItemAttributes.Any())
             {
                 testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString()).ToArray();
             }
 
-            testElement.Ignored = this.reflectHelper.IsAttributeDefined(method, typeof(IgnoreAttribute), false);
+            testElement.Ignored = reflectHelper.IsAttributeDefined(method, typeof(IgnoreAttribute), false);
 
             // Get Deployment items if any.
-            testElement.DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, this.type, warnings);
+            testElement.DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, type, warnings);
 
             // get DisplayName from TestMethodAttribute
-            var testMethodAttribute = this.reflectHelper.GetCustomAttribute(method, typeof(TestMethodAttribute)) as TestMethodAttribute;
+            var testMethodAttribute = reflectHelper.GetCustomAttribute(method, typeof(TestMethodAttribute)) as TestMethodAttribute;
             testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
 
             return testElement;

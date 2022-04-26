@@ -39,7 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                return this.testSource ?? (this.testSource = new TestSource());
+                return testSource ?? (testSource = new TestSource());
             }
         }
 
@@ -50,7 +50,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                return this.testDataSource ?? (this.testDataSource = new TestDataSource());
+                return testDataSource ?? (testDataSource = new TestDataSource());
             }
         }
 
@@ -61,7 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                return this.fileOperations ?? (this.fileOperations = new FileOperations());
+                return fileOperations ?? (fileOperations = new FileOperations());
             }
         }
 
@@ -72,7 +72,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                return this.traceLogger ?? (this.traceLogger = new AdapterTraceLogger());
+                return traceLogger ?? (traceLogger = new AdapterTraceLogger());
             }
         }
 
@@ -83,7 +83,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                return this.testDeployment ?? (this.testDeployment = new TestDeployment());
+                return testDeployment ?? (testDeployment = new TestDeployment());
             }
         }
 
@@ -94,7 +94,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                return this.settingsProvider ?? (this.settingsProvider = new MSTestSettingsProvider());
+                return settingsProvider ?? (settingsProvider = new MSTestSettingsProvider());
             }
         }
 
@@ -105,7 +105,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                return this.threadOperations ?? (this.threadOperations = new ThreadOperations());
+                return threadOperations ?? (threadOperations = new ThreadOperations());
             }
         }
 
@@ -116,7 +116,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                return this.reflectionOperations ?? (this.reflectionOperations = new ReflectionOperations());
+                return reflectionOperations ?? (reflectionOperations = new ReflectionOperations());
             }
         }
 

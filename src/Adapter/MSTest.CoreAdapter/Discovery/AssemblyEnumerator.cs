@@ -82,13 +82,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         {
             Debug.Assert(!string.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
 
-            var runSettingsXml = this.RunSettingsXml;
+            var runSettingsXml = RunSettingsXml;
             var warningMessages = new List<string>();
             var tests = new List<UnitTestElement>();
 
             var assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
-            var types = this.GetTypes(assembly, assemblyFileName, warningMessages);
+            var types = GetTypes(assembly, assemblyFileName, warningMessages);
             var discoverInternals = assembly.GetCustomAttribute<UTF.DiscoverInternalsAttribute>() != null;
             var testDataSourceDiscovery = assembly.GetCustomAttribute<UTF.TestDataSourceDiscoveryAttribute>()?.DiscoveryOption ?? UTF.TestDataSourceDiscoveryOption.DuringDiscovery;
 
@@ -99,7 +99,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     continue;
                 }
 
-                var testsInType = this.DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals, testDataSourceDiscovery);
+                var testsInType = DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals, testDataSourceDiscovery);
                 tests.AddRange(testsInType);
             }
 
@@ -129,7 +129,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 if (ex.LoaderExceptions != null)
                 {
                     // If not able to load all type, log a warning and continue with loaded types.
-                    var message = string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, assemblyFileName, this.GetLoadExceptionDetails(ex));
+                    var message = string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, assemblyFileName, GetLoadExceptionDetails(ex));
 
                     warningMessages?.Add(message);
 
@@ -208,7 +208,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             try
             {
                 typeFullName = type.FullName;
-                var unitTestCases = this.GetTypeEnumerator(type, assemblyFileName, discoverInternals).Enumerate(out var warningsFromTypeEnumerator);
+                var unitTestCases = GetTypeEnumerator(type, assemblyFileName, discoverInternals).Enumerate(out var warningsFromTypeEnumerator);
                 var typeIgnored = ReflectHelper.IsAttributeDefined(type, typeof(UTF.IgnoreAttribute), false);
 
                 if (warningsFromTypeEnumerator != null)
@@ -222,7 +222,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     {
                         if (discoveryOption == UTF.TestDataSourceDiscoveryOption.DuringDiscovery)
                         {
-                            if (this.DynamicDataAttached(sourceLevelParameters, assembly, test, tests))
+                            if (DynamicDataAttached(sourceLevelParameters, assembly, test, tests))
                             {
                                 continue;
                             }
@@ -257,7 +257,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             {
                 var testMethod = test.TestMethod;
                 var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
-                var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                var testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
                 if (testMethodInfo == null)
                 {
                     return false;
@@ -265,7 +265,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
                 return /* DataSourceAttribute discovery is disabled for now, since we cannot serialize DataRow values.
                        this.TryProcessDataSource(test, testMethodInfo, testContext, tests) || */
-                       this.TryProcessTestDataSourceTests(test, testMethodInfo, tests);
+                       TryProcessTestDataSourceTests(test, testMethodInfo, tests);
             }
         }
 
@@ -287,7 +287,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             // dataSourceAttributes.Length == 1
             try
             {
-                return this.ProcessDataSourceTests(test, testMethodInfo, testContext, tests);
+                return ProcessDataSourceTests(test, testMethodInfo, testContext, tests);
             }
             catch (Exception ex)
             {
@@ -342,7 +342,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
             try
             {
-                return this.ProcessTestDataSourceTests(test, (MethodInfo)methodInfo, testDataSources, tests);
+                return ProcessTestDataSourceTests(test, (MethodInfo)methodInfo, testDataSources, tests);
             }
             catch (Exception ex)
             {

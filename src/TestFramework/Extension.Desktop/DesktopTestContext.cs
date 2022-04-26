@@ -42,28 +42,28 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Gets base directory for the test run, under which deployed files and result files are stored.
         /// </summary>
-        public virtual string TestRunDirectory => this.GetProperty<string>("TestRunDirectory");
+        public virtual string TestRunDirectory => GetProperty<string>("TestRunDirectory");
 
         /// <summary>
         /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
         /// </summary>
-        public virtual string DeploymentDirectory => this.GetProperty<string>("DeploymentDirectory");
+        public virtual string DeploymentDirectory => GetProperty<string>("DeploymentDirectory");
 
         /// <summary>
         /// Gets base directory for results from the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
         /// </summary>
-        public virtual string ResultsDirectory => this.GetProperty<string>("ResultsDirectory");
+        public virtual string ResultsDirectory => GetProperty<string>("ResultsDirectory");
 
         /// <summary>
         /// Gets directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
         /// </summary>
-        public virtual string TestRunResultsDirectory => this.GetProperty<string>("TestRunResultsDirectory");
+        public virtual string TestRunResultsDirectory => GetProperty<string>("TestRunResultsDirectory");
 
         /// <summary>
         /// Gets directory for test result files.
         /// </summary>
         [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", Justification = "Compat")]
-        public virtual string TestResultsDirectory => this.GetProperty<string>("TestResultsDirectory");
+        public virtual string TestResultsDirectory => GetProperty<string>("TestResultsDirectory");
 
         #region Old names, for backwards compatibility
 
@@ -71,20 +71,20 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Gets base directory for the test run, under which deployed files and result files are stored.
         /// Same as <see cref="TestRunDirectory"/>. Use that property instead.
         /// </summary>
-        public virtual string TestDir => this.GetProperty<string>("TestDir");
+        public virtual string TestDir => GetProperty<string>("TestDir");
 
         /// <summary>
         /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
         /// Same as <see cref="DeploymentDirectory"/>. Use that property instead.
         /// </summary>
-        public virtual string TestDeploymentDir => this.GetProperty<string>("TestDeploymentDir");
+        public virtual string TestDeploymentDir => GetProperty<string>("TestDeploymentDir");
 
         /// <summary>
         /// Gets directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
         /// Same as <see cref="TestRunResultsDirectory"/>. Use that property for test run result files, or
         /// <see cref="TestResultsDirectory"/> for test-specific result files instead.
         /// </summary>
-        public virtual string TestLogsDir => this.GetProperty<string>("TestLogsDir");
+        public virtual string TestLogsDir => GetProperty<string>("TestLogsDir");
 
         #endregion
 
@@ -98,22 +98,22 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// Gets the Fully-qualified name of the class containing the test method currently being executed
         /// </summary>
-        public virtual string FullyQualifiedTestClassName => this.GetProperty<string>("FullyQualifiedTestClassName");
+        public virtual string FullyQualifiedTestClassName => GetProperty<string>("FullyQualifiedTestClassName");
 
         /// <summary>
         /// Gets the fully specified type name metadata format.
         /// </summary>
-        public virtual string ManagedType => this.GetProperty<string>(nameof(this.ManagedType));
+        public virtual string ManagedType => GetProperty<string>(nameof(ManagedType));
 
         /// <summary>
         /// Gets the fully specified method name metadata format.
         /// </summary>
-        public virtual string ManagedMethod => this.GetProperty<string>(nameof(this.ManagedMethod));
+        public virtual string ManagedMethod => GetProperty<string>(nameof(ManagedMethod));
 
         /// <summary>
         /// Gets the name of the test method currently being executed
         /// </summary>
-        public virtual string TestName => this.GetProperty<string>("TestName");
+        public virtual string TestName => GetProperty<string>("TestName");
 
         /// <summary>
         /// Gets the current test outcome.
@@ -169,7 +169,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         private T GetProperty<T>(string name)
             where T : class
         {
-            object o = this.Properties[name];
+            object o = Properties[name];
 
             // If o has a value, but it's not the right type
             if (o != null && !(o is T))

@@ -162,7 +162,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         protected string FixPath(string path)
         {
-            return FixPath(path, this.dataFolders);
+            return FixPath(path, dataFolders);
         }
     }
 }

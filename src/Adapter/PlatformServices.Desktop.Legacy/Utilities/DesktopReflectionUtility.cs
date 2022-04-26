@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <returns> The vale of the custom attribute. </returns>
         internal virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
         {
-            return this.GetCustomAttributes(attributeProvider, type, true);
+            return GetCustomAttributes(attributeProvider, type, true);
         }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <returns> The list of attributes on the member. Empty list if none found. </returns>
         internal object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
         {
-            return this.GetCustomAttributes(memberInfo, type: null, inherit: inherit);
+            return GetCustomAttributes(memberInfo, type: null, inherit: inherit);
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             bool shouldGetAllAttributes = type == null;
 
-            if (!this.IsReflectionOnlyLoad(memberInfo))
+            if (!IsReflectionOnlyLoad(memberInfo))
             {
                 if (shouldGetAllAttributes)
                 {
@@ -80,7 +80,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     do
                     {
                         var attributes = CustomAttributeData.GetCustomAttributes(tempTypeInfo);
-                        this.AddNewAttributes(
+                        AddNewAttributes(
                             attributes,
                             shouldGetAllAttributes,
                             type,
@@ -100,7 +100,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     do
                     {
                         var attributes = CustomAttributeData.GetCustomAttributes(tempMethodInfo);
-                        this.AddNewAttributes(
+                        AddNewAttributes(
                             attributes,
                             shouldGetAllAttributes,
                             type,
@@ -129,7 +129,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     // Return the attributes that CustomAttributeData returns in this cases not considering inheritance.
                     var firstLevelAttributes =
                     CustomAttributeData.GetCustomAttributes(memberInfo);
-                    this.AddNewAttributes(firstLevelAttributes, shouldGetAllAttributes, type, uniqueAttributes, nonUniqueAttributes);
+                    AddNewAttributes(firstLevelAttributes, shouldGetAllAttributes, type, uniqueAttributes, nonUniqueAttributes);
                 }
 
                 nonUniqueAttributes.AddRange(uniqueAttributes.Values);
@@ -148,7 +148,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
                 foreach (var attribute in customAttributes)
                 {
-                    if (this.IsTypeInheriting(attribute.Constructor.DeclaringType, type)
+                    if (IsTypeInheriting(attribute.Constructor.DeclaringType, type)
                             || attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
                                 type.AssemblyQualifiedName))
                     {
@@ -251,14 +251,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             foreach (var attribute in customAttributes)
             {
                 if (shouldGetAllAttributes
-                    || (this.IsTypeInheriting(attribute.Constructor.DeclaringType, type)
+                    || (IsTypeInheriting(attribute.Constructor.DeclaringType, type)
                         || attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
                             type.AssemblyQualifiedName)))
                 {
                     Attribute attributeInstance = CreateAttributeInstance(attribute);
                     if (attributeInstance != null)
                     {
-                        if (this.GetCustomAttributes(attributeInstance.GetType().GetTypeInfo(), typeof(AttributeUsageAttribute), true).FirstOrDefault() is AttributeUsageAttribute attributeUsageAttribute
+                        if (GetCustomAttributes(attributeInstance.GetType().GetTypeInfo(), typeof(AttributeUsageAttribute), true).FirstOrDefault() is AttributeUsageAttribute attributeUsageAttribute
                             && !attributeUsageAttribute.AllowMultiple)
                         {
                             if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))

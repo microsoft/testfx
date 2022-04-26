@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </summary>
         public RunConfigurationSettings()
         {
-            this.CollectSourceInformation = true;
+            CollectSourceInformation = true;
         }
 
         /// <summary>

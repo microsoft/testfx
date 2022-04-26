@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </param>
         public OwnerAttribute(string owner)
         {
-            this.Owner = owner;
+            Owner = owner;
         }
 
         /// <summary>

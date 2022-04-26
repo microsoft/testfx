@@ -42,7 +42,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             // Load the source.
             var testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
 
-            var parallelizeAttribute = this.reflectHelper.GetParallelizeAttribute(testAssembly);
+            var parallelizeAttribute = reflectHelper.GetParallelizeAttribute(testAssembly);
 
             if (parallelizeAttribute != null)
             {
@@ -55,9 +55,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
 
-            testAssemblySettings.CanParallelizeAssembly = !this.reflectHelper.IsDoNotParallelizeSet(testAssembly);
+            testAssemblySettings.CanParallelizeAssembly = !reflectHelper.IsDoNotParallelizeSet(testAssembly);
 
-            var classCleanupSequencingAttribute = this.reflectHelper.GetClassCleanupAttribute(testAssembly);
+            var classCleanupSequencingAttribute = reflectHelper.GetClassCleanupAttribute(testAssembly);
             if (classCleanupSequencingAttribute != null)
             {
                 testAssemblySettings.ClassCleanupLifecycle = classCleanupSequencingAttribute.CleanupBehavior;

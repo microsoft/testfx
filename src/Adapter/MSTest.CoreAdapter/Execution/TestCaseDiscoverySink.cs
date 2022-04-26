@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// </summary>
         public TestCaseDiscoverySink()
         {
-            this.Tests = new Collection<TestCase>();
+            Tests = new Collection<TestCase>();
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             if (discoveredTest != null)
             {
-                this.Tests.Add(discoveredTest);
+                Tests.Add(discoveredTest);
             }
         }
     }

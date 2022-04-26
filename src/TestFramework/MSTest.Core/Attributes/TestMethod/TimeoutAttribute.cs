@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </param>
         public TimeoutAttribute(int timeout)
         {
-            this.Timeout = timeout;
+            Timeout = timeout;
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </param>
         public TimeoutAttribute(TestTimeout timeout)
         {
-            this.Timeout = (int)timeout;
+            Timeout = (int)timeout;
         }
 
         #endregion

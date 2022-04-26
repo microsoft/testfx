@@ -27,7 +27,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </param>
         public IgnoreAttribute(string message)
         {
-            this.IgnoreMessage = message;
+            IgnoreMessage = message;
         }
 
         /// <summary>

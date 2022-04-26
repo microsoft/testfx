@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             try
             {
-                this.GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
+                GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
             }
             catch (Exception ex)
             {
@@ -68,7 +68,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         return null;
                     }
 
-                    IEnumerable<int> permutation = this.GetPermutation(dataAccessMethod, rows.Length);
+                    IEnumerable<int> permutation = GetPermutation(dataAccessMethod, rows.Length);
 
                     object[] rowsAfterPermutation = new object[rows.Length];
                     int index = 0;

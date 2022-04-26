@@ -50,8 +50,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <returns> Return true if a method is a valid test method. </returns>
         internal virtual bool IsValidTestMethod(MethodInfo testMethodInfo, Type type, ICollection<string> warnings)
         {
-            if (!this.reflectHelper.IsAttributeDefined(testMethodInfo, typeof(TestMethodAttribute), false)
-                && !this.reflectHelper.HasAttributeDerivedFrom(testMethodInfo, typeof(TestMethodAttribute), false))
+            if (!reflectHelper.IsAttributeDefined(testMethodInfo, typeof(TestMethodAttribute), false)
+                && !reflectHelper.HasAttributeDerivedFrom(testMethodInfo, typeof(TestMethodAttribute), false))
             {
                 return false;
             }
@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             }
 
             var isAccessible = testMethodInfo.IsPublic
-                || (this.discoverInternals && testMethodInfo.IsAssembly);
+                || (discoverInternals && testMethodInfo.IsAssembly);
 
             // Todo: Decide whether parameter count matters.
             // The isGenericMethod check below id to verify that there are no closed generic methods slipping through.

@@ -55,7 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 }
 
                 // Load the assembly in isolation if required.
-                return this.GetTestsInIsolation(fullFilePath, runSettings, out warnings);
+                return GetTestsInIsolation(fullFilePath, runSettings, out warnings);
             }
             catch (FileNotFoundException ex)
             {

@@ -33,8 +33,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </param>
         public RecursiveDirectoryPath(string dirPath, bool includeSubDirectories)
         {
-            this.DirectoryPath = dirPath;
-            this.IncludeSubDirectories = includeSubDirectories;
+            DirectoryPath = dirPath;
+            IncludeSubDirectories = includeSubDirectories;
         }
 
         /// <summary>

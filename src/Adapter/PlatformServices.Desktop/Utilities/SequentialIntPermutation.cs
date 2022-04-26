@@ -27,7 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         public IEnumerator<int> GetEnumerator()
         {
-            for (int i = 0; i < this.numberOfObjects; ++i)
+            for (int i = 0; i < numberOfObjects; ++i)
             {
                 yield return i;
             }
@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
     }
 }

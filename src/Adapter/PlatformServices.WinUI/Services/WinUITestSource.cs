@@ -77,7 +77,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public IEnumerable<string> GetTestSources(IEnumerable<string> sources)
         {
             string appxSource;
-            if ((appxSource = this.FindAppxSource(sources)) != null)
+            if ((appxSource = FindAppxSource(sources)) != null)
             {
                 var appxSourceDirectory = Path.GetDirectoryName(appxSource);
 

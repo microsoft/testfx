@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             }
 
             Debug.Assert(testMethod.FullClassName != null, "Full className cannot be empty");
-            this.TestMethod = testMethod;
+            TestMethod = testMethod;
         }
 
         /// <summary>
@@ -109,10 +109,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
         internal UnitTestElement Clone()
         {
-            var clone = this.MemberwiseClone() as UnitTestElement;
-            if (this.TestMethod != null)
+            var clone = MemberwiseClone() as UnitTestElement;
+            if (TestMethod != null)
             {
-                clone.TestMethod = this.TestMethod.Clone();
+                clone.TestMethod = TestMethod.Clone();
             }
 
             return clone;
@@ -128,95 +128,95 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             // string fullName = this.TestMethod.HasManagedMethodAndTypeProperties
             //                 ? string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.ManagedTypeName, this.TestMethod.ManagedMethodName)
             //                 : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
-            var fullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
+            var fullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", TestMethod.FullClassName, TestMethod.Name);
 
-            TestCase testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
-            testCase.DisplayName = this.GetDisplayName();
+            TestCase testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, TestMethod.AssemblyName);
+            testCase.DisplayName = GetDisplayName();
 
-            if (this.TestMethod.HasManagedMethodAndTypeProperties)
+            if (TestMethod.HasManagedMethodAndTypeProperties)
             {
-                testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, this.TestMethod.ManagedTypeName);
-                testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, this.TestMethod.ManagedMethodName);
-                testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.ManagedTypeName);
+                testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, TestMethod.ManagedTypeName);
+                testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, TestMethod.ManagedMethodName);
+                testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, TestMethod.ManagedTypeName);
             }
             else
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, this.TestMethod.FullClassName);
+                testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, TestMethod.FullClassName);
             }
 
-            var hierarchy = this.TestMethod.Hierarchy;
+            var hierarchy = TestMethod.Hierarchy;
             if (hierarchy != null && hierarchy.Count > 0)
             {
                 testCase.SetHierarchy(hierarchy.ToArray());
             }
 
             // Set declaring type if present so the correct method info can be retrieved
-            if (this.TestMethod.DeclaringClassFullName != null)
+            if (TestMethod.DeclaringClassFullName != null)
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.DeclaringClassNameProperty, this.TestMethod.DeclaringClassFullName);
+                testCase.SetPropertyValue(TestAdapter.Constants.DeclaringClassNameProperty, TestMethod.DeclaringClassFullName);
             }
 
             // Many of the tests will not be async, so there is no point in sending extra data
-            if (this.IsAsync)
+            if (IsAsync)
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.AsyncTestProperty, this.IsAsync);
+                testCase.SetPropertyValue(TestAdapter.Constants.AsyncTestProperty, IsAsync);
             }
 
             // Set only if some test category is present
-            if (this.TestCategory != null && this.TestCategory.Length > 0)
+            if (TestCategory != null && TestCategory.Length > 0)
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.TestCategoryProperty, this.TestCategory);
+                testCase.SetPropertyValue(TestAdapter.Constants.TestCategoryProperty, TestCategory);
             }
 
             // Set priority if present
-            if (this.Priority != null)
+            if (Priority != null)
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.PriorityProperty, this.Priority.Value);
+                testCase.SetPropertyValue(TestAdapter.Constants.PriorityProperty, Priority.Value);
             }
 
-            if (this.Traits != null)
+            if (Traits != null)
             {
-                testCase.Traits.AddRange(this.Traits);
+                testCase.Traits.AddRange(Traits);
             }
 
-            if (!string.IsNullOrEmpty(this.CssIteration))
+            if (!string.IsNullOrEmpty(CssIteration))
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.CssIterationProperty, this.CssIteration);
+                testCase.SetPropertyValue(TestAdapter.Constants.CssIterationProperty, CssIteration);
             }
 
-            if (!string.IsNullOrEmpty(this.CssProjectStructure))
+            if (!string.IsNullOrEmpty(CssProjectStructure))
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.CssProjectStructureProperty, this.CssProjectStructure);
+                testCase.SetPropertyValue(TestAdapter.Constants.CssProjectStructureProperty, CssProjectStructure);
             }
 
-            if (!string.IsNullOrEmpty(this.Description))
+            if (!string.IsNullOrEmpty(Description))
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.DescriptionProperty, this.Description);
+                testCase.SetPropertyValue(TestAdapter.Constants.DescriptionProperty, Description);
             }
 
-            if (this.WorkItemIds != null)
+            if (WorkItemIds != null)
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.WorkItemIdsProperty, this.WorkItemIds);
+                testCase.SetPropertyValue(TestAdapter.Constants.WorkItemIdsProperty, WorkItemIds);
             }
 
             // The list of items to deploy before running this test.
-            if (this.DeploymentItems != null && this.DeploymentItems.Length > 0)
+            if (DeploymentItems != null && DeploymentItems.Length > 0)
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.DeploymentItemsProperty, this.DeploymentItems);
+                testCase.SetPropertyValue(TestAdapter.Constants.DeploymentItemsProperty, DeploymentItems);
             }
 
             // Set the Do not parallelize state if present
-            if (this.DoNotParallelize)
+            if (DoNotParallelize)
             {
-                testCase.SetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, this.DoNotParallelize);
+                testCase.SetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, DoNotParallelize);
             }
 
             // Store resolved data if any
-            if (this.TestMethod.DataType != DynamicDataType.None)
+            if (TestMethod.DataType != DynamicDataType.None)
             {
-                var data = this.TestMethod.SerializedData;
+                var data = TestMethod.SerializedData;
 
-                testCase.SetPropertyValue(TestAdapter.Constants.TestDynamicDataTypeProperty, (int)this.TestMethod.DataType);
+                testCase.SetPropertyValue(TestAdapter.Constants.TestDynamicDataTypeProperty, (int)TestMethod.DataType);
                 testCase.SetPropertyValue(TestAdapter.Constants.TestDynamicDataProperty, data);
             }
 
@@ -232,17 +232,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             var idProvider = new TestIdProvider();
             idProvider.AppendString(testCase.ExecutorUri?.ToString());
             idProvider.AppendString(fileName);
-            if (this.TestMethod.HasManagedMethodAndTypeProperties)
+            if (TestMethod.HasManagedMethodAndTypeProperties)
             {
-                idProvider.AppendString(this.TestMethod.ManagedTypeName);
-                idProvider.AppendString(this.TestMethod.ManagedMethodName);
+                idProvider.AppendString(TestMethod.ManagedTypeName);
+                idProvider.AppendString(TestMethod.ManagedMethodName);
             }
             else
             {
                 idProvider.AppendString(testCase.FullyQualifiedName);
             }
 
-            if (this.TestMethod.DataType != DynamicDataType.None)
+            if (TestMethod.DataType != DynamicDataType.None)
             {
                 idProvider.AppendString(testCase.DisplayName);
             }
@@ -254,9 +254,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
         private string GetDisplayName()
         {
-            if (string.IsNullOrWhiteSpace(this.DisplayName))
+            if (string.IsNullOrWhiteSpace(DisplayName))
             {
-                return this.TestMethod.Name;
+                return TestMethod.Name;
 
                 // This causes compatibility problems with older runners.
                 // return string.IsNullOrWhiteSpace(this.TestMethod.ManagedMethodName)
@@ -265,7 +265,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             }
             else
             {
-                return this.DisplayName;
+                return DisplayName;
             }
         }
     }

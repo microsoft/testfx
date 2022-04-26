@@ -37,7 +37,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         //     that receives the tracing or debugging output.
         public TextWriter GetWriter()
         {
-            return this.Writer;
+            return Writer;
         }
     }
 

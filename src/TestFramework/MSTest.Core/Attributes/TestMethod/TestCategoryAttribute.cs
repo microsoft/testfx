@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             List<string> categories = new List<string>(1);
             categories.Add(testCategory);
-            this.testCategories = categories;
+            testCategories = categories;
         }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         public override IList<string> TestCategories
         {
-            get { return this.testCategories; }
+            get { return testCategories; }
         }
     }
 }

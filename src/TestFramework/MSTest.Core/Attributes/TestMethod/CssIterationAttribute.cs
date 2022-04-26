@@ -17,7 +17,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="cssIteration">The CSS Iteration URI.</param>
         public CssIterationAttribute(string cssIteration)
         {
-            this.CssIteration = cssIteration;
+            CssIteration = cssIteration;
         }
 
         /// <summary>

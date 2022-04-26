@@ -25,8 +25,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         public ParallelizeAttribute()
         {
-            this.Workers = DefaultParallelWorkers;
-            this.Scope = DefaultExecutionScope;
+            Workers = DefaultParallelWorkers;
+            Scope = DefaultExecutionScope;
         }
 
         /// <summary>

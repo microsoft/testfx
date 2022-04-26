@@ -38,14 +38,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             get
             {
                 // Only one table based on the name of the file, with dots converted to # signs
-                return Path.GetFileName(this.fileName).Replace('.', '#');
+                return Path.GetFileName(fileName).Replace('.', '#');
             }
         }
 
         public override List<string> GetDataTablesAndViews()
         {
             List<string> tableNames = new List<string>(1);
-            tableNames.Add(this.TableName);
+            tableNames.Add(TableName);
             return tableNames;
         }
 
@@ -56,7 +56,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             // read the table in then check the columns...
             try
             {
-                DataTable table = this.ReadTable(tableName, null);
+                DataTable table = ReadTable(tableName, null);
                 if (table != null)
                 {
                     List<string> columnNames = new List<string>();
@@ -70,7 +70,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             }
             catch (Exception exception)
             {
-                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for CSV data source " + this.fileName);
+                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for CSV data source " + fileName);
             }
 
             return null;
@@ -85,7 +85,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             WriteDiagnostics("Current Directory: {0}", Directory.GetCurrentDirectory());
 
             // We better work with a full path, if nothing else, errors become easier to report
-            string fullPath = this.FixPath(this.fileName) ?? Path.GetFullPath(this.fileName);
+            string fullPath = FixPath(fileName) ?? Path.GetFullPath(fileName);
 
             // We can map simplified CSVs to an OLEDB/Text connection, then proceed as normal
             using (OleDbConnection connection = new OleDbConnection())
@@ -164,7 +164,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         public override DataTable ReadTable(string tableName, IEnumerable columns)
         {
-            return this.ReadTable(tableName, columns, -1);
+            return ReadTable(tableName, columns, -1);
         }
     }
 }

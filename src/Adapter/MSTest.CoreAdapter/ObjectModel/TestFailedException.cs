@@ -32,8 +32,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         {
             Debug.Assert(!string.IsNullOrEmpty(errorMessage), "ErrorMessage should not be empty");
 
-            this.Outcome = outcome;
-            this.StackTraceInformation = stackTraceInformation;
+            Outcome = outcome;
+            StackTraceInformation = stackTraceInformation;
         }
 
         /// <summary>

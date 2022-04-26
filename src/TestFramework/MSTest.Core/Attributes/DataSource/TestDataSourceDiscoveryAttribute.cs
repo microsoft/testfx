@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </param>
         public TestDataSourceDiscoveryAttribute(TestDataSourceDiscoveryOption discoveryOption)
         {
-            this.DiscoveryOption = discoveryOption;
+            DiscoveryOption = discoveryOption;
         }
 
         /// <summary>

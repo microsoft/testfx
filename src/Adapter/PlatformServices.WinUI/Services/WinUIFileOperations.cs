@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         public FileOperations()
         {
-            this.isPackaged = AppContainer.AppModel.IsPackagedProcess();
+            isPackaged = AppContainer.AppModel.IsPackagedProcess();
         }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns> The <see cref="Assembly"/>. </returns>
         public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly)
         {
-            if (!this.isPackaged && Path.IsPathRooted(assemblyName))
+            if (!isPackaged && Path.IsPathRooted(assemblyName))
             {
                 return Assembly.LoadFrom(assemblyName);
             }
@@ -60,7 +60,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns> The <see cref="bool"/>. </returns>
         public bool DoesFileExist(string assemblyFileName)
         {
-            var path = this.GetFullFilePath(assemblyFileName);
+            var path = GetFullFilePath(assemblyFileName);
             return File.Exists(path);
         }
 

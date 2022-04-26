@@ -70,7 +70,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <returns> True if this is an assembly extension. </returns>
         internal bool IsAssemblyExtension(string extensionWithLeadingDot)
         {
-            foreach (var realExtension in this.assemblyExtensions)
+            foreach (var realExtension in assemblyExtensions)
             {
                 if (string.Equals(extensionWithLeadingDot, realExtension, StringComparison.OrdinalIgnoreCase))
                 {
@@ -119,7 +119,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <returns> List of satellite assemblies. </returns>
         internal virtual List<string> GetSatelliteAssemblies(string assemblyPath)
         {
-            if (!this.IsAssemblyExtension(Path.GetExtension(assemblyPath)) || !this.IsAssembly(assemblyPath))
+            if (!IsAssemblyExtension(Path.GetExtension(assemblyPath)) || !IsAssembly(assemblyPath))
             {
                 EqtTrace.ErrorIf(
                         EqtTrace.IsErrorEnabled,
@@ -147,7 +147,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 // Check if the satellite exists in this dir.
                 // We check filenames like: MyAssembly.dll -> MyAssembly.resources.dll.
                 // Surprisingly, but both DLL and EXE are found by resource manager.
-                foreach (var extension in this.assemblyExtensions)
+                foreach (var extension in assemblyExtensions)
                 {
                     // extension contains leading dot.
                     string satellite = Path.ChangeExtension(Path.GetFileName(assemblyPath), "resources" + extension);
@@ -158,7 +158,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     if (File.Exists(satellitePath))
                     {
                         // If the satellite found is not a managed assembly we do not report it as a reference.
-                        if (!this.IsAssembly(satellitePath))
+                        if (!IsAssembly(satellitePath))
                         {
                             EqtTrace.ErrorIf(
                                 EqtTrace.IsErrorEnabled,
@@ -220,7 +220,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                         (AssemblyResolver)AppDomainUtilities.CreateInstance(
                                                     appDomain,
                                                     assemblyResolverType,
-                                                    new object[] { this.GetResolutionPaths() }))
+                                                    new object[] { GetResolutionPaths() }))
                 {
                     // This has to be Load, otherwise Serialization of argument types will not work correctly.
                     AssemblyLoadWorker worker =

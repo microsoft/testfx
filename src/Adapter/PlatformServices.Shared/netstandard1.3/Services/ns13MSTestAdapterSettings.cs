@@ -19,10 +19,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         public MSTestAdapterSettings()
         {
-            this.DeleteDeploymentDirectoryAfterTestRunIsComplete = true;
-            this.DeploymentEnabled = true;
-            this.DeployTestSourceDependencies = true;
-            this.SearchDirectories = new List<RecursiveDirectoryPath>();
+            DeleteDeploymentDirectoryAfterTestRunIsComplete = true;
+            DeploymentEnabled = true;
+            DeployTestSourceDependencies = true;
+            SearchDirectories = new List<RecursiveDirectoryPath>();
         }
 
         /// <summary>
@@ -154,10 +154,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             List<RecursiveDirectoryPath> directoriesList = new List<RecursiveDirectoryPath>();
 
-            foreach (RecursiveDirectoryPath recPath in this.SearchDirectories)
+            foreach (RecursiveDirectoryPath recPath in SearchDirectories)
             {
                 // If path has environment variable, then resolve it
-                string directorypath = this.ResolveEnvironmentVariableAndReturnFullPathIfExist(recPath.DirectoryPath, baseDirectory);
+                string directorypath = ResolveEnvironmentVariableAndReturnFullPathIfExist(recPath.DirectoryPath, baseDirectory);
 
                 if (!string.IsNullOrEmpty(directorypath))
                 {
@@ -184,7 +184,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 string warningMessage = null;
 
                 // Expand any environment variables in the path.
-                path = this.ExpandEnvironmentVariables(path);
+                path = ExpandEnvironmentVariables(path);
 
                 // If the path is a relative path, expand it relative to the base directory
                 if (!Path.IsPathRooted(path))
@@ -230,7 +230,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                     return null;
                 }
 
-                if (this.DoesDirectoryExist(path))
+                if (DoesDirectoryExist(path))
                 {
                     return path;
                 }
@@ -293,7 +293,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         {
                             // Do we have to look in sub directory for dependent dll.
                             var includeSubDirectories = string.Equals(recursiveAttribute, "true", StringComparison.OrdinalIgnoreCase);
-                            this.SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
+                            SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
                         }
                     }
                     else

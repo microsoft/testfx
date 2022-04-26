@@ -17,7 +17,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         public ClassInitializeAttribute()
         {
-            this.InheritanceBehavior = InheritanceBehavior.None;
+            InheritanceBehavior = InheritanceBehavior.None;
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </param>
         public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior)
         {
-            this.InheritanceBehavior = inheritanceBehavior;
+            InheritanceBehavior = inheritanceBehavior;
         }
 
         /// <summary>

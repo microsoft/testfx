@@ -53,11 +53,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         internal virtual bool IsValidTestClass(Type type, ICollection<string> warnings)
         {
             if (type.GetTypeInfo().IsClass &&
-                    (this.reflectHelper.IsAttributeDefined(type, typeof(TestClassAttribute), false) ||
-                    this.reflectHelper.HasAttributeDerivedFrom(type, typeof(TestClassAttribute), false)))
+                    (reflectHelper.IsAttributeDefined(type, typeof(TestClassAttribute), false) ||
+                    reflectHelper.HasAttributeDerivedFrom(type, typeof(TestClassAttribute), false)))
             {
                 // inaccessible class
-                if (!this.TypeHasValidAccessibility(type.GetTypeInfo(), this.discoverInternals))
+                if (!TypeHasValidAccessibility(type.GetTypeInfo(), discoverInternals))
                 {
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
                     warnings.Add(warning);
@@ -74,7 +74,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 }
 
                 // Class is not valid if the testContext property is incorrect
-                if (!this.HasCorrectTestContextSignature(type))
+                if (!HasCorrectTestContextSignature(type))
                 {
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInValidTestContextSignature, type.FullName);
                     warnings.Add(warning);

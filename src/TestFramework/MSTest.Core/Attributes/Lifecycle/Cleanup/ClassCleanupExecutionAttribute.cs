@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </param>
         public ClassCleanupExecutionAttribute(ClassCleanupBehavior cleanupBehavior)
         {
-            this.CleanupBehavior = cleanupBehavior;
+            CleanupBehavior = cleanupBehavior;
         }
 
         /// <summary>

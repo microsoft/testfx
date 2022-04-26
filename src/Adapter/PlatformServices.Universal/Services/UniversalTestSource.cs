@@ -79,7 +79,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns> Sources that contains tests. <see cref="IEnumerable{T}"/>. </returns>
         public IEnumerable<string> GetTestSources(IEnumerable<string> sources)
         {
-            if (this.ContainsAppxSource(sources))
+            if (ContainsAppxSource(sources))
             {
                 List<string> newSources = new List<string>();
 

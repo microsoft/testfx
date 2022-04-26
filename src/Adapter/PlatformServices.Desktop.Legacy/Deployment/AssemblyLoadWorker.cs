@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
                 EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Reflection loading {assemblyPath}.");
 
                 // First time we load in LoadFromContext to avoid issues.
-                assembly = this.assemblyUtility.ReflectionOnlyLoadFrom(assemblyPath);
+                assembly = assemblyUtility.ReflectionOnlyLoadFrom(assemblyPath);
             }
             catch (Exception ex)
             {
@@ -67,7 +67,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 
             visitedAssemblies.Add(assembly.FullName);
 
-            this.ProcessChildren(assembly, result, visitedAssemblies, warnings);
+            ProcessChildren(assembly, result, visitedAssemblies, warnings);
 
             return result.ToArray();
         }
@@ -93,8 +93,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             {
                 try
                 {
-                    Assembly a = this.assemblyUtility.ReflectionOnlyLoadFrom(path);
-                    return this.GetTargetFrameworkStringFromAssembly(a);
+                    Assembly a = assemblyUtility.ReflectionOnlyLoadFrom(path);
+                    return GetTargetFrameworkStringFromAssembly(a);
                 }
                 catch (BadImageFormatException)
                 {
@@ -161,7 +161,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Processing assembly {assembly.FullName}.");
             foreach (AssemblyName reference in assembly.GetReferencedAssemblies())
             {
-                this.GetDependentAssembliesInternal(reference.FullName, result, visitedAssemblies, warnings);
+                GetDependentAssembliesInternal(reference.FullName, result, visitedAssemblies, warnings);
             }
 
             // Take care of .netmodule's.
@@ -244,7 +244,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
                 string postPolicyAssembly = AppDomain.CurrentDomain.ApplyPolicy(assemblyString);
                 Debug.Assert(!string.IsNullOrEmpty(postPolicyAssembly), "postPolicyAssembly");
 
-                assembly = this.assemblyUtility.ReflectionOnlyLoad(postPolicyAssembly);
+                assembly = assemblyUtility.ReflectionOnlyLoad(postPolicyAssembly);
                 visitedAssemblies.Add(assembly.FullName);   // Just in case.
             }
             catch (Exception ex)
@@ -260,7 +260,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
             EqtTrace.Verbose($"AssemblyLoadWorker.GetDependentAssembliesInternal: Assembly {assemblyString} was added as dependency.");
             result.Add(assembly.Location);
 
-            this.ProcessChildren(assembly, result, visitedAssemblies, warnings);
+            ProcessChildren(assembly, result, visitedAssemblies, warnings);
         }
     }
 }

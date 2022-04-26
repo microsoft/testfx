@@ -35,22 +35,22 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// in the test results. Users can benefit from messages that include the fully-qualified
         /// class name in addition to the name of the test method currently being executed.
         /// </remarks>
-        public virtual string FullyQualifiedTestClassName => this.GetProperty<string>("FullyQualifiedTestClassName");
+        public virtual string FullyQualifiedTestClassName => GetProperty<string>("FullyQualifiedTestClassName");
 
         /// <summary>
         /// Gets the fully specified type name metadata format.
         /// </summary>
-        public virtual string ManagedType => this.GetProperty<string>(nameof(this.ManagedType));
+        public virtual string ManagedType => GetProperty<string>(nameof(ManagedType));
 
         /// <summary>
         /// Gets the fully specified method name metadata format.
         /// </summary>
-        public virtual string ManagedMethod => this.GetProperty<string>(nameof(this.ManagedMethod));
+        public virtual string ManagedMethod => GetProperty<string>(nameof(ManagedMethod));
 
         /// <summary>
         /// Gets the Name of the test method currently being executed
         /// </summary>
-        public virtual string TestName => this.GetProperty<string>("TestName");
+        public virtual string TestName => GetProperty<string>("TestName");
 
         /// <summary>
         /// Gets the current test outcome.
@@ -94,7 +94,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         private T GetProperty<T>(string name)
             where T : class
         {
-            if (!((IDictionary<string, object>)this.Properties).TryGetValue(name, out object propertyValue))
+            if (!((IDictionary<string, object>)Properties).TryGetValue(name, out object propertyValue))
             {
                 return null;
             }

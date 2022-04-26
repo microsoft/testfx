@@ -74,23 +74,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// Gets Class Info cache which has cleanup methods to execute
         /// </summary>
         public IEnumerable<TestClassInfo> ClassInfoListWithExecutableCleanupMethods =>
-            this.classInfoCache.Values.Where(classInfo => classInfo.HasExecutableCleanupMethod).ToList();
+            classInfoCache.Values.Where(classInfo => classInfo.HasExecutableCleanupMethod).ToList();
 
         /// <summary>
         /// Gets Assembly Info cache which has cleanup methods to execute
         /// </summary>
         public IEnumerable<TestAssemblyInfo> AssemblyInfoListWithExecutableCleanupMethods =>
-            this.testAssemblyInfoCache.Values.Where(assemblyInfo => assemblyInfo.HasExecutableCleanupMethod).ToList();
+            testAssemblyInfoCache.Values.Where(assemblyInfo => assemblyInfo.HasExecutableCleanupMethod).ToList();
 
         /// <summary>
         /// Gets the set of cached assembly info values.
         /// </summary>
-        public IEnumerable<TestAssemblyInfo> AssemblyInfoCache => this.testAssemblyInfoCache.Values.ToList();
+        public IEnumerable<TestAssemblyInfo> AssemblyInfoCache => testAssemblyInfoCache.Values.ToList();
 
         /// <summary>
         /// Gets the set of cached class info values.
         /// </summary>
-        public IEnumerable<TestClassInfo> ClassInfoCache => this.classInfoCache.Values.ToList();
+        public IEnumerable<TestClassInfo> ClassInfoCache => classInfoCache.Values.ToList();
 
         /// <summary>
         /// Get the test method info corresponding to the parameter test Element
@@ -112,7 +112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
-            var testClassInfo = this.GetClassInfo(testMethod);
+            var testClassInfo = GetClassInfo(testMethod);
 
             if (testClassInfo == null)
             {
@@ -122,7 +122,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
 
             // Get the testMethod
-            return this.ResolveTestMethod(testMethod, testClassInfo, testContext, captureDebugTraces);
+            return ResolveTestMethod(testMethod, testClassInfo, testContext, captureDebugTraces);
         }
 
         /// <summary>
@@ -150,10 +150,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             var typeName = testMethod.FullClassName;
 
-            if (!this.classInfoCache.TryGetValue(typeName, out TestClassInfo classInfo))
+            if (!classInfoCache.TryGetValue(typeName, out TestClassInfo classInfo))
             {
                 // Load the class type
-                Type type = this.LoadType(typeName, testMethod.AssemblyName);
+                Type type = LoadType(typeName, testMethod.AssemblyName);
 
                 if (type == null)
                 {
@@ -163,10 +163,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
 
                 // Get the classInfo
-                classInfo = this.CreateClassInfo(type, testMethod);
+                classInfo = CreateClassInfo(type, testMethod);
 
                 // Use the full type name for the cache.
-                classInfo = this.classInfoCache.GetOrAdd(typeName, classInfo);
+                classInfo = classInfoCache.GetOrAdd(typeName, classInfo);
             }
 
             return classInfo;
@@ -231,11 +231,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 throw new TypeInspectionException(message);
             }
 
-            var testContextProperty = this.ResolveTestContext(classType);
+            var testContextProperty = ResolveTestContext(classType);
 
-            var assemblyInfo = this.GetAssemblyInfo(classType);
+            var assemblyInfo = GetAssemblyInfo(classType);
 
-            var classInfo = new TestClassInfo(classType, constructor, testContextProperty, this.reflectionHelper.GetDerivedAttribute<TestClassAttribute>(classType, false), assemblyInfo);
+            var classInfo = new TestClassInfo(classType, constructor, testContextProperty, reflectionHelper.GetDerivedAttribute<TestClassAttribute>(classType, false), assemblyInfo);
 
             var testInitializeAttributeType = typeof(TestInitializeAttribute);
             var testCleanupAttributeType = typeof(TestCleanupAttribute);
@@ -255,10 +255,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             foreach (var methodInfo in classType.GetTypeInfo().DeclaredMethods)
             {
                 // Update test initialize/cleanup method
-                this.UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, isBase: false, instanceMethods: instanceMethods, testInitializeAttributeType: testInitializeAttributeType, testCleanupAttributeType: testCleanupAttributeType);
+                UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, isBase: false, instanceMethods: instanceMethods, testInitializeAttributeType: testInitializeAttributeType, testCleanupAttributeType: testCleanupAttributeType);
 
                 // Update class initialize/cleanup method
-                this.UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods, classInitializeAttributeType, classCleanupAttributeType);
+                UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods, classInitializeAttributeType, classCleanupAttributeType);
             }
 
             var baseType = classType.GetTypeInfo().BaseType;
@@ -269,16 +269,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     if (methodInfo.IsPublic && !methodInfo.IsStatic)
                     {
                         // Update test initialize/cleanup method from base type.
-                        this.UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, instanceMethods, testInitializeAttributeType, testCleanupAttributeType);
+                        UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, instanceMethods, testInitializeAttributeType, testCleanupAttributeType);
                     }
 
                     if (methodInfo.IsPublic && methodInfo.IsStatic)
                     {
-                        this.UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, true, ref initAndCleanupMethods, classInitializeAttributeType, classCleanupAttributeType);
+                        UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, true, ref initAndCleanupMethods, classInitializeAttributeType, classCleanupAttributeType);
                     }
                 }
 
-                this.UpdateInfoWithInitializeAndCleanupMethods(classInfo, ref initAndCleanupMethods);
+                UpdateInfoWithInitializeAndCleanupMethods(classInfo, ref initAndCleanupMethods);
                 baseType = baseType.GetTypeInfo().BaseType;
             }
 
@@ -330,7 +330,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             var assembly = type.GetTypeInfo().Assembly;
 
-            if (!this.testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo assemblyInfo))
+            if (!testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo assemblyInfo))
             {
                 var assemblyInitializeType = typeof(AssemblyInitializeAttribute);
                 var assemblyCleanupType = typeof(AssemblyCleanupAttribute);
@@ -349,8 +349,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     try
                     {
                         // Only examine classes which are TestClass or derives from TestClass attribute
-                        if (!this.reflectionHelper.IsAttributeDefined(t, typeof(TestClassAttribute), inherit: true) &&
-                            !this.reflectionHelper.HasAttributeDerivedFrom(t, typeof(TestClassAttribute), true))
+                        if (!reflectionHelper.IsAttributeDefined(t, typeof(TestClassAttribute), inherit: true) &&
+                            !reflectionHelper.HasAttributeDerivedFrom(t, typeof(TestClassAttribute), true))
                         {
                             continue;
                         }
@@ -369,18 +369,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     // Enumerate through all methods and identify the Assembly Init and cleanup methods.
                     foreach (var methodInfo in t.GetTypeInfo().DeclaredMethods)
                     {
-                        if (this.IsAssemblyOrClassInitializeMethod(methodInfo, assemblyInitializeType))
+                        if (IsAssemblyOrClassInitializeMethod(methodInfo, assemblyInitializeType))
                         {
                             assemblyInfo.AssemblyInitializeMethod = methodInfo;
                         }
-                        else if (this.IsAssemblyOrClassCleanupMethod(methodInfo, assemblyCleanupType))
+                        else if (IsAssemblyOrClassCleanupMethod(methodInfo, assemblyCleanupType))
                         {
                             assemblyInfo.AssemblyCleanupMethod = methodInfo;
                         }
                     }
                 }
 
-                assemblyInfo = this.testAssemblyInfoCache.GetOrAdd(assembly, assemblyInfo);
+                assemblyInfo = testAssemblyInfoCache.GetOrAdd(assembly, assemblyInfo);
             }
 
             return assemblyInfo;
@@ -394,7 +394,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns> True if its an initialization method. </returns>
         private bool IsAssemblyOrClassInitializeMethod(MethodInfo methodInfo, Type initializeAttributeType)
         {
-            if (!this.reflectionHelper.IsAttributeDefined(methodInfo, initializeAttributeType, false))
+            if (!reflectionHelper.IsAttributeDefined(methodInfo, initializeAttributeType, false))
             {
                 return false;
             }
@@ -416,7 +416,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns> True if its a cleanup method. </returns>
         private bool IsAssemblyOrClassCleanupMethod(MethodInfo methodInfo, Type cleanupAttributeType)
         {
-            if (!this.reflectionHelper.IsAttributeDefined(methodInfo, cleanupAttributeType, false))
+            if (!reflectionHelper.IsAttributeDefined(methodInfo, cleanupAttributeType, false))
             {
                 return false;
             }
@@ -469,14 +469,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             Type classInitializeAttributeType,
             Type classCleanupAttributeType)
         {
-            var isInitializeMethod = this.IsAssemblyOrClassInitializeMethod(methodInfo, classInitializeAttributeType);
-            var isCleanupMethod = this.IsAssemblyOrClassCleanupMethod(methodInfo, classCleanupAttributeType);
+            var isInitializeMethod = IsAssemblyOrClassInitializeMethod(methodInfo, classInitializeAttributeType);
+            var isCleanupMethod = IsAssemblyOrClassCleanupMethod(methodInfo, classCleanupAttributeType);
 
             if (isInitializeMethod)
             {
                 if (isBase)
                 {
-                    if (((ClassInitializeAttribute)this.reflectionHelper.GetCustomAttribute(methodInfo, classInitializeAttributeType))
+                    if (((ClassInitializeAttribute)reflectionHelper.GetCustomAttribute(methodInfo, classInitializeAttributeType))
                             .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                     {
                         initAndCleanupMethods[0] = methodInfo;
@@ -493,7 +493,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             {
                 if (isBase)
                 {
-                    if (((ClassCleanupAttribute)this.reflectionHelper.GetCustomAttribute(methodInfo, classCleanupAttributeType))
+                    if (((ClassCleanupAttribute)reflectionHelper.GetCustomAttribute(methodInfo, classCleanupAttributeType))
                             .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                     {
                         initAndCleanupMethods[1] = methodInfo;
@@ -524,8 +524,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             Type testInitializeAttributeType,
             Type testCleanupAttributeType)
         {
-            var hasTestInitialize = this.reflectionHelper.IsAttributeDefined(methodInfo, testInitializeAttributeType, inherit: false);
-            var hasTestCleanup = this.reflectionHelper.IsAttributeDefined(methodInfo, testCleanupAttributeType, inherit: false);
+            var hasTestInitialize = reflectionHelper.IsAttributeDefined(methodInfo, testInitializeAttributeType, inherit: false);
+            var hasTestCleanup = reflectionHelper.IsAttributeDefined(methodInfo, testCleanupAttributeType, inherit: false);
 
             if (!hasTestCleanup && !hasTestInitialize)
             {
@@ -594,20 +594,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             Debug.Assert(testMethod != null, "testMethod is Null");
             Debug.Assert(testClassInfo != null, "testClassInfo is Null");
 
-            var methodInfo = this.GetMethodInfoForTestMethod(testMethod, testClassInfo);
+            var methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
             if (methodInfo == null)
             {
                 // Means the specified test method could not be found.
                 return null;
             }
 
-            var expectedExceptionAttribute = this.reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
-            var timeout = this.GetTestTimeout(methodInfo, testMethod);
+            var expectedExceptionAttribute = reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
+            var timeout = GetTestTimeout(methodInfo, testMethod);
 
-            var testMethodOptions = new TestMethodOptions() { Timeout = timeout, Executor = this.GetTestMethodAttribute(methodInfo, testClassInfo), ExpectedException = expectedExceptionAttribute, TestContext = testContext, CaptureDebugTraces = captureDebugTraces };
+            var testMethodOptions = new TestMethodOptions() { Timeout = timeout, Executor = GetTestMethodAttribute(methodInfo, testClassInfo), ExpectedException = expectedExceptionAttribute, TestContext = testContext, CaptureDebugTraces = captureDebugTraces };
             var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testMethodOptions);
 
-            this.SetCustomProperties(testMethodInfo, testContext);
+            SetCustomProperties(testMethodInfo, testContext);
 
             return testMethodInfo;
         }
@@ -621,7 +621,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private TestMethodAttribute GetTestMethodAttribute(MethodInfo methodInfo, TestClassInfo testClassInfo)
         {
             // Get the derived TestMethod attribute from reflection
-            var testMethodAttribute = this.reflectionHelper.GetDerivedAttribute<TestMethodAttribute>(methodInfo, false);
+            var testMethodAttribute = reflectionHelper.GetDerivedAttribute<TestMethodAttribute>(methodInfo, false);
 
             // Get the derived TestMethod attribute from Extended TestClass Attribute
             // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
@@ -638,13 +638,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns> The <see cref="MethodInfo"/>. </returns>
         private MethodInfo GetMethodInfoForTestMethod(TestMethod testMethod, TestClassInfo testClassInfo)
         {
-            var discoverInternals = this.discoverInternalsCache.GetOrAdd(
+            var discoverInternals = discoverInternalsCache.GetOrAdd(
                 testMethod.AssemblyName,
                 _ => testClassInfo.Parent.Assembly.GetCustomAttribute<DiscoverInternalsAttribute>() != null);
 
             var testMethodInfo = testMethod.HasManagedMethodAndTypeProperties
-                               ? this.GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo, discoverInternals)
-                               : this.GetMethodInfoUsingRuntimeMethods(testMethod, testClassInfo, discoverInternals);
+                               ? GetMethodInfoUsingManagedNameHelper(testMethod, testClassInfo, discoverInternals)
+                               : GetMethodInfoUsingRuntimeMethods(testMethod, testClassInfo, discoverInternals);
 
             // if correct method is not found, throw appropriate
             // exception about what is wrong.
@@ -716,7 +716,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         private int GetTestTimeout(MethodInfo methodInfo, TestMethod testMethod)
         {
             Debug.Assert(methodInfo != null, "TestMethod should be non-null");
-            var timeoutAttribute = this.reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
+            var timeoutAttribute = reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
             var globalTimeout = MSTestSettings.CurrentSettings.TestTimeout;
 
             if (timeoutAttribute != null)
@@ -752,7 +752,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             foreach (TestPropertyAttribute attribute in attributes)
             {
-                if (!this.ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value))
+                if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value))
                 {
                     break;
                 }

@@ -41,9 +41,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
             string dateTimeSufix = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo);
             string directoryName = string.Format(CultureInfo.CurrentCulture, Resource.TestRunName, DeploymentFolderPrefix, Environment.GetEnvironmentVariable("USERNAME") ?? Environment.GetEnvironmentVariable("USER"), dateTimeSufix);
-            directoryName = this.FileUtility.ReplaceInvalidFileNameCharacters(directoryName);
+            directoryName = FileUtility.ReplaceInvalidFileNameCharacters(directoryName);
 
-            return this.FileUtility.GetNextIterationDirectoryName(baseDirectory, directoryName);
+            return FileUtility.GetNextIterationDirectoryName(baseDirectory, directoryName);
         }
 
         /// <summary>

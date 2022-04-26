@@ -40,8 +40,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Justification = "Need to over-write the keys in dictionary.")]
         public TestExecutionManager()
         {
-            this.TestMethodFilter = new TestMethodFilter();
-            this.sessionParameters = new Dictionary<string, object>();
+            TestMethodFilter = new TestMethodFilter();
+            sessionParameters = new Dictionary<string, object>();
         }
 
         /// <summary>
@@ -68,17 +68,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             Debug.Assert(frameworkHandle != null, "frameworkHandle");
             Debug.Assert(runCancellationToken != null, "runCancellationToken");
 
-            this.cancellationToken = runCancellationToken;
+            cancellationToken = runCancellationToken;
 
             var isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
 
             // Placing this after deployment since we need information post deployment that we pass in as properties.
-            this.CacheSessionParameters(runContext, frameworkHandle);
+            CacheSessionParameters(runContext, frameworkHandle);
 
             // Execute the tests
-            this.ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
+            ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
 
-            if (!this.HasAnyTestFailed)
+            if (!HasAnyTestFailed)
             {
                 PlatformServiceProvider.Instance.TestDeployment.Cleanup();
             }
@@ -103,7 +103,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 var logger = (IMessageLogger)frameworkHandle;
 
                 // discover the tests
-                this.GetUnitTestDiscoverer().DiscoverTestsInSource(source, logger, discoverySink, runContext);
+                GetUnitTestDiscoverer().DiscoverTestsInSource(source, logger, discoverySink, runContext);
                 tests.AddRange(discoverySink.Tests);
 
                 // Clear discoverSinksTests so that it just stores test for one source at one point of time
@@ -113,12 +113,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
 
             // Placing this after deployment since we need information post deployment that we pass in as properties.
-            this.CacheSessionParameters(runContext, frameworkHandle);
+            CacheSessionParameters(runContext, frameworkHandle);
 
             // Run tests.
-            this.ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
+            ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
 
-            if (!this.HasAnyTestFailed)
+            if (!HasAnyTestFailed)
             {
                 PlatformServiceProvider.Instance.TestDeployment.Cleanup();
             }
@@ -139,7 +139,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             foreach (var group in testsBySource)
             {
-                this.ExecuteTestsInSource(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone);
+                ExecuteTestsInSource(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone);
             }
         }
 
@@ -174,7 +174,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 if (testResult.Outcome == TestOutcome.Failed)
                 {
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
-                    this.HasAnyTestFailed = true;
+                    HasAnyTestFailed = true;
                 }
 
                 try
@@ -227,22 +227,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 // Default test set is filtered tests based on user provided filter criteria
                 ICollection<TestCase> testsToRun = new TestCase[0];
-                var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
+                var filterExpression = TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
                 if (filterHasError)
                 {
                     // Bail out without processing everything else below.
                     return;
                 }
 
-                testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter)).ToArray();
+                testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, TestMethodFilter)).ToArray();
 
                 // this is done so that appropriate values of test context properties are set at source level
                 // and are merged with session level parameters
                 var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
 
-                if (this.sessionParameters != null && this.sessionParameters.Count > 0)
+                if (sessionParameters != null && sessionParameters.Count > 0)
                 {
-                    sourceLevelParameters = this.sessionParameters.ConcatWithOverwrites(sourceLevelParameters);
+                    sourceLevelParameters = sessionParameters.ConcatWithOverwrites(sourceLevelParameters);
                 }
 
                 TestAssemblySettingsProvider sourceSettingsProvider = null;
@@ -261,7 +261,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 var sourceSettings = (sourceSettingsProvider != null) ? sourceSettingsProvider.GetSettings(source) : new TestAssemblySettings();
                 var parallelWorkers = sourceSettings.Workers;
                 var parallelScope = sourceSettings.Scope;
-                this.InitializeClassCleanupManager(source, testRunner, testsToRun, sourceSettings);
+                InitializeClassCleanupManager(source, testRunner, testsToRun, sourceSettings);
 
                 if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
                 {
@@ -317,7 +317,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                                 {
                                     while (!queue.IsEmpty)
                                     {
-                                        if (this.cancellationToken != null && this.cancellationToken.Canceled)
+                                        if (cancellationToken != null && cancellationToken.Canceled)
                                         {
                                             // if a cancellation has been requested, do not queue any more test runs.
                                             break;
@@ -325,7 +325,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                                         if (queue.TryDequeue(out IEnumerable<TestCase> testSet))
                                         {
-                                            this.ExecuteTestsWithTestRunner(testSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
+                                            ExecuteTestsWithTestRunner(testSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
                                         }
                                     }
                                 },
@@ -340,15 +340,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     // Queue the non parallel set
                     if (nonparallelizableTestSet != null)
                     {
-                        this.ExecuteTestsWithTestRunner(nonparallelizableTestSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
+                        ExecuteTestsWithTestRunner(nonparallelizableTestSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
                     }
                 }
                 else
                 {
-                    this.ExecuteTestsWithTestRunner(testsToRun, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
+                    ExecuteTestsWithTestRunner(testsToRun, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
                 }
 
-                this.RunCleanup(frameworkHandle, testRunner);
+                RunCleanup(frameworkHandle, testRunner);
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
             }
@@ -381,7 +381,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             foreach (var currentTest in tests)
             {
-                if (this.cancellationToken != null && this.cancellationToken.Canceled)
+                if (cancellationToken != null && cancellationToken.Canceled)
                 {
                     break;
                 }
@@ -396,14 +396,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 // Run single test passing test context properties to it.
                 var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
-                var testContextProperties = this.GetTestContextProperties(tcmProperties, sourceLevelParameters);
+                var testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
                 var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 
                 var endTime = DateTimeOffset.Now;
 
-                this.SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
+                SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
             }
         }
 
@@ -446,7 +446,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // Do not attach the standard output and error messages to any test result. It is not
                 // guaranteed that a test method of same class would have run last. We will end up
                 // adding stdout to test method of another class.
-                this.LogCleanupResult(testExecutionRecorder, cleanupResult);
+                LogCleanupResult(testExecutionRecorder, cleanupResult);
             }
         }
 
@@ -462,10 +462,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     {
                         // Clear sessionParameters to prevent key collisions of test run parameters in case
                         // "Keep Test Execution Engine Alive" is selected in VS.
-                        this.sessionParameters.Clear();
+                        sessionParameters.Clear();
                         foreach (var kvp in testRunParameters)
                         {
-                            this.sessionParameters.Add(kvp);
+                            sessionParameters.Add(kvp);
                         }
                     }
                 }

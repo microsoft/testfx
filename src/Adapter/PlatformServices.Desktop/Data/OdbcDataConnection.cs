@@ -19,9 +19,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
         {
             // Need open connection to get Connection.Driver.
-            Debug.Assert(this.IsOpen(), "The connection must be open!");
+            Debug.Assert(IsOpen(), "The connection must be open!");
 
-            this.isMSSql = this.Connection != null && IsMSSql(this.Connection.Driver);
+            isMSSql = Connection != null && IsMSSql(Connection.Driver);
         }
 
         public new OdbcCommandBuilder CommandBuilder
@@ -39,14 +39,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// </summary>
         public override void GetQuoteLiterals()
         {
-            this.GetQuoteLiteralsHelper();
+            GetQuoteLiteralsHelper();
         }
 
         public override string GetDefaultSchema()
         {
-            if (this.isMSSql)
+            if (isMSSql)
             {
-                return this.GetDefaultSchemaMSSql();
+                return GetDefaultSchemaMSSql();
             }
 
             return base.GetDefaultSchema();
@@ -79,13 +79,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         protected override string QuoteIdentifier(string identifier)
         {
             Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier");
-            return this.CommandBuilder.QuoteIdentifier(identifier, this.Connection);  // Must pass connection.
+            return CommandBuilder.QuoteIdentifier(identifier, Connection);  // Must pass connection.
         }
 
         protected override string UnquoteIdentifier(string identifier)
         {
             Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier");
-            return this.CommandBuilder.UnquoteIdentifier(identifier, this.Connection);  // Must pass connection.
+            return CommandBuilder.UnquoteIdentifier(identifier, Connection);  // Must pass connection.
         }
 
         // Need to fix up excel connections

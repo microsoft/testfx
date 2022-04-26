@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             this.sourceFileName = sourceFileName;
 
             // Set the environment context.
-            this.SetContext(sourceFileName);
+            SetContext(sourceFileName);
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         public void Dispose()
         {
-            this.ResetContext();
+            ResetContext();
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             Exception setWorkingDirectoryException = null;
-            this.currentDirectory = Directory.GetCurrentDirectory();
+            currentDirectory = Directory.GetCurrentDirectory();
             try
             {
                 var dirName = Path.GetDirectoryName(source);
@@ -108,9 +108,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         private void ResetContext()
         {
-            if (!string.IsNullOrEmpty(this.currentDirectory))
+            if (!string.IsNullOrEmpty(currentDirectory))
             {
-                Directory.SetCurrentDirectory(this.currentDirectory);
+                Directory.SetCurrentDirectory(currentDirectory);
             }
         }
     }

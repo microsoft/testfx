@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         public ReflectionOperations()
         {
-            this.reflectionUtility = new ReflectionUtility();
+            reflectionUtility = new ReflectionUtility();
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns> The list of attributes on the member. Empty list if none found. </returns>
         public object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
         {
-            return this.reflectionUtility.GetCustomAttributes(memberInfo, inherit);
+            return reflectionUtility.GetCustomAttributes(memberInfo, inherit);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns> The list of attributes on the member. Empty list if none found. </returns>
         public object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
         {
-            return this.reflectionUtility.GetCustomAttributes(memberInfo, type, inherit);
+            return reflectionUtility.GetCustomAttributes(memberInfo, type, inherit);
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns> The list of attributes of the given type on the member. Empty list if none found. </returns>
         public object[] GetCustomAttributes(Assembly assembly, Type type)
         {
-            return this.reflectionUtility.GetCustomAttributes(assembly, type);
+            return reflectionUtility.GetCustomAttributes(assembly, type);
         }
     }
 

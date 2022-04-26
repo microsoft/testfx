@@ -64,3 +64,13 @@ dotnet_diagnostic.IDE0054.severity = warning
 
 # IDE0074: Use coalesce compound assignment
 dotnet_diagnostic.IDE0074.severity = warning
+
+#### Naming styles ####
+
+# Naming styles
+
+dotnet_style_qualification_for_field = false:warning
+dotnet_style_qualification_for_property = false:warning
+dotnet_style_qualification_for_method = false:warning
+dotnet_style_qualification_for_event = false:warning
+dotnet_diagnostic.SA1101.severity = silent

@@ -30,7 +30,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer
                 throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ArgumentXMustDeriveFromClassY, nameof(applicationType), "Microsoft.UI.Xaml.Application"), nameof(applicationType));
             }
 
-            this.ApplicationType = applicationType;
+            ApplicationType = applicationType;
         }
 
         /// <summary>

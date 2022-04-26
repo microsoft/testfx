@@ -30,7 +30,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <inheritdoc/>
         public override string ToString()
         {
-            lock (this.lockObject)
+            lock (lockObject)
             {
                 try
                 {
@@ -45,11 +45,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
         public string ToStringAndClear()
         {
-            lock (this.lockObject)
+            lock (lockObject)
             {
                 try
                 {
-                    var sb = this.GetStringBuilder();
+                    var sb = GetStringBuilder();
                     var output = sb.ToString();
                     sb.Clear();
                     return output;
@@ -64,7 +64,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <inheritdoc/>
         public override void Write(char value)
         {
-            lock (this.lockObject)
+            lock (lockObject)
             {
                 InvokeBaseClass(() => base.Write(value));
             }
@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <inheritdoc/>
         public override void Write(string value)
         {
-            lock (this.lockObject)
+            lock (lockObject)
             {
                 InvokeBaseClass(() => base.Write(value));
             }
@@ -82,7 +82,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <inheritdoc/>
         public override void Write(char[] buffer, int index, int count)
         {
-            lock (this.lockObject)
+            lock (lockObject)
             {
                 InvokeBaseClass(() => base.Write(buffer, index, count));
             }
@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
-            lock (this.lockObject)
+            lock (lockObject)
             {
                 InvokeBaseClass(() => base.Dispose(disposing));
             }

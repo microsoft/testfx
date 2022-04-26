@@ -41,7 +41,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             ValidateArg.NotNull(logger, "logger");
             ValidateArg.NotNull(discoverySink, "discoverySink");
 
-            if (!this.AreValidSources(sources))
+            if (!AreValidSources(sources))
             {
                 throw new NotSupportedException(Resource.SourcesNotSupported);
             }

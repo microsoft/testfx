@@ -22,35 +22,35 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 throw new ArgumentException(Resource.WrongNumberOfObjects, nameof(numberOfObjects));
             }
 
-            this.objects = new int[numberOfObjects];
+            objects = new int[numberOfObjects];
             for (int i = 0; i < numberOfObjects; ++i)
             {
-                this.objects[i] = i;
+                objects[i] = i;
             }
 
             Random random = new Random();
-            for (int last = this.objects.Length - 1; last > 0; --last)
+            for (int last = objects.Length - 1; last > 0; --last)
             {
                 // Swap last and at random position which can be last in which case we don't swap.
                 int position = random.Next(last);   // 0 .. last - 1
-                int temp = this.objects[last];
-                this.objects[last] = this.objects[position];
-                this.objects[position] = temp;
+                int temp = objects[last];
+                objects[last] = objects[position];
+                objects[position] = temp;
             }
         }
 
         public IEnumerator<int> GetEnumerator()
         {
             // Iterate over created permutation, do not change it.
-            for (int i = 0; i < this.objects.Length; ++i)
+            for (int i = 0; i < objects.Length; ++i)
             {
-                yield return this.objects[i];
+                yield return objects[i];
             }
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
     }
 }

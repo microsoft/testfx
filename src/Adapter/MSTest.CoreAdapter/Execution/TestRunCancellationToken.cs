@@ -29,15 +29,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                return this.canceled;
+                return canceled;
             }
 
             private set
             {
-                this.canceled = value;
-                if (this.canceled)
+                canceled = value;
+                if (canceled)
                 {
-                    this.registeredCallback?.Invoke();
+                    registeredCallback?.Invoke();
                 }
             }
         }
@@ -47,7 +47,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </summary>
         public void Cancel()
         {
-            this.Canceled = true;
+            Canceled = true;
         }
 
         /// <summary>
@@ -58,9 +58,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             ValidateArg.NotNull(callback, "callback");
 
-            Debug.Assert(this.registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
+            Debug.Assert(registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
 
-            this.registeredCallback = callback;
+            registeredCallback = callback;
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// </summary>
         public void Unregister()
         {
-            this.registeredCallback = null;
+            registeredCallback = null;
         }
     }
 }

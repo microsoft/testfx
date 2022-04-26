@@ -27,7 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         {
             Debug.Assert(!string.IsNullOrEmpty(rootDirectory), "rootDirectory");
 
-            this.RootDeploymentDirectory = rootDirectory;
+            RootDeploymentDirectory = rootDirectory;
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         {
             get
             {
-                return Path.Combine(this.RootDeploymentDirectory, DeploymentInDirectorySuffix);
+                return Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
             }
         }
 
@@ -64,7 +64,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         {
             get
             {
-                return Path.Combine(Path.Combine(this.RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
+                return Path.Combine(Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
             }
         }
     }

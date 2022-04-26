@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         public DataRowAttribute()
         {
-            this.Data = new object[0];
+            Data = new object[0];
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public DataRowAttribute(object data1)
         {
             // Need to have this constructor explicitly to fix a CLS compliance error.
-            this.Data = new object[] { data1 };
+            Data = new object[] { data1 };
         }
 
         /// <summary>
@@ -46,9 +46,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 moreData = new object[] { null };
             }
 
-            this.Data = new object[moreData.Length + 1];
-            this.Data[0] = data1;
-            Array.Copy(moreData, 0, this.Data, 1, moreData.Length);
+            Data = new object[moreData.Length + 1];
+            Data[0] = data1;
+            Array.Copy(moreData, 0, Data, 1, moreData.Length);
         }
 
         /// <summary>
@@ -64,15 +64,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <inheritdoc />
         public IEnumerable<object[]> GetData(MethodInfo methodInfo)
         {
-            return new[] { this.Data };
+            return new[] { Data };
         }
 
         /// <inheritdoc />
         public string GetDisplayName(MethodInfo methodInfo, object[] data)
         {
-            if (!string.IsNullOrWhiteSpace(this.DisplayName))
+            if (!string.IsNullOrWhiteSpace(DisplayName))
             {
-                return this.DisplayName;
+                return DisplayName;
             }
             else
             {

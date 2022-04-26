@@ -24,7 +24,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <returns> A byte array of the config file with the redirections added. </returns>
         internal byte[] AddAssemblyRedirection(string configFile, AssemblyName assemblyName, string oldVersion, string newVersion)
         {
-            var doc = this.GetXmlDocument(configFile);
+            var doc = GetXmlDocument(configFile);
 
             var configurationElement = FindOrCreateElement(doc, doc, "configuration");
             var assemblyBindingSection = FindOrCreateAssemblyBindingSection(doc, configurationElement);

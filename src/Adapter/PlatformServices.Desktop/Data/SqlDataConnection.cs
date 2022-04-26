@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// <returns>The default database schema.</returns>
         public override string GetDefaultSchema()
         {
-            return this.GetDefaultSchemaMSSql();
+            return GetDefaultSchemaMSSql();
         }
 
         protected override SchemaMetaData[] GetSchemaMetaData()

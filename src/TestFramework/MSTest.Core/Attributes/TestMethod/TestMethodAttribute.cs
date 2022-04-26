@@ -27,7 +27,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </param>
         public TestMethodAttribute(string displayName)
         {
-            this.DisplayName = displayName;
+            DisplayName = displayName;
         }
 
         /// <summary>

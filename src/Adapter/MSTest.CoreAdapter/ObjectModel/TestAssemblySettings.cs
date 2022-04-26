@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
     {
         public TestAssemblySettings()
         {
-            this.Workers = -1;
+            Workers = -1;
         }
 
         /// <summary>

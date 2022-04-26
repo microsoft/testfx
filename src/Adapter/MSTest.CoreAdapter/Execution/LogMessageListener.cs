@@ -44,16 +44,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             this.captureDebugTraces = captureDebugTraces;
 
             // Cache the original output/error streams and replace it with the own stream.
-            this.redirectedStandardOutput = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out");
-            this.redirectedStandardError = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "err");
+            redirectedStandardOutput = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out");
+            redirectedStandardError = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "err");
 
-            Logger.OnLogMessage += this.redirectedStandardOutput.WriteLine;
+            Logger.OnLogMessage += redirectedStandardOutput.WriteLine;
 
             if (this.captureDebugTraces)
             {
                 // This is awkward, it has a side-effect of setting up Console output redirection, but the naming is suggesting that we are
                 // just getting TraceListener manager.
-                this.traceListenerManager = PlatformServiceProvider.Instance.GetTraceListenerManager(this.redirectedStandardOutput, this.redirectedStandardError);
+                traceListenerManager = PlatformServiceProvider.Instance.GetTraceListenerManager(redirectedStandardOutput, redirectedStandardError);
 
                 // The Debug listener uses Debug.WriteLine and Debug.Write to write the messages, which end up written into Trace.Listeners.
                 // These listeners are static and hence shared across the whole process. We need to capture Debug output only for the current
@@ -75,7 +75,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     {
                         redirectedDebugTrace = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "trace");
                         traceListener = PlatformServiceProvider.Instance.GetTraceListener(redirectedDebugTrace);
-                        this.traceListenerManager.Add(traceListener);
+                        traceListenerManager.Add(traceListener);
                     }
 
                     listenerCount++;
@@ -85,18 +85,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         ~LogMessageListener()
         {
-            this.Dispose(false);
+            Dispose(false);
         }
 
         /// <summary>
         /// Gets logger output
         /// </summary>
-        public string StandardOutput => this.redirectedStandardOutput.ToString();
+        public string StandardOutput => redirectedStandardOutput.ToString();
 
         /// <summary>
         /// Gets 'Error' Output from the redirected stream
         /// </summary>
-        public string StandardError => this.redirectedStandardError.ToString();
+        public string StandardError => redirectedStandardError.ToString();
 
         /// <summary>
         /// Gets 'Trace' Output from the redirected stream
@@ -111,13 +111,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         public string GetAndClearStandardOutput()
         {
-            var output = this.redirectedStandardOutput.ToStringAndClear();
+            var output = redirectedStandardOutput.ToStringAndClear();
             return output;
         }
 
         public string GetAndClearStandardError()
         {
-            var output = this.redirectedStandardError.ToStringAndClear();
+            var output = redirectedStandardError.ToStringAndClear();
             return output;
         }
 
@@ -134,22 +134,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
         public void Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         private void Dispose(bool disposing)
         {
-            if (disposing && !this.isDisposed)
+            if (disposing && !isDisposed)
             {
-                this.isDisposed = true;
-                Logger.OnLogMessage -= this.redirectedStandardOutput.WriteLine;
-                Logger.OnLogMessage -= this.redirectedStandardError.WriteLine;
+                isDisposed = true;
+                Logger.OnLogMessage -= redirectedStandardOutput.WriteLine;
+                Logger.OnLogMessage -= redirectedStandardError.WriteLine;
 
-                this.redirectedStandardOutput.Dispose();
-                this.redirectedStandardError.Dispose();
+                redirectedStandardOutput.Dispose();
+                redirectedStandardError.Dispose();
 
-                if (this.captureDebugTraces)
+                if (captureDebugTraces)
                 {
                     lock (traceLock)
                     {
@@ -159,7 +159,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                             {
                                 if (traceListener != null)
                                 {
-                                    this.traceListenerManager.Remove(traceListener);
+                                    traceListenerManager.Remove(traceListener);
                                 }
                             }
                             catch (Exception e)
@@ -171,8 +171,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                             if (traceListener != null)
                             {
                                 // Dispose trace manager and listeners
-                                this.traceListenerManager.Dispose(traceListener);
-                                this.traceListenerManager = null;
+                                traceListenerManager.Dispose(traceListener);
+                                traceListenerManager = null;
                                 traceListener = null;
                             }
                         }

@@ -71,7 +71,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         internal string Key
         {
-            get { return this.Name; }
+            get { return Name; }
         }
 
         /// <summary>
