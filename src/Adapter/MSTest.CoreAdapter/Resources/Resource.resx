@@ -368,4 +368,20 @@ Error: {1}</value>
   <data name="OlderTFMVersionFoundClassCleanup" xml:space="preserve">
     <value>An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest pacakges newer then version 2.2.8.</value>
   </data>
+  <data name="CannotExpandIDataSourceAttribute" xml:space="preserve">
+    <value>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</value>
+    <comment>{0}: TypeName with namespace, 
+{1}: Method name,
+{2}: CannotExpandIDataSourceAttribute_DuplicateDisplayName or CannotExpandIDataSourceAttribute_CannotSerialize</comment>
+  </data>
+  <data name="CannotExpandIDataSourceAttribute_DuplicateDisplayName" xml:space="preserve">
+    <value>Display name "{2}" on indexes {0} and {1} are duplicate. Display names should be unique.</value>
+    <comment>{0}, {1}: Zero based index if an element inside of an array
+{2}: Test display name.</comment>
+  </data>
+  <data name="CannotExpandIDataSourceAttribute_CannotSerialize" xml:space="preserve">
+    <value>Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</value>
+    <comment>{0}: Zero based index if an element inside of an array,
+{1}: Test name</comment>
+  </data>
 </root>
