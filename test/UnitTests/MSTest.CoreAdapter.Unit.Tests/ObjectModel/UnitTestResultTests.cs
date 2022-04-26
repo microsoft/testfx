@@ -55,10 +55,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
             TestFailedException ex = new TestFailedException(UnitTestOutcome.Error, "DummyMessage", stackTrace);
             var dummyTimeSpan = new TimeSpan(20);
             UnitTestResult result = new UnitTestResult(ex)
-                                        {
-                                            DisplayName = "DummyDisplayName",
-                                            Duration = dummyTimeSpan
-                                        };
+            {
+                DisplayName = "DummyDisplayName",
+                Duration = dummyTimeSpan
+            };
 
             TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
             var startTime = DateTimeOffset.Now;

@@ -607,7 +607,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                             return new object[] { new UTF.ParallelizeAttribute { Workers = 10, Scope = UTF.ExecutionScope.MethodLevel } };
                         }
 
-                         return originalReflectionOperation.GetCustomAttributes(asm, type);
+                        return originalReflectionOperation.GetCustomAttributes(asm, type);
                     });
 
                 testablePlatformService.MockReflectionOperations.Setup(

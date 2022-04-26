@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// <summary>
     /// The Data source element collection.
     /// </summary>
-    [SuppressMessage("Microsoft.Design", "CA1010:CollectionsShouldImplementGenericInterface", Justification ="Compat")]
+    [SuppressMessage("Microsoft.Design", "CA1010:CollectionsShouldImplementGenericInterface", Justification = "Compat")]
     public sealed class DataSourceElementCollection : ConfigurationElementCollection
     {
         /// <summary>

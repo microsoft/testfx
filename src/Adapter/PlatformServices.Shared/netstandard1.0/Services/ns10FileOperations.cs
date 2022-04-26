@@ -36,11 +36,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>Path to the .DLL of the assembly.</returns>
         public string GetAssemblyPath(Assembly assembly)
         {
-            #if NETSTANDARD1_5
-                return assembly.Location;
-            #else
+#if NETSTANDARD1_5
+            return assembly.Location;
+#else
                 return null;
-            #endif
+#endif
         }
 
         /// <summary>

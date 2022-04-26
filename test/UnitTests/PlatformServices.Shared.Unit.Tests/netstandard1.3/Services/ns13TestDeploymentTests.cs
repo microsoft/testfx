@@ -57,7 +57,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             MSTestSettingsProvider.Reset();
         }
 
-#region GetDeploymentItems tests.
+        #region GetDeploymentItems tests.
 
         [TestMethod]
         public void GetDeploymentItemsReturnsNullWhenNoDeploymentItems()
@@ -110,9 +110,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
         }
 
-#endregion
+        #endregion
 
-#region Cleanup tests
+        #region Cleanup tests
 
         [TestMethod]
         public void CleanupShouldNotDeleteDirectoriesIfRunDirectoiresIsNull()
@@ -168,9 +168,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             this.mockFileUtility.Verify(fu => fu.DeleteDirectories(testRunDirectories.RootDeploymentDirectory), Times.Once);
         }
 
-#endregion
+        #endregion
 
-#region GetDeploymentDirectory tests
+        #region GetDeploymentDirectory tests
 
         [TestMethod]
         public void GetDeploymentDirectoryShouldReturnNullIfDeploymentDirectoryIsNull()
@@ -195,9 +195,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             Assert.AreEqual(testRunDirectories.OutDirectory, testDeployment.GetDeploymentDirectory());
         }
 
-#endregion
+        #endregion
 
-#region Deploy tests
+        #region Deploy tests
 
         [TestMethod]
         public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseButHasDeploymentItems()
@@ -310,9 +310,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             Assert.IsNotNull(testDeployment.GetDeploymentDirectory());
         }
 
-#endregion
+        #endregion
 
-#region GetDeploymentInformation tests
+        #region GetDeploymentInformation tests
 
         [TestMethod]
         public void GetDeploymentInformationShouldReturnAppBaseDirectoryIfRunDirectoryIsNull()
@@ -482,9 +482,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             CollectionAssert.AreEqual(expectedProperties.ToList(), properties.ToList());
         }
 
-#endregion
+        #endregion
 
-#region private methods
+        #region private methods
 
         private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
         {
@@ -526,9 +526,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
             this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
             var mockAssemblyUtility = new Mock<AssemblyUtility>();
 #if !NETCOREAPP
-             mockAssemblyUtility.Setup(
-                au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
-                .Returns(new string[] { });
+            mockAssemblyUtility.Setup(
+               au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
+               .Returns(new string[] { });
             mockAssemblyUtility.Setup(
                 au => au.GetSatelliteAssemblies(It.IsAny<string>()))
                 .Returns(new List<string> { });
@@ -543,6 +543,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, this.mockFileUtility.Object),
                 this.mockFileUtility.Object);
         }
-#endregion
+        #endregion
     }
 }

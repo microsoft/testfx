@@ -402,7 +402,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         public void ClearDiagnosticMessages()
         {
-           this.threadSafeStringWriter.ToStringAndClear();
+            this.threadSafeStringWriter.ToStringAndClear();
         }
 
         public void SetDataRow(object dataRow)

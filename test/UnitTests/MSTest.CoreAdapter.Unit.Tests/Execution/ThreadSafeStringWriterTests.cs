@@ -33,9 +33,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                             var count = 10;
                             for (var i = 0; i < count; i++)
                             {
-                            // Choose WriteLine since it calls the entire sequence:
-                            // Write(string) -> Write(char[]) -> Write(char)
-                            stringWriter.WriteLine(x);
+                                // Choose WriteLine since it calls the entire sequence:
+                                // Write(string) -> Write(char[]) -> Write(char)
+                                stringWriter.WriteLine(x);
                             }
                         };
 
