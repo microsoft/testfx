@@ -357,13 +357,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             foreach (var dataSource in testDataSources)
             {
                 var data = dataSource.GetData(methodInfo);
-                var discoveredTests = new List<UnitTestElement>();
+                var discoveredTests = new Dictionary<string, UnitTestElement>();
+                var discoveredIndex = new Dictionary<string, int>();
                 var serializationFailed = false;
+                var index = 0;
 
                 foreach (var d in data)
                 {
                     var discoveredTest = test.Clone();
-                    discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d);
+                    discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+
+                    // if we have a duplicate test name don't expand the test, bail out.
+                    if (discoveredTests.ContainsKey(discoveredTest.DisplayName))
+                    {
+                        var firstSeen = discoveredIndex[discoveredTest.DisplayName];
+                        var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstSeen, index, discoveredTest.DisplayName);
+                        warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumarator: {warning}");
+
+                        serializationFailed = true;
+                        break;
+                    }
 
                     try
                     {
@@ -372,22 +386,27 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                     }
                     catch (SerializationException)
                     {
+                        var firstSeen = discoveredIndex[discoveredTest.DisplayName];
+                        var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
+                        warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumarator: {warning}");
+
                         serializationFailed = true;
                         break;
                     }
 
-                    discoveredTests.Add(discoveredTest);
+                    discoveredTests[discoveredTest.DisplayName] = discoveredTest;
+                    discoveredIndex[discoveredTest.DisplayName] = index++;
                 }
 
                 // Serialization failed for the type, bail out.
                 if (serializationFailed)
                 {
                     tests.Add(test);
-
                     break;
                 }
 
-                tests.AddRange(discoveredTests);
+                tests.AddRange(discoveredTests.Values);
             }
 
             return true;
