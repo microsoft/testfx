@@ -9,8 +9,8 @@
 
   <Import Project="$(RepoRoot)eng\Versions.props" />
 
-  <!-- 
-    Prevent NuGet from using cached packages 
+  <!--
+    Prevent NuGet from using cached packages
     Workaround for https://github.com/NuGet/Home/issues/3116
   -->
   <PropertyGroup>
@@ -20,15 +20,15 @@
   <!-- Properties requires by NuGet.targets to restore PackageReferences -->
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
-    <!-- Workaround changes from newer MSBuild requiring additional properties --> 
+    <!-- Workaround changes from newer MSBuild requiring additional properties -->
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">5</TargetFrameworkVersion>
     <TargetFrameworkIdentifier  Condition=" '$(TargetFrameworkIdentifier)' == '' ">.NETFramework</TargetFrameworkIdentifier>
-    <TargetFrameworkMoniker Condition=" '$(TargetFrameworkMoniker)' == '' ">.NETFramework,Version=v4.7.2</TargetFrameworkMoniker> 
+    <TargetFrameworkMoniker Condition=" '$(TargetFrameworkMoniker)' == '' ">.NETFramework,Version=v4.7.2</TargetFrameworkMoniker>
     <OutputPath>$(RepoRoot)artifacts\toolset\</OutputPath>
     <MSBuildProjectExtensionsPath>$(OutputPath)</MSBuildProjectExtensionsPath>
   </PropertyGroup>
 
-  <!-- 
+  <!--
     Configure NuGet Restore to use NuGet.config file in the repository root.
     We could drop a custom NuGet.config to the containing directory but it's simpler
     if we use the same config for all restore operations.
@@ -36,7 +36,7 @@
   <PropertyGroup>
     <RestoreConfigFile>$(RepoRoot)NuGet.config</RestoreConfigFile>
   </PropertyGroup>
-  
+
   <Import Project="$(_NuGetRestoreTargets)" />
   <Import Project="$(RepoRoot)eng\Tools.props" />
 </Project>

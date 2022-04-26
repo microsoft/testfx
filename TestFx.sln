@@ -77,6 +77,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Universal", "Universal", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{929A3EDE-893B-4801-82BA-01FD947291CB}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		Nuget.config = Nuget.config
 	EndProjectSection
 EndProject
@@ -147,7 +148,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BCF5
 	ProjectSection(SolutionItems) = preProject
 		scripts\Build.ps1 = scripts\Build.ps1
 		scripts\common.lib.ps1 = scripts\common.lib.ps1
-		scripts\SetBuildNumber.ps1 = scripts\SetBuildNumber.ps1
 		scripts\test.ps1 = scripts\test.ps1
 	EndProjectSection
 EndProject
@@ -230,12 +230,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop.Legacy", "Desktop.L
 	EndProjectSection
 EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		src\Adapter\PlatformServices.Shared\PlatformServices.Shared.projitems*{2177c273-ae07-43b3-b87a-443e47a23c5a}*SharedItemsImports = 13
-		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{23b9d9a2-4aee-47e6-97b5-060df21539fb}*SharedItemsImports = 5
-		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{272ca5e1-8e81-4825-9e47-86cce02f700d}*SharedItemsImports = 13
-		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{df131865-84ee-4540-8112-e88acebdea09}*SharedItemsImports = 4
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Code Analysis Debug|Any CPU = Code Analysis Debug|Any CPU
 		Code Analysis Debug|ARM = Code Analysis Debug|ARM
@@ -1456,5 +1450,11 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Adapter\PlatformServices.Shared\PlatformServices.Shared.projitems*{2177c273-ae07-43b3-b87a-443e47a23c5a}*SharedItemsImports = 13
+		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{23b9d9a2-4aee-47e6-97b5-060df21539fb}*SharedItemsImports = 5
+		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{272ca5e1-8e81-4825-9e47-86cce02f700d}*SharedItemsImports = 13
+		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{df131865-84ee-4540-8112-e88acebdea09}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

@@ -13,7 +13,7 @@ Param(
   [Parameter(Mandatory=$false)]
   [Alias("p")]
   [System.String] $Pattern = "UnitTests",
-  
+
   [Parameter(Mandatory=$false)]
   [Alias("pl")]
   [Switch] $Parallel = $false,
@@ -79,9 +79,9 @@ function Invoke-Test
     & dotnet --info
 
     $timer = Start-Timer
-    
+
     Write-Log "Run-Test: Started."
-    
+
     Write-Log "    Computing Test Containers."
     # Get all the test project folders. They should all be ending with ".Tests"
     $outDir = Join-Path $env:TF_OUT_DIR -ChildPath $TFT_Configuration
@@ -91,29 +91,29 @@ function Invoke-Test
     foreach($container in $testFolders)
     {
         $testContainer = Get-ChildItem $container\* -Recurse -Include $env:TF_UNITTEST_FILES_PATTERN, $env:TF_COMPONENTTEST_FILES_PATTERN, $env:TF_E2ETEST_FILES_PATTERN, "DiscoveryAndExecutionTests.dll"
-        
+
         $testContainerName = $testContainer.Name
         $testContainerPath = $testContainer.FullName
         $allContainers += ,"$testContainerName"
-        
+
         if($TFT_All)
         {
             if($env:TF_NetCoreContainers -Contains $testContainerName)
             {
-                $netCoreTestContainers += ,"$testContainerPath" 
+                $netCoreTestContainers += ,"$testContainerPath"
             }
             else
             {
                 $testContainers += ,"$testContainerPath"
             }
         }
-        else 
+        else
         {
             if($testContainerPath -match $TFT_Pattern)
             {
                 if($env:TF_NetCoreContainers -Contains $testContainerName)
                 {
-                    $netCoreTestContainers += ,"$testContainerPath" 
+                    $netCoreTestContainers += ,"$testContainerPath"
 
                 }
                 else
@@ -123,7 +123,7 @@ function Invoke-Test
             }
         }
     }
-                        
+
     if($testContainers.Count -gt 0 -Or $netCoreTestContainers.Count -gt 0)
     {
         $testContainersString = [system.String]::Join(",",$testContainers)
@@ -136,36 +136,36 @@ function Invoke-Test
         Write-Log "    None of the test containers matched the pattern $TFT_Pattern."
         Write-Log "    Test Containers available: $allContainersString."
     }
-    
+
     Write-Log "Run-Test: Complete. {$(Get-ElapsedTime($timer))}"
 }
 
 function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
-{	
+{
     $vstestPath = Get-VSTestPath
- 
+
     $additionalArguments = @('/Blame:CollectHangDump;TestTimeout=5min')
     if($TFT_Parallel)
     {
        $additionalArguments += "/parallel"
     }
-    
+
      if($testContainers.Count -gt 0)
      {
         if(!(Test-Path $vstestPath))
         {
             Write-Error "Unable to find vstest.console.exe at $vstestPath. Test aborted."
         }
-    
+
         Write-Verbose "$vstestPath $testContainers $additionalArguments /logger:trx"
         & $vstestPath $testContainers $additionalArguments /logger:trx
 
-        if ($lastExitCode -ne 0) 
+        if ($lastExitCode -ne 0)
         {
             throw "Tests failed."
         }
      }
-    
+
     if($netCoreTestContainers.Count -gt 0)
     {
         Try
@@ -179,7 +179,7 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
             Write-Error "Unable to find dotnet.exe. Test aborted."
         }
 
-        if ($lastExitCode -ne 0) 
+        if ($lastExitCode -ne 0)
         {
             throw "Tests failed."
         }

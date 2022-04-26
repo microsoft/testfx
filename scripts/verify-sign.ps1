@@ -59,9 +59,9 @@ function Test-Assembly ([string] $Path)
 function Test-Assemblies ([string] $Path)
 {
     foreach ($pattern in $TF_AssembliesPattern) {
-        Get-ChildItem -Recurse -Include $pattern $Path | Where-Object { (!$_.PSIsContainer) } | ForEach-Object { 
-            Test-Assembly $_.FullName 
-        } 
+        Get-ChildItem -Recurse -Include $pattern $Path | Where-Object { (!$_.PSIsContainer) } | ForEach-Object {
+            Test-Assembly $_.FullName
+        }
     }
 }
 
@@ -99,20 +99,20 @@ function Test-NugetPackages
 
     $nugetInstallPath = Locate-NuGet
     Write-Debug  "Using nuget.exe installed at $nugetInstallPath"
-    
+
     $artifactsConfigDirectory = Join-Path $TF_OUT_DIR $TF_Configuration
     $packagesDirectory = Join-Path $artifactsConfigDirectory "MSTestPackages"
 
     Get-ChildItem -Filter *.nupkg  $packagesDirectory | ForEach-Object {
         try {
             Write-ToCI "Verifing $($_.FullName)" -type "group"
-            & $nugetInstallPath verify -signature -CertificateFingerprint "3F9001EA83C560D712C24CF213C3D312CB3BFF51EE89435D3430BD06B5D0EECE;AA12DA22A49BCE7D5C1AE64CC1F3D892F150DA76140F210ABD2CBFFCA2C18A27;" $_.FullName    
+            & $nugetInstallPath verify -signature -CertificateFingerprint "3F9001EA83C560D712C24CF213C3D312CB3BFF51EE89435D3430BD06B5D0EECE;AA12DA22A49BCE7D5C1AE64CC1F3D892F150DA76140F210ABD2CBFFCA2C18A27;" $_.FullName
             Test-NugetPackage -path $_.FullName
         } finally {
             Write-ToCI -type "endgroup"
         }
     }
-    
+
     Write-Debug  "Test-NugetPackages: Complete"
 }
 

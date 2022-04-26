@@ -3,8 +3,8 @@
 
 # Sets variables which are used across the build tasks.
 
-param ( 
-  [Parameter(Mandatory)] 
+param (
+  [Parameter(Mandatory)]
   [string] $IsRtmBuild
 )
 
@@ -19,21 +19,21 @@ $TPB_BUILD_VERSION_SUFFIX = "0.0"
 $TFB_FIRST_RELEASE_DATE = [DateTime](Get-Date -Year 2016 -Month 05 -Day 01)
 $TPB_BRANCH = "LOCALBRANCH"
 try {
-    $TPB_BRANCH = $env:BUILD_SOURCEBRANCH -replace "^refs/heads/"  
-    if ([string]::IsNullOrWhiteSpace($TPB_BRANCH)) { 
+    $TPB_BRANCH = $env:BUILD_SOURCEBRANCH -replace "^refs/heads/"
+    if ([string]::IsNullOrWhiteSpace($TPB_BRANCH)) {
         $TPB_BRANCH = git -C "." rev-parse --abbrev-ref HEAD
     }
 }
 catch { }
 
 # Set TPB_BUILD_VERSION_SUFFIX
-if($TPB_BUILD_NUMBER -ne "LOCAL") 
+if($TPB_BUILD_NUMBER -ne "LOCAL")
 {
     $currentDate = [System.DateTime]::UTCNow
-    
+
     # The default build number would be of the format $(date:yyyymmdd)$(rev:-rr)
     $revisionNumber = $TPB_BUILD_NUMBER.Split("-")[1]
-    
+
     $monthDiff = ($currentDate.Month - $TFB_FIRST_RELEASE_DATE.Month) + 12*($currentDate.Year - $TFB_FIRST_RELEASE_DATE.Year)
     $TPB_BUILD_VERSION_SUFFIX = $monthDiff.ToString() + $currentDate.ToString("dd") + "." + $revisionNumber
 }

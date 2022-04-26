@@ -9,11 +9,11 @@
     <AdditionalFiles Include="$(RepoRoot)scripts\build\stylecop.json">
       <Link>stylecop.json</Link>
     </AdditionalFiles>
-    
+
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
-  </ItemGroup> 
+  </ItemGroup>
 
   <!-- Generate AssemblyInfo.cs -->
   <PropertyGroup>
