@@ -325,8 +325,8 @@ Error: {1}</value>
     <value>Test '{0}' execution has been aborted.</value>
   </data>
   <data name="CannotEnumerateDataSourceAttribute" xml:space="preserve">
-    <comment>{0}: TypeName with namespace, 
     <value>Exception occurred while enumerating DataSourceAttribute on "{0}.{1}": {2}</value>
+    <comment>{0}: TypeName with namespace,
 {1}: Method name,
 {2}: Exception details</comment>
   </data>
