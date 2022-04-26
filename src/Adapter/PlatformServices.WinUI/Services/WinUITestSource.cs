@@ -112,7 +112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         /// <param name="sources">The list of sources.</param>
         /// <returns>True if there is an appx source.</returns>
-        private string FindAppxSource(IEnumerable<string> sources)
+        private static string FindAppxSource(IEnumerable<string> sources)
         {
             foreach (string source in sources)
             {

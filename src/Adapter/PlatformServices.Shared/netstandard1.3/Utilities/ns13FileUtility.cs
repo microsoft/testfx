@@ -21,6 +21,31 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             assemblyUtility = new AssemblyUtility();
         }
 
+        /// <summary>
+        /// Replaces the invalid file/path characters from the parameter file name with '_'
+        /// </summary>
+        /// <param name="fileName"> The file Name. </param>
+        /// <returns> The fileName devoid of any invalid characters. </returns>
+        public static string ReplaceInvalidFileNameCharacters(string fileName)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
+
+            return Path.GetInvalidFileNameChars().Aggregate(fileName, (current, ch) => current.Replace(ch, '_'));
+        }
+
+        public static string TryConvertPathToRelative(string path, string rootDir)
+        {
+            Debug.Assert(!string.IsNullOrEmpty(path), "path should not be null or empty.");
+            Debug.Assert(!string.IsNullOrEmpty(rootDir), "rootDir should not be null or empty.");
+
+            if (Path.IsPathRooted(path) && path.StartsWith(rootDir, StringComparison.OrdinalIgnoreCase))
+            {
+                return path.Substring(rootDir.Length).TrimStart(Path.DirectorySeparatorChar);
+            }
+
+            return path;
+        }
+
         public virtual void CreateDirectoryIfNotExists(string directory)
         {
             Debug.Assert(!string.IsNullOrEmpty(directory), "directory");
@@ -29,18 +54,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             {
                 Directory.CreateDirectory(directory);    // Creates subdir chain if necessary.
             }
-        }
-
-        /// <summary>
-        /// Replaces the invalid file/path characters from the parameter file name with '_'
-        /// </summary>
-        /// <param name="fileName"> The file Name. </param>
-        /// <returns> The fileName devoid of any invalid characters. </returns>
-        public string ReplaceInvalidFileNameCharacters(string fileName)
-        {
-            Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
-
-            return Path.GetInvalidFileNameChars().Aggregate(fileName, (current, ch) => current.Replace(ch, '_'));
         }
 
         /// <summary>
@@ -229,19 +242,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             return fileContents;
         }
 
-        public string TryConvertPathToRelative(string path, string rootDir)
-        {
-            Debug.Assert(!string.IsNullOrEmpty(path), "path should not be null or empty.");
-            Debug.Assert(!string.IsNullOrEmpty(rootDir), "rootDir should not be null or empty.");
-
-            if (Path.IsPathRooted(path) && path.StartsWith(rootDir, StringComparison.OrdinalIgnoreCase))
-            {
-                return path.Substring(rootDir.Length).TrimStart(Path.DirectorySeparatorChar);
-            }
-
-            return path;
-        }
-
         /// <summary>
         /// The function goes among the subdirectories of the specified one and clears all of
         /// them.
@@ -294,7 +294,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <param name="path">path to symbols file.</param>
         /// <returns>Pdb file name or null if non-existent.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        private string GetSymbolsFileName(string path)
+        private static string GetSymbolsFileName(string path)
         {
             if (string.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
             {

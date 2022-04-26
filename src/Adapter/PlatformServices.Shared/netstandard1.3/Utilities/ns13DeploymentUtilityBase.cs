@@ -45,6 +45,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
         protected AssemblyUtility AssemblyUtility { get; set; }
 
+        /// <summary>
+        /// Get the parent test results directory where deployment will be done.
+        /// </summary>
+        /// <param name="runContext">The run context.</param>
+        /// <returns>The test results directory.</returns>
+        public static string GetTestResultsDirectory(IRunContext runContext)
+        {
+            var resultsDirectory = (!string.IsNullOrEmpty(runContext?.TestRunDirectory)) ?
+                runContext.TestRunDirectory : null;
+
+            if (string.IsNullOrEmpty(resultsDirectory))
+            {
+                resultsDirectory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), TestRunDirectories.DefaultDeploymentRootDirectory));
+            }
+
+            return resultsDirectory;
+        }
+
         public bool Deploy(IEnumerable<TestCase> tests, string source, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, TestRunDirectories runDirectories)
         {
             IList<DeploymentItem> deploymentItems = DeploymentItemUtility.GetDeploymentItems(tests);
@@ -85,24 +103,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         public abstract void AddDeploymentItemsBasedOnMsTestSetting(string testSource, IList<DeploymentItem> deploymentItems, List<string> warnings);
 
         /// <summary>
-        /// Get the parent test results directory where deployment will be done.
-        /// </summary>
-        /// <param name="runContext">The run context.</param>
-        /// <returns>The test results directory.</returns>
-        public string GetTestResultsDirectory(IRunContext runContext)
-        {
-            var resultsDirectory = (!string.IsNullOrEmpty(runContext?.TestRunDirectory)) ?
-                runContext.TestRunDirectory : null;
-
-            if (string.IsNullOrEmpty(resultsDirectory))
-            {
-                resultsDirectory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), TestRunDirectories.DefaultDeploymentRootDirectory));
-            }
-
-            return resultsDirectory;
-        }
-
-        /// <summary>
         /// Get root deployment directory
         /// </summary>
         /// <param name="baseDirectory">The base directory.</param>
@@ -129,6 +129,69 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
 
             return configFile;
+        }
+
+        protected static string GetFullPathToDeploymentItemSource(string deploymentItemSourcePath, string testSource)
+        {
+            if (Path.IsPathRooted(deploymentItemSourcePath))
+            {
+                return deploymentItemSourcePath;
+            }
+
+            return Path.Combine(Path.GetDirectoryName(testSource), deploymentItemSourcePath);
+        }
+
+        /// <summary>
+        /// Validate the output directory for the parameter deployment item.
+        /// </summary>
+        /// <param name="deploymentItem">The deployment item.</param>
+        /// <param name="deploymentDirectory">The deployment directory.</param>
+        /// <param name="warnings">Warnings.</param>
+        /// <returns>True if valid.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        protected static bool IsOutputDirectoryValid(DeploymentItem deploymentItem, string deploymentDirectory, IList<string> warnings)
+        {
+            Debug.Assert(deploymentItem != null, "deploymentItem should not be null.");
+            Debug.Assert(!string.IsNullOrEmpty(deploymentDirectory), "deploymentDirectory should not be null or empty.");
+            Debug.Assert(warnings != null, "warnings should not be null.");
+
+            // Check that item.output dir does not go outside deployment Out dir, otherwise you can erase any file!
+            string outputDir = deploymentDirectory;
+            try
+            {
+                outputDir = Path.GetFullPath(Path.Combine(deploymentDirectory, deploymentItem.RelativeOutputDirectory));
+
+                // convert the short path to full length path (like joe~1.dom to joe.domain) and the comparison
+                // startsWith in the next loop will work for the matching paths.
+                deploymentDirectory = Path.GetFullPath(deploymentDirectory);
+            }
+            catch (Exception e)
+            {
+                string warning = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.DeploymentErrorFailedToAccesOutputDirectory,
+                    deploymentItem.SourcePath,
+                    outputDir,
+                    e.GetType(),
+                    e.GetExceptionMessage());
+
+                warnings.Add(warning);
+                return false;
+            }
+
+            if (!outputDir.StartsWith(deploymentDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                string warning = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.DeploymentErrorBadDeploymentItem,
+                    deploymentItem.SourcePath,
+                    deploymentItem.RelativeOutputDirectory);
+                warnings.Add(warning);
+
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -321,69 +384,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             isDirectory = false;
             return null;
-        }
-
-        protected string GetFullPathToDeploymentItemSource(string deploymentItemSourcePath, string testSource)
-        {
-            if (Path.IsPathRooted(deploymentItemSourcePath))
-            {
-                return deploymentItemSourcePath;
-            }
-
-            return Path.Combine(Path.GetDirectoryName(testSource), deploymentItemSourcePath);
-        }
-
-        /// <summary>
-        /// Validate the output directory for the parameter deployment item.
-        /// </summary>
-        /// <param name="deploymentItem">The deployment item.</param>
-        /// <param name="deploymentDirectory">The deployment directory.</param>
-        /// <param name="warnings">Warnings.</param>
-        /// <returns>True if valid.</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        protected bool IsOutputDirectoryValid(DeploymentItem deploymentItem, string deploymentDirectory, IList<string> warnings)
-        {
-            Debug.Assert(deploymentItem != null, "deploymentItem should not be null.");
-            Debug.Assert(!string.IsNullOrEmpty(deploymentDirectory), "deploymentDirectory should not be null or empty.");
-            Debug.Assert(warnings != null, "warnings should not be null.");
-
-            // Check that item.output dir does not go outside deployment Out dir, otherwise you can erase any file!
-            string outputDir = deploymentDirectory;
-            try
-            {
-                outputDir = Path.GetFullPath(Path.Combine(deploymentDirectory, deploymentItem.RelativeOutputDirectory));
-
-                // convert the short path to full length path (like joe~1.dom to joe.domain) and the comparison
-                // startsWith in the next loop will work for the matching paths.
-                deploymentDirectory = Path.GetFullPath(deploymentDirectory);
-            }
-            catch (Exception e)
-            {
-                string warning = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.DeploymentErrorFailedToAccesOutputDirectory,
-                    deploymentItem.SourcePath,
-                    outputDir,
-                    e.GetType(),
-                    e.GetExceptionMessage());
-
-                warnings.Add(warning);
-                return false;
-            }
-
-            if (!outputDir.StartsWith(deploymentDirectory, StringComparison.OrdinalIgnoreCase))
-            {
-                string warning = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.DeploymentErrorBadDeploymentItem,
-                    deploymentItem.SourcePath,
-                    deploymentItem.RelativeOutputDirectory);
-                warnings.Add(warning);
-
-                return false;
-            }
-
-            return true;
         }
 
         protected string AddTestSourceConfigFileIfExists(string testSource, IList<DeploymentItem> deploymentItems)

@@ -3,6 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
 
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -37,6 +38,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// Returning as this feature is not supported in ASP .net and UWP
         /// </summary>
         /// <param name="traceListener">The trace listener instance.</param>
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Keep as instance member.")]
         public void Close(ITraceListener traceListener)
         {
             return;

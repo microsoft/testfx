@@ -3,6 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 {
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
@@ -28,6 +29,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Returning as this feature is not supported in ASP .net and UWP
         /// </summary>
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Keep as instance member.")]
         public void Close()
         {
             return;

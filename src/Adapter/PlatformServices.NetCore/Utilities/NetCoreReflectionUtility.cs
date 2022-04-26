@@ -12,23 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     /// </summary>
     internal class ReflectionUtility
     {
-        internal virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
-        {
-            return GetCustomAttributes(attributeProvider, type, true);
-        }
-
-        /// <summary>
-        /// Gets all the custom attributes adorned on a member.
-        /// </summary>
-        /// <param name="memberInfo"> The member. </param>
-        /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
-        /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-        internal object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
-        {
-            return GetCustomAttributes(memberInfo, type: null, inherit: inherit);
-        }
-
-        internal object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
+        internal static object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
         {
             if (memberInfo == null)
             {
@@ -43,6 +27,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             {
                 return memberInfo.GetCustomAttributes(type, inherit).ToArray();
             }
+        }
+
+        /// <summary>
+        /// Gets all the custom attributes adorned on a member.
+        /// </summary>
+        /// <param name="memberInfo"> The member. </param>
+        /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
+        /// <returns> The list of attributes on the member. Empty list if none found. </returns>
+        internal static object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
+        {
+            return GetCustomAttributes(memberInfo, type: null, inherit: inherit);
+        }
+
+        internal virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
+        {
+            return GetCustomAttributes(attributeProvider, type, true);
         }
     }
 }

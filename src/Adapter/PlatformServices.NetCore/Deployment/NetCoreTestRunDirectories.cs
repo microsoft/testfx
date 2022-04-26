@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 {
     using System;
     using System.Diagnostics;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
 
     /// <summary>
@@ -49,6 +50,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// <summary>
         /// Gets the Out directory
         /// </summary>
+        [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Keep as instance member.")]
         public string OutDirectory
         {
             get
