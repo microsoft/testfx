@@ -283,65 +283,65 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             return resolutionPaths;
         }
 
-    internal virtual string GetTargetFrameworkVersionString(string sourceFileName)
-    {
-        return AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
-    }
-
-    private string GetConfigFileForTestSource(string sourceFileName)
-    {
-        return new DeploymentUtility().GetConfigFile(sourceFileName);
-    }
-
-    /// <summary>
-    /// Sets context required for running tests.
-    /// </summary>
-    /// <param name="source">
-    /// source parameter used for setting context
-    /// </param>
-    private void SetContext(string source)
-    {
-        if (string.IsNullOrEmpty(source))
+        internal virtual string GetTargetFrameworkVersionString(string sourceFileName)
         {
-            return;
+            return AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
         }
 
-        Exception setWorkingDirectoryException = null;
-        this.currentDirectory = Environment.CurrentDirectory;
-
-        try
+        private string GetConfigFileForTestSource(string sourceFileName)
         {
-            Environment.CurrentDirectory = Path.GetDirectoryName(source);
-            EqtTrace.Info("MSTestExecutor: Changed the working directory to {0}", Environment.CurrentDirectory);
-        }
-        catch (IOException ex)
-        {
-            setWorkingDirectoryException = ex;
-        }
-        catch (System.Security.SecurityException ex)
-        {
-            setWorkingDirectoryException = ex;
+            return new DeploymentUtility().GetConfigFile(sourceFileName);
         }
 
-        if (setWorkingDirectoryException != null)
+        /// <summary>
+        /// Sets context required for running tests.
+        /// </summary>
+        /// <param name="source">
+        /// source parameter used for setting context
+        /// </param>
+        private void SetContext(string source)
         {
-            EqtTrace.Error("MSTestExecutor.SetWorkingDirectory: Failed to set the working directory to '{0}'. {1}", Path.GetDirectoryName(source), setWorkingDirectoryException);
-        }
-    }
+            if (string.IsNullOrEmpty(source))
+            {
+                return;
+            }
 
-    /// <summary>
-    /// Resets the context as it was before calling SetContext()
-    /// </summary>
-    private void ResetContext()
-    {
-        if (!string.IsNullOrEmpty(this.currentDirectory))
+            Exception setWorkingDirectoryException = null;
+            this.currentDirectory = Environment.CurrentDirectory;
+
+            try
+            {
+                Environment.CurrentDirectory = Path.GetDirectoryName(source);
+                EqtTrace.Info("MSTestExecutor: Changed the working directory to {0}", Environment.CurrentDirectory);
+            }
+            catch (IOException ex)
+            {
+                setWorkingDirectoryException = ex;
+            }
+            catch (System.Security.SecurityException ex)
+            {
+                setWorkingDirectoryException = ex;
+            }
+
+            if (setWorkingDirectoryException != null)
+            {
+                EqtTrace.Error("MSTestExecutor.SetWorkingDirectory: Failed to set the working directory to '{0}'. {1}", Path.GetDirectoryName(source), setWorkingDirectoryException);
+            }
+        }
+
+        /// <summary>
+        /// Resets the context as it was before calling SetContext()
+        /// </summary>
+        private void ResetContext()
         {
-            Environment.CurrentDirectory = this.currentDirectory;
+            if (!string.IsNullOrEmpty(this.currentDirectory))
+            {
+                Environment.CurrentDirectory = this.currentDirectory;
+            }
         }
-    }
 
-    private void AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(AssemblyResolver assemblyResolver, string baseDirectory)
-    {
+        private void AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(AssemblyResolver assemblyResolver, string baseDirectory)
+        {
             // Check if user specified any adapter settings
             MSTestAdapterSettings adapterSettings = MSTestSettingsProvider.Settings;
 
@@ -364,7 +364,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 }
             }
         }
-}
+    }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 }

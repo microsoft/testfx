@@ -44,9 +44,6 @@ namespace Microsoft.MSTestV2.CLIAutomation
             return frameworkHandle.GetFlattenedTestResults().ToList().AsReadOnly();
         }
 
-
-
-
         #region Helper classes
         private MSTestSettings GetSettings(bool captureDebugTraceValue)
         {

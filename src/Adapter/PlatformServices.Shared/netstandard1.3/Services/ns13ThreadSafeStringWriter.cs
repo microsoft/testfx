@@ -120,7 +120,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 ThreadSafeStringWriter.State?.Value?.Remove(this.outputType);
                 try
                 {
-                   base.Dispose(disposing);
+                    base.Dispose(disposing);
                 }
                 catch (ObjectDisposedException)
                 {

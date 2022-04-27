@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resource {
@@ -71,7 +71,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception occurred while enumarating DataSourceAttribute on &quot;{0}.{1}&quot;: {2}.
+        ///   Looks up a localized string similar to Exception occurred while enumerating DataSourceAttribute on &quot;{0}.{1}&quot;: {2}.
         /// </summary>
         internal static string CannotEnumerateDataSourceAttribute {
             get {
@@ -89,11 +89,38 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Exception occurred while enumarating IDataSource attribute on &quot;{0}.{1}&quot;: {2}.
+        ///   Looks up a localized string similar to Exception occurred while enumerating IDataSource attribute on &quot;{0}.{1}&quot;: {2}.
         /// </summary>
         internal static string CannotEnumerateIDataSourceAttribute {
             get {
                 return ResourceManager.GetString("CannotEnumerateIDataSourceAttribute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exception occurred while expanding IDataSource rows from attribute on &quot;{0}.{1}&quot;: {2}.
+        /// </summary>
+        internal static string CannotExpandIDataSourceAttribute {
+            get {
+                return ResourceManager.GetString("CannotExpandIDataSourceAttribute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Data on index {0} for &quot;{1}&quot; cannot be serialized. All data provided through &quot;IDataSource&quot; should be serializable. If you need to test non-serializable data sources, please make sure you add &quot;TestDataSourceDiscovery&quot; attribute on your test assembly and set the discovery option to &quot;DuringExecution&quot;..
+        /// </summary>
+        internal static string CannotExpandIDataSourceAttribute_CannotSerialize {
+            get {
+                return ResourceManager.GetString("CannotExpandIDataSourceAttribute_CannotSerialize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Display name &quot;{2}&quot; on indexes {0} and {1} are duplicate. Display names should be unique..
+        /// </summary>
+        internal static string CannotExpandIDataSourceAttribute_DuplicateDisplayName {
+            get {
+                return ResourceManager.GetString("CannotExpandIDataSourceAttribute_DuplicateDisplayName", resourceCulture);
             }
         }
         
@@ -287,7 +314,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest pacakges newer then version 2.2.8..
+        ///   Looks up a localized string similar to An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8..
         /// </summary>
         internal static string OlderTFMVersionFoundClassCleanup {
             get {

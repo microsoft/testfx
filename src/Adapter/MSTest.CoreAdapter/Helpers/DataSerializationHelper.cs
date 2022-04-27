@@ -24,7 +24,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         /// The result can be deserialized using <see cref="Deserialize(string[])"/> method.
         /// </summary>
         /// <param name="data">Data array to serialize.</param>
-        /// <returns>Serialzed array.</returns>
+        /// <returns>Serialized array.</returns>
         public static string[] Serialize(object[] data)
         {
             if (data == null)
@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         }
 
         /// <summary>
-        /// Deserialzes the data serialzed by <see cref="Serialize(object[])" /> method.
+        /// Deserializes the data serialized by <see cref="Serialize(object[])" /> method.
         /// </summary>
         /// <param name="serializedData">Serialized data array to deserialize.</param>
         /// <returns>Deserialized array.</returns>

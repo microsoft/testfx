@@ -75,7 +75,7 @@ namespace MSTestAdapter.Smoke.E2ETests
 
             this.InvokeVsTestForExecution(new string[] { DoNotParallelizeTestAssembly }, RunSetting);
 
-            // DoNotParallelize set for Assemblly
+            // DoNotParallelize set for Assembly
             // There are a total of 2 classes - C1 (3 tests), C2 (3 tests) with a sleep of TestMethodWaitTimeInMS.
             // So this should not exceed 5 * TestMethodWaitTimeInMS seconds + 2.5 seconds overhead.
             this.ValidateTestRunTime((5 * TestMethodWaitTimeInMS) + OverheadTimeInMS);

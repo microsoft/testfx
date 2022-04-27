@@ -5,7 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 {
     using System;
 
-    #pragma warning disable SA1649 // File name must match first type name
+#pragma warning disable SA1649 // File name must match first type name
 
     internal class Validate
     {

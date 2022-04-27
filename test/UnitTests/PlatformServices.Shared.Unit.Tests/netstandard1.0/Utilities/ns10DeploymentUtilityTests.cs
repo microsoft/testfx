@@ -62,7 +62,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
             this.mocktestExecutionRecorder = new Mock<ITestExecutionRecorder>();
         }
 
-#region CreateDeploymentDirectories tests
+        #region CreateDeploymentDirectories tests
 
         [TestMethod]
         public void CreateDeploymentDirectoriesShouldCreateDeploymentDirectoryFromRunContext()
@@ -117,6 +117,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
             this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
         }
 
-#endregion
+        #endregion
     }
 }

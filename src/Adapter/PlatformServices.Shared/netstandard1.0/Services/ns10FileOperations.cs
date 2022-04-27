@@ -36,11 +36,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>Path to the .DLL of the assembly.</returns>
         public string GetAssemblyPath(Assembly assembly)
         {
-            #if NETSTANDARD1_5
-                return assembly.Location;
-            #else
+#if NETSTANDARD1_5
+            return assembly.Location;
+#else
                 return null;
-            #endif
+#endif
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Get's the navigation data for a navigation session.
+        /// Gets the navigation data for a navigation session.
         /// </summary>
         /// <param name="navigationSession"> The navigation session. </param>
         /// <param name="className"> The class name. </param>
@@ -81,7 +81,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         }
 
         /// <summary>
-        /// Dispose's the navigation session instance.
+        /// Disposes the navigation session instance.
         /// </summary>
         /// <param name="navigationSession"> The navigation session. </param>
         public void DisposeNavigationSession(object navigationSession)

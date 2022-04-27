@@ -67,7 +67,7 @@
       <EmbeddedResource Include="$(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx" />
     </ItemGroup>
   </Target>
-  
+
   <!-- Localization for documentation files. -->
   <Target Name="CopyLocalizedXmls" BeforeTargets="BeforeBuild" Condition=" '$(LocDocumentationSubPath)' != ''">
     <PropertyGroup>
@@ -82,14 +82,14 @@
 
   <Target Name="CopyStaticResourcesToOutput">
     <!-- Until we have a process of converting to/from loc friendly file formats like resx files, the already localized vsixlangpacks are checked in and packaged in the vsix.-->
-    <!-- If we have new vsix projects before we have a process setup, they would not contain localized descriptive infromation until the above process is setup.-->
-    <Copy SourceFiles="$(ProjectDir)Resources" 
+    <!-- If we have new vsix projects before we have a process setup, they would not contain localized descriptive information until the above process is setup.-->
+    <Copy SourceFiles="$(ProjectDir)Resources"
           DestinationFolder="$(OutDir)localize"
           SkipUnchangedFiles="True" OverwriteReadOnlyFiles="True" Retries="3" RetryDelayMilliseconds="500"
           UseHardlinksIfPossible="False" UseSymboliclinksIfPossible="False" ErrorIfLinkFails="True"
 
           Condition="Exists('$(ProjectDir)Resources')">
-      
+
       <Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
     </Copy>
   </Target>

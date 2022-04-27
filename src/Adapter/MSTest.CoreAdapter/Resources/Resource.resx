@@ -325,8 +325,8 @@ Error: {1}</value>
     <value>Test '{0}' execution has been aborted.</value>
   </data>
   <data name="CannotEnumerateDataSourceAttribute" xml:space="preserve">
-    <value>Exception occurred while enumarating DataSourceAttribute on "{0}.{1}": {2}</value>
-    <comment>{0}: TypeName with namespace, 
+    <value>Exception occurred while enumerating DataSourceAttribute on "{0}.{1}": {2}</value>
+    <comment>{0}: TypeName with namespace,
 {1}: Method name,
 {2}: Exception details</comment>
   </data>
@@ -337,19 +337,19 @@ Error: {1}</value>
 {2}: Number of attributed defined.</comment>
   </data>
   <data name="CannotEnumerateIDataSourceAttribute" xml:space="preserve">
-    <value>Exception occurred while enumarating IDataSource attribute on "{0}.{1}": {2}</value>
-    <comment>{0}: TypeName with namespace, 
+    <value>Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</value>
+    <comment>{0}: TypeName with namespace,
 {1}: Method name,
 {2}: Exception details</comment>
   </data>
   <data name="ExceptionOccuredWhileGettingTheExceptionDescription" xml:space="preserve">
     <value>"{0}": (Failed to get exception description due to an exception of type "{1}".</value>
-    <comment>{0}: Type of the original exception that we're trying to get the desciption of.
+    <comment>{0}: Type of the original exception that we're trying to get the description of.
 {1}: Thrown exception</comment>
   </data>
   <data name="ExceptionsThrown" xml:space="preserve">
     <value>Exceptions thrown:</value>
-    <comment>This is usually preceeds by TestAssembly_AssemblyDiscoveryFailure message, and precceded by list of exceptions thrown in a test discovery session.</comment>
+    <comment>This is usually precedes by TestAssembly_AssemblyDiscoveryFailure message, and preceded by list of exceptions thrown in a test discovery session.</comment>
   </data>
   <data name="FailedFetchAttributeCache" xml:space="preserve">
     <value>Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.</value>
@@ -366,6 +366,22 @@ Error: {1}</value>
     <value>The called code threw an exception that was caught, but the exception value was null</value>
   </data>
   <data name="OlderTFMVersionFoundClassCleanup" xml:space="preserve">
-    <value>An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest pacakges newer then version 2.2.8.</value>
+    <value>An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8.</value>
+  </data>
+  <data name="CannotExpandIDataSourceAttribute" xml:space="preserve">
+    <value>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</value>
+    <comment>{0}: TypeName with namespace, 
+{1}: Method name,
+{2}: CannotExpandIDataSourceAttribute_DuplicateDisplayName or CannotExpandIDataSourceAttribute_CannotSerialize</comment>
+  </data>
+  <data name="CannotExpandIDataSourceAttribute_DuplicateDisplayName" xml:space="preserve">
+    <value>Display name "{2}" on indexes {0} and {1} are duplicate. Display names should be unique.</value>
+    <comment>{0}, {1}: Zero based index if an element inside of an array
+{2}: Test display name.</comment>
+  </data>
+  <data name="CannotExpandIDataSourceAttribute_CannotSerialize" xml:space="preserve">
+    <value>Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</value>
+    <comment>{0}: Zero based index if an element inside of an array,
+{1}: Test name</comment>
   </data>
 </root>

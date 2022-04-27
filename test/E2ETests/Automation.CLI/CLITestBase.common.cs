@@ -17,7 +17,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         private const string PackagesFolder = "packages";
 
         // This value is automatically updated by "build.ps1" script.
-        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform\17.1.0-release-20220113-05";
+        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform\17.1.0";
         private const string VstestConsoleRelativePath = @"tools\net451\Common7\IDE\Extensions\TestPlatform\vstest.console.exe";
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         }
 
         /// <summary>
-        /// Gets the RunSettingXml having testadapterpath filled in specified by arguement.
+        /// Gets the RunSettingXml having testadapterpath filled in specified by argument.
         /// Inserts testAdapterPath in existing runSetting if not present already,
         /// or generates new runSettings with testAdapterPath if runSettings is Empty.
         /// </summary>

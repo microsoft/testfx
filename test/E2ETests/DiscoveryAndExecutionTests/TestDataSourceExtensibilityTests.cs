@@ -104,5 +104,20 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
                 "CustomTestMethod2 (C)"
             );
         }
+
+        [TestMethod]
+        public void BailOutWhenDuplicateTestDisplayName()
+        {
+            // Arrange
+            var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+
+            // Act
+            var testCases = DiscoverTests(assemblyPath, "Name~DynamicDataDiscoveryBailOutTestMethod1");
+            var testResults = RunTests(assemblyPath, testCases);
+
+            // Assert
+            Assert.That.TestsDiscovered(testCases, "FxExtensibilityTestProject.DynamicDataDiscoveryBailOutTests.DynamicDataDiscoveryBailOutTestMethod1");
+            Assert.That.PassedTestCount(testResults, 3);
+        }
     }
 }
