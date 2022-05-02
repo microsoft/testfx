@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <Import Project="scripts\build\TestFx.props" />
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+  <!-- <Import Project="eng/Versions.props" /> -->
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.4; netstandard2.0; net462; net5.0</TargetFrameworks>
+    <Copyright>$(CopyrightMicrosoft)</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <LangVersion>Latest</LangVersion>
+
+    <IsShipping>false</IsShipping>
+  </PropertyGroup>
+
+  <!-- Don't let it restore lower versions of this package, which can come transitively from NetStandard package restores (CSProj only) -->
+  <ItemGroup Condition=" '$(MSBuildProjectExtension)' == '.csproj' " >
+    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="$(SystemSecurityCryptographyX509CertificatesVersion)" />
+  </ItemGroup>
 </Project>

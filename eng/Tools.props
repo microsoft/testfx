@@ -1,11 +1,11 @@
 <Project>
   <ItemGroup>
-    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  />
+    <!-- <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  />
     <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" />
     <PackageReference Include="Microsoft.Internal.Dia.Interop" Version="$(MicrosoftInternalDiaInteropVersion)" />
     <PackageReference Include="MSTest.Internal.TestFx.Localized.Documentation" Version="$(MsTestInternalTestFxLocalizedDocumentationVersion)" />
     <PackageReference Include="vswhere" Version="$(VsWhereVersion)" />
     <PackageReference Include="fmdev.xlftool" Version="$(FmDevXlfToolVersion)" />
-    <PackageReference Include="Microsoft.VisualStudio.QualityTools" Version="$(VisualStudioQualityToolsUnitTestFrameworkVersion)" developmentDependency="true" />
+    <PackageReference Include="Microsoft.VisualStudio.QualityTools" Version="$(VisualStudioQualityToolsUnitTestFrameworkVersion)" developmentDependency="true" /> -->
   </ItemGroup>
 </Project>

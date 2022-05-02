@@ -47,3 +47,6 @@ indent_size = 4
 tab_width = 4
 insert_final_newline = true
 trim_trailing_whitespace = true
+
+dotnet_diagnostic.IDE0017.severity = none # IDE0017: Simplify object initialization
+dotnet_diagnostic.IDE0180.severity = none # IDE0180: Use tuple to swap values

@@ -1,0 +1,24 @@
+{
+    "Projects":  [
+                     {
+                         "LocItems":  [
+                                          {
+                                              "SourceFile":  ".\\src\\PlatformServices\\Resources\\xlf\\Resource.xlf",
+                                              "CopyOption":  "LangIDOnName",
+                                              "OutputPath":  ".\\src\\PlatformServices\\Resources\\xlf\\"
+                                          },
+                                          {
+                                              "SourceFile":  ".\\src\\TestAdapter\\Resources\\xlf\\Resource.xlf",
+                                              "CopyOption":  "LangIDOnName",
+                                              "OutputPath":  ".\\src\\TestAdapter\\Resources\\xlf\\"
+                                          },
+                                          {
+                                              "SourceFile":  ".\\src\\TestFramework\\Resources\\xlf\\FrameworkMessages.xlf",
+                                              "CopyOption":  "LangIDOnName",
+                                              "OutputPath":  ".\\src\\TestFramework\\Resources\\xlf\\"
+                                          }
+                                      ],
+                         "LanguageSet":  "VS_Main_Languages"
+                     }
+                 ]
+}

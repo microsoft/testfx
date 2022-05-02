@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+      <PackageId>MSTest.TestFramework</PackageId>
+      <PackageLicenseExpression>MIT</PackageLicenseExpression>
+      <IsPackable>true</IsPackable>
+      <IsShipping>true</IsShipping>
+      <!-- Generate package during Build, rather than Pack, so that it can be used during Test. -->
+      <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+      <Description>
+      This is MSTest V3, the next version of Microsoft's Test Framework.
+
+      Supported platforms:
+      - .NET 4.6.2+
+      - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017)
+      - .NET 5.0 (Visual Studio 2019)
+      - .NET 5.0 Windows.18362+ (WinUI Desktop Apps) (Visual Studio 2019)
+      - ASP.NET Core 1.0+ (Visual Studio 2017)
+      </Description>
+      <PackageTags>MSTest TestFramework TestAdapter VisualStudio UnitTest MSTestV3 Microsoft</PackageTags>
+      <DevelopmentDependency>true</DevelopmentDependency>
+      <PackageType>MSBuildSdk</PackageType>
+
+      <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+      <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\FrameworkMessages.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FrameworkMessages.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="Resources\FrameworkMessages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FrameworkMessages.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</CustomToolNamespace>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="$(SystemConfigurationConfigurationManagerVersion)" Condition="'$(TargetFramework)' != 'netstandard1.4'" />
+  </ItemGroup>
+</Project>

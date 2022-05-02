@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsShipping>true</IsShipping>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.csproj" PrivateAssets="all" Pack="True" />
+    <ProjectReference Include="$(RepoRoot)src\PlatformServices.Interface\PlatformServices.Interface.csproj" PrivateAssets="all" Pack="True" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="System.Data.OleDb" Version="$(SystemDataOleDbVersion)" Condition=" '$(TargetFramework)' != 'netstandard1.4' " />
+    <PackageReference Include="System.Data.Odbc" Version="$(SystemDataOdbcVersion)" Condition=" '$(TargetFramework)' != 'netstandard1.4' " />
+    <PackageReference Include="System.Data.Common" Version="$(SystemDataCommonVersion)" />
+    <PackageReference Include="System.Data.SqlClient" Version="$(SystemDataSqlClientVersion)" />
+    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="$(SystemDiagnosticsTextWriterTraceListenerVersion)" Condition=" '$(TargetFramework)' == 'netstandard1.4' " />
+    <PackageReference Include="System.Runtime.Loader" Version="$(SystemRuntimeVersion)" Condition=" '$(TargetFramework)' != 'netstandard1.4' " />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\Resource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
+
+    <EmbeddedResource Update="Resources\Resource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+      <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</CustomToolNamespace>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

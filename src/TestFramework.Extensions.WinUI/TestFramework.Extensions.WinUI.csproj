@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net5.0-windows10.0.18362.0</TargetFrameworks>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.WinUI</AssemblyName>
+    <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
+
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>MSTest.TestFramework.Extensions.WinUI</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IsPackable>true</IsPackable>
+    <IsShipping>true</IsShipping>
+
+    <!-- Generate package during Build, rather than Pack, so that it can be used during Test. -->
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+
+    <Description>WinUI extension for MSTest.TestFramework package. This package enables UI testing on packaged and un-packaged apps.</Description>
+    <PackageTags>MSTest TestFramework TestAdapter VisualStudio UnitTest WinUI MSTestV3 Microsoft</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <PackageType>MSBuildSdk</PackageType>
+
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.csproj" PrivateAssets="all" Pack="True" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWindowsAppSDKVersion)" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+
+  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+    <ItemGroup>
+      <_ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))"/>
+      <BuildOutputInPackage Include="@(_ReferenceCopyLocalPaths)" TargetPath="%(_ReferenceCopyLocalPaths.DestinationSubDirectory)"/>
+    </ItemGroup>
+  </Target>
+
+</Project>
