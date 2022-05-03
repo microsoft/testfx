@@ -60,7 +60,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
         }
 
-#if !NETSTANDARD1_4
+#if !NETSTANDARD1_4 && !NET6_0_OR_GREATER
         /// <summary>
         /// Loads an assembly into the reflection-only context, given its path.
         /// </summary>
@@ -72,7 +72,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         }
 #endif
 
-#if !NETSTANDARD1_4
+#if !NETSTANDARD1_4 && !NET6_0_OR_GREATER
         /// <summary>
         /// Loads an assembly into the reflection-only context, given its display name.
         /// </summary>
@@ -113,21 +113,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <returns> True if the assembly is referenced. </returns>
         public static bool IsAssemblyReferenced(AssemblyName assemblyName, string source)
         {
-#if NETSTANDARD1_4
-            return true;
-#elif NETFRAMEWORK
+#if NETFRAMEWORK
             // This loads the dll in a different app domain.
             // If no reference to UTF don't run discovery. Take conservative approach. If not able to find proceed with discovery.
             return AssemblyHelper.DoesReferencesAssembly(source, assemblyName) ?? true;
 #else
-            var paths = GetResolutionPaths();
-            using var context = new InternalAssemblyLoadContext(paths, source);
-            var dependencies = context.GetDependencies(source);
-            if (dependencies != null)
-            {
-                return dependencies.Contains(assemblyName);
-            }
-            
             return true;
 #endif
         }
@@ -352,115 +342,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
 
             return resolutionPaths;
-        }
-#endif
-
-#if NETSTANDARD2_0_OR_GREATER || NET5_0_OR_GREATER
-        private class InternalAssemblyLoadContext : AssemblyLoadContext, IDisposable
-        {
-            private readonly string[] _assemblyExtensions = new string[] { ".dll", ".exe" };
-            private readonly IReadOnlyCollection<string> _sources;
-            private readonly HashSet<AssemblyName> _dependencies = null;
-
-            public InternalAssemblyLoadContext(IList<string> resolutionPaths, string source = null)
-            {
-                resolutionPaths = resolutionPaths ?? new List<string>();
-
-                for (var i = 0; i < resolutionPaths.Count; i++)
-                {
-                    var item = resolutionPaths[i];
-                    if (item[item.Length - 1] == Path.DirectorySeparatorChar)
-                    {
-                        continue;
-                    }
-
-                    resolutionPaths[i] = $"{item}{Path.DirectorySeparatorChar}";
-                }
-
-                if (!string.IsNullOrWhiteSpace(source))
-                {
-                    var folder = Path.GetDirectoryName(source);
-                    folder = folder[folder.Length - 1] == Path.DirectorySeparatorChar ? folder : $"{folder}{Path.DirectorySeparatorChar}";
-
-                    if (!resolutionPaths.Contains(folder))
-                    {
-                        resolutionPaths.Add(folder);
-                    }
-                }
-
-                _sources = new System.Collections.ObjectModel.ReadOnlyCollection<string>(resolutionPaths);
-                _dependencies = new HashSet<AssemblyName>();
-
-                base.Resolving += OnResolving;
-            }
-
-            public AssemblyName[] GetDependencies(string assemblyPath)
-            {
-                _dependencies.Clear();
-                base.LoadFromAssemblyPath(assemblyPath);
-
-                return _dependencies.ToArray();
-            }
-
-
-            private Assembly OnResolving(AssemblyLoadContext context, AssemblyName assemblyName)
-            {
-                _dependencies.Add(assemblyName);
-                return null;
-            }
-
-            /// <inheritdoc />
-            protected override Assembly Load(AssemblyName assemblyName)
-            {
-                var assembly = base.LoadFromAssemblyName(assemblyName);
-                if (assembly != null)
-                {
-                    return assembly;
-                }
-
-                foreach (var folder in _sources)
-                {
-                    foreach (var ext in _assemblyExtensions)
-                    {
-                        var asmPath = Path.Combine(folder, $"{assemblyName.Name}{ext}");
-                        assembly = base.LoadFromAssemblyPath(asmPath);
-                        if (assembly != null)
-                        {
-                            return assembly;
-                        }
-                    }
-                }
-
-#if NET5_0_OR_GREATER
-                return base.Load(assemblyName);
-#else
-                return null;
-#endif
-            }
-
-            private bool _disposed;
-
-            ~InternalAssemblyLoadContext() => Dispose(false);
-
-            public void Dispose()
-            {
-                Dispose(true);
-                GC.SuppressFinalize(this);
-            }
-
-            protected virtual void Dispose(bool disposing)
-            {
-                if (_disposed)
-                {
-                    return;
-                }
-
-                _disposed = true;
-
-#if NET5_0_OR_GREATER
-                base.Unload();
-#endif
-            }
         }
 #endif
     }

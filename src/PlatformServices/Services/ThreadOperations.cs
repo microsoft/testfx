@@ -109,8 +109,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
             catch (ThreadAbortException exception)
             {
+#if !NET6_0_OR_GREATER
                 Thread.ResetAbort();
-
+#endif
                 // Throwing an exception so that the test is marked as failed.
                 // This is a TargetInvocation exception because we want just the ThreadAbort exception to be shown to the user and not something we create here.
                 // TargetInvocation exceptions are stripped off by the test failure handler surfacing the actual exception.

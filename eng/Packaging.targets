@@ -1,0 +1,104 @@
+<Project>
+
+  <PropertyGroup>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <BeforePack>$(BeforePack);AddNETStandardCompatErrorFileForPackaging</BeforePack>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludeProjectReferencesWithPackAttributeInPackage</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(EnablePackageValidation)' == 'true'">
+    <PackageReference Include="Microsoft.DotNet.Compatibility" Version="$(MicrosoftDotNetCompatibilityVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(AddNETFrameworkAssemblyReferenceToPackage)' == 'true'">
+    <_FrameworkAssemblyReferences Include="$(MSBuildProjectName)"
+                                  TargetFramework="$(NetFrameworkMinimum)" />
+  </ItemGroup>
+
+  <!-- Include a netstandard compat error if the project targets both .NETStandard and
+       .NETCoreApp. This prohibits users to consume packages on an older .NETCoreApp version
+       than the minimum supported one. -->
+  <ItemGroup>
+    <NETStandardCompatError Include="netcoreapp2.1"
+                            Supported="$(NetCoreAppMinimum)"
+                            Condition="$(TargetFrameworks.Contains('netstandard2.')) and
+                                       ($(TargetFrameworks.Contains('$(NetCoreAppMinimum)')) or $(TargetFrameworks.Contains('$(NetCoreAppCurrent)'))) and
+                                       '$(DisableNETStandardCompatErrorForNETCoreApp)' != 'true'" />
+    <NETStandardCompatError Include="net461"
+                            Supported="$(NetFrameworkMinimum)"
+                            Condition="$(TargetFrameworks.Contains('netstandard2.0')) and
+                                       ($(TargetFrameworks.Contains('$(NetFrameworkMinimum)')) or $(TargetFrameworks.Contains('net47')) or $(TargetFrameworks.Contains('net48'))) and
+                                       '$(DisableNETStandardCompatErrorForNETFramework)' != 'true'" />
+
+  </ItemGroup>
+
+  <!-- Add targets file that marks a .NETStandard applicable tfm as unsupported. -->
+  <Target Name="AddNETStandardCompatErrorFileForPackaging"
+          Condition="'@(NETStandardCompatError)' != ''"
+          Inputs="%(NETStandardCompatError.Identity); %(NETStandardCompatError.Supported)"
+          Outputs="none">
+    <PropertyGroup>
+      <_NETStandardCompatErrorFilePath>$(BaseIntermediateOutputPath)netstandardcompaterrors\%(NETStandardCompatError.Identity)\$(PackageId).targets</_NETStandardCompatErrorFilePath>
+      <_NETStandardCompatErrorFileTarget>NETStandardCompatError_$(PackageId.Replace('.', '_'))_$([System.String]::new('%(NETStandardCompatError.Supported)').Replace('.', '_'))</_NETStandardCompatErrorFileTarget>
+      <_NETStandardCompatErrorFileContent>
+<![CDATA[<Project InitialTargets="$(_NETStandardCompatErrorFileTarget)">
+  <Target Name="$(_NETStandardCompatErrorFileTarget)"
+          Condition="'%24(SuppressTfmSupportBuildWarnings)' == ''">
+    <Error Text="$(PackageId) doesn't support %24(TargetFramework). Consider updating your TargetFramework to %(NETStandardCompatError.Supported) or later." />
+  </Target>
+</Project>]]>
+      </_NETStandardCompatErrorFileContent>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="$(_NETStandardCompatErrorFilePath)"
+                      Lines="$(_NETStandardCompatErrorFileContent)"
+                      Overwrite="true"
+                      WriteOnlyWhenDifferent="true" />
+    
+    <ItemGroup>
+      <None Include="$(_NETStandardCompatErrorFilePath)"
+            PackagePath="buildTransitive\%(NETStandardCompatError.Identity)"
+            Pack="true" />
+      <None Include="$(PlaceholderFile)"
+            PackagePath="buildTransitive\%(NETStandardCompatError.Supported)"
+            Pack="true" />
+      <FileWrites Include="$(_NETStandardCompatErrorFilePath)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="IncludeProjectReferencesWithPackAttributeInPackage"
+          Condition="'@(ProjectReference)' != '' and @(ProjectReference->AnyHaveMetadataValue('Pack', 'true'))"
+          DependsOnTargets="BuildOnlySettings;ResolveReferences">
+    <ItemGroup>
+      <!-- Add ReferenceCopyLocalPaths for ProjectReferences which are flagged as Pack="true" into the package. -->
+      <_projectReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('Pack', 'true'))" />
+      <TfmSpecificPackageFile Include="@(_projectReferenceCopyLocalPaths)"
+                              PackagePath="$([MSBuild]::ValueOrDefault('%(ReferenceCopyLocalPaths.PackagePath)', '$(BuildOutputTargetFolder)\$(TargetFramework)\%(_projectReferenceCopyLocalPaths.DestinationSubDirectory)'))" />
+      <TfmSpecificDebugSymbolsFile Include="@(TfmSpecificPackageFile->WithMetadataValue('Extension', '.pdb'))"
+                                   TargetPath="/%(TfmSpecificPackageFile.PackagePath)/%(TfmSpecificPackageFile.DestinationSubDirectory)%(Filename)%(Extension)"
+                                   TargetFramework="$(TargetFramework)"
+                                   Condition="'$(IncludeSymbols)' == 'true'" />
+      <!-- Remove symbol from the non symbol package. -->
+      <TfmSpecificPackageFile Remove="@(TfmSpecificPackageFile->WithMetadataValue('Extension', '.pdb'))" />
+      <!-- If the reference assembly is included, don't put the documentation file next to the lib assembly. -->
+      <TfmSpecificPackageFile Remove="@(_projectReferenceCopyLocalPaths->WithMetadataValue('Extension', '.xml')->WithMetadataValue('IncludeReferenceAssemblyInPackage', 'true'))" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Include the reference assembly and put the documentation file next to it. -->
+      <_referenceAssemblyPaths Include="@(_projectReferenceCopyLocalPaths->WithMetadataValue('Extension', '.dll')->WithMetadataValue('IncludeReferenceAssemblyInPackage', 'true')->Metadata('ReferenceAssembly'))" />
+      <_referenceAssemblyPaths Include="@(_projectReferenceCopyLocalPaths->WithMetadataValue('Extension', '.xml')->WithMetadataValue('IncludeReferenceAssemblyInPackage', 'true'))" />
+      <TfmSpecificPackageFile Include="@(_referenceAssemblyPaths)"
+                              PackagePath="ref\$(TargetFramework)\%(TfmSpecificPackageFile.DestinationSubDirectory)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ValidateAssemblyVersionsInRefPack" 
+          Condition="$(_AssemblyInTargetingPack) == 'true' and '$(PreReleaseVersionLabel)' == 'servicing'" 
+          AfterTargets="CoreCompile" >
+    <Error Condition="'$(AssemblyVersion)' != '$(LastReleasedStableAssemblyVersion)'" Text="AssemblyVersion should match last released assembly version $(LastReleasedStableAssemblyVersion)" />
+  </Target>
+
+
+
+</Project>

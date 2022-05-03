@@ -17,4 +17,5 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.csproj" />
   </ItemGroup>
+
 </Project>

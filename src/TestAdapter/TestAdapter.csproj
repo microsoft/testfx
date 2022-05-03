@@ -12,36 +12,31 @@
       <IsShipping>true</IsShipping>
       <!-- Generate package during Build, rather than Pack, so that it can be used during Test. -->
       <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-
-      <Description>
-      The adapter to discover and execute MSTest Framework based tests.
+      <Description>The adapter to discover and execute MSTest Framework based tests.
 
       Supported platforms:
       - .NET 4.6.2+
       - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017)
       - .NET 5.0 (Visual Studio 2019)
       - .NET 5.0 Windows.18362+ (WinUI Desktop Apps) (Visual Studio 2019)
-      - ASP.NET Core 1.0+ (Visual Studio 2017)
-      </Description>
+      - ASP.NET Core 1.0+ (Visual Studio 2017)</Description>
       <PackageTags>MSTest TestFramework TestAdapter VisualStudio UnitTest MSTestV3 Microsoft</PackageTags>
-      <DevelopmentDependency>true</DevelopmentDependency>
-      <PackageType>MSBuildSdk</PackageType>
 
       <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
       <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
+      <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\PlatformServices.Interface\PlatformServices.Interface.csproj" PrivateAssets="all" Pack="True" />
-    <ProjectReference Include="$(RepoRoot)src\PlatformServices\PlatformServices.csproj" PrivateAssets="all" Pack="True" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.csproj" Pack="True" />
+    <ProjectReference Include="$(RepoRoot)src\PlatformServices.Interface\PlatformServices.Interface.csproj" PrivateAssets="all" Pack="true" />
+    <ProjectReference Include="$(RepoRoot)src\PlatformServices\PlatformServices.csproj" PrivateAssets="all" Pack="true" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.csproj" />
   </ItemGroup>
 
    <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
   </ItemGroup>
-
 
   <ItemGroup>
     <Compile Update="Resources\Resource.Designer.cs">
@@ -57,14 +52,4 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <PropertyGroup>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
-  </PropertyGroup>
-
-  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="BuildOnlySettings;ResolveReferences">
-    <ItemGroup>
-      <_ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))"/>
-      <BuildOutputInPackage Include="@(_ReferenceCopyLocalPaths)" TargetPath="%(_ReferenceCopyLocalPaths.DestinationSubDirectory)"/>
-    </ItemGroup>
-  </Target>
 </Project>

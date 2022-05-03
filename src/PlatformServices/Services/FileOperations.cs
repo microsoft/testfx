@@ -28,20 +28,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="assemblyFileName"> The assembly name. </param>
         /// <param name="isReflectionOnly">Indicates whether this should be a reflection only load.</param>
         /// <returns> The <see cref="Assembly"/>. </returns>
-        /// <exception cref="NotImplementedException"> This is currently not implemented. </exception>
         public Assembly LoadAssembly(string assemblyFileName, bool isReflectionOnly)
         {
-#if !NETSTANDARD1_4
+#if NET6_0_OR_GREATER
+            return Assembly.LoadFrom(assemblyFileName);
+#else
+    #if !NETSTANDARD1_4
             if (!_isPackaged && Path.IsPathRooted(assemblyFileName))
             {
                 return isReflectionOnly
                     ? Assembly.ReflectionOnlyLoadFrom(assemblyFileName)
                     : Assembly.LoadFrom(assemblyFileName);
             }
-#endif
+    #endif
 
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyFileName);
             return Assembly.Load(new AssemblyName(fileNameWithoutExtension));
+#endif
         }
 
         /// <summary>

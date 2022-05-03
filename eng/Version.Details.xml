@@ -23,6 +23,10 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>5145e86df0c491e082b589aa31d69eea300adc02</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Packaging" Version="7.0.0-beta.22225.6">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>5145e86df0c491e082b589aa31d69eea300adc02</Sha>
+    </Dependency>
     <Dependency Name="Microsoft.DotNet.SignTool" Version="7.0.0-beta.22225.6">
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>5145e86df0c491e082b589aa31d69eea300adc02</Sha>
@@ -75,6 +79,10 @@
     <Dependency Name="XliffTasks" Version="1.0.0-beta.21265.1">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
       <Sha>f4bfde77fb60daf52d8fec738d96d1d54e37dd88</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.DotNet.Compatibility" Version="2.0.0-alpha.1.21525.11">
+      <Uri>https://github.com/dotnet/sdk</Uri>
+      <Sha>957ae5ca599fdeaee425d23928d42da711373a5e</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

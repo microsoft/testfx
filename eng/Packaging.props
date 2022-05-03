@@ -1,0 +1,18 @@
+<Project>
+  <PropertyGroup>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <Copyright>$(CopyrightMicrosoft)</Copyright>
+    <Owners>microsoft,mstest</Owners>
+    <LicenseFile>$(RepoRoot)LICENSE</LicenseFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageThirdPartyNoticesFile>$(MSBuildThisFileDirectory)THIRD-PARTY-NOTICES.TXT</PackageThirdPartyNoticesFile>
+    <PlaceholderFile>$(RepositoryEngineeringDir)_._</PlaceholderFile>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <IsShipping>false</IsShipping>
+    
+    <!-- Indicates this is not an officially supported release. Release branches should set this to false. -->
+    <IsPrerelease>true</IsPrerelease>
+  </PropertyGroup>
+</Project>

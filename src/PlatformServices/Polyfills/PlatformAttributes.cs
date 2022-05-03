@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // Original source: https://github.com/dotnet/runtime/blob/288de113d01c183d5e323005728096911dc03c55/src/libraries/System.Private.CoreLib/src/System/Runtime/Versioning/PlatformAttributes.cs
 
-#if NETSTANDARD2_0 || NETFRAMEWORK
+#if NETSTANDARD2_0 || NETFRAMEWORK || NETCOREAPP3_1
 namespace System.Runtime.Versioning
 {
     /// <summary>

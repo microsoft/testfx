@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>uap10.0</TargetFrameworks>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
-    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.UAP</AssemblyName>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.UWP</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -17,11 +17,10 @@
 
     <Description>UWP extension for MSTest.TestFramework package. This package enables UI testing on packaged apps.</Description>
     <PackageTags>MSTest TestFramework TestAdapter VisualStudio UnitTest MSTestV3 Microsoft</PackageTags>
-    <DevelopmentDependency>true</DevelopmentDependency>
-    <PackageType>MSBuildSdk</PackageType>
 
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -38,22 +37,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.csproj" SetTargetFramework="TargetFramework=netstandard1.4" PrivateAssets="all" Pack="True" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.csproj" SetTargetFramework="TargetFramework=netstandard1.4" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform " Version="$(MicrosoftNETCoreUniversalWindowsPlatformVersion)" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
-  </PropertyGroup>
-
-  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="BuildOnlySettings;ResolveReferences">
-    <ItemGroup>
-      <_ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('PrivateAssets', 'All'))"/>
-      <BuildOutputInPackage Include="@(_ReferenceCopyLocalPaths)" TargetPath="%(_ReferenceCopyLocalPaths.DestinationSubDirectory)"/>
-    </ItemGroup>
-  </Target>
 
 </Project>

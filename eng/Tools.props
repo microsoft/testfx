@@ -1,5 +1,7 @@
 <Project>
   <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Packaging" Version="$(MicrosoftDotNetBuildTasksPackagingVersion)" />
+
     <!-- <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  />
     <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" />
     <PackageReference Include="Microsoft.Internal.Dia.Interop" Version="$(MicrosoftInternalDiaInteropVersion)" />
