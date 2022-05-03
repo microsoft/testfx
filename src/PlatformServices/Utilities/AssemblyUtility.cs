@@ -114,14 +114,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         public static bool IsAssemblyReferenced(AssemblyName assemblyName, string source)
         {
 #if NETSTANDARD1_4
+            return true;
 #elif NETFRAMEWORK
             // This loads the dll in a different app domain.
             // If no reference to UTF don't run discovery. Take conservative approach. If not able to find proceed with discovery.
-            var utfReference = AssemblyHelper.DoesReferencesAssembly(source, assemblyName) ?? true;
-            if (!utfReference)
-            {
-                return false;
-            }
+            return AssemblyHelper.DoesReferencesAssembly(source, assemblyName) ?? true;
 #else
             var paths = GetResolutionPaths();
             using var context = new InternalAssemblyLoadContext(paths, source);
@@ -130,9 +127,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             {
                 return dependencies.Contains(assemblyName);
             }
-#endif
-
+            
             return true;
+#endif
         }
 
 #if NETSTANDARD1_4
@@ -361,7 +358,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 #if NETSTANDARD2_0_OR_GREATER || NET5_0_OR_GREATER
         private class InternalAssemblyLoadContext : AssemblyLoadContext, IDisposable
         {
-            private readonly string[] assemblyExtensions = new string[] { ".dll", ".exe" };
+            private readonly string[] _assemblyExtensions = new string[] { ".dll", ".exe" };
             private readonly IReadOnlyCollection<string> _sources;
             private readonly HashSet<AssemblyName> _dependencies = null;
 
@@ -423,7 +420,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
                 foreach (var folder in _sources)
                 {
-                    foreach (var ext in assemblyExtensions)
+                    foreach (var ext in _assemblyExtensions)
                     {
                         var asmPath = Path.Combine(folder, $"{assemblyName.Name}{ext}");
                         assembly = base.LoadFromAssemblyPath(asmPath);

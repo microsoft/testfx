@@ -29,7 +29,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             get
             {
-                return new[] {
+                return new[] 
+                {
                     Constants.DllExtension,
                     Constants.ExeExtension,
                     Constants.PackageExtension
@@ -71,13 +72,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 #if NETFRAMEWORK
             // This loads the dll in a different app domain.
             // If no reference to UTF don't run discovery. Take conservative approach. If not able to find proceed with discovery.
-            var utfReference = AssemblyHelper.DoesReferencesAssembly(source, assemblyName) ?? true;
-            if (!utfReference)
-            {
-                return false;
-            }
-
-            return true;
+            return AssemblyHelper.DoesReferencesAssembly(source, assemblyName) ?? true;
 #elif NET5_0_OR_GREATER || NETSTANDARD1_5_OR_GREATER
             return AssemblyUtility.IsAssemblyReferenced(assemblyName, source);
 #else

@@ -245,14 +245,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             //    in IDE scenarios. If the app base is set to the test source location, discovery will not work because we drop the
             //    UWP platform service assembly at the test source location and since CLR starts looking for assemblies from the app base location,
             //    there would be a mismatch of platform service assemblies during discovery.
-            if (this.targetFrameworkVersion.Contains(PlatformServices.Constants.DotNetFrameWorkStringPrefix))
-            {
-                return Path.GetDirectoryName(this.sourceFileName) ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
-            }
-            else
-            {
-                return Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
-            }
+            return this.targetFrameworkVersion.Contains(PlatformServices.Constants.DotNetFrameWorkStringPrefix)
+                ? Path.GetDirectoryName(this.sourceFileName) ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)
+                : Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
         }
 #endif
 

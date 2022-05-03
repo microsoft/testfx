@@ -154,7 +154,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 return attributesArray.ToArray();
 #else
                 // We should never hit this, since NETSTANDARD1_4 doesn't support ReflectionOnlyLoad.
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("ReflectionOnlyLoad is not supported in NETSTANDARD1.4");
 #endif
             }
             else

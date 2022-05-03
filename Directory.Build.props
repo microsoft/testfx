@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
-  <!-- <Import Project="eng/Versions.props" /> -->
 
   <PropertyGroup>
     <TargetFrameworks>netstandard1.4; netstandard2.0; net462; net5.0</TargetFrameworks>

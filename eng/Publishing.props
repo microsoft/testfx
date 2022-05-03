@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
    <PropertyGroup>
+      <!-- https://github.com/dotnet/arcade/blob/main/Documentation/CorePackages/Publishing.md#what-is-v3-publishing -->
       <PublishingVersion>3</PublishingVersion>
    </PropertyGroup>
 </Project>

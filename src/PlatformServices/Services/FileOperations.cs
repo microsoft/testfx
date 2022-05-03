@@ -34,14 +34,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 #if !NETSTANDARD1_4
             if (!_isPackaged && Path.IsPathRooted(assemblyFileName))
             {
-                if (isReflectionOnly)
-                {
-                    return Assembly.ReflectionOnlyLoadFrom(assemblyFileName);
-                }
-                else
-                {
-                    return Assembly.LoadFrom(assemblyFileName);
-                }
+                return isReflectionOnly
+                    ? Assembly.ReflectionOnlyLoadFrom(assemblyFileName)
+                    : Assembly.LoadFrom(assemblyFileName);
             }
 #endif
 
@@ -129,12 +124,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public string GetFullFilePath(string assemblyFileName)
         {
             var packagePath = AppContainer.AppModel.GetCurrentPackagePath();
-            if (packagePath == null)
-            {
-                return assemblyFileName;
-            }
 
-            return Path.Combine(packagePath, assemblyFileName);
+            return packagePath == null
+                ? assemblyFileName
+                : Path.Combine(packagePath, assemblyFileName);
         }
     }
 }

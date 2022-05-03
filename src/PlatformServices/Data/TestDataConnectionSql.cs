@@ -129,7 +129,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 WriteDiagnostics("Using default SQL implementation for {0}, {1}", invariantProviderName, connectionString);
                 return new TestDataConnectionSql(invariantProviderName, connectionString, dataFolders);
 #else
-                WriteDiagnostics("Factory for '{0}' isn't supported on current TFM.", invariantProviderName, connectionString);
+                WriteDiagnostics("Factory for '{0}' isn't supported on current TFM.", invariantProviderName);
                 return null;
 #endif
             }

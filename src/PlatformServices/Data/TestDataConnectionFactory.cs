@@ -64,7 +64,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             }
         }
 
-#region TestDataConnectionFactories
+        #region TestDataConnectionFactories
 
         private class XmlTestDataConnectionFactory : TestDataConnectionFactory
         {
@@ -84,7 +84,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             }
         }
 
-#endregion TestDataConnectionFactories
+        #endregion TestDataConnectionFactories
     }
 }
 #endif

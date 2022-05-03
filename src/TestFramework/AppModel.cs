@@ -89,7 +89,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.App
             int result;
             int pathLength = 0;
 
-            if (GetCurrentPackagePath(PackagePathType.Install) is { } installPath) {
+            if (GetCurrentPackagePath(PackagePathType.Install) is { } installPath) 
+            {
                 return installPath;
             }
 
@@ -174,6 +175,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.App
 
         MachineExternal = 3,
         UserExternal = 4,
-        EffectiveExternal = 5
+        EffectiveExternal = 5,
     }
 }
