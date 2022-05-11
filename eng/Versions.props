@@ -4,9 +4,8 @@
     <!-- This repo version -->
     <VersionPrefix>3.0.0</VersionPrefix>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
-
-    <MicrosoftNETTestSdkVersion>17.1.0</MicrosoftNETTestSdkVersion>
-
+    <!-- Opt-out repo features -->
+    <UsingToolXliff>false</UsingToolXliff>
     <!-- Toolset -->
     <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
     <NuGetFrameworksVersion>5.11.0</NuGetFrameworksVersion>
@@ -51,6 +50,7 @@
     <CastleCoreVersion>4.3.0</CastleCoreVersion>
     <FluentAssertionsVersion>5.10.3</FluentAssertionsVersion>
     <StyleCopAnalyzersVersion>1.0.0</StyleCopAnalyzersVersion>
+    <MicrosoftNETTestSdkVersion>17.2.0</MicrosoftNETTestSdkVersion>
     <!-- These are used to test compability with legacy MSTest, please do not update -->
     <Legacy__MicrosoftNETTestSdkVersion>15.7.0</Legacy__MicrosoftNETTestSdkVersion>
     <Legacy__MSTestTestAdapterVersion>1.2.0</Legacy__MSTestTestAdapterVersion>
@@ -85,7 +85,7 @@
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftExtensionsLoggingConsoleVersion>2.1.1</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
-    <MicrosoftNetCompilersToolsetVersion>4.1.0-5.22128.4</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftNetCompilersToolsetVersion>4.2.0-4.22255.15</MicrosoftNetCompilersToolsetVersion>
     <MicrosoftNETILLinkTasksVersion>6.0.100-preview.5.21268.2</MicrosoftNETILLinkTasksVersion>
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
@@ -111,24 +111,24 @@
     <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksPackagingVersion>7.0.0-beta.22259.5</MicrosoftDotNetBuildTasksPackagingVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>7.0.0-beta.22259.5</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>7.0.0-beta.22259.5</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksPackagingVersion>7.0.0-beta.22260.2</MicrosoftDotNetBuildTasksPackagingVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>7.0.0-beta.22260.2</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>7.0.0-beta.22260.2</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.6.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
-    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.20258.6</MicrosoftDotNetMaestroClientVersion>
+    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.20074.1</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftSourceLinkGitHubVersion>1.1.0-beta-21228-01</MicrosoftSourceLinkGitHubVersion>
     <MicrosoftSourceLinkAzureReposGitVersion>1.1.0-beta-21228-01</MicrosoftSourceLinkAzureReposGitVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.22259.5</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.22260.2</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <XliffTasksVersion>1.0.0-beta.21265.1</XliffTasksVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.21228.1</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21264.3</MicrosoftDotNetXHarnessCLIVersion>
-    <MicrosoftSymbolUploaderBuildTaskVersion>1.1.156402</MicrosoftSymbolUploaderBuildTaskVersion>
-    <MicrosoftSymbolUploaderVersion>1.1.152002</MicrosoftSymbolUploaderVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.20074.1</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.22259.3</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftSymbolUploaderBuildTaskVersion>2.0.0-preview.1.22118.3</MicrosoftSymbolUploaderBuildTaskVersion>
+    <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.22118.3</MicrosoftSymbolUploaderVersion>
     <MicrosoftNetSdkWorkloadManifestReaderVersion>6.0.100-preview.5.21254.11</MicrosoftNetSdkWorkloadManifestReaderVersion>
   </PropertyGroup>
 </Project>
