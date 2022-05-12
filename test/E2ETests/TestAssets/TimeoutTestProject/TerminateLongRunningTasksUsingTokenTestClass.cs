@@ -10,13 +10,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace TimeoutTestProject
 {
     [TestClass]
-    public class TerimnateLongRunningTasksUsingTokenTestClass
+    public class TerminateLongRunningTasksUsingTokenTestClass
     {
         public TestContext TestContext { get; set; }
 
         [TestMethod]
         [Timeout(5000)]
-        public void TerimnateLongRunningTasksUsingToken()
+        public void TerminateLongRunningTasksUsingToken()
         {
             var longTask = new Thread(ExecuteLong);
             longTask.Start();
