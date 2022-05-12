@@ -41,7 +41,7 @@ namespace MSTestAdapter.Smoke.E2ETests
             this.ValidateFailedTestsContain(
                 testAssembly,
                 false,
-                "TimeoutTestProject.TerimnateLongRunningTasksUsingTokenTestClass.TerimnateLongRunningTasksUsingToken",
+                "TimeoutTestProject.TerminateLongRunningTasksUsingTokenTestClass.TerminateLongRunningTasksUsingToken",
                 "TimeoutTestProject.SelfTerminatingTestClass.SelfTerminatingTestMethod");
 
             Assert.IsTrue(File.Exists(this.GetAssetFullPath(fileToValidate)), "Unable to locate the TimeoutTestOutput.txt file");
