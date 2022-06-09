@@ -609,11 +609,11 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
 
         #endregion
 
-        #region HandleFail tests
+        #region ThrowAssertFailed tests
         [TestMethod] // See https://github.com/dotnet/sdk/issues/25373
-        public void HandleFailDoesNotFailWithFormatExceptionOnEmptyParameters()
+        public void ThrowAssertFailedDoesNotThrowIfMessageContainsInvalidStringFormatComposite()
         {
-            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.HandleFail("name", "{"));
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.ThrowAssertFailed("name", "{"));
 
             Assert.IsNotNull(ex);
             Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), ex.GetType());
@@ -621,15 +621,42 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         }
         #endregion
 
+        #region BuildUserMessage tests
+        [TestMethod] // See https://github.com/dotnet/sdk/issues/25373
+        public void BuildUserMessageThrowsWhenMessageContainsInvalidStringFormatComposite()
+        {
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.BuildUserMessage("{", "arg"));
+
+            Assert.IsNotNull(ex);
+            Assert.AreEqual(typeof(FormatException), ex.GetType());
+        }
+
+        [TestMethod] // See https://github.com/dotnet/sdk/issues/25373
+        public void BuildUserMessageDoesNotThrowWhenMessageContainsInvalidStringFormatCompositeAndNoArgumentsPassed()
+        {
+            string message = TestFrameworkV2.Assert.BuildUserMessage("{");
+            Assert.AreEqual("{", message);
+        }
+        #endregion
+
         #region Inconclusive tests
         [TestMethod] // See https://github.com/dotnet/sdk/issues/25373
-        public void InconclusiveDoesNotFailWithFormatExceptionOnEmptyParameters()
+        public void InconclusiveDoesNotThrowWhenMessageContainsInvalidStringFormatCompositeAndNoArgumentsPassed()
         {
             var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.Inconclusive("{"));
 
             Assert.IsNotNull(ex);
             Assert.AreEqual(typeof(TestFrameworkV2.AssertInconclusiveException), ex.GetType());
             StringAssert.Contains(ex.Message, "Assert.Inconclusive failed. {");
+        }
+
+        [TestMethod] // See https://github.com/dotnet/sdk/issues/25373
+        public void InconclusiveThrowsWhenMessageContainsInvalidStringFormatComposite()
+        {
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.Inconclusive("{", "arg"));
+
+            Assert.IsNotNull(ex);
+            Assert.AreEqual(typeof(FormatException), ex.GetType());
         }
         #endregion
     }

@@ -37,10 +37,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             get
             {
-               if (that == null)
-               {
-                   that = new Assert();
-               }
+                if (that == null)
+                {
+                    that = new Assert();
+                }
 
                 return that;
             }
@@ -88,8 +88,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be true.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="condition"/>
-        /// is false. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="condition"/>
+        /// is false. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
@@ -107,8 +107,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be true.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="condition"/>
-        /// is false. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="condition"/>
+        /// is false. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
@@ -126,8 +126,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be true.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="condition"/>
-        /// is false. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="condition"/>
+        /// is false. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -139,7 +139,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (!condition)
             {
-                HandleFail("Assert.IsTrue", message, parameters);
+                ThrowAssertFailed("Assert.IsTrue", BuildUserMessage(message, parameters));
             }
         }
 
@@ -151,8 +151,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be true.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="condition"/>
-        /// is false. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="condition"/>
+        /// is false. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -164,7 +164,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (condition == false || condition == null)
             {
-                HandleFail("Assert.IsTrue", message, parameters);
+                ThrowAssertFailed("Assert.IsTrue", BuildUserMessage(message, parameters));
             }
         }
 
@@ -206,8 +206,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be false.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="condition"/>
-        /// is true. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="condition"/>
+        /// is true. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
@@ -225,8 +225,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be false.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="condition"/>
-        /// is true. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="condition"/>
+        /// is true. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
@@ -244,8 +244,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be false.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="condition"/>
-        /// is true. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="condition"/>
+        /// is true. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -257,7 +257,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (condition)
             {
-                HandleFail("Assert.IsFalse", message, parameters);
+                ThrowAssertFailed("Assert.IsFalse", BuildUserMessage(message, parameters));
             }
         }
 
@@ -269,8 +269,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be false.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="condition"/>
-        /// is true. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="condition"/>
+        /// is true. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -282,7 +282,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (condition == true || condition == null)
             {
-                HandleFail("Assert.IsFalse", message, parameters);
+                ThrowAssertFailed("Assert.IsFalse", BuildUserMessage(message, parameters));
             }
         }
 
@@ -313,8 +313,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The object the test expects to be null.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="value"/>
-        /// is not null. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="value"/>
+        /// is not null. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is not null.
@@ -332,8 +332,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The object the test expects to be null.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="value"/>
-        /// is not null. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="value"/>
+        /// is not null. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -345,7 +345,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (value != null)
             {
-                HandleFail("Assert.IsNull", message, parameters);
+                ThrowAssertFailed("Assert.IsNull", BuildUserMessage(message, parameters));
             }
         }
 
@@ -372,8 +372,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The object the test expects not to be null.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="value"/>
-        /// is null. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="value"/>
+        /// is null. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is null.
@@ -391,8 +391,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The object the test expects not to be null.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="value"/>
-        /// is null. The message is shown in test results.
+        /// The format to include in the exception when <paramref name="value"/>
+        /// is null. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -400,11 +400,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is null.
         /// </exception>
-        public static void IsNotNull([NotNull]object value, string message, params object[] parameters)
+        public static void IsNotNull([NotNull] object value, string message, params object[] parameters)
         {
             if (value == null)
             {
-                HandleFail("Assert.IsNotNull", message, parameters);
+                ThrowAssertFailed("Assert.IsNotNull", BuildUserMessage(message, parameters));
             }
         }
 
@@ -442,8 +442,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is not the same as <paramref name="expected"/>. The message is shown
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is not the same as <paramref name="expected"/>. The format is shown
         /// in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -466,8 +466,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is not the same as <paramref name="expected"/>. The message is shown
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is not the same as <paramref name="expected"/>. The format is shown
         /// in test results.
         /// </param>
         /// <param name="parameters">
@@ -481,7 +481,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (!ReferenceEquals(expected, actual))
             {
-                string finalMessage = message;
+                string userMessage = BuildUserMessage(message, parameters);
+                string finalMessage = userMessage;
 
                 if (expected is ValueType valExpected)
                 {
@@ -490,11 +491,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                         finalMessage = string.Format(
                             CultureInfo.CurrentCulture,
                             FrameworkMessages.AreSameGivenValues,
-                            message == null ? string.Empty : ReplaceNulls(message));
+                            userMessage);
                     }
                 }
 
-                HandleFail("Assert.AreSame", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreSame", finalMessage);
             }
         }
 
@@ -530,8 +531,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is the same as <paramref name="notExpected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is the same as <paramref name="notExpected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -555,8 +556,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is the same as <paramref name="notExpected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is the same as <paramref name="notExpected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -570,7 +571,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (ReferenceEquals(notExpected, actual))
             {
-                HandleFail("Assert.AreNotSame", message, parameters);
+                ThrowAssertFailed("Assert.AreNotSame", BuildUserMessage(message, parameters));
             }
         }
 
@@ -615,8 +616,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second value to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -643,8 +644,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second value to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -658,6 +659,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (!object.Equals(expected, actual))
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage;
                 if (actual != null && expected != null && !actual.GetType().Equals(expected.GetType()))
                 {
@@ -665,7 +667,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.AreEqualDifferentTypesFailMsg,
-                        message == null ? string.Empty : ReplaceNulls(message),
+                        userMessage,
                         ReplaceNulls(expected),
                         expected.GetType().FullName,
                         ReplaceNulls(actual),
@@ -676,12 +678,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.AreEqualFailMsg,
-                        message == null ? string.Empty : ReplaceNulls(message),
+                        userMessage,
                         ReplaceNulls(expected),
                         ReplaceNulls(actual));
                 }
 
-                HandleFail("Assert.AreEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
 
@@ -724,8 +726,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second value to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -752,8 +754,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second value to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -766,13 +768,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (object.Equals(notExpected, actual))
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreNotEqualFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     ReplaceNulls(notExpected),
                     ReplaceNulls(actual));
-                HandleFail("Assert.AreNotEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
             }
         }
 
@@ -808,8 +811,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the object produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -833,8 +836,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the object produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -882,8 +885,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the object produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -907,8 +910,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the object produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -962,9 +965,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to
@@ -991,9 +994,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1006,26 +1009,28 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (float.IsNaN(expected) || float.IsNaN(actual) || float.IsNaN(delta))
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreEqualDeltaFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-                HandleFail("Assert.AreEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
 
             if (Math.Abs(expected - actual) > delta)
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreEqualDeltaFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-                HandleFail("Assert.AreEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
 
@@ -1070,9 +1075,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
@@ -1099,9 +1104,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1113,14 +1118,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (Math.Abs(notExpected - actual) <= delta)
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 var finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreNotEqualDeltaFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-                HandleFail("Assert.AreNotEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
             }
         }
 
@@ -1164,9 +1170,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to
@@ -1193,9 +1199,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1208,14 +1214,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (Math.Abs(expected - actual) > delta)
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreEqualDeltaFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-                HandleFail("Assert.AreEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
 
@@ -1260,9 +1267,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
@@ -1289,9 +1296,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1303,14 +1310,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (Math.Abs(notExpected - actual) <= delta)
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 var finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreNotEqualDeltaFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-                HandleFail("Assert.AreNotEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
             }
         }
 
@@ -1354,9 +1362,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to
@@ -1383,9 +1391,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1398,14 +1406,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (Math.Abs(expected - actual) > delta)
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreEqualDeltaFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-                HandleFail("Assert.AreEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
 
@@ -1450,9 +1459,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
@@ -1479,9 +1488,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1493,14 +1502,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (Math.Abs(notExpected - actual) <= delta)
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 var finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreNotEqualDeltaFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-                HandleFail("Assert.AreNotEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
             }
         }
 
@@ -1544,9 +1554,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
@@ -1572,9 +1582,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1586,26 +1596,28 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (double.IsNaN(expected) || double.IsNaN(actual) || double.IsNaN(delta))
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreEqualDeltaFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-                HandleFail("Assert.AreEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
 
             if (Math.Abs(expected - actual) > delta)
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreEqualDeltaFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     expected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-                HandleFail("Assert.AreEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
 
@@ -1650,9 +1662,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
@@ -1679,9 +1691,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
+        /// The format to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The message is shown in test results.
+        /// <paramref name="delta"/>. The format is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1693,14 +1705,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (Math.Abs(notExpected - actual) <= delta)
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreNotEqualDeltaFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     notExpected.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     actual.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     delta.ToString(CultureInfo.CurrentCulture.NumberFormat));
-                HandleFail("Assert.AreNotEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
             }
         }
 
@@ -1741,8 +1754,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// indicates a case-insensitive comparison.)
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -1768,8 +1781,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// indicates a case-insensitive comparison.)
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -1826,8 +1839,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// A CultureInfo object that supplies culture-specific comparison information.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -1856,8 +1869,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// A CultureInfo object that supplies culture-specific comparison information.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -1871,6 +1884,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             CheckParameterNotNull(culture, "Assert.AreEqual", "culture", string.Empty);
             if (CompareInternal(expected, actual, ignoreCase, culture) != 0)
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage;
 
                 // Comparison failed. Check if it was a case-only failure.
@@ -1880,7 +1894,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.AreEqualCaseFailMsg,
-                        message == null ? string.Empty : ReplaceNulls(message),
+                        userMessage,
                         ReplaceNulls(expected),
                         ReplaceNulls(actual));
                 }
@@ -1889,12 +1903,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.AreEqualFailMsg,
-                        message == null ? string.Empty : ReplaceNulls(message),
+                        userMessage,
                         ReplaceNulls(expected),
                         ReplaceNulls(actual));
                 }
 
-                HandleFail("Assert.AreEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
 
@@ -1937,8 +1951,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// indicates a case-insensitive comparison.)
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -1965,8 +1979,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// indicates a case-insensitive comparison.)
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -2025,8 +2039,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// A CultureInfo object that supplies culture-specific comparison information.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -2056,8 +2070,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// A CultureInfo object that supplies culture-specific comparison information.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The message is shown in
+        /// The format to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The format is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -2071,13 +2085,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture", string.Empty);
             if (CompareInternal(notExpected, actual, ignoreCase, culture) == 0)
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreNotEqualFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     ReplaceNulls(notExpected),
                     ReplaceNulls(actual));
-                HandleFail("Assert.AreNotEqual", finalMessage, parameters);
+                ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
             }
         }
 
@@ -2118,8 +2133,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The expected type of <paramref name="value"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="value"/>
-        /// is not an instance of <paramref name="expectedType"/>. The message is
+        /// The format to include in the exception when <paramref name="value"/>
+        /// is not an instance of <paramref name="expectedType"/>. The format is
         /// shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -2144,8 +2159,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The expected type of <paramref name="value"/>.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="value"/>
-        /// is not an instance of <paramref name="expectedType"/>. The message is
+        /// The format to include in the exception when <paramref name="value"/>
+        /// is not an instance of <paramref name="expectedType"/>. The format is
         /// shown in test results.
         /// </param>
         /// <param name="parameters">
@@ -2160,20 +2175,21 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (expectedType == null || value == null)
             {
-                HandleFail("Assert.IsInstanceOfType", message, parameters);
+                ThrowAssertFailed("Assert.IsInstanceOfType", BuildUserMessage(message, parameters));
             }
 
             var elementTypeInfo = value.GetType().GetTypeInfo();
             var expectedTypeInfo = expectedType.GetTypeInfo();
             if (!expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.IsInstanceOfFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     expectedType.ToString(),
                     value.GetType().ToString());
-                HandleFail("Assert.IsInstanceOfType", finalMessage, parameters);
+                ThrowAssertFailed("Assert.IsInstanceOfType", finalMessage);
             }
         }
 
@@ -2210,8 +2226,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The type that <paramref name="value"/> should not be.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="value"/>
-        /// is an instance of <paramref name="wrongType"/>. The message is shown
+        /// The format to include in the exception when <paramref name="value"/>
+        /// is an instance of <paramref name="wrongType"/>. The format is shown
         /// in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -2236,8 +2252,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The type that <paramref name="value"/> should not be.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="value"/>
-        /// is an instance of <paramref name="wrongType"/>. The message is shown
+        /// The format to include in the exception when <paramref name="value"/>
+        /// is an instance of <paramref name="wrongType"/>. The format is shown
         /// in test results.
         /// </param>
         /// <param name="parameters">
@@ -2252,7 +2268,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             if (wrongType == null)
             {
-                HandleFail("Assert.IsNotInstanceOfType", message, parameters);
+                ThrowAssertFailed("Assert.IsNotInstanceOfType", BuildUserMessage(message, parameters));
             }
 
             // Null is not an instance of any type.
@@ -2265,13 +2281,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             var expectedTypeInfo = wrongType.GetTypeInfo();
             if (expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
             {
+                string userMessage = BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.IsNotInstanceOfFailMsg,
-                    message == null ? string.Empty : ReplaceNulls(message),
+                    userMessage,
                     wrongType.ToString(),
                     value.GetType().ToString());
-                HandleFail("Assert.IsNotInstanceOfType", finalMessage, parameters);
+                ThrowAssertFailed("Assert.IsNotInstanceOfType", finalMessage);
             }
         }
 
@@ -2295,7 +2312,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Throws an AssertFailedException.
         /// </summary>
         /// <param name="message">
-        /// The message to include in the exception. The message is shown in
+        /// The format to include in the exception. The format is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -2311,7 +2328,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Throws an AssertFailedException.
         /// </summary>
         /// <param name="message">
-        /// The message to include in the exception. The message is shown in
+        /// The format to include in the exception. The format is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -2323,7 +2340,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         [DoesNotReturn]
         public static void Fail(string message, params object[] parameters)
         {
-            HandleFail("Assert.Fail", message, parameters);
+            ThrowAssertFailed("Assert.Fail", BuildUserMessage(message, parameters));
         }
 
         #endregion
@@ -2345,7 +2362,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Throws an AssertInconclusiveException.
         /// </summary>
         /// <param name="message">
-        /// The message to include in the exception. The message is shown in
+        /// The format to include in the exception. The format is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertInconclusiveException">
@@ -2360,7 +2377,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Throws an AssertInconclusiveException.
         /// </summary>
         /// <param name="message">
-        /// The message to include in the exception. The message is shown in
+        /// The format to include in the exception. The format is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -2371,20 +2388,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </exception>
         public static void Inconclusive(string message, params object[] parameters)
         {
-            string finalMessage = string.Empty;
-            if (!string.IsNullOrEmpty(message))
-            {
-                if (parameters == null || parameters.Length == 0)
-                {
-                    finalMessage = ReplaceNulls(message);
-                }
-                else
-                {
-                    finalMessage = string.Format(CultureInfo.CurrentCulture, ReplaceNulls(message), parameters);
-                }
-            }
-
-            throw new AssertInconclusiveException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, "Assert.Inconclusive", finalMessage));
+            string userMessage = BuildUserMessage(message, parameters);
+            throw new AssertInconclusiveException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, "Assert.Inconclusive", userMessage));
         }
 
         #endregion
@@ -2441,7 +2446,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Delegate to code to be tested and which is expected to throw exception.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="action"/>
+        /// The format to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <typeparam name="T">
@@ -2489,7 +2494,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Delegate to code to be tested and which is expected to throw exception.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="action"/>
+        /// The format to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <typeparam name="T">
@@ -2515,7 +2520,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Delegate to code to be tested and which is expected to throw exception.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="action"/>
+        /// The format to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <param name="parameters">
@@ -2544,7 +2549,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Delegate to code to be tested and which is expected to throw exception.
         /// </param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="action"/>
+        /// The format to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <param name="parameters">
@@ -2559,12 +2564,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>
         /// The exception that was thrown.
         /// </returns>
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and format appropriately.")]
         public static T ThrowsException<T>(Action action, string message, params object[] parameters)
             where T : Exception
         {
-            var finalMessage = string.Empty;
-
             if (action == null)
             {
                 throw new ArgumentNullException(nameof(action));
@@ -2575,6 +2578,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 throw new ArgumentNullException(nameof(message));
             }
 
+            string userMessage, finalMessage;
             try
             {
                 action();
@@ -2583,26 +2587,28 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 if (!typeof(T).Equals(ex.GetType()))
                 {
+                    userMessage = BuildUserMessage(message, parameters);
                     finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.WrongExceptionThrown,
-                        ReplaceNulls(message),
+                        userMessage,
                         typeof(T).Name,
                     ex.GetType().Name,
                     ex.Message,
                     ex.StackTrace);
-                    HandleFail("Assert.ThrowsException", finalMessage, parameters);
+                    ThrowAssertFailed("Assert.ThrowsException", finalMessage);
                 }
 
                 return (T)ex;
             }
 
+            userMessage = BuildUserMessage(message, parameters);
             finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.NoExceptionThrown,
-                ReplaceNulls(message),
+                userMessage,
                 typeof(T).Name);
-            HandleFail("Assert.ThrowsException", finalMessage, parameters);
+            ThrowAssertFailed("Assert.ThrowsException", finalMessage);
 
             // This will not hit, but need it for compiler.
             return null;
@@ -2636,7 +2642,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="action">Delegate to code to be tested and which is expected to throw exception.</param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="action"/>
+        /// The format to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <typeparam name="T">Type of exception expected to be thrown.</typeparam>
@@ -2658,7 +2664,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="action">Delegate to code to be tested and which is expected to throw exception.</param>
         /// <param name="message">
-        /// The message to include in the exception when <paramref name="action"/>
+        /// The format to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <param name="parameters">
@@ -2674,8 +2680,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message, params object[] parameters)
             where T : Exception
         {
-            var finalMessage = string.Empty;
-
             if (action == null)
             {
                 throw new ArgumentNullException(nameof(action));
@@ -2686,6 +2690,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 throw new ArgumentNullException(nameof(message));
             }
 
+            string userMessage, finalMessage;
             try
             {
                 await action().ConfigureAwait(false);
@@ -2694,26 +2699,28 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 if (!typeof(T).Equals(ex.GetType()))
                 {
+                    userMessage = BuildUserMessage(message, parameters);
                     finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.WrongExceptionThrown,
-                        ReplaceNulls(message),
+                        userMessage,
                         typeof(T).Name,
                     ex.GetType().Name,
                     ex.Message,
                     ex.StackTrace);
-                    HandleFail("Assert.ThrowsException", finalMessage, parameters);
+                    ThrowAssertFailed("Assert.ThrowsException", finalMessage);
                 }
 
                 return (T)ex;
             }
 
+            userMessage = BuildUserMessage(message, parameters);
             finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.NoExceptionThrown,
-                ReplaceNulls(message),
+                userMessage,
                 typeof(T).Name);
-            HandleFail("Assert.ThrowsException", finalMessage, parameters);
+            ThrowAssertFailed("Assert.ThrowsException", finalMessage);
 
             // This will not hit, but need it for compiler.
             return null;
@@ -2752,28 +2759,41 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// name of the assertion throwing an exception
         /// </param>
         /// <param name="message">
-        /// message describing conditions for assertion failure
-        /// </param>
-        /// <param name="parameters">
-        /// The parameters.
+        /// The assertion failure message
         /// </param>
         [DoesNotReturn]
-        internal static void HandleFail(string assertionName, string message, params object[] parameters)
+        internal static void ThrowAssertFailed(string assertionName, string message)
         {
-            string finalMessage = string.Empty;
-            if (!string.IsNullOrEmpty(message))
+            throw new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
+        }
+
+        /// <summary>
+        /// Builds the formatted message using the given user format message and parameters.
+        /// </summary>
+        /// <param name="format">
+        /// A composite format string
+        /// </param>
+        /// <param name="parameters">
+        /// An object array that contains zero or more objects to format.
+        /// </param>
+        /// <returns>
+        /// The formatted string based on format and paramters.
+        /// </returns>
+        internal static string BuildUserMessage(string format, params object[] parameters)
+        {
+            if (format is null)
             {
-                if (parameters == null || parameters.Length == 0)
-                {
-                    finalMessage = ReplaceNulls(message);
-                }
-                else
-                {
-                    finalMessage = string.Format(CultureInfo.CurrentCulture, ReplaceNulls(message), parameters);
-                }
+                return ReplaceNulls(format);
             }
 
-            throw new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, finalMessage));
+            if (format.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            return parameters == null || parameters.Length == 0
+                ? ReplaceNulls(format)
+                : string.Format(CultureInfo.CurrentCulture, ReplaceNulls(format), parameters);
         }
 
         /// <summary>
@@ -2789,16 +2809,18 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// parameter name
         /// </param>
         /// <param name="message">
-        /// message for the invalid parameter exception
+        /// format for the invalid parameter exception
         /// </param>
         /// <param name="parameters">
         /// The parameters.
         /// </param>
-        internal static void CheckParameterNotNull([NotNull]object param, string assertionName, string parameterName, string message, params object[] parameters)
+        internal static void CheckParameterNotNull([NotNull] object param, string assertionName, string parameterName, string message, params object[] parameters)
         {
             if (param == null)
             {
-                HandleFail(assertionName, string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName, message), parameters);
+                string userMessage = BuildUserMessage(message, parameters);
+                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.NullParameterToAssert, parameterName, userMessage);
+                ThrowAssertFailed(assertionName, finalMessage);
             }
         }
 
