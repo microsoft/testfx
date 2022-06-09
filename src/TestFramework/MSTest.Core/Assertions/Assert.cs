@@ -88,8 +88,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be true.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="condition"/>
-        /// is false. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is false. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
@@ -107,8 +107,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be true.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="condition"/>
-        /// is false. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is false. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is false.
@@ -126,8 +126,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be true.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="condition"/>
-        /// is false. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is false. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -151,8 +151,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be true.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="condition"/>
-        /// is false. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is false. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -206,8 +206,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be false.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="condition"/>
-        /// is true. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is true. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
@@ -225,8 +225,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be false.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="condition"/>
-        /// is true. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is true. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="condition"/> is true.
@@ -244,8 +244,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be false.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="condition"/>
-        /// is true. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is true. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -269,8 +269,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The condition the test expects to be false.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="condition"/>
-        /// is true. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="condition"/>
+        /// is true. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -313,8 +313,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The object the test expects to be null.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="value"/>
-        /// is not null. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="value"/>
+        /// is not null. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is not null.
@@ -332,8 +332,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The object the test expects to be null.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="value"/>
-        /// is not null. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="value"/>
+        /// is not null. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -372,8 +372,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The object the test expects not to be null.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="value"/>
-        /// is null. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="value"/>
+        /// is null. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="value"/> is null.
@@ -391,8 +391,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The object the test expects not to be null.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="value"/>
-        /// is null. The format is shown in test results.
+        /// The message to include in the exception when <paramref name="value"/>
+        /// is null. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -442,8 +442,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is not the same as <paramref name="expected"/>. The format is shown
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is not the same as <paramref name="expected"/>. The message is shown
         /// in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -466,8 +466,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is not the same as <paramref name="expected"/>. The format is shown
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is not the same as <paramref name="expected"/>. The message is shown
         /// in test results.
         /// </param>
         /// <param name="parameters">
@@ -531,8 +531,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is the same as <paramref name="notExpected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is the same as <paramref name="notExpected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -556,8 +556,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is the same as <paramref name="notExpected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is the same as <paramref name="notExpected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -616,8 +616,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second value to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -644,8 +644,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second value to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -726,8 +726,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second value to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -754,8 +754,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second value to compare. This is the value produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -811,8 +811,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the object produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -836,8 +836,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the object produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -885,8 +885,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the object produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -910,8 +910,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The second object to compare. This is the object produced by the code under test.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -965,9 +965,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to
@@ -994,9 +994,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1075,9 +1075,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
@@ -1104,9 +1104,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1170,9 +1170,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to
@@ -1199,9 +1199,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1267,9 +1267,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
@@ -1296,9 +1296,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1362,9 +1362,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to
@@ -1391,9 +1391,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1459,9 +1459,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
@@ -1488,9 +1488,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1554,9 +1554,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
@@ -1582,9 +1582,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by more than <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is different than <paramref name="expected"/> by more than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1662,9 +1662,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
         /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
@@ -1691,9 +1691,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// by at most <paramref name="delta"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
+        /// The message to include in the exception when <paramref name="actual"/>
         /// is equal to <paramref name="notExpected"/> or different by less than
-        /// <paramref name="delta"/>. The format is shown in test results.
+        /// <paramref name="delta"/>. The message is shown in test results.
         /// </param>
         /// <param name="parameters">
         /// An array of parameters to use when formatting <paramref name="message"/>.
@@ -1754,8 +1754,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// indicates a case-insensitive comparison.)
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -1781,8 +1781,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// indicates a case-insensitive comparison.)
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -1839,8 +1839,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// A CultureInfo object that supplies culture-specific comparison information.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -1869,8 +1869,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// A CultureInfo object that supplies culture-specific comparison information.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is not equal to <paramref name="expected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is not equal to <paramref name="expected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -1951,8 +1951,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// indicates a case-insensitive comparison.)
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -1979,8 +1979,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// indicates a case-insensitive comparison.)
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -2039,8 +2039,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// A CultureInfo object that supplies culture-specific comparison information.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -2070,8 +2070,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// A CultureInfo object that supplies culture-specific comparison information.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="actual"/>
-        /// is equal to <paramref name="notExpected"/>. The format is shown in
+        /// The message to include in the exception when <paramref name="actual"/>
+        /// is equal to <paramref name="notExpected"/>. The message is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -2133,8 +2133,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The expected type of <paramref name="value"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="value"/>
-        /// is not an instance of <paramref name="expectedType"/>. The format is
+        /// The message to include in the exception when <paramref name="value"/>
+        /// is not an instance of <paramref name="expectedType"/>. The message is
         /// shown in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -2159,8 +2159,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The expected type of <paramref name="value"/>.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="value"/>
-        /// is not an instance of <paramref name="expectedType"/>. The format is
+        /// The message to include in the exception when <paramref name="value"/>
+        /// is not an instance of <paramref name="expectedType"/>. The message is
         /// shown in test results.
         /// </param>
         /// <param name="parameters">
@@ -2226,8 +2226,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The type that <paramref name="value"/> should not be.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="value"/>
-        /// is an instance of <paramref name="wrongType"/>. The format is shown
+        /// The message to include in the exception when <paramref name="value"/>
+        /// is an instance of <paramref name="wrongType"/>. The message is shown
         /// in test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -2252,8 +2252,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// The type that <paramref name="value"/> should not be.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="value"/>
-        /// is an instance of <paramref name="wrongType"/>. The format is shown
+        /// The message to include in the exception when <paramref name="value"/>
+        /// is an instance of <paramref name="wrongType"/>. The message is shown
         /// in test results.
         /// </param>
         /// <param name="parameters">
@@ -2312,7 +2312,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Throws an AssertFailedException.
         /// </summary>
         /// <param name="message">
-        /// The format to include in the exception. The format is shown in
+        /// The message to include in the exception. The message is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertFailedException">
@@ -2328,7 +2328,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Throws an AssertFailedException.
         /// </summary>
         /// <param name="message">
-        /// The format to include in the exception. The format is shown in
+        /// The message to include in the exception. The message is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -2362,7 +2362,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Throws an AssertInconclusiveException.
         /// </summary>
         /// <param name="message">
-        /// The format to include in the exception. The format is shown in
+        /// The message to include in the exception. The message is shown in
         /// test results.
         /// </param>
         /// <exception cref="AssertInconclusiveException">
@@ -2377,7 +2377,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Throws an AssertInconclusiveException.
         /// </summary>
         /// <param name="message">
-        /// The format to include in the exception. The format is shown in
+        /// The message to include in the exception. The message is shown in
         /// test results.
         /// </param>
         /// <param name="parameters">
@@ -2446,7 +2446,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Delegate to code to be tested and which is expected to throw exception.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="action"/>
+        /// The message to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <typeparam name="T">
@@ -2494,7 +2494,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Delegate to code to be tested and which is expected to throw exception.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="action"/>
+        /// The message to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <typeparam name="T">
@@ -2520,7 +2520,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Delegate to code to be tested and which is expected to throw exception.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="action"/>
+        /// The message to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <param name="parameters">
@@ -2549,7 +2549,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Delegate to code to be tested and which is expected to throw exception.
         /// </param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="action"/>
+        /// The message to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <param name="parameters">
@@ -2642,7 +2642,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="action">Delegate to code to be tested and which is expected to throw exception.</param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="action"/>
+        /// The message to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <typeparam name="T">Type of exception expected to be thrown.</typeparam>
@@ -2664,7 +2664,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// </summary>
         /// <param name="action">Delegate to code to be tested and which is expected to throw exception.</param>
         /// <param name="message">
-        /// The format to include in the exception when <paramref name="action"/>
+        /// The message to include in the exception when <paramref name="action"/>
         /// does not throws exception of type <typeparamref name="T"/>.
         /// </param>
         /// <param name="parameters">
@@ -2809,7 +2809,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// parameter name
         /// </param>
         /// <param name="message">
-        /// format for the invalid parameter exception
+        /// message for the invalid parameter exception
         /// </param>
         /// <param name="parameters">
         /// The parameters.
