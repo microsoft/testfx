@@ -97,5 +97,13 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions
             var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.EndsWith(actual, inString, StringComparison.OrdinalIgnoreCase));
             Assert.IsNull(ex);
         }
+
+        [TestMethod] // See https://github.com/dotnet/sdk/issues/25373
+        public void StringAssertContainsDoesNotThrowFormatException()
+        {
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.Contains(":-{", "x"));
+            Assert.IsNotNull(ex);
+            TestFrameworkV1.StringAssert.Contains(ex.Message, "StringAssert.Contains failed");
+        }
     }
 }

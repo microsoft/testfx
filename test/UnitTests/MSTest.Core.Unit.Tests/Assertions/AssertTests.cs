@@ -608,5 +608,29 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         }
 
         #endregion
+
+        #region HandleFail tests
+        [TestMethod] // See https://github.com/dotnet/sdk/issues/25373
+        public void HandleFailDoesNotFailWithFormatExceptionOnEmptyParameters()
+        {
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.HandleFail("name", "{"));
+
+            Assert.IsNotNull(ex);
+            Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), ex.GetType());
+            StringAssert.Contains(ex.Message, "name failed. {");
+        }
+        #endregion
+
+        #region Inconclusive tests
+        [TestMethod] // See https://github.com/dotnet/sdk/issues/25373
+        public void InconclusiveDoesNotFailWithFormatExceptionOnEmptyParameters()
+        {
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.Inconclusive("{"));
+
+            Assert.IsNotNull(ex);
+            Assert.AreEqual(typeof(TestFrameworkV2.AssertInconclusiveException), ex.GetType());
+            StringAssert.Contains(ex.Message, "Assert.Inconclusive failed. {");
+        }
+        #endregion
     }
 }
