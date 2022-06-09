@@ -9,6 +9,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     using System.Diagnostics;
     using System.Globalization;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// A collection of helper classes to test various conditions associated
@@ -128,7 +129,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 }
             }
 
-            Assert.HandleFail("CollectionAssert.Contains", message, parameters);
+            Assert.ThrowAssertFailed("CollectionAssert.Contains", Assert.BuildUserMessage(message, parameters));
         }
 
         /// <summary>
@@ -204,7 +205,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 if (object.Equals(current, element))
                 {
-                    Assert.HandleFail("CollectionAssert.DoesNotContain", message, parameters);
+                    Assert.ThrowAssertFailed("CollectionAssert.DoesNotContain", Assert.BuildUserMessage(message, parameters));
                 }
             }
         }
@@ -267,7 +268,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             {
                 if (current == null)
                 {
-                    Assert.HandleFail("CollectionAssert.AllItemsAreNotNull", message, parameters);
+                    Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreNotNull", Assert.BuildUserMessage(message, parameters));
                 }
             }
         }
@@ -347,26 +348,28 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                     else
                     {
                         // Found a second occurrence of null.
+                        string userMessage = Assert.BuildUserMessage(message, parameters);
                         var finalMessage = string.Format(
                             CultureInfo.CurrentCulture,
                             FrameworkMessages.AllItemsAreUniqueFailMsg,
-                            message ?? string.Empty,
+                            userMessage,
                             FrameworkMessages.Common_NullInMessages);
 
-                        Assert.HandleFail("CollectionAssert.AllItemsAreUnique", finalMessage, parameters);
+                        Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", finalMessage);
                     }
                 }
                 else
                 {
                     if (table.ContainsKey(current))
                     {
+                        string userMessage = Assert.BuildUserMessage(message, parameters);
                         string finalMessage = string.Format(
                             CultureInfo.CurrentCulture,
                             FrameworkMessages.AllItemsAreUniqueFailMsg,
-                            message ?? string.Empty,
+                            userMessage,
                             Assert.ReplaceNulls(current));
 
-                        Assert.HandleFail("CollectionAssert.AllItemsAreUnique", finalMessage, parameters);
+                        Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreUnique", finalMessage);
                     }
                     else
                     {
@@ -454,7 +457,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset", string.Empty);
             if (!IsSubsetOfHelper(subset, superset))
             {
-                Assert.HandleFail("CollectionAssert.IsSubsetOf", message, parameters);
+                Assert.ThrowAssertFailed("CollectionAssert.IsSubsetOf", Assert.BuildUserMessage(message, parameters));
             }
         }
 
@@ -532,7 +535,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset", string.Empty);
             if (IsSubsetOfHelper(subset, superset))
             {
-                Assert.HandleFail("CollectionAssert.IsNotSubsetOf", message, parameters);
+                Assert.ThrowAssertFailed("CollectionAssert.IsNotSubsetOf", Assert.BuildUserMessage(message, parameters));
             }
         }
 
@@ -619,7 +622,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             // Check whether one is null while the other is not.
             if ((expected == null) != (actual == null))
             {
-                Assert.HandleFail("CollectionAssert.AreEquivalent", message, parameters);
+                Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", Assert.BuildUserMessage(message, parameters));
             }
 
             // If the references are the same or both collections are null, they
@@ -632,13 +635,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             // Check whether the element counts are different.
             if (expected.Count != actual.Count)
             {
+                string userMessage = Assert.BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.ElementNumbersDontMatch,
-                    message == null ? string.Empty : Assert.ReplaceNulls(message),
+                    userMessage,
                     expected.Count,
                     actual.Count);
-                Assert.HandleFail("CollectionAssert.AreEquivalent", finalMessage, parameters);
+                Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", finalMessage);
             }
 
             // If both collections are empty, they are equivalent.
@@ -650,14 +654,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             // Search for a mismatched element.
             if (FindMismatchedElement(expected, actual, out var expectedCount, out var actualCount, out var mismatchedElement))
             {
+                string userMessage = Assert.BuildUserMessage(message, parameters);
                 var finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.ActualHasMismatchedElements,
-                    message == null ? string.Empty : Assert.ReplaceNulls(message),
+                    userMessage,
                     expectedCount.ToString(CultureInfo.CurrentCulture.NumberFormat),
                     Assert.ReplaceNulls(mismatchedElement),
                     actualCount.ToString(CultureInfo.CurrentCulture.NumberFormat));
-                Assert.HandleFail("CollectionAssert.AreEquivalent", finalMessage, parameters);
+                Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", finalMessage);
             }
 
             // All the elements and counts matched.
@@ -749,11 +754,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             // are equivalent. object.ReferenceEquals will handle case where both are null.
             if (ReferenceEquals(expected, actual))
             {
+                string userMessage = Assert.BuildUserMessage(message, parameters);
                 var finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.BothCollectionsSameReference,
-                    message == null ? string.Empty : Assert.ReplaceNulls(message));
-                Assert.HandleFail("CollectionAssert.AreNotEquivalent", finalMessage, parameters);
+                    userMessage);
+                Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", finalMessage);
             }
 
             // Check whether the element counts are different.
@@ -765,21 +771,23 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             // If both collections are empty, they are equivalent.
             if (expected.Count == 0)
             {
+                string userMessage = Assert.BuildUserMessage(message, parameters);
                 string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.BothCollectionsEmpty,
-                    message == null ? string.Empty : Assert.ReplaceNulls(message));
-                Assert.HandleFail("CollectionAssert.AreNotEquivalent", finalMessage, parameters);
+                    userMessage);
+                Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", finalMessage);
             }
 
             // Search for a mismatched element.
             if (!FindMismatchedElement(expected, actual, out var expectedCount, out var actualCount, out var mismatchedElement))
             {
+                string userMessage = Assert.BuildUserMessage(message, parameters);
                 var finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.BothSameElements,
-                    message == null ? string.Empty : Assert.ReplaceNulls(message));
-                Assert.HandleFail("CollectionAssert.AreNotEquivalent", finalMessage, parameters);
+                    userMessage);
+                Assert.ThrowAssertFailed("CollectionAssert.AreNotEquivalent", finalMessage);
             }
         }
 
@@ -872,15 +880,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 var expectedTypeInfo = expectedType?.GetTypeInfo();
                 if (expectedTypeInfo != null && elementTypeInfo != null && !expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
                 {
+                    string userMessage = Assert.BuildUserMessage(message, parameters);
                     var finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.ElementTypesAtIndexDontMatch,
-                        message == null ? string.Empty : Assert.ReplaceNulls(message),
+                        userMessage,
                         i,
                         expectedType.ToString(),
                         element.GetType().ToString());
-
-                    Assert.HandleFail("CollectionAssert.AllItemsAreInstancesOfType", finalMessage, parameters);
+                    Assert.ThrowAssertFailed("CollectionAssert.AllItemsAreInstancesOfType", finalMessage);
                 }
 
                 i++;
@@ -973,7 +981,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             string reason = string.Empty;
             if (!AreCollectionsEqual(expected, actual, new ObjectComparer(), ref reason))
             {
-                Assert.HandleFail("CollectionAssert.AreEqual", string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, message, reason), parameters);
+                string userMessage = Assert.BuildUserMessage(message, parameters);
+                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
+                Assert.ThrowAssertFailed("CollectionAssert.AreEqual", finalMessage);
             }
         }
 
@@ -1059,7 +1069,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             string reason = string.Empty;
             if (AreCollectionsEqual(notExpected, actual, new ObjectComparer(), ref reason))
             {
-                Assert.HandleFail("CollectionAssert.AreNotEqual", string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, message, reason), parameters);
+                string userMessage = Assert.BuildUserMessage(message, parameters);
+                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
+                Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
             }
         }
 
@@ -1151,7 +1163,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             string reason = string.Empty;
             if (!AreCollectionsEqual(expected, actual, comparer, ref reason))
             {
-                Assert.HandleFail("CollectionAssert.AreEqual", string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, message, reason), parameters);
+                string userMessage = Assert.BuildUserMessage(message, parameters);
+                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
+                Assert.ThrowAssertFailed("CollectionAssert.AreEqual", finalMessage);
             }
         }
 
@@ -1243,7 +1257,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             string reason = string.Empty;
             if (AreCollectionsEqual(notExpected, actual, comparer, ref reason))
             {
-                Assert.HandleFail("CollectionAssert.AreNotEqual", string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, message, reason), parameters);
+                string userMessage = Assert.BuildUserMessage(message, parameters);
+                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.CollectionEqualReason, userMessage, reason);
+                Assert.ThrowAssertFailed("CollectionAssert.AreNotEqual", finalMessage);
             }
         }
 

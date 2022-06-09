@@ -204,8 +204,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Assert.CheckParameterNotNull(substring, "StringAssert.Contains", "substring", string.Empty);
             if (value.IndexOf(substring, comparisonType) < 0)
             {
-                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, message);
-                Assert.HandleFail("StringAssert.Contains", finalMessage, parameters);
+                string userMessage = Assert.BuildUserMessage(message, parameters);
+                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
+                Assert.ThrowAssertFailed("StringAssert.Contains", finalMessage);
             }
         }
 
@@ -365,8 +366,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Assert.CheckParameterNotNull(substring, "StringAssert.StartsWith", "substring", string.Empty);
             if (!value.StartsWith(substring, comparisonType))
             {
-                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, substring, message);
-                Assert.HandleFail("StringAssert.StartsWith", finalMessage, parameters);
+                string userMessage = Assert.BuildUserMessage(message, parameters);
+                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, substring, userMessage);
+                Assert.ThrowAssertFailed("StringAssert.StartsWith", finalMessage);
             }
         }
 
@@ -526,8 +528,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Assert.CheckParameterNotNull(substring, "StringAssert.EndsWith", "substring", string.Empty);
             if (!value.EndsWith(substring, comparisonType))
             {
-                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, substring, message);
-                Assert.HandleFail("StringAssert.EndsWith", finalMessage, parameters);
+                string userMessage = Assert.BuildUserMessage(message, parameters);
+                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, substring, userMessage);
+                Assert.ThrowAssertFailed("StringAssert.EndsWith", finalMessage);
             }
         }
 
@@ -610,8 +613,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
             if (!pattern.IsMatch(value))
             {
-                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, message);
-                Assert.HandleFail("StringAssert.Matches", finalMessage, parameters);
+                string userMessage = Assert.BuildUserMessage(message, parameters);
+                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, userMessage);
+                Assert.ThrowAssertFailed("StringAssert.Matches", finalMessage);
             }
         }
 
@@ -687,8 +691,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
             if (pattern.IsMatch(value))
             {
-                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, message);
-                Assert.HandleFail("StringAssert.DoesNotMatch", finalMessage, parameters);
+                string userMessage = Assert.BuildUserMessage(message, parameters);
+                string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, userMessage);
+                Assert.ThrowAssertFailed("StringAssert.DoesNotMatch", finalMessage);
             }
         }
 
