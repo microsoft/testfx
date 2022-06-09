@@ -2374,7 +2374,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             string finalMessage = string.Empty;
             if (!string.IsNullOrEmpty(message))
             {
-                if (parameters == null)
+                if (parameters == null || parameters.Length == 0)
                 {
                     finalMessage = ReplaceNulls(message);
                 }
@@ -2763,7 +2763,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             string finalMessage = string.Empty;
             if (!string.IsNullOrEmpty(message))
             {
-                if (parameters == null)
+                if (parameters == null || parameters.Length == 0)
                 {
                     finalMessage = ReplaceNulls(message);
                 }
