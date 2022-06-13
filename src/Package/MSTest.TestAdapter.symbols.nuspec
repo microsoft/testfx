@@ -32,22 +32,17 @@
     <dependencies>
       <group targetFramework="netcoreapp1.0">
         <dependency id="NETStandard.Library" version="1.6.1" />
-        <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
       </group>
       
       <group targetFramework="netstandard1.5">
         <dependency id="NETStandard.Library" version="1.6.1" />
-        <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
       </group>
 
       <group targetFramework="net45" />
 
       <group targetFramework="uap10.0" />
 
-      <group targetFramework="net5.0">
-        <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
-        <dependency id="Newtonsoft.Json" version="[10.0.3, )" />
-      </group>
+      <group targetFramework="net5.0" />
     </dependencies>
   </metadata>
   <files>
