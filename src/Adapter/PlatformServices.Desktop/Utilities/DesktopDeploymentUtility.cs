@@ -57,8 +57,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         /// <returns>Root deployment directory.</returns>
         public override string GetRootDeploymentDirectory(string baseDirectory)
         {
-            string dateTimeSufix = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo);
-            string directoryName = string.Format(CultureInfo.CurrentCulture, Resource.TestRunName, DeploymentFolderPrefix, Environment.UserName, dateTimeSufix);
+            string dateTimeSufix = DateTime.Now.ToString("yyyyMMddTHHmmss", DateTimeFormatInfo.InvariantInfo);
+            string directoryName = string.Format(CultureInfo.InvariantCulture, Resource.TestRunName, DeploymentFolderPrefix, Environment.UserName, dateTimeSufix);
             directoryName = this.FileUtility.ReplaceInvalidFileNameCharacters(directoryName);
 
             return this.FileUtility.GetNextIterationDirectoryName(baseDirectory, directoryName);
