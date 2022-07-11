@@ -17,7 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+    using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
     using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -317,7 +317,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 if (hasTestInitializePassed && !isExceptionThrown && this.TestMethodOptions.ExpectedException != null)
                 {
                     result.TestFailureException = new TestFailedException(
-                        UnitTestOutcome.Failed,
+                        ObjectModelUnitTestOutcome.Failed,
                         this.TestMethodOptions.ExpectedException.NoExceptionMessage);
                     result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
                 }
@@ -385,9 +385,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 // attribute's Verify method) is an AssertInconclusiveException. If so, set
                 // the test outcome to Inconclusive.
                 result.TestFailureException = new TestFailedException(
-                    exceptionFromVerify is UTF.AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed,
-                                              exceptionFromVerify.TryGetMessage(),
-                                              realException.TryGetStackTraceInformation());
+                    exceptionFromVerify is UTF.AssertInconclusiveException
+                        ? ObjectModelUnitTestOutcome.Inconclusive
+                        : ObjectModelUnitTestOutcome.Failed,
+                    exceptionFromVerify.TryGetMessage(),
+                    realException.TryGetStackTraceInformation());
                 return false;
             }
             else
@@ -428,7 +430,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             if (isTargetInvocationException && ex.InnerException == null)
             {
                 var errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_FailedToGetTestMethodException, className, methodName);
-                return new TestFailedException(UnitTestOutcome.Error, errorMessage);
+                return new TestFailedException(ObjectModelUnitTestOutcome.Error, errorMessage);
             }
 
             // Get the real exception thrown by the test method
@@ -441,24 +443,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             else
             {
-                string errorMessage;
+                string errorMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.UTA_TestMethodThrows,
+                    className,
+                    methodName,
+                    StackTraceHelper.GetExceptionMessage(realException));
 
                 // Handle special case of UI objects in TestMethod to suggest UITestMethod
                 if (realException.HResult == -2147417842)
                 {
-                    errorMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.UTA_WrongThread,
-                        string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestMethodThrows, className, methodName, StackTraceHelper.GetExceptionMessage(realException)));
-                }
-                else
-                {
-                    errorMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.UTA_TestMethodThrows,
-                        className,
-                        methodName,
-                        StackTraceHelper.GetExceptionMessage(realException));
+                    errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_WrongThread, errorMessage);
                 }
 
                 StackTraceInformation stackTrace = null;
@@ -472,7 +467,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     stackTrace = StackTraceHelper.GetStackTraceInformation(realException);
                 }
 
-                return new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTrace, realException);
+                return new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, stackTrace, realException);
             }
         }
 
@@ -509,70 +504,66 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             catch (Exception ex)
             {
-                var cleanupOutcome = UTF.UnitTestOutcome.Failed;
                 var cleanupError = new StringBuilder();
                 var cleanupStackTrace = new StringBuilder();
-                StackTraceInformation cleanupStackTraceInfo = null;
-
-                TestFailedException testFailureException = result.TestFailureException as TestFailedException;
-                testFailureException.TryGetTestFailureExceptionMessageAndStackTrace(cleanupError, cleanupStackTrace);
-
-                if (cleanupStackTrace.Length > 0)
+                if (result.TestFailureException is TestFailedException testFailureException)
                 {
-                    cleanupStackTrace.Append(Resource.UTA_CleanupStackTrace);
-                    cleanupStackTrace.Append(Environment.NewLine);
+                    if (!string.IsNullOrEmpty(testFailureException.Message))
+                    {
+                        cleanupError.Append(testFailureException.Message);
+                        cleanupError.AppendLine();
+                    }
+
+                    if (!string.IsNullOrEmpty(testFailureException.StackTraceInformation?.ErrorStackTrace))
+                    {
+                        cleanupStackTrace.Append(testFailureException.StackTraceInformation.ErrorStackTrace);
+                        cleanupStackTrace.Append(Environment.NewLine);
+                        cleanupStackTrace.Append(Resource.UTA_CleanupStackTrace);
+                        cleanupStackTrace.Append(Environment.NewLine);
+                    }
                 }
 
                 Exception realException = ex.GetInnerExceptionOrDefault();
 
-                // special case UnitTestAssertException to trim off part of the stack trace
-                if (!realException.TryGetUnitTestAssertException(out cleanupOutcome, out var exceptionMessage, out var realExceptionStackTraceInfo))
+                if (testCleanupMethod != null)
                 {
-                    cleanupOutcome = UTF.UnitTestOutcome.Failed;
-                    exceptionMessage = this.GetTestCleanUpExceptionMessage(testCleanupMethod, realException);
-                    realExceptionStackTraceInfo = realException.TryGetStackTraceInformation();
+                    // Do not use StackTraceHelper.GetExceptionMessage(realException) as it prefixes the message with the exception type name.
+                    cleanupError.AppendFormat(
+                        CultureInfo.CurrentCulture,
+                        Resource.UTA_CleanupMethodThrows,
+                        this.TestClassName,
+                        testCleanupMethod.Name,
+                        realException.GetType().ToString(),
+                        realException.TryGetMessage());
+                }
+                else
+                {
+                    // Use StackTraceHelper.GetExceptionMessage(realException) to get the message prefixed with the exception type name.
+                    cleanupError.AppendFormat(
+                        CultureInfo.CurrentCulture,
+                        Resource.UTA_CleanupMethodThrowsGeneralError,
+                        this.TestClassName,
+                        StackTraceHelper.GetExceptionMessage(realException));
                 }
 
-                cleanupError.Append(exceptionMessage);
+                StackTraceInformation cleanupStackTraceInfo = null;
+                var realExceptionStackTraceInfo = realException.TryGetStackTraceInformation();
                 if (realExceptionStackTraceInfo != null)
                 {
                     cleanupStackTrace.Append(realExceptionStackTraceInfo.ErrorStackTrace);
                     cleanupStackTraceInfo = cleanupStackTraceInfo ?? realExceptionStackTraceInfo;
                 }
 
-                UTF.UnitTestOutcome outcome = testFailureException == null ? cleanupOutcome : cleanupOutcome.GetMoreImportantOutcome(result.Outcome);
-                StackTraceInformation finalStackTraceInfo = cleanupStackTraceInfo != null ?
-                                new StackTraceInformation(
-                                    cleanupStackTrace.ToString(),
-                                    cleanupStackTraceInfo.ErrorFilePath,
-                                    cleanupStackTraceInfo.ErrorLineNumber,
-                                    cleanupStackTraceInfo.ErrorColumnNumber) :
-                                new StackTraceInformation(cleanupStackTrace.ToString());
+                var finalStackTraceInfo = cleanupStackTraceInfo != null
+                    ? new StackTraceInformation(
+                        cleanupStackTrace.ToString(),
+                        cleanupStackTraceInfo.ErrorFilePath,
+                        cleanupStackTraceInfo.ErrorLineNumber,
+                        cleanupStackTraceInfo.ErrorColumnNumber)
+                    : new StackTraceInformation(cleanupStackTrace.ToString());
 
-                result.Outcome = outcome;
-                result.TestFailureException = new TestFailedException(outcome.ToUnitTestOutcome(), cleanupError.ToString(), finalStackTraceInfo);
-            }
-        }
-
-        private string GetTestCleanUpExceptionMessage(MethodInfo testCleanupMethod, Exception exception)
-        {
-            if (testCleanupMethod != null)
-            {
-                return string.Format(
-                            CultureInfo.CurrentCulture,
-                            Resource.UTA_CleanupMethodThrows,
-                            this.TestClassName,
-                            testCleanupMethod?.Name,
-                            exception.GetType().ToString(),
-                            StackTraceHelper.GetExceptionMessage(exception));
-            }
-            else
-            {
-                return string.Format(
-                            CultureInfo.CurrentCulture,
-                            Resource.UTA_CleanupMethodThrowsGeneralError,
-                            this.TestClassName,
-                            StackTraceHelper.GetExceptionMessage(exception));
+                result.Outcome = result.Outcome.GetMoreImportantOutcome(realException is AssertInconclusiveException ? UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed);
+                result.TestFailureException = new TestFailedException(result.Outcome.ToUnitTestOutcome(), cleanupError.ToString(), finalStackTraceInfo, realException);
             }
         }
 
@@ -607,30 +598,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             }
             catch (Exception ex)
             {
-                var innerException = ex.GetInnerExceptionOrDefault();
-                var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
+                var realException = ex.GetInnerExceptionOrDefault();
 
-                if (innerException.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var exceptionStackTraceInfo))
-                {
-                    result.Outcome = outcome;
-                    result.TestFailureException = new TestFailedException(
-                        UnitTestOutcome.Failed,
-                        exceptionMessage,
-                        exceptionStackTraceInfo);
-                }
-                else
-                {
-                    var stackTrace = StackTraceHelper.GetStackTraceInformation(innerException);
-                    var errorMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.UTA_InitMethodThrows,
-                        this.TestClassName,
-                        testInitializeMethod?.Name,
-                        StackTraceHelper.GetExceptionMessage(innerException));
+                // Prefix the exception message with the exception type name as prefix when exception is not assert exception.
+                var exceptionMessage = realException is UnitTestAssertException
+                    ? realException.TryGetMessage()
+                    : StackTraceHelper.GetExceptionMessage(realException);
+                var errorMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.UTA_InitMethodThrows,
+                    this.TestClassName,
+                    testInitializeMethod?.Name,
+                    exceptionMessage);
+                var stackTrace = StackTraceHelper.GetStackTraceInformation(realException);
 
-                    result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
-                    result.TestFailureException = new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTrace);
-                }
+                result.Outcome = realException is AssertInconclusiveException ? UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed;
+                result.TestFailureException = new TestFailedException(
+                    result.Outcome.ToUnitTestOutcome(),
+                    errorMessage,
+                    stackTrace,
+                    realException);
             }
 
             return false;
@@ -673,7 +660,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     StackTraceHelper.GetExceptionMessage(ex.GetInnerExceptionOrDefault()));
 
                 result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
-                result.TestFailureException = new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTraceInfo);
+                result.TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, stackTraceInfo);
             }
 
             return false;
@@ -727,7 +714,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     exceptionMessage);
 
                 result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
-                result.TestFailureException = new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTraceInfo);
+                result.TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, stackTraceInfo);
             }
 
             return classInstance;
@@ -782,7 +769,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     this.TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel();
                 }
 
-                TestResult timeoutResult = new TestResult() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(UnitTestOutcome.Timeout, errorMessage) };
+                TestResult timeoutResult = new TestResult() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, errorMessage) };
                 return timeoutResult;
             }
         }

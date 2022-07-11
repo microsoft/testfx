@@ -214,23 +214,5 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             Assert.AreEqual("Dummy Message", exceptionMessage);
         }
         #endregion
-
-        #region TryGetTestFailureExceptionMessageAndStackTrace scenarios
-
-        [TestMethod]
-        public void TryGetTestFailureExceptionMessageAndStackTraceFillsInMessageAndStackTrace()
-        {
-            StringBuilder message = new StringBuilder();
-            StringBuilder stackTrace = new StringBuilder();
-            var testFailureException = new TestFailedException(UnitTestOutcome.NotFound, "DummyMessage", new StackTraceInformation("DummyStack"));
-
-            testFailureException.TryGetTestFailureExceptionMessageAndStackTrace(message, stackTrace);
-
-            StringAssert.StartsWith(message.ToString(), "DummyMessage");
-            StringAssert.StartsWith(stackTrace.ToString(), "DummyStack");
-        }
-
-        #endregion
-
     }
 }

@@ -227,7 +227,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunClassInitializeShouldNotInvokeIfClassInitializeIsNull()
         {
             var classInitCallCount = 0;
-            DummyTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+            DummyTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
 
             this.testClassInfo.ClassInitializeMethod = null;
 
@@ -239,7 +239,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void RunClassInitializeShouldThrowIfTestContextIsNull()
         {
-            DummyTestClass.ClassInitializeMethodBody = (tc) => { };
+            DummyTestClass.ClassInitializeMethodBody = tc => { };
 
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
@@ -252,7 +252,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunClassInitializeShouldNotExecuteClassInitializeIfItHasAlreadyExecuted()
         {
             var classInitCallCount = 0;
-            DummyTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+            DummyTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
 
             this.testClassInfo.IsClassInitializeExecuted = true;
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
@@ -266,7 +266,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunClassInitializeShouldExecuteClassInitialize()
         {
             var classInitCallCount = 0;
-            DummyTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+            DummyTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
             this.testClassInfo.RunClassInitialize(this.testContext);
@@ -277,7 +277,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void RunClassInitializeShouldSetClassInitializeExecutedFlag()
         {
-            DummyTestClass.ClassInitializeMethodBody = (tc) => { };
+            DummyTestClass.ClassInitializeMethodBody = tc => { };
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
             this.testClassInfo.RunClassInitialize(this.testContext);
@@ -289,7 +289,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunClassInitializeShouldOnlyRunOnce()
         {
             var classInitCallCount = 0;
-            DummyTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+            DummyTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
             this.testClassInfo.RunClassInitialize(this.testContext);
@@ -302,7 +302,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunClassInitializeShouldRunOnlyOnceIfThereIsNoDerivedClassInitializeAndSetClassInitializeExecutedFlag()
         {
             var classInitCallCount = 0;
-            DummyBaseTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+            DummyBaseTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
             this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
                 Tuple.Create(typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"), (MethodInfo)null));
 
@@ -316,7 +316,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void RunClassInitializeShouldSetClassInitializationExceptionOnException()
         {
-            DummyTestClass.ClassInitializeMethodBody = (tc) => UTF.Assert.Inconclusive("Test Inconclusive");
+            DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
             var exception = ActionUtility.PerformActionAndReturnException(() => this.testClassInfo.RunClassInitialize(this.testContext));
@@ -328,8 +328,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunClassInitializeShouldExecuteBaseClassInitializeMethod()
         {
             var classInitCallCount = 0;
-            DummyBaseTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
-            DummyDerivedTestClass.DerivedClassInitializeMethodBody = (tc) => classInitCallCount++;
+            DummyBaseTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
+            DummyDerivedTestClass.DerivedClassInitializeMethodBody = tc => classInitCallCount++;
 
             this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
                 new Tuple<MethodInfo, MethodInfo>(
@@ -347,8 +347,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var classInitCallCount = 0;
 
-            DummyBaseTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount += 2;
-            DummyDerivedTestClass.DerivedClassInitializeMethodBody = (tc) => classInitCallCount++;
+            DummyBaseTestClass.ClassInitializeMethodBody = tc => classInitCallCount += 2;
+            DummyDerivedTestClass.DerivedClassInitializeMethodBody = tc => classInitCallCount++;
 
             this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
                 new Tuple<MethodInfo, MethodInfo>(
@@ -367,7 +367,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunClassInitializeShouldExecuteBaseClassInitializeIfDerivedClassInitializeIsNull()
         {
             var classInitCallCount = 0;
-            DummyBaseTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+            DummyBaseTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
 
             this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
                 new Tuple<MethodInfo, MethodInfo>(
@@ -383,7 +383,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunClassInitializeShouldNotExecuteBaseClassIfBaseClassInitializeIsNull()
         {
             var classInitCallCount = 0;
-            DummyTestClass.ClassInitializeMethodBody = (tc) => classInitCallCount++;
+            DummyTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
 
             this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(new Tuple<MethodInfo, MethodInfo>(null, null));
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
@@ -396,7 +396,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions()
         {
-            DummyBaseTestClass.ClassInitializeMethodBody = (tc) => { throw new ArgumentException("Argument exception"); };
+            DummyBaseTestClass.ClassInitializeMethodBody = tc => { throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message")); };
 
             this.testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(new Tuple<MethodInfo, MethodInfo>(
                 typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"),
@@ -407,49 +407,19 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNotNull(exception);
             Assert.AreEqual(UnitTestOutcome.Failed, exception.Outcome);
             Assert.AreEqual(
-                "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.InitBaseClassMethod threw exception. System.ArgumentException: System.ArgumentException: Argument exception.",
+                "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.InitBaseClassMethod threw exception. System.ArgumentException: Some exception message.",
                 exception.Message);
             StringAssert.StartsWith(
                 exception.StackTraceInformation.ErrorStackTrace,
-                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions>");
+                "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions>");
+            Assert.IsInstanceOfType(exception.InnerException, typeof(ArgumentException));
+            Assert.IsInstanceOfType(exception.InnerException.InnerException, typeof(InvalidOperationException));
         }
 
         [TestMethod]
         public void RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure()
         {
-            DummyTestClass.ClassInitializeMethodBody = (tc) => UTF.Assert.Fail("Test failure");
-            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
-
-            var exception = ActionUtility.PerformActionAndReturnException(() => this.testClassInfo.RunClassInitialize(this.testContext)) as TestFailedException;
-
-            Assert.IsNotNull(exception);
-            Assert.AreEqual(UnitTestOutcome.Failed, exception.Outcome);
-            StringAssert.Contains(exception.Message, "Test failure");
-            StringAssert.StartsWith(
-                exception.StackTraceInformation.ErrorStackTrace,
-                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure>");
-        }
-
-        [TestMethod]
-        public void RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive()
-        {
-            DummyTestClass.ClassInitializeMethodBody = (tc) => UTF.Assert.Inconclusive("Test Inconclusive");
-            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
-
-            var exception = ActionUtility.PerformActionAndReturnException(() => this.testClassInfo.RunClassInitialize(this.testContext)) as TestFailedException;
-
-            Assert.IsNotNull(exception);
-            Assert.AreEqual(UnitTestOutcome.Inconclusive, exception.Outcome);
-            StringAssert.Contains(exception.Message, "Test Inconclusive");
-            StringAssert.StartsWith(
-                exception.StackTraceInformation.ErrorStackTrace,
-                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive>");
-        }
-
-        [TestMethod]
-        public void RunClassInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions()
-        {
-            DummyTestClass.ClassInitializeMethodBody = (tc) => { throw new ArgumentException("Argument exception"); };
+            DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Fail("Test failure");
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
             var exception = ActionUtility.PerformActionAndReturnException(() => this.testClassInfo.RunClassInitialize(this.testContext)) as TestFailedException;
@@ -457,17 +427,55 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             Assert.IsNotNull(exception);
             Assert.AreEqual(UnitTestOutcome.Failed, exception.Outcome);
             Assert.AreEqual(
-                "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.ArgumentException: System.ArgumentException: Argument exception.",
+                "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure.",
                 exception.Message);
             StringAssert.StartsWith(
                 exception.StackTraceInformation.ErrorStackTrace,
-                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>");
+                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure>");
+            Assert.IsInstanceOfType(exception.InnerException, typeof(UTF.AssertFailedException));
+        }
+
+        [TestMethod]
+        public void RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive()
+        {
+            DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
+
+            var exception = ActionUtility.PerformActionAndReturnException(() => this.testClassInfo.RunClassInitialize(this.testContext)) as TestFailedException;
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(UnitTestOutcome.Inconclusive, exception.Outcome);
+            Assert.AreEqual(
+                "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive.",
+                exception.Message);
+            StringAssert.StartsWith(
+                exception.StackTraceInformation.ErrorStackTrace,
+                "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive>");
+            Assert.IsInstanceOfType(exception.InnerException, typeof(UTF.AssertInconclusiveException));
+        }
+
+        [TestMethod]
+        public void RunClassInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions()
+        {
+            DummyTestClass.ClassInitializeMethodBody = tc => { throw new ArgumentException("Argument exception"); };
+            this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
+
+            var exception = ActionUtility.PerformActionAndReturnException(() => this.testClassInfo.RunClassInitialize(this.testContext)) as TestFailedException;
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(UnitTestOutcome.Failed, exception.Outcome);
+            Assert.AreEqual(
+                "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.ArgumentException: Argument exception.",
+                exception.Message);
+            StringAssert.StartsWith(
+                exception.StackTraceInformation.ErrorStackTrace,
+                "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>");
         }
 
         [TestMethod]
         public void RunClassInitializeShouldThrowForAlreadyExecutedTestClassInitWithException()
         {
-            DummyTestClass.ClassInitializeMethodBody = (tc) => { };
+            DummyTestClass.ClassInitializeMethodBody = tc => { };
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
             this.testClassInfo.ClassInitializationException = new TestFailedException(UnitTestOutcome.Failed, "Cached Test failure");
 
@@ -483,7 +491,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
         {
-            DummyTestClass.ClassInitializeMethodBody = (tc) => { Assert.AreEqual(tc, this.testContext); };
+            DummyTestClass.ClassInitializeMethodBody = tc => { Assert.AreEqual(tc, this.testContext); };
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
             this.testClassInfo.RunClassInitialize(this.testContext);

@@ -169,25 +169,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 throw this.AssemblyInitializationException;
             }
 
-            var realException = this.AssemblyInitializationException.InnerException
-                                ?? this.AssemblyInitializationException;
+            var realException = this.AssemblyInitializationException.InnerException ?? this.AssemblyInitializationException;
 
-            var outcome = UnitTestOutcome.Failed;
-            if (!realException.TryGetUnitTestAssertException(out outcome, out var errorMessage, out var stackTraceInfo))
-            {
-                var exception = realException.GetType().ToString();
-                var message = StackTraceHelper.GetExceptionMessage(realException);
-                errorMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_AssemblyInitMethodThrows,
-                    this.AssemblyInitializeMethod.DeclaringType.FullName,
-                    this.AssemblyInitializeMethod.Name,
-                    exception,
-                    message);
-                stackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
-            }
+            var outcome = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
 
-            var testFailedException = new TestFailedException(outcome, errorMessage, stackTraceInfo);
+            // Do not use StackTraceHelper.GetExceptionMessage(realException) as it prefixes the message with the exception type name.
+            var exceptionMessage = realException.TryGetMessage();
+            var errorMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_AssemblyInitMethodThrows,
+                this.AssemblyInitializeMethod.DeclaringType.FullName,
+                this.AssemblyInitializeMethod.Name,
+                realException.GetType().ToString(),
+                exceptionMessage);
+            var exceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
+
+            var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo, realException);
             this.AssemblyInitializationException = testFailedException;
 
             throw testFailedException;
