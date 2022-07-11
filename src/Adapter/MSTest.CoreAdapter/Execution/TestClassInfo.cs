@@ -10,10 +10,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
+
     using Extensions;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using ObjectModel;
-    using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+
+    using ObjectModelUnitTestOutcome = ObjectModel.UnitTestOutcome;
 
     /// <summary>
     /// Defines the TestClassInfo object
@@ -319,21 +321,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             // Fail the current test if it was a failure.
             var realException = this.ClassInitializationException.InnerException ?? this.ClassInitializationException;
 
-            var outcome = UnitTestOutcome.Failed;
-            if (!realException.TryGetUnitTestAssertException(out outcome, out string errorMessage, out StackTraceInformation exceptionStackTraceInfo))
-            {
-                errorMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_ClassInitMethodThrows,
-                    this.ClassType.FullName,
-                    failedClassInitializeMethodName,
-                    realException.GetType().ToString(),
-                    StackTraceHelper.GetExceptionMessage(realException));
+            var outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
 
-                exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
-            }
+            // Do not use StackTraceHelper.GetExceptionMessage(realException) as it prefixes the message with the exception type name.
+            var exceptionMessage = realException.TryGetMessage();
+            var errorMessage = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_ClassInitMethodThrows,
+                this.ClassType.FullName,
+                failedClassInitializeMethodName,
+                realException.GetType().ToString(),
+                exceptionMessage);
+            var exceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
 
-            var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo);
+            var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo, realException);
             this.ClassInitializationException = testFailedException;
 
             throw testFailedException;
@@ -411,7 +412,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                             if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
                             {
-                                var testFailedException = new TestFailedException(UnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
+                                var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
                                 this.ClassCleanupException = testFailedException;
                                 throw testFailedException;
                             }
