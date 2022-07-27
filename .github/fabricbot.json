@@ -1,0 +1,133 @@
+{
+  "version": "1.0",
+  "tasks": [
+    {
+      "taskType": "trigger",
+      "capabilityId": "AutoMerge",
+      "subCapability": "AutoMerge",
+      "version": "1.0",
+      "config": {
+        "label": "auto-merge",
+        "taskName": "Auto-merge pull requests",
+        "minMinutesOpen": "3",
+        "mergeType": "squash",
+        "deleteBranches": true,
+        "removeLabelOnPush": true,
+        "requireAllStatuses": true,
+        "usePrDescriptionAsCommitMessage": true,
+        "requireAllStatuses_exemptList": [
+          "dependabot"
+        ],
+        "allowAutoMergeInstructionsWithoutLabel": false,
+        "conditionalMergeTypes": [],
+        "enforceDMPAsStatus": true
+      },
+      "id": "JuMdi8HG5hj"
+    },
+    {
+      "taskType": "trigger",
+      "capabilityId": "IssueResponder",
+      "subCapability": "PullRequestResponder",
+      "version": "1.0",
+      "id": "2NIutwdw7",
+      "config": {
+        "conditions": {
+          "operator": "and",
+          "operands": [
+            {
+              "name": "prTargetsBranch",
+              "parameters": {
+                "branchName": "master"
+              }
+            },
+            {
+              "name": "activitySenderHasPermissions",
+              "parameters": {
+                "permissions": "write"
+              }
+            },
+            {
+              "name": "isAction",
+              "parameters": {
+                "action": "opened"
+              }
+            },
+            {
+              "operator": "or",
+              "operands": [
+                {
+                  "operator": "and",
+                  "operands": [
+                    {
+                      "name": "titleContains",
+                      "parameters": {
+                        "titlePattern": "Localized file check-in by OneLocBuild Task: Build definition ID 4138: Build ID: Build ID [0-9]+",
+                        "isRegex": true
+                      }
+                    },
+                    {
+                      "name": "isActivitySender",
+                      "parameters": {
+                        "user": "testplatform-bot"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "operator": "and",
+                  "operands": [
+                    {
+                      "name": "titleContains",
+                      "parameters": {
+                        "titlePattern": "LEGO\\: Pull request from lego\\/[a-z0-9_\\-]* to master",
+                        "isRegex": true
+                      }
+                    },
+                    {
+                      "name": "isActivitySender",
+                      "parameters": {
+                        "user": "csigs"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        "eventType": "pull_request",
+        "eventNames": [
+          "pull_request",
+          "issues",
+          "project_card"
+        ],
+        "taskName": "Auto-merge Localization PRs",
+        "actions": [
+          {
+            "name": "approvePullRequest",
+            "parameters": {
+              "comment": "Localization PR auto-approved."
+            }
+          },
+          {
+            "name": "addLabel",
+            "parameters": {
+              "label": "localization"
+            }
+          },
+          {
+            "name": "addLabel",
+            "parameters": {
+              "label": "auto-merge"
+            }
+          }
+        ],
+        "dangerZone": {
+          "respondToBotActions": true,
+          "acceptRespondToBotActions": true
+        }
+      }
+    }
+  ],
+  "userGroups": []
+}
