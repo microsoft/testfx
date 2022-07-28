@@ -132,6 +132,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// The <see cref="object"/>.
         /// </returns>
         [SecurityCritical]
+#if NET5_0_OR_GREATER
+        [Obsolete]
+#endif
         public override object InitializeLifetimeService()
         {
             return null;

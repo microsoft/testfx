@@ -1,35 +1,46 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.4;netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <LangVersion>Latest</LangVersion>
+  </PropertyGroup>
+
   <PropertyGroup>
     <ProjectGuid>{98BA6D2C-1F3D-4636-8E1D-D4932B7A253D}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</AssemblyName>
-    <ProjectTypeGuids>{786C830F-07A1-408B-BD7F-6EE04809D6DB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>TRACE;DEBUG;CODE_ANALYSIS</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+
+  <!-- Remove after ARCADE transiton -->
+  <PropertyGroup>
+    <SkipAppendingVersion>true</SkipAppendingVersion>
+    <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
+  </PropertyGroup>
+  <!-- / Remove after ARCADE transiton -->
+  
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;CODE_ANALYSIS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="System.Collections.Concurrent">
       <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETPortable\v4.5\System.Collections.Concurrent.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
       <Name>PlatformServices.Interface</Name>
@@ -51,87 +62,30 @@
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)" PrivateAssets="all">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="Discovery\AssemblyEnumerator.cs" />
-    <Compile Include="Discovery\AssemblyEnumeratorWrapper.cs" />
-    <Compile Include="Discovery\TestMethodValidator.cs" />
-    <Compile Include="Execution\RunCleanupResult.cs" />
-    <Compile Include="Execution\TcmTestPropertiesProvider.cs" />
-    <Compile Include="Extensions\TestContextExtensions.cs" />
-    <Compile Include="Extensions\TestResultExtensions.cs" />
-    <Compile Include="Extensions\UnitTestOutcomeExtensions.cs" />
-    <Compile Include="Helpers\DataSerializationHelper.cs" />
-    <Compile Include="Helpers\DictionaryHelper.cs" />
-    <Compile Include="Helpers\RunSettingsUtilities.cs" />
-    <Compile Include="Helpers\TestRunParameters.cs" />
-    <Compile Include="MSTestDiscoverer.cs" />
-    <Compile Include="Discovery\TypeEnumerator.cs" />
-    <Compile Include="Extensions\ExceptionExtensions.cs" />
-    <Compile Include="Execution\LogMessageListener.cs" />
-    <Compile Include="Execution\TestCaseDiscoverySink.cs" />
-    <Compile Include="Execution\TestExecutionManager.cs" />
-    <Compile Include="MSTestExecutor.cs" />
-    <Compile Include="Execution\StackTraceHelper.cs" />
-    <Compile Include="Execution\TestAssemblyInfo.cs" />
-    <Compile Include="Execution\TestClassInfo.cs" />
-    <Compile Include="Execution\TestAssemblySettingsProvider.cs" />
-    <Compile Include="ObjectModel\AdapterSettingsException.cs" />
-    <Compile Include="ObjectModel\TestAssemblySettings.cs" />
-    <Compile Include="ObjectModel\DynamicDataType.cs" />
-    <Compile Include="ObjectModel\TestFailedException.cs" />
-    <Compile Include="Properties\TestExtensionTypesAttribute.cs" />
-    <Compile Include="TestMethodFilter.cs" />
-    <Compile Include="Execution\TestMethodRunner.cs" />
-    <Compile Include="Execution\TypeCache.cs" />
-    <Compile Include="Execution\UnitTestRunner.cs" />
-    <Compile Include="Extensions\MethodInfoExtensions.cs" />
-    <Compile Include="Extensions\TestCaseExtensions.cs" />
-    <Compile Include="MSTestSettings.cs" />
-    <Compile Include="ObjectModel\StackTraceInformation.cs" />
-    <Compile Include="ObjectModel\TestMethod.cs" />
-    <Compile Include="Execution\TestMethodInfo.cs" />
-    <Compile Include="ObjectModel\TestMethodOptions.cs" />
-    <Compile Include="ObjectModel\TypeInspectionException.cs" />
-    <Compile Include="Helpers\UnitTestOutcomeHelper.cs" />
-    <Compile Include="ObjectModel\UnitTestOutcome.cs" />
-    <Compile Include="ObjectModel\UnitTestResult.cs" />
-    <Compile Include="Discovery\TypeValidator.cs" />
-    <Compile Include="Friends.cs" />
-    <Compile Include="IPlatformServiceProvider.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ObjectModel\UnitTestElement.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="PlatformServiceProvider.cs" />
-    <Compile Include="Helpers\ReflectHelper.cs" />
-    <Compile Include="Execution\TestRunCancellationToken.cs" />
-    <Compile Include="Discovery\UnitTestDiscoverer.cs" />
-    <Compile Include="Resources\Resource.Designer.cs">
+    <Compile Update="Resources\Resource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
-    <Compile Include="RunConfigurationSettings.cs" />
-    <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\Resource.resx">
+    
+    <EmbeddedResource Update="Resources\Resource.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
       <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</CustomToolNamespace>
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
+  
   <Target Name="CopyMSBuildScriptsFiles" DependsOnTargets="CoreCompile" AfterTargets="CoreCompile">
     <ItemGroup>
       <FileToCopy Include="$(ProjectDir)..\Build\**\*.*" />

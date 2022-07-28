@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETSTANDARD1_4
 namespace System
 {
     using System.Runtime.InteropServices;
@@ -16,3 +17,4 @@ namespace System
     {
     }
 }
+#endif
