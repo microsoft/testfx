@@ -41,7 +41,7 @@
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>5.4.7</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <MicrosoftWindowsAppSDKVersion>1.0.0</MicrosoftWindowsAppSDKVersion>
     <!-- / UWP and WinUI dependencies -->
-    <MoqVersion>4.8.3</MoqVersion>
+    <MoqVersion>4.18.1</MoqVersion>
     <CastleCoreVersion>4.3.0</CastleCoreVersion>
     <FluentAssertionsVersion>6.7.0</FluentAssertionsVersion>
     <StyleCopAnalyzersVersion>1.0.0</StyleCopAnalyzersVersion>
