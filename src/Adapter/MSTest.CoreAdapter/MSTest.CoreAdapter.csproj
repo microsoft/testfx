@@ -84,7 +84,7 @@
     <ItemGroup>
       <FileToCopy Include="$(ProjectDir)..\Build\**\*.*" />
     </ItemGroup>
-    <Copy SourceFiles="@(FileToCopy)" DestinationFiles="@(FileToCopy->'$(OutDir)..\Build\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="True" OverwriteReadOnlyFiles="True" Retries="3" RetryDelayMilliseconds="500" UseHardlinksIfPossible="False" UseSymboliclinksIfPossible="False" ErrorIfLinkFails="False" Condition="@(FileToCopy-&gt;Count()) &gt; 0">
+    <Copy SourceFiles="@(FileToCopy)" DestinationFiles="@(FileToCopy->'$(OutDir)..\..\Build\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="True" OverwriteReadOnlyFiles="True" Retries="3" RetryDelayMilliseconds="500" UseHardlinksIfPossible="False" UseSymboliclinksIfPossible="False" ErrorIfLinkFails="False" Condition="@(FileToCopy-&gt;Count()) &gt; 0">
       <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
     </Copy>
   </Target>

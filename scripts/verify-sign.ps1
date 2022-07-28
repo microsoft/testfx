@@ -119,7 +119,7 @@ function Test-NugetPackages
 function Write-FailLog ([string] $message)
 {
     $script:ErrorCount = $script:ErrorCount + 1
-    Write-ToCI -message $message -type "error"
+    Write-ToCI -message $message -type "task.logissue type=error"
 }
 
 function Write-Debug ([string] $message)
@@ -129,12 +129,6 @@ function Write-Debug ([string] $message)
 
 function Write-ToCI ([string] $message, [string]$type, [switch]$vso)
 {
-    $currentColor = $Host.UI.RawUI.ForegroundColor
-
-    if($type -eq "error") {
-        $Host.UI.RawUI.ForegroundColor = "Red"
-    }
-
     if ($message -or $vso -or $type)
     {
         $prefix = ""
@@ -142,9 +136,9 @@ function Write-ToCI ([string] $message, [string]$type, [switch]$vso)
             $prefix = "vso"
         }
 
-        Write-Output "##$prefix[$type]$message"
+        $color = if($type -eq "error") { "Red" } else { $Host.UI.RawUI.ForegroundColor }
+        Write-Host "##$prefix[$type]$message" -ForegroundColor $color
     }
-    $Host.UI.RawUI.ForegroundColor = $currentColor
 }
 
 try {
