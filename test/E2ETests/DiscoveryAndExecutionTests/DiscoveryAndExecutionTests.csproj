@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFramework>net462</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
     <IsPackable>false</IsPackable>
@@ -23,11 +22,11 @@
     <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
 
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter">
-      <HintPath>$(ArtifactsBinDir)MSTest.CoreAdapter\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
+      <HintPath>$(ArtifactsBinDir)MSTest.CoreAdapter\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
     </Reference>
 
     <Reference Include="System.Collections.Concurrent">
-      <HintPath>$(ArtifactsBinDir)MSTest.CoreAdapter\System.Collections.Concurrent.dll</HintPath>
+      <HintPath>$(ArtifactsBinDir)MSTest.CoreAdapter\$(TargetFramework)\System.Collections.Concurrent.dll</HintPath>
     </Reference>
 
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices">
@@ -35,11 +34,11 @@
     </Reference>
     
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface">
-      <HintPath>$(ArtifactsBinDir)PlatformServices.Interface\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll</HintPath>
+      <HintPath>$(ArtifactsBinDir)PlatformServices.Interface\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll</HintPath>
     </Reference>
     
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework">
-      <HintPath>$(ArtifactsBinDir)MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
+      <HintPath>$(ArtifactsBinDir)MSTest.Core\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
     </Reference>
     
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions">
