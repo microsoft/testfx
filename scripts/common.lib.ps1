@@ -192,7 +192,7 @@ function Get-LogsPath {
 function Get-VSTestPath
 {
     $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
-    $vstestPath = Join-Path -path (Locate-PackagesPath) "Microsoft.TestPlatform\$TestPlatformVersion\tools\net451\Common7\IDE\Extensions\TestPlatform\vstest.console.exe"
+    $vstestPath = Join-Path -path (Locate-PackagesPath) "Microsoft.TestPlatform\$TestPlatformVersion\tools\net462\Common7\IDE\Extensions\TestPlatform\vstest.console.exe"
 
     return Resolve-Path -path $vstestPath
 }
