@@ -46,7 +46,7 @@
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
 

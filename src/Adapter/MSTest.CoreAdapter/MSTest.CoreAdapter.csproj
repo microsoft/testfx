@@ -22,7 +22,7 @@
     <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
   </PropertyGroup>
   <!-- / Remove after ARCADE transiton -->
-  
+
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -71,7 +71,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
-    
+
     <EmbeddedResource Update="Resources\Resource.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
@@ -79,7 +79,7 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
-  
+
   <Target Name="CopyMSBuildScriptsFiles" DependsOnTargets="CoreCompile" AfterTargets="CoreCompile">
     <ItemGroup>
       <FileToCopy Include="$(ProjectDir)..\Build\**\*.*" />
