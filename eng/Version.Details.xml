@@ -9,9 +9,9 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>165896e7efeecb70f01bd011257ead0f56d32c95</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Test.Sdk" Version="17.4.0-preview-20220801-01">
+    <Dependency Name="Microsoft.NET.Test.Sdk" Version="17.4.0-preview-20220801-02">
       <Uri>https://github.com/microsoft/vstest</Uri>
-      <Sha>bb9a1b8a0c0ccc8adf9786b6d738ecb8be249a6b</Sha>
+      <Sha>202a21e20c3268fb52b2285b5fbf9664d94f9cc0</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
