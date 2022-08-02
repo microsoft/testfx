@@ -6,6 +6,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
     using System;
     using System.IO;
     using System.Linq;
+    using System.Runtime.CompilerServices;
     using System.Xml;
 
     using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
@@ -154,6 +155,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </summary>
         /// <param name="passedTests">Set of passed tests.</param>
         /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodPass.</remarks>
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void ValidatePassedTestsContain(params string[] passedTests)
         {
             var passedTestResults = this.runEventsHandler.PassedTests;
@@ -193,6 +195,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// Provide the full test name similar to this format SampleTest.TestCode.TestMethodFailed.
         /// Also validates whether these tests have stack trace info.
         /// </remarks>
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void ValidateFailedTestsContain(string source, bool validateStackTraceInfo, params string[] failedTests)
         {
             foreach (var test in failedTests)
@@ -220,6 +223,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </summary>
         /// <param name="skippedTests">The set of skipped tests.</param>
         /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodSkipped.</remarks>
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void ValidateSkippedTestsContain(params string[] skippedTests)
         {
             foreach (var test in skippedTests)

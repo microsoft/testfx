@@ -4,6 +4,7 @@
 namespace FxExtensibilityTestProject
 {
     using System;
+    using System.Runtime.CompilerServices;
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -19,6 +20,7 @@ namespace FxExtensibilityTestProject
         }
 
         [TestMethod]
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void BasicFailingAssertExtensionTest()
         {
             Assert.That.IsOfType<FormatException>(new ArgumentNullException());
@@ -31,6 +33,7 @@ namespace FxExtensibilityTestProject
         }
 
         [TestMethod]
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void ChainedFailingAssertExtensionTest()
         {
             Assert.That.Is().Positive(-10);
