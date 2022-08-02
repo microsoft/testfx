@@ -20,7 +20,9 @@
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
+  </ItemGroup>
 
+  <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter">
       <HintPath>$(ArtifactsBinDir)MSTest.CoreAdapter\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
     </Reference>

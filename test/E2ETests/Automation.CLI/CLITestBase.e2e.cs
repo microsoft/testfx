@@ -31,13 +31,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <param name="runSettings">Run settings for execution.</param>
         public void InvokeVsTestForDiscovery(string[] sources, string runSettings = "")
         {
-            for (var iterator = 0; iterator < sources.Length; iterator++)
-            {
-                if (!Path.IsPathRooted(sources[iterator]))
-                {
-                    sources[iterator] = this.GetAssetFullPath(sources[iterator]);
-                }
-            }
+            this.ExpandTestSourcePaths(sources);
 
             this.discoveryEventsHandler = new DiscoveryEventsHandler();
             string runSettingXml = this.GetRunSettingXml(runSettings, this.GetTestAdapterPath());
@@ -55,13 +49,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <param name="testCaseFilter">Test Case filter for execution.</param>
         public void InvokeVsTestForExecution(string[] sources, string runSettings = "", string testCaseFilter = null)
         {
-            for (var iterator = 0; iterator < sources.Length; iterator++)
-            {
-                if (!Path.IsPathRooted(sources[iterator]))
-                {
-                    sources[iterator] = this.GetAssetFullPath(sources[iterator]);
-                }
-            }
+            this.ExpandTestSourcePaths(sources);
 
             this.runEventsHandler = new RunEventsHandler();
             string runSettingXml = this.GetRunSettingXml(runSettings, this.GetTestAdapterPath());
@@ -265,6 +253,27 @@ namespace Microsoft.MSTestV2.CLIAutomation
             }
 
             return testMethodName;
+        }
+
+        /// <summary>
+        /// Covertes relative test sources, to absolute paths.
+        /// </summary>
+        /// <param name="sources">An array of test sources, element may be modified to reflect absolute paths.</param>
+        private void ExpandTestSourcePaths(string[] sources)
+        {
+            for (var i = 0; i < sources.Length; i++)
+            {
+                var path = sources[i];
+
+                if (!Path.IsPathRooted(path))
+                {
+                    sources[i] = this.GetAssetFullPath(path);
+                }
+                else
+                {
+                    sources[i] = Path.GetFullPath(path);
+                }
+            }
         }
     }
 }

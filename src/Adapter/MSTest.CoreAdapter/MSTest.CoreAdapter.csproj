@@ -18,7 +18,7 @@
 
   <!-- Remove after ARCADE transiton -->
   <PropertyGroup>
-    <SkipAppendingVersion>true</SkipAppendingVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
   </PropertyGroup>
   <!-- / Remove after ARCADE transiton -->

@@ -46,10 +46,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </remarks>
         protected string GetAssetFullPath(string assetName)
         {
-            var assetPath = Path.Combine(this.GetAssetFolderPath(), assetName);
-
+            var assetPath = Path.GetFullPath(Path.Combine(this.GetAssetFolderPath(), assetName));
             Assert.IsTrue(File.Exists(assetPath), "GetTestAsset: Path not found: {0}.", assetPath);
-
             return assetPath;
         }
 

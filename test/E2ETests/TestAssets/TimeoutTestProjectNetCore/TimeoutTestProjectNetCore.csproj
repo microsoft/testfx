@@ -1,10 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <IsPackable>false</IsPackable>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(RepoRoot)artifacts\TestAssets\netcoreapp2.1\</OutputPath>
+    <OutputPath>$(RepoRoot)artifacts\TestAssets\</OutputPath>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
   </PropertyGroup>
 
