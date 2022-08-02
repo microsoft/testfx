@@ -1,9 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</AssemblyName>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
     <Company>Microsoft Corporation</Company>

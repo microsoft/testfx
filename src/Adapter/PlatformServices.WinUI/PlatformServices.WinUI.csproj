@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
