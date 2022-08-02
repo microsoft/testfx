@@ -256,22 +256,22 @@ namespace Microsoft.MSTestV2.CLIAutomation
         }
 
         /// <summary>
-        /// Covertes relative test sources, to absolute paths.
+        /// Converts relative paths to absolute.
         /// </summary>
-        /// <param name="sources">An array of test sources, element may be modified to reflect absolute paths.</param>
-        private void ExpandTestSourcePaths(string[] sources)
+        /// <param name="paths">An array of file paths, elements may be modified to absolute paths.</param>
+        private void ExpandTestSourcePaths(string[] paths)
         {
-            for (var i = 0; i < sources.Length; i++)
+            for (var i = 0; i < paths.Length; i++)
             {
-                var path = sources[i];
+                var path = paths[i];
 
                 if (!Path.IsPathRooted(path))
                 {
-                    sources[i] = this.GetAssetFullPath(path);
+                    paths[i] = this.GetAssetFullPath(path);
                 }
                 else
                 {
-                    sources[i] = Path.GetFullPath(path);
+                    paths[i] = Path.GetFullPath(path);
                 }
             }
         }

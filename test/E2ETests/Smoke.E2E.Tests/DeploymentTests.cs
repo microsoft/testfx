@@ -41,7 +41,7 @@ namespace MSTestAdapter.Smoke.E2ETests
         {
             this.InvokeVsTestForExecution(new string[] { TestAssemblyNetCore31 }, null);
             this.ValidatePassedTestsContain("DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.FailIfFilePresent", "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfDeclaredFilesPresent");
-            this.ValidateFailedTestsContain("DeploymentTestProjectNetCore.dll", true, "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfFilePresent");
+            this.ValidateFailedTestsContain(TestAssemblyMSBuild, true, "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfFilePresent");
         }
 
         // TODO @haplois | @evangelink: We need to work on our netcoreapp2.1 tests.

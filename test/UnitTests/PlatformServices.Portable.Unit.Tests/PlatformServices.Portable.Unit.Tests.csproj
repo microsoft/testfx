@@ -34,11 +34,10 @@
 
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Aliases="FrameworkV1" />
+  </ItemGroup>
 
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <Aliases>FrameworkV1</Aliases>
-    </Reference>
-
+  <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
       <Project>{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}</Project>
       <Name>PlatformServices.Interface</Name>

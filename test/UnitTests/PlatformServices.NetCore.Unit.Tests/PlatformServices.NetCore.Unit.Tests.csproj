@@ -46,7 +46,7 @@
     <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13TestDeploymentTests.cs" Link="Services\ns13TestDeploymentTests.cs" />
     <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13DeploymentItemUtilityTests.cs" Link="Utilities\ns13DeploymentItemUtilityTests.cs" />
     <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13ReflectionUtilityTests.cs" Link="Utilities\ns13ReflectionUtilityTests.cs" />
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13ThreadSafeStringWriterTests.cs" Link="Services\ns13ThreadSafeStringWriterTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13ThreadSafeStringWriterTests.cs" Link="Services\ns13ThreadSafeStringWriterTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
