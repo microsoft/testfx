@@ -16,12 +16,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
 
-  <!-- Remove after ARCADE transiton -->
+  <!-- Remove after ARCADE transition -->
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
   </PropertyGroup>
-  <!-- / Remove after ARCADE transiton -->
+  <!-- / Remove after ARCADE transition -->
 
   <PropertyGroup>
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>

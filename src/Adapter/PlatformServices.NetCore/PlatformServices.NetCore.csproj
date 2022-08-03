@@ -5,7 +5,7 @@
     <TargetFramework>netstandard1.5</TargetFramework>
   </PropertyGroup>
 
-  <!-- Remove after ARCADE transiton -->
+  <!-- Remove after ARCADE transition -->
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
@@ -15,7 +15,7 @@
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
   </PropertyGroup>
-  <!-- / Remove after ARCADE transiton -->
+  <!-- / Remove after ARCADE transition -->
 
   <ImportGroup>
     <Import Project="$(NuGetPackageRoot)\Microbuild.Core\$(MicroBuildCoreVersion)\build\Microbuild.Core.targets" />
