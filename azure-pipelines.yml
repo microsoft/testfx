@@ -39,7 +39,7 @@ jobs:
   - task: DotNetCoreCLI@2
     inputs:
       command: test
-      projects: '$(Build.SourcesDirectory)\test\E2ETests\TestAssets\DataSourceTestProject\DataSourceTestProject.csproj'
+      projects: '$(Build.SourcesDirectory)\artifacts\TestAssets\DataSourceTestProject.dll'
     condition: succeededOrFailed()
 
   - task: PublishBuildArtifacts@1
