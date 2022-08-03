@@ -37,8 +37,6 @@ namespace Microsoft.MSTestV2.CLIAutomation
             this.discoveryEventsHandler = new DiscoveryEventsHandler();
             string runSettingXml = this.GetRunSettingXml(runSettings, this.GetTestAdapterPath());
 
-            // this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
-            vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(this.GetTestAdapterPath(), "*TestAdapter.dll"));
             vsTestConsoleWrapper.DiscoverTests(sources, runSettingXml, this.discoveryEventsHandler);
         }
 
@@ -55,8 +53,6 @@ namespace Microsoft.MSTestV2.CLIAutomation
             this.runEventsHandler = new RunEventsHandler();
             string runSettingXml = this.GetRunSettingXml(runSettings, this.GetTestAdapterPath());
 
-            // this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
-            vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(this.GetTestAdapterPath(), "*TestAdapter.dll"));
             vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, this.runEventsHandler);
             if (this.runEventsHandler.Errors.Any())
             {
