@@ -31,8 +31,7 @@
 
        So if you E2E tests are failing, and you removed this comment, 
        I hope you see it in diff.
-   -->
-
+  -->
   <!-- Generate AssemblyInfo.cs -->
   <PropertyGroup>
     <TFBuildNumber Condition=" '$(TFBuildNumber)' == '' ">0.1</TFBuildNumber>

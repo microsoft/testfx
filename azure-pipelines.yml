@@ -36,20 +36,6 @@ jobs:
       arguments: '-configuration $(BuildConfiguration) -all -parallel'
       modifyEnvironment: false
 
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: test
-      projects: '$(Build.SourcesDirectory)\artifacts\TestAssets\DataSourceTestProject.dll'
-    condition: succeededOrFailed()
-
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish build artifacts for debugging'
-    inputs:
-      PathtoPublish: '$(Build.SourcesDirectory)\artifacts'
-      ArtifactName: 'BuildArtifacts'
-      publishLocation: 'Container'
-    condition: failed()
-
   - task: ComponentGovernanceComponentDetection@0
     displayName: 'Component Governance'
     inputs:

@@ -15,7 +15,7 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
         private const string TestAssembly = "FSharpTestProject.dll";
 
         [TestMethod]
-        public void ExecuteCsvTestDataSourceTests()
+        public void TestFSharpTestsWithSpaceAndDotInName()
         {
             // Arrange
             var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
