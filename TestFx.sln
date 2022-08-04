@@ -221,12 +221,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiscoverInternalsProject", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OutputTestProject", "test\E2ETests\TestAssets\OutputTestProject\OutputTestProject.csproj", "{66608D86-416A-49AF-A937-C47F7E4586AE}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop.Legacy", "Desktop.Legacy", "{DE6887A6-D4B8-4D77-98D3-CC87A8F21C2E}"
-	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.props = src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.props
-		src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.targets = src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.targets
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Code Analysis Debug|Any CPU = Code Analysis Debug|Any CPU
@@ -1419,7 +1413,6 @@ Global
 		{6B4DE65C-4162-4C52-836A-8F9FA901814A} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
 		{44A504D9-A0D6-427D-BFB2-DB144A74F0D5} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
 		{66608D86-416A-49AF-A937-C47F7E4586AE} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
-		{DE6887A6-D4B8-4D77-98D3-CC87A8F21C2E} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}
