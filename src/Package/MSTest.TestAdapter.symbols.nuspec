@@ -42,7 +42,13 @@
 
       <group targetFramework="net462" />
 
-      <group targetFramework="uap10.0" />
+      <group targetFramework="uap10.0">
+        <dependency id="System.Net.WebSockets.Client" version="[$SystemNetWebSocketsClientVersion$, ]" />
+        <dependency id="System.Net.NameResolution" version="[$SystemNetNameResolutionVersion$, ]" />
+        <dependency id="System.Text.RegularExpressions" version="[$SystemTextRegularExpressionsVersion$, ]" />
+        <dependency id="System.Private.Uri" version="[$SystemPrivateUriVersion$, ]" />
+        <dependency id="System.Xml.ReaderWriter" version="[$SystemXmlReaderWriterVersion$, ]" />
+      </group>
 
       <group targetFramework="net5.0" />
     </dependencies>
@@ -50,7 +56,7 @@
   <files>
     <file src="MSTest.CoreAdapter\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\_common\" />
     <file src="PlatformServices.Interface\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="build\_common\" />
-    <file src="PlatformServices.Desktop.Legacy\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
+    <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
     <file src="MSTest.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\_common\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard2.0\" target="build\_common\" />
  
@@ -72,7 +78,8 @@
     <!-- uap10.0 -->
     <file src="Build\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />
     <file src="Build\Universal\MSTest.TestAdapter.targets" target="build\uap10.0\MSTest.TestAdapter.targets" />
-    <file src="PlatformServices.Universal\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\uap10.0\" />
+    <file src="PlatformServices.Universal\uap10.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\uap10.0\" />
+    <file src="PlatformServices.Universal\uap10.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="build\uap10.0\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\uap10.0\" target="build\uap10.0\" />
 
     <!-- net5.0 -->
@@ -90,20 +97,21 @@
 
     <!-- Localization -->
     <file src="MSTest.CoreAdapter\**\*.resources.dll" target="\build\_common\" />
-    <file src="PlatformServices.Desktop.Legacy\**\*.resources.dll" target="\build\_common\" />
+    <file src="PlatformServices.Desktop\**\*.resources.dll" target="\build\_common\" />
     <file src="MSTest.Core\**\*.resources.dll" target="build\_common\" />
 
     <!-- Symbols -->
     <file src="MSTest.CoreAdapter\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" target="build\_common\" />
     <file src="PlatformServices.Interface\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" target="build\_common\" />
-    <file src="PlatformServices.Desktop.Legacy\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\_common\" />
+    <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\_common\" />
     <file src="MSTest.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="build\_common\" />
 
     <!-- netcoreapp1.0 -->
     <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\netcoreapp1.0\" />
 
     <!-- uap10.0 -->
-    <file src="PlatformServices.Universal\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\uap10.0\" />
+    <file src="PlatformServices.Universal\uap10.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\uap10.0\" />
+    <file src="PlatformServices.Universal\uap10.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" target="build\uap10.0\" />
 
     <!-- net5.0 -->
     <file src="PlatformServices.WinUI\net5.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\net5.0\winui\" />

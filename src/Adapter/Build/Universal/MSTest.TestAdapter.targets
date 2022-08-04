@@ -25,7 +25,8 @@
     </PropertyGroup>
   
     <ItemGroup>
-      <MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_common\*.dll" />
+      <MSTestV2Files Include="$(MSBuildThisFileDirectory)../_common/Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" />
+      <MSTestV2Files Include="$(MSBuildThisFileDirectory)*.dll" />
     </ItemGroup>
 	
 	<ItemGroup>

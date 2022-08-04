@@ -27,7 +27,9 @@
     <SystemDiagnosticsTextWriterTraceListenerVersion>4.3.0</SystemDiagnosticsTextWriterTraceListenerVersion>
     <SystemRuntimeInteropServicesRuntimeInformationVersion>4.3.0</SystemRuntimeInteropServicesRuntimeInformationVersion>
     <SystemNetNameResolutionVersion>4.3.0</SystemNetNameResolutionVersion>
+    <SystemNetNameResolutionVersion>4.3.0</SystemNetNameResolutionVersion>
     <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>
+    <SystemXmlReaderWriterVersion>4.3.1</SystemXmlReaderWriterVersion>
     <!-- CVE-2019-0820 -->
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
     <!-- CVE-2017-0247 -->
