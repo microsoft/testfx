@@ -15,6 +15,14 @@ jobs:
     inputs:
       versionSpec: 5.8.1
 
+  - task: PowerShell@2
+    displayName: 'Install Windows SDK'
+    inputs:
+      targetType: filePath
+      filePath: './scripts/Install-WindowsSDK.ps1'
+      failOnStderr: true
+      showWarnings: true
+
   - powershell: |
       reg DELETE "HKLM\Software\Microsoft\StrongName\Verification" /f
       reg ADD "HKLM\Software\Microsoft\StrongName\Verification\*,*" /f
