@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <IsPackable>false</IsPackable>
     <RootNamespace>MSTestAdapter.PlatformServices.NetCore.UnitTests</RootNamespace>
@@ -20,12 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="5.10.3" />
+    <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\ActionUtility.cs" Link="ActionUtility.cs" />
     <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10DeploymentItemTests.cs" Link="Deployment\ns10DeploymentItemTests.cs" />
@@ -46,7 +46,7 @@
     <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13TestDeploymentTests.cs" Link="Services\ns13TestDeploymentTests.cs" />
     <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13DeploymentItemUtilityTests.cs" Link="Utilities\ns13DeploymentItemUtilityTests.cs" />
     <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13ReflectionUtilityTests.cs" Link="Utilities\ns13ReflectionUtilityTests.cs" />
-    <Compile Include="..\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13ThreadSafeStringWriterTests.cs" Link="Services\ns13ThreadSafeStringWriterTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13ThreadSafeStringWriterTests.cs" Link="Services\ns13ThreadSafeStringWriterTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

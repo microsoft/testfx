@@ -12,6 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -809,9 +810,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             Assert.AreEqual(result.Outcome, UTF.UnitTestOutcome.Failed);
             Assert.IsNotNull(exception);
-            StringAssert.Contains(exception?.StackTraceInformation.ErrorStackTrace, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()");
-            StringAssert.Contains(exception?.StackTraceInformation.ErrorStackTrace, Resource.UTA_CleanupStackTrace);
-            StringAssert.Contains(exception?.StackTraceInformation.ErrorStackTrace, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()");
+            StringAssert.Contains(exception.StackTraceInformation.ErrorStackTrace, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestMethod()");
+            StringAssert.Contains(exception.StackTraceInformation.ErrorStackTrace, Resource.UTA_CleanupStackTrace);
+            StringAssert.Contains(exception.StackTraceInformation.ErrorStackTrace, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.DummyTestClass.DummyTestCleanupMethod()");
         }
 
         [TestMethodV1]
@@ -1494,37 +1495,44 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                 }
             }
 
+            [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
             public void DummyTestInitializeMethod()
             {
                 TestInitializeMethodBody(this);
             }
 
+            [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
             public void DummyTestCleanupMethod()
             {
                 TestCleanupMethodBody(this);
             }
 
+            [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
             public void DummyTestMethod()
             {
                 TestMethodBody(this);
             }
 
+            [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
             public Task DummyAsyncTestMethod()
             {
                 // We use this method to validate async TestInitialize, TestCleanup, TestMethod
                 return DummyAsyncTestMethodBody();
             }
 
+            [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
             public void DummySimpleArgumentsMethod(string str1, string str2)
             {
                 TestMethodBody(this);
             }
 
+            [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
             public void DummyOptionalArgumentsMethod(string str1, string str2 = null, string str3 = null)
             {
                 TestMethodBody(this);
             }
 
+            [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
             public void DummyParamsArgumentMethod(int i, params string[] args)
             {
                 TestMethodBody(this);

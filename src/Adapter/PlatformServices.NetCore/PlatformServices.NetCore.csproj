@@ -1,19 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
-  </PropertyGroup>
-  
-  <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
     <TargetFramework>netstandard1.5</TargetFramework>
-    <PackageTargetFallback>$(PackageTargetFallback);portable-net45+win8+wpa81+wp8</PackageTargetFallback>
+  </PropertyGroup>
+
+  <!-- Remove after ARCADE transition -->
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
+
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <UseSharedResources>true</UseSharedResources>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
-    <SkipAppendingVersion>true</SkipAppendingVersion> <!-- TODO: remove after full arcade transition -->
   </PropertyGroup>
+  <!-- / Remove after ARCADE transition -->
 
   <ImportGroup>
     <Import Project="$(NuGetPackageRoot)\Microbuild.Core\$(MicroBuildCoreVersion)\build\Microbuild.Core.targets" />
@@ -21,8 +23,6 @@
   </ImportGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
@@ -68,7 +68,7 @@
     <Compile Include="Utilities\NetCoreDeploymentUtility.cs" />
     <Compile Include="Utilities\NetCoreReflectionUtility.cs" />
     <Folder Include="Resources\" />
-    
+
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
       <Link>Resources\Resource.Designer.cs</Link>
       <AutoGen>True</AutoGen>

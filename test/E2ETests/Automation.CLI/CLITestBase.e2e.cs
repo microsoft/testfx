@@ -6,6 +6,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
     using System;
     using System.IO;
     using System.Linq;
+    using System.Runtime.CompilerServices;
     using System.Xml;
 
     using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
@@ -31,19 +32,11 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <param name="runSettings">Run settings for execution.</param>
         public void InvokeVsTestForDiscovery(string[] sources, string runSettings = "")
         {
-            for (var iterator = 0; iterator < sources.Length; iterator++)
-            {
-                if (!Path.IsPathRooted(sources[iterator]))
-                {
-                    sources[iterator] = this.GetAssetFullPath(sources[iterator]);
-                }
-            }
+            this.ExpandTestSourcePaths(sources);
 
             this.discoveryEventsHandler = new DiscoveryEventsHandler();
             string runSettingXml = this.GetRunSettingXml(runSettings, this.GetTestAdapterPath());
 
-            // this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
-            vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(this.GetTestAdapterPath(), "*TestAdapter.dll"));
             vsTestConsoleWrapper.DiscoverTests(sources, runSettingXml, this.discoveryEventsHandler);
         }
 
@@ -55,19 +48,11 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <param name="testCaseFilter">Test Case filter for execution.</param>
         public void InvokeVsTestForExecution(string[] sources, string runSettings = "", string testCaseFilter = null)
         {
-            for (var iterator = 0; iterator < sources.Length; iterator++)
-            {
-                if (!Path.IsPathRooted(sources[iterator]))
-                {
-                    sources[iterator] = this.GetAssetFullPath(sources[iterator]);
-                }
-            }
+            this.ExpandTestSourcePaths(sources);
 
             this.runEventsHandler = new RunEventsHandler();
             string runSettingXml = this.GetRunSettingXml(runSettings, this.GetTestAdapterPath());
 
-            // this step of Initializing extensions should not be required after this issue: https://github.com/Microsoft/vstest/issues/236 is fixed
-            vsTestConsoleWrapper.InitializeExtensions(Directory.GetFiles(this.GetTestAdapterPath(), "*TestAdapter.dll"));
             vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, this.runEventsHandler);
             if (this.runEventsHandler.Errors.Any())
             {
@@ -166,6 +151,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </summary>
         /// <param name="passedTests">Set of passed tests.</param>
         /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodPass.</remarks>
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void ValidatePassedTestsContain(params string[] passedTests)
         {
             var passedTestResults = this.runEventsHandler.PassedTests;
@@ -205,6 +191,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// Provide the full test name similar to this format SampleTest.TestCode.TestMethodFailed.
         /// Also validates whether these tests have stack trace info.
         /// </remarks>
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void ValidateFailedTestsContain(string source, bool validateStackTraceInfo, params string[] failedTests)
         {
             foreach (var test in failedTests)
@@ -232,6 +219,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </summary>
         /// <param name="skippedTests">The set of skipped tests.</param>
         /// <remarks>Provide the full test name similar to this format SampleTest.TestCode.TestMethodSkipped.</remarks>
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void ValidateSkippedTestsContain(params string[] skippedTests)
         {
             foreach (var test in skippedTests)
@@ -265,6 +253,27 @@ namespace Microsoft.MSTestV2.CLIAutomation
             }
 
             return testMethodName;
+        }
+
+        /// <summary>
+        /// Converts relative paths to absolute.
+        /// </summary>
+        /// <param name="paths">An array of file paths, elements may be modified to absolute paths.</param>
+        private void ExpandTestSourcePaths(string[] paths)
+        {
+            for (var i = 0; i < paths.Length; i++)
+            {
+                var path = paths[i];
+
+                if (!Path.IsPathRooted(path))
+                {
+                    paths[i] = this.GetAssetFullPath(path);
+                }
+                else
+                {
+                    paths[i] = Path.GetFullPath(path);
+                }
+            }
         }
     }
 }

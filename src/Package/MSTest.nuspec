@@ -11,11 +11,11 @@
       A meta package to simplify test projects.
 
       Supported platforms:
-      - .NET 4.5.0+
-      - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017)
-      - .NET 5.0 (Visual Studio 2019)
-      - .NET 5.0 Windows.18362+ (WinUI Desktop Apps) (Visual Studio 2019)
-      - ASP.NET Core 1.0+ (Visual Studio 2017)
+      - .NET 4.6.2+
+      - .NET Core 3.1+ (Universal Windows Apps 10+) 
+      - .NET 5.0 
+      - .NET 5.0 Windows.18362+
+      - ASP.NET Core 1.0+
     </description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
     <license type="expression">MIT</license>
@@ -42,7 +42,13 @@
         <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" />
       </group>
 
-      <group targetFramework="net45">
+      <group targetFramework="netstandard2.0">
+        <dependency id="MSTest.TestAdapter" version="[$version$]" />
+        <dependency id="MSTest.TestFramework" version="[$version$]" />
+        <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" />
+      </group>
+
+      <group targetFramework="net462">
         <dependency id="MSTest.TestAdapter" version="[$version$]" />
         <dependency id="MSTest.TestFramework" version="[$version$]" />
         <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" />

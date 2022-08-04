@@ -1,0 +1,22 @@
+<Project>
+  <!-- The TFMs to build and test against. -->
+  <PropertyGroup>
+    <NetCoreAppCurrentVersion>5.0</NetCoreAppCurrentVersion>
+    <NetCoreAppCurrentIdentifier>.NETCoreApp</NetCoreAppCurrentIdentifier>
+    <NetCoreAppCurrentTargetFrameworkMoniker>$(NetCoreAppCurrentIdentifier),Version=v$(NetCoreAppCurrentVersion)</NetCoreAppCurrentTargetFrameworkMoniker>
+    <MicrosoftNetCoreAppFrameworkName>Microsoft.NETCore.App</MicrosoftNetCoreAppFrameworkName>
+    <NetCoreAppCurrentBrandName>.NET $(NetCoreAppCurrentVersion)</NetCoreAppCurrentBrandName>
+    <NetCoreAppCurrent>net$(NetCoreAppCurrentVersion)</NetCoreAppCurrent>
+    <NetCoreAppMinimum>netcoreapp3.1</NetCoreAppMinimum>
+
+    <NetCoreAppToolCurrentVersion>5.0</NetCoreAppToolCurrentVersion>
+    <NetCoreAppToolCurrent>net$(NetCoreAppToolCurrentVersion)</NetCoreAppToolCurrent>
+    <NetCoreAppCurrentToolTargetFrameworkMoniker>$(NetCoreAppCurrentIdentifier),Version=v$(NetCoreAppToolCurrentVersion)</NetCoreAppCurrentToolTargetFrameworkMoniker>
+
+    <NetCoreAppLatestStableVersion>5.0</NetCoreAppLatestStableVersion>
+    <NetCoreAppLatestStablePackageBaselineVersion>$(NetCoreAppLatestStableVersion).0</NetCoreAppLatestStablePackageBaselineVersion>
+    <NetCoreAppLatestStable>net$(NetCoreAppLatestStableVersion)</NetCoreAppLatestStable>
+
+    <NetFrameworkMinimum>net462</NetFrameworkMinimum>
+  </PropertyGroup>
+</Project>

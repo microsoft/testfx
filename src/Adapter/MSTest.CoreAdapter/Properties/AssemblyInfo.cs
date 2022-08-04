@@ -11,14 +11,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("MSTest.CoreAdapter")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft Corporation")]
-[assembly: AssemblyProduct("MSTest.CoreAdapter")]
-[assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
 [assembly: NeutralResourcesLanguage("en")]
 
 [assembly: TestExtensionTypes(typeof(MSTestDiscoverer), typeof(MSTestExecutor))]

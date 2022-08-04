@@ -15,6 +15,23 @@
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup>
 
+  
+  <!-- WARNING remove this when SDK-style project conversion is being done. -->
+  <!-- 
+       We are generating an AssemblyInfo file with certain attributes here, 
+       SDK-style project does that automatically (https://github.com/dotnet/sdk/blob/58e663374580ef082a82f7cb75ea233275d432cd/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.GenerateAssemblyInfo.targets)
+       we should use that behavior instead.
+
+       WE SHOULD ENSURE WE ARE SETTING THESE PROPERTIES AS SPECIFIED BELOW, 
+       OTHERWISE IT WILL BREAK OUR TESTS.
+
+            AssemblyVersion              = "14.0.0.0"
+            AssemblyFileVersion          = "14.0.0.1"
+            AssemblyInformationalVersion = "14.0.0.1"
+
+       So if you E2E tests are failing, and you removed this comment, 
+       I hope you see it in diff.
+  -->
   <!-- Generate AssemblyInfo.cs -->
   <PropertyGroup>
     <TFBuildNumber Condition=" '$(TFBuildNumber)' == '' ">0.1</TFBuildNumber>
@@ -22,6 +39,11 @@
     <AssemblyVersion>$(MajorVersion).0.0</AssemblyVersion>
     <BuildVersion Condition=" '$(BuildVersion)' == '' ">$(MajorVersion).$(TFBuildNumber)</BuildVersion>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <GeneratedAssemblyInfoFile Condition="'$(GeneratedAssemblyInfoFile)' ==''">$(IntermediateOutputPath)$(MSBuildProjectName).AssemblyInfo.cs</GeneratedAssemblyInfoFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <AssemblyVersionAttribute Include="System.Reflection.AssemblyVersionAttribute">
       <_Parameter1>$(AssemblyVersion)</_Parameter1>
@@ -33,13 +55,21 @@
       <_Parameter1>$(BuildVersion)</_Parameter1>
     </AssemblyVersionAttribute>
   </ItemGroup>
+
   <Target Name="GenerateAssemblyInfoFile">
-    <WriteCodeFragment AssemblyAttributes="@(AssemblyVersionAttribute)" Language="C#" OutputFile="$(MSBuildProjectDirectory)\GlobalAssemblyInfo.cs" Condition=" '$(SkipAppendingVersion)' != 'true' ">
+    <ItemGroup>
+      <!-- Ensure the generated assemblyinfo file is not already part of the Compile sources, as a workaround for https://github.com/dotnet/sdk/issues/114 -->
+      <Compile Remove="$(GeneratedAssemblyInfoFile)" />
+    </ItemGroup>
+
+    <WriteCodeFragment AssemblyAttributes="@(AssemblyVersionAttribute)" Language="C#" OutputFile="$(GeneratedAssemblyInfoFile)" Condition=" '$(SkipAppendingVersion)' != 'true' ">
       <Output TaskParameter="OutputFile" ItemName="Compile" />
       <Output TaskParameter="OutputFile" ItemName="FileWrites" />
     </WriteCodeFragment>
   </Target>
+
   <PropertyGroup>
     <CompileDependsOn>GenerateAssemblyInfoFile;$(CompileDependsOn)</CompileDependsOn>
   </PropertyGroup>
+  <!-- / WARNING remove this when SDK-style project conversion is being done. -->
 </Project>

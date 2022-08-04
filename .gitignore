@@ -64,9 +64,6 @@ UpgradeLog*.XML
 UpgradeLog*.htm
 *.log
 
-#GlobalAssemblyInfo produced for Microbuild
-GlobalAssemblyInfo.cs
-
 # =========================
 # Windows detritus
 # =========================

@@ -17,8 +17,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
         private const string PackagesFolder = "packages";
 
         // This value is automatically updated by "build.ps1" script.
-        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform\17.2.0";
-        private const string VstestConsoleRelativePath = @"tools\net451\Common7\IDE\Extensions\TestPlatform\vstest.console.exe";
+        private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform\17.4.0-preview-20220803-02";
+        private const string VstestConsoleRelativePath = @"tools\net462\Common7\IDE\Extensions\TestPlatform\vstest.console.exe";
 
         /// <summary>
         /// Gets the relative path of repository root from start-up directory.
@@ -46,10 +46,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// </remarks>
         protected string GetAssetFullPath(string assetName)
         {
-            var assetPath = Path.Combine(this.GetAssetFolderPath(), assetName);
-
+            var assetPath = Path.GetFullPath(Path.Combine(this.GetAssetFolderPath(), assetName));
             Assert.IsTrue(File.Exists(assetPath), "GetTestAsset: Path not found: {0}.", assetPath);
-
             return assetPath;
         }
 

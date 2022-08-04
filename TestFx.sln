@@ -7,17 +7,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FF8B1B72-55A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Adapter", "Adapter", "{24088844-2107-4DB2-8F3F-CBCA94FC4B28}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.CoreAdapter", "src\Adapter\MSTest.CoreAdapter\MSTest.CoreAdapter.csproj", "{98BA6D2C-1F3D-4636-8E1D-D4932B7A253D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.CoreAdapter", "src\Adapter\MSTest.CoreAdapter\MSTest.CoreAdapter.csproj", "{98BA6D2C-1F3D-4636-8E1D-D4932B7A253D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Interface", "src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj", "{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Interface", "src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj", "{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Portable", "src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj", "{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Portable", "src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj", "{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Universal", "src\Adapter\PlatformServices.Universal\PlatformServices.Universal.csproj", "{5D153CAA-80C2-4551-9549-6C406FCEEFB1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Universal", "src\Adapter\PlatformServices.Universal\PlatformServices.Universal.csproj", "{5D153CAA-80C2-4551-9549-6C406FCEEFB1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFramework", "TestFramework", "{E48AC786-E150-4F41-9A16-32F02E4493D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Core", "src\TestFramework\MSTest.Core\MSTest.Core.csproj", "{7252D9E3-267D-442C-96BC-C73AEF3241D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Core", "src\TestFramework\MSTest.Core\MSTest.Core.csproj", "{7252D9E3-267D-442C-96BC-C73AEF3241D6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Desktop", "src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj", "{B0FCE474-14BC-449A-91EA-A433342C0D63}"
 EndProject
@@ -25,7 +25,7 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PlatformServices.Shared", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension.Desktop", "src\TestFramework\Extension.Desktop\Extension.Desktop.csproj", "{A7EA583B-A2B0-47DA-A058-458F247C7575}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension.Core", "src\TestFramework\Extension.Core\Extension.Core.csproj", "{6C9FE494-8315-4667-B3F6-75DC62A62319}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Extension.Core", "src\TestFramework\Extension.Core\Extension.Core.csproj", "{6C9FE494-8315-4667-B3F6-75DC62A62319}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A9596292-7E67-4566-9096-143DDAA4E8D8}"
 EndProject
@@ -33,7 +33,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AdapterTests", "AdapterTest
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Extension.Shared", "src\TestFramework\Extension.Shared\Extension.Shared.shproj", "{272CA5E1-8E81-4825-9E47-86CCE02F700D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension.UWP", "src\TestFramework\Extension.UWP\Extension.UWP.csproj", "{DF131865-84EE-4540-8112-E88ACEBDEA09}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Extension.UWP", "src\TestFramework\Extension.UWP\Extension.UWP.csproj", "{DF131865-84EE-4540-8112-E88ACEBDEA09}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "E2ETests", "E2ETests", "{F1A27537-78D1-4BBD-8E76-ADB31BC0C2B4}"
 EndProject
@@ -219,15 +219,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReferencedProjectFromDataSo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiscoverInternalsProject", "test\E2ETests\TestAssets\DiscoverInternalsProject\DiscoverInternalsProject.csproj", "{44A504D9-A0D6-427D-BFB2-DB144A74F0D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Desktop.Legacy", "src\Adapter\PlatformServices.Desktop.Legacy\PlatformServices.Desktop.Legacy.csproj", "{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OutputTestProject", "test\E2ETests\TestAssets\OutputTestProject\OutputTestProject.csproj", "{66608D86-416A-49AF-A937-C47F7E4586AE}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop.Legacy", "Desktop.Legacy", "{DE6887A6-D4B8-4D77-98D3-CC87A8F21C2E}"
-	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.props = src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.props
-		src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.targets = src\Adapter\Build\Desktop.Legacy\MSTest.TestAdapter.targets
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1325,30 +1317,6 @@ Global
 		{44A504D9-A0D6-427D-BFB2-DB144A74F0D5}.Release|x64.Build.0 = Release|Any CPU
 		{44A504D9-A0D6-427D-BFB2-DB144A74F0D5}.Release|x86.ActiveCfg = Release|Any CPU
 		{44A504D9-A0D6-427D-BFB2-DB144A74F0D5}.Release|x86.Build.0 = Release|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Code Analysis Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Code Analysis Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Code Analysis Debug|ARM.ActiveCfg = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Code Analysis Debug|ARM.Build.0 = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Code Analysis Debug|x64.ActiveCfg = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Code Analysis Debug|x64.Build.0 = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Code Analysis Debug|x86.ActiveCfg = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Code Analysis Debug|x86.Build.0 = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Debug|ARM.Build.0 = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Debug|x64.Build.0 = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Debug|x86.Build.0 = Debug|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Release|ARM.ActiveCfg = Release|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Release|ARM.Build.0 = Release|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Release|x64.ActiveCfg = Release|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Release|x64.Build.0 = Release|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Release|x86.ActiveCfg = Release|Any CPU
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4}.Release|x86.Build.0 = Release|Any CPU
 		{66608D86-416A-49AF-A937-C47F7E4586AE}.Code Analysis Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{66608D86-416A-49AF-A937-C47F7E4586AE}.Code Analysis Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66608D86-416A-49AF-A937-C47F7E4586AE}.Code Analysis Debug|ARM.ActiveCfg = Debug|Any CPU
@@ -1444,9 +1412,7 @@ Global
 		{35D010CC-CDF2-4115-BCFB-E2E3D21C1055} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 		{6B4DE65C-4162-4C52-836A-8F9FA901814A} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
 		{44A504D9-A0D6-427D-BFB2-DB144A74F0D5} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
-		{F64A748C-DDBA-4B57-99F4-D9E55684A7A4} = {24088844-2107-4DB2-8F3F-CBCA94FC4B28}
 		{66608D86-416A-49AF-A937-C47F7E4586AE} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
-		{DE6887A6-D4B8-4D77-98D3-CC87A8F21C2E} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}
@@ -1455,6 +1421,6 @@ Global
 		src\Adapter\PlatformServices.Shared\PlatformServices.Shared.projitems*{2177c273-ae07-43b3-b87a-443e47a23c5a}*SharedItemsImports = 13
 		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{23b9d9a2-4aee-47e6-97b5-060df21539fb}*SharedItemsImports = 5
 		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{272ca5e1-8e81-4825-9e47-86cce02f700d}*SharedItemsImports = 13
-		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{df131865-84ee-4540-8112-e88acebdea09}*SharedItemsImports = 4
+		src\TestFramework\Extension.Shared\Extension.Shared.projitems*{df131865-84ee-4540-8112-e88acebdea09}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal

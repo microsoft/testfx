@@ -11,11 +11,11 @@
       This is MSTest V2, the evolution of Microsoft's Test Framework.
 
       Supported platforms:
-      - .NET 4.5.0+
-      - .NET Core 1.0+ (Universal Windows Apps 10+) (Visual Studio 2017)
-      - .NET 5.0 (Visual Studio 2019)
-      - .NET 5.0 Windows.18362+ (WinUI Desktop Apps) (Visual Studio 2019)
-      - ASP.NET Core 1.0+ (Visual Studio 2017)
+      - .NET 4.6.2+
+      - .NET Core 3.1+ (Universal Windows Apps 10+) 
+      - .NET 5.0 
+      - .NET 5.0 Windows.18362+
+      - ASP.NET Core 1.0+
 
       To discover and execute tests install MSTest.TestAdapter.
     </description>
@@ -32,12 +32,14 @@
                 commit="$CommitId$" />
    
     <dependencies>
-      <group targetFramework="netstandard1.0">
+      <group targetFramework="netstandard1.4">
         <dependency id="NETStandard.Library" version="1.6.1" />
         <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
       </group>
+      
+      <group targetFramework="netstandard2.0" />
 
-      <group targetFramework="net45" />
+      <group targetFramework="net462" />
 
       <group targetFramework="uap10.0" />
 
@@ -45,50 +47,60 @@
     </dependencies>
   </metadata>
   <files>
-
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard1.0\" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard1.0" />
-    <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.0\" />
-    <file src="Extension.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.0" />
-
-    <!-- Symbols -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\netstandard1.0\" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\netstandard1.0" />
-
-    <!-- net45 -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net45\" />
-    <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\net45\" />
-    <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net45\" />
-    <file src="Extension.Desktop\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net45\" />
+    <!-- netstandard1.4 -->
+    <file src="MSTest.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard1.4\" />
+    <file src="Extension.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard1.4\" />
+    <file src="MSTest.Core\netstandard1.4\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.4\" />
+    <file src="Extension.Core\netstandard1.4\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.4\" />
 
     <!-- Symbols -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\net45\" />
-    <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\net45\" />
+    <file src="MSTest.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\netstandard1.4\" />
+    <file src="Extension.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\netstandard1.4\" />
+
+    <!-- netstandard2.0 -->
+    <file src="MSTest.Core\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard2.0\" />
+    <file src="Extension.Core\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard2.0\" />
+    <file src="MSTest.Core\netstandard2.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard2.0\" />
+    <file src="Extension.Core\netstandard2.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard2.0\" />
+  
+    <!-- Symbols -->
+    <file src="MSTest.Core\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\netstandard2.0\" />
+    <file src="Extension.Core\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\netstandard2.0" />
+
+    <!-- net462 -->
+    <file src="MSTest.Core\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net462\" />
+    <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\net462\" />
+    <file src="MSTest.Core\net462\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net462\" />
+    <file src="Extension.Desktop\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net462\" />
+
+    <!-- Symbols -->
+    <file src="MSTest.Core\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\net462\" />
+    <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\net462\" />
 
     <!-- uap10.0 -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\uap10.0\" />
-    <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\uap10.0\" />
-    <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\uap10.0\" />
-    <file src="Extension.UWP\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\uap10.0\" />
+    <file src="Extension.UWP\uap10.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\uap10.0\" />
+    <file src="Extension.UWP\uap10.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\uap10.0\" />
+    <file src="Extension.UWP\uap10.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\uap10.0\" />
+    <file src="Extension.UWP\uap10.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\uap10.0\" />
 
     <!-- Symbols -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\uap10.0\" />
-    <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\uap10.0\" />
+    <file src="Extension.UWP\uap10.0\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\uap10.0\" />
+    <file src="Extension.UWP\uap10.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\uap10.0\" />
 
     <!-- net5.0 -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net5.0\" />
-    <file src="MSTest.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net5.0\" />
     <file src="Build\Net5\MSTest.TestFramework.targets" target="build\net5.0\" />
+    <file src="MSTest.Core\net5.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net5.0\" />
+    <file src="MSTest.Core\net5.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net5.0\" />
     
     <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net5.0\winui\" />
     <file src="Extension.WinUI\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net5.0\winui\" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net5.0\" />
-    <file src="Extension.Core\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net5.0\" />
+    <file src="Extension.Core\net5.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net5.0\" />
+    <file src="Extension.Core\net5.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net5.0\" />
 
     <!-- Symbols -->
-    <file src="MSTest.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\net5.0\" />
+    <file src="MSTest.Core\net5.0\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\net5.0\" />
     <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="build\net5.0\winui\" />
-    <file src="Extension.Core\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="build\net5.0\" />
+    <file src="Extension.Core\net5.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="build\net5.0\" />
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />
