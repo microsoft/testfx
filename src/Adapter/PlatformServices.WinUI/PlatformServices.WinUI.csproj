@@ -39,24 +39,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Constants.cs">
-      <Link>Constants.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs">
-      <Link>Services\ns10ReflectionOperations.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs">
-      <Link>Services\ns10DiaSessionOperations.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs">
-      <Link>Services\ns10TestContextImplementation.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs">
-      <Link>Services\ns10TestDataSource.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TestDeployment.cs">
-      <Link>Services\ns13TestDeployment.cs</Link>
-    </Compile>
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Constants.cs" Link="Constants.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs" Link="Services\ns10ReflectionOperations.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs" Link="Services\ns10DiaSessionOperations.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs" Link="Services\ns10TestContextImplementation.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs" Link="Services\ns10TestDataSource.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TestDeployment.cs" Link="Services\ns13TestDeployment.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentItemUtility.cs" Link="Utilities\ns13DeploymentItemUtility.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentUtilityBase.cs" Link="Utilities\ns13DeploymentUtilityBase.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs" Link="Utilities\ns13FileUtility.cs" />
@@ -71,15 +59,9 @@
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\Utilities\NetCoreDeploymentUtility.cs" Link="Utilities\NetCoreDeploymentUtility.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\Deployment\NetCoreTestRunDirectories.cs" Link="Deployment\NetCoreTestRunDirectories.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\Utilities\NetCoreAssemblyUtility.cs" Link="Utilities\NetCoreAssemblyUtility.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs">
-      <Link>Services\ns10ThreadOperations.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs">
-      <Link>Services\ns10TraceListener.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs">
-      <Link>Services\ns10TraceListenerManager.cs</Link>
-    </Compile>
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" Link="Services\ns10ThreadOperations.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs" Link="Services\ns10TraceListener.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs" Link="Services\ns10TraceListenerManager.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13ThreadSafeStringWriter.cs" Link="Services\ns13ThreadSafeStringWriter.cs" />
     <Compile Include="Friends.cs" />
     <Compile Include="AppModel.cs" />
