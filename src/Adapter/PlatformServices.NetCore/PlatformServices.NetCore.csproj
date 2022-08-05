@@ -3,6 +3,7 @@
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
     <TargetFramework>netstandard1.5</TargetFramework>
+    <UseSharedResources>true</UseSharedResources>
   </PropertyGroup>
 
   <!-- Remove after ARCADE transition -->
@@ -11,7 +12,6 @@
     <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
 
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <UseSharedResources>true</UseSharedResources>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
   </PropertyGroup>
