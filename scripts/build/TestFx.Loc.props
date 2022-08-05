@@ -24,8 +24,8 @@
   <!-- Localization for Libraries.
   'UseSharedResources' flag is true for desktop and netcore as their resources are common and present at a shared location -->
   <Target Name="TestFxLocalization" Condition=" '$(IsVsixProj)' == '' and '$(IsVsixProj)' !='true' " BeforeTargets="BeforeBuild" DependsOnTargets="GatherResxResources">
-    <CallTarget Targets="CreateLocalizeXLF;CreateLocalizeResx" Condition=" '$(HasResxResources)' == 'true' and '$(UseSharedResources)' == '' "/>
-    <CallTarget Targets="CreateLocalizeXLFShared;CreateLocalizeResxShared" Condition=" '$(HasResxResources)' == 'true' and '$(UseSharedResources)' == 'true' "/>
+    <!-- <CallTarget Targets="CreateLocalizeXLF;CreateLocalizeResx" Condition=" '$(HasResxResources)' == 'true' and '$(UseSharedResources)' == '' "/>
+    <CallTarget Targets="CreateLocalizeXLFShared;CreateLocalizeResxShared" Condition=" '$(HasResxResources)' == 'true' and '$(UseSharedResources)' == 'true' "/> -->
   </Target>
 
   <!-- Generate xlf files from Resources.resx by using command Build.cmd -uxlf -->
