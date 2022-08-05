@@ -16,16 +16,16 @@
     <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework MSTestV2</tags>
-    <repository type="git" 
-                url="https://github.com/microsoft/testfx" 
-                branch="$BranchName$" 
+    <repository type="git"
+                url="https://github.com/microsoft/testfx"
+                branch="$BranchName$"
                 commit="$CommitId$" />
   </metadata>
   <files>
     <!--DotNet-->
     <file src="MSTest.Core\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="contentFiles\any\any\Core" />
     <file src="Extension.Core\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Core" />
-    <file src="Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Desktop" />
+    <file src="Extension.Desktop\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Desktop" />
     <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\UWP" />
     <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\WinUI" />
 

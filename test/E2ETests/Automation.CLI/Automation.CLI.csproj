@@ -34,7 +34,7 @@
     <PackageReference Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
-    
+
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="$(SystemRuntimeInteropServicesRuntimeInformationVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
@@ -62,7 +62,7 @@
       <Name>MSTest.Core</Name>
     </ProjectReference>
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Include="CLITestBase.common.cs" />
     <Compile Include="CLITestBase.e2e.cs" />
@@ -72,9 +72,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XmlRunSettingsUtilities.cs" />
   </ItemGroup>
-  
+
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  
+
   <Target Name="CopyMSBuildScriptsFiles" DependsOnTargets="CoreCompile" AfterTargets="CoreCompile">
     <PropertyGroup>
       <SourcePath>$(TargetDir)..\</SourcePath>
@@ -83,14 +83,14 @@
 
     <ItemGroup>
       <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNETTestSdkVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" />
-      <FileToCopy Include="$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" />
-      <FileToCopy Include="$(SourcePath)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Desktop\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Desktop\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)PlatformServices.Interface\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)PlatformServices.Interface\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)MSTest.Core\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)MSTest.Core\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" KeepDuplicates="True" />
-      <FileToCopy Include="$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" KeepDuplicates="True" />
-      <FileToCopy Include="$(SourcePath)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)Extension.Desktop\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)Extension.Desktop\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\net462\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)MSTest.CoreAdapter\net462\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" KeepDuplicates="True" />
 
@@ -100,15 +100,15 @@
       <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" Folder="netcoreapp3.1" />
       <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" Folder="netcoreapp3.1" />
       <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" KeepDuplicates="True" Folder="netcoreapp3.1" />
-      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" KeepDuplicates="True" Folder="netcoreapp3.1" /> 
+      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" KeepDuplicates="True" Folder="netcoreapp3.1" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(FileToCopy)" 
+    <Copy SourceFiles="@(FileToCopy)"
           DestinationFiles="$(DestinationPath)\%(FileToCopy.Folder)\%(Filename)%(Extension)"
           SkipUnchangedFiles="True" OverwriteReadOnlyFiles="True" Retries="3" RetryDelayMilliseconds="500"
           UseHardlinksIfPossible="False" UseSymboliclinksIfPossible="False" ErrorIfLinkFails="False"
           Condition="@(FileToCopy->Count()) > 0">
-      
+
       <Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
     </Copy>
   </Target>

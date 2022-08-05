@@ -12,8 +12,8 @@
 
       Supported platforms:
       - .NET 4.6.2+
-      - .NET Core 3.1+ (Universal Windows Apps 10+) 
-      - .NET 5.0 
+      - .NET Core 3.1+ (Universal Windows Apps 10+)
+      - .NET 5.0
       - .NET 5.0 Windows.18362+
       - ASP.NET Core 1.0+
     </description>
@@ -24,9 +24,9 @@
     <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
-    <repository type="git" 
-                url="https://github.com/microsoft/testfx" 
-                branch="$BranchName$" 
+    <repository type="git"
+                url="https://github.com/microsoft/testfx"
+                branch="$BranchName$"
                 commit="$CommitId$" />
 
     <dependencies>
@@ -48,7 +48,7 @@
         <dependency id="System.Text.RegularExpressions" version="[$SystemTextRegularExpressionsVersion$, ]" />
         <dependency id="System.Private.Uri" version="[$SystemPrivateUriVersion$, ]" />
         <dependency id="System.Xml.ReaderWriter" version="[$SystemXmlReaderWriterVersion$, ]" />
-      </group>     
+      </group>
 
       <group targetFramework="net5.0" />
     </dependencies>
@@ -56,7 +56,7 @@
   <files>
     <file src="MSTest.CoreAdapter\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\_common\" />
     <file src="PlatformServices.Interface\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="build\_common\" />
-    <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
+    <file src="PlatformServices.Desktop\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
     <file src="MSTest.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\_common\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard2.0\" target="build\_common\" />
 
@@ -92,12 +92,12 @@
     <!-- net462 -->
     <file src="Build\Desktop\MSTest.TestAdapter.props" target="build\net462\" />
     <file src="Build\Desktop\MSTest.TestAdapter.targets" target="build\net462\" />
-    <file src="PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net462\" />
+    <file src="PlatformServices.Desktop\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net462\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\net462\" target="build\net462\" />
 
     <!-- Localization -->
     <file src="MSTest.CoreAdapter\**\*.resources.dll" target="\build\_common\" />
-    <file src="PlatformServices.Desktop\**\*.resources.dll" target="\build\_common\" />
+    <file src="PlatformServices.Desktop\net462\**\*.resources.dll" target="\build\_common\" />
     <file src="MSTest.Core\**\*.resources.dll" target="build\_common\" />
 
     <!-- Icon -->

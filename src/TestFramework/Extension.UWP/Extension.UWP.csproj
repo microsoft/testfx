@@ -52,7 +52,7 @@
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
     <LocDocumentationSubPath>Extensions\UWP</LocDocumentationSubPath>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" SetTargetFramework="TargetFramework=netstandard1.4">
       <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
@@ -79,6 +79,6 @@
   <ItemGroup>
     <EmbeddedResource Update="Properties\Extension.UWP.rd.xml" />
   </ItemGroup>
-  
+
   <Import Project="$(RepoRoot)src\TestFramework\Extension.Shared\Extension.Shared.projitems" Label="Shared" />
 </Project>
