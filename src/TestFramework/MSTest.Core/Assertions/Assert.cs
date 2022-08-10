@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+    #define HIDE_MESSAGELESS_IMPLEMENTATION
+#endif
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting
 {
     using System;
@@ -50,7 +54,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         #endregion
 
         #region Boolean
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified condition is true and throws an exception
         /// if the condition is false.
@@ -81,6 +86,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             IsTrue(condition, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified condition is true and throws an exception
         /// if the condition is false.
@@ -96,8 +102,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="condition"/> is false.
         /// </exception>
         public static void IsTrue([DoesNotReturnIf(false)] bool condition,
-            [CallerArgumentExpression("condition")]
-            string message = null)
+            [CallerArgumentExpression("condition")] string message = null)
         {
             IsTrue(condition, message, null);
         }
@@ -173,7 +178,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.IsTrue", BuildUserMessage(message, parameters));
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified condition is false and throws an exception
         /// if the condition is true.
@@ -204,6 +210,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             IsFalse(condition, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified condition is false and throws an exception
         /// if the condition is true.
@@ -300,7 +307,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         #region Null
 
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified object is null and throws an exception
         /// if it is not.
@@ -332,8 +339,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// Thrown if <paramref name="value"/> is not null.
         /// </exception>
         public static void IsNull(object value,
-            [CallerArgumentExpression("value")]
-            string message = null)
+            [CallerArgumentExpression("value")] string message = null)
         {
             IsNull(value, message, null);
         }
@@ -363,7 +369,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.IsNull", BuildUserMessage(message, parameters));
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified object is non-null and throws an exception
         /// if it is null.
@@ -379,6 +386,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             IsNotNull(value, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified object is non-null and throws an exception
         /// if it is null.
@@ -429,6 +437,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
 
         #region AreSame
 
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified objects both refer to the same object and
         /// throws an exception if the two inputs do not refer to the same object.
@@ -447,7 +456,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             AreSame(expected, actual, string.Empty, null);
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+#endif
+
         /// <summary>
         /// Tests whether the specified objects both refer to the same object and
         /// throws an exception if the two inputs do not refer to the same object.
@@ -471,7 +481,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             AreSame(expected, actual, message, null);
         }
-#endif
+
         /// <summary>
         /// Tests whether the specified objects both refer to the same object and
         /// throws an exception if the two inputs do not refer to the same object.
@@ -515,7 +525,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.AreSame", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified objects refer to different objects and
         /// throws an exception if the two inputs refer to the same object.
@@ -536,6 +547,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreNotSame(notExpected, actual, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified objects refer to different objects and
         /// throws an exception if the two inputs refer to the same object.
@@ -595,7 +607,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         #endregion
 
         #region AreEqual
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified values are equal and throws an exception
         /// if the two values are not equal. Different numeric types are treated
@@ -618,6 +631,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreEqual(expected, actual, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified values are equal and throws an exception
         /// if the two values are not equal. Different numeric types are treated
@@ -705,7 +719,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified values are unequal and throws an exception
         /// if the two values are equal. Different numeric types are treated
@@ -729,6 +744,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreNotEqual(notExpected, actual, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified values are unequal and throws an exception
         /// if the two values are equal. Different numeric types are treated
@@ -799,7 +815,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified objects are equal and throws an exception
         /// if the two objects are not equal. Different numeric types are treated
@@ -820,6 +837,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreEqual(expected, actual, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified objects are equal and throws an exception
         /// if the two objects are not equal. Different numeric types are treated
@@ -874,7 +892,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             AreEqual<object>(expected, actual, message, parameters);
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified objects are unequal and throws an exception
         /// if the two objects are equal. Different numeric types are treated
@@ -895,6 +914,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreNotEqual(notExpected, actual, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified objects are unequal and throws an exception
         /// if the two objects are equal. Different numeric types are treated
@@ -949,7 +969,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             AreNotEqual<object>(notExpected, actual, message, parameters);
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified floats are equal and throws an exception
         /// if they are not equal.
@@ -974,6 +995,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreEqual(expected, actual, delta, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified floats are equal and throws an exception
         /// if they are not equal.
@@ -1060,7 +1082,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified floats are unequal and throws an exception
         /// if they are equal.
@@ -1085,6 +1108,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreNotEqual(notExpected, actual, delta, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified floats are unequal and throws an exception
         /// if they are equal.
@@ -1158,7 +1182,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified decimals are equal and throws an exception
         /// if they are not equal.
@@ -1183,6 +1208,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreEqual(expected, actual, delta, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified decimals are equal and throws an exception
         /// if they are not equal.
@@ -1256,7 +1282,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified decimals are unequal and throws an exception
         /// if they are equal.
@@ -1281,6 +1308,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreNotEqual(notExpected, actual, delta, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified decimals are unequal and throws an exception
         /// if they are equal.
@@ -1378,7 +1406,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             AreEqual(expected, actual, delta, string.Empty, null);
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified longs are equal and throws an exception
         /// if they are not equal.
@@ -1409,6 +1438,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreEqual(expected, actual, delta, message, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified longs are equal and throws an exception
         /// if they are not equal.
@@ -1452,7 +1482,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified longs are unequal and throws an exception
         /// if they are equal.
@@ -1477,6 +1508,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreNotEqual(notExpected, actual, delta, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified longs are unequal and throws an exception
         /// if they are equal.
@@ -1549,7 +1581,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified doubles are equal and throws an exception
         /// if they are not equal.
@@ -1574,6 +1607,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreEqual(expected, actual, delta, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified doubles are equal and throws an exception
         /// if they are not equal.
@@ -1656,7 +1690,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified doubles are unequal and throws an exception
         /// if they are equal.
@@ -1681,6 +1716,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreNotEqual(notExpected, actual, delta, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified doubles are unequal and throws an exception
         /// if they are equal.
@@ -1752,7 +1788,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified strings are equal and throws an exception
         /// if they are not equal. The invariant culture is used for the comparison.
@@ -1775,6 +1812,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Assert.AreEqual(expected, actual, ignoreCase, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified strings are equal and throws an exception
         /// if they are not equal. The invariant culture is used for the comparison.
@@ -1831,7 +1869,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified strings are equal and throws an exception
         /// if they are not equal.
@@ -1857,6 +1896,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreEqual(expected, actual, ignoreCase, culture, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified strings are equal and throws an exception
         /// if they are not equal.
@@ -1947,7 +1987,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.AreEqual", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified strings are unequal and throws an exception
         /// if they are equal. The invariant culture is used for the comparison.
@@ -1971,6 +2012,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreNotEqual(notExpected, actual, ignoreCase, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified strings are unequal and throws an exception
         /// if they are equal. The invariant culture is used for the comparison.
@@ -2029,7 +2071,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified strings are unequal and throws an exception
         /// if they are equal.
@@ -2056,6 +2099,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             AreNotEqual(notExpected, actual, ignoreCase, culture, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified strings are unequal and throws an exception
         /// if they are equal.
@@ -2135,7 +2179,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         #endregion
 
         #region Type
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified object is an instance of the expected
         /// type and throws an exception if the expected type is not in the
@@ -2157,6 +2202,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             IsInstanceOfType(value, expectedType, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified object is an instance of the expected
         /// type and throws an exception if the expected type is not in the
@@ -2228,7 +2274,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 ThrowAssertFailed("Assert.IsInstanceOfType", finalMessage);
             }
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the specified object is not an instance of the wrong
         /// type and throws an exception if the specified type is in the
@@ -2250,6 +2297,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             IsNotInstanceOfType(value, wrongType, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the specified object is not an instance of the wrong
         /// type and throws an exception if the specified type is in the
@@ -2451,7 +2499,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         #endregion Equals Assertion
 
         #region ThrowsException
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
         /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
@@ -2474,6 +2523,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             return ThrowsException<T>(action, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
         /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
@@ -2499,7 +2549,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             return ThrowsException<T>(action, message, null);
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
         /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
@@ -2522,6 +2573,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             return ThrowsException<T>(action, string.Empty, null);
         }
 #endif
+
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
         /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
@@ -2649,7 +2701,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             // This will not hit, but need it for compiler.
             return null;
         }
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
         /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
@@ -2672,6 +2725,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             return await ThrowsExceptionAsync<T>(action, string.Empty, null).ConfigureAwait(false);
         }
 #endif
+
         /// <summary>
         /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
         /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
