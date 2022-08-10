@@ -18,7 +18,6 @@
 
   <!-- Remove after ARCADE transition -->
   <PropertyGroup>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
   </PropertyGroup>
   <!-- / Remove after ARCADE transition -->

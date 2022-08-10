@@ -211,7 +211,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
             try
             {
                 typeFullName = type.FullName;
-                var unitTestCases = this.GetTypeEnumerator(type, assemblyFileName, discoverInternals).Enumerate(out var warningsFromTypeEnumerator);
+                var testTypeEnumerator = this.GetTypeEnumerator(type, assemblyFileName, discoverInternals);
+                var unitTestCases = testTypeEnumerator.Enumerate(out var warningsFromTypeEnumerator);
                 var typeIgnored = ReflectHelper.IsAttributeDefined(type, typeof(UTF.IgnoreAttribute), false);
 
                 if (warningsFromTypeEnumerator != null)

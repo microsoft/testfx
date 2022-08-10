@@ -5,7 +5,6 @@
 
     <IsPackable>false</IsPackable>
     <NoWarn>1685</NoWarn>
-    <SkipAppendingVersion>true</SkipAppendingVersion>
     <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
   </PropertyGroup>
 
@@ -32,7 +31,7 @@
     </Reference>
 
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices">
-      <HintPath>$(ArtifactsBinDir)PlatformServices.Desktop\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
+      <HintPath>$(ArtifactsBinDir)PlatformServices.Desktop\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
     </Reference>
     
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface">
@@ -44,7 +43,7 @@
     </Reference>
     
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions">
-      <HintPath>$(ArtifactsBinDir)Extension.Desktop\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+      <HintPath>$(ArtifactsBinDir)Extension.Desktop\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

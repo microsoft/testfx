@@ -47,8 +47,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             this.IsAsync = isAsync;
 
             var hierarchy = new string[HierarchyConstants.Levels.TotalLevelCount];
+            hierarchy[HierarchyConstants.Levels.ContainerIndex] = null;
             hierarchy[HierarchyConstants.Levels.NamespaceIndex] = fullClassName;
             hierarchy[HierarchyConstants.Levels.ClassIndex] = name;
+            hierarchy[HierarchyConstants.Levels.TestGroupIndex] = name;
 
             this.hierarchy = new ReadOnlyCollection<string>(hierarchy);
         }
@@ -62,6 +64,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             }
 
             ManagedNameHelper.GetManagedName(method, out var managedType, out var managedMethod, out var hierarchyValues);
+            hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
+
             this.ManagedTypeName = managedType;
             this.ManagedMethodName = managedMethod;
             this.hierarchy = new ReadOnlyCollection<string>(hierarchyValues);

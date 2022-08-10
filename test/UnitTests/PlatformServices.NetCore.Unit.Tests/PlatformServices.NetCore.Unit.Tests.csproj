@@ -8,7 +8,6 @@
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     <NoWarn>CS1685</NoWarn>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
-    <SkipAppendingVersion>true</SkipAppendingVersion> <!-- TODO: remove after full arcade transition -->
   </PropertyGroup>
 
   <ItemGroup>
