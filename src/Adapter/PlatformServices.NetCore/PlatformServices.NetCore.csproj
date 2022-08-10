@@ -8,7 +8,6 @@
 
   <!-- Remove after ARCADE transition -->
   <PropertyGroup>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
 
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>

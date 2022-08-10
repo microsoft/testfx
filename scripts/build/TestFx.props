@@ -8,6 +8,12 @@
     <IsTest Condition=" '$(IsTest)' == '' ">false</IsTest>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <BranchName Condition=" '$(BranchName)' == '' ">BRANCHNAME</BranchName>
+    <CommitHash Condition=" '$(CommitHash)' == '' ">COMMITHASH</CommitHash>
+    <CommitId>$(CommitHash.SubString(0, 8))</CommitId>
+  </PropertyGroup>
+
   <Import Project="$(RepoRoot)eng\Versions.props" />
   <Import Project="$(RepoRoot)scripts\build\TestFx.Sign.props" Condition=" '$(TestFxSigningPropsImported)' != 'true' " />
 
@@ -20,6 +26,12 @@
     <IntermediatePath Condition=" '$(IntermediatePath)' == '' ">$(RepoRoot)artifacts\$(Configuration)\$(MSBuildProjectName)\obj\</IntermediatePath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
+
+  <!-- WARNING remove this when SDK-style project conversion is being done. -->
+  <PropertyGroup>
+    <CompileDependsOn>GenerateAssemblyInfoFile;$(CompileDependsOn)</CompileDependsOn>
+  </PropertyGroup>
+  <!-- / WARNING remove this when SDK-style project conversion is being done. -->
 
   <!-- Code analysis settings -->
   <PropertyGroup>

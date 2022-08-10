@@ -234,6 +234,8 @@ function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExten
                 "-p:IsLocalizedBuild=$TFB_IsLocalizedBuild",
                 "-p:UpdateXlf=$TFB_UpdateXlf",
                 "-p:BuildVersion=$TFB_BuildVersion",
+                "-p:BranchName=`"$TPB_BRANCH`"",
+                "-p:CommitHash=$TPB_COMMIT",
                 "-restore:$restore",
                 "`"$solutionPath`"",
                 "-bl:`"$binLog`"",
@@ -304,8 +306,8 @@ function Create-NugetPackages {
     $SystemPrivateUriVersion = Get-PackageVersion -PackageName "SystemPrivateUriVersion"
     $SystemXmlReaderWriterVersion = Get-PackageVersion -PackageName "SystemXmlReaderWriterVersion"
 
-    Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version``;Srcroot=$env:TF_SRC_DIR``;Packagesroot=$env:TF_PACKAGES_DIR``;TestPlatformVersion=$TestPlatformVersion``;MicrosoftNETCoreUniversalWindowsPlatformVersion=$MicrosoftNETCoreUniversalWindowsPlatformVersion``;SystemNetWebSocketsClientVersion=$SystemNetWebSocketsClientVersion``;SystemTextRegularExpressionsVersion=$SystemTextRegularExpressionsVersion``;SystemPrivateUriVersion=$SystemPrivateUriVersion``;SystemXmlReaderWriterVersion=$SystemXmlReaderWriterVersion``;SystemNetNameResolutionVersion=$SystemNetNameResolutionVersion``;NOWARN=`"NU5127,NU5128,NU5129`"``;BranchName=$TPB_BRANCH``;CommitId=$TPB_COMMIT"
-    & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR`;TestPlatformVersion=$TestPlatformVersion`;MicrosoftNETCoreUniversalWindowsPlatformVersion=$MicrosoftNETCoreUniversalWindowsPlatformVersion`;SystemNetWebSocketsClientVersion=$SystemNetWebSocketsClientVersion`;SystemTextRegularExpressionsVersion=$SystemTextRegularExpressionsVersion`;SystemPrivateUriVersion=$SystemPrivateUriVersion`;SystemXmlReaderWriterVersion=$SystemXmlReaderWriterVersion`;SystemNetNameResolutionVersion=$SystemNetNameResolutionVersion`;NOWARN="NU5127,NU5128,NU5129"`;BranchName=$TPB_BRANCH`;CommitId=$TPB_COMMIT
+    Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version``;Srcroot=$env:TF_SRC_DIR``;Packagesroot=$env:TF_PACKAGES_DIR``;TestPlatformVersion=$TestPlatformVersion``;MicrosoftNETCoreUniversalWindowsPlatformVersion=$MicrosoftNETCoreUniversalWindowsPlatformVersion``;SystemNetWebSocketsClientVersion=$SystemNetWebSocketsClientVersion``;SystemTextRegularExpressionsVersion=$SystemTextRegularExpressionsVersion``;SystemPrivateUriVersion=$SystemPrivateUriVersion``;SystemXmlReaderWriterVersion=$SystemXmlReaderWriterVersion``;SystemNetNameResolutionVersion=$SystemNetNameResolutionVersion``;NOWARN=`"NU5127,NU5128,NU5129`"``;BranchName=$TPB_BRANCH``;CommitHash=$TPB_COMMIT"
+    & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR`;TestPlatformVersion=$TestPlatformVersion`;MicrosoftNETCoreUniversalWindowsPlatformVersion=$MicrosoftNETCoreUniversalWindowsPlatformVersion`;SystemNetWebSocketsClientVersion=$SystemNetWebSocketsClientVersion`;SystemTextRegularExpressionsVersion=$SystemTextRegularExpressionsVersion`;SystemPrivateUriVersion=$SystemPrivateUriVersion`;SystemXmlReaderWriterVersion=$SystemXmlReaderWriterVersion`;SystemNetNameResolutionVersion=$SystemNetNameResolutionVersion`;NOWARN="NU5127,NU5128,NU5129"`;BranchName=$TPB_BRANCH`;CommitHash=$TPB_COMMIT
     if ($lastExitCode -ne 0) {
       throw "Nuget pack failed with an exit code of '$lastExitCode'."
     }

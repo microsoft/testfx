@@ -14,7 +14,6 @@
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup>
-
   
   <!-- WARNING remove this when SDK-style project conversion is being done. -->
   <!-- 
@@ -36,40 +35,58 @@
   <PropertyGroup>
     <TFBuildNumber Condition=" '$(TFBuildNumber)' == '' ">0.1</TFBuildNumber>
     <MajorVersion>14.0</MajorVersion>
+    <GeneratedAssemblyInfoFile Condition="'$(GeneratedAssemblyInfoFile)' ==''">$(IntermediateOutputPath)$(MSBuildProjectName).AssemblyInfo.cs</GeneratedAssemblyInfoFile>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <AssemblyVersion>$(MajorVersion).0.0</AssemblyVersion>
     <BuildVersion Condition=" '$(BuildVersion)' == '' ">$(MajorVersion).$(TFBuildNumber)</BuildVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <GeneratedAssemblyInfoFile Condition="'$(GeneratedAssemblyInfoFile)' ==''">$(IntermediateOutputPath)$(MSBuildProjectName).AssemblyInfo.cs</GeneratedAssemblyInfoFile>
+    <FileVersion Condition=" '$(FileVersion)' == '' ">$(BuildVersion)</FileVersion>
+    <InformationalVersion>$(BuildVersion)+$(CommitId)</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <AssemblyVersionAttribute Include="System.Reflection.AssemblyVersionAttribute">
-      <_Parameter1>$(AssemblyVersion)</_Parameter1>
-    </AssemblyVersionAttribute>
-    <AssemblyVersionAttribute Include="System.Reflection.AssemblyFileVersionAttribute">
-      <_Parameter1>$(BuildVersion)</_Parameter1>
-    </AssemblyVersionAttribute>
-    <AssemblyVersionAttribute Include="System.Reflection.AssemblyInformationalVersionAttribute">
-      <_Parameter1>$(BuildVersion)</_Parameter1>
-    </AssemblyVersionAttribute>
+    <!-- Not including branch name assemblies for now. -->
+    <!-- <AssemblyMetadata Include="Branch" Value="$(BranchName)" /> -->
+    <AssemblyMetadata Include="Commit" Value="$(CommitHash)" />
   </ItemGroup>
 
-  <Target Name="GenerateAssemblyInfoFile">
+  <ItemGroup Condition=" '$(GenerateAssemblyInfo)' == 'false' ">
+    <AssemblyAttribute Include="System.Reflection.AssemblyCompanyAttribute" Condition="'$(Company)' != '' and '$(GenerateAssemblyCompanyAttribute)' == 'true'">
+      <_Parameter1>$(Company)</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyCopyrightAttribute" Condition="'$(Copyright)' != '' and '$(GenerateAssemblyCopyrightAttribute)' == 'true'">
+      <_Parameter1>$(Copyright)</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyVersionAttribute" Condition="'$(AssemblyVersion)' != ''">
+      <_Parameter1>$(AssemblyVersion)</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyFileVersionAttribute" Condition="'$(FileVersion)' != ''">
+      <_Parameter1>$(FileVersion)</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyInformationalVersionAttribute" Condition="'$(InformationalVersion)' != ''">
+      <_Parameter1>$(InformationalVersion)</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(GenerateRepositoryUrlAttribute)' != 'true'" >
+      <_Parameter1>RepositoryUrl</_Parameter1>
+      <_Parameter2 Condition="'$(RepositoryUrl)' != ''">$(RepositoryUrl)</_Parameter2>
+      <_Parameter2 Condition="'$(RepositoryUrl)' == ''">$(PrivateRepositoryUrl)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadata" Condition="'$(GenerateAssemblyMetadataAttributes)' != 'true'">
+        <_Parameter1>%(AssemblyMetadata.Identity)</_Parameter1>
+        <_Parameter2>%(AssemblyMetadata.Value)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <Target Name="GenerateAssemblyInfoFile" Condition=" '$(GenerateAssemblyInfo)' == 'false' ">
     <ItemGroup>
       <!-- Ensure the generated assemblyinfo file is not already part of the Compile sources, as a workaround for https://github.com/dotnet/sdk/issues/114 -->
       <Compile Remove="$(GeneratedAssemblyInfoFile)" />
     </ItemGroup>
 
-    <WriteCodeFragment AssemblyAttributes="@(AssemblyVersionAttribute)" Language="C#" OutputFile="$(GeneratedAssemblyInfoFile)" Condition=" '$(SkipAppendingVersion)' != 'true' ">
+    <WriteCodeFragment AssemblyAttributes="@(AssemblyVersionAttribute)" Language="C#" OutputFile="$(GeneratedAssemblyInfoFile)">
       <Output TaskParameter="OutputFile" ItemName="Compile" />
       <Output TaskParameter="OutputFile" ItemName="FileWrites" />
     </WriteCodeFragment>
   </Target>
-
-  <PropertyGroup>
-    <CompileDependsOn>GenerateAssemblyInfoFile;$(CompileDependsOn)</CompileDependsOn>
-  </PropertyGroup>
   <!-- / WARNING remove this when SDK-style project conversion is being done. -->
 </Project>
