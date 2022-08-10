@@ -76,6 +76,14 @@ else {
     Write-Host "Branch $branch$(if($branch -ne $sourceBranch){" ($sourceBranch)"}) has tag $start, getting log since that."
 }
 
+$discards = @(
+    "^Update dependencies from (?:https:\/\/github\.com[A-Za-z0-9\/\.-]+ )+build [0-9]{8}.[0-9]+ \(\#[0-9]+\)$", 
+    "^\[.+\] Update dependencies from (?:[A-Za-z0-9\/\.-]+ )+\(\#[0-9]+\)$",
+    "^LEGO\: Pull request from lego\/[a-z0-9\-_]+ to .+ \(\#[0-9]+\)$",
+    "^Localized file check-in by OneLocBuild Task \(\#[0-9]+\)$"
+)
+$discard = $discards -join "|"    
+
 $prUrl = "$repoUrl/pull/"
 $v = $tag -replace '^v'
 $b = if ($Stable) { $v } else { $tag -replace '.*?(\d+-\d+)$', '$1' }
@@ -83,7 +91,8 @@ $b = if ($Stable) { $v } else { $tag -replace '.*?(\d+-\d+)$', '$1' }
 $log = (git -C $Path log "$start..$end" --oneline --pretty="format:%s" --first-parent)
 $date = ([datetime](git -C $path log -1 --format=%ai $end)).ToString("MMMM yyyy")
 $issues = $log | ForEach-Object {
-    if ($_ -match '^(?<message>.+)\s\(#(?<pr>\d+)\)?$') {
+    if($_ -match $discard) { }
+    elseif ($_ -match '^(?<message>.+)\s\(#(?<pr>\d+)\)?$') {
         if ($matches.pr) {
             $pr = $matches.pr
             "- [x] [$($matches.message)]($prUrl$pr)"
@@ -107,11 +116,13 @@ See release notes [here](https://github.com/microsoft/testfx-docs/blob/main/docs
 ---
 
 # $v ($date)
+
 $($issues -join "`n")
 
 A list of changes since last release are available [here]($repoUrl/compare/$start...$tag)
 
 ### Builds
+* MSTest: [$v](https://www.nuget.org/packages/MSTest/$v)
 * MSTest.TestFramework: [$v](https://www.nuget.org/packages/MSTest.TestFramework/$v)
 * MSTest.TestAdapter: [$v](https://www.nuget.org/packages/MSTest.TestAdapter/$v)
 
