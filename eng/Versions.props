@@ -6,7 +6,7 @@
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
-    <MicrosoftNETTestSdkVersion>17.4.0-preview-20220809-03</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>17.4.0-preview-20220811-01</MicrosoftNETTestSdkVersion>
     <!-- Toolset -->
     <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
     <NuGetFrameworksVersion>5.11.0</NuGetFrameworksVersion>
