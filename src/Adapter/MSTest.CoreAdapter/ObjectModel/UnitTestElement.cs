@@ -229,26 +229,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             {
             }
 
-            // This code is disabled for compatibility. 
-            // var idProvider = new TestIdProvider();
-            // idProvider.AppendString(testCase.ExecutorUri?.ToString());
-            // idProvider.AppendString(fileName);
-            // if (this.TestMethod.HasManagedMethodAndTypeProperties)
-            // {
-            //     idProvider.AppendString(this.TestMethod.ManagedTypeName);
-            //     idProvider.AppendString(this.TestMethod.ManagedMethodName);
-            // }
-            // else
-            // {
-            //     idProvider.AppendString(testCase.FullyQualifiedName);
-            // }
-            // 
-            // if (this.TestMethod.DataType != DynamicDataType.None)
-            // {
-            //     idProvider.AppendString(testCase.DisplayName);
-            // }
-            // 
-            // testCase.Id = idProvider.GetId();
+            var idProvider = new TestIdProvider();
+            idProvider.AppendString(testCase.ExecutorUri?.ToString());
+            idProvider.AppendString(fileName);
+            if (this.TestMethod.HasManagedMethodAndTypeProperties)
+            {
+                idProvider.AppendString(this.TestMethod.ManagedTypeName);
+                idProvider.AppendString(this.TestMethod.ManagedMethodName);
+            }
+            else
+            {
+                idProvider.AppendString(testCase.FullyQualifiedName);
+            }
+
+            if (this.TestMethod.DataType != DynamicDataType.None)
+            {
+                idProvider.AppendString(testCase.DisplayName);
+            }
+
+            testCase.Id = idProvider.GetId();
 
             return testCase;
         }
