@@ -14,8 +14,6 @@ namespace System.Runtime.CompilerServices
             ParameterName = parameterName;
         }
 
-
-
         public string ParameterName { get; }
     }
 }

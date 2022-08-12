@@ -1,10 +1,15 @@
-<Project>
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+
   <PropertyGroup>
     <RepoRoot Condition=" '$(RepoRoot)' == '' ">$([MSBuild]::NormalizeDirectory('$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'LICENSE'))'))</RepoRoot>
+  </PropertyGroup>
 
-    <!-- 'IsRunningFromVisualStudio' may be true even when running msbuild.exe from command line. This generally means that MSBuild is from a Visual Studio installation and therefore we need to find NuGet.targets in a different location. -->
-    <_NuGetRestoreTargets Condition="Exists('$(MSBuildToolsPath)\NuGet.targets')" >$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
-    <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true' And Exists('$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets')">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+    <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
   </PropertyGroup>
 
   <Import Project="$(RepoRoot)eng\Versions.props" />
@@ -17,17 +22,6 @@
     <RestoreNoCache Condition=" '$(ContinuousIntegrationBuild)' == 'true' ">true</RestoreNoCache>
   </PropertyGroup>
 
-  <!-- Properties requires by NuGet.targets to restore PackageReferences -->
-  <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
-    <!-- Workaround changes from newer MSBuild requiring additional properties -->
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">5</TargetFrameworkVersion>
-    <TargetFrameworkIdentifier  Condition=" '$(TargetFrameworkIdentifier)' == '' ">.NETFramework</TargetFrameworkIdentifier>
-    <TargetFrameworkMoniker Condition=" '$(TargetFrameworkMoniker)' == '' ">.NETFramework,Version=v4.7.2</TargetFrameworkMoniker>
-    <OutputPath>$(RepoRoot)artifacts\toolset\</OutputPath>
-    <MSBuildProjectExtensionsPath>$(OutputPath)</MSBuildProjectExtensionsPath>
-  </PropertyGroup>
-
   <!--
     Configure NuGet Restore to use NuGet.config file in the repository root.
     We could drop a custom NuGet.config to the containing directory but it's simpler
@@ -37,6 +31,9 @@
     <RestoreConfigFile>$(RepoRoot)NuGet.config</RestoreConfigFile>
   </PropertyGroup>
 
-  <Import Project="$(_NuGetRestoreTargets)" />
+  <ItemGroup>
+    <!-- Clear references, the SDK may add some depending on UsuingToolXxx settings, but we only want to restore the following -->
+    <PackageReference Remove="@(PackageReference)"/>
+  </ItemGroup>
   <Import Project="$(RepoRoot)eng\Tools.props" />
 </Project>

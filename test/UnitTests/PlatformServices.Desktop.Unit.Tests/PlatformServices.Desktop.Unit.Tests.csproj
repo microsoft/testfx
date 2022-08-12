@@ -81,10 +81,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(RepoRoot)test\UnitTests\\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10DeploymentItemTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10DeploymentItemTests.cs">
       <Link>Deployment\ns10DeploymentItemTests.cs</Link>
     </Compile>
-    <Compile Include="$(RepoRoot)test\UnitTests\\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10TestRunDirectoriesTests.cs">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10TestRunDirectoriesTests.cs">
       <Link>Deployment\ns10TestRunDirectoriesTests.cs</Link>
     </Compile>
     <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Extensions\ns10ExceptionExtensionsTests.cs">
