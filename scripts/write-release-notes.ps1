@@ -63,7 +63,7 @@ if ([string]::IsNullOrWhiteSpace($sourceBranch)) {
 
 Write-Host "Branch is $branch"
 Write-Host "SourceBranch is $sourceBranch"
-$branchesWithStartTag = git -C $Path branch --contains tags/$start
+$branchesWithStartTag = if ($start) { git -C $Path branch --contains tags/$start }
 
 if (-not $branchesWithStartTag -or -not ($branchesWithStartTag -match $branch)) {
     Write-Host "This branch $branch$(if($branch -ne $sourceBranch){" ($sourceBranch)"}), does not contain the starting tag $start. Skipping generating release notes."
@@ -77,12 +77,12 @@ else {
 }
 
 $discards = @(
-    "^Update dependencies from (?:https:\/\/github\.com[A-Za-z0-9\/\.-]+ )+build [0-9]{8}.[0-9]+ \(\#[0-9]+\)$", 
+    "^Update dependencies from (?:https:\/\/github\.com[A-Za-z0-9\/\.-]+ )+build [0-9]{8}.[0-9]+ \(\#[0-9]+\)$",
     "^\[.+\] Update dependencies from (?:[A-Za-z0-9\/\.-]+ )+\(\#[0-9]+\)$",
     "^LEGO\: Pull request from lego\/[a-z0-9\-_]+ to .+ \(\#[0-9]+\)$",
     "^Localized file check-in by OneLocBuild Task \(\#[0-9]+\)$"
 )
-$discard = $discards -join "|"    
+$discard = $discards -join "|"
 
 $prUrl = "$repoUrl/pull/"
 $v = $tag -replace '^v'
