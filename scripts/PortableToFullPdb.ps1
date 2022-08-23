@@ -26,8 +26,7 @@ function Locate-PdbConverterTool
 
     if (!(Test-Path -path $pdbConverter))
     {
-        $files = Get-ChildItem -Path $TF_PACKAGES_DIR -Recurse
-        Write-Verbose "Packages content: $files"
+        Get-ChildItem -Path $TF_PACKAGES_DIR -Recurse | Foreach-Object { Write-Host $_ }
         throw "Unable to locate Microsoft.DiaSymReader.Pdb2Pdb converter exe in path '$pdbConverter'."
     }
 
