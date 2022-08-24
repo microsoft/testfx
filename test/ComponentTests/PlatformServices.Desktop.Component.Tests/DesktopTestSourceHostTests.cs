@@ -9,11 +9,14 @@ namespace PlatformServices.Desktop.ComponentTests
     using System.IO;
     using System.Reflection;
     using System.Xml;
+
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
     using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
     using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+
     using Moq;
+
     using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
     using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
     using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
@@ -27,10 +30,10 @@ namespace PlatformServices.Desktop.ComponentTests
         public void ParentDomainShouldHonourSearchDirectoriesSpecifiedInRunsettings()
         {
             string runSettingxml =
-            @"<RunSettings>   
-                <RunConfiguration>  
-                    <DisableAppDomain>True</DisableAppDomain>   
-                </RunConfiguration>  
+            @"<RunSettings>
+                <RunConfiguration>
+                    <DisableAppDomain>True</DisableAppDomain>
+                </RunConfiguration>
                 <MSTestV2>
                     <AssemblyResolution>
                         <Directory path = "" % Temp %\directory"" includeSubDirectories = ""true"" />
@@ -53,10 +56,10 @@ namespace PlatformServices.Desktop.ComponentTests
         public void ChildDomainResolutionPathsShouldHaveSearchDirectoriesSpecifiedInRunsettings()
         {
             string runSettingxml =
-            @"<RunSettings>   
-                <RunConfiguration>  
-                    <DisableAppDomain>False</DisableAppDomain>   
-                </RunConfiguration>  
+            @"<RunSettings>
+                <RunConfiguration>
+                    <DisableAppDomain>False</DisableAppDomain>
+                </RunConfiguration>
                 <MSTestV2>
                     <AssemblyResolution>
                         <Directory path = "" % Temp %\directory"" includeSubDirectories = ""true"" />
@@ -96,8 +99,8 @@ namespace PlatformServices.Desktop.ComponentTests
 
         private static string GetTestAssemblyPath(string assemblyName)
         {
-            var currentAssemblyPath = Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location);
-            var testAssetPath = Path.Combine(Directory.GetParent(Directory.GetParent(Directory.GetParent(currentAssemblyPath).FullName).FullName).FullName, "artifacts", "TestAssets");
+            var currentAssemblyDirectory = new FileInfo(typeof(DesktopTestSourceHostTests).Assembly.Location).Directory;
+            var testAssetPath = Path.Combine(currentAssemblyDirectory.Parent.Parent.Parent.FullName, "TestAssets");
 
             return Path.Combine(testAssetPath, assemblyName);
         }
