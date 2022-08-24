@@ -8,8 +8,6 @@
 
   <!-- Remove after ARCADE transition -->
   <PropertyGroup>
-    <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
-
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>

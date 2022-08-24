@@ -19,11 +19,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFramework", "TestFramew
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Core", "src\TestFramework\MSTest.Core\MSTest.Core.csproj", "{7252D9E3-267D-442C-96BC-C73AEF3241D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Desktop", "src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj", "{B0FCE474-14BC-449A-91EA-A433342C0D63}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Desktop", "src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj", "{B0FCE474-14BC-449A-91EA-A433342C0D63}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PlatformServices.Shared", "src\Adapter\PlatformServices.Shared\PlatformServices.Shared.shproj", "{2177C273-AE07-43B3-B87A-443E47A23C5A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extension.Desktop", "src\TestFramework\Extension.Desktop\Extension.Desktop.csproj", "{A7EA583B-A2B0-47DA-A058-458F247C7575}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Extension.Desktop", "src\TestFramework\Extension.Desktop\Extension.Desktop.csproj", "{A7EA583B-A2B0-47DA-A058-458F247C7575}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Extension.Core", "src\TestFramework\Extension.Core\Extension.Core.csproj", "{6C9FE494-8315-4667-B3F6-75DC62A62319}"
 EndProject
@@ -39,25 +39,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "E2ETests", "E2ETests", "{F1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestAssets", "TestAssets", "{D53BD452-F69F-4FB3-8B98-386EDA28A4C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DesktopTestProjectx64Debug", "test\E2ETests\TestAssets\DesktopTestProjectx64Debug\DesktopTestProjectx64Debug.csproj", "{0C139DA9-AA81-43A0-8625-7A873C0E2873}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DesktopTestProjectx64Debug", "test\E2ETests\TestAssets\DesktopTestProjectx64Debug\DesktopTestProjectx64Debug.csproj", "{0C139DA9-AA81-43A0-8625-7A873C0E2873}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DesktopTestProjectx64Release", "test\E2ETests\TestAssets\DesktopTestProjectx64Release\DesktopTestProjectx64Release.csproj", "{C6AC27D2-975B-4CF3-B16B-9C17907B2268}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DesktopTestProjectx64Release", "test\E2ETests\TestAssets\DesktopTestProjectx64Release\DesktopTestProjectx64Release.csproj", "{C6AC27D2-975B-4CF3-B16B-9C17907B2268}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DesktopTestProjectx86Debug", "test\E2ETests\TestAssets\DesktopTestProjectx86Debug\DesktopTestProjectx86Debug.csproj", "{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DesktopTestProjectx86Debug", "test\E2ETests\TestAssets\DesktopTestProjectx86Debug\DesktopTestProjectx86Debug.csproj", "{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DesktopTestProjectx86Release", "test\E2ETests\TestAssets\DesktopTestProjectx86Release\DesktopTestProjectx86Release.csproj", "{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DesktopTestProjectx86Release", "test\E2ETests\TestAssets\DesktopTestProjectx86Release\DesktopTestProjectx86Release.csproj", "{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ComponentTests", "ComponentTests", "{1A9F8CEF-7C03-40BD-B33C-1453114F9ABD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestAssets", "TestAssets", "{1899187D-8B9C-40C2-9F04-9E9A76C9A919}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleFrameworkExtensions", "test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj", "{5C411BBF-FCC9-4430-AE08-07666D39FD04}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleFrameworkExtensions", "test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj", "{5C411BBF-FCC9-4430-AE08-07666D39FD04}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProjectForDiscovery", "test\ComponentTests\TestAssets\TestProject\TestProjectForDiscovery.csproj", "{771B0933-B811-4002-B455-823C1CC96505}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestProjectForDiscovery", "test\ComponentTests\TestAssets\TestProject\TestProjectForDiscovery.csproj", "{771B0933-B811-4002-B455-823C1CC96505}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestUtilities", "TestUtilities", "{33D3029D-E653-4929-BB31-C714178C4BEE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.CoreAdapter.TestUtilities", "test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj", "{F81C7549-E3A3-4770-AC3F-3BC7356E61E8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.CoreAdapter.TestUtilities", "test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj", "{F81C7549-E3A3-4770-AC3F-3BC7356E61E8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFrameworkTests", "TestFrameworkTests", "{C6F38A55-2B8E-4C5D-A49A-2D0B9D4F10C8}"
 EndProject
@@ -90,14 +90,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Package", "Package", "{E374
 		src\Package\MSTest.TestFramework.symbols.nuspec = src\Package\MSTest.TestFramework.symbols.nuspec
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Desktop.Component.Tests", "test\ComponentTests\PlatformServices.Desktop.Component.Tests\PlatformServices.Desktop.Component.Tests.csproj", "{4EA6EED3-0579-4C7C-94EA-52B2AD2A9D39}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Desktop.Component.Tests", "test\ComponentTests\PlatformServices.Desktop.Component.Tests\PlatformServices.Desktop.Component.Tests.csproj", "{4EA6EED3-0579-4C7C-94EA-52B2AD2A9D39}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smoke.E2E.Tests", "test\E2ETests\Smoke.E2E.Tests\Smoke.E2E.Tests.csproj", "{A94E3FCA-2FB3-4C79-9F39-5B652B6992F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Smoke.E2E.Tests", "test\E2ETests\Smoke.E2E.Tests\Smoke.E2E.Tests.csproj", "{A94E3FCA-2FB3-4C79-9F39-5B652B6992F0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{4004757A-0080-4410-B90A-6169B20F151B} = {4004757A-0080-4410-B90A-6169B20F151B}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Automation.CLI", "test\E2ETests\Automation.CLI\Automation.CLI.csproj", "{9C1219E0-E775-47F9-9236-63F03F774801}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Automation.CLI", "test\E2ETests\Automation.CLI\Automation.CLI.csproj", "{9C1219E0-E775-47F9-9236-63F03F774801}"
 	ProjectSection(ProjectDependencies) = postProject
 		{98BA6D2C-1F3D-4636-8E1D-D4932B7A253D} = {98BA6D2C-1F3D-4636-8E1D-D4932B7A253D}
 		{BBC99A6B-4490-49DD-9C12-AF2C1E95576E} = {BBC99A6B-4490-49DD-9C12-AF2C1E95576E}
@@ -111,19 +111,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Automation.CLI", "test\E2ET
 		{C6AC27D2-975B-4CF3-B16B-9C17907B2268} = {C6AC27D2-975B-4CF3-B16B-9C17907B2268}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.CoreAdapter.Unit.Tests", "test\UnitTests\MSTest.CoreAdapter.Unit.Tests\MSTest.CoreAdapter.Unit.Tests.csproj", "{1CEB5743-70BF-475E-91BC-0AEBD63835B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.CoreAdapter.Unit.Tests", "test\UnitTests\MSTest.CoreAdapter.Unit.Tests\MSTest.CoreAdapter.Unit.Tests.csproj", "{1CEB5743-70BF-475E-91BC-0AEBD63835B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Desktop.Unit.Tests", "test\UnitTests\PlatformServices.Desktop.Unit.Tests\PlatformServices.Desktop.Unit.Tests.csproj", "{599833DC-EC5A-40CA-B5CF-DEF719548EEF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Desktop.Unit.Tests", "test\UnitTests\PlatformServices.Desktop.Unit.Tests\PlatformServices.Desktop.Unit.Tests.csproj", "{599833DC-EC5A-40CA-B5CF-DEF719548EEF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Portable.Unit.Tests", "test\UnitTests\PlatformServices.Portable.Unit.Tests\PlatformServices.Portable.Unit.Tests.csproj", "{E3C630FE-AF89-4C95-B1B9-2409B1107208}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Portable.Unit.Tests", "test\UnitTests\PlatformServices.Portable.Unit.Tests\PlatformServices.Portable.Unit.Tests.csproj", "{E3C630FE-AF89-4C95-B1B9-2409B1107208}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlatformServices.Universal.Unit.Tests", "test\UnitTests\PlatformServices.Universal.Unit.Tests\PlatformServices.Universal.Unit.Tests.csproj", "{FA7C719F-A400-45AF-8091-7C23435617A8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Universal.Unit.Tests", "test\UnitTests\PlatformServices.Universal.Unit.Tests\PlatformServices.Universal.Unit.Tests.csproj", "{FA7C719F-A400-45AF-8091-7C23435617A8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DF131865-84EE-4540-8112-E88ACEBDEA09} = {DF131865-84EE-4540-8112-E88ACEBDEA09}
 		{5D153CAA-80C2-4551-9549-6C406FCEEFB1} = {5D153CAA-80C2-4551-9549-6C406FCEEFB1}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Core.Unit.Tests", "test\UnitTests\MSTest.Core.Unit.Tests\MSTest.Core.Unit.Tests.csproj", "{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Core.Unit.Tests", "test\UnitTests\MSTest.Core.Unit.Tests\MSTest.Core.Unit.Tests.csproj", "{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "toolPackages", "toolPackages", "{1701E9E5-E06B-45FE-B860-6A83BBAEE6A9}"
 	ProjectSection(SolutionItems) = preProject
@@ -155,15 +155,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{92F8
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FxExtensibility", "samples\FxExtensibility\FxExtensibility.csproj", "{A82770C0-1FF5-43C7-8790-471D5E4F8D6E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FxExtensibilityTestProject", "test\E2ETests\TestAssets\FxExtensibilityTestProject\FxExtensibilityTestProject.csproj", "{4004757A-0080-4410-B90A-6169B20F151B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FxExtensibilityTestProject", "test\E2ETests\TestAssets\FxExtensibilityTestProject\FxExtensibilityTestProject.csproj", "{4004757A-0080-4410-B90A-6169B20F151B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.NetCore", "src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj", "{2979FAA1-4786-43E8-B2E1-F01A0A91FECC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.NetCore.Unit.Tests", "test\UnitTests\PlatformServices.NetCore.Unit.Tests\PlatformServices.NetCore.Unit.Tests.csproj", "{655001BB-C00F-4EF7-A324-7F7C48656D35}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelMethodsTestProject", "test\E2ETests\TestAssets\ParallelTestMethods\ParallelMethodsTestProject.csproj", "{4004757A-0082-4410-B94A-6166B20F153C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParallelMethodsTestProject", "test\E2ETests\TestAssets\ParallelTestMethods\ParallelMethodsTestProject.csproj", "{4004757A-0082-4410-B94A-6166B20F153C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParallelClassesTestProject", "test\E2ETests\TestAssets\ParallelTestClass\ParallelClassesTestProject.csproj", "{CD0CA7CD-CED3-45FF-9F36-B1C8DF7A9220}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParallelClassesTestProject", "test\E2ETests\TestAssets\ParallelTestClass\ParallelClassesTestProject.csproj", "{CD0CA7CD-CED3-45FF-9F36-B1C8DF7A9220}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataSourceTestProject", "test\E2ETests\TestAssets\DataSourceTestProject\DataSourceTestProject.csproj", "{5A4967CD-B527-4D43-81C2-4CA90EE10222}"
 EndProject
@@ -461,8 +461,8 @@ Global
 		{0C139DA9-AA81-43A0-8625-7A873C0E2873}.Code Analysis Debug|x64.Build.0 = Debug|x64
 		{0C139DA9-AA81-43A0-8625-7A873C0E2873}.Code Analysis Debug|x86.ActiveCfg = Debug|Any CPU
 		{0C139DA9-AA81-43A0-8625-7A873C0E2873}.Code Analysis Debug|x86.Build.0 = Debug|Any CPU
-		{0C139DA9-AA81-43A0-8625-7A873C0E2873}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{0C139DA9-AA81-43A0-8625-7A873C0E2873}.Debug|Any CPU.Build.0 = Debug|x64
+		{0C139DA9-AA81-43A0-8625-7A873C0E2873}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C139DA9-AA81-43A0-8625-7A873C0E2873}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C139DA9-AA81-43A0-8625-7A873C0E2873}.Debug|ARM.ActiveCfg = Debug|x64
 		{0C139DA9-AA81-43A0-8625-7A873C0E2873}.Debug|ARM.Build.0 = Debug|x64
 		{0C139DA9-AA81-43A0-8625-7A873C0E2873}.Debug|x64.ActiveCfg = Debug|x64
@@ -485,8 +485,8 @@ Global
 		{C6AC27D2-975B-4CF3-B16B-9C17907B2268}.Code Analysis Debug|x64.Build.0 = Debug|x64
 		{C6AC27D2-975B-4CF3-B16B-9C17907B2268}.Code Analysis Debug|x86.ActiveCfg = Debug|Any CPU
 		{C6AC27D2-975B-4CF3-B16B-9C17907B2268}.Code Analysis Debug|x86.Build.0 = Debug|Any CPU
-		{C6AC27D2-975B-4CF3-B16B-9C17907B2268}.Debug|Any CPU.ActiveCfg = Release|x64
-		{C6AC27D2-975B-4CF3-B16B-9C17907B2268}.Debug|Any CPU.Build.0 = Release|x64
+		{C6AC27D2-975B-4CF3-B16B-9C17907B2268}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{C6AC27D2-975B-4CF3-B16B-9C17907B2268}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{C6AC27D2-975B-4CF3-B16B-9C17907B2268}.Debug|ARM.ActiveCfg = Debug|x64
 		{C6AC27D2-975B-4CF3-B16B-9C17907B2268}.Debug|ARM.Build.0 = Debug|x64
 		{C6AC27D2-975B-4CF3-B16B-9C17907B2268}.Debug|x64.ActiveCfg = Debug|x64
@@ -509,8 +509,8 @@ Global
 		{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}.Code Analysis Debug|x64.Build.0 = Debug|Any CPU
 		{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}.Code Analysis Debug|x86.ActiveCfg = Debug|x86
 		{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}.Code Analysis Debug|x86.Build.0 = Debug|x86
-		{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}.Debug|Any CPU.Build.0 = Debug|x86
+		{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}.Debug|ARM.ActiveCfg = Debug|x86
 		{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}.Debug|ARM.Build.0 = Debug|x86
 		{0C522C84-B5AF-4DB6-96A2-9EFC15C88589}.Debug|x64.ActiveCfg = Debug|x86
@@ -533,8 +533,8 @@ Global
 		{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}.Code Analysis Debug|x64.Build.0 = Debug|Any CPU
 		{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}.Code Analysis Debug|x86.ActiveCfg = Debug|x86
 		{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}.Code Analysis Debug|x86.Build.0 = Debug|x86
-		{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}.Debug|Any CPU.ActiveCfg = Release|x86
-		{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}.Debug|Any CPU.Build.0 = Release|x86
+		{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}.Debug|ARM.ActiveCfg = Debug|x86
 		{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}.Debug|ARM.Build.0 = Debug|x86
 		{293597CE-CCF7-4C09-9ADD-17BF34C6E86F}.Debug|x64.ActiveCfg = Debug|x86

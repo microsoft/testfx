@@ -11,7 +11,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
     public partial class CLITestBase
     {
-        private const string E2ETestsRelativePath = @"..\..\..\";
+        private const string E2ETestsRelativePath = @"..\..\..\..\";
         private const string TestAssetsFolder = "TestAssets";
         private const string ArtifactsFolder = "artifacts";
         private const string PackagesFolder = "packages";

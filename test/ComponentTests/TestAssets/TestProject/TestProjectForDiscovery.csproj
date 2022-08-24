@@ -19,12 +19,6 @@
     <TestProjectType>UnitTest</TestProjectType>
   </PropertyGroup>
 
-  <!-- Remove after ARCADE transition -->
-  <PropertyGroup>
-    <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
-  </PropertyGroup>
-  <!-- / Remove after ARCADE transition -->
-
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>

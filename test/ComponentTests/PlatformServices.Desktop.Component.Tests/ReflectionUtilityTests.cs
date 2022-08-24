@@ -46,10 +46,6 @@ namespace PlatformServices.Desktop.ComponentTests
                     currentAssemblyDirectory.Name /* TFM (e.g. net462) */);
             this.testAsset = Assembly.ReflectionOnlyLoadFrom(Path.Combine(testAssetPath, "TestProjectForDiscovery.dll"));
 
-            // Also pre-load the Test Framework assembly.
-            Assembly.ReflectionOnlyLoadFrom(
-                Path.Combine(testAssetPath, "Microsoft.VisualStudio.TestPlatform.TestFramework.dll"));
-
             // This is needed for System assemblies.
             AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(this.ReflectionOnlyOnResolve);
         }
