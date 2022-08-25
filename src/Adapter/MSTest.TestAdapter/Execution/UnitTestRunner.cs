@@ -207,7 +207,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 try
                 {
                     using (LogMessageListener logListener =
-                        new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces))
+                        new(MSTestSettings.CurrentSettings.CaptureDebugTraces))
                     {
                         try
                         {

@@ -32,7 +32,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
         /// <returns>The XmlElement instance.</returns>
         public XmlElement ToXml()
         {
-            XmlDocument doc = new XmlDocument();
+            XmlDocument doc = new();
             XmlElement root = doc.CreateElement(this.SettingsName);
 
             foreach (var p in this.TestAdaptersPaths)

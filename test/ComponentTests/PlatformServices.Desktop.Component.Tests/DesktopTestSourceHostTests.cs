@@ -110,9 +110,9 @@ namespace PlatformServices.Desktop.ComponentTests
             var mockRunSettings = new Mock<IRunSettings>();
             mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
+            MSTestSettingsProvider mstestSettingsProvider = new();
             reader.ReadToFollowing("MSTestV2");
             mstestSettingsProvider.Load(reader);
 

@@ -12,10 +12,10 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
     public class RunEventsHandler : ITestRunEventsHandler
     {
-        private readonly List<TestResult> passedTests = new List<TestResult>();
-        private readonly List<TestResult> failedTests = new List<TestResult>();
-        private readonly List<TestResult> skippedTests = new List<TestResult>();
-        private readonly List<string> errors = new List<string>();
+        private readonly List<TestResult> passedTests = new();
+        private readonly List<TestResult> failedTests = new();
+        private readonly List<TestResult> skippedTests = new();
+        private readonly List<string> errors = new();
 
         /// <summary>
         /// Gets a list of Tests which passed.

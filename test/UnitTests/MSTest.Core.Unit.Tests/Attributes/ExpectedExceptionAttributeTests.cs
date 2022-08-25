@@ -46,13 +46,13 @@ namespace UnitTestFramework.Tests
         [TestFrameworkV1.TestMethod]
         public void ExpectedExceptionAttributeConstructerShouldNotThrowAnyException()
         {
-            TestFrameworkV2.ExpectedExceptionAttribute sut = new TestFrameworkV2.ExpectedExceptionAttribute(typeof(DummyTestClassDerivedFromException), "Dummy");
+            TestFrameworkV2.ExpectedExceptionAttribute sut = new(typeof(DummyTestClassDerivedFromException), "Dummy");
         }
 
         [TestFrameworkV1.TestMethod]
         public void GetExceptionMsgShouldReturnExceptionMessage()
         {
-            Exception ex = new Exception("Dummy Exception");
+            Exception ex = new("Dummy Exception");
             var actualMessage = TestFrameworkV2.UtfHelper.GetExceptionMsg(ex);
             var expectedMessage = "System.Exception: Dummy Exception";
             TestFrameworkV2.Assert.AreEqual(expectedMessage, actualMessage);
@@ -62,7 +62,7 @@ namespace UnitTestFramework.Tests
         public void GetExceptionMsgShouldReturnInnerExceptionMessageAsWellIfPresent()
         {
             Exception innerException = new DivideByZeroException();
-            Exception ex = new Exception("Dummy Exception", innerException);
+            Exception ex = new("Dummy Exception", innerException);
             var actualMessage = TestFrameworkV2.UtfHelper.GetExceptionMsg(ex);
             var expectedMessage = "System.Exception: Dummy Exception ---> System.DivideByZeroException: Attempted to divide by zero.";
             TestFrameworkV2.Assert.AreEqual(expectedMessage, actualMessage);
@@ -73,7 +73,7 @@ namespace UnitTestFramework.Tests
         {
             Exception recursiveInnerException = new IndexOutOfRangeException("ThirdLevelException");
             Exception innerException = new DivideByZeroException("SecondLevel Exception", recursiveInnerException);
-            Exception ex = new Exception("FirstLevelException", innerException);
+            Exception ex = new("FirstLevelException", innerException);
             var actualMessage = TestFrameworkV2.UtfHelper.GetExceptionMsg(ex);
             var expectedMessage = "System.Exception: FirstLevelException ---> System.DivideByZeroException: SecondLevel Exception ---> System.IndexOutOfRangeException: ThirdLevelException";
             TestFrameworkV2.Assert.AreEqual(expectedMessage, actualMessage);

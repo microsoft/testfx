@@ -110,7 +110,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         protected virtual SchemaMetaData[] GetSchemaMetaData()
         {
             // A bare minimum set of things that should vaguely work for all databases
-            SchemaMetaData data = new SchemaMetaData()
+            SchemaMetaData data = new()
             {
                 SchemaTable = "Tables",
                 SchemaColumn = null,
@@ -229,7 +229,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// <returns>An array of unquoted parts, or null if the name fails to conform</returns>
         public string[] SplitName(string name)
         {
-            List<string> parts = new List<string>();
+            List<string> parts = new();
 
             int here = 0;
             int end = name.Length;
@@ -322,7 +322,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         public string JoinAndQuoteName(string[] parts, bool fullyQuote)
         {
             int partCount = parts.Length;
-            StringBuilder result = new StringBuilder();
+            StringBuilder result = new();
 
             Debug.Assert(partCount > 0 && partCount < 4, "partCount should be 1,2 or 3.");
 
@@ -498,7 +498,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         public override List<string> GetDataTablesAndViews()
         {
             WriteDiagnostics("GetDataTablesAndViews");
-            List<string> tableNames = new List<string>();
+            List<string> tableNames = new();
             try
             {
                 string defaultSchema = this.GetDefaultSchema();
@@ -626,7 +626,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
                 if (columns != null)
                 {
-                    List<string> result = new List<string>();
+                    List<string> result = new();
 
                     // Add all the columns
                     foreach (DataRow columnRow in columns.Rows)
@@ -841,7 +841,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 WriteDiagnostics("ReadTable: SQL Query: {0}", command.CommandText);
                 dataAdapter.SelectCommand = command;
 
-                DataTable table = new DataTable();
+                DataTable table = new();
                 table.Locale = CultureInfo.InvariantCulture;
                 dataAdapter.Fill(table);
 
@@ -855,7 +855,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             string result = null;
             if (columns != null)
             {
-                StringBuilder builder = new StringBuilder();
+                StringBuilder builder = new();
                 foreach (string columnName in columns)
                 {
                     if (builder.Length > 0)

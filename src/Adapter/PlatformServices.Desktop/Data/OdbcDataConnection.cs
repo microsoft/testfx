@@ -55,7 +55,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         protected override SchemaMetaData[] GetSchemaMetaData()
         {
             // The following may fail for Oracle ODBC, need to test that...
-            SchemaMetaData data1 = new SchemaMetaData()
+            SchemaMetaData data1 = new()
             {
                 SchemaTable = "Tables",
                 SchemaColumn = "TABLE_SCHEM",
@@ -64,7 +64,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 ValidTableTypes = new string[] { "TABLE", "SYSTEM TABLE" },
                 InvalidSchemas = null
             };
-            SchemaMetaData data2 = new SchemaMetaData()
+            SchemaMetaData data2 = new()
             {
                 SchemaTable = "Views",
                 SchemaColumn = "TABLE_SCHEM",
@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         // Need to fix up excel connections
         private static string FixConnectionString(string connectionString, List<string> dataFolders)
         {
-            OdbcConnectionStringBuilder builder = new OdbcConnectionStringBuilder(connectionString);
+            OdbcConnectionStringBuilder builder = new(connectionString);
 
             // only fix this for excel
             if (!string.Equals(builder.Dsn, "Excel Files"))

@@ -171,37 +171,37 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
 
             if (!string.IsNullOrEmpty(this.StandardOut))
             {
-                TestResultMessage message = new TestResultMessage(TestResultMessage.StandardOutCategory, this.StandardOut);
+                TestResultMessage message = new(TestResultMessage.StandardOutCategory, this.StandardOut);
                 testResult.Messages.Add(message);
             }
 
             if (!string.IsNullOrEmpty(this.StandardError))
             {
-                TestResultMessage message = new TestResultMessage(TestResultMessage.StandardErrorCategory, this.StandardError);
+                TestResultMessage message = new(TestResultMessage.StandardErrorCategory, this.StandardError);
                 testResult.Messages.Add(message);
             }
 
             if (!string.IsNullOrEmpty(this.DebugTrace))
             {
                 string debugTraceMessagesinStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.DebugTraceBanner, this.DebugTrace);
-                TestResultMessage debugTraceMessage = new TestResultMessage(TestResultMessage.StandardOutCategory, debugTraceMessagesinStdOut);
+                TestResultMessage debugTraceMessage = new(TestResultMessage.StandardOutCategory, debugTraceMessagesinStdOut);
                 testResult.Messages.Add(debugTraceMessage);
             }
 
             if (!string.IsNullOrEmpty(this.TestContextMessages))
             {
                 string testContextMessagesInStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.TestContextMessageBanner, this.TestContextMessages);
-                TestResultMessage testContextMessage = new TestResultMessage(TestResultMessage.StandardOutCategory, testContextMessagesInStdOut);
+                TestResultMessage testContextMessage = new(TestResultMessage.StandardOutCategory, testContextMessagesInStdOut);
                 testResult.Messages.Add(testContextMessage);
             }
 
             if (this.ResultFiles != null && this.ResultFiles.Count > 0)
             {
-                AttachmentSet attachmentSet = new AttachmentSet(Constants.ExecutorUri, Resource.AttachmentSetDisplayName);
+                AttachmentSet attachmentSet = new(Constants.ExecutorUri, Resource.AttachmentSetDisplayName);
                 foreach (var resultFile in this.ResultFiles)
                 {
                     string pathToResultFile = PlatformServiceProvider.Instance.FileOperations.GetFullFilePath(resultFile);
-                    UriDataAttachment attachment = new UriDataAttachment(new Uri(pathToResultFile), resultFile);
+                    UriDataAttachment attachment = new(new Uri(pathToResultFile), resultFile);
                     attachmentSet.Attachments.Add(attachment);
                 }
 

@@ -130,7 +130,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
             //                 : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
             var fullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
 
-            TestCase testCase = new TestCase(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
+            TestCase testCase = new(fullName, TestAdapter.Constants.ExecutorUri, this.TestMethod.AssemblyName);
             testCase.DisplayName = this.GetDisplayName();
 
             if (this.TestMethod.HasManagedMethodAndTypeProperties)

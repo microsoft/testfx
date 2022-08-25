@@ -44,7 +44,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void SendTestCaseShouldAddTheTestCaseToTests()
         {
-            TestCase tc = new TestCase("T", new Uri("executor://TestExecutorUri"), "A");
+            TestCase tc = new("T", new Uri("executor://TestExecutorUri"), "A");
             this.testCaseDiscoverySink.SendTestCase(tc);
 
             Assert.IsNotNull(this.testCaseDiscoverySink.Tests);

@@ -333,7 +333,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             message = Assert.ReplaceNulls(message);
 
             bool foundNull = false;
-            Dictionary<object, bool> table = new Dictionary<object, bool>();
+            Dictionary<object, bool> table = new();
             foreach (object current in collection)
             {
                 if (current == null)
@@ -1332,7 +1332,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             Debug.Assert(collection != null, "Collection is Null.");
 
-            Dictionary<object, int> elementCounts = new Dictionary<object, int>();
+            Dictionary<object, int> elementCounts = new();
             nullCount = 0;
 
             foreach (object element in collection)

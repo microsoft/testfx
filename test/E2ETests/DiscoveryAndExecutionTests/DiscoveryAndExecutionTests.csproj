@@ -4,6 +4,7 @@
     <IsPackable>false</IsPackable>
     <NoWarn>1685</NoWarn>
     <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
+    <LangVersion>Latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

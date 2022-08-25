@@ -40,7 +40,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 actionThreadID = Thread.CurrentThread.ManagedThreadId;
             }
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            CancellationTokenSource tokenSource = new();
             Assert.IsTrue(this.asyncOperations.Execute(action, 1000, tokenSource.Token));
             Assert.AreNotEqual(Thread.CurrentThread.ManagedThreadId, actionThreadID);
         }
@@ -53,7 +53,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 Task.Delay(100).Wait();
             }
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            CancellationTokenSource tokenSource = new();
             Assert.IsFalse(this.asyncOperations.Execute(action, 1, tokenSource.Token));
         }
 

@@ -43,8 +43,8 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         [TestMethod]
         public void ExecuteShouldKillTheThreadExecutingAsyncOnTimeout()
         {
-            ManualResetEvent timeoutMutex = new ManualResetEvent(false);
-            ManualResetEvent actionCompleted = new ManualResetEvent(false);
+            ManualResetEvent timeoutMutex = new(false);
+            ManualResetEvent actionCompleted = new(false);
             var hasReachedEnd = false;
             var isThreadAbortThrown = false;
             var cancellationTokenSource = new CancellationTokenSource();

@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
         /// <summary>
         /// Type cache
         /// </summary>
-        private readonly TypeCache typeCache = new TypeCache(ReflectHelper);
+        private readonly TypeCache typeCache = new(ReflectHelper);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AssemblyEnumerator"/> class.

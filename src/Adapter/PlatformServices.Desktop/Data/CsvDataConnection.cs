@@ -44,7 +44,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         public override List<string> GetDataTablesAndViews()
         {
-            List<string> tableNames = new List<string>(1);
+            List<string> tableNames = new(1);
             tableNames.Add(this.TableName);
             return tableNames;
         }
@@ -59,7 +59,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 DataTable table = this.ReadTable(tableName, null);
                 if (table != null)
                 {
-                    List<string> columnNames = new List<string>();
+                    List<string> columnNames = new();
                     foreach (DataColumn column in table.Columns)
                     {
                         columnNames.Add(column.ColumnName);
@@ -88,10 +88,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             string fullPath = this.FixPath(this.fileName) ?? Path.GetFullPath(this.fileName);
 
             // We can map simplified CSVs to an OLEDB/Text connection, then proceed as normal
-            using (OleDbConnection connection = new OleDbConnection())
-            using (OleDbDataAdapter dataAdapter = new OleDbDataAdapter())
-            using (OleDbCommandBuilder commandBuilder = new OleDbCommandBuilder())
-            using (OleDbCommand command = new OleDbCommand())
+            using (OleDbConnection connection = new())
+            using (OleDbDataAdapter dataAdapter = new())
+            using (OleDbCommandBuilder commandBuilder = new())
+            using (OleDbCommand command = new())
             {
                 // We have to use the name of the folder which contains the CSV file in the connection string
                 // If target platform is x64, then use CsvConnectionTemplate64 connection string.
@@ -128,7 +128,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 string columnsClause;
                 if (columns != null)
                 {
-                    StringBuilder builder = new StringBuilder();
+                    StringBuilder builder = new();
                     foreach (string columnName in columns)
                     {
                         if (builder.Length > 0)
@@ -155,7 +155,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
                 dataAdapter.SelectCommand = command;
 
-                DataTable table = new DataTable();
+                DataTable table = new();
                 table.Locale = CultureInfo.InvariantCulture;
                 dataAdapter.Fill(table);
                 return table;

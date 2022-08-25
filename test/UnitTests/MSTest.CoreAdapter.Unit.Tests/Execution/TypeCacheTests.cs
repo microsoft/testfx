@@ -1381,7 +1381,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var type = typeof(DummyTestClassWithTestMethods);
             var methodInfo = type.GetMethod("TestMethodWithExpectedException");
             var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
+            UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException));
 
             this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(methodInfo, typeof(UTF.ExpectedExceptionAttribute), false))
                 .Returns(true);
@@ -1410,7 +1410,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                     false);
 
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
+            UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException));
 
             Assert.IsNull(testMethodInfo.TestMethodOptions.ExpectedException);
         }

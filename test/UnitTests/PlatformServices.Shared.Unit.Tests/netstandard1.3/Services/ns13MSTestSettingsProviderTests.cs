@@ -65,7 +65,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
                 @"<MSTestV2>
                         <DeploymentEnabled>False</DeploymentEnabled>
                   </MSTestV2>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             this.settingsProvider.Load(reader);
@@ -85,7 +85,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
                 @"<MSTestV2>
                         <DeploymentEnabled>False</DeploymentEnabled>
                   </MSTestV2>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             this.settingsProvider.Load(reader);

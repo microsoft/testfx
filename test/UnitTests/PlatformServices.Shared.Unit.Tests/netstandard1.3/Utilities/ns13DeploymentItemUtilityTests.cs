@@ -427,7 +427,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestMethod]
         public void HasDeployItemsShouldReturnFalseForNoDeploymentItems()
         {
-            TestCase testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
+            TestCase testCase = new("A.C.M", new System.Uri("executor://testExecutor"), "A");
             testCase.SetPropertyValue(DeploymentItemsProperty, null);
 
             Assert.IsFalse(this.deploymentItemUtility.HasDeploymentItems(testCase));
@@ -436,7 +436,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         [TestMethod]
         public void HasDeployItemsShouldReturnTrueWhenDeploymentItemsArePresent()
         {
-            TestCase testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
+            TestCase testCase = new("A.C.M", new System.Uri("executor://testExecutor"), "A");
             var kvpArray = new[]
                     {
                         new KeyValuePair<string, string>(

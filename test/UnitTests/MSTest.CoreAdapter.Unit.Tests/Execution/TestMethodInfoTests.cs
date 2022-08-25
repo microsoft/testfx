@@ -321,7 +321,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void TestMethodInfoInvokeShouldSetResultFilesIfTestContextHasAttachments()
         {
-            Mock<ITestContext> testContext = new Mock<ITestContext>();
+            Mock<ITestContext> testContext = new();
             testContext.Setup(tc => tc.GetResultFiles()).Returns(new List<string>() { "C:\\temp.txt" });
             var mockInnerContext = new Mock<UTFExtension.TestContext>();
             testContext.SetupGet(tc => tc.Context).Returns(mockInnerContext.Object);
@@ -1004,7 +1004,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void HandleMethodExceptionShouldInvokeVerifyOfCustomExpectedException()
         {
-            CustomExpectedExceptionAttribute customExpectedException = new CustomExpectedExceptionAttribute(typeof(DivideByZeroException), "Attempted to divide by zero");
+            CustomExpectedExceptionAttribute customExpectedException = new(typeof(DivideByZeroException), "Attempted to divide by zero");
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = customExpectedException;
             var method = new TestMethodInfo(
@@ -1021,7 +1021,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void HandleMethodExceptionShouldSetOutcomeAsFailedIfVerifyOfExpectedExceptionThrows()
         {
-            CustomExpectedExceptionAttribute customExpectedException = new CustomExpectedExceptionAttribute(typeof(DivideByZeroException), "Custom Exception");
+            CustomExpectedExceptionAttribute customExpectedException = new(typeof(DivideByZeroException), "Custom Exception");
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = customExpectedException;
             var method = new TestMethodInfo(
@@ -1038,7 +1038,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void HandleMethodExceptionShouldSetOutcomeAsInconclusveIfVerifyOfExpectedExceptionThrowsAssertInconclusiveException()
         {
-            CustomExpectedExceptionAttribute customExpectedException = new CustomExpectedExceptionAttribute(typeof(DivideByZeroException), "Custom Exception");
+            CustomExpectedExceptionAttribute customExpectedException = new(typeof(DivideByZeroException), "Custom Exception");
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = customExpectedException;
             var method = new TestMethodInfo(
@@ -1056,7 +1056,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void HandleMethodExceptionShouldInvokeVerifyOfDerivedCustomExpectedException()
         {
-            DerivedCustomExpectedExceptionAttribute derivedCustomExpectedException = new DerivedCustomExpectedExceptionAttribute(typeof(DivideByZeroException), "Attempted to divide by zero");
+            DerivedCustomExpectedExceptionAttribute derivedCustomExpectedException = new(typeof(DivideByZeroException), "Attempted to divide by zero");
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = derivedCustomExpectedException;
             var method = new TestMethodInfo(
@@ -1073,7 +1073,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void VerifyShouldNotThrowIfThrownExceptionCanBeAssignedToExpectedException()
         {
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(Exception));
+            UTF.ExpectedExceptionAttribute expectedException = new(typeof(Exception));
             expectedException.AllowDerivedTypes = true;
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = expectedException;
@@ -1090,7 +1090,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void VerifyShouldThrowExceptionIfThrownExceptionCannotBeAssignedToExpectedException()
         {
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException), "Custom Exception");
+            UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException), "Custom Exception");
             expectedException.AllowDerivedTypes = true;
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = expectedException;
@@ -1110,7 +1110,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void VerifyShouldRethrowExceptionIfThrownExceptionIsAssertFailedException()
         {
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
+            UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException));
             expectedException.AllowDerivedTypes = true;
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = expectedException;
@@ -1129,7 +1129,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void VerifyShouldRethrowExceptionIfThrownExceptionIsAssertInconclusiveException()
         {
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
+            UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException));
             expectedException.AllowDerivedTypes = true;
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = expectedException;
@@ -1148,7 +1148,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void VerifyShouldThrowIfThrownExceptionIsNotSameAsExpectedException()
         {
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(Exception));
+            UTF.ExpectedExceptionAttribute expectedException = new(typeof(Exception));
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = expectedException;
             var method = new TestMethodInfo(
@@ -1167,7 +1167,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void VerifyShouldRethrowIfThrownExceptionIsAssertExceptionWhichIsNotSameAsExpectedException()
         {
-            UTF.ExpectedExceptionAttribute expectedException = new UTF.ExpectedExceptionAttribute(typeof(Exception));
+            UTF.ExpectedExceptionAttribute expectedException = new(typeof(Exception));
             this.testMethodOptions.Timeout = 0;
             this.testMethodOptions.ExpectedException = expectedException;
             var method = new TestMethodInfo(

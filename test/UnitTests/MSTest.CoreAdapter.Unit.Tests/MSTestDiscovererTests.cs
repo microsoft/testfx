@@ -179,12 +179,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         {
             string runSettingxml =
             @"<RunSettings>   
-			        <MSTest>   
-				        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-				        <ForcedLegacyMode>true</ForcedLegacyMode>    
-				        <IgnoreTestImpact>true</IgnoreTestImpact>  
-			        </MSTest>
-		    </RunSettings>";
+                    <MSTest>   
+                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                        <ForcedLegacyMode>true</ForcedLegacyMode>    
+                        <IgnoreTestImpact>true</IgnoreTestImpact>  
+                    </MSTest>
+            </RunSettings>";
             this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
             this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
@@ -201,12 +201,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         {
             string runSettingxml =
             @"<RunSettings>   
-			        <MSTest>   
-				        <Parallelize>
-				          <Scope>Pond</Scope>
-				        </Parallelize>
-			        </MSTest>
-		    </RunSettings>";
+                    <MSTest>   
+                        <Parallelize>
+                          <Scope>Pond</Scope>
+                        </Parallelize>
+                    </MSTest>
+            </RunSettings>";
             this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
             this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
             this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
@@ -223,7 +223,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         public void AreValidSourcesShouldThrowIfPlatformsValidSourceExtensionsIsNull()
         {
             this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);
-            MSTestDiscoverer discoverer = new MSTestDiscoverer();
+            MSTestDiscoverer discoverer = new();
 
             Action a = () => discoverer.AreValidSources(new List<string> { "dummy" });
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
@@ -233,7 +233,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         public void AreValidSourcesShouldReturnFalseIfValidSourceExtensionsIsEmpty()
         {
             this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { });
-            MSTestDiscoverer discoverer = new MSTestDiscoverer();
+            MSTestDiscoverer discoverer = new();
 
             Assert.IsFalse(discoverer.AreValidSources(new List<string> { "dummy.te" }));
         }
@@ -242,7 +242,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         public void AreValidSourcesShouldReturnTrueForValidSourceExtensions()
         {
             this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".te" });
-            MSTestDiscoverer discoverer = new MSTestDiscoverer();
+            MSTestDiscoverer discoverer = new();
 
             Assert.IsTrue(discoverer.AreValidSources(new List<string> { "dummy.te" }));
         }
@@ -251,7 +251,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         public void AreValidSourcesShouldReturnFalseForInvalidSourceExtensions()
         {
             this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".nte", ".tep" });
-            MSTestDiscoverer discoverer = new MSTestDiscoverer();
+            MSTestDiscoverer discoverer = new();
 
             Assert.IsFalse(discoverer.AreValidSources(new List<string> { "dummy.te" }));
         }

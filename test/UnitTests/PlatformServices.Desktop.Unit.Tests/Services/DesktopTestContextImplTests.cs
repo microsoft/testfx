@@ -385,7 +385,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
             var stringWriter = new ThreadSafeStringWriter(null, "test");
             this.testContextImplementation = new TestContextImplementation(this.testMethod.Object, stringWriter, this.properties);
 
-            DataTable dataTable = new DataTable();
+            DataTable dataTable = new();
 
             // create the table with the appropriate column names
             dataTable.Columns.Add("Id", typeof(int));

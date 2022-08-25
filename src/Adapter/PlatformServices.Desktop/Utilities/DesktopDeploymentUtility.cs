@@ -114,7 +114,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
         protected IEnumerable<DeploymentItem> GetSatellites(IEnumerable<DeploymentItem> deploymentItems, string testSource, IList<string> warnings)
         {
-            List<DeploymentItem> satellites = new List<DeploymentItem>();
+            List<DeploymentItem> satellites = new();
             foreach (DeploymentItem item in deploymentItems)
             {
                 // We do not care about deployment items which are directories because in that case we deploy all files underneath anyway.
@@ -176,7 +176,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                         string relativeOutputDir = Path.Combine(item.RelativeOutputDirectory, localeDir);
 
                         // Now finally add the item!
-                        DeploymentItem satelliteItem = new DeploymentItem(satellite, relativeOutputDir, DeploymentItemOriginType.Satellite);
+                        DeploymentItem satelliteItem = new(satellite, relativeOutputDir, DeploymentItemOriginType.Satellite);
                         this.DeploymentItemUtility.AddDeploymentItem(satellites, satelliteItem);
                     }
                 }
@@ -237,7 +237,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             foreach (string reference in references)
             {
-                DeploymentItem deploymentItem = new DeploymentItem(reference, string.Empty, DeploymentItemOriginType.Dependency);
+                DeploymentItem deploymentItem = new(reference, string.Empty, DeploymentItemOriginType.Dependency);
                 this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, deploymentItem);
 
                 if (EqtTrace.IsInfoEnabled)

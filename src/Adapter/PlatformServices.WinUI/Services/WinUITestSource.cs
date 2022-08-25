@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
              Constants.ExeExtension
         };
 
-        private static HashSet<string> systemAssemblies = new HashSet<string>(new string[]
+        private static HashSet<string> systemAssemblies = new(new string[]
         {
             "MICROSOFT.CSHARP.DLL",
             "MICROSOFT.VISUALBASIC.DLL",
@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         });
 
         // Well known platform assemblies.
-        private static HashSet<string> platformAssemblies = new HashSet<string>(new string[]
+        private static HashSet<string> platformAssemblies = new(new string[]
         {
             "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.DLL",
             "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.EXTENSIONS.CORE.DLL",
@@ -81,7 +81,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 var appxSourceDirectory = Path.GetDirectoryName(appxSource);
 
-                List<string> newSources = new List<string>();
+                List<string> newSources = new();
 
                 var fileSearchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFilesAsync().AsTask();
                 fileSearchTask.Wait();

@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Type that need to be excluded.
         /// </summary>
-        private static List<string> typesToBeExcluded = new List<string>() { typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Namespace, typeof(MSTestExecutor).Namespace };
+        private static List<string> typesToBeExcluded = new() { typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Namespace, typeof(MSTestExecutor).Namespace };
 
         /// <summary>
         /// Gets the types whose methods should be ignored in the reported call stacks.
@@ -48,7 +48,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             Debug.Assert(ex != null, "exception should not be null.");
 
-            Stack<string> stackTraces = new Stack<string>();
+            Stack<string> stackTraces = new();
 
             for (Exception curException = ex;
                 curException != null;
@@ -86,7 +86,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 }
             }
 
-            StringBuilder result = new StringBuilder();
+            StringBuilder result = new();
             bool first = true;
             while (stackTraces.Count != 0)
             {
@@ -115,7 +115,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             Debug.Assert(!string.IsNullOrEmpty(stackTrace), "stack trace should be non-empty.");
 
-            StringBuilder result = new StringBuilder(stackTrace.Length);
+            StringBuilder result = new(stackTrace.Length);
             string[] stackFrames = Regex.Split(stackTrace, Environment.NewLine);
 
             foreach (string stackFrame in stackFrames)
@@ -153,7 +153,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         {
             Debug.Assert(ex != null, "exception should not be null.");
 
-            StringBuilder result = new StringBuilder();
+            StringBuilder result = new();
             bool first = true;
             for (Exception curException = ex;
                  curException != null;

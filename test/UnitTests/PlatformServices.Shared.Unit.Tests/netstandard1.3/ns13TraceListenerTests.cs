@@ -27,7 +27,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services
         [TestMethod]
         public void GetWriterShouldReturnInitialisedWriter()
         {
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
+            StringWriter writer = new(new StringBuilder("DummyTrace"));
             var traceListener = new TraceListenerWrapper(writer);
             var returnedWriter = traceListener.GetWriter();
             Assert.AreEqual("DummyTrace", returnedWriter.ToString());
@@ -36,7 +36,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services
         [TestMethod]
         public void DisposeShouldDisposeCorrespondingTextWriter()
         {
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
+            StringWriter writer = new(new StringBuilder("DummyTrace"));
             var traceListener = new TraceListenerWrapper(writer);
             traceListener.Dispose();
 

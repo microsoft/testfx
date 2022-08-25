@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         [TestMethod]
         public void ToUnitTestElementShouldReturnUnitTestElementWithFieldsSet()
         {
-            TestCase testCase = new TestCase("DummyClassName.DummyMethod", new Uri("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
+            TestCase testCase = new("DummyClassName.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
             testCase.DisplayName = "DummyDisplayName";
             var testCategories = new[] { "DummyCategory" };
 
@@ -44,7 +44,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         [TestMethod]
         public void ToUnitTestElementForTestCaseWithNoPropertiesShouldReturnUnitTestElementWithDefaultFields()
         {
-            TestCase testCase = new TestCase("DummyClass.DummyMethod", new Uri("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
+            TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
             testCase.SetPropertyValue(Constants.TestClassNameProperty, "DummyClassName");
 
             var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
@@ -58,7 +58,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         [TestMethod]
         public void ToUnitTestElementShouldAddDeclaringClassNameToTestElementWhenAvailable()
         {
-            TestCase testCase = new TestCase("DummyClass.DummyMethod", new Uri("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
+            TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
             testCase.SetPropertyValue(Constants.TestClassNameProperty, "DummyClassName");
             testCase.SetPropertyValue(Constants.DeclaringClassNameProperty, "DummyDeclaringClassName");
 

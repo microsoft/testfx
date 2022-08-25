@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         public bool Execute(Action action, int timeout, CancellationToken cancelToken)
         {
             bool executionAborted = false;
-            Thread executionThread = new Thread(new ThreadStart(action))
+            Thread executionThread = new(new ThreadStart(action))
             {
                 IsBackground = true,
                 Name = "MSTestAdapter Thread"

@@ -10,10 +10,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// </summary>
     public sealed class DataSourceElement : ConfigurationElement
     {
-        private static readonly ConfigurationProperty NameValue = new ConfigurationProperty(ConfigurationNames.NameAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsKey | ConfigurationPropertyOptions.IsRequired);
-        private static readonly ConfigurationProperty ConnectionStringValue = new ConfigurationProperty(ConfigurationNames.ConnectionStringAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
-        private static readonly ConfigurationProperty DataTableNameValue = new ConfigurationProperty(ConfigurationNames.DataTableAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
-        private static readonly ConfigurationProperty DataAccessMethodValue = new ConfigurationProperty(ConfigurationNames.DataAccessMethodAttributeName, typeof(string), string.Empty);
+        private static readonly ConfigurationProperty NameValue = new(ConfigurationNames.NameAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsKey | ConfigurationPropertyOptions.IsRequired);
+        private static readonly ConfigurationProperty ConnectionStringValue = new(ConfigurationNames.ConnectionStringAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
+        private static readonly ConfigurationProperty DataTableNameValue = new(ConfigurationNames.DataTableAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
+        private static readonly ConfigurationProperty DataAccessMethodValue = new(ConfigurationNames.DataAccessMethodAttributeName, typeof(string), string.Empty);
 
         private static ConfigurationPropertyCollection properties;
 

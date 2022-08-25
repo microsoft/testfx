@@ -21,7 +21,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
         [TestMethod]
         public void EqualsShouldReturnFalseIfOtherItemIsNull()
         {
-            DeploymentItem item = new DeploymentItem("e:\\temp\\temp1.dll");
+            DeploymentItem item = new("e:\\temp\\temp1.dll");
 
             Assert.IsFalse(item.Equals(null));
         }
@@ -29,7 +29,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
         [TestMethod]
         public void EqualsShouldReturnFalseIfOtherItemIsNotDeploymentItem()
         {
-            DeploymentItem item = new DeploymentItem("e:\\temp\\temp1.dll");
+            DeploymentItem item = new("e:\\temp\\temp1.dll");
 
             Assert.IsFalse(item.Equals(new DeploymentItemTests()));
         }
@@ -37,8 +37,8 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
         [TestMethod]
         public void EqualsShouldReturnFalseIfSourcePathIsDifferent()
         {
-            DeploymentItem item1 = new DeploymentItem("e:\\temp\\temp1.dll");
-            DeploymentItem item2 = new DeploymentItem("e:\\temp\\temp2.dll");
+            DeploymentItem item1 = new("e:\\temp\\temp1.dll");
+            DeploymentItem item2 = new("e:\\temp\\temp2.dll");
 
             Assert.IsFalse(item1.Equals(item2));
         }
@@ -46,8 +46,8 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
         [TestMethod]
         public void EqualsShouldReturnFalseIfRelativeOutputDirectoryIsDifferent()
         {
-            DeploymentItem item1 = new DeploymentItem("e:\\temp\\temp1.dll", "foo1");
-            DeploymentItem item2 = new DeploymentItem("e:\\temp\\temp1.dll", "foo2");
+            DeploymentItem item1 = new("e:\\temp\\temp1.dll", "foo1");
+            DeploymentItem item2 = new("e:\\temp\\temp1.dll", "foo2");
 
             Assert.IsFalse(item1.Equals(item2));
         }
@@ -55,8 +55,8 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
         [TestMethod]
         public void EqualsShouldReturnTrueIfSourcePathDiffersByCase()
         {
-            DeploymentItem item1 = new DeploymentItem("e:\\temp\\temp1.dll");
-            DeploymentItem item2 = new DeploymentItem("e:\\temp\\Temp1.dll");
+            DeploymentItem item1 = new("e:\\temp\\temp1.dll");
+            DeploymentItem item2 = new("e:\\temp\\Temp1.dll");
 
             Assert.IsTrue(item1.Equals(item2));
         }
@@ -64,8 +64,8 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
         [TestMethod]
         public void EqualsShouldReturnTrueIfRelativeOutputDirectoryDiffersByCase()
         {
-            DeploymentItem item1 = new DeploymentItem("e:\\temp\\temp1.dll", "foo1");
-            DeploymentItem item2 = new DeploymentItem("e:\\temp\\temp1.dll", "Foo1");
+            DeploymentItem item1 = new("e:\\temp\\temp1.dll", "foo1");
+            DeploymentItem item2 = new("e:\\temp\\temp1.dll", "Foo1");
 
             Assert.IsTrue(item1.Equals(item2));
         }
@@ -73,8 +73,8 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
         [TestMethod]
         public void EqualsShouldReturnTrueIfSourceAndRelativeOutputDirectoryAreSame()
         {
-            DeploymentItem item1 = new DeploymentItem("e:\\temp\\temp1.dll", "foo1");
-            DeploymentItem item2 = new DeploymentItem("e:\\temp\\temp1.dll", "foo1");
+            DeploymentItem item1 = new("e:\\temp\\temp1.dll", "foo1");
+            DeploymentItem item2 = new("e:\\temp\\temp1.dll", "foo1");
 
             Assert.IsTrue(item1.Equals(item2));
         }
@@ -84,7 +84,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
         {
             var sourcePath = "e:\\temp\\temp1.dll";
             var relativeOutputDirectory = "foo1";
-            DeploymentItem item = new DeploymentItem(sourcePath, relativeOutputDirectory);
+            DeploymentItem item = new(sourcePath, relativeOutputDirectory);
 
             Assert.AreEqual(sourcePath.GetHashCode() + relativeOutputDirectory.GetHashCode(), item.GetHashCode());
         }
@@ -93,7 +93,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
         public void ToStringShouldReturnDeploymentItemIfRelativeOutputDirectoryIsNotSpecified()
         {
             var sourcePath = "e:\\temp\\temp1.dll";
-            DeploymentItem item = new DeploymentItem(sourcePath);
+            DeploymentItem item = new(sourcePath);
 
             Assert.AreEqual(string.Format(Resource.DeploymentItem, sourcePath), item.ToString());
         }
@@ -103,7 +103,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
         {
             var sourcePath = "e:\\temp\\temp1.dll";
             var relativeOutputDirectory = "foo1";
-            DeploymentItem item = new DeploymentItem(sourcePath, relativeOutputDirectory);
+            DeploymentItem item = new(sourcePath, relativeOutputDirectory);
 
             Assert.AreEqual(string.Format(Resource.DeploymentItemWithOutputDirectory, sourcePath, relativeOutputDirectory), item.ToString());
         }

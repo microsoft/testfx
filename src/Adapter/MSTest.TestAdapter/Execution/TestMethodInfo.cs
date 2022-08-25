@@ -106,13 +106,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>Result of test method invocation.</returns>
         public virtual TestResult Invoke(object[] arguments)
         {
-            Stopwatch watch = new Stopwatch();
+            Stopwatch watch = new();
             TestResult result = null;
 
             // check if arguments are set for data driven tests
             arguments ??= this.Arguments;
 
-            using (LogMessageListener listener = new LogMessageListener(this.TestMethodOptions.CaptureDebugTraces))
+            using (LogMessageListener listener = new(this.TestMethodOptions.CaptureDebugTraces))
             {
                 watch.Start();
                 try
@@ -763,7 +763,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     this.TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel();
                 }
 
-                TestResult timeoutResult = new TestResult() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, errorMessage) };
+                TestResult timeoutResult = new() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, errorMessage) };
                 return timeoutResult;
             }
         }

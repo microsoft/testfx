@@ -26,15 +26,15 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         {
             // Arrange.
             string path = @"C:\unitTesting";
-            List<string> searchDirectories = new List<string>();
+            List<string> searchDirectories = new();
 
-            List<string> resultDirectories = new List<string>();
+            List<string> resultDirectories = new();
             resultDirectories.Add(@"C:\unitTesting\a");
             resultDirectories.Add(@"C:\unitTesting\a\c");
             resultDirectories.Add(@"C:\unitTesting\a\c\d");
             resultDirectories.Add(@"C:\unitTesting\b");
 
-            TestableAssemblyResolver assemblyResolver = new TestableAssemblyResolver(new List<string> { @"c:\dummy" });
+            TestableAssemblyResolver assemblyResolver = new(new List<string> { @"c:\dummy" });
 
             assemblyResolver.DoesDirectoryExistSetter = (str) => true;
             assemblyResolver.GetDirectoriesSetter = (str) =>
@@ -69,13 +69,13 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         {
             int count = 0;
 
-            List<RecursiveDirectoryPath> recursiveDirectoryPath = new List<RecursiveDirectoryPath>();
+            List<RecursiveDirectoryPath> recursiveDirectoryPath = new();
             recursiveDirectoryPath.Add(new RecursiveDirectoryPath(@"C:\unitTesting", true));
             recursiveDirectoryPath.Add(new RecursiveDirectoryPath(@"C:\FunctionalTesting", false));
 
-            List<string> dummyDirectories = new List<string>();
+            List<string> dummyDirectories = new();
             dummyDirectories.Add(@"c:\dummy");
-            TestableAssemblyResolver assemblyResolver = new TestableAssemblyResolver(dummyDirectories);
+            TestableAssemblyResolver assemblyResolver = new(dummyDirectories);
 
             // Adding search directory with recursive property true/false
             assemblyResolver.AddSearchDirectoriesFromRunSetting(recursiveDirectoryPath);
@@ -141,7 +141,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                     return null;
                 };
 
-            ResolveEventArgs dummyArgs = new ResolveEventArgs("DummyTestDllForTest");
+            ResolveEventArgs dummyArgs = new("DummyTestDllForTest");
             assemblyResolver.OnResolve(null, dummyArgs);
 
             // second call to onResolve to verify that the directory in which we have searched in first attempt

@@ -32,8 +32,8 @@ namespace UnitTestFramework.Tests
         [TestFrameworkV1.TestMethod]
         public void EqualsShouldReturnFalseIfEachObjectHasDefaultDataValue()
         {
-            TestFrameworkV2.GenericParameterHelper firstObject = new TestFrameworkV2.GenericParameterHelper();
-            TestFrameworkV2.GenericParameterHelper secondObject = new TestFrameworkV2.GenericParameterHelper();
+            TestFrameworkV2.GenericParameterHelper firstObject = new();
+            TestFrameworkV2.GenericParameterHelper secondObject = new();
 
             TestFrameworkV1.Assert.IsFalse(firstObject.Equals(secondObject));
         }
@@ -41,7 +41,7 @@ namespace UnitTestFramework.Tests
         [TestFrameworkV1.TestMethod]
         public void EqualsShouldReturnTrueIfTwoObjectHasSameDataValue()
         {
-            TestFrameworkV2.GenericParameterHelper objectToCompare = new TestFrameworkV2.GenericParameterHelper(10);
+            TestFrameworkV2.GenericParameterHelper objectToCompare = new(10);
 
             TestFrameworkV1.Assert.IsTrue(this.sut.Equals(objectToCompare));
         }
@@ -49,7 +49,7 @@ namespace UnitTestFramework.Tests
         [TestFrameworkV1.TestMethod]
         public void EqualsShouldReturnFalseIfTwoObjectDoesNotHaveSameDataValue()
         {
-            TestFrameworkV2.GenericParameterHelper objectToCompare = new TestFrameworkV2.GenericParameterHelper(5);
+            TestFrameworkV2.GenericParameterHelper objectToCompare = new(5);
 
             TestFrameworkV1.Assert.IsFalse(this.sut.Equals(objectToCompare));
         }
@@ -57,7 +57,7 @@ namespace UnitTestFramework.Tests
         [TestFrameworkV1.TestMethod]
         public void CompareToShouldReturnZeroIfTwoObjectHasSameDataValue()
         {
-            TestFrameworkV2.GenericParameterHelper objectToCompare = new TestFrameworkV2.GenericParameterHelper(10);
+            TestFrameworkV2.GenericParameterHelper objectToCompare = new(10);
 
             TestFrameworkV1.Assert.AreEqual(0, this.sut.CompareTo(objectToCompare));
         }

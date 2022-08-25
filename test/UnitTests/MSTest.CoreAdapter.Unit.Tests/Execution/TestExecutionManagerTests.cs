@@ -117,9 +117,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, this.cancellationToken);
 
             // FailingTest should be skipped because it does not match the filter criteria.
-            List<string> expectedTestCaseStartList = new List<string>() { "PassingTest" };
-            List<string> expectedTestCaseEndList = new List<string>() { "PassingTest:Passed" };
-            List<string> expectedResultList = new List<string>() { "PassingTest  Passed" };
+            List<string> expectedTestCaseStartList = new() { "PassingTest" };
+            List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
+            List<string> expectedResultList = new() { "PassingTest  Passed" };
 
             CollectionAssert.AreEqual(expectedTestCaseStartList, this.frameworkHandle.TestCaseStartList);
             CollectionAssert.AreEqual(expectedTestCaseEndList, this.frameworkHandle.TestCaseEndList);
@@ -148,9 +148,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, new TestRunCancellationToken());
 
-            List<string> expectedTestCaseStartList = new List<string>() { "PassingTest" };
-            List<string> expectedTestCaseEndList = new List<string>() { "PassingTest:Passed" };
-            List<string> expectedResultList = new List<string>() { "PassingTest  Passed" };
+            List<string> expectedTestCaseStartList = new() { "PassingTest" };
+            List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
+            List<string> expectedResultList = new() { "PassingTest  Passed" };
 
             CollectionAssert.AreEqual(expectedTestCaseStartList, this.frameworkHandle.TestCaseStartList);
             CollectionAssert.AreEqual(expectedTestCaseEndList, this.frameworkHandle.TestCaseEndList);
@@ -166,9 +166,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             this.TestExecutionManager.RunTests(tests, this.runContext, this.frameworkHandle, this.cancellationToken);
 
-            List<string> expectedTestCaseStartList = new List<string>() { "PassingTest", "FailingTest" };
-            List<string> expectedTestCaseEndList = new List<string>() { "PassingTest:Passed", "FailingTest:Failed" };
-            List<string> expectedResultList = new List<string>() { "PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail failed." };
+            List<string> expectedTestCaseStartList = new() { "PassingTest", "FailingTest" };
+            List<string> expectedTestCaseEndList = new() { "PassingTest:Passed", "FailingTest:Failed" };
+            List<string> expectedResultList = new() { "PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail failed." };
 
             CollectionAssert.AreEqual(expectedTestCaseStartList, this.frameworkHandle.TestCaseStartList);
             CollectionAssert.AreEqual(expectedTestCaseEndList, this.frameworkHandle.TestCaseEndList);
@@ -442,7 +442,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             int testsCount = 0;
             var sources = new List<string> { Assembly.GetExecutingAssembly().Location, Assembly.GetExecutingAssembly().Location };
-            TestableTestExecutionManager testableTestExecutionmanager = new TestableTestExecutionManager
+            TestableTestExecutionManager testableTestExecutionmanager = new()
             {
                 ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) =>
                 {
@@ -462,8 +462,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void SendTestResultsShouldFillInDataRowIndexIfTestIsDataDriven()
         {
             var testCase = new TestCase("DummyTest", new System.Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
-            UnitTestResult unitTestResult1 = new UnitTestResult() { DatarowIndex = 0, DisplayName = "DummyTest" };
-            UnitTestResult unitTestResult2 = new UnitTestResult() { DatarowIndex = 1, DisplayName = "DummyTest" };
+            UnitTestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
+            UnitTestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
             this.TestExecutionManager.SendTestResults(testCase, new UnitTestResult[] { unitTestResult1, unitTestResult2 }, default, default, this.frameworkHandle);
             Assert.AreEqual("DummyTest (Data Row 0)", this.frameworkHandle.TestDisplayNameList[0]);
             Assert.AreEqual("DummyTest (Data Row 1)", this.frameworkHandle.TestDisplayNameList[1]);
@@ -818,7 +818,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var methodInfo = typeOfClass.GetMethod(testName);
             var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName, Assembly.GetExecutingAssembly().FullName, isAsync: false);
-            UnitTestElement element = new UnitTestElement(testMethod)
+            UnitTestElement element = new(testMethod)
             {
                 Ignored = ignore
             };
@@ -962,7 +962,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [DummyTestClass]
         private class DummyTestClassForParallelize
         {
-            private static HashSet<int> threadIds = new HashSet<int>();
+            private static HashSet<int> threadIds = new();
 
             public static HashSet<int> ThreadIds
             {
@@ -997,7 +997,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [DummyTestClass]
         private class DummyTestClassForParallelize2
         {
-            private static HashSet<int> threadIds = new HashSet<int>();
+            private static HashSet<int> threadIds = new();
 
             public static HashSet<int> ThreadIds
             {
@@ -1032,7 +1032,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [DummyTestClass]
         private class DummyTestClassForParallelize3
         {
-            private static HashSet<int> threadIds = new HashSet<int>();
+            private static HashSet<int> threadIds = new();
 
             public static HashSet<int> ThreadIds
             {
@@ -1059,9 +1059,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [DummyTestClass]
         private class DummyTestClassWithDoNotParallelizeMethods
         {
-            private static HashSet<int> parallelizableTestsThreadIds = new HashSet<int>();
-            private static HashSet<int> unParallelizableTestsThreadIds = new HashSet<int>();
-            private static HashSet<ApartmentState> threadApartmentStates = new HashSet<ApartmentState>();
+            private static HashSet<int> parallelizableTestsThreadIds = new();
+            private static HashSet<int> unParallelizableTestsThreadIds = new();
+            private static HashSet<ApartmentState> threadApartmentStates = new();
             private static bool isFirstUnParallelizedTestRunTimeSet = false;
 
             public static HashSet<int> ParallelizableTestsThreadIds

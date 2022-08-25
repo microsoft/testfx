@@ -11,8 +11,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
     internal static class DataSerializationHelper
     {
-        private static readonly ConcurrentDictionary<string, DataContractJsonSerializer> SerializerCache = new ConcurrentDictionary<string, DataContractJsonSerializer>();
-        private static readonly DataContractJsonSerializerSettings SerializerSettings = new DataContractJsonSerializerSettings()
+        private static readonly ConcurrentDictionary<string, DataContractJsonSerializer> SerializerCache = new();
+        private static readonly DataContractJsonSerializerSettings SerializerSettings = new()
         {
             UseSimpleDictionaryFormat = true,
             EmitTypeInformation = System.Runtime.Serialization.EmitTypeInformation.Always,

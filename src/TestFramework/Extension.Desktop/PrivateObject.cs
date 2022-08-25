@@ -833,7 +833,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Debug.Assert(parameterTypes != null, "parameterTypes should not be null.");
             Debug.Assert(typeArguments != null, "typeArguments should not be null.");
 
-            LinkedList<MethodInfo> methodCandidates = new LinkedList<MethodInfo>();
+            LinkedList<MethodInfo> methodCandidates = new();
 
             if (!this.GenericMethodCache.TryGetValue(methodName, out var methods))
             {

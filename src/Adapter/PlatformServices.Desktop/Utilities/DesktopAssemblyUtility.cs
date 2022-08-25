@@ -189,7 +189,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: start.");
 
-            AppDomainSetup setupInfo = new AppDomainSetup();
+            AppDomainSetup setupInfo = new();
             var dllDirectory = Path.GetDirectoryName(Path.GetFullPath(assemblyPath));
             setupInfo.ApplicationBase = dllDirectory;
 
@@ -261,8 +261,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
             // Use dictionary to ensure we get a list of unique paths, but keep a list as the
             // dictionary does not guarantee order.
-            Dictionary<string, object> resolutionPathsDictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-            List<string> resolutionPaths = new List<string>();
+            Dictionary<string, object> resolutionPathsDictionary = new(StringComparer.OrdinalIgnoreCase);
+            List<string> resolutionPaths = new();
 
             // Add the path of the currently executing assembly (use Uri(CodeBase).LocalPath as Location can be on shadow dir).
             string currentlyExecutingAssembly = Path.GetDirectoryName(Path.GetFullPath(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath));

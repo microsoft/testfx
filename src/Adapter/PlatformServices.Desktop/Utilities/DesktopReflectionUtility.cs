@@ -66,8 +66,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
             else
             {
-                List<object> nonUniqueAttributes = new List<object>();
-                Dictionary<string, object> uniqueAttributes = new Dictionary<string, object>();
+                List<object> nonUniqueAttributes = new();
+                Dictionary<string, object> uniqueAttributes = new();
 
                 var inheritanceThreshold = 10;
                 var inheritanceLevel = 0;
@@ -141,10 +141,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
             if (assembly.ReflectionOnly)
             {
-                List<CustomAttributeData> customAttributes = new List<CustomAttributeData>();
+                List<CustomAttributeData> customAttributes = new();
                 customAttributes.AddRange(CustomAttributeData.GetCustomAttributes(assembly));
 
-                List<object> attributesArray = new List<object>();
+                List<object> attributesArray = new();
 
                 foreach (var attribute in customAttributes)
                 {
@@ -182,8 +182,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 // instead of array. So convert it to array else constructor invoke will fail.
                 Type attributeType = Type.GetType(attributeData.Constructor.DeclaringType.AssemblyQualifiedName);
 
-                List<Type> constructorParameters = new List<Type>();
-                List<object> constructorArguments = new List<object>();
+                List<Type> constructorParameters = new();
+                List<object> constructorArguments = new();
                 foreach (var parameter in attributeData.ConstructorArguments)
                 {
                     Type parameterType = Type.GetType(parameter.ArgumentType.AssemblyQualifiedName);
@@ -192,7 +192,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     {
                         if (parameter.Value is IEnumerable enumerable)
                         {
-                            ArrayList list = new ArrayList();
+                            ArrayList list = new();
                             foreach (var item in enumerable)
                             {
                                 if (item is CustomAttributeTypedArgument argument)

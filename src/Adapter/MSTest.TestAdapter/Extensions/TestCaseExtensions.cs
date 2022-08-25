@@ -103,7 +103,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
                 testMethod.DeclaringClassFullName = declaringClassName;
             }
 
-            UnitTestElement testElement = new UnitTestElement(testMethod)
+            UnitTestElement testElement = new(testMethod)
             {
                 IsAsync = isAsync,
                 TestCategory = testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[],

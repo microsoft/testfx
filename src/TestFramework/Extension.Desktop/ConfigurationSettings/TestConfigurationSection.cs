@@ -10,7 +10,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// </summary>
     public sealed class TestConfigurationSection : ConfigurationSection
     {
-        private static readonly ConfigurationProperty DataSourcesValue = new ConfigurationProperty(ConfigurationNames.DataSourcesSectionName, typeof(DataSourceElementCollection), null);
+        private static readonly ConfigurationProperty DataSourcesValue = new(ConfigurationNames.DataSourcesSectionName, typeof(DataSourceElementCollection), null);
         private static ConfigurationPropertyCollection properties;
 
         static TestConfigurationSection()

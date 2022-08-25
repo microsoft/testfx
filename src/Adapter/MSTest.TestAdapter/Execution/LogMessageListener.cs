@@ -17,7 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
     /// </summary>
     public class LogMessageListener : IDisposable
     {
-        private static object traceLock = new object();
+        private static object traceLock = new();
         private static int listenerCount;
         private static ThreadSafeStringWriter redirectedDebugTrace;
 

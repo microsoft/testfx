@@ -62,8 +62,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 
             Debug.Assert(assembly != null, "assembly");
 
-            List<string> result = new List<string>();
-            HashSet<string> visitedAssemblies = new HashSet<string>();
+            List<string> result = new();
+            HashSet<string> visitedAssemblies = new();
 
             visitedAssemblies.Add(assembly.FullName);
 

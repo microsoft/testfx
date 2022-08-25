@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions
         public void StringAssertDoesNotMatch()
         {
             string actual = "The quick brown fox jumps over the lazy dog.";
-            Regex doesMatch = new Regex("quick brown fox");
+            Regex doesMatch = new("quick brown fox");
             var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.DoesNotMatch(actual, doesMatch));
             Assert.IsNotNull(ex);
             TestFrameworkV1.StringAssert.Contains(ex.Message, "StringAssert.DoesNotMatch failed");

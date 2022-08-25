@@ -79,7 +79,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         {
             var type = typeof(DummyTestClassWithTestMethods);
             var fullName = $"{type.FullName}.{"TestMethod"}";
-            TestCase testCase = new TestCase(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
+            TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 
             var result = this.TestMethodFilter.PropertyValueProvider(testCase, null);
             Assert.IsNull(result);
@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var type = typeof(DummyTestClassWithTestMethods);
             var fullName = $"{type.FullName}.{"TestMethod"}";
 
-            TestCase testCase = new TestCase(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
+            TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
             var result = this.TestMethodFilter.PropertyValueProvider(testCase, "Priority");
             Assert.IsNull(result);
         }
@@ -102,7 +102,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var type = typeof(DummyTestClassWithTestMethods);
             var fullName = $"{type.FullName}.{"TestMethod"}";
 
-            TestCase testCase = new TestCase(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
+            TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 
             var result = this.TestMethodFilter.PropertyValueProvider(testCase, "FullyQualifiedName");
             Assert.AreEqual(fullName, result);
@@ -111,7 +111,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void GetFilterExpressionForNullRunContextReturnsNull()
         {
-            TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
+            TestableTestExecutionRecorder recorder = new();
             var filterExpression = this.TestMethodFilter.GetFilterExpression(null, recorder, out var filterHasError);
 
             Assert.IsNull(filterExpression);
@@ -121,9 +121,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void GetFilterExpressionForValidRunContextReturnsValidTestCaseFilterExpression()
         {
-            TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
+            TestableTestExecutionRecorder recorder = new();
             var dummyFilterExpression = new TestableTestCaseFilterExpression();
-            TestableRunContext runContext = new TestableRunContext(() => dummyFilterExpression);
+            TestableRunContext runContext = new(() => dummyFilterExpression);
             var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, recorder, out var filterHasError);
 
             Assert.AreEqual(dummyFilterExpression, filterExpression);
@@ -136,9 +136,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void GetFilterExpressionForDiscoveryContextWithGetTestCaseFilterReturnsValidTestCaseFilterExpression()
         {
-            TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
+            TestableTestExecutionRecorder recorder = new();
             var dummyFilterExpression = new TestableTestCaseFilterExpression();
-            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithGetTestCaseFilter(() => dummyFilterExpression);
+            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => dummyFilterExpression);
             var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out var filterHasError);
 
             Assert.AreEqual(dummyFilterExpression, filterExpression);
@@ -151,8 +151,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void GetFilterExpressionForDiscoveryContextWithoutGetTestCaseFilterReturnsNullTestCaseFilterExpression()
         {
-            TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
-            TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithoutGetTestCaseFilter();
+            TestableTestExecutionRecorder recorder = new();
+            TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new();
             var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out var filterHasError);
 
             Assert.IsNull(filterExpression);
@@ -162,8 +162,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void GetFilterExpressionForRunContextGetTestCaseFilterThrowingExceptionReturnsNullWithFilterHasErrorTrue()
         {
-            TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
-            TestableRunContext runContext = new TestableRunContext(() => { throw new TestPlatformFormatException("DummyException"); });
+            TestableTestExecutionRecorder recorder = new();
+            TestableRunContext runContext = new(() => { throw new TestPlatformFormatException("DummyException"); });
             var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, recorder, out var filterHasError);
 
             Assert.IsNull(filterExpression);
@@ -178,8 +178,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void GetFilterExpressionForDiscoveryContextWithGetTestCaseFilterThrowingExceptionReturnsNullWithFilterHasErrorTrue()
         {
-            TestableTestExecutionRecorder recorder = new TestableTestExecutionRecorder();
-            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithGetTestCaseFilter(() => { throw new TestPlatformFormatException("DummyException"); });
+            TestableTestExecutionRecorder recorder = new();
+            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => { throw new TestPlatformFormatException("DummyException"); });
             var filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out var filterHasError);
 
             Assert.IsNull(filterExpression);

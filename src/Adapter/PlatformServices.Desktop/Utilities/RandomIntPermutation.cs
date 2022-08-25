@@ -28,7 +28,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 this.objects[i] = i;
             }
 
-            Random random = new Random();
+            Random random = new();
             for (int last = this.objects.Length - 1; last > 0; --last)
             {
                 // Swap last and at random position which can be last in which case we don't swap.

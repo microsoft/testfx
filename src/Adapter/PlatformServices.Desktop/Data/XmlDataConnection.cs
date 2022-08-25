@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
             if (dataSet != null)
             {
-                List<string> tableNames = new List<string>();
+                List<string> tableNames = new();
 
                 int tableCount = dataSet.Tables.Count;
                 for (int i = 0; i < tableCount; i++)
@@ -60,7 +60,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 DataTable table = dataSet.Tables[tableName];
                 if (table != null)
                 {
-                    List<string> columnNames = new List<string>();
+                    List<string> columnNames = new();
                     foreach (DataColumn column in table.Columns)
                     {
                         // Only show "normal" columns, we try to hide derived columns used as part
@@ -95,7 +95,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         {
             try
             {
-                DataSet dataSet = new DataSet();
+                DataSet dataSet = new();
                 dataSet.Locale = CultureInfo.CurrentCulture;
                 string path = this.FixPath(this.fileName) ?? Path.GetFullPath(this.fileName);
                 if (schemaOnly)

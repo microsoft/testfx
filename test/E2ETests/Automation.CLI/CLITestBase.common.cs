@@ -77,14 +77,14 @@ namespace Microsoft.MSTestV2.CLIAutomation
                 settingsXml = XmlRunSettingsUtilities.CreateDefaultRunSettings();
             }
 
-            XmlDocument doc = new XmlDocument();
+            XmlDocument doc = new();
             using (var xmlReader = XmlReader.Create(new StringReader(settingsXml), new XmlReaderSettings() { XmlResolver = null, CloseInput = true }))
             {
                 doc.Load(xmlReader);
             }
 
             XmlElement root = doc.DocumentElement;
-            RunConfiguration runConfiguration = new RunConfiguration(testAdapterPath);
+            RunConfiguration runConfiguration = new(testAdapterPath);
             XmlElement runConfigElement = runConfiguration.ToXml();
             if (root[runConfiguration.SettingsName] == null)
             {

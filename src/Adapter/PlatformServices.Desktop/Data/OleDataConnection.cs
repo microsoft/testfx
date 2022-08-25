@@ -59,7 +59,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             // Note, in older iterations of the code there seemed to be
             // cases when we also need to look in the "views" table
             // but I do not see that in my test cases
-            SchemaMetaData data = new SchemaMetaData()
+            SchemaMetaData data = new()
             {
                 SchemaTable = "Tables",
                 SchemaColumn = "TABLE_SCHEMA",
@@ -85,7 +85,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         private static string FixConnectionString(string connectionString, List<string> dataFolders)
         {
-            OleDbConnectionStringBuilder oleDbBuilder = new OleDbConnectionStringBuilder(connectionString);
+            OleDbConnectionStringBuilder oleDbBuilder = new(connectionString);
 
             string fileName = oleDbBuilder.DataSource;
 
