@@ -30,7 +30,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel
         {
             if (testMethod == null)
             {
-                throw new ArgumentNullException("testMethod");
+                throw new ArgumentNullException(nameof(testMethod));
             }
 
             Debug.Assert(testMethod.FullClassName != null, "Full className cannot be empty");
