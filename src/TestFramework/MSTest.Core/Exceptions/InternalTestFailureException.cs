@@ -12,6 +12,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// This class is only added to preserve source compatibility with the V1 framework.
     /// For all practical purposes either use AssertFailedException/AssertInconclusiveException.
     /// </remarks>
+#if !NETSTANDARD1_4
+    [Serializable]
+#endif
     public class InternalTestFailureException : UnitTestAssertException
     {
         /// <summary>

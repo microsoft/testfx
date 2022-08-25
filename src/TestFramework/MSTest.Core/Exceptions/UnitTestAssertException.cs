@@ -8,6 +8,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     /// <summary>
     /// Base class for Framework Exceptions.
     /// </summary>
+#if !NETSTANDARD1_4
+    [Serializable]
+#endif
     public abstract partial class UnitTestAssertException : Exception
     {
         /// <summary>
