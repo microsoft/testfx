@@ -790,12 +790,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     "select default_schema_name from sys.database_principals where name = user_name()" :
                     "select user_name()";
 
-                using (DbCommand cmd = this.Connection.CreateCommand())
-                {
-                    cmd.CommandText = sql;
-                    string defaultSchema = cmd.ExecuteScalar() as string;
-                    return defaultSchema;
-                }
+                using DbCommand cmd = this.Connection.CreateCommand();
+                cmd.CommandText = sql;
+                string defaultSchema = cmd.ExecuteScalar() as string;
+                return defaultSchema;
             }
             catch (Exception e)
             {
@@ -823,31 +821,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         public override DataTable ReadTable(string tableName, IEnumerable columns)
 #pragma warning restore SA1202 // Elements must be ordered by access
         {
-            using (DbDataAdapter dataAdapter = this.Factory.CreateDataAdapter())
-            using (DbCommand command = this.Factory.CreateCommand())
+            using DbDataAdapter dataAdapter = this.Factory.CreateDataAdapter();
+            using DbCommand command = this.Factory.CreateCommand();
+            // We need to escape bad characters in table name like [Sheet1$] in Excel.
+            // But if table name is quoted in terms of provider, don't touch it to avoid e.g. [dbo.tables.etc].
+            string quotedTableName = this.PrepareNameForSql(tableName);
+            if (EqtTrace.IsInfoEnabled)
             {
-                // We need to escape bad characters in table name like [Sheet1$] in Excel.
-                // But if table name is quoted in terms of provider, don't touch it to avoid e.g. [dbo.tables.etc].
-                string quotedTableName = this.PrepareNameForSql(tableName);
-                if (EqtTrace.IsInfoEnabled)
-                {
-                    EqtTrace.Info("ReadTable: data driven test: got table name from attribute: {0}", tableName);
-                    EqtTrace.Info("ReadTable: data driven test: will use table name: {0}", tableName);
-                }
-
-                command.Connection = this.Connection;
-                command.CommandText = string.Format(CultureInfo.InvariantCulture, "select {0} from {1}", this.GetColumnsSQL(columns), quotedTableName);
-
-                WriteDiagnostics("ReadTable: SQL Query: {0}", command.CommandText);
-                dataAdapter.SelectCommand = command;
-
-                DataTable table = new();
-                table.Locale = CultureInfo.InvariantCulture;
-                dataAdapter.Fill(table);
-
-                table.TableName = tableName;    // Make table name in the data set the same as original table name.
-                return table;
+                EqtTrace.Info("ReadTable: data driven test: got table name from attribute: {0}", tableName);
+                EqtTrace.Info("ReadTable: data driven test: will use table name: {0}", tableName);
             }
+
+            command.Connection = this.Connection;
+            command.CommandText = string.Format(CultureInfo.InvariantCulture, "select {0} from {1}", this.GetColumnsSQL(columns), quotedTableName);
+
+            WriteDiagnostics("ReadTable: SQL Query: {0}", command.CommandText);
+            dataAdapter.SelectCommand = command;
+
+            DataTable table = new();
+            table.Locale = CultureInfo.InvariantCulture;
+            dataAdapter.Fill(table);
+
+            table.TableName = tableName;    // Make table name in the data set the same as original table name.
+            return table;
         }
 
         private string GetColumnsSQL(IEnumerable columns)

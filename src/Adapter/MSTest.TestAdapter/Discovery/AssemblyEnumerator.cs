@@ -257,20 +257,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
                 return false;
             }
 
-            using (var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "all"))
+            using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "all");
+            var testMethod = test.TestMethod;
+            var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
+            var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
+            if (testMethodInfo == null)
             {
-                var testMethod = test.TestMethod;
-                var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
-                var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
-                if (testMethodInfo == null)
-                {
-                    return false;
-                }
-
-                return /* DataSourceAttribute discovery is disabled for now, since we cannot serialize DataRow values.
-                       this.TryProcessDataSource(test, testMethodInfo, testContext, tests) || */
-                       this.TryProcessTestDataSourceTests(test, testMethodInfo, tests);
+                return false;
             }
+
+            return /* DataSourceAttribute discovery is disabled for now, since we cannot serialize DataRow values.
+                       this.TryProcessDataSource(test, testMethodInfo, testContext, tests) || */
+                   this.TryProcessTestDataSourceTests(test, testMethodInfo, tests);
         }
 
         private bool TryProcessDataSource(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)

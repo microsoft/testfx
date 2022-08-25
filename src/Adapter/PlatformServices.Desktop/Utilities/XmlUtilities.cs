@@ -29,11 +29,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             var configurationElement = FindOrCreateElement(doc, doc, "configuration");
             var assemblyBindingSection = FindOrCreateAssemblyBindingSection(doc, configurationElement);
             AddAssemblyBindingRedirect(doc, assemblyBindingSection, assemblyName, oldVersion, newVersion);
-            using (var ms = new MemoryStream())
-            {
-                doc.Save(ms);
-                return ms.ToArray();
-            }
+            using var ms = new MemoryStream();
+            doc.Save(ms);
+            return ms.ToArray();
         }
 
         /// <summary>
@@ -46,12 +44,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             var doc = new XmlDocument();
             if (!string.IsNullOrEmpty(configFile?.Trim()))
             {
-                using (var xmlReader = new XmlTextReader(configFile))
-                {
-                    xmlReader.DtdProcessing = DtdProcessing.Prohibit;
-                    xmlReader.XmlResolver = null;
-                    doc.Load(xmlReader);
-                }
+                using var xmlReader = new XmlTextReader(configFile);
+                xmlReader.DtdProcessing = DtdProcessing.Prohibit;
+                xmlReader.XmlResolver = null;
+                doc.Load(xmlReader);
             }
 
             return doc;

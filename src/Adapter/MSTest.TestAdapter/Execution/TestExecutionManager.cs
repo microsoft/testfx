@@ -216,142 +216,140 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 source = Path.Combine(PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory(), Path.GetFileName(source));
             }
 
-            using (var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle))
+            using var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
+            // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
+            var testRunner = isolationHost.CreateInstanceForType(
+                typeof(UnitTestRunner),
+                new object[] { MSTestSettings.CurrentSettings }) as UnitTestRunner;
+
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
+
+            // Default test set is filtered tests based on user provided filter criteria
+            ICollection<TestCase> testsToRun = new TestCase[0];
+            var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
+            if (filterHasError)
             {
-                // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
-                var testRunner = isolationHost.CreateInstanceForType(
-                    typeof(UnitTestRunner),
-                    new object[] { MSTestSettings.CurrentSettings }) as UnitTestRunner;
-
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
-
-                // Default test set is filtered tests based on user provided filter criteria
-                ICollection<TestCase> testsToRun = new TestCase[0];
-                var filterExpression = this.TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
-                if (filterHasError)
-                {
-                    // Bail out without processing everything else below.
-                    return;
-                }
-
-                testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter)).ToArray();
-
-                // this is done so that appropriate values of test context properties are set at source level
-                // and are merged with session level parameters
-                var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
-
-                if (this.sessionParameters != null && this.sessionParameters.Count > 0)
-                {
-                    sourceLevelParameters = this.sessionParameters.ConcatWithOverwrites(sourceLevelParameters);
-                }
-
-                TestAssemblySettingsProvider sourceSettingsProvider = null;
-
-                try
-                {
-                    sourceSettingsProvider = isolationHost.CreateInstanceForType(
-                        typeof(TestAssemblySettingsProvider),
-                        null) as TestAssemblySettingsProvider;
-                }
-                catch (Exception ex)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
-                }
-
-                var sourceSettings = (sourceSettingsProvider != null) ? sourceSettingsProvider.GetSettings(source) : new TestAssemblySettings();
-                var parallelWorkers = sourceSettings.Workers;
-                var parallelScope = sourceSettings.Scope;
-                this.InitializeClassCleanupManager(source, testRunner, testsToRun, sourceSettings);
-
-                if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
-                {
-                    // The runsettings value takes precedence over an assembly level setting. Reset the level.
-                    parallelWorkers = MSTestSettings.CurrentSettings.ParallelizationWorkers.Value;
-                }
-
-                if (MSTestSettings.CurrentSettings.ParallelizationScope.HasValue)
-                {
-                    // The runsettings value takes precedence over an assembly level setting. Reset the level.
-                    parallelScope = MSTestSettings.CurrentSettings.ParallelizationScope.Value;
-                }
-
-                if (!MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0)
-                {
-                    // Parallelization is enabled. Let's do further classification for sets.
-                    var logger = (IMessageLogger)frameworkHandle;
-                    logger.SendMessage(
-                        TestMessageLevel.Informational,
-                        string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
-
-                    // Create test sets for execution, we can execute them in parallel based on parallel settings
-                    IEnumerable<IGrouping<bool, TestCase>> testsets = Enumerable.Empty<IGrouping<bool, TestCase>>();
-
-                    // Parallel and not parallel sets.
-                    testsets = testsToRun.GroupBy(t => t.GetPropertyValue<bool>(TestAdapter.Constants.DoNotParallelizeProperty, false));
-
-                    var parallelizableTestSet = testsets.FirstOrDefault(g => g.Key == false);
-                    var nonparallelizableTestSet = testsets.FirstOrDefault(g => g.Key == true);
-
-                    if (parallelizableTestSet != null)
-                    {
-                        ConcurrentQueue<IEnumerable<TestCase>> queue = null;
-
-                        // Chunk the sets into further groups based on parallel level
-                        switch (parallelScope)
-                        {
-                            case ExecutionScope.MethodLevel:
-                                queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }));
-                                break;
-
-                            case ExecutionScope.ClassLevel:
-                                queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.TestClassNameProperty) as string));
-                                break;
-                        }
-
-                        var tasks = new List<Task>();
-
-                        for (int i = 0; i < parallelWorkers; i++)
-                        {
-                            tasks.Add(Task.Factory.StartNew(
-                                () =>
-                                {
-                                    while (!queue.IsEmpty)
-                                    {
-                                        if (this.cancellationToken != null && this.cancellationToken.Canceled)
-                                        {
-                                            // if a cancellation has been requested, do not queue any more test runs.
-                                            break;
-                                        }
-
-                                        if (queue.TryDequeue(out IEnumerable<TestCase> testSet))
-                                        {
-                                            this.ExecuteTestsWithTestRunner(testSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
-                                        }
-                                    }
-                                },
-                            CancellationToken.None,
-                            TaskCreationOptions.LongRunning,
-                            TaskScheduler.Default));
-                        }
-
-                        Task.WaitAll(tasks.ToArray());
-                    }
-
-                    // Queue the non parallel set
-                    if (nonparallelizableTestSet != null)
-                    {
-                        this.ExecuteTestsWithTestRunner(nonparallelizableTestSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
-                    }
-                }
-                else
-                {
-                    this.ExecuteTestsWithTestRunner(testsToRun, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
-                }
-
-                this.RunCleanup(frameworkHandle, testRunner);
-
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
+                // Bail out without processing everything else below.
+                return;
             }
+
+            testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, this.TestMethodFilter)).ToArray();
+
+            // this is done so that appropriate values of test context properties are set at source level
+            // and are merged with session level parameters
+            var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
+
+            if (this.sessionParameters != null && this.sessionParameters.Count > 0)
+            {
+                sourceLevelParameters = this.sessionParameters.ConcatWithOverwrites(sourceLevelParameters);
+            }
+
+            TestAssemblySettingsProvider sourceSettingsProvider = null;
+
+            try
+            {
+                sourceSettingsProvider = isolationHost.CreateInstanceForType(
+                    typeof(TestAssemblySettingsProvider),
+                    null) as TestAssemblySettingsProvider;
+            }
+            catch (Exception ex)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
+            }
+
+            var sourceSettings = (sourceSettingsProvider != null) ? sourceSettingsProvider.GetSettings(source) : new TestAssemblySettings();
+            var parallelWorkers = sourceSettings.Workers;
+            var parallelScope = sourceSettings.Scope;
+            this.InitializeClassCleanupManager(source, testRunner, testsToRun, sourceSettings);
+
+            if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
+            {
+                // The runsettings value takes precedence over an assembly level setting. Reset the level.
+                parallelWorkers = MSTestSettings.CurrentSettings.ParallelizationWorkers.Value;
+            }
+
+            if (MSTestSettings.CurrentSettings.ParallelizationScope.HasValue)
+            {
+                // The runsettings value takes precedence over an assembly level setting. Reset the level.
+                parallelScope = MSTestSettings.CurrentSettings.ParallelizationScope.Value;
+            }
+
+            if (!MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0)
+            {
+                // Parallelization is enabled. Let's do further classification for sets.
+                var logger = (IMessageLogger)frameworkHandle;
+                logger.SendMessage(
+                    TestMessageLevel.Informational,
+                    string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
+
+                // Create test sets for execution, we can execute them in parallel based on parallel settings
+                IEnumerable<IGrouping<bool, TestCase>> testsets = Enumerable.Empty<IGrouping<bool, TestCase>>();
+
+                // Parallel and not parallel sets.
+                testsets = testsToRun.GroupBy(t => t.GetPropertyValue<bool>(TestAdapter.Constants.DoNotParallelizeProperty, false));
+
+                var parallelizableTestSet = testsets.FirstOrDefault(g => g.Key == false);
+                var nonparallelizableTestSet = testsets.FirstOrDefault(g => g.Key == true);
+
+                if (parallelizableTestSet != null)
+                {
+                    ConcurrentQueue<IEnumerable<TestCase>> queue = null;
+
+                    // Chunk the sets into further groups based on parallel level
+                    switch (parallelScope)
+                    {
+                        case ExecutionScope.MethodLevel:
+                            queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }));
+                            break;
+
+                        case ExecutionScope.ClassLevel:
+                            queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.TestClassNameProperty) as string));
+                            break;
+                    }
+
+                    var tasks = new List<Task>();
+
+                    for (int i = 0; i < parallelWorkers; i++)
+                    {
+                        tasks.Add(Task.Factory.StartNew(
+                            () =>
+                            {
+                                while (!queue.IsEmpty)
+                                {
+                                    if (this.cancellationToken != null && this.cancellationToken.Canceled)
+                                    {
+                                        // if a cancellation has been requested, do not queue any more test runs.
+                                        break;
+                                    }
+
+                                    if (queue.TryDequeue(out IEnumerable<TestCase> testSet))
+                                    {
+                                        this.ExecuteTestsWithTestRunner(testSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
+                                    }
+                                }
+                            },
+                        CancellationToken.None,
+                        TaskCreationOptions.LongRunning,
+                        TaskScheduler.Default));
+                    }
+
+                    Task.WaitAll(tasks.ToArray());
+                }
+
+                // Queue the non parallel set
+                if (nonparallelizableTestSet != null)
+                {
+                    this.ExecuteTestsWithTestRunner(nonparallelizableTestSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
+                }
+            }
+            else
+            {
+                this.ExecuteTestsWithTestRunner(testsToRun, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
+            }
+
+            this.RunCleanup(frameworkHandle, testRunner);
+
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
         }
 
         private void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, ICollection<TestCase> testsToRun, TestAssemblySettings sourceSettings)

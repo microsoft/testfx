@@ -215,32 +215,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
 
                 // This has to be LoadFrom, otherwise we will have to use AssemblyResolver to find self.
-                using (
-                    AssemblyResolver resolver =
+                using AssemblyResolver resolver =
                         (AssemblyResolver)AppDomainUtilities.CreateInstance(
                                                     appDomain,
                                                     assemblyResolverType,
-                                                    new object[] { this.GetResolutionPaths() }))
+                                                    new object[] { this.GetResolutionPaths() });
+                // This has to be Load, otherwise Serialization of argument types will not work correctly.
+                AssemblyLoadWorker worker =
+                    (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
+
+                EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
+
+                var allDependencies = worker.GetFullPathToDependentAssemblies(assemblyPath, out warnings);
+                var dependenciesFromDllDirectory = new List<string>();
+                var dllDirectoryUppercase = dllDirectory.ToUpperInvariant();
+                foreach (var dependency in allDependencies)
                 {
-                    // This has to be Load, otherwise Serialization of argument types will not work correctly.
-                    AssemblyLoadWorker worker =
-                        (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
-
-                    EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
-
-                    var allDependencies = worker.GetFullPathToDependentAssemblies(assemblyPath, out warnings);
-                    var dependenciesFromDllDirectory = new List<string>();
-                    var dllDirectoryUppercase = dllDirectory.ToUpperInvariant();
-                    foreach (var dependency in allDependencies)
+                    if (dependency.ToUpperInvariant().Contains(dllDirectoryUppercase))
                     {
-                        if (dependency.ToUpperInvariant().Contains(dllDirectoryUppercase))
-                        {
-                            dependenciesFromDllDirectory.Add(dependency);
-                        }
+                        dependenciesFromDllDirectory.Add(dependency);
                     }
-
-                    return dependenciesFromDllDirectory.ToArray();
                 }
+
+                return dependenciesFromDllDirectory.ToArray();
             }
             finally
             {

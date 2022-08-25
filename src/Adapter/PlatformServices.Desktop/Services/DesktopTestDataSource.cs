@@ -56,30 +56,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 
             try
             {
-                using (TestDataConnection connection = factory.Create(providerNameInvariant, connectionString, dataFolders))
+                using TestDataConnection connection = factory.Create(providerNameInvariant, connectionString, dataFolders);
+                DataTable table = connection.ReadTable(tableName, null);
+                DataRow[] rows = table.Select();
+                Debug.Assert(rows != null, "rows should not be null.");
+
+                // check for row length is 0
+                if (rows.Length == 0)
                 {
-                    DataTable table = connection.ReadTable(tableName, null);
-                    DataRow[] rows = table.Select();
-                    Debug.Assert(rows != null, "rows should not be null.");
-
-                    // check for row length is 0
-                    if (rows.Length == 0)
-                    {
-                        return null;
-                    }
-
-                    IEnumerable<int> permutation = this.GetPermutation(dataAccessMethod, rows.Length);
-
-                    object[] rowsAfterPermutation = new object[rows.Length];
-                    int index = 0;
-                    foreach (int rowIndex in permutation)
-                    {
-                        rowsAfterPermutation[index++] = rows[rowIndex];
-                    }
-
-                    testContext.SetDataConnection(connection.Connection);
-                    return rowsAfterPermutation;
+                    return null;
                 }
+
+                IEnumerable<int> permutation = this.GetPermutation(dataAccessMethod, rows.Length);
+
+                object[] rowsAfterPermutation = new object[rows.Length];
+                int index = 0;
+                foreach (int rowIndex in permutation)
+                {
+                    rowsAfterPermutation[index++] = rows[rowIndex];
+                }
+
+                testContext.SetDataConnection(connection.Connection);
+                return rowsAfterPermutation;
             }
             catch (Exception ex)
             {
