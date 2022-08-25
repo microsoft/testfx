@@ -110,10 +110,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             TestResult result = null;
 
             // check if arguments are set for data driven tests
-            if (arguments == null)
-            {
-                arguments = this.Arguments;
-            }
+            arguments ??= this.Arguments;
 
             using (LogMessageListener listener = new LogMessageListener(this.TestMethodOptions.CaptureDebugTraces))
             {
@@ -287,15 +284,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         // Expected Exception was thrown, so Pass the test
                         result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed;
                     }
-                    else if (result.TestFailureException == null)
-                    {
-                        // This block should not throw. If it needs to throw, then handling of
+                    else                         // This block should not throw. If it needs to throw, then handling of
                         // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
-                        result.TestFailureException = this.HandleMethodException(
+                        result.TestFailureException ??= this.HandleMethodException(
                             ex,
                             this.TestClassName,
                             this.TestMethodName);
-                    }
 
                     if (result.Outcome != TestTools.UnitTesting.UnitTestOutcome.Passed)
                     {

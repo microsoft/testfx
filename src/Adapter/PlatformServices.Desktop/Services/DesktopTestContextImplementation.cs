@@ -415,10 +415,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <param name="propertyValue">The property value.</param>
         public void AddProperty(string propertyName, string propertyValue)
         {
-            if (this.properties == null)
-            {
-                this.properties = new Dictionary<string, object>();
-            }
+            this.properties ??= new Dictionary<string, object>();
 
             this.properties.Add(propertyName, propertyValue);
         }

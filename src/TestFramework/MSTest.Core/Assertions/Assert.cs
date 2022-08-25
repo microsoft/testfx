@@ -42,10 +42,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             get
             {
-                if (that == null)
-                {
-                    that = new Assert();
-                }
+                that ??= new Assert();
 
                 return that;
             }

@@ -121,7 +121,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
                     return this.MockReflectionOperations.Object;
                 }
 
-                return this.reflectionOperations ?? (this.reflectionOperations = new ReflectionOperations());
+                return this.reflectionOperations ??= new ReflectionOperations();
             }
         }
 

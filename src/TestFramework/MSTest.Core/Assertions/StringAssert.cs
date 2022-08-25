@@ -35,10 +35,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             get
             {
-                if (that == null)
-                {
-                    that = new StringAssert();
-                }
+                that ??= new StringAssert();
 
                 return that;
             }

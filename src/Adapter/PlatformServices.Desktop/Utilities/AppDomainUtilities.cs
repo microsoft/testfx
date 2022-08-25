@@ -32,10 +32,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
             get
             {
-                if (xmlUtilities == null)
-                {
-                    xmlUtilities = new XmlUtilities();
-                }
+                xmlUtilities ??= new XmlUtilities();
 
                 return xmlUtilities;
             }

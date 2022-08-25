@@ -860,10 +860,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private void SetCaller(string caller)
         {
-            if (this.callers == null)
-            {
-                this.callers = new List<string>();
-            }
+            this.callers ??= new List<string>();
 
             this.callers.Add(caller);
         }

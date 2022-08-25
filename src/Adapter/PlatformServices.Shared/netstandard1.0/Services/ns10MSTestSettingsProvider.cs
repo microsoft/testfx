@@ -25,10 +25,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         {
             get
             {
-                if (settings == null)
-                {
-                    settings = new MSTestAdapterSettings();
-                }
+                settings ??= new MSTestAdapterSettings();
 
                 return settings;
             }

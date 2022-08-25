@@ -67,10 +67,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                if (currentSettings == null)
-                {
-                    currentSettings = new MSTestSettings();
-                }
+                currentSettings ??= new MSTestSettings();
 
                 return currentSettings;
             }
@@ -88,10 +85,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                if (runConfigurationSettings == null)
-                {
-                    runConfigurationSettings = new RunConfigurationSettings();
-                }
+                runConfigurationSettings ??= new RunConfigurationSettings();
 
                 return runConfigurationSettings;
             }

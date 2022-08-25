@@ -44,10 +44,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             ValidateAccessString(memberToAccess);
 
             PrivateObject temp = obj as PrivateObject;
-            if (temp == null)
-            {
-                temp = new PrivateObject(obj);
-            }
+            temp ??= new PrivateObject(obj);
 
             // Split The access string
             string[] arr = memberToAccess.Split(new char[] { '.' });

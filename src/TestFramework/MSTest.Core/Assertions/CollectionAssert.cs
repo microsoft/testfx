@@ -39,10 +39,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             get
             {
-                if (that == null)
-                {
-                    that = new CollectionAssert();
-                }
+                that ??= new CollectionAssert();
 
                 return that;
             }
