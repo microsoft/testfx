@@ -99,7 +99,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 return null;
             }
 
-            if (propertyValue != null && !(propertyValue is T))
+            if (propertyValue != null && propertyValue is not T)
             {
                 // If o has a value, but it's not the right type
                 throw new InvalidCastException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.InvalidPropertyType, name, propertyValue.GetType(), typeof(T)));
