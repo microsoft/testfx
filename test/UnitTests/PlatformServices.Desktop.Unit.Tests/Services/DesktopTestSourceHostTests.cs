@@ -100,10 +100,9 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             sut.SetupHost();
 
             // Execute
-            var expectedObject = sut.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
             int newAppDomainId = currentAppDomainId + 10;  // not equal to currentAppDomainId
-            if (expectedObject != null)
+            if (sut.CreateInstanceForType(typeof(DummyClass), null) is DummyClass expectedObject)
             {
                 newAppDomainId = expectedObject.AppDomainId;
             }

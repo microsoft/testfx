@@ -25,14 +25,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 
                 if (testResults[i].TestFailureException != null)
                 {
-                    TestFailedException testException = testResults[i].TestFailureException as TestFailedException;
-
                     unitTestResult =
                         new UnitTestResult(
                             new TestFailedException(
                                 outcome,
                                 testResults[i].TestFailureException.TryGetMessage(),
-                                testException != null ? testException.StackTraceInformation : testResults[i].TestFailureException.TryGetStackTraceInformation()));
+                                testResults[i].TestFailureException is TestFailedException testException ? testException.StackTraceInformation : testResults[i].TestFailureException.TryGetStackTraceInformation()));
                 }
                 else
                 {

@@ -174,20 +174,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery
 
             testElement.Traits = traits.ToArray();
 
-            var cssIteration = this.reflectHelper.GetCustomAttribute(method, typeof(CssIterationAttribute)) as CssIterationAttribute;
-            if (cssIteration != null)
+            if (this.reflectHelper.GetCustomAttribute(method, typeof(CssIterationAttribute)) is CssIterationAttribute cssIteration)
             {
                 testElement.CssIteration = cssIteration.CssIteration;
             }
 
-            var cssProjectStructure = this.reflectHelper.GetCustomAttribute(method, typeof(CssProjectStructureAttribute)) as CssProjectStructureAttribute;
-            if (cssProjectStructure != null)
+            if (this.reflectHelper.GetCustomAttribute(method, typeof(CssProjectStructureAttribute)) is CssProjectStructureAttribute cssProjectStructure)
             {
                 testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
             }
 
-            var descriptionAttribute = this.reflectHelper.GetCustomAttribute(method, typeof(DescriptionAttribute)) as DescriptionAttribute;
-            if (descriptionAttribute != null)
+            if (this.reflectHelper.GetCustomAttribute(method, typeof(DescriptionAttribute)) is DescriptionAttribute descriptionAttribute)
             {
                 testElement.Description = descriptionAttribute.Description;
             }

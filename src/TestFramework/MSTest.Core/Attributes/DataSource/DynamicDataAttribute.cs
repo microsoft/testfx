@@ -124,9 +124,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                         this.dynamicDataDeclaringType.FullName));
             }
 
-            IEnumerable<object[]> enumerable = obj as IEnumerable<object[]>;
 
-            if (enumerable == null)
+            if (obj is not IEnumerable<object[]> enumerable)
             {
                 throw new ArgumentNullException(
                     string.Format(

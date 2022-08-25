@@ -190,15 +190,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     constructorParameters.Add(parameterType);
                     if (parameterType.IsArray)
                     {
-                        IEnumerable enumerable = parameter.Value as IEnumerable;
-                        if (enumerable != null)
+                        if (parameter.Value is IEnumerable enumerable)
                         {
                             ArrayList list = new ArrayList();
                             foreach (var item in enumerable)
                             {
-                                if (item is CustomAttributeTypedArgument)
+                                if (item is CustomAttributeTypedArgument argument)
                                 {
-                                    list.Add(((CustomAttributeTypedArgument)item).Value);
+                                    list.Add(argument.Value);
                                 }
                                 else
                                 {
@@ -259,13 +258,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     Attribute attributeInstance = CreateAttributeInstance(attribute);
                     if (attributeInstance != null)
                     {
-                        var attributeUsageAttribute =
-                            this.GetCustomAttributes(
+                        if (this.GetCustomAttributes(
                                 attributeInstance.GetType().GetTypeInfo(),
                                 typeof(AttributeUsageAttribute),
-                                true).FirstOrDefault() as AttributeUsageAttribute;
-
-                        if (attributeUsageAttribute != null && !attributeUsageAttribute.AllowMultiple)
+                                true).FirstOrDefault() is AttributeUsageAttribute attributeUsageAttribute && !attributeUsageAttribute.AllowMultiple)
                         {
                             if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))
                             {
