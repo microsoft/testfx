@@ -33,9 +33,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             {
                 // Swap last and at random position which can be last in which case we don't swap.
                 int position = random.Next(last);   // 0 .. last - 1
-                int temp = this.objects[last];
-                this.objects[last] = this.objects[position];
-                this.objects[position] = temp;
+                (this.objects[position], this.objects[last]) = (this.objects[last], this.objects[position]);
             }
         }
 
