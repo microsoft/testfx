@@ -21,10 +21,10 @@
 
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter">
-      <HintPath>$(ArtifactsBinDir)MSTest.CoreAdapter\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
+      <HintPath>$(ArtifactsBinDir)MSTest.TestAdapter\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
     </Reference>
     <Reference Include="System.Collections.Concurrent">
-      <HintPath>$(ArtifactsBinDir)MSTest.CoreAdapter\$(TargetFramework)\System.Collections.Concurrent.dll</HintPath>
+      <HintPath>$(ArtifactsBinDir)MSTest.TestAdapter\$(TargetFramework)\System.Collections.Concurrent.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices">
       <HintPath>$(ArtifactsBinDir)PlatformServices.Desktop\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
