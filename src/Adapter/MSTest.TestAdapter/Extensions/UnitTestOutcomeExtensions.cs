@@ -16,40 +16,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         /// <returns>The adapter's UnitTestOutcome object.</returns>
         public static UnitTestOutcome ToUnitTestOutcome(this UTF.UnitTestOutcome frameworkTestOutcome)
         {
-            UnitTestOutcome outcome = UnitTestOutcome.Passed;
-
-            switch (frameworkTestOutcome)
+            UnitTestOutcome outcome = frameworkTestOutcome switch
             {
-                case UTF.UnitTestOutcome.Failed:
-                    outcome = UnitTestOutcome.Failed;
-                    break;
-
-                case UTF.UnitTestOutcome.Inconclusive:
-                    outcome = UnitTestOutcome.Inconclusive;
-                    break;
-
-                case UTF.UnitTestOutcome.InProgress:
-                    outcome = UnitTestOutcome.InProgress;
-                    break;
-
-                case UTF.UnitTestOutcome.Passed:
-                    outcome = UnitTestOutcome.Passed;
-                    break;
-
-                case UTF.UnitTestOutcome.Timeout:
-                    outcome = UnitTestOutcome.Timeout;
-                    break;
-
-                case UTF.UnitTestOutcome.NotRunnable:
-                    outcome = UnitTestOutcome.NotRunnable;
-                    break;
-
-                case UTF.UnitTestOutcome.Unknown:
-                default:
-                    outcome = UnitTestOutcome.Error;
-                    break;
-            }
-
+                UTF.UnitTestOutcome.Failed => UnitTestOutcome.Failed,
+                UTF.UnitTestOutcome.Inconclusive => UnitTestOutcome.Inconclusive,
+                UTF.UnitTestOutcome.InProgress => UnitTestOutcome.InProgress,
+                UTF.UnitTestOutcome.Passed => UnitTestOutcome.Passed,
+                UTF.UnitTestOutcome.Timeout => UnitTestOutcome.Timeout,
+                UTF.UnitTestOutcome.NotRunnable => UnitTestOutcome.NotRunnable,
+                _ => UnitTestOutcome.Error,
+            };
             return outcome;
         }
 
