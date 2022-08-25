@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{1CEB5743-70BF-475E-91BC-0AEBD63835B7}</ProjectGuid>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests</AssemblyName>
     <NoWarn>1685</NoWarn>
@@ -39,38 +38,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
-      <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
-      <Name>PlatformServices.Interface</Name>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj">
-      <Project>{58bdd63d-5e58-4d23-bdf5-592e5e03d29d}</Project>
-      <Name>PlatformServices.Portable</Name>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj">
-      <Project>{98ba6d2c-1f3d-4636-8e1d-d4932b7a253d}</Project>
-      <Name>MSTest.TestAdapter</Name>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
-      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
-      <Name>MSTest.Core</Name>
-      <Aliases>FrameworkV2</Aliases>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj">
-      <Project>{6C9FE494-8315-4667-B3F6-75DC62A62319}</Project>
-      <Name>Extension.Core</Name>
-      <Aliases>FrameworkV2CoreExtension</Aliases>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj">
-      <Project>{f81c7549-e3a3-4770-ac3f-3bc7356e61e8}</Project>
-      <Name>MSTest.CoreAdapter.TestUtilities</Name>
-      <Private>True</Private>
-    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" Private="true" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj" Private="true" />
+    <ProjectReference Include="..\..\..\src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" Private="true" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Private="true" Aliases="FrameworkV2" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" Private="true" Aliases="FrameworkV2CoreExtension" />
+    <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj" Private="true" />
   </ItemGroup>
 
   <ItemGroup>

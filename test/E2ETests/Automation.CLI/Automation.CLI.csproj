@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{9C1219E0-E775-47F9-9236-63F03F774801}</ProjectGuid>
     <RootNamespace>Automation.CLI</RootNamespace>
     <AssemblyName>Automation.CLI</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
@@ -51,10 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" PrivateAssets="all">
-      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
-      <Name>MSTest.Core</Name>
-    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <Target Name="CopyMSBuildScriptsFiles" DependsOnTargets="CoreCompile" AfterTargets="CoreCompile">
