@@ -464,7 +464,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testCase = new TestCase("DummyTest", new System.Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
             UnitTestResult unitTestResult1 = new UnitTestResult() { DatarowIndex = 0, DisplayName = "DummyTest" };
             UnitTestResult unitTestResult2 = new UnitTestResult() { DatarowIndex = 1, DisplayName = "DummyTest" };
-            this.TestExecutionManager.SendTestResults(testCase, new UnitTestResult[] { unitTestResult1, unitTestResult2 }, default(DateTimeOffset), default(DateTimeOffset), this.frameworkHandle);
+            this.TestExecutionManager.SendTestResults(testCase, new UnitTestResult[] { unitTestResult1, unitTestResult2 }, default, default, this.frameworkHandle);
             Assert.AreEqual("DummyTest (Data Row 0)", this.frameworkHandle.TestDisplayNameList[0]);
             Assert.AreEqual("DummyTest (Data Row 1)", this.frameworkHandle.TestDisplayNameList[1]);
         }
