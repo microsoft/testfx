@@ -36,7 +36,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         [TestMethod]
         public void SetConfigurationFileShouldSetOMRedirectionIfConfigFileIsPresent()
         {
-            AppDomainSetup setup = new AppDomainSetup();
+            AppDomainSetup setup = new();
             var configFile = @"C:\temp\foo.dll.config";
 
             // Setup mocks.
@@ -61,7 +61,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
         [TestMethod]
         public void SetConfigurationFileShouldSetToCurrentDomainsConfigFileIfSourceDoesNotHaveAConfig()
         {
-            AppDomainSetup setup = new AppDomainSetup();
+            AppDomainSetup setup = new();
 
             AppDomainUtilities.SetConfigurationFile(setup, null);
 

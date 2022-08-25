@@ -23,10 +23,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                 (TestConfigurationSection)ConfigurationManager.GetSection(ConfigurationNames.SectionName);
 
             // If could not find RTM section, try Beta2 section name.
-            if (configSection == null)
-            {
-                configSection = (TestConfigurationSection)ConfigurationManager.GetSection(ConfigurationNames.Beta2SectionName);
-            }
+            configSection ??= (TestConfigurationSection)ConfigurationManager.GetSection(ConfigurationNames.Beta2SectionName);
 
             if (configSection == null)
             {

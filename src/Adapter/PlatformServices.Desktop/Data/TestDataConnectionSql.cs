@@ -110,7 +110,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         protected virtual SchemaMetaData[] GetSchemaMetaData()
         {
             // A bare minimum set of things that should vaguely work for all databases
-            SchemaMetaData data = new SchemaMetaData()
+            SchemaMetaData data = new()
             {
                 SchemaTable = "Tables",
                 SchemaColumn = null,
@@ -229,7 +229,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// <returns>An array of unquoted parts, or null if the name fails to conform</returns>
         public string[] SplitName(string name)
         {
-            List<string> parts = new List<string>();
+            List<string> parts = new();
 
             int here = 0;
             int end = name.Length;
@@ -322,7 +322,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         public string JoinAndQuoteName(string[] parts, bool fullyQuote)
         {
             int partCount = parts.Length;
-            StringBuilder result = new StringBuilder();
+            StringBuilder result = new();
 
             Debug.Assert(partCount > 0 && partCount < 4, "partCount should be 1,2 or 3.");
 
@@ -498,7 +498,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         public override List<string> GetDataTablesAndViews()
         {
             WriteDiagnostics("GetDataTablesAndViews");
-            List<string> tableNames = new List<string>();
+            List<string> tableNames = new();
             try
             {
                 string defaultSchema = this.GetDefaultSchema();
@@ -626,7 +626,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
                 if (columns != null)
                 {
-                    List<string> result = new List<string>();
+                    List<string> result = new();
 
                     // Add all the columns
                     foreach (DataRow columnRow in columns.Rows)
@@ -790,12 +790,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                     "select default_schema_name from sys.database_principals where name = user_name()" :
                     "select user_name()";
 
-                using (DbCommand cmd = this.Connection.CreateCommand())
-                {
-                    cmd.CommandText = sql;
-                    string defaultSchema = cmd.ExecuteScalar() as string;
-                    return defaultSchema;
-                }
+                using DbCommand cmd = this.Connection.CreateCommand();
+                cmd.CommandText = sql;
+                string defaultSchema = cmd.ExecuteScalar() as string;
+                return defaultSchema;
             }
             catch (Exception e)
             {
@@ -823,31 +821,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         public override DataTable ReadTable(string tableName, IEnumerable columns)
 #pragma warning restore SA1202 // Elements must be ordered by access
         {
-            using (DbDataAdapter dataAdapter = this.Factory.CreateDataAdapter())
-            using (DbCommand command = this.Factory.CreateCommand())
+            using DbDataAdapter dataAdapter = this.Factory.CreateDataAdapter();
+            using DbCommand command = this.Factory.CreateCommand();
+            // We need to escape bad characters in table name like [Sheet1$] in Excel.
+            // But if table name is quoted in terms of provider, don't touch it to avoid e.g. [dbo.tables.etc].
+            string quotedTableName = this.PrepareNameForSql(tableName);
+            if (EqtTrace.IsInfoEnabled)
             {
-                // We need to escape bad characters in table name like [Sheet1$] in Excel.
-                // But if table name is quoted in terms of provider, don't touch it to avoid e.g. [dbo.tables.etc].
-                string quotedTableName = this.PrepareNameForSql(tableName);
-                if (EqtTrace.IsInfoEnabled)
-                {
-                    EqtTrace.Info("ReadTable: data driven test: got table name from attribute: {0}", tableName);
-                    EqtTrace.Info("ReadTable: data driven test: will use table name: {0}", tableName);
-                }
-
-                command.Connection = this.Connection;
-                command.CommandText = string.Format(CultureInfo.InvariantCulture, "select {0} from {1}", this.GetColumnsSQL(columns), quotedTableName);
-
-                WriteDiagnostics("ReadTable: SQL Query: {0}", command.CommandText);
-                dataAdapter.SelectCommand = command;
-
-                DataTable table = new DataTable();
-                table.Locale = CultureInfo.InvariantCulture;
-                dataAdapter.Fill(table);
-
-                table.TableName = tableName;    // Make table name in the data set the same as original table name.
-                return table;
+                EqtTrace.Info("ReadTable: data driven test: got table name from attribute: {0}", tableName);
+                EqtTrace.Info("ReadTable: data driven test: will use table name: {0}", tableName);
             }
+
+            command.Connection = this.Connection;
+            command.CommandText = string.Format(CultureInfo.InvariantCulture, "select {0} from {1}", this.GetColumnsSQL(columns), quotedTableName);
+
+            WriteDiagnostics("ReadTable: SQL Query: {0}", command.CommandText);
+            dataAdapter.SelectCommand = command;
+
+            DataTable table = new();
+            table.Locale = CultureInfo.InvariantCulture;
+            dataAdapter.Fill(table);
+
+            table.TableName = tableName;    // Make table name in the data set the same as original table name.
+            return table;
         }
 
         private string GetColumnsSQL(IEnumerable columns)
@@ -855,7 +851,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             string result = null;
             if (columns != null)
             {
-                StringBuilder builder = new StringBuilder();
+                StringBuilder builder = new();
                 foreach (string columnName in columns)
                 {
                     if (builder.Length > 0)

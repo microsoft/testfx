@@ -40,11 +40,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <param name="moreData"> More data. </param>
         public DataRowAttribute(object data1, params object[] moreData)
         {
-            if (moreData == null)
-            {
-                // This actually means that the user wants to pass in a 'null' value to the test method.
-                moreData = new object[] { null };
-            }
+            // This actually means that the user wants to pass in a 'null' value to the test method.
+            moreData ??= new object[] { null };
 
             this.Data = new object[moreData.Length + 1];
             this.Data[0] = data1;

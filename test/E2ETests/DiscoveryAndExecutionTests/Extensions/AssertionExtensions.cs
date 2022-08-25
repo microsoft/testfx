@@ -114,25 +114,15 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
 
         private static string GetOutcomeAssertString(string testName, TestOutcome outcome)
         {
-            switch (outcome)
+            return outcome switch
             {
-                case TestOutcome.None:
-                    return $"\"{testName}\" does not have TestOutcome.None outcome.";
-
-                case TestOutcome.Passed:
-                    return $"\"{testName}\" does not appear in passed tests list.";
-
-                case TestOutcome.Failed:
-                    return $"\"{testName}\" does not appear in failed tests list.";
-
-                case TestOutcome.Skipped:
-                    return $"\"{testName}\" does not appear in skipped tests list.";
-
-                case TestOutcome.NotFound:
-                    return $"\"{testName}\" does not appear in not found tests list.";
-            }
-
-            return string.Empty;
+                TestOutcome.None => $"\"{testName}\" does not have TestOutcome.None outcome.",
+                TestOutcome.Passed => $"\"{testName}\" does not appear in passed tests list.",
+                TestOutcome.Failed => $"\"{testName}\" does not appear in failed tests list.",
+                TestOutcome.Skipped => $"\"{testName}\" does not appear in skipped tests list.",
+                TestOutcome.NotFound => $"\"{testName}\" does not appear in not found tests list.",
+                _ => string.Empty,
+            };
         }
 
         private static void AssertOutcomeCount(IEnumerable<TestResult> actual, TestOutcome expectedOutcome, int expectedCount)

@@ -265,7 +265,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void SendTestCasesShouldSendFilteredTestCasesIfValidFilterExpression()
         {
-            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithGetTestCaseFilter(() => new TestableTestCaseFilterExpression((p) => (p.DisplayName == "M1")));
+            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => new TestableTestCaseFilterExpression((p) => (p.DisplayName == "M1")));
 
             var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", false));
             var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));
@@ -285,7 +285,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void SendTestCasesShouldSendAllTestCasesIfNullFilterExpression()
         {
-            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithGetTestCaseFilter(() => null);
+            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => null);
 
             var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", false));
             var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));
@@ -305,7 +305,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void SendTestCasesShouldSendAllTestCasesIfGetTestCaseFilterNotPresent()
         {
-            TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithoutGetTestCaseFilter();
+            TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new();
 
             var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", false));
             var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));
@@ -325,7 +325,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void SendTestCasesShouldNotSendAnyTestCasesIfFilterError()
         {
-            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new TestableDiscoveryContextWithGetTestCaseFilter(() => { throw new TestPlatformFormatException("DummyException"); });
+            TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => { throw new TestPlatformFormatException("DummyException"); });
 
             var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", false));
             var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));

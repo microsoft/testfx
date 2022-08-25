@@ -106,16 +106,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <returns>Result of test method invocation.</returns>
         public virtual TestResult Invoke(object[] arguments)
         {
-            Stopwatch watch = new Stopwatch();
+            Stopwatch watch = new();
             TestResult result = null;
 
             // check if arguments are set for data driven tests
-            if (arguments == null)
-            {
-                arguments = this.Arguments;
-            }
+            arguments ??= this.Arguments;
 
-            using (LogMessageListener listener = new LogMessageListener(this.TestMethodOptions.CaptureDebugTraces))
+            using (LogMessageListener listener = new(this.TestMethodOptions.CaptureDebugTraces))
             {
                 watch.Start();
                 try
@@ -287,15 +284,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         // Expected Exception was thrown, so Pass the test
                         result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed;
                     }
-                    else if (result.TestFailureException == null)
-                    {
-                        // This block should not throw. If it needs to throw, then handling of
+                    else                         // This block should not throw. If it needs to throw, then handling of
                         // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
-                        result.TestFailureException = this.HandleMethodException(
+                        result.TestFailureException ??= this.HandleMethodException(
                             ex,
                             this.TestClassName,
                             this.TestMethodName);
-                    }
 
                     if (result.Outcome != TestTools.UnitTesting.UnitTestOutcome.Passed)
                     {
@@ -551,7 +545,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 if (realExceptionStackTraceInfo != null)
                 {
                     cleanupStackTrace.Append(realExceptionStackTraceInfo.ErrorStackTrace);
-                    cleanupStackTraceInfo = cleanupStackTraceInfo ?? realExceptionStackTraceInfo;
+                    cleanupStackTraceInfo ??= realExceptionStackTraceInfo;
                 }
 
                 var finalStackTraceInfo = cleanupStackTraceInfo != null
@@ -769,7 +763,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                     this.TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel();
                 }
 
-                TestResult timeoutResult = new TestResult() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, errorMessage) };
+                TestResult timeoutResult = new() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, errorMessage) };
                 return timeoutResult;
             }
         }

@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         /// <summary>
         /// The executor uri for this adapter.
         /// </summary>
-        internal static readonly Uri ExecutorUri = new Uri(ExecutorUriString);
+        internal static readonly Uri ExecutorUri = new(ExecutorUriString);
 
         #region Test Property registration
         internal static readonly TestProperty DescriptionProperty = TestProperty.Register("Description", DescriptionLabel, typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));

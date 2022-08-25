@@ -22,14 +22,14 @@ namespace MSTestAdapter.PlatformServices.Tests.Extensions
         [TestMethod]
         public void GetExceptionMessageShouldReturnExceptionMessage()
         {
-            Exception ex = new Exception("something bad happened");
+            Exception ex = new("something bad happened");
             Assert.AreEqual("something bad happened", ex.GetExceptionMessage());
         }
 
         [TestMethod]
         public void GetExceptionMessageShouldReturnInnerExceptionMessageAsWell()
         {
-            Exception ex = new Exception("something bad happened", new Exception("inner exception", new Exception("the real exception")));
+            Exception ex = new("something bad happened", new Exception("inner exception", new Exception("the real exception")));
             var expectedMessage = string.Concat(
                 "something bad happened",
                 Environment.NewLine,

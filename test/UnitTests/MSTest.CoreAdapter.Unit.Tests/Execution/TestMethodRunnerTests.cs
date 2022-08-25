@@ -216,7 +216,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
+            StringWriter writer = new(new StringBuilder("DummyTrace"));
             this.testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
 
             var results = testMethodRunner.Execute();
@@ -226,7 +226,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void ExecuteShouldNotFillInDebugAndTraceLogsFromRunningTestMethod()
         {
-            StringWriter writer = new StringWriter(new StringBuilder());
+            StringWriter writer = new(new StringBuilder());
             var testMethodInfo = new TestableTestmethodInfo(
                 this.methodInfo,
                 this.testClassInfo,
@@ -336,11 +336,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
-            UTF.DataSourceAttribute dataSourceAttribute = new UTF.DataSourceAttribute("DummyConnectionString", "DummyTableName");
+            UTF.DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
 
             var attribs = new Attribute[] { dataSourceAttribute };
 
-            TestDataSource testDataSource = new TestDataSource();
+            TestDataSource testDataSource = new();
 
             // Setup mocks
             this.testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(this.methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
@@ -357,7 +357,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldRunDataDrivenTestsWhenDataIsProvidedUsingDataRowAttribute()
         {
-            UTF.TestResult testResult = new UTF.TestResult
+            UTF.TestResult testResult = new()
             {
                 Outcome = UTF.UnitTestOutcome.Inconclusive
             };
@@ -367,7 +367,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             int dummyIntData = 2;
             string dummyStringData = "DummyString";
-            UTF.DataRowAttribute dataRowAttribute = new UTF.DataRowAttribute(
+            UTF.DataRowAttribute dataRowAttribute = new(
                 dummyIntData,
                 dummyStringData);
 
@@ -386,7 +386,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult());
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
-            UTF.DataSourceAttribute dataSourceAttribute = new UTF.DataSourceAttribute("DummyConnectionString", "DummyTableName");
+            UTF.DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
 
             var attribs = new Attribute[] { dataSourceAttribute };
 
@@ -408,10 +408,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => new UTF.TestResult());
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false);
 
-            UTF.DataSourceAttribute dataSourceAttribute = new UTF.DataSourceAttribute("DummyConnectionString", "DummyTableName");
+            UTF.DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
             int dummyIntData = 2;
             string dummyStringData = "DummyString";
-            UTF.DataRowAttribute dataRowAttribute = new UTF.DataRowAttribute(
+            UTF.DataRowAttribute dataRowAttribute = new(
                 dummyIntData,
                 dummyStringData);
 
@@ -432,13 +432,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldFillInDisplayNameWithDataRowDisplayNameIfProvidedForDataDrivenTests()
         {
-            UTF.TestResult testResult = new UTF.TestResult();
+            UTF.TestResult testResult = new();
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
 
             int dummyIntData = 2;
             string dummyStringData = "DummyString";
-            UTF.DataRowAttribute dataRowAttribute = new UTF.DataRowAttribute(dummyIntData, dummyStringData)
+            UTF.DataRowAttribute dataRowAttribute = new(dummyIntData, dummyStringData)
             {
                 DisplayName = "DataRowTestDisplayName"
             };
@@ -457,13 +457,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldFillInDisplayNameWithDataRowArgumentsIfNoDisplayNameIsProvidedForDataDrivenTests()
         {
-            UTF.TestResult testResult = new UTF.TestResult();
+            UTF.TestResult testResult = new();
             var testMethodInfo = new TestableTestmethodInfo(this.methodInfo, this.testClassInfo, this.testMethodOptions, () => testResult);
             var testMethodRunner = new TestMethodRunner(testMethodInfo, this.testMethod, this.testContextImplementation, false, this.mockReflectHelper.Object);
 
             int dummyIntData = 2;
             string dummyStringData = "DummyString";
-            UTF.DataRowAttribute dataRowAttribute = new UTF.DataRowAttribute(
+            UTF.DataRowAttribute dataRowAttribute = new(
                 dummyIntData,
                 dummyStringData);
 
@@ -481,7 +481,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunTestMethodShouldSetResultFilesIfPresentForDataDrivenTests()
         {
-            UTF.TestResult testResult = new UTF.TestResult
+            UTF.TestResult testResult = new()
             {
                 ResultFiles = new List<string>() { "C:\\temp.txt" }
             };
@@ -491,8 +491,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             int dummyIntData1 = 1;
             int dummyIntData2 = 2;
-            UTF.DataRowAttribute dataRowAttribute1 = new UTF.DataRowAttribute(dummyIntData1);
-            UTF.DataRowAttribute dataRowAttribute2 = new UTF.DataRowAttribute(dummyIntData2);
+            UTF.DataRowAttribute dataRowAttribute1 = new(dummyIntData1);
+            UTF.DataRowAttribute dataRowAttribute2 = new(dummyIntData2);
 
             var attribs = new Attribute[] { dataRowAttribute1, dataRowAttribute2 };
 

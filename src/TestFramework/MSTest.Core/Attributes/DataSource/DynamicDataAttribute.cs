@@ -86,10 +86,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         public IEnumerable<object[]> GetData(MethodInfo methodInfo)
         {
             // Check if the declaring type of test data is passed in constructor. If not, default to test method's class type.
-            if (this.dynamicDataDeclaringType == null)
-            {
-                this.dynamicDataDeclaringType = methodInfo.DeclaringType;
-            }
+            this.dynamicDataDeclaringType ??= methodInfo.DeclaringType;
 
             object obj = null;
 
@@ -127,9 +124,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
                         this.dynamicDataDeclaringType.FullName));
             }
 
-            IEnumerable<object[]> enumerable = obj as IEnumerable<object[]>;
 
-            if (enumerable == null)
+            if (obj is not IEnumerable<object[]> enumerable)
             {
                 throw new ArgumentNullException(
                     string.Format(

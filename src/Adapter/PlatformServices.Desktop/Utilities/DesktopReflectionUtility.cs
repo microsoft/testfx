@@ -66,8 +66,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
             }
             else
             {
-                List<object> nonUniqueAttributes = new List<object>();
-                Dictionary<string, object> uniqueAttributes = new Dictionary<string, object>();
+                List<object> nonUniqueAttributes = new();
+                Dictionary<string, object> uniqueAttributes = new();
 
                 var inheritanceThreshold = 10;
                 var inheritanceLevel = 0;
@@ -141,10 +141,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
             if (assembly.ReflectionOnly)
             {
-                List<CustomAttributeData> customAttributes = new List<CustomAttributeData>();
+                List<CustomAttributeData> customAttributes = new();
                 customAttributes.AddRange(CustomAttributeData.GetCustomAttributes(assembly));
 
-                List<object> attributesArray = new List<object>();
+                List<object> attributesArray = new();
 
                 foreach (var attribute in customAttributes)
                 {
@@ -182,23 +182,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 // instead of array. So convert it to array else constructor invoke will fail.
                 Type attributeType = Type.GetType(attributeData.Constructor.DeclaringType.AssemblyQualifiedName);
 
-                List<Type> constructorParameters = new List<Type>();
-                List<object> constructorArguments = new List<object>();
+                List<Type> constructorParameters = new();
+                List<object> constructorArguments = new();
                 foreach (var parameter in attributeData.ConstructorArguments)
                 {
                     Type parameterType = Type.GetType(parameter.ArgumentType.AssemblyQualifiedName);
                     constructorParameters.Add(parameterType);
                     if (parameterType.IsArray)
                     {
-                        IEnumerable enumerable = parameter.Value as IEnumerable;
-                        if (enumerable != null)
+                        if (parameter.Value is IEnumerable enumerable)
                         {
-                            ArrayList list = new ArrayList();
+                            ArrayList list = new();
                             foreach (var item in enumerable)
                             {
-                                if (item is CustomAttributeTypedArgument)
+                                if (item is CustomAttributeTypedArgument argument)
                                 {
-                                    list.Add(((CustomAttributeTypedArgument)item).Value);
+                                    list.Add(argument.Value);
                                 }
                                 else
                                 {
@@ -259,13 +258,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                     Attribute attributeInstance = CreateAttributeInstance(attribute);
                     if (attributeInstance != null)
                     {
-                        var attributeUsageAttribute =
-                            this.GetCustomAttributes(
+                        if (this.GetCustomAttributes(
                                 attributeInstance.GetType().GetTypeInfo(),
                                 typeof(AttributeUsageAttribute),
-                                true).FirstOrDefault() as AttributeUsageAttribute;
-
-                        if (attributeUsageAttribute != null && !attributeUsageAttribute.AllowMultiple)
+                                true).FirstOrDefault() is AttributeUsageAttribute attributeUsageAttribute && !attributeUsageAttribute.AllowMultiple)
                         {
                             if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))
                             {

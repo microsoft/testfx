@@ -121,7 +121,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
         internal IList<DeploymentItem> GetDeploymentItems(IEnumerable<TestCase> tests)
         {
-            List<DeploymentItem> allDeploymentItems = new List<DeploymentItem>();
+            List<DeploymentItem> allDeploymentItems = new();
             foreach (var test in tests)
             {
                 KeyValuePair<string, string>[] items = this.GetDeploymentItems(test);

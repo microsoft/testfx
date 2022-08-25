@@ -106,7 +106,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             // <CollectSourceInformation>true</CollectSourceInformation>
             // </RunConfiguration>
             // </Runsettings>
-            RunConfigurationSettings settings = new RunConfigurationSettings();
+            RunConfigurationSettings settings = new();
 
             // Read the first element in the section
             reader.ReadToNextElement();

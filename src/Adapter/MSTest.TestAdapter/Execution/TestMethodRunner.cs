@@ -115,7 +115,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             try
             {
-                using (LogMessageListener logListener = new LogMessageListener(this.captureDebugTraces))
+                using (LogMessageListener logListener = new(this.captureDebugTraces))
                 {
                     try
                     {
@@ -180,7 +180,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             Debug.Assert(this.test != null, "Test should not be null.");
             Debug.Assert(this.testMethodInfo.TestMethod != null, "Test method should not be null.");
 
-            List<UTF.TestResult> results = new List<UTF.TestResult>();
+            List<UTF.TestResult> results = new();
             var isDataDriven = false;
 
             if (this.testMethodInfo.TestMethodOptions.Executor != null)
@@ -245,7 +245,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
             if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
             {
                 isDataDriven = true;
-                Stopwatch watch = new Stopwatch();
+                Stopwatch watch = new();
                 watch.Start();
 
                 try

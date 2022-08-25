@@ -46,11 +46,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void TestAssemblyInfoAssemblyInitializeMethodThrowsForMultipleAssemblyInitializeMethods()
         {
-            Action action = () =>
-                {
-                    this.testAssemblyInfo.AssemblyInitializeMethod = this.dummyMethodInfo;
-                    this.testAssemblyInfo.AssemblyInitializeMethod = this.dummyMethodInfo;
-                };
+            void action()
+            {
+                this.testAssemblyInfo.AssemblyInitializeMethod = this.dummyMethodInfo;
+                this.testAssemblyInfo.AssemblyInitializeMethod = this.dummyMethodInfo;
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TypeInspectionException));
         }
@@ -58,11 +58,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void TestAssemblyInfoAssemblyCleanupMethodThrowsForMultipleAssemblyCleanupMethods()
         {
-            Action action = () =>
-                {
-                    this.testAssemblyInfo.AssemblyCleanupMethod = this.dummyMethodInfo;
-                    this.testAssemblyInfo.AssemblyCleanupMethod = this.dummyMethodInfo;
-                };
+            void action()
+            {
+                this.testAssemblyInfo.AssemblyCleanupMethod = this.dummyMethodInfo;
+                this.testAssemblyInfo.AssemblyCleanupMethod = this.dummyMethodInfo;
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TypeInspectionException));
         }
@@ -112,7 +112,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             this.testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-            Action action = () => this.testAssemblyInfo.RunAssemblyInitialize(null);
+            void action() => this.testAssemblyInfo.RunAssemblyInitialize(null);
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(NullReferenceException));
         }

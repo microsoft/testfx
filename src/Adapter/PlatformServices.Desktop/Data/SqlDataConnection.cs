@@ -28,7 +28,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         protected override SchemaMetaData[] GetSchemaMetaData()
         {
-            SchemaMetaData data = new SchemaMetaData()
+            SchemaMetaData data = new()
             {
                 SchemaTable = "Tables",
                 SchemaColumn = "TABLE_SCHEMA",
@@ -42,7 +42,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         private static string FixConnectionString(string connectionString, List<string> dataFolders)
         {
-            SqlConnectionStringBuilder sqlBuilder = new SqlConnectionStringBuilder(connectionString);
+            SqlConnectionStringBuilder sqlBuilder = new(connectionString);
 
             string attachedFile = sqlBuilder.AttachDBFilename;
 

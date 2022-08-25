@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         [TestMethod]
         public void GetAndClearDiagnosticMessagesShouldReturnTestContextMessages()
         {
-            Mock<ITestContext> mockTestContext = new Mock<ITestContext>();
+            Mock<ITestContext> mockTestContext = new();
 
             mockTestContext.Setup(tc => tc.GetDiagnosticMessages()).Returns("foo");
 
@@ -31,7 +31,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         [TestMethod]
         public void GetAndClearDiagnosticMessagesShouldClearContextMessages()
         {
-            Mock<ITestContext> mockTestContext = new Mock<ITestContext>();
+            Mock<ITestContext> mockTestContext = new();
             var message = "foobar";
             mockTestContext.Setup(tc => tc.GetDiagnosticMessages()).Returns(() => { return message; });
             mockTestContext.Setup(tc => tc.ClearDiagnosticMessages()).Callback(() => message = string.Empty);

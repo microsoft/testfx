@@ -107,8 +107,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
         /// <returns> True if the two objects are equal. </returns>
         public override bool Equals(object obj)
         {
-            DeploymentItem otherItem = obj as DeploymentItem;
-            if (otherItem == null)
+            if (obj is not DeploymentItem otherItem)
             {
                 return false;
             }

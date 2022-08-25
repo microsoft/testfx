@@ -40,7 +40,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
                 actionThreadID = Thread.CurrentThread.ManagedThreadId;
             }
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            CancellationTokenSource tokenSource = new();
             Assert.IsTrue(this.asyncOperations.Execute(action, 1000, tokenSource.Token));
             Assert.AreNotEqual(Thread.CurrentThread.ManagedThreadId, actionThreadID);
         }
@@ -48,12 +48,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void ExecuteShouldReturnFalseIftheActionTimesout()
         {
-            void action()
-            {
-                Task.Delay(100).Wait();
-            }
+            static void action() => Task.Delay(100).Wait();
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            CancellationTokenSource tokenSource = new();
             Assert.IsFalse(this.asyncOperations.Execute(action, 1, tokenSource.Token));
         }
 
@@ -61,10 +58,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         public void ExecuteWithAbortSafetyShouldInvokeTheAction()
         {
             var isInvoked = false;
-            void action()
-            {
-                isInvoked = true;
-            }
+            void action() => isInvoked = true;
 
             this.asyncOperations.ExecuteWithAbortSafety(action);
 

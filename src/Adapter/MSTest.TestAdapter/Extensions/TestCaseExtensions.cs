@@ -75,7 +75,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
         {
             var isAsync = (testCase.GetPropertyValue(Constants.AsyncTestProperty) as bool?) ?? false;
             var testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
-            var declaringClassName = testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) as string;
             var name = testCase.GetTestName(testClassName);
 
             TestMethod testMethod;
@@ -99,12 +98,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions
 
             testMethod.DisplayName = testCase.DisplayName;
 
-            if (declaringClassName != null && declaringClassName != testClassName)
+            if (testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) is string declaringClassName && declaringClassName != testClassName)
             {
                 testMethod.DeclaringClassFullName = declaringClassName;
             }
 
-            UnitTestElement testElement = new UnitTestElement(testMethod)
+            UnitTestElement testElement = new(testMethod)
             {
                 IsAsync = isAsync,
                 TestCategory = testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[],

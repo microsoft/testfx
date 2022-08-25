@@ -41,14 +41,14 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         public void GetDataShouldReadDataFromGivenDataSource()
         {
             var methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
-            TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new TestFrameworkV2.DataSourceAttribute(
+            TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new(
                 "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", TestFrameworkV2.DataAccessMethod.Sequential);
 
             this.mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
                 .Returns(new TestFrameworkV2.DataSourceAttribute[] { dataSourceAttribute });
             this.mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
-            TestDataSource testDataSource = new TestDataSource();
+            TestDataSource testDataSource = new();
             IEnumerable<object> dataRows = testDataSource.GetData(this.mockTestMethodInfo.Object, this.mockTestContext.Object);
 
             foreach (DataRow dataRow in dataRows)
@@ -61,14 +61,14 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         public void GetDataShouldSetDataConnectionInTestContextObject()
         {
             var methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
-            TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new TestFrameworkV2.DataSourceAttribute(
+            TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new(
                 "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", TestFrameworkV2.DataAccessMethod.Sequential);
 
             this.mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
                 .Returns(new TestFrameworkV2.DataSourceAttribute[] { dataSourceAttribute });
             this.mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
-            TestDataSource testDataSource = new TestDataSource();
+            TestDataSource testDataSource = new();
             IEnumerable<object> dataRows = testDataSource.GetData(this.mockTestMethodInfo.Object, this.mockTestContext.Object);
 
             this.mockTestContext.Verify(tc => tc.SetDataConnection(It.IsAny<object>()), Times.Once);

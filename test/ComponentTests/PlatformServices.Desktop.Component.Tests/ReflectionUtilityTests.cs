@@ -32,7 +32,7 @@ namespace PlatformServices.Desktop.ComponentTests
         /// Dictionary of Assemblies discovered to date. Must be locked as it may
         /// be accessed in a multi-threaded context.
         /// </summary>
-        private Dictionary<string, Assembly> resolvedAssemblies = new Dictionary<string, Assembly>();
+        private Dictionary<string, Assembly> resolvedAssemblies = new();
 
         public ReflectionUtilityTests()
         {

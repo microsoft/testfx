@@ -70,11 +70,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
         {
             if (string.IsNullOrWhiteSpace(settingsXml))
             {
-                return default(T);
+                return default;
             }
 
             // use XmlReader to avoid loading of the plugins in client code (mainly from VS).
-            using (StringReader stringReader = new StringReader(settingsXml))
+            using (StringReader stringReader = new(settingsXml))
             {
                 XmlReader reader = XmlReader.Create(stringReader, ReaderSettings);
 
@@ -97,7 +97,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 }
             }
 
-            return default(T);
+            return default;
         }
     }
 }

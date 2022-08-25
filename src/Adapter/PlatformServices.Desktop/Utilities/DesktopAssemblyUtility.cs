@@ -189,7 +189,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: start.");
 
-            AppDomainSetup setupInfo = new AppDomainSetup();
+            AppDomainSetup setupInfo = new();
             var dllDirectory = Path.GetDirectoryName(Path.GetFullPath(assemblyPath));
             setupInfo.ApplicationBase = dllDirectory;
 
@@ -215,32 +215,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                 EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
 
                 // This has to be LoadFrom, otherwise we will have to use AssemblyResolver to find self.
-                using (
-                    AssemblyResolver resolver =
+                using AssemblyResolver resolver =
                         (AssemblyResolver)AppDomainUtilities.CreateInstance(
                                                     appDomain,
                                                     assemblyResolverType,
-                                                    new object[] { this.GetResolutionPaths() }))
+                                                    new object[] { this.GetResolutionPaths() });
+                // This has to be Load, otherwise Serialization of argument types will not work correctly.
+                AssemblyLoadWorker worker =
+                    (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
+
+                EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
+
+                var allDependencies = worker.GetFullPathToDependentAssemblies(assemblyPath, out warnings);
+                var dependenciesFromDllDirectory = new List<string>();
+                var dllDirectoryUppercase = dllDirectory.ToUpperInvariant();
+                foreach (var dependency in allDependencies)
                 {
-                    // This has to be Load, otherwise Serialization of argument types will not work correctly.
-                    AssemblyLoadWorker worker =
-                        (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);
-
-                    EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: loaded the worker.");
-
-                    var allDependencies = worker.GetFullPathToDependentAssemblies(assemblyPath, out warnings);
-                    var dependenciesFromDllDirectory = new List<string>();
-                    var dllDirectoryUppercase = dllDirectory.ToUpperInvariant();
-                    foreach (var dependency in allDependencies)
+                    if (dependency.ToUpperInvariant().Contains(dllDirectoryUppercase))
                     {
-                        if (dependency.ToUpperInvariant().Contains(dllDirectoryUppercase))
-                        {
-                            dependenciesFromDllDirectory.Add(dependency);
-                        }
+                        dependenciesFromDllDirectory.Add(dependency);
                     }
-
-                    return dependenciesFromDllDirectory.ToArray();
                 }
+
+                return dependenciesFromDllDirectory.ToArray();
             }
             finally
             {
@@ -261,8 +258,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
             // Use dictionary to ensure we get a list of unique paths, but keep a list as the
             // dictionary does not guarantee order.
-            Dictionary<string, object> resolutionPathsDictionary = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-            List<string> resolutionPaths = new List<string>();
+            Dictionary<string, object> resolutionPathsDictionary = new(StringComparer.OrdinalIgnoreCase);
+            List<string> resolutionPaths = new();
 
             // Add the path of the currently executing assembly (use Uri(CodeBase).LocalPath as Location can be on shadow dir).
             string currentlyExecutingAssembly = Path.GetDirectoryName(Path.GetFullPath(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath));

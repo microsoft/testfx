@@ -38,10 +38,7 @@ namespace MSTest.Extensibility.Samples
         /// <returns>The class that contains the assert methods for this grouping.</returns>
         public static AssertIs Is(this Assert assert)
         {
-            if (assertis == null)
-            {
-                assertis = new AssertIs();
-            }
+            assertis ??= new AssertIs();
 
             return assertis;
         }

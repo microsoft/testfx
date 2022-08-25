@@ -321,22 +321,12 @@ namespace DiscoveryAndExecutionTests.Utilities
             ParameterExpression parameter = Expression.Parameter(typeof(Func<string, object>), "p");
 
             parameterValueProvider = Expression.Call(CachedGetMultiValueMethod, Expression.Invoke(parameter, parameterName));
-
-            MethodInfo comparer;
-            switch (op.Last())
+            MethodInfo comparer = op.Last() switch
             {
-                case '=':
-                    comparer = CachedEqualsComparerMethod;
-                    break;
-
-                case '~':
-                    comparer = CachedContainsComparerMethod;
-                    break;
-
-                default:
-                    throw new FormatException($"Invalid operator in {conditionString}: {condition[1]}");
-            }
-
+                '=' => CachedEqualsComparerMethod,
+                '~' => CachedContainsComparerMethod,
+                _ => throw new FormatException($"Invalid operator in {conditionString}: {condition[1]}"),
+            };
             expression = Expression.Call(comparer, parameterValueProvider, expectedValue);
 
             if (op[0] == '!')

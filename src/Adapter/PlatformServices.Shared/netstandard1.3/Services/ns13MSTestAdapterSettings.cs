@@ -131,7 +131,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             bool disableAppDomain = false;
             if (!string.IsNullOrEmpty(settingsXml))
             {
-                StringReader stringReader = new StringReader(settingsXml);
+                StringReader stringReader = new(settingsXml);
                 XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
 
                 if (reader.ReadToFollowing("DisableAppDomain"))
@@ -152,7 +152,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <returns>RecursiveDirectoryPath information.</returns>
         public List<RecursiveDirectoryPath> GetDirectoryListWithRecursiveProperty(string baseDirectory)
         {
-            List<RecursiveDirectoryPath> directoriesList = new List<RecursiveDirectoryPath>();
+            List<RecursiveDirectoryPath> directoriesList = new();
 
             foreach (RecursiveDirectoryPath recPath in this.SearchDirectories)
             {

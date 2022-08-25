@@ -24,7 +24,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     public class GenericParameterHelper : IComparable, IEnumerable
     {
         #region Private Fields
-        private static readonly Random Randomizer = new Random();
+        private static readonly Random Randomizer = new();
         private int data;
         private IList ienumerableStore;
 
@@ -150,7 +150,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <returns>The cloned object.</returns>
         public object Clone()
         {
-            GenericParameterHelper clone = new GenericParameterHelper { data = this.data };
+            GenericParameterHelper clone = new() { data = this.data };
             return clone;
         }
 

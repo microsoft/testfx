@@ -129,9 +129,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         {
             string runSettingxml =
                 "<DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
+            MSTestSettingsProvider mstestSettingsProvider = new();
             mstestSettingsProvider.Load(reader);
 
             var testCase = this.GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
@@ -218,9 +218,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
 
             string runSettingxml =
                  "<DeploymentEnabled>False</DeploymentEnabled>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
+            MSTestSettingsProvider mstestSettingsProvider = new();
             mstestSettingsProvider.Load(reader);
 
             // Deployment should not happen
@@ -242,9 +242,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
 
             string runSettingxml =
                 "<DeploymentEnabled>False</DeploymentEnabled>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
+            MSTestSettingsProvider mstestSettingsProvider = new();
             mstestSettingsProvider.Load(reader);
 
             // Deployment should not happen
@@ -266,9 +266,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
 
             string runSettingxml =
                 "<DeploymentEnabled>True</DeploymentEnabled>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
+            MSTestSettingsProvider mstestSettingsProvider = new();
             mstestSettingsProvider.Load(reader);
 
             // Deployment should not happen
@@ -298,9 +298,9 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
 
             string runSettingxml =
                 "<DeploymentEnabled>True</DeploymentEnabled>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-            MSTestSettingsProvider mstestSettingsProvider = new MSTestSettingsProvider();
+            MSTestSettingsProvider mstestSettingsProvider = new();
             mstestSettingsProvider.Load(reader);
 
             // Deployment should happen

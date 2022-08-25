@@ -37,11 +37,11 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [TestFrameworkV1.TestMethod]
         public void GetDataShoudThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()
         {
-            Action action = () =>
-                {
-                    this.dynamicDataAttribute = new DynamicDataAttribute("ABC");
-                    this.dynamicDataAttribute.GetData(this.testMethodInfo);
-                };
+            void action()
+            {
+                this.dynamicDataAttribute = new DynamicDataAttribute("ABC");
+                this.dynamicDataAttribute.GetData(this.testMethodInfo);
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
@@ -89,12 +89,12 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [TestFrameworkV1.TestMethod]
         public void GetDataShouldThrowExceptionIfPropertyReturnsNull()
         {
-            Action action = () =>
+            void action()
             {
                 var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod4");
                 this.dynamicDataAttribute = new DynamicDataAttribute("NullProperty", typeof(DummyTestClass));
                 this.dynamicDataAttribute.GetData(methodInfo);
-            };
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
@@ -102,12 +102,12 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [TestFrameworkV1.TestMethod]
         public void GetDataShouldThrowExceptionIfPropertyReturnsEmpty()
         {
-            Action action = () =>
+            void action()
             {
                 var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod5");
                 this.dynamicDataAttribute = new DynamicDataAttribute("EmptyProperty", typeof(DummyTestClass));
                 this.dynamicDataAttribute.GetData(methodInfo);
-            };
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentException));
         }
@@ -115,12 +115,12 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [TestFrameworkV1.TestMethod]
         public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType()
         {
-            Action action = () =>
+            void action()
             {
                 var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod3");
                 this.dynamicDataAttribute = new DynamicDataAttribute("WrongDataTypeProperty", typeof(DummyTestClass));
                 this.dynamicDataAttribute.GetData(methodInfo);
-            };
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
@@ -158,13 +158,13 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [TestFrameworkV1.TestMethod]
         public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodMissingParameters()
         {
-            Action action = () =>
+            void action()
             {
                 var data = new object[] { 1, 2, 3 };
 
                 this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithMissingParameters";
                 var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
-            };
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
@@ -172,13 +172,13 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [TestFrameworkV1.TestMethod]
         public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidReturnType()
         {
-            Action action = () =>
+            void action()
             {
                 var data = new object[] { 1, 2, 3 };
 
                 this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidReturnType";
                 var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
-            };
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
@@ -186,13 +186,13 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [TestFrameworkV1.TestMethod]
         public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidFirstParameterType()
         {
-            Action action = () =>
+            void action()
             {
                 var data = new object[] { 1, 2, 3 };
 
                 this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidFirstParameterType";
                 var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
-            };
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
@@ -200,13 +200,13 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [TestFrameworkV1.TestMethod]
         public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidSecondParameterType()
         {
-            Action action = () =>
+            void action()
             {
                 var data = new object[] { 1, 2, 3 };
 
                 this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidSecondParameterType";
                 var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
-            };
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
@@ -214,13 +214,13 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [TestFrameworkV1.TestMethod]
         public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodNonStatic()
         {
-            Action action = () =>
+            void action()
             {
                 var data = new object[] { 1, 2, 3 };
 
                 this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameNonStatic";
                 var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
-            };
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
@@ -228,13 +228,13 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [TestFrameworkV1.TestMethod]
         public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodPrivate()
         {
-            Action action = () =>
+            void action()
             {
                 var data = new object[] { 1, 2, 3 };
 
                 this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNamePrivate";
                 var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
-            };
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }
@@ -242,13 +242,13 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
         [TestFrameworkV1.TestMethod]
         public void GetDisplayNameShouldThrowExceptionWithMissingDynamicDataDisplayNameMethod()
         {
-            Action action = () =>
+            void action()
             {
                 var data = new object[] { 1, 2, 3 };
 
                 this.dynamicDataAttribute.DynamicDataDisplayName = "MissingCustomDynamicDataDisplayName";
                 var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
-            };
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
         }

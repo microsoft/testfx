@@ -44,7 +44,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 
         public override List<string> GetDataTablesAndViews()
         {
-            List<string> tableNames = new List<string>(1);
+            List<string> tableNames = new(1);
             tableNames.Add(this.TableName);
             return tableNames;
         }
@@ -59,7 +59,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
                 DataTable table = this.ReadTable(tableName, null);
                 if (table != null)
                 {
-                    List<string> columnNames = new List<string>();
+                    List<string> columnNames = new();
                     foreach (DataColumn column in table.Columns)
                     {
                         columnNames.Add(column.ColumnName);
@@ -88,78 +88,76 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
             string fullPath = this.FixPath(this.fileName) ?? Path.GetFullPath(this.fileName);
 
             // We can map simplified CSVs to an OLEDB/Text connection, then proceed as normal
-            using (OleDbConnection connection = new OleDbConnection())
-            using (OleDbDataAdapter dataAdapter = new OleDbDataAdapter())
-            using (OleDbCommandBuilder commandBuilder = new OleDbCommandBuilder())
-            using (OleDbCommand command = new OleDbCommand())
+            using OleDbConnection connection = new();
+            using OleDbDataAdapter dataAdapter = new();
+            using OleDbCommandBuilder commandBuilder = new();
+            using OleDbCommand command = new();
+            // We have to use the name of the folder which contains the CSV file in the connection string
+            // If target platform is x64, then use CsvConnectionTemplate64 connection string.
+            if (IntPtr.Size == 8)
             {
-                // We have to use the name of the folder which contains the CSV file in the connection string
-                // If target platform is x64, then use CsvConnectionTemplate64 connection string.
-                if (IntPtr.Size == 8)
+                connection.ConnectionString = string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate64, Path.GetDirectoryName(fullPath));
+            }
+            else
+            {
+                connection.ConnectionString = string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate, Path.GetDirectoryName(fullPath));
+            }
+
+            WriteDiagnostics("Connection String: {0}", connection.ConnectionString);
+
+            // We have to open the connection now, before we try to quote
+            // the table name, otherwise QuoteIdentifier fails (for OleDb, go figure!)
+            // The connection will get closed when we dispose of it
+            connection.Open();
+
+            string quotedTableName = commandBuilder.QuoteIdentifier(tableName, connection);
+
+            command.Connection = connection;
+
+            string topClause;
+            if (maxRows >= 0)
+            {
+                topClause = string.Format(CultureInfo.InvariantCulture, " top {0}", maxRows.ToString(NumberFormatInfo.InvariantInfo));
+            }
+            else
+            {
+                topClause = string.Empty;
+            }
+
+            string columnsClause;
+            if (columns != null)
+            {
+                StringBuilder builder = new();
+                foreach (string columnName in columns)
                 {
-                    connection.ConnectionString = string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate64, Path.GetDirectoryName(fullPath));
-                }
-                else
-                {
-                    connection.ConnectionString = string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate, Path.GetDirectoryName(fullPath));
-                }
-
-                WriteDiagnostics("Connection String: {0}", connection.ConnectionString);
-
-                // We have to open the connection now, before we try to quote
-                // the table name, otherwise QuoteIdentifier fails (for OleDb, go figure!)
-                // The connection will get closed when we dispose of it
-                connection.Open();
-
-                string quotedTableName = commandBuilder.QuoteIdentifier(tableName, connection);
-
-                command.Connection = connection;
-
-                string topClause;
-                if (maxRows >= 0)
-                {
-                    topClause = string.Format(CultureInfo.InvariantCulture, " top {0}", maxRows.ToString(NumberFormatInfo.InvariantInfo));
-                }
-                else
-                {
-                    topClause = string.Empty;
-                }
-
-                string columnsClause;
-                if (columns != null)
-                {
-                    StringBuilder builder = new StringBuilder();
-                    foreach (string columnName in columns)
+                    if (builder.Length > 0)
                     {
-                        if (builder.Length > 0)
-                        {
-                            builder.Append(',');
-                        }
-
-                        builder.Append(commandBuilder.QuoteIdentifier(columnName, connection));
+                        builder.Append(',');
                     }
 
-                    columnsClause = builder.ToString();
-                    if (columnsClause.Length == 0)
-                    {
-                        columnsClause = "*";
-                    }
+                    builder.Append(commandBuilder.QuoteIdentifier(columnName, connection));
                 }
-                else
+
+                columnsClause = builder.ToString();
+                if (columnsClause.Length == 0)
                 {
                     columnsClause = "*";
                 }
-
-                command.CommandText = string.Format(CultureInfo.InvariantCulture, "select {0} {1} from {2}", topClause, columnsClause, quotedTableName);
-                WriteDiagnostics("Query: " + command.CommandText);
-
-                dataAdapter.SelectCommand = command;
-
-                DataTable table = new DataTable();
-                table.Locale = CultureInfo.InvariantCulture;
-                dataAdapter.Fill(table);
-                return table;
             }
+            else
+            {
+                columnsClause = "*";
+            }
+
+            command.CommandText = string.Format(CultureInfo.InvariantCulture, "select {0} {1} from {2}", topClause, columnsClause, quotedTableName);
+            WriteDiagnostics("Query: " + command.CommandText);
+
+            dataAdapter.SelectCommand = command;
+
+            DataTable table = new();
+            table.Locale = CultureInfo.InvariantCulture;
+            dataAdapter.Fill(table);
+            return table;
         }
 
         public override DataTable ReadTable(string tableName, IEnumerable columns)

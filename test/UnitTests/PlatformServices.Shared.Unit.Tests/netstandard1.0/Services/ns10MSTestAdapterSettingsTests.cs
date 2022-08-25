@@ -164,7 +164,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         {
             string baseDirectory = @"C:\unitTesting";
 
-            List<RecursiveDirectoryPath> expectedResult = new List<RecursiveDirectoryPath>();
+            List<RecursiveDirectoryPath> expectedResult = new();
             expectedResult.Add(new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true));
             expectedResult.Add(new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false));
 
@@ -202,7 +202,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                     <CleanUpCommunicationChannels>false</CleanUpCommunicationChannels>
                   </MSTestV2>";
 
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
 
@@ -221,11 +221,11 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                     </AssemblyResolution>
                   </MSTestV2>";
 
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
 
-            Action shouldThrowException = () => MSTestAdapterSettings.ToSettings(reader);
+            void shouldThrowException() => MSTestAdapterSettings.ToSettings(reader);
 
             ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(SettingsException));
         }
@@ -240,7 +240,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string runSettingxml =
                 @"<MSTestV2>
                   </MSTestV2>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
@@ -254,7 +254,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 @"<MSTestV2>
                         <DeploymentEnabled>False</DeploymentEnabled>
                   </MSTestV2>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
@@ -271,7 +271,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             string runSettingxml =
                 @"<MSTestV2>
                   </MSTestV2>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
@@ -285,7 +285,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 @"<MSTestV2>
                      <DeployTestSourceDependencies>False</DeployTestSourceDependencies>
                   </MSTestV2>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
@@ -299,7 +299,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
                 @"<MSTestV2>
                      <DeployTestSourceDependencies>True</DeployTestSourceDependencies>
                   </MSTestV2>";
-            StringReader stringReader = new StringReader(runSettingxml);
+            StringReader stringReader = new(runSettingxml);
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
             MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);

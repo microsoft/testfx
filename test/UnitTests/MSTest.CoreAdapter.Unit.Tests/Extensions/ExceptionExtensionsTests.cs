@@ -40,7 +40,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
         [TestMethod]
         public void ExceptionGetInnerExceptionOrDefaultShouldNotThrowForNullException()
         {
-            Action action = () => ((Exception)null).GetInnerExceptionOrDefault();
+            static void action() => ((Exception)null).GetInnerExceptionOrDefault();
 
             action();
         }

@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         /// - the key (provider name is case-sensitive).
         /// - other providers can be registered using RegisterProvider (per app domain).
         /// </summary>
-        private static Dictionary<string, TestDataConnectionFactory> specializedProviders = new Dictionary<string, TestDataConnectionFactory>
+        private static Dictionary<string, TestDataConnectionFactory> specializedProviders = new()
         {
             // The XML case is quite unlike all others, as there is no real DB connection at all!
             { XmlProvider, new XmlTestDataConnectionFactory() },

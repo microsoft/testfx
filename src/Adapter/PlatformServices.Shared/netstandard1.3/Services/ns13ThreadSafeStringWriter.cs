@@ -17,12 +17,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
 #if DEBUG
         private static readonly ThreadSafeStringBuilder AllOutput = new ThreadSafeStringBuilder();
 #endif
-        private static readonly AsyncLocal<Dictionary<string, ThreadSafeStringBuilder>> State = new AsyncLocal<Dictionary<string, ThreadSafeStringBuilder>>();
+        private static readonly AsyncLocal<Dictionary<string, ThreadSafeStringBuilder>> State = new();
 
         // This static lock guards access to the state and getting values from dictionary. There can be multiple different instances of ThreadSafeStringWriter
         // accessing the state at the same time, and we need to give them the correct state for their async context. Non-concurrent dictionary is used to store the
         // state because we need to lock around it anyway, to ensure that the State is populated, but not overwritten by every new instance of ThreadSafeStringWriter.
-        private static readonly object StaticLockObject = new object();
+        private static readonly object StaticLockObject = new();
         private readonly string outputType;
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
             catch (ObjectDisposedException)
             {
-                return default(string);
+                return default;
             }
         }
 
@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
             catch (ObjectDisposedException)
             {
-                return default(string);
+                return default;
             }
         }
 
@@ -183,8 +183,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// </summary>
         private class ThreadSafeStringBuilder
         {
-            private readonly StringBuilder stringBuilder = new StringBuilder();
-            private readonly object instanceLockObject = new object();
+            private readonly StringBuilder stringBuilder = new();
+            private readonly object instanceLockObject = new();
 
             public void Append(string value)
             {

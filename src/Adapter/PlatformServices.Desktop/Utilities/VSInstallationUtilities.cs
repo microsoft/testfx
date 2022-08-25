@@ -46,8 +46,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
                         vsInstallPath = null;
 
                         // Use the Setup API to find the installation folder for currently running VS instance.
-                        var setupConfiguration = new SetupConfiguration() as ISetupConfiguration;
-                        if (setupConfiguration != null)
+                        if (new SetupConfiguration() is ISetupConfiguration setupConfiguration)
                         {
                             var currentConfiguration = setupConfiguration.GetInstanceForCurrentProcess();
                             var currentInstallationPath = currentConfiguration.GetInstallationPath();

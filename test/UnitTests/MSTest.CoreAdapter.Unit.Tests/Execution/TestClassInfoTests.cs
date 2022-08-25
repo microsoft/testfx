@@ -110,11 +110,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void TestClassInfoClassInitializeMethodSetShouldThrowForMultipleClassInitializeMethods()
         {
-            Action action = () =>
-                {
-                    this.testClassInfo.ClassInitializeMethod = this.testClassType.GetMethods().First();
-                    this.testClassInfo.ClassInitializeMethod = this.testClassType.GetMethods().First();
-                };
+            void action()
+            {
+                this.testClassInfo.ClassInitializeMethod = this.testClassType.GetMethods().First();
+                this.testClassInfo.ClassInitializeMethod = this.testClassType.GetMethods().First();
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TypeInspectionException));
         }
@@ -122,11 +122,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void TestClassInfoClassCleanupMethodSetShouldThrowForMultipleClassCleanupMethods()
         {
-            Action action = () =>
-                {
-                    this.testClassInfo.ClassCleanupMethod = this.testClassType.GetMethods().First();
-                    this.testClassInfo.ClassCleanupMethod = this.testClassType.GetMethods().First();
-                };
+            void action()
+            {
+                this.testClassInfo.ClassCleanupMethod = this.testClassType.GetMethods().First();
+                this.testClassInfo.ClassCleanupMethod = this.testClassType.GetMethods().First();
+            }
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TypeInspectionException));
         }
@@ -243,7 +243,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
             this.testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-            Action action = () => this.testClassInfo.RunClassInitialize(null);
+            void action() => this.testClassInfo.RunClassInitialize(null);
 
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(NullReferenceException));
         }

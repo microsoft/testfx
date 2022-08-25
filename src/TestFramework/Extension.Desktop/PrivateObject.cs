@@ -44,10 +44,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             ValidateAccessString(memberToAccess);
 
             PrivateObject temp = obj as PrivateObject;
-            if (temp == null)
-            {
-                temp = new PrivateObject(obj);
-            }
+            temp ??= new PrivateObject(obj);
 
             // Split The access string
             string[] arr = memberToAccess.Split(new char[] { '.' });
@@ -836,7 +833,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             Debug.Assert(parameterTypes != null, "parameterTypes should not be null.");
             Debug.Assert(typeArguments != null, "typeArguments should not be null.");
 
-            LinkedList<MethodInfo> methodCandidates = new LinkedList<MethodInfo>();
+            LinkedList<MethodInfo> methodCandidates = new();
 
             if (!this.GenericMethodCache.TryGetValue(methodName, out var methods))
             {

@@ -11,8 +11,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
     internal static class DataSerializationHelper
     {
-        private static readonly ConcurrentDictionary<string, DataContractJsonSerializer> SerializerCache = new ConcurrentDictionary<string, DataContractJsonSerializer>();
-        private static readonly DataContractJsonSerializerSettings SerializerSettings = new DataContractJsonSerializerSettings()
+        private static readonly ConcurrentDictionary<string, DataContractJsonSerializer> SerializerCache = new();
+        private static readonly DataContractJsonSerializerSettings SerializerSettings = new()
         {
             UseSimpleDictionaryFormat = true,
             EmitTypeInformation = System.Runtime.Serialization.EmitTypeInformation.Always,
@@ -52,13 +52,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
 
                 var serializer = GetSerializer(type);
 
-                using (var memoryStream = new MemoryStream())
-                {
-                    serializer.WriteObject(memoryStream, data[i]);
-                    var serializerData = memoryStream.ToArray();
+                using var memoryStream = new MemoryStream();
+                serializer.WriteObject(memoryStream, data[i]);
+                var serializerData = memoryStream.ToArray();
 
-                    serializedData[dataIndex] = Encoding.UTF8.GetString(serializerData, 0, serializerData.Length);
-                }
+                serializedData[dataIndex] = Encoding.UTF8.GetString(serializerData, 0, serializerData.Length);
             }
 
             return serializedData;
@@ -94,10 +92,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers
                 var serializer = GetSerializer(assemblyQualifiedName);
 
                 var serialzedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
-                using (var memoryStream = new MemoryStream(serialzedDataBytes))
-                {
-                    data[i] = serializer.ReadObject(memoryStream);
-                }
+                using var memoryStream = new MemoryStream(serialzedDataBytes);
+                data[i] = serializer.ReadObject(memoryStream);
             }
 
             return data;

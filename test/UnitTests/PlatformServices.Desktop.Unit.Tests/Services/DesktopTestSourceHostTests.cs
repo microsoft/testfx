@@ -30,7 +30,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void GetResolutionPathsShouldAddPublicAndPrivateAssemblyPath()
         {
             // Setup
-            TestSourceHost sut = new TestSourceHost(null, null, null);
+            TestSourceHost sut = new(null, null, null);
 
             // Execute
             // It should return public and private path if it is not running in portable mode.
@@ -52,7 +52,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void GetResolutionPathsShouldNotAddPublicAndPrivateAssemblyPathInPortableMode()
         {
             // Setup
-            TestSourceHost sut = new TestSourceHost(null, null, null);
+            TestSourceHost sut = new(null, null, null);
 
             // Execute
             // It should not return public and private path if it is running in portable mode.
@@ -67,7 +67,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void GetResolutionPathsShouldAddAdapterFolderPath()
         {
             // Setup
-            TestSourceHost sut = new TestSourceHost(null, null, null);
+            TestSourceHost sut = new(null, null, null);
 
             // Execute
             List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
@@ -80,7 +80,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void GetResolutionPathsShouldAddTestPlatformFolderPath()
         {
             // Setup
-            TestSourceHost sut = new TestSourceHost(null, null, null);
+            TestSourceHost sut = new(null, null, null);
 
             // Execute
             List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
@@ -93,17 +93,16 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void CreateInstanceForTypeShouldCreateTheTypeInANewAppDomain()
         {
             // Setup
-            DummyClass dummyclass = new DummyClass();
+            DummyClass dummyclass = new();
             int currentAppDomainId = dummyclass.AppDomainId;
 
-            TestSourceHost sut = new TestSourceHost(Assembly.GetExecutingAssembly().Location, null, null);
+            TestSourceHost sut = new(Assembly.GetExecutingAssembly().Location, null, null);
             sut.SetupHost();
 
             // Execute
-            var expectedObject = sut.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
             int newAppDomainId = currentAppDomainId + 10;  // not equal to currentAppDomainId
-            if (expectedObject != null)
+            if (sut.CreateInstanceForType(typeof(DummyClass), null) is DummyClass expectedObject)
             {
                 newAppDomainId = expectedObject.AppDomainId;
             }
@@ -116,10 +115,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void SetupHostShouldSetChildDomainsAppBaseToTestSourceLocation()
         {
             // Arrange
-            DummyClass dummyclass = new DummyClass();
+            DummyClass dummyclass = new();
 
             var location = typeof(TestSourceHost).Assembly.Location;
-            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, null, null) { CallBase = true };
+            Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
 
             try
             {
@@ -140,7 +139,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void SetupHostShouldHaveParentDomainsAppBaseSetToTestSourceLocation()
         {
             // Arrange
-            DummyClass dummyclass = new DummyClass();
+            DummyClass dummyclass = new();
             string runSettingxml =
             @"<RunSettings>   
                 <RunConfiguration>  
@@ -152,7 +151,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             var mockRunSettings = new Mock<IRunSettings>();
             mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
-            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, mockRunSettings.Object, null) { CallBase = true };
+            Mock<TestSourceHost> sourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
 
             try
             {
@@ -173,10 +172,10 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void SetupHostShouldSetResolutionsPaths()
         {
             // Arrange
-            DummyClass dummyclass = new DummyClass();
+            DummyClass dummyclass = new();
 
             var location = typeof(TestSourceHost).Assembly.Location;
-            Mock<TestSourceHost> sourceHost = new Mock<TestSourceHost>(location, null, null) { CallBase = true };
+            Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
 
             try
             {
@@ -215,7 +214,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void NoAppDomainShouldGetCreatedWhenDisableAppDomainIsSetToTrue()
         {
             // Arrange
-            DummyClass dummyclass = new DummyClass();
+            DummyClass dummyclass = new();
             string runSettingxml =
             @"<RunSettings>   
                 <RunConfiguration>  
@@ -227,7 +226,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             var mockRunSettings = new Mock<IRunSettings>();
             mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
-            Mock<TestSourceHost> testSourceHost = new Mock<TestSourceHost>(location, mockRunSettings.Object, null) { CallBase = true };
+            Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
 
             try
             {
@@ -245,7 +244,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
         public void AppDomainShouldGetCreatedWhenDisableAppDomainIsSetToFalse()
         {
             // Arrange
-            DummyClass dummyclass = new DummyClass();
+            DummyClass dummyclass = new();
             string runSettingxml =
             @"<RunSettings>   
                 <RunConfiguration>  
@@ -257,7 +256,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             var mockRunSettings = new Mock<IRunSettings>();
             mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
-            Mock<TestSourceHost> testSourceHost = new Mock<TestSourceHost>(location, mockRunSettings.Object, null) { CallBase = true };
+            Mock<TestSourceHost> testSourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
 
             try
             {

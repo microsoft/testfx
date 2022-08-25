@@ -116,39 +116,37 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
             try
             {
-                using (var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context"))
+                using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
+                var properties = new Dictionary<string, object>(testContextProperties);
+                var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
+                testContext.SetOutcome(TestTools.UnitTesting.UnitTestOutcome.InProgress);
+
+                // Get the testMethod
+                var testMethodInfo = this.typeCache.GetTestMethodInfo(
+                    testMethod,
+                    testContext,
+                    MSTestSettings.CurrentSettings.CaptureDebugTraces);
+
+                if (this.classCleanupManager == null && testMethodInfo != null && testMethodInfo.Parent.HasExecutableCleanupMethod)
                 {
-                    var properties = new Dictionary<string, object>(testContextProperties);
-                    var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
-                    testContext.SetOutcome(TestTools.UnitTesting.UnitTestOutcome.InProgress);
-
-                    // Get the testMethod
-                    var testMethodInfo = this.typeCache.GetTestMethodInfo(
-                        testMethod,
-                        testContext,
-                        MSTestSettings.CurrentSettings.CaptureDebugTraces);
-
-                    if (this.classCleanupManager == null && testMethodInfo != null && testMethodInfo.Parent.HasExecutableCleanupMethod)
-                    {
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFoundClassCleanup);
-                    }
-
-                    if (!this.IsTestMethodRunnable(testMethod, testMethodInfo, out var notRunnableResult))
-                    {
-                        bool shouldRunClassCleanup = false;
-                        this.classCleanupManager?.MarkTestComplete(testMethodInfo, testMethod, out shouldRunClassCleanup);
-                        if (shouldRunClassCleanup)
-                        {
-                            testMethodInfo.Parent.RunClassCleanup(ClassCleanupBehavior.EndOfClass);
-                        }
-
-                        return notRunnableResult;
-                    }
-
-                    var result = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces, this.reflectHelper).Execute();
-                    this.RunClassCleanupIfEndOfClass(testMethodInfo, testMethod, result);
-                    return result;
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFoundClassCleanup);
                 }
+
+                if (!this.IsTestMethodRunnable(testMethod, testMethodInfo, out var notRunnableResult))
+                {
+                    bool shouldRunClassCleanup = false;
+                    this.classCleanupManager?.MarkTestComplete(testMethodInfo, testMethod, out shouldRunClassCleanup);
+                    if (shouldRunClassCleanup)
+                    {
+                        testMethodInfo.Parent.RunClassCleanup(ClassCleanupBehavior.EndOfClass);
+                    }
+
+                    return notRunnableResult;
+                }
+
+                var result = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces, this.reflectHelper).Execute();
+                this.RunClassCleanupIfEndOfClass(testMethodInfo, testMethod, result);
+                return result;
             }
             catch (TypeInspectionException ex)
             {
@@ -206,24 +204,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
                 try
                 {
-                    using (LogMessageListener logListener =
-                        new LogMessageListener(MSTestSettings.CurrentSettings.CaptureDebugTraces))
+                    using LogMessageListener logListener =
+                        new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+                    try
                     {
-                        try
-                        {
-                            // Class cleanup can throw exceptions in which case we need to ensure that we fail the test.
-                            testMethodInfo.Parent.RunClassCleanup(ClassCleanupBehavior.EndOfClass);
-                        }
-                        finally
-                        {
-                            cleanupLogs = logListener.StandardOutput;
-                            cleanupTrace = logListener.DebugTrace;
-                            cleanupErrorLogs = logListener.StandardError;
-                            var lastResult = results[results.Length - 1];
-                            lastResult.StandardOut = lastResult.StandardOut + cleanupLogs;
-                            lastResult.StandardError = lastResult.StandardError + cleanupErrorLogs;
-                            lastResult.DebugTrace = lastResult.DebugTrace + cleanupTrace;
-                        }
+                        // Class cleanup can throw exceptions in which case we need to ensure that we fail the test.
+                        testMethodInfo.Parent.RunClassCleanup(ClassCleanupBehavior.EndOfClass);
+                    }
+                    finally
+                    {
+                        cleanupLogs = logListener.StandardOutput;
+                        cleanupTrace = logListener.DebugTrace;
+                        cleanupErrorLogs = logListener.StandardError;
+                        var lastResult = results[results.Length - 1];
+                        lastResult.StandardOut += cleanupLogs;
+                        lastResult.StandardError += cleanupErrorLogs;
+                        lastResult.DebugTrace += cleanupTrace;
                     }
                 }
                 catch (Exception e)

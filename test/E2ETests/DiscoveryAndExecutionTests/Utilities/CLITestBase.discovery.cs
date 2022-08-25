@@ -86,7 +86,7 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
         private class InternalSink : ITestCaseDiscoverySink
         {
-            private readonly List<TestCase> testCases = new List<TestCase>();
+            private readonly List<TestCase> testCases = new();
 
             public ReadOnlyCollection<TestCase> DiscoveredTests => this.testCases.AsReadOnly();
 
@@ -132,8 +132,8 @@ namespace Microsoft.MSTestV2.CLIAutomation
 
         private class InternalFrameworkHandle : IFrameworkHandle
         {
-            private readonly List<string> messageList = new List<string>();
-            private readonly ConcurrentDictionary<TestCase, List<TestResult>> testResults = new ConcurrentDictionary<TestCase, List<TestResult>>();
+            private readonly List<string> messageList = new();
+            private readonly ConcurrentDictionary<TestCase, List<TestResult>> testResults = new();
 
             private TestCase activeTest;
             private List<TestResult> activeResults;

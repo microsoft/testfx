@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void GetTypesShouldReturnEmptyArrayWhenNoDeclaredTypes()
         {
-            Mock<TestableAssembly> mockAssembly = new Mock<TestableAssembly>();
+            Mock<TestableAssembly> mockAssembly = new();
 
             // Setup mocks
             mockAssembly.Setup(a => a.DefinedTypes).Returns(new List<TypeInfo>());
@@ -102,7 +102,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void GetTypesShouldReturnSetOfDefinedTypes()
         {
-            Mock<TestableAssembly> mockAssembly = new Mock<TestableAssembly>();
+            Mock<TestableAssembly> mockAssembly = new();
 
             var expectedTypes = new List<TypeInfo>() { typeof(DummyTestClass).GetTypeInfo(), typeof(DummyTestClass).GetTypeInfo() };
 
@@ -116,7 +116,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void GetTypesShouldHandleReflectionTypeLoadException()
         {
-            Mock<TestableAssembly> mockAssembly = new Mock<TestableAssembly>();
+            Mock<TestableAssembly> mockAssembly = new();
 
             // Setup mocks
             mockAssembly.Setup(a => a.DefinedTypes).Throws(new ReflectionTypeLoadException(null, null));
@@ -127,7 +127,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void GetTypesShouldReturnReflectionTypeLoadExceptionTypesOnException()
         {
-            Mock<TestableAssembly> mockAssembly = new Mock<TestableAssembly>();
+            Mock<TestableAssembly> mockAssembly = new();
             var reflectedTypes = new Type[] { typeof(DummyTestClass) };
 
             // Setup mocks
@@ -142,7 +142,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
         [TestMethodV1]
         public void GetTypesShouldLogWarningsWhenReflectionFailsWithLoaderExceptions()
         {
-            Mock<TestableAssembly> mockAssembly = new Mock<TestableAssembly>();
+            Mock<TestableAssembly> mockAssembly = new();
             var exceptions = new Exception[] { new Exception("DummyLoaderException") };
 
             // Setup mocks
@@ -196,7 +196,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery
             var exceptions = new ReflectionTypeLoadException(
                 null,
                 new Exception[] { loaderException1, loaderException2 });
-            StringBuilder errorDetails = new StringBuilder();
+            StringBuilder errorDetails = new();
 
             errorDetails.AppendFormat(
                     CultureInfo.CurrentCulture,

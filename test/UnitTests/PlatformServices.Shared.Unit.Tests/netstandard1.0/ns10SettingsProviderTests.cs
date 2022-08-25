@@ -22,7 +22,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         [TestMethod]
         public void GetPropertiesShouldReturnEmptyDictionary()
         {
-            MSTestSettingsProvider settings = new MSTestSettingsProvider();
+            MSTestSettingsProvider settings = new();
 
             Assert.AreEqual(0, settings.GetProperties(It.IsAny<string>()).Count);
         }

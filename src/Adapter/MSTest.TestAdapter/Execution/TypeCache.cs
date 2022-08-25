@@ -43,15 +43,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Assembly info cache
         /// </summary>
-        private readonly ConcurrentDictionary<Assembly, TestAssemblyInfo> testAssemblyInfoCache = new ConcurrentDictionary<Assembly, TestAssemblyInfo>();
+        private readonly ConcurrentDictionary<Assembly, TestAssemblyInfo> testAssemblyInfoCache = new();
 
         /// <summary>
         /// ClassInfo cache
         /// </summary>
-        private readonly ConcurrentDictionary<string, TestClassInfo> classInfoCache = new ConcurrentDictionary<string, TestClassInfo>(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, TestClassInfo> classInfoCache = new(StringComparer.Ordinal);
 
         private readonly ConcurrentDictionary<string, bool> discoverInternalsCache =
-            new ConcurrentDictionary<string, bool>();
+            new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TypeCache"/> class.

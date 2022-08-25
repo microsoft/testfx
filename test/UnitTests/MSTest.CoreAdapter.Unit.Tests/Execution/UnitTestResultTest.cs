@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void UnitTestResultConstrutorWithOutcomeAndErrorMessageShouldSetRequiredFields()
         {
-            UnitTestResult result = new UnitTestResult(UnitTestOutcome.Error, "DummyMessage");
+            UnitTestResult result = new(UnitTestOutcome.Error, "DummyMessage");
 
             Assert.AreEqual(UnitTestOutcome.Error, result.Outcome);
             Assert.AreEqual("DummyMessage", result.ErrorMessage);
@@ -36,9 +36,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void UnitTestResultConstrutorWithTestFailedExceptionShouldSetRequiredFields()
         {
             var stackTrace = new StackTraceInformation("trace", "filePath", 2, 3);
-            TestFailedException ex = new TestFailedException(UnitTestOutcome.Error, "DummyMessage", stackTrace);
+            TestFailedException ex = new(UnitTestOutcome.Error, "DummyMessage", stackTrace);
 
-            UnitTestResult result = new UnitTestResult(ex);
+            UnitTestResult result = new(ex);
 
             Assert.AreEqual(UnitTestOutcome.Error, result.Outcome);
             Assert.AreEqual("DummyMessage", result.ErrorMessage);
@@ -52,15 +52,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void ToTestResultShouldReturnConvertedTestResultWithFieldsSet()
         {
             var stackTrace = new StackTraceInformation("DummyStackTrace", "filePath", 2, 3);
-            TestFailedException ex = new TestFailedException(UnitTestOutcome.Error, "DummyMessage", stackTrace);
+            TestFailedException ex = new(UnitTestOutcome.Error, "DummyMessage", stackTrace);
             var dummyTimeSpan = new TimeSpan(20);
-            UnitTestResult result = new UnitTestResult(ex)
+            UnitTestResult result = new(ex)
             {
                 DisplayName = "DummyDisplayName",
                 Duration = dummyTimeSpan
             };
 
-            TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
+            TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
             var startTime = DateTimeOffset.Now;
             var endTime = DateTimeOffset.Now;
 
@@ -90,11 +90,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void ToTestResultForUniTestResultWithStandardOutShouldReturnTestResultWithStdOutMessage()
         {
-            UnitTestResult result = new UnitTestResult()
+            UnitTestResult result = new()
             {
                 StandardOut = "DummyOutput"
             };
-            TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
+            TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
             string runSettingxml =
                @"<RunSettings>
                     <MSTestV2>
@@ -110,11 +110,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethod]
         public void ToTestResultForUniTestResultWithDebugTraceShouldReturnTestResultWithDebugTraceStdOutMessage()
         {
-            UnitTestResult result = new UnitTestResult()
+            UnitTestResult result = new()
             {
                 DebugTrace = "DummyDebugTrace"
             };
-            TestCase testCase = new TestCase("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
+            TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
             string runSettingxml =
                @"<RunSettings>
                     <MSTestV2>

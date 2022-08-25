@@ -433,7 +433,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
             var dummyTestClass = new DummyTestClass2();
             var dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
 
-            Action action = () => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
+            void action() => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
             action();
         }
 

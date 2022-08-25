@@ -162,22 +162,22 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowOnNullAction()
         {
-            Action a = () =>
-                {
-                    Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(null, null, null);
-                    t.Wait();
-                };
+            static void a()
+            {
+                Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(null, null, null);
+                t.Wait();
+            }
             ActionUtility.ActionShouldThrowInnerExceptionOfType(a, typeof(ArgumentNullException));
         }
 
         [TestMethod]
         public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowOnNullMessage()
         {
-            Action a = () =>
+            static void a()
             {
                 Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(async () => { await Task.FromResult(true).ConfigureAwait(false); }, null, null);
                 t.Wait();
-            };
+            }
             ActionUtility.ActionShouldThrowInnerExceptionOfType(a, typeof(ArgumentNullException));
         }
 
@@ -251,14 +251,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void InstanceOfTypeShouldFailWhenValueIsNull()
         {
-            Action action = () => TestFrameworkV2.Assert.IsInstanceOfType(null, typeof(AssertTests));
+            static void action() => TestFrameworkV2.Assert.IsInstanceOfType(null, typeof(AssertTests));
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
         [TestMethod]
         public void InstanceOfTypeShouldFailWhenTypeIsNull()
         {
-            Action action = () => TestFrameworkV2.Assert.IsInstanceOfType(5, null);
+            static void action() => TestFrameworkV2.Assert.IsInstanceOfType(5, null);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -283,7 +283,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void InstanceNotOfTypeShouldFailWhenTypeIsNull()
         {
-            Action action = () => TestFrameworkV2.Assert.IsNotInstanceOfType(5, null);
+            static void action() => TestFrameworkV2.Assert.IsNotInstanceOfType(5, null);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -328,7 +328,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualType()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual(null, null);
+            static void action() => TestFrameworkV2.Assert.AreNotEqual(null, null);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -343,7 +343,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualString()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual("A", "A");
+            static void action() => TestFrameworkV2.Assert.AreNotEqual("A", "A");
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -358,14 +358,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualStringAndCaseIgnored()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual("A", "a", true);
+            static void action() => TestFrameworkV2.Assert.AreNotEqual("A", "a", true);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
         [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualInt()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual(1, 1);
+            static void action() => TestFrameworkV2.Assert.AreNotEqual(1, 1);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -380,7 +380,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualLong()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual(1L, 1L);
+            static void action() => TestFrameworkV2.Assert.AreNotEqual(1L, 1L);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -395,14 +395,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualLongWithDelta()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual(1L, 2L, 1L);
+            static void action() => TestFrameworkV2.Assert.AreNotEqual(1L, 2L, 1L);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
         [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualDecimal()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual(0.1M, 0.1M);
+            static void action() => TestFrameworkV2.Assert.AreNotEqual(0.1M, 0.1M);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -417,14 +417,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualDecimalWithDelta()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual(0.1M, 0.2M, 0.1M);
+            static void action() => TestFrameworkV2.Assert.AreNotEqual(0.1M, 0.2M, 0.1M);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
         [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualDouble()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual(0.1, 0.1);
+            static void action() => TestFrameworkV2.Assert.AreNotEqual(0.1, 0.1);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -439,14 +439,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualDoubleWithDelta()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual(0.1, 0.2, 0.1);
+            static void action() => TestFrameworkV2.Assert.AreNotEqual(0.1, 0.2, 0.1);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
         [TestMethod]
         public void AreNotEqualShouldFailWhenFloatDouble()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual(100E-2, 100E-2);
+            static void action() => TestFrameworkV2.Assert.AreNotEqual(100E-2, 100E-2);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -461,7 +461,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreNotEqualShouldFailWhenNotEqualFloatWithDelta()
         {
-            Action action = () => TestFrameworkV2.Assert.AreNotEqual(100E-2, 200E-2, 100E-2);
+            static void action() => TestFrameworkV2.Assert.AreNotEqual(100E-2, 200E-2, 100E-2);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
         #endregion
@@ -470,7 +470,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreEqualShouldFailWhenNotEqualType()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual(null, "string");
+            static void action() => TestFrameworkV2.Assert.AreEqual(null, "string");
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -485,7 +485,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreEqualShouldFailWhenNotEqualString()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual("A", "a");
+            static void action() => TestFrameworkV2.Assert.AreEqual("A", "a");
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -500,14 +500,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreEqualShouldFailWhenNotEqualStringAndCaseIgnored()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual("A", "a", false);
+            static void action() => TestFrameworkV2.Assert.AreEqual("A", "a", false);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
         [TestMethod]
         public void AreEqualShouldFailWhenNotEqualInt()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual(1, 2);
+            static void action() => TestFrameworkV2.Assert.AreEqual(1, 2);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -522,7 +522,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreEqualShouldFailWhenNotEqualLong()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual(1L, 2L);
+            static void action() => TestFrameworkV2.Assert.AreEqual(1L, 2L);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -537,14 +537,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreEqualShouldFailWhenNotEqualLongWithDelta()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual(10L, 20L, 5L);
+            static void action() => TestFrameworkV2.Assert.AreEqual(10L, 20L, 5L);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
         [TestMethod]
         public void AreEqualShouldFailWhenNotEqualDouble()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual(0.1, 0.2);
+            static void action() => TestFrameworkV2.Assert.AreEqual(0.1, 0.2);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -559,14 +559,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreEqualShouldFailWhenNotEqualDoubleWithDelta()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual(0.1, 0.2, 0.05);
+            static void action() => TestFrameworkV2.Assert.AreEqual(0.1, 0.2, 0.05);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
         [TestMethod]
         public void AreEqualShouldFailWhenNotEqualDecimal()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual(0.1M, 0.2M);
+            static void action() => TestFrameworkV2.Assert.AreEqual(0.1M, 0.2M);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -581,14 +581,14 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreEqualShouldFailWhenNotEqualDecimalWithDelta()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual(0.1M, 0.2M, 0.05M);
+            static void action() => TestFrameworkV2.Assert.AreEqual(0.1M, 0.2M, 0.05M);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
         [TestMethod]
         public void AreEqualShouldFailWhenFloatDouble()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual(100E-2, 200E-2);
+            static void action() => TestFrameworkV2.Assert.AreEqual(100E-2, 200E-2);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 
@@ -603,7 +603,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests
         [TestMethod]
         public void AreEqualShouldFailWhenNotEqualFloatWithDelta()
         {
-            Action action = () => TestFrameworkV2.Assert.AreEqual(100E-2, 200E-2, 50E-2);
+            static void action() => TestFrameworkV2.Assert.AreEqual(100E-2, 200E-2, 50E-2);
             ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
         }
 

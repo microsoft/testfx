@@ -20,8 +20,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     {
         private const string ObjectModelVersionBuiltAgainst = "11.0.0.0";
 
-        private static Version defaultVersion = new Version();
-        private static Version version45 = new Version("4.5");
+        private static Version defaultVersion = new();
+        private static Version version45 = new("4.5");
 
         private static XmlUtilities xmlUtilities = null;
 
@@ -32,10 +32,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         {
             get
             {
-                if (xmlUtilities == null)
-                {
-                    xmlUtilities = new XmlUtilities();
-                }
+                xmlUtilities ??= new XmlUtilities();
 
                 return xmlUtilities;
             }
@@ -78,7 +75,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
         [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
         internal static string GetTargetFrameworkVersionString(string testSourcePath)
         {
-            AppDomainSetup appDomainSetup = new AppDomainSetup();
+            AppDomainSetup appDomainSetup = new();
 
             appDomainSetup.LoaderOptimization = LoaderOptimization.MultiDomainHost;
 

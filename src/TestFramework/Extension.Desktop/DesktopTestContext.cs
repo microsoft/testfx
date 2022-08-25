@@ -172,7 +172,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
             object o = this.Properties[name];
 
             // If o has a value, but it's not the right type
-            if (o != null && !(o is T))
+            if (o != null && o is not T)
             {
                 Debug.Fail("How did an invalid value get in here?");
                 throw new InvalidCastException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.InvalidPropertyType, name, o.GetType(), typeof(T)));

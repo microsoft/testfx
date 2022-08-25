@@ -67,10 +67,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                if (currentSettings == null)
-                {
-                    currentSettings = new MSTestSettings();
-                }
+                currentSettings ??= new MSTestSettings();
 
                 return currentSettings;
             }
@@ -88,10 +85,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
         {
             get
             {
-                if (runConfigurationSettings == null)
-                {
-                    runConfigurationSettings = new RunConfigurationSettings();
-                }
+                runConfigurationSettings ??= new RunConfigurationSettings();
 
                 return runConfigurationSettings;
             }
@@ -327,7 +321,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
             //     <SettingsFile>..\..\Local.testsettings</SettingsFile>
             //     <CaptureTraceOutput>true</CaptureTraceOutput>
             // </MSTest>
-            MSTestSettings settings = new MSTestSettings();
+            MSTestSettings settings = new();
 
             // Read the first element in the section which is either "MSTest"/"MSTestV2"
             reader.ReadToNextElement();

@@ -25,7 +25,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         {
             Debug.Assert(ex != null, "exception is null");
 
-            StringBuilder result = new StringBuilder();
+            StringBuilder result = new();
             bool first = true;
             for (Exception curException = ex;
                  curException != null;

@@ -27,7 +27,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services
         [TestMethod]
         public void GetWriterShouldReturnInitialisedWriter()
         {
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
+            StringWriter writer = new(new StringBuilder("DummyTrace"));
             var traceListener = new TraceListenerWrapper(writer);
             var returnedWriter = traceListener.GetWriter();
             Assert.AreEqual("DummyTrace", returnedWriter.ToString());
@@ -36,12 +36,12 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services
         [TestMethod]
         public void DisposeShouldDisposeCorrespondingTextWriter()
         {
-            StringWriter writer = new StringWriter(new StringBuilder("DummyTrace"));
+            StringWriter writer = new(new StringBuilder("DummyTrace"));
             var traceListener = new TraceListenerWrapper(writer);
             traceListener.Dispose();
 
             // Trying to write after disposing textWriter should throw exception
-            Action shouldThrowException = () => writer.WriteLine("Try to write something");
+            void shouldThrowException() => writer.WriteLine("Try to write something");
             ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
         }
     }

@@ -53,17 +53,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Dictionary of Assemblies discovered to date.
         /// </summary>
-        private Dictionary<string, Assembly> resolvedAssemblies = new Dictionary<string, Assembly>();
+        private Dictionary<string, Assembly> resolvedAssemblies = new();
 
         /// <summary>
         /// Dictionary of Reflection-Only Assemblies discovered to date.
         /// </summary>
-        private Dictionary<string, Assembly> reflectionOnlyResolvedAssemblies = new Dictionary<string, Assembly>();
+        private Dictionary<string, Assembly> reflectionOnlyResolvedAssemblies = new();
 
         /// <summary>
         /// lock for the loaded assemblies cache.
         /// </summary>
-        private object syncLock = new object();
+        private object syncLock = new();
 
         private bool disposed;
 
@@ -445,7 +445,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                         // instead of loading whole search directory in one time, we are adding directory on the basis of need
                         var currentNode = this.directoryList.Dequeue();
 
-                        List<string> increamentalSearchDirectory = new List<string>();
+                        List<string> increamentalSearchDirectory = new();
 
                         if (this.DoesDirectoryExist(currentNode.DirectoryPath))
                         {

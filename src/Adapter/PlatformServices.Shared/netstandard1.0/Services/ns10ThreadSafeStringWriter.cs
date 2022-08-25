@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </summary>
     public class ThreadSafeStringWriter : StringWriter
     {
-        private readonly object lockObject = new object();
+        private readonly object lockObject = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ThreadSafeStringWriter"/> class.
@@ -38,7 +38,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 }
                 catch (ObjectDisposedException)
                 {
-                    return default(string);
+                    return default;
                 }
             }
         }
@@ -56,7 +56,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                 }
                 catch (ObjectDisposedException)
                 {
-                    return default(string);
+                    return default;
                 }
             }
         }

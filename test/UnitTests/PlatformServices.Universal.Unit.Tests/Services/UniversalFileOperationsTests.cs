@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
         public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
         {
             var filePath = "temp<>txt";
-            Action a = () => this.fileOperations.LoadAssembly(filePath, false);
+            void a() => this.fileOperations.LoadAssembly(filePath, false);
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentException));
         }
 
@@ -46,7 +46,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
         public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound()
         {
             var filePath = "temptxt";
-            Action a = () => this.fileOperations.LoadAssembly(filePath, false);
+            void a() => this.fileOperations.LoadAssembly(filePath, false);
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
         }
 
@@ -80,7 +80,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
         public void DoesFileExistReturnsFalseIfFileIsNotFound()
         {
             var filePath = "C:\\footemp.txt";
-            Action a = () => this.fileOperations.DoesFileExist(filePath);
+            void a() => this.fileOperations.DoesFileExist(filePath);
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
         }
 
