@@ -101,7 +101,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
         [TestMethod]
         public void ExecuteWithAbortSafetyShouldCatchThreadAbortExceptionsAndResetAbort()
         {
-            Action action = () => Thread.CurrentThread.Abort();
+            static void action() => Thread.CurrentThread.Abort();
 
             var exception = ActionUtility.PerformActionAndReturnException(() => this.asyncOperations.ExecuteWithAbortSafety(action));
 

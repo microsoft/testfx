@@ -68,7 +68,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void GetTestMethodInfoShouldThrowIfTestMethodIsNull()
         {
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-            Action a = () => this.typeCache.GetTestMethodInfo(
+            void a() => this.typeCache.GetTestMethodInfo(
                 null,
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
@@ -80,7 +80,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void GetTestMethodInfoShouldThrowIfTestContextIsNull()
         {
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-            Action a = () => this.typeCache.GetTestMethodInfo(testMethod, null, false);
+            void a() => this.typeCache.GetTestMethodInfo(testMethod, null, false);
 
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
@@ -117,7 +117,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
                 .Throws(new Exception("Load failure"));
 
-            Action action = () =>
+            void action() =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
@@ -136,7 +136,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             string className = typeof(DummyTestClassWithNoDefaultConstructor).FullName;
             var testMethod = new TestMethod("M", className, "A", isAsync: false);
 
-            Action action = () =>
+            void action() =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
@@ -155,7 +155,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             string className = typeof(DummyTestClassWithIncorrectTestContextType).FullName;
             var testMethod = new TestMethod("M", className, "A", isAsync: false);
 
-            Action action = () =>
+            void action() =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
@@ -174,7 +174,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             string className = typeof(DummyTestClassWithMultipleTestContextProperties).FullName;
             var testMethod = new TestMethod("M", className, "A", isAsync: false);
 
-            Action action = () =>
+            void action() =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
@@ -344,8 +344,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyInit"), typeof(UTF.AssemblyInitializeAttribute), false)).Returns(true);
 
-            Action a =
-                () =>
+            void a() =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
@@ -377,8 +376,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyCleanup"), typeof(UTF.AssemblyCleanupAttribute), false)).Returns(true);
 
-            Action a =
-                () =>
+            void a() =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
@@ -692,8 +690,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyInit"), typeof(UTF.ClassInitializeAttribute), false)).Returns(true);
 
-            Action a =
-                () =>
+            void a() =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
@@ -725,8 +722,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(
                 rh => rh.IsAttributeDefined(type.GetMethod("AssemblyCleanup"), typeof(UTF.ClassCleanupAttribute), false)).Returns(true);
 
-            Action a =
-                () =>
+            void a() =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
@@ -800,8 +796,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(
                 rh => rh.IsAttributeDefined(type.GetMethod("TestInit"), typeof(UTF.TestInitializeAttribute), false)).Returns(true);
 
-            Action a =
-                () =>
+            void a() =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
@@ -901,8 +896,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var methodInfo = type.GetMethod("TestMethod");
             var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-            Action a =
-                () =>
+            void a() =>
                 this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
@@ -970,7 +964,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(methodInfo, typeof(UTF.TimeoutAttribute), false))
                 .Returns(true);
 
-            Action a = () => this.typeCache.GetTestMethodInfo(
+            void a() => this.typeCache.GetTestMethodInfo(
                     testMethod,
                     new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                     false);

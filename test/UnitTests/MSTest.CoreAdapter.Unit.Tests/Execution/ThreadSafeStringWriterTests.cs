@@ -27,16 +27,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             using (ExecutionContext.SuppressFlow())
             {
                 using var stringWriter = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "tst");
-                Action<string> action = (string x) =>
+                void action(string x)
+                {
+                    var count = 10;
+                    for (var i = 0; i < count; i++)
                     {
-                        var count = 10;
-                        for (var i = 0; i < count; i++)
-                        {
-                            // Choose WriteLine since it calls the entire sequence:
-                            // Write(string) -> Write(char[]) -> Write(char)
-                            stringWriter.WriteLine(x);
-                        }
-                    };
+                        // Choose WriteLine since it calls the entire sequence:
+                        // Write(string) -> Write(char[]) -> Write(char)
+                        stringWriter.WriteLine(x);
+                    }
+                }
 
                 var task1 = Task.Run(() =>
                 {

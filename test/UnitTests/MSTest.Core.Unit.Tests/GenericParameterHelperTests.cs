@@ -67,7 +67,7 @@ namespace UnitTestFramework.Tests
         {
             int objectToCompare = 5;
 
-            Action a = () => this.sut.CompareTo(objectToCompare);
+            void a() => this.sut.CompareTo(objectToCompare);
 
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(NotSupportedException));
         }

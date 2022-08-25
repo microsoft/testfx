@@ -344,7 +344,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(this.methodInfo, testClass, this.testMethodOptions);
 
             UTF.TestResult result = null;
-            Action runMethod = () => result = method.Invoke(null);
+            void runMethod() => result = method.Invoke(null);
 
             runMethod();
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
@@ -358,7 +358,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
             var method = new TestMethodInfo(this.methodInfo, testClass, this.testMethodOptions);
 
             UTF.TestResult result = null;
-            Action runMethod = () => result = method.Invoke(null);
+            void runMethod() => result = method.Invoke(null);
 
             runMethod();
             Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);

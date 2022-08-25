@@ -41,7 +41,7 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services
             traceListener.Dispose();
 
             // Trying to write after disposing textWriter should throw exception
-            Action shouldThrowException = () => writer.WriteLine("Try to write something");
+            void shouldThrowException() => writer.WriteLine("Try to write something");
             ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
         }
     }

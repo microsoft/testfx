@@ -35,7 +35,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
         {
             var filePath = "temp<>txt";
-            Action a = () => this.fileOperations.LoadAssembly(filePath, false);
+            void a() => this.fileOperations.LoadAssembly(filePath, false);
 
             Type expectedException;
 #if NETCOREAPP
@@ -51,7 +51,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
         public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound()
         {
             var filePath = "temptxt";
-            Action a = () => this.fileOperations.LoadAssembly(filePath, false);
+            void a() => this.fileOperations.LoadAssembly(filePath, false);
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
         }
 

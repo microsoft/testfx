@@ -35,7 +35,7 @@ namespace UnitTestFramework.Tests
         [TestFrameworkV1.TestMethod]
         public void RethrowIfAssertExceptionThrowsExceptionOnAssertFailure()
         {
-            Action a = () => this.sut.RethrowIfAssertException(new TestFrameworkV2.AssertFailedException());
+            void a() => this.sut.RethrowIfAssertException(new TestFrameworkV2.AssertFailedException());
 
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(TestFrameworkV2.AssertFailedException));
         }
@@ -46,7 +46,7 @@ namespace UnitTestFramework.Tests
         [TestFrameworkV1.TestMethod]
         public void RethrowIfAssertExceptionThrowsExceptionOnAssertInconclusive()
         {
-            Action a = () => this.sut.RethrowIfAssertException(new TestFrameworkV2.AssertInconclusiveException());
+            void a() => this.sut.RethrowIfAssertException(new TestFrameworkV2.AssertInconclusiveException());
 
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(TestFrameworkV2.AssertInconclusiveException));
         }

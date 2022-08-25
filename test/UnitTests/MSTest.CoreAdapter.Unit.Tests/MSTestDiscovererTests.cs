@@ -101,21 +101,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
         [TestMethod]
         public void DiscoverTestsShouldThrowIfSourcesIsNull()
         {
-            Action a = () => this.discoverer.DiscoverTests(null, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
+            void a() => this.discoverer.DiscoverTests(null, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
         [TestMethod]
         public void DiscoverTestsShouldThrowIfDiscoverySinkIsNull()
         {
-            Action a = () => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, null);
+            void a() => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, null);
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
         [TestMethod]
         public void DiscoverTestsShouldThrowIfLoggerIsNull()
         {
-            Action a = () => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, null, this.mockTestCaseDiscoverySink.Object);
+            void a() => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, null, this.mockTestCaseDiscoverySink.Object);
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
@@ -126,7 +126,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.testablePlatformServiceProvider.MockTestSourceValidator.Setup(tsv => tsv.ValidSourceExtensions)
                 .Returns(new List<string> { });
 
-            Action a = () => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
+            void a() => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(NotSupportedException));
         }
 
@@ -225,7 +225,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests
             this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);
             MSTestDiscoverer discoverer = new();
 
-            Action a = () => discoverer.AreValidSources(new List<string> { "dummy" });
+            void a() => discoverer.AreValidSources(new List<string> { "dummy" });
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 

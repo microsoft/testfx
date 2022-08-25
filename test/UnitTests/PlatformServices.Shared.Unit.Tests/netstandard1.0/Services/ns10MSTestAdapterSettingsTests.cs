@@ -225,7 +225,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests
             XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
             reader.Read();
 
-            Action shouldThrowException = () => MSTestAdapterSettings.ToSettings(reader);
+            void shouldThrowException() => MSTestAdapterSettings.ToSettings(reader);
 
             ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(SettingsException));
         }

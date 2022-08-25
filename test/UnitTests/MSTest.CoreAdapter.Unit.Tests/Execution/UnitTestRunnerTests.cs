@@ -96,7 +96,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         [TestMethodV1]
         public void RunSingleTestShouldThrowIfTestMethodIsNull()
         {
-            Action a = () => this.unitTestRunner.RunSingleTest(null, null);
+            void a() => this.unitTestRunner.RunSingleTest(null, null);
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
@@ -104,7 +104,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
         public void RunSingleTestShouldThrowIfTestRunParamtersIsNull()
         {
             var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-            Action a = () => this.unitTestRunner.RunSingleTest(testMethod, null);
+            void a() => this.unitTestRunner.RunSingleTest(testMethod, null);
             ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
         }
 
