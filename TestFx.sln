@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FF8B1B72-55A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Adapter", "Adapter", "{24088844-2107-4DB2-8F3F-CBCA94FC4B28}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.CoreAdapter", "src\Adapter\MSTest.CoreAdapter\MSTest.CoreAdapter.csproj", "{98BA6D2C-1F3D-4636-8E1D-D4932B7A253D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.TestAdapter", "src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj", "{98BA6D2C-1F3D-4636-8E1D-D4932B7A253D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Interface", "src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj", "{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}"
 EndProject
@@ -153,7 +153,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BCF5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{92F8E9A2-903E-4025-99BC-7DC478D5466D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FxExtensibility", "samples\FxExtensibility\FxExtensibility.csproj", "{A82770C0-1FF5-43C7-8790-471D5E4F8D6E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FxExtensibility", "samples\FxExtensibility\FxExtensibility.csproj", "{A82770C0-1FF5-43C7-8790-471D5E4F8D6E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FxExtensibilityTestProject", "test\E2ETests\TestAssets\FxExtensibilityTestProject\FxExtensibilityTestProject.csproj", "{4004757A-0080-4410-B90A-6169B20F151B}"
 EndProject

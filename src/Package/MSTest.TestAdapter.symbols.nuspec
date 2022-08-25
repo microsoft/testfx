@@ -54,7 +54,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="MSTest.CoreAdapter\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\_common\" />
+    <file src="MSTest.TestAdapter\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\_common\" />
     <file src="PlatformServices.Interface\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="build\_common\" />
     <file src="PlatformServices.Desktop\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
     <file src="MSTest.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\_common\" />
@@ -96,12 +96,12 @@
     <file src="Microsoft.TestPlatform.AdapterUtilities\net462\" target="build\net462\" />
 
     <!-- Localization -->
-    <file src="MSTest.CoreAdapter\**\*.resources.dll" target="\build\_common\" />
+    <file src="MSTest.TestAdapter\**\*.resources.dll" target="\build\_common\" />
     <file src="PlatformServices.Desktop\net462\**\*.resources.dll" target="\build\_common\" />
     <file src="MSTest.Core\**\*.resources.dll" target="build\_common\" />
 
     <!-- Symbols -->
-    <file src="MSTest.CoreAdapter\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" target="build\_common\" />
+    <file src="MSTest.TestAdapter\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" target="build\_common\" />
     <file src="PlatformServices.Interface\netstandard1.4\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" target="build\_common\" />
     <file src="PlatformServices.Desktop\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\_common\" />
     <file src="MSTest.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="build\_common\" />

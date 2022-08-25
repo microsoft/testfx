@@ -49,9 +49,9 @@
       <Name>PlatformServices.Portable</Name>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.CoreAdapter\MSTest.CoreAdapter.csproj">
+    <ProjectReference Include="..\..\..\src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj">
       <Project>{98ba6d2c-1f3d-4636-8e1d-d4932b7a253d}</Project>
-      <Name>MSTest.CoreAdapter</Name>
+      <Name>MSTest.TestAdapter</Name>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
