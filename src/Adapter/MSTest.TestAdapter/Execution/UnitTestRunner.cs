@@ -217,9 +217,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                         cleanupTrace = logListener.DebugTrace;
                         cleanupErrorLogs = logListener.StandardError;
                         var lastResult = results[results.Length - 1];
-                        lastResult.StandardOut = lastResult.StandardOut + cleanupLogs;
-                        lastResult.StandardError = lastResult.StandardError + cleanupErrorLogs;
-                        lastResult.DebugTrace = lastResult.DebugTrace + cleanupTrace;
+                        lastResult.StandardOut += cleanupLogs;
+                        lastResult.StandardError += cleanupErrorLogs;
+                        lastResult.DebugTrace += cleanupTrace;
                     }
                 }
                 catch (Exception e)

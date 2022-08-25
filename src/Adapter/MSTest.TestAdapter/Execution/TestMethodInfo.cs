@@ -545,7 +545,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
                 if (realExceptionStackTraceInfo != null)
                 {
                     cleanupStackTrace.Append(realExceptionStackTraceInfo.ErrorStackTrace);
-                    cleanupStackTraceInfo = cleanupStackTraceInfo ?? realExceptionStackTraceInfo;
+                    cleanupStackTraceInfo ??= realExceptionStackTraceInfo;
                 }
 
                 var finalStackTraceInfo = cleanupStackTraceInfo != null
