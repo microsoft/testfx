@@ -99,6 +99,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP
         /// The create navigation session should return null for all sources.
         /// </summary>
         [TestMethod]
+        [Ignore] // TODO: Re-enable this tests when we have merged projects
         public void CreateNavigationSessionShouldReturnNullForAllSources()
         {
             Assert.IsNull(this.fileOperations.CreateNavigationSession(null));
