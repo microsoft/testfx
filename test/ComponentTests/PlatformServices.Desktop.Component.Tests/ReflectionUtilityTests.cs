@@ -38,17 +38,13 @@ namespace PlatformServices.Desktop.ComponentTests
         {
             this.reflectionUtility = new ReflectionUtility();
 
-            var currentAssemblyPath = Path.GetDirectoryName(typeof(ReflectionUtilityTests).Assembly.Location);
+            var currentAssemblyDirectory = new FileInfo(typeof(ReflectionUtilityTests).Assembly.Location).Directory;
             var testAssetPath =
                 Path.Combine(
-                    Directory.GetParent(Directory.GetParent(Directory.GetParent(currentAssemblyPath).FullName).FullName).FullName,
-                    "artifacts",
-                    "TestAssets");
+                    currentAssemblyDirectory.Parent.Parent.Parent.FullName,
+                    "TestAssets",
+                    currentAssemblyDirectory.Name /* TFM (e.g. net462) */);
             this.testAsset = Assembly.ReflectionOnlyLoadFrom(Path.Combine(testAssetPath, "TestProjectForDiscovery.dll"));
-
-            // Also pre-load the Test Framework assembly.
-            Assembly.ReflectionOnlyLoadFrom(
-                Path.Combine(testAssetPath, "Microsoft.VisualStudio.TestPlatform.TestFramework.dll"));
 
             // This is needed for System assemblies.
             AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(this.ReflectionOnlyOnResolve);

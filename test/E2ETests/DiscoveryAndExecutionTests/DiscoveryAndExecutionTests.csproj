@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-
     <IsPackable>false</IsPackable>
     <NoWarn>1685</NoWarn>
     <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
@@ -25,25 +23,21 @@
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter">
       <HintPath>$(ArtifactsBinDir)MSTest.CoreAdapter\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
     </Reference>
-
     <Reference Include="System.Collections.Concurrent">
       <HintPath>$(ArtifactsBinDir)MSTest.CoreAdapter\$(TargetFramework)\System.Collections.Concurrent.dll</HintPath>
     </Reference>
-
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices">
       <HintPath>$(ArtifactsBinDir)PlatformServices.Desktop\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
     </Reference>
-    
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface">
       <HintPath>$(ArtifactsBinDir)PlatformServices.Interface\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll</HintPath>
     </Reference>
-    
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework">
       <HintPath>$(ArtifactsBinDir)MSTest.Core\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
     </Reference>
-    
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions">
       <HintPath>$(ArtifactsBinDir)Extension.Desktop\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
     </Reference>
   </ItemGroup>
+
 </Project>

@@ -5,6 +5,7 @@
   <Import Project="$(RepoRoot)scripts\build\TestFx.Sign.targets" Condition=" '$(TestFxSigningTargetsImported)' != 'true' " />
 
   <!-- StyleCop settings. -->
+  <!-- TODO: Re-enable Stylecop analyzers in repo
   <ItemGroup Condition=" '$(ShouldEnableStyleCop)' != 'false' and '$(IsVsixProj)' != 'true'">
     <AdditionalFiles Include="$(RepoRoot)scripts\build\stylecop.json">
       <Link>stylecop.json</Link>
@@ -13,22 +14,22 @@
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
-  </ItemGroup>
-  
+  </ItemGroup>-->
+
   <!-- WARNING remove this when SDK-style project conversion is being done. -->
-  <!-- 
-       We are generating an AssemblyInfo file with certain attributes here, 
+  <!--
+       We are generating an AssemblyInfo file with certain attributes here,
        SDK-style project does that automatically (https://github.com/dotnet/sdk/blob/58e663374580ef082a82f7cb75ea233275d432cd/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.GenerateAssemblyInfo.targets)
        we should use that behavior instead.
 
-       WE SHOULD ENSURE WE ARE SETTING THESE PROPERTIES AS SPECIFIED BELOW, 
+       WE SHOULD ENSURE WE ARE SETTING THESE PROPERTIES AS SPECIFIED BELOW,
        OTHERWISE IT WILL BREAK OUR TESTS.
 
             AssemblyVersion              = "14.0.0.0"
             AssemblyFileVersion          = "14.0.0.1"
             AssemblyInformationalVersion = "14.0.0.1"
 
-       So if you E2E tests are failing, and you removed this comment, 
+       So if you E2E tests are failing, and you removed this comment,
        I hope you see it in diff.
   -->
   <!-- Generate AssemblyInfo.cs -->

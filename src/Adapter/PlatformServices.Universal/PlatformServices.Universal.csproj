@@ -28,12 +28,6 @@
     <LanguageTargets>$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets</LanguageTargets>
   </PropertyGroup>
 
-  <!-- Remove after ARCADE transition -->
-  <PropertyGroup>
-    <ShouldEnableStyleCop>false</ShouldEnableStyleCop>
-  </PropertyGroup>
-  <!-- / Remove after ARCADE transition -->
-
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>

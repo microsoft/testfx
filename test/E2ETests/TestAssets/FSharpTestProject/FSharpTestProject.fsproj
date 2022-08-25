@@ -12,9 +12,9 @@
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Include="Tests.fs" />
   </ItemGroup>
-  
+
 </Project>
