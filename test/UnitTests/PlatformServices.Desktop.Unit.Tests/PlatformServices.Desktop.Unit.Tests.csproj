@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{599833DC-EC5A-40CA-B5CF-DEF719548EEF}</ProjectGuid>
     <RootNamespace>MSTestAdapter.PlatformServices.Desktop.UnitTests</RootNamespace>
     <AssemblyName>MSTestAdapter.PlatformServices.Desktop.UnitTests</AssemblyName>
     <DefineConstants>TRACE;</DefineConstants>
@@ -42,28 +41,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj">
-      <Project>{b0fce474-14bc-449a-91ea-a433342c0d63}</Project>
-      <Name>PlatformServices.Desktop</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
-      <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
-      <Name>PlatformServices.Interface</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Desktop\Extension.Desktop.csproj">
-      <Project>{a7ea583b-a2b0-47da-a058-458f247c7575}</Project>
-      <Name>Extension.Desktop</Name>
-      <Aliases>FrameworkV2Extension</Aliases>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
-      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
-      <Name>MSTest.Core</Name>
-      <Aliases>FrameworkV2</Aliases>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj">
-      <Project>{F81C7549-E3A3-4770-AC3F-3BC7356E61E8}</Project>
-      <Name>MSTest.CoreAdapter.TestUtilities</Name>
-    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" Aliases="FrameworkV2Extension" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Aliases="FrameworkV2" />
+    <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj" />
   </ItemGroup>
 
   <ItemGroup>

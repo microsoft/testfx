@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{4EA6EED3-0579-4C7C-94EA-52B2AD2A9D39}</ProjectGuid>
     <RootNamespace>MSTestAdapter.PlatformServices.Desktop.ComponentTests</RootNamespace>
     <AssemblyName>PlatformServices.Desktop.ComponentTests</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
@@ -40,23 +39,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj">
-      <Project>{b0fce474-14bc-449a-91ea-a433342c0d63}</Project>
-      <Name>PlatformServices.Desktop</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj">
-      <Project>{bbc99a6b-4490-49dd-9c12-af2c1e95576e}</Project>
-      <Name>PlatformServices.Interface</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
-      <Project>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</Project>
-      <Name>MSTest.Core</Name>
-      <Aliases>FrameworkV2</Aliases>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj">
-      <Project>{5c411bbf-fcc9-4430-ae08-07666d39fd04}</Project>
-      <Name>SampleFrameworkExtensions</Name>
-    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Aliases="FrameworkV2" />
+    <ProjectReference Include="$(RepoRoot)test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

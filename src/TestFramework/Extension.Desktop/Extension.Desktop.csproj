@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{A7EA583B-A2B0-47DA-A058-458F247C7575}</ProjectGuid>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
@@ -45,11 +44,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj">
-      <Project>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</Project>
-      <Name>MSTest.Core</Name>
-      <Private>False</Private>
-    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

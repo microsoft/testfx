@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{A94E3FCA-2FB3-4C79-9F39-5B652B6992F0}</ProjectGuid>
     <RootNamespace>MSTestAdapter.Smoke.E2ETests</RootNamespace>
     <AssemblyName>MSTestAdapter.Smoke.E2ETests</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
@@ -38,10 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)test\E2ETests\Automation.CLI\Automation.CLI.csproj">
-      <Project>{9c1219e0-e775-47f9-9236-63f03f774801}</Project>
-      <Name>Automation.CLI</Name>
-    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)test\E2ETests\Automation.CLI\Automation.CLI.csproj" />
   </ItemGroup>
 
 </Project>

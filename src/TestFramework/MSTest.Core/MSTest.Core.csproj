@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{7252D9E3-267D-442C-96BC-C73AEF3241D6}</ProjectGuid>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>

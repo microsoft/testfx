@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{DF131865-84EE-4540-8112-E88ACEBDEA09}</ProjectGuid>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</AssemblyName>
     <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UAP</DefineConstants>
@@ -47,11 +46,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" SetTargetFramework="TargetFramework=netstandard1.4">
-      <Project>{7252d9e3-267d-442c-96bc-c73aef3241d6}</Project>
-      <Name>MSTest.Core</Name>
-      <Private>True</Private>
-    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" SetTargetFramework="TargetFramework=netstandard1.4" Private="True" />
   </ItemGroup>
 
   <ItemGroup>
