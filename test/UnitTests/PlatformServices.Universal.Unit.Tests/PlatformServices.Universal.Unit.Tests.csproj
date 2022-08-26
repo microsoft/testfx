@@ -28,19 +28,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Collections" Private="True" />
-    <Reference Include="System.Diagnostics.Debug" Private="True" />
-    <Reference Include="System.Runtime" Private="True" />
-    <Reference Include="System.Runtime.Extensions" Private="True" />
-    <Reference Include="System.Reflection" Private="True" />
-    <Reference Include="System.IO" Private="True" />
-    <Reference Include="System.Globalization" Private="True" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.ReaderWriter" Private="True" />
-    <Reference Include="System.Threading" Private="True" />
-    <Reference Include="System.Threading.Tasks" Private="True" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices">
       <HintPath>$(ArtifactsBinDir)PlatformServices.Universal\uap10.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
     </Reference>
