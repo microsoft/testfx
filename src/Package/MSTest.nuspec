@@ -12,8 +12,8 @@
 
       Supported platforms:
       - .NET 4.6.2+
-      - .NET Core 3.1+ (Universal Windows Apps 10+) 
-      - .NET 5.0 
+      - .NET Core 3.1+ (Universal Windows Apps 10+)
+      - .NET 5.0
       - .NET 5.0 Windows.18362+
       - ASP.NET Core 1.0+
     </description>
@@ -24,9 +24,9 @@
     <icon>Icon.png</icon>
     <copyright>© Microsoft Corporation. All rights reserved.</copyright>
     <tags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</tags>
-    <repository type="git" 
-                url="https://github.com/microsoft/testfx" 
-                branch="$BranchName$" 
+    <repository type="git"
+                url="https://github.com/microsoft/testfx"
+                branch="$BranchName$"
                 commit="$CommitHash$" />
 
     <dependencies>
