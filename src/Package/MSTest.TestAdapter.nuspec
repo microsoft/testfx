@@ -30,14 +30,6 @@
                 commit="$CommitHash$" />
 
     <dependencies>
-      <group targetFramework="netcoreapp1.0">
-        <dependency id="NETStandard.Library" version="1.6.1" />
-      </group>
-
-      <group targetFramework="netstandard1.5">
-        <dependency id="NETStandard.Library" version="1.6.1" />
-      </group>
-
       <group targetFramework="netstandard2.0" />
 
       <group targetFramework="net462" />
@@ -59,16 +51,6 @@
     <file src="PlatformServices.Desktop\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
     <file src="MSTest.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\_common\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard2.0\" target="build\_common\" />
-
-    <!-- netcoreapp1.0 -->
-    <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netcoreapp1.0\" />
-    <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp1.0\" />
-    <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard1.0\" target="build\netcoreapp1.0\" />
-
-    <!-- netstandard1.5 -->
-    <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netstandard1.5\" />
-    <file src="PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard1.5\" />
-    <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard1.0\" target="build\netstandard1.5\" />
 
     <!-- netstandard2.0 -->
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netstandard2.0\" />

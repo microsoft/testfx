@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.4;netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <LangVersion>Latest</LangVersion>
   </PropertyGroup>

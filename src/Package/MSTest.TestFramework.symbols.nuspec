@@ -32,11 +32,6 @@
                 commit="$CommitHash$" />
 
     <dependencies>
-      <group targetFramework="netstandard1.4">
-        <dependency id="NETStandard.Library" version="1.6.1" />
-        <dependency id="System.Diagnostics.TextWriterTraceListener" version="4.3.0" />
-      </group>
-
       <group targetFramework="netstandard2.0" />
 
       <group targetFramework="net462" />
@@ -47,16 +42,6 @@
     </dependencies>
   </metadata>
   <files>
-    <!-- netstandard1.4 -->
-    <file src="MSTest.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard1.4\" />
-    <file src="Extension.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard1.4\" />
-    <file src="MSTest.Core\netstandard1.4\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard1.4\" />
-    <file src="Extension.Core\netstandard1.4\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard1.4\" />
-
-    <!-- Symbols -->
-    <file src="MSTest.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\netstandard1.4\" />
-    <file src="Extension.Core\netstandard1.4\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\netstandard1.4\" />
-
     <!-- netstandard2.0 -->
     <file src="MSTest.Core\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard2.0\" />
     <file src="Extension.Core\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard2.0\" />
