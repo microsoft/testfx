@@ -14,7 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 
     internal class FileUtility
     {
-        private AssemblyUtility assemblyUtility;
+        private readonly AssemblyUtility assemblyUtility;
 
         public FileUtility()
         {

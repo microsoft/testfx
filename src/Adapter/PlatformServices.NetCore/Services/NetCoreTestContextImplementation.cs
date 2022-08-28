@@ -50,9 +50,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Test Method
         /// </summary>
-        private ITestMethod testMethod;
+        private readonly ITestMethod testMethod;
 
-        private ThreadSafeStringWriter threadSafeStringWriter;
+        private readonly ThreadSafeStringWriter threadSafeStringWriter;
         private bool stringWriterDisposed;
 
         /// <summary>

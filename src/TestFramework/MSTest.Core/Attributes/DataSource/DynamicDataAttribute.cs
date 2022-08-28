@@ -31,11 +31,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     {
-        private string dynamicDataSourceName;
+        private readonly string dynamicDataSourceName;
 
         private Type dynamicDataDeclaringType;
 
-        private DynamicDataSourceType dynamicDataSourceType;
+        private readonly DynamicDataSourceType dynamicDataSourceType;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.

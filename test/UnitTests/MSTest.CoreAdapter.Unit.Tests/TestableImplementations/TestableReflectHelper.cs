@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
         /// MemberTypes.TypeInfo for class level
         /// MemberTypes.Method for method level
         /// </summary>
-        private Dictionary<int, Attribute[]> customAttributes;
+        private readonly Dictionary<int, Attribute[]> customAttributes;
 
         public TestableReflectHelper()
         {

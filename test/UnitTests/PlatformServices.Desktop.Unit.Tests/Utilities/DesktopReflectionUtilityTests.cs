@@ -21,7 +21,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities
     public class ReflectionUtilityTests
 #pragma warning restore SA1649 // File name must match first type name
     {
-        private ReflectionUtility reflectionUtility;
+        private readonly ReflectionUtility reflectionUtility;
 
         public ReflectionUtilityTests()
         {
