@@ -19,12 +19,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
     /// </summary>
     internal class DeploymentItemUtility
     {
-        private ReflectionUtility reflectionUtility;
+        private readonly ReflectionUtility reflectionUtility;
 
         /// <summary>
         /// A cache for class level deployment items.
         /// </summary>
-        private Dictionary<Type, IList<DeploymentItem>> classLevelDeploymentItems;
+        private readonly Dictionary<Type, IList<DeploymentItem>> classLevelDeploymentItems;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DeploymentItemUtility"/> class.

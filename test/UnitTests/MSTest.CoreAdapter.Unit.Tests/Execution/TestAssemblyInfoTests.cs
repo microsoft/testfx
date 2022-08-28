@@ -34,7 +34,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private readonly MethodInfo dummyMethodInfo;
 
-        private UTFExtension.TestContext testContext;
+        private readonly UTFExtension.TestContext testContext;
 
         public TestAssemblyInfoTests()
         {

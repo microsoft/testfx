@@ -13,7 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
     /// </summary>
     internal sealed class OdbcDataConnection : TestDataConnectionSql
     {
-        private bool isMSSql;
+        private readonly bool isMSSql;
 
         public OdbcDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
             : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)

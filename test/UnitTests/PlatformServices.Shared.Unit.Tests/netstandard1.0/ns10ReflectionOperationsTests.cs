@@ -22,7 +22,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     [TestClass]
     public class ReflectionOperationsTests
     {
-        private ReflectionOperations reflectionOperations;
+        private readonly ReflectionOperations reflectionOperations;
 
         public ReflectionOperationsTests()
         {

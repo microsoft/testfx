@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
     [TestClass]
     public class TcmTestPropertiesProviderTests
     {
-        private TestProperty[] tcmKnownProperties = new TestProperty[]
+        private readonly TestProperty[] tcmKnownProperties = new TestProperty[]
         {
             TestAdapterConstants.TestRunIdProperty,
             TestAdapterConstants.TestPlanIdProperty,

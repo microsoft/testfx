@@ -13,7 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     /// </summary>
     internal class SequentialIntPermutation : IEnumerable<int>
     {
-        private int numberOfObjects;
+        private readonly int numberOfObjects;
 
         public SequentialIntPermutation(int numberOfObjects)
         {

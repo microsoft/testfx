@@ -43,7 +43,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution
 
         private readonly UTFExtension.TestContext testContext;
 
-        private TestClassInfo testClassInfo;
+        private readonly TestClassInfo testClassInfo;
 
         public TestClassInfoTests()
         {

@@ -25,9 +25,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
     {
         private string quoteSuffix;
         private string quotePrefix;
-        private DbCommandBuilder commandBuilder;
-        private DbConnection connection;
-        private DbProviderFactory factory;
+        private readonly DbCommandBuilder commandBuilder;
+        private readonly DbConnection connection;
+        private readonly DbProviderFactory factory;
 
         #region Constructor
 
