@@ -17,16 +17,9 @@ namespace DiscoveryAndExecutionTests.Utilities
 
     internal static class TestCaseFilterFactory
     {
-        private static readonly MethodInfo CachedGetMultiValueMethod;
-        private static readonly MethodInfo CachedEqualsComparerMethod;
-        private static readonly MethodInfo CachedContainsComparerMethod;
-
-        static TestCaseFilterFactory()
-        {
-            CachedGetMultiValueMethod = typeof(TestCaseFilterFactory).GetMethod(nameof(GetMultiValue), BindingFlags.Static | BindingFlags.NonPublic);
-            CachedEqualsComparerMethod = typeof(TestCaseFilterFactory).GetMethod(nameof(EqualsComparer), BindingFlags.Static | BindingFlags.NonPublic);
-            CachedContainsComparerMethod = typeof(TestCaseFilterFactory).GetMethod(nameof(ContainsComparer), BindingFlags.Static | BindingFlags.NonPublic);
-        }
+        private static readonly MethodInfo CachedGetMultiValueMethod = typeof(TestCaseFilterFactory).GetMethod(nameof(GetMultiValue), BindingFlags.Static | BindingFlags.NonPublic);
+        private static readonly MethodInfo CachedEqualsComparerMethod = typeof(TestCaseFilterFactory).GetMethod(nameof(EqualsComparer), BindingFlags.Static | BindingFlags.NonPublic);
+        private static readonly MethodInfo CachedContainsComparerMethod = typeof(TestCaseFilterFactory).GetMethod(nameof(ContainsComparer), BindingFlags.Static | BindingFlags.NonPublic);
 
         public static ITestCaseFilterExpression ParseTestFilter(string filterString)
         {
