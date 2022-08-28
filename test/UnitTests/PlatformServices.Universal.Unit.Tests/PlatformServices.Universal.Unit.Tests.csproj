@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>net462</TargetFrameworks>
+    <TargetFrameworks>uap10.0.16299</TargetFrameworks>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <LangVersion>Latest</LangVersion>
   </PropertyGroup>
@@ -29,10 +29,10 @@
 
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices">
-      <HintPath>$(ArtifactsBinDir)PlatformServices.Universal\uap10.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
+      <HintPath>$(ArtifactsBinDir)PlatformServices.Universal\uap10.0.16299\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions">
-      <HintPath>$(ArtifactsBinDir)Extension.UWP\uap10.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+      <HintPath>$(ArtifactsBinDir)Extension.UWP\uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Aliases="FrameworkV1">
       <HintPath>$(MSBuildExtensionsPath)\..\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
@@ -40,18 +40,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Aliases="FrameworkV2" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Universal\PlatformServices.Universal.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Aliases="FrameworkV2" SetTargetFramework="TargetFramework=netstandard2.0" />
     <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" targetFramework="net462" />
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" targetFramework="uap10.0" />
-    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
-    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
-    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetFrameworksVersion)" />
-    <PackageReference Include="Castle.Core" Version="$(CastleCoreVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
   </ItemGroup>
 

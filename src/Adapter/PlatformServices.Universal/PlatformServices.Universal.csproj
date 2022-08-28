@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>uap10.0</TargetFrameworks>
+    <TargetFrameworks>uap10.0.16299</TargetFrameworks>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <LangVersion>Latest</LangVersion>
   </PropertyGroup>
@@ -9,22 +9,9 @@
    <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
-    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UAP</DefineConstants>
+    <DefineConstants>TRACE;NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
-    <NugetTargetMoniker>UAP,Version=v10.0</NugetTargetMoniker>
-    <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.16299.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.16299.0</TargetPlatformMinVersion>
-    <TargetFrameworkIdentifier>.NETCore</TargetFrameworkIdentifier>
-    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
-    <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
-    <DefaultLanguage>en</DefaultLanguage>
-    <LanguageTargets>$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets</LanguageTargets>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -48,13 +35,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="$(MicrosoftNETCoreUniversalWindowsPlatformVersion)" />
-    <!-- CVE-2017-0247 -->
-    <PackageReference Include="System.Net.WebSockets.Client" Version="$(SystemNetWebSocketsClientVersion)" />
-    <!-- CVE-2019-0820 -->
-    <PackageReference Include="System.Text.RegularExpressions" Version="$(SystemTextRegularExpressionsVersion)" />
-    <!-- CVE-2019-0981, CVE-2019-0980, CVE-2019-0657  -->
-    <PackageReference Include="System.Private.Uri" Version="$(SystemPrivateUriVersion)" />
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
