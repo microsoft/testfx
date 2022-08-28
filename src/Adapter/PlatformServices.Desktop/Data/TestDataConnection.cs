@@ -25,7 +25,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
         private static bool? extendedDiagnosticsEnabled;
 
         // List of places to look for files when substituting |DataDirectory|
-        private List<string> dataFolders;
+        private readonly List<string> dataFolders;
 
         internal protected TestDataConnection(List<string> dataFolders)
         {

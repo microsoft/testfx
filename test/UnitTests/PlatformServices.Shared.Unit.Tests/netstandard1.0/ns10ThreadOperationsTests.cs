@@ -24,7 +24,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     [TestClass]
     public class ThreadOperationsTests
     {
-        private ThreadOperations asyncOperations;
+        private readonly ThreadOperations asyncOperations;
 
         public ThreadOperationsTests()
         {

@@ -19,7 +19,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Deployment
     [TestClass]
     public class TestRunDirectoriesTests
     {
-        private TestRunDirectories testRunDirectories = new(@"C:\temp");
+        private readonly TestRunDirectories testRunDirectories = new(@"C:\temp");
 
         [TestMethod]
         public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory()

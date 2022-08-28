@@ -24,15 +24,14 @@ namespace PlatformServices.Desktop.ComponentTests
     [TestClass]
     public class ReflectionUtilityTests
     {
-        private ReflectionUtility reflectionUtility;
-
-        private Assembly testAsset;
+        private readonly ReflectionUtility reflectionUtility;
+        private readonly Assembly testAsset;
 
         /// <summary>
         /// Dictionary of Assemblies discovered to date. Must be locked as it may
         /// be accessed in a multi-threaded context.
         /// </summary>
-        private Dictionary<string, Assembly> resolvedAssemblies = new();
+        private readonly Dictionary<string, Assembly> resolvedAssemblies = new();
 
         public ReflectionUtilityTests()
         {

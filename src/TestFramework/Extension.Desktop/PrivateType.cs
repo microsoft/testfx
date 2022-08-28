@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting
         /// <summary>
         /// The wrapped type.
         /// </summary>
-        private Type type;
+        private readonly Type type;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PrivateType"/> class that contains the private type.

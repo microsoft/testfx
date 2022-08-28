@@ -20,7 +20,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     [TestClass]
     public class DesktopReflectionOperationsTests
     {
-        private ReflectionOperations reflectionOperations;
+        private readonly ReflectionOperations reflectionOperations;
 
         public DesktopReflectionOperationsTests()
         {
