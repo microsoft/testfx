@@ -52,10 +52,10 @@
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs" Link="Services\ns10MSTestSettingsProvider.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs" Link="ns10RecursiveDirectoryPath.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextPropertyStrings.cs" Link="Services\ns10TestContextPropertyStrings.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\Utilities\NetCoreReflectionUtility.cs" Link="Utilities\NetCoreReflectionUtility.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\Utilities\NetCoreDeploymentUtility.cs" Link="Utilities\NetCoreDeploymentUtility.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\Deployment\NetCoreTestRunDirectories.cs" Link="Deployment\NetCoreTestRunDirectories.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\Utilities\NetCoreAssemblyUtility.cs" Link="Utilities\NetCoreAssemblyUtility.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices\Utilities\NetCoreReflectionUtility.cs" Link="Utilities\NetCoreReflectionUtility.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices\Utilities\NetCoreDeploymentUtility.cs" Link="Utilities\NetCoreDeploymentUtility.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices\Deployment\NetCoreTestRunDirectories.cs" Link="Deployment\NetCoreTestRunDirectories.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices\Utilities\NetCoreAssemblyUtility.cs" Link="Utilities\NetCoreAssemblyUtility.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" Link="Services\ns10ThreadOperations.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs" Link="Services\ns10TraceListener.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs" Link="Services\ns10TraceListenerManager.cs" />

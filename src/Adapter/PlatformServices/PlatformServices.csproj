@@ -1,32 +1,45 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.4;netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum)</TargetFrameworks>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <LangVersion>Latest</LangVersion>
+  </PropertyGroup>
+
   <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <UseSharedResources>true</UseSharedResources>
-    <LangVersion>latest</LangVersion>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
 
-  <!-- Remove after ARCADE transition -->
-  <PropertyGroup>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
-    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG;CODE_ANALYSIS</DefineConstants>
   </PropertyGroup>
-  <!-- / Remove after ARCADE transition -->
-
-  <ImportGroup>
-    <Import Project="$(NuGetPackageRoot)\Microbuild.Core\$(MicroBuildCoreVersion)\build\Microbuild.Core.targets" />
-    <Import Project="$(NuGetPackageRoot)\Microbuild.Core\$(MicroBuildCoreVersion)\build\Microbuild.Core.props" />
-  </ImportGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extensions\Extensions.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extensions\Extensions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.4' OR '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="$(SystemDiagnosticsTextWriterTraceListenerVersion)" />
     <!-- CVE-2019-0820 -->
@@ -38,35 +51,30 @@
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs" Link="MarshalByRefObject.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs" Link="ns10RecursiveDirectoryPath.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs" Link="SerializableAttribute.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10FileOperations.cs" Link="Services\ns10FileOperations.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs" Link="Services\ns10DiaSessionOperations.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs" Link="Services\ns10DiaSessionOperations.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10FileOperations.cs" Link="Services\ns10FileOperations.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs" Link="Services\ns10MSTestSettingsProvider.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs" Link="Services\ns10ReflectionOperations.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs" Link="Services\ns10TestDataSource.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestSource.cs" Link="Services\ns10TestSource.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" Link="Services\ns10ThreadOperations.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceLogger.cs" Link="Services\ns10TraceLogger.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10SettingsProvider.cs" Link="Services\ns10SettingsProvider.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs" Link="Services\ns10TestContextImplementation.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextPropertyStrings.cs" Link="Services\ns10TestContextPropertyStrings.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs" Link="Services\ns10TestDataSource.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDeployment.cs" Link="Services\ns10TestDeployment.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestSource.cs" Link="Services\ns10TestSource.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestSourceHost.cs" Link="Services\ns10TestSourceHost.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" Link="Services\ns10ThreadOperations.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadSafeStringWriter.cs" Link="Services\ns10ThreadSafeStringWriter.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs" Link="Services\ns10TraceListener.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs" Link="Services\ns10TraceListenerManager.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceLogger.cs" Link="Services\ns10TraceLogger.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Utilities\ns10Validate.cs" Link="Utilities\ns10Validate.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Extensions\ns13ExceptionExtensions.cs" Link="Extensions\ns13ExceptionExtensions.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\ns13DeploymentItem.cs" Link="Deployment\ns13DeploymentItem.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13MSTestAdapterSettings.cs" Link="Services\ns13MSTestAdapterSettings.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TestDeployment.cs" Link="Services\ns13TestDeployment.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs" Link="Services\ns13TraceListener.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListenerManager.cs" Link="Services\ns13TraceListenerManager.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentItemUtility.cs" Link="Utilities\ns13DeploymentItemUtility.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentUtilityBase.cs" Link="Utilities\ns13DeploymentUtilityBase.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs" Link="Utilities\ns13FileUtility.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13ThreadSafeStringWriter.cs" Link="Services\ns13ThreadSafeStringWriter.cs" />
-    <Compile Include="Deployment\NetCoreTestRunDirectories.cs" />
-    <Compile Include="Friends.cs" />
-    <Compile Include="Services\NetCoreTestContextImplementation.cs" />
-    <Compile Include="Services\NetCoreTestSourceHost.cs" />
-    <Compile Include="Utilities\NetCoreAssemblyUtility.cs" />
-    <Compile Include="Utilities\NetCoreDeploymentUtility.cs" />
-    <Compile Include="Utilities\NetCoreReflectionUtility.cs" />
-    <Folder Include="Resources\" />
-
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
       <Link>Resources\Resource.Designer.cs</Link>
       <AutoGen>True</AutoGen>
@@ -84,4 +92,5 @@
       <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
+
 </Project>

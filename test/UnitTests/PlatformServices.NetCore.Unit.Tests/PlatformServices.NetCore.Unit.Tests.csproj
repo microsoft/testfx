@@ -16,7 +16,7 @@
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extensions\Extensions.csproj" Aliases="FrameworkV2Extension" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices\PlatformServices.csproj" />
   </ItemGroup>
 
   <ItemGroup>
