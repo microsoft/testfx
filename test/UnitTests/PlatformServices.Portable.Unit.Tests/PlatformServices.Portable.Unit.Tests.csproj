@@ -39,7 +39,7 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extensions\Extensions.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Aliases="FrameworkV2" />
     <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj" />
   </ItemGroup>

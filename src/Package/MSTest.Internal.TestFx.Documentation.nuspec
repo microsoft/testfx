@@ -24,8 +24,8 @@
   <files>
     <!--DotNet-->
     <file src="MSTest.Core\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="contentFiles\any\any\Core" />
-    <file src="Extension.Core\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Core" />
-    <file src="Extension.Desktop\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Desktop" />
+    <file src="Extensions\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Core" />
+    <file src="Extensions\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Desktop" />
     <file src="Extension.UWP\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\UWP" />
     <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\WinUI" />
 

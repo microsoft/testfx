@@ -42,7 +42,7 @@
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj" Private="true" />
     <ProjectReference Include="..\..\..\src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" Private="true" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Private="true" Aliases="FrameworkV2" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" Private="true" Aliases="FrameworkV2CoreExtension" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extensions\Extensions.csproj" Private="true" Aliases="FrameworkV2CoreExtension" />
     <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj" Private="true" />
   </ItemGroup>
 
