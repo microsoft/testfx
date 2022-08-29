@@ -139,7 +139,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
             }
 
             // Object model currently does not have support for SuspendCodeCoverage. We can remove this once support is added
-#if !NETSTANDARD2_0 && !NET5_0
+#if !NETSTANDARD2_0 && !NET5_0_OR_GREATER
             using (new SuspendCodeCoverage())
 #endif
             {

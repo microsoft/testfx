@@ -7,7 +7,7 @@
     <AssemblyTitle>Extension.WinUI</AssemblyTitle>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
 
-    <TargetFramework>net5.0-windows10.0.18362.0</TargetFramework>
+    <TargetFramework>net6.0-windows10.0.18362.0</TargetFramework>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>

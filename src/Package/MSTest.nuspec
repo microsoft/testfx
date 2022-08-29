@@ -49,7 +49,7 @@
         <!-- <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" /> -->
       </group>
 
-      <group targetFramework="net5.0">
+      <group targetFramework="net6.0">
         <dependency id="MSTest.TestAdapter" version="[$version$]" />
         <dependency id="MSTest.TestFramework" version="[$version$]" />
         <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" />
