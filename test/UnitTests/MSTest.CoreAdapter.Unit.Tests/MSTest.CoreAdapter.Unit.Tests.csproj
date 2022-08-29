@@ -4,7 +4,6 @@
   <PropertyGroup>
     <TargetFrameworks>net462</TargetFrameworks>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    <LangVersion>Latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>

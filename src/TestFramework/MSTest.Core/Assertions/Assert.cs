@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
-    #define HIDE_MESSAGELESS_IMPLEMENTATION
+#define HIDE_MESSAGELESS_IMPLEMENTATION
 #endif
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
