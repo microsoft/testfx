@@ -34,13 +34,7 @@
 
       <group targetFramework="net462" />
 
-      <group targetFramework="uap10.0">
-        <dependency id="System.Net.WebSockets.Client" version="[$SystemNetWebSocketsClientVersion$, ]" />
-        <dependency id="System.Net.NameResolution" version="[$SystemNetNameResolutionVersion$, ]" />
-        <dependency id="System.Text.RegularExpressions" version="[$SystemTextRegularExpressionsVersion$, ]" />
-        <dependency id="System.Private.Uri" version="[$SystemPrivateUriVersion$, ]" />
-        <dependency id="System.Xml.ReaderWriter" version="[$SystemXmlReaderWriterVersion$, ]" />
-      </group>
+      <group targetFramework="uap10.0" />
 
       <group targetFramework="net5.0" />
     </dependencies>
