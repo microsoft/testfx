@@ -40,8 +40,6 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="PlatformServices.Desktop\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\_common\" />
-
     <!-- netstandard2.0 -->
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netstandard2.0\" />
     <file src="PlatformServices.NetCore\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard2.0\" />
