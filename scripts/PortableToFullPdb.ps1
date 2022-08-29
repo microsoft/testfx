@@ -16,7 +16,7 @@ Param(
 # Variables
 #
 Write-Verbose "Setup environment variables."
-$TF_PortablePdbs = @("PlatformServices.NetCore\netstandard1.5\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb")
+$TF_PortablePdbs = @("PlatformServices.NetCore\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb")
 
 $PdbConverterToolVersion = Get-PackageVersion -PackageName "MicrosoftDiaSymReaderPdb2PdbVersion"
 
