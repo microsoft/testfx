@@ -15,22 +15,22 @@
       <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Name)' != '' "/>
       <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Parent.Name)' != '' "/>
     </ItemGroup>
-  </Target> 
+  </Target>
 
   <!-- Copy resources over to $(TargetDir) if this is a localized build. -->
   <Target Name="CopyMSTestV2Resources" BeforeTargets="PrepareForBuild" Condition=" '$(EnableMSTestV2CopyResources)' == 'true' " DependsOnTargets="GetMSTestV2CultureHierarchy">
-  
+
     <PropertyGroup>
       <CurrentUICultureHierarchy>%(CurrentUICultureHierarchy.Identity)</CurrentUICultureHierarchy>
     </PropertyGroup>
-  
+
     <ItemGroup>
       <MSTestV2Files Include="$(MSBuildThisFileDirectory)../_common/Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" />
       <MSTestV2Files Include="$(MSBuildThisFileDirectory)*.dll" />
     </ItemGroup>
-	
-	<ItemGroup>
-      <Content Include="@(MSTestV2Files->'%(RootDir)%(Directory)$(CurrentUICultureHierarchy)\%(FileName).resources.dll')" 
+
+  <ItemGroup>
+      <Content Include="@(MSTestV2Files->'%(RootDir)%(Directory)$(CurrentUICultureHierarchy)\%(FileName).resources.dll')"
                Condition="Exists('%(RootDir)%(Directory)$(CurrentUICultureHierarchy)\%(FileName).resources.dll')">
          <Link>$(CurrentUICultureHierarchy)\%(FileName).resources.dll</Link>
          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
