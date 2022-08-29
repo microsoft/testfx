@@ -62,9 +62,9 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 
         this.testMethod = testMethod;
         this.properties = new Dictionary<string, object>(properties);
-        this.threadSafeStringWriter = (ThreadSafeStringWriter)writer;
-        this.CancellationTokenSource = new CancellationTokenSource();
-        this.InitializeProperties();
+        threadSafeStringWriter = (ThreadSafeStringWriter)writer;
+        CancellationTokenSource = new CancellationTokenSource();
+        InitializeProperties();
     }
 
     #region TestContext impl
@@ -80,7 +80,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     {
         get
         {
-            return this.outcome;
+            return outcome;
         }
     }
 
@@ -97,7 +97,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     {
         get
         {
-            return this.GetPropertyValue(FullyQualifiedTestClassNameLabel) as string;
+            return GetPropertyValue(FullyQualifiedTestClassNameLabel) as string;
         }
     }
 
@@ -108,7 +108,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     {
         get
         {
-            return this.GetPropertyValue(TestNameLabel) as string;
+            return GetPropertyValue(TestNameLabel) as string;
         }
     }
 
@@ -123,7 +123,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     {
         get
         {
-            return this.properties as IDictionary;
+            return properties as IDictionary;
         }
     }
 
@@ -165,13 +165,13 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <returns>True if property with parameter name is present.</returns>
     public bool TryGetPropertyValue(string propertyName, out object propertyValue)
     {
-        if (this.properties == null)
+        if (properties == null)
         {
             propertyValue = null;
             return false;
         }
 
-        return this.properties.TryGetValue(propertyName, out propertyValue);
+        return properties.TryGetValue(propertyName, out propertyValue);
     }
 
     /// <summary>
@@ -181,9 +181,9 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <param name="propertyValue">Property value.</param>
     public void AddProperty(string propertyName, string propertyValue)
     {
-        this.properties ??= new Dictionary<string, object>();
+        properties ??= new Dictionary<string, object>();
 
-        this.properties.Add(propertyName, propertyValue);
+        properties.Add(propertyName, propertyValue);
     }
 
     /// <summary>
@@ -193,7 +193,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void Write(string message)
     {
-        if (this.stringWriterDisposed)
+        if (stringWriterDisposed)
         {
             return;
         }
@@ -201,11 +201,11 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         try
         {
             var msg = message?.Replace("\0", "\\0");
-            this.threadSafeStringWriter.Write(msg);
+            threadSafeStringWriter.Write(msg);
         }
         catch (ObjectDisposedException)
         {
-            this.stringWriterDisposed = true;
+            stringWriterDisposed = true;
         }
     }
 
@@ -217,7 +217,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void Write(string format, params object[] args)
     {
-        if (this.stringWriterDisposed)
+        if (stringWriterDisposed)
         {
             return;
         }
@@ -225,11 +225,11 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         try
         {
             string message = string.Format(CultureInfo.CurrentCulture, format?.Replace("\0", "\\0"), args);
-            this.threadSafeStringWriter.Write(message);
+            threadSafeStringWriter.Write(message);
         }
         catch (ObjectDisposedException)
         {
-            this.stringWriterDisposed = true;
+            stringWriterDisposed = true;
         }
     }
 
@@ -240,7 +240,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void WriteLine(string message)
     {
-        if (this.stringWriterDisposed)
+        if (stringWriterDisposed)
         {
             return;
         }
@@ -248,11 +248,11 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         try
         {
             var msg = message?.Replace("\0", "\\0");
-            this.threadSafeStringWriter.WriteLine(msg);
+            threadSafeStringWriter.WriteLine(msg);
         }
         catch (ObjectDisposedException)
         {
-            this.stringWriterDisposed = true;
+            stringWriterDisposed = true;
         }
     }
 
@@ -264,7 +264,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void WriteLine(string format, params object[] args)
     {
-        if (this.stringWriterDisposed)
+        if (stringWriterDisposed)
         {
             return;
         }
@@ -272,11 +272,11 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         try
         {
             string message = string.Format(CultureInfo.CurrentCulture, format?.Replace("\0", "\\0"), args);
-            this.threadSafeStringWriter.WriteLine(message);
+            threadSafeStringWriter.WriteLine(message);
         }
         catch (ObjectDisposedException)
         {
-            this.stringWriterDisposed = true;
+            stringWriterDisposed = true;
         }
     }
 
@@ -295,7 +295,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <returns>The test context messages added so far.</returns>
     public string GetDiagnosticMessages()
     {
-        return this.threadSafeStringWriter.ToString();
+        return threadSafeStringWriter.ToString();
     }
 
     /// <summary>
@@ -303,7 +303,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// </summary>
     public void ClearDiagnosticMessages()
     {
-        this.threadSafeStringWriter.ToStringAndClear();
+        threadSafeStringWriter.ToStringAndClear();
     }
 
     public void SetDataRow(object dataRow)
@@ -325,7 +325,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <returns>Property value</returns>
     private object GetPropertyValue(string propertyName)
     {
-        this.properties.TryGetValue(propertyName, out var propertyValue);
+        properties.TryGetValue(propertyName, out var propertyValue);
 
         return propertyValue;
     }
@@ -335,10 +335,10 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// </summary>
     private void InitializeProperties()
     {
-        this.properties[FullyQualifiedTestClassNameLabel] = this.testMethod.FullClassName;
-        this.properties[ManagedTypeLabel] = this.testMethod.ManagedTypeName;
-        this.properties[ManagedMethodLabel] = this.testMethod.ManagedMethodName;
-        this.properties[TestNameLabel] = this.testMethod.Name;
+        properties[FullyQualifiedTestClassNameLabel] = testMethod.FullClassName;
+        properties[ManagedTypeLabel] = testMethod.ManagedTypeName;
+        properties[ManagedMethodLabel] = testMethod.ManagedMethodName;
+        properties[TestNameLabel] = testMethod.Name;
     }
 }
 

@@ -23,7 +23,7 @@ public class RunConfigurationSettings
     /// </summary>
     public RunConfigurationSettings()
     {
-        this.CollectSourceInformation = true;
+        CollectSourceInformation = true;
     }
 
     /// <summary>

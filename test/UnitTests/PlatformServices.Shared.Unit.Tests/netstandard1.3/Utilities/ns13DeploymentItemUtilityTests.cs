@@ -55,9 +55,9 @@ public class DeploymentItemUtilityTests
     [TestInitialize]
     public void TestInit()
     {
-        this.mockReflectionUtility = new Mock<ReflectionUtility>();
-        this.deploymentItemUtility = new DeploymentItemUtility(this.mockReflectionUtility.Object);
-        this.warnings = new List<string>();
+        mockReflectionUtility = new Mock<ReflectionUtility>();
+        deploymentItemUtility = new DeploymentItemUtility(mockReflectionUtility.Object);
+        warnings = new List<string>();
     }
 
     #region GetClassLevelDeploymentItems tests
@@ -65,7 +65,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void GetClassLevelDeploymentItemsShouldReturnEmptyListWhenNoDeploymentItems()
     {
-        var deploymentItems = this.deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), this.warnings);
+        var deploymentItems = deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), warnings);
 
         Assert.IsNotNull(deploymentItems);
         Assert.AreEqual(0, deploymentItems.Count);
@@ -77,17 +77,17 @@ public class DeploymentItemUtilityTests
         var kvpArray = new[]
                 {
                     new KeyValuePair<string, string>(
-                        this.defaultDeploymentItemPath,
-                        this.defaultDeploymentItemOutputDirectory)
+                        defaultDeploymentItemPath,
+                        defaultDeploymentItemOutputDirectory)
                 };
-        this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), kvpArray);
+        SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), kvpArray);
 
-        var deploymentItems = this.deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), this.warnings);
+        var deploymentItems = deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), warnings);
         var expectedDeploymentItems = new DeploymentItem[]
                                           {
                                               new DeploymentItem(
-                                                  this.defaultDeploymentItemPath,
-                                                  this.defaultDeploymentItemOutputDirectory)
+                                                  defaultDeploymentItemPath,
+                                                  defaultDeploymentItemOutputDirectory)
                                           };
         CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
     }
@@ -98,18 +98,18 @@ public class DeploymentItemUtilityTests
         var deploymentItemAttributes = new[]
                                            {
                                                new KeyValuePair<string, string>(
-                                                   this.defaultDeploymentItemPath,
-                                                   this.defaultDeploymentItemOutputDirectory),
+                                                   defaultDeploymentItemPath,
+                                                   defaultDeploymentItemOutputDirectory),
                                                new KeyValuePair<string, string>(
-                                                   this.defaultDeploymentItemPath + "\\temp2",
-                                                   this.defaultDeploymentItemOutputDirectory)
+                                                   defaultDeploymentItemPath + "\\temp2",
+                                                   defaultDeploymentItemOutputDirectory)
                                            };
-        this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
+        SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
         var deploymentItems =
-            this.deploymentItemUtility.GetClassLevelDeploymentItems(
+            deploymentItemUtility.GetClassLevelDeploymentItems(
                 typeof(DeploymentItemUtilityTests),
-                this.warnings);
+                warnings);
 
         var expectedDeploymentItems = new DeploymentItem[]
                                           {
@@ -130,24 +130,24 @@ public class DeploymentItemUtilityTests
         var deploymentItemAttributes = new[]
                                            {
                                                new KeyValuePair<string, string>(
-                                                   this.defaultDeploymentItemPath,
-                                                   this.defaultDeploymentItemOutputDirectory),
+                                                   defaultDeploymentItemPath,
+                                                   defaultDeploymentItemOutputDirectory),
                                                new KeyValuePair<string, string>(
-                                                   this.defaultDeploymentItemPath,
-                                                   this.defaultDeploymentItemOutputDirectory)
+                                                   defaultDeploymentItemPath,
+                                                   defaultDeploymentItemOutputDirectory)
                                            };
-        this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
+        SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
         var deploymentItems =
-            this.deploymentItemUtility.GetClassLevelDeploymentItems(
+            deploymentItemUtility.GetClassLevelDeploymentItems(
                 typeof(DeploymentItemUtilityTests),
-                this.warnings);
+                warnings);
 
         var expectedDeploymentItems = new[]
                                           {
                                               new DeploymentItem(
-                                                  this.defaultDeploymentItemPath,
-                                                  this.defaultDeploymentItemOutputDirectory)
+                                                  defaultDeploymentItemPath,
+                                                  defaultDeploymentItemOutputDirectory)
                                           };
 
         CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
@@ -159,26 +159,26 @@ public class DeploymentItemUtilityTests
         var deploymentItemAttributes = new[]
                                            {
                                                new KeyValuePair<string, string>(
-                                                   this.defaultDeploymentItemPath,
-                                                   this.defaultDeploymentItemOutputDirectory),
+                                                   defaultDeploymentItemPath,
+                                                   defaultDeploymentItemOutputDirectory),
                                                new KeyValuePair<string, string>(
                                                    null,
-                                                   this.defaultDeploymentItemOutputDirectory)
+                                                   defaultDeploymentItemOutputDirectory)
                                            };
-        this.SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
+        SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
-        var deploymentItems = this.deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), this.warnings);
+        var deploymentItems = deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), warnings);
 
         var expectedDeploymentItems = new DeploymentItem[]
                                           {
                                               new DeploymentItem(
-                                                  this.defaultDeploymentItemPath,
-                                                  this.defaultDeploymentItemOutputDirectory)
+                                                  defaultDeploymentItemPath,
+                                                  defaultDeploymentItemOutputDirectory)
                                           };
 
         CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
-        Assert.AreEqual(1, this.warnings.Count);
-        StringAssert.Contains(this.warnings.ToArray()[0], Resource.DeploymentItemPathCannotBeNullOrEmpty);
+        Assert.AreEqual(1, warnings.Count);
+        StringAssert.Contains(warnings.ToArray()[0], Resource.DeploymentItemPathCannotBeNullOrEmpty);
     }
 
     #endregion
@@ -188,10 +188,10 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void GetDeploymentItemsShouldReturnNullOnNoDeploymentItems()
     {
-        Assert.IsNull(this.deploymentItemUtility.GetDeploymentItems(
+        Assert.IsNull(deploymentItemUtility.GetDeploymentItems(
             typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems"),
             null,
-            this.warnings));
+            warnings));
     }
 
     [TestMethod]
@@ -200,22 +200,22 @@ public class DeploymentItemUtilityTests
         var deploymentItemAttributes = new[]
                                               {
                                                new KeyValuePair<string, string>(
-                                                   this.defaultDeploymentItemPath,
-                                                   this.defaultDeploymentItemOutputDirectory),
+                                                   defaultDeploymentItemPath,
+                                                   defaultDeploymentItemOutputDirectory),
                                                new KeyValuePair<string, string>(
-                                                   this.defaultDeploymentItemPath + "\\temp2",
-                                                   this.defaultDeploymentItemOutputDirectory)
+                                                   defaultDeploymentItemPath + "\\temp2",
+                                                   defaultDeploymentItemOutputDirectory)
                                            };
         var memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
                 "GetDeploymentItemsShouldReturnNullOnNoDeploymentItems");
 
-        this.SetupDeploymentItems(memberInfo, deploymentItemAttributes);
+        SetupDeploymentItems(memberInfo, deploymentItemAttributes);
 
-        var deploymentItems = this.deploymentItemUtility.GetDeploymentItems(
+        var deploymentItems = deploymentItemUtility.GetDeploymentItems(
             memberInfo,
             null,
-            this.warnings);
+            warnings);
 
         CollectionAssert.AreEqual(deploymentItemAttributes, deploymentItems.ToArray());
     }
@@ -227,28 +227,28 @@ public class DeploymentItemUtilityTests
         var classLevelDeploymentItems = new DeploymentItem[]
                                             {
                                                 new DeploymentItem(
-                                                    this.defaultDeploymentItemPath,
-                                                    this.defaultDeploymentItemOutputDirectory),
+                                                    defaultDeploymentItemPath,
+                                                    defaultDeploymentItemOutputDirectory),
                                                 new DeploymentItem(
-                                                    this.defaultDeploymentItemPath + "\\temp2",
-                                                    this.defaultDeploymentItemOutputDirectory)
+                                                    defaultDeploymentItemPath + "\\temp2",
+                                                    defaultDeploymentItemOutputDirectory)
                                             };
 
         // Act.
-        var deploymentItems = this.deploymentItemUtility.GetDeploymentItems(
+        var deploymentItems = deploymentItemUtility.GetDeploymentItems(
             typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems"),
             classLevelDeploymentItems,
-            this.warnings);
+            warnings);
 
         // Assert.
         var expectedDeploymentItems = new[]
                                           {
                                               new KeyValuePair<string, string>(
-                                                  this.defaultDeploymentItemPath,
-                                                  this.defaultDeploymentItemOutputDirectory),
+                                                  defaultDeploymentItemPath,
+                                                  defaultDeploymentItemOutputDirectory),
                                               new KeyValuePair<string, string>(
-                                                  this.defaultDeploymentItemPath + "\\temp2",
-                                                  this.defaultDeploymentItemOutputDirectory)
+                                                  defaultDeploymentItemPath + "\\temp2",
+                                                  defaultDeploymentItemOutputDirectory)
                                           };
 
         CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
@@ -261,36 +261,36 @@ public class DeploymentItemUtilityTests
         var deploymentItemAttributes = new[]
                                               {
                                                new KeyValuePair<string, string>(
-                                                   this.defaultDeploymentItemPath,
-                                                   this.defaultDeploymentItemOutputDirectory)
+                                                   defaultDeploymentItemPath,
+                                                   defaultDeploymentItemOutputDirectory)
                                            };
         var memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
                 "GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItems");
-        this.SetupDeploymentItems(memberInfo, deploymentItemAttributes);
+        SetupDeploymentItems(memberInfo, deploymentItemAttributes);
 
         var classLevelDeploymentItems = new[]
                                             {
                                                 new DeploymentItem(
-                                                    this.defaultDeploymentItemPath + "\\temp2",
-                                                    this.defaultDeploymentItemOutputDirectory)
+                                                    defaultDeploymentItemPath + "\\temp2",
+                                                    defaultDeploymentItemOutputDirectory)
                                             };
 
         // Act.
-        var deploymentItems = this.deploymentItemUtility.GetDeploymentItems(
+        var deploymentItems = deploymentItemUtility.GetDeploymentItems(
             memberInfo,
             classLevelDeploymentItems,
-            this.warnings);
+            warnings);
 
         // Assert.
         var expectedDeploymentItems = new KeyValuePair<string, string>[]
                                           {
                                               new KeyValuePair<string, string>(
-                                                  this.defaultDeploymentItemPath,
-                                                  this.defaultDeploymentItemOutputDirectory),
+                                                  defaultDeploymentItemPath,
+                                                  defaultDeploymentItemOutputDirectory),
                                               new KeyValuePair<string, string>(
-                                                  this.defaultDeploymentItemPath + "\\temp2",
-                                                  this.defaultDeploymentItemOutputDirectory)
+                                                  defaultDeploymentItemPath + "\\temp2",
+                                                  defaultDeploymentItemOutputDirectory)
                                           };
 
         CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
@@ -303,45 +303,45 @@ public class DeploymentItemUtilityTests
         var deploymentItemAttributes = new[]
                                               {
                                                new KeyValuePair<string, string>(
-                                                   this.defaultDeploymentItemPath,
-                                                   this.defaultDeploymentItemOutputDirectory),
+                                                   defaultDeploymentItemPath,
+                                                   defaultDeploymentItemOutputDirectory),
                                                new KeyValuePair<string, string>(
-                                                   this.defaultDeploymentItemPath + "\\temp2",
-                                                   this.defaultDeploymentItemOutputDirectory)
+                                                   defaultDeploymentItemPath + "\\temp2",
+                                                   defaultDeploymentItemOutputDirectory)
                                            };
         var memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
                 "GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItems");
-        this.SetupDeploymentItems(memberInfo, deploymentItemAttributes);
+        SetupDeploymentItems(memberInfo, deploymentItemAttributes);
 
         var classLevelDeploymentItems = new DeploymentItem[]
                                             {
                                                 new DeploymentItem(
-                                                    this.defaultDeploymentItemPath,
-                                                    this.defaultDeploymentItemOutputDirectory),
+                                                    defaultDeploymentItemPath,
+                                                    defaultDeploymentItemOutputDirectory),
                                                 new DeploymentItem(
-                                                    this.defaultDeploymentItemPath + "\\temp1",
-                                                    this.defaultDeploymentItemOutputDirectory)
+                                                    defaultDeploymentItemPath + "\\temp1",
+                                                    defaultDeploymentItemOutputDirectory)
                                             };
 
         // Act.
-        var deploymentItems = this.deploymentItemUtility.GetDeploymentItems(
+        var deploymentItems = deploymentItemUtility.GetDeploymentItems(
             memberInfo,
             classLevelDeploymentItems,
-            this.warnings);
+            warnings);
 
         // Assert.
         var expectedDeploymentItems = new KeyValuePair<string, string>[]
                                           {
                                               new KeyValuePair<string, string>(
-                                                  this.defaultDeploymentItemPath,
-                                                  this.defaultDeploymentItemOutputDirectory),
+                                                  defaultDeploymentItemPath,
+                                                  defaultDeploymentItemOutputDirectory),
                                               new KeyValuePair<string, string>(
-                                                  this.defaultDeploymentItemPath + "\\temp2",
-                                                  this.defaultDeploymentItemOutputDirectory),
+                                                  defaultDeploymentItemPath + "\\temp2",
+                                                  defaultDeploymentItemOutputDirectory),
                                               new KeyValuePair<string, string>(
-                                                  this.defaultDeploymentItemPath + "\\temp1",
-                                                  this.defaultDeploymentItemOutputDirectory)
+                                                  defaultDeploymentItemPath + "\\temp1",
+                                                  defaultDeploymentItemOutputDirectory)
                                           };
 
         CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
@@ -354,7 +354,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsNull()
     {
-        Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(null, this.defaultDeploymentItemOutputDirectory, out var warning));
+        Assert.IsFalse(deploymentItemUtility.IsValidDeploymentItem(null, defaultDeploymentItemOutputDirectory, out var warning));
 
         StringAssert.Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty, warning);
     }
@@ -362,7 +362,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsEmpty()
     {
-        Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(string.Empty, this.defaultDeploymentItemOutputDirectory, out var warning));
+        Assert.IsFalse(deploymentItemUtility.IsValidDeploymentItem(string.Empty, defaultDeploymentItemOutputDirectory, out var warning));
 
         StringAssert.Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty, warning);
     }
@@ -370,7 +370,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsNull()
     {
-        Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, null, out var warning));
+        Assert.IsFalse(deploymentItemUtility.IsValidDeploymentItem(defaultDeploymentItemPath, null, out var warning));
 
         StringAssert.Contains(Resource.DeploymentItemOutputDirectoryCannotBeNull, warning);
     }
@@ -378,25 +378,25 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathHasInvalidCharacters()
     {
-        Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem("C:<>", this.defaultDeploymentItemOutputDirectory, out var warning));
+        Assert.IsFalse(deploymentItemUtility.IsValidDeploymentItem("C:<>", defaultDeploymentItemOutputDirectory, out var warning));
 
         StringAssert.Contains(
             string.Format(
                 Resource.DeploymentItemContainsInvalidCharacters,
                 "C:<>",
-                this.defaultDeploymentItemOutputDirectory),
+                defaultDeploymentItemOutputDirectory),
             warning);
     }
 
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfOutputDirectoryHasInvalidCharacters()
     {
-        Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, "<>", out var warning));
+        Assert.IsFalse(deploymentItemUtility.IsValidDeploymentItem(defaultDeploymentItemPath, "<>", out var warning));
 
         StringAssert.Contains(
             string.Format(
                 Resource.DeploymentItemContainsInvalidCharacters,
-                this.defaultDeploymentItemPath,
+                defaultDeploymentItemPath,
                 "<>"),
             warning);
     }
@@ -404,7 +404,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsRooted()
     {
-        Assert.IsFalse(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, "C:\\temp", out var warning));
+        Assert.IsFalse(deploymentItemUtility.IsValidDeploymentItem(defaultDeploymentItemPath, "C:\\temp", out var warning));
 
         StringAssert.Contains(
            string.Format(
@@ -416,7 +416,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReturnTrueForAValidDeploymentItem()
     {
-        Assert.IsTrue(this.deploymentItemUtility.IsValidDeploymentItem(this.defaultDeploymentItemPath, this.defaultDeploymentItemOutputDirectory, out var warning));
+        Assert.IsTrue(deploymentItemUtility.IsValidDeploymentItem(defaultDeploymentItemPath, defaultDeploymentItemOutputDirectory, out var warning));
 
         Assert.IsTrue(string.Empty.Equals(warning));
     }
@@ -430,7 +430,7 @@ public class DeploymentItemUtilityTests
         TestCase testCase = new("A.C.M", new System.Uri("executor://testExecutor"), "A");
         testCase.SetPropertyValue(DeploymentItemsProperty, null);
 
-        Assert.IsFalse(this.deploymentItemUtility.HasDeploymentItems(testCase));
+        Assert.IsFalse(deploymentItemUtility.HasDeploymentItems(testCase));
     }
 
     [TestMethod]
@@ -440,12 +440,12 @@ public class DeploymentItemUtilityTests
         var kvpArray = new[]
                 {
                     new KeyValuePair<string, string>(
-                        this.defaultDeploymentItemPath,
-                        this.defaultDeploymentItemOutputDirectory)
+                        defaultDeploymentItemPath,
+                        defaultDeploymentItemOutputDirectory)
                 };
         testCase.SetPropertyValue(DeploymentItemsProperty, kvpArray);
 
-        Assert.IsTrue(this.deploymentItemUtility.HasDeploymentItems(testCase));
+        Assert.IsTrue(deploymentItemUtility.HasDeploymentItems(testCase));
     }
 
     #endregion
@@ -461,7 +461,7 @@ public class DeploymentItemUtilityTests
             deploymentItemAttributes.Add(new TestFrameworkV2Extension.DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
         }
 
-        this.mockReflectionUtility.Setup(
+        mockReflectionUtility.Setup(
             ru =>
             ru.GetCustomAttributes(
                 memberInfo,

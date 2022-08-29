@@ -24,42 +24,42 @@ public class DesktopCSharpCLITests : CLITestBase
     public void DiscoverTestsx86Debug()
     {
         string[] sources = { X86DebugTestProject };
-        this.DoDiscoveryAndValidateDiscoveredTests(sources);
+        DoDiscoveryAndValidateDiscoveredTests(sources);
     }
 
     [TestMethod]
     public void DiscoverTestsx64Debug()
     {
         string[] sources = { X64DebugTestProject };
-        this.DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
+        DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
     }
 
     [TestMethod]
     public void DiscoverTestsx86Release()
     {
         string[] sources = { X86ReleaseTestProject };
-        this.DoDiscoveryAndValidateDiscoveredTests(sources);
+        DoDiscoveryAndValidateDiscoveredTests(sources);
     }
 
     [TestMethod]
     public void DiscoverTestsx64Release()
     {
         string[] sources = { X64ReleaseTestProject };
-        this.DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
+        DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
     }
 
     [TestMethod]
     public void RunAllTestsx86Debug()
     {
         string[] sources = { X86DebugTestProject };
-        this.RunAllTestsAndValidateResults(sources);
+        RunAllTestsAndValidateResults(sources);
     }
 
     [TestMethod]
     public void RunAllTestsx64Debug()
     {
         string[] sources = { X64DebugTestProject };
-        this.RunAllTestsAndValidateResults(sources, RunSetting);
+        RunAllTestsAndValidateResults(sources, RunSetting);
     }
 
     [TestMethod]
@@ -67,28 +67,28 @@ public class DesktopCSharpCLITests : CLITestBase
     public void RunAllTestsx86Release()
     {
         string[] sources = { X86ReleaseTestProject };
-        this.RunAllTestsAndValidateResults(sources);
+        RunAllTestsAndValidateResults(sources);
     }
 
     [TestMethod]
     public void RunAllTestsx64Release()
     {
         string[] sources = { X64ReleaseTestProject };
-        this.RunAllTestsAndValidateResults(sources, RunSetting);
+        RunAllTestsAndValidateResults(sources, RunSetting);
     }
 
     private void DoDiscoveryAndValidateDiscoveredTests(string[] sources, string runSettings = "")
     {
-        this.InvokeVsTestForDiscovery(sources, runSettings);
+        InvokeVsTestForDiscovery(sources, runSettings);
         var listOfTests = new string[] { "SampleUnitTestProject.UnitTest1.PassingTest", "SampleUnitTestProject.UnitTest1.FailingTest", "SampleUnitTestProject.UnitTest1.SkippingTest" };
-        this.ValidateDiscoveredTests(listOfTests);
+        ValidateDiscoveredTests(listOfTests);
     }
 
     private void RunAllTestsAndValidateResults(string[] sources, string runSettings = "")
     {
-        this.InvokeVsTestForExecution(sources, runSettings);
-        this.ValidatePassedTests("SampleUnitTestProject.UnitTest1.PassingTest");
-        this.ValidateFailedTests(sources[0], "SampleUnitTestProject.UnitTest1.FailingTest");
-        this.ValidateSkippedTests("SampleUnitTestProject.UnitTest1.SkippingTest");
+        InvokeVsTestForExecution(sources, runSettings);
+        ValidatePassedTests("SampleUnitTestProject.UnitTest1.PassingTest");
+        ValidateFailedTests(sources[0], "SampleUnitTestProject.UnitTest1.FailingTest");
+        ValidateSkippedTests("SampleUnitTestProject.UnitTest1.SkippingTest");
     }
 }

@@ -29,15 +29,15 @@ public class TestRunCancellationToken
     {
         get
         {
-            return this.canceled;
+            return canceled;
         }
 
         private set
         {
-            this.canceled = value;
-            if (this.canceled)
+            canceled = value;
+            if (canceled)
             {
-                this.registeredCallback?.Invoke();
+                registeredCallback?.Invoke();
             }
         }
     }
@@ -47,7 +47,7 @@ public class TestRunCancellationToken
     /// </summary>
     public void Cancel()
     {
-        this.Canceled = true;
+        Canceled = true;
     }
 
     /// <summary>
@@ -58,9 +58,9 @@ public class TestRunCancellationToken
     {
         ValidateArg.NotNull(callback, "callback");
 
-        Debug.Assert(this.registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
+        Debug.Assert(registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
 
-        this.registeredCallback = callback;
+        registeredCallback = callback;
     }
 
     /// <summary>
@@ -68,6 +68,6 @@ public class TestRunCancellationToken
     /// </summary>
     public void Unregister()
     {
-        this.registeredCallback = null;
+        registeredCallback = null;
     }
 }

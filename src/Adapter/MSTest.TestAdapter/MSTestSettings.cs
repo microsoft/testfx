@@ -49,15 +49,15 @@ public class MSTestSettings
     /// </summary>
     public MSTestSettings()
     {
-        this.CaptureDebugTraces = true;
-        this.MapInconclusiveToFailed = false;
-        this.MapNotRunnableToFailed = true;
-        this.EnableBaseClassTestMethodsFromOtherAssemblies = true;
-        this.ForcedLegacyMode = false;
-        this.TestSettingsFile = null;
-        this.DisableParallelization = false;
-        this.TestTimeout = 0;
-        this.TreatClassAndAssemblyCleanupWarningsAsErrors = false;
+        CaptureDebugTraces = true;
+        MapInconclusiveToFailed = false;
+        MapNotRunnableToFailed = true;
+        EnableBaseClassTestMethodsFromOtherAssemblies = true;
+        ForcedLegacyMode = false;
+        TestSettingsFile = null;
+        DisableParallelization = false;
+        TestTimeout = 0;
+        TreatClassAndAssemblyCleanupWarningsAsErrors = false;
     }
 
     /// <summary>

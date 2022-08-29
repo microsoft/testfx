@@ -29,7 +29,7 @@ public class TestSourceHost : ITestSourceHost
         this.sourceFileName = sourceFileName;
 
         // Set the environment context.
-        this.SetContext(sourceFileName);
+        SetContext(sourceFileName);
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     public void Dispose()
     {
-        this.ResetContext();
+        ResetContext();
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public class TestSourceHost : ITestSourceHost
         }
 
         Exception setWorkingDirectoryException = null;
-        this.currentDirectory = Directory.GetCurrentDirectory();
+        currentDirectory = Directory.GetCurrentDirectory();
         try
         {
             Directory.SetCurrentDirectory(Path.GetDirectoryName(source));
@@ -102,9 +102,9 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     private void ResetContext()
     {
-        if (!string.IsNullOrEmpty(this.currentDirectory))
+        if (!string.IsNullOrEmpty(currentDirectory))
         {
-            Directory.SetCurrentDirectory(this.currentDirectory);
+            Directory.SetCurrentDirectory(currentDirectory);
         }
     }
 }

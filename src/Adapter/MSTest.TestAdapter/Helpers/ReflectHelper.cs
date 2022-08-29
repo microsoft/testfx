@@ -53,7 +53,7 @@ internal class ReflectHelper : MarshalByRefObject
         Debug.Assert(attributeType != null, "attrbiuteType should not be null.");
 
         // Get attributes defined on the member from the cache.
-        Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
+        Dictionary<string, object> attributes = GetAttributes(memberInfo, inherit);
         if (attributes == null)
         {
             // If we could not obtain all attributes from cache, just get the one we need.
@@ -82,7 +82,7 @@ internal class ReflectHelper : MarshalByRefObject
     public virtual bool IsAttributeDefined(Type type, Type attributeType, bool inherit)
     {
         var memberInfo = (MemberInfo)type.GetTypeInfo();
-        return this.IsAttributeDefined(memberInfo, attributeType, inherit);
+        return IsAttributeDefined(memberInfo, attributeType, inherit);
     }
 
     /// <summary>
@@ -95,7 +95,7 @@ internal class ReflectHelper : MarshalByRefObject
     public virtual bool HasAttributeDerivedFrom(Type type, Type baseAttributeType, bool inherit)
     {
         var memberInfo = (MemberInfo)type.GetTypeInfo();
-        return this.HasAttributeDerivedFrom(memberInfo, baseAttributeType, inherit);
+        return HasAttributeDerivedFrom(memberInfo, baseAttributeType, inherit);
     }
 
     /// <summary>
@@ -118,12 +118,12 @@ internal class ReflectHelper : MarshalByRefObject
         }
 
         // Get all attributes on the member.
-        Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
+        Dictionary<string, object> attributes = GetAttributes(memberInfo, inherit);
         if (attributes == null)
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(ReflectHelper)}.{nameof(GetAttributes)}: {Resource.FailedFetchAttributeCache}");
 
-            return this.IsAttributeDefined(memberInfo, baseAttributeType, inherit);
+            return IsAttributeDefined(memberInfo, baseAttributeType, inherit);
         }
 
         // Try to find the attribute that is derived from baseAttrType.
@@ -301,7 +301,7 @@ internal class ReflectHelper : MarshalByRefObject
     internal AttributeType GetAttribute<AttributeType>(MethodInfo method)
         where AttributeType : class
     {
-        if (this.IsAttributeDefined(method, typeof(AttributeType), false))
+        if (IsAttributeDefined(method, typeof(AttributeType), false))
         {
             object[] attributes = GetCustomAttributes(method, typeof(AttributeType), false);
             Debug.Assert(attributes.Length == 1, "Should only be one attribute.");
@@ -319,7 +319,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Attribute of the specified type. Null if not found.</returns>
     internal Attribute GetAttribute(Type attributeType, MethodInfo method)
     {
-        if (this.IsAttributeDefined(method, attributeType, false))
+        if (IsAttributeDefined(method, attributeType, false))
         {
             object[] attributes = GetCustomAttributes(method, attributeType, false);
             Debug.Assert(attributes.Length == 1, "Should only be one attribute.");
@@ -348,7 +348,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Categories defined.</returns>
     internal virtual string[] GetCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
-        var categories = this.GetCustomAttributesRecursively(categoryAttributeProvider, owningType, typeof(TestCategoryBaseAttribute));
+        var categories = GetCustomAttributesRecursively(categoryAttributeProvider, owningType, typeof(TestCategoryBaseAttribute));
         List<string> testCategories = new();
 
         if (categories != null)
@@ -380,8 +380,8 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>True if test method should not run in parallel.</returns>
     internal bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType)
     {
-        return this.GetCustomAttributes(testMethod, typeof(DoNotParallelizeAttribute)).Any()
-               || this.GetCustomAttributes(owningType.GetTypeInfo(), typeof(DoNotParallelizeAttribute)).Any();
+        return GetCustomAttributes(testMethod, typeof(DoNotParallelizeAttribute)).Any()
+               || GetCustomAttributes(owningType.GetTypeInfo(), typeof(DoNotParallelizeAttribute)).Any();
     }
 
     /// <summary>
@@ -413,15 +413,15 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>The categories of the specified type on the method. </returns>
     internal IEnumerable<object> GetCustomAttributesRecursively(MemberInfo attributeProvider, Type owningType, Type type)
     {
-        var categories = this.GetCustomAttributes(attributeProvider, typeof(TestCategoryBaseAttribute));
+        var categories = GetCustomAttributes(attributeProvider, typeof(TestCategoryBaseAttribute));
         if (categories != null)
         {
-            categories = categories.Concat(this.GetCustomAttributes(owningType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
+            categories = categories.Concat(GetCustomAttributes(owningType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
         }
 
         if (categories != null)
         {
-            categories = categories.Concat(this.GetCustomAttributeForAssembly(owningType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
+            categories = categories.Concat(GetCustomAttributeForAssembly(owningType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
         }
 
         if (categories != null)
@@ -482,7 +482,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>The owner trait.</returns>
     internal virtual Trait GetTestOwnerAsTraits(MemberInfo ownerAttributeProvider)
     {
-        string owner = this.GetOwner(ownerAttributeProvider);
+        string owner = GetOwner(ownerAttributeProvider);
 
         if (string.IsNullOrEmpty(owner))
         {
@@ -571,7 +571,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>List of traits.</returns>
     internal virtual IEnumerable<Trait> GetTestPropertiesAsTraits(MemberInfo testPropertyProvider)
     {
-        var testPropertyAttributes = this.GetTestPropertyAttributes(testPropertyProvider);
+        var testPropertyAttributes = GetTestPropertyAttributes(testPropertyProvider);
 
         foreach (TestPropertyAttribute testProperty in testPropertyAttributes)
         {
@@ -599,7 +599,7 @@ internal class ReflectHelper : MarshalByRefObject
     internal AttributeType GetDerivedAttribute<AttributeType>(MemberInfo memberInfo, bool inherit)
         where AttributeType : Attribute
     {
-        Dictionary<string, object> attributes = this.GetAttributes(memberInfo, inherit);
+        Dictionary<string, object> attributes = GetAttributes(memberInfo, inherit);
         if (attributes == null)
         {
             return null;
@@ -689,9 +689,9 @@ internal class ReflectHelper : MarshalByRefObject
         // If the information is cached, then use it otherwise populate the cache using
         // the reflection APIs.
         Dictionary<string, object> attributes;
-        lock (this.attributeCache)
+        lock (attributeCache)
         {
-            if (!this.attributeCache.TryGetValue(memberInfo, out attributes))
+            if (!attributeCache.TryGetValue(memberInfo, out attributes))
             {
                 // Populate the cache
                 attributes = new Dictionary<string, object>();
@@ -731,7 +731,7 @@ internal class ReflectHelper : MarshalByRefObject
                     attributes[attrType.AssemblyQualifiedName] = customAttribute;
                 }
 
-                this.attributeCache.Add(memberInfo, attributes);
+                attributeCache.Add(memberInfo, attributes);
             }
         }
 

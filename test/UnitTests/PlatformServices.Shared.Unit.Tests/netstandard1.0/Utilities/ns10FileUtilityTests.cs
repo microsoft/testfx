@@ -29,22 +29,22 @@ public class FileUtilityTests
     [TestInitialize]
     public void TestInit()
     {
-        this.fileUtility = new Mock<FileUtility>();
-        this.fileUtility.CallBase = true;
+        fileUtility = new Mock<FileUtility>();
+        fileUtility.CallBase = true;
     }
 
     [TestMethod]
     public void ReplaceInvalidFileNameCharactersShouldReturnFileNameIfItHasNoInvalidChars()
     {
         var fileName = "galaxy";
-        Assert.AreEqual(fileName, this.fileUtility.Object.ReplaceInvalidFileNameCharacters(fileName));
+        Assert.AreEqual(fileName, fileUtility.Object.ReplaceInvalidFileNameCharacters(fileName));
     }
 
     [TestMethod]
     public void ReplaceInvalidFileNameCharactersShouldReplaceInvalidChars()
     {
         var fileName = "galaxy<>far:far?away";
-        Assert.AreEqual("galaxy__far_far_away", this.fileUtility.Object.ReplaceInvalidFileNameCharacters(fileName));
+        Assert.AreEqual("galaxy__far_far_away", fileUtility.Object.ReplaceInvalidFileNameCharacters(fileName));
     }
 
     #region AddFilesFromDirectory tests
@@ -54,10 +54,10 @@ public class FileUtilityTests
     {
         var topLevelFiles = new string[] { "tick.txt", "tock.tick.txt" };
 
-        this.fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns(topLevelFiles);
-        this.fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns(new string[] { });
+        fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns(topLevelFiles);
+        fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns(new string[] { });
 
-        var files = this.fileUtility.Object.AddFilesFromDirectory("C:\\randomclock", false);
+        var files = fileUtility.Object.AddFilesFromDirectory("C:\\randomclock", false);
 
         CollectionAssert.AreEqual(topLevelFiles, files);
     }
@@ -73,9 +73,9 @@ public class FileUtilityTests
                                "MainClock\\Folder2\\backup\\newtock.tick.txt",
                            };
 
-        this.SetupMockFileAPIs(allFiles);
+        SetupMockFileAPIs(allFiles);
 
-        var files = this.fileUtility.Object.AddFilesFromDirectory("MainClock", false);
+        var files = fileUtility.Object.AddFilesFromDirectory("MainClock", false);
 
         CollectionAssert.AreEqual(allFiles, files);
     }
@@ -91,9 +91,9 @@ public class FileUtilityTests
                                "MainClock\\Folder2\\backup\\",
                            };
 
-        this.SetupMockFileAPIs(allFiles);
+        SetupMockFileAPIs(allFiles);
 
-        var files = this.fileUtility.Object.AddFilesFromDirectory("MainClock", false);
+        var files = fileUtility.Object.AddFilesFromDirectory("MainClock", false);
 
         var expectedFiles = new string[allFiles.Length - 1];
         Array.Copy(allFiles, 0, expectedFiles, 0, 6);
@@ -113,19 +113,19 @@ public class FileUtilityTests
                                "c:\\MainClock\\Folder2\\backup\\Data.csv",
                            };
 
-        this.fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
+        fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
         {
             var directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select((file) => Path.GetDirectoryName(file)).Distinct();
             return directories.ToArray();
         });
 
-        this.fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
+        fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
         {
             return allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray();
         });
 
         // Act
-        var files = this.fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", (directory) => directory.Contains("Results"), false);
+        var files = fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", (directory) => directory.Contains("Results"), false);
 
         // Validate
         foreach (var sourceFile in allFiles)
@@ -154,19 +154,19 @@ public class FileUtilityTests
                                "c:\\MainClock\\Folder2\\backup\\Data.csv",
                            };
 
-        this.fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
+        fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
         {
             var directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select((file) => Path.GetDirectoryName(file)).Distinct();
             return directories.ToArray();
         });
 
-        this.fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
+        fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
         {
             return allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray();
         });
 
         // Act
-        var files = this.fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", false);
+        var files = fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", false);
 
         // Validate
         foreach (var sourceFile in allFiles)
@@ -184,13 +184,13 @@ public class FileUtilityTests
 
     private void SetupMockFileAPIs(string[] files)
     {
-        this.fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns((string dp) =>
+        fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns((string dp) =>
         {
             return
                 files.Where(f => f.Contains(dp) && f.LastIndexOf("\\") == (f.IndexOf(dp) + dp.Length) && !f.EndsWith("\\"))
                     .ToArray();
         });
-        this.fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) =>
+        fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) =>
         {
             return
                 files.Where(f => f.Contains(dp) && f.LastIndexOf("\\") > (f.IndexOf(dp) + dp.Length))

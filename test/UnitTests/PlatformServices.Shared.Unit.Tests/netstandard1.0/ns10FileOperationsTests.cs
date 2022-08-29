@@ -28,14 +28,14 @@ public class FileOperationsTests
     [TestInitialize]
     public void TestInit()
     {
-        this.fileOperations = new FileOperations();
+        fileOperations = new FileOperations();
     }
 
     [TestMethod]
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
     {
         var filePath = "temp<>txt";
-        void a() => this.fileOperations.LoadAssembly(filePath, false);
+        void a() => fileOperations.LoadAssembly(filePath, false);
 
         Type expectedException;
 #if NETCOREAPP
@@ -51,7 +51,7 @@ public class FileOperationsTests
     public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound()
     {
         var filePath = "temptxt";
-        void a() => this.fileOperations.LoadAssembly(filePath, false);
+        void a() => fileOperations.LoadAssembly(filePath, false);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
     }
 
@@ -61,21 +61,21 @@ public class FileOperationsTests
         var filePath = typeof(FileOperationsTests).GetTypeInfo().Assembly.Location;
 
         // This should not throw.
-        this.fileOperations.LoadAssembly(filePath, false);
+        fileOperations.LoadAssembly(filePath, false);
     }
 
     [TestMethod]
     public void DoesFileExistReturnsTrueForAllFiles()
     {
-        Assert.IsTrue(this.fileOperations.DoesFileExist(null));
-        Assert.IsTrue(this.fileOperations.DoesFileExist("foobar"));
+        Assert.IsTrue(fileOperations.DoesFileExist(null));
+        Assert.IsTrue(fileOperations.DoesFileExist("foobar"));
     }
 
     [TestMethod]
     public void GetFullFilePathShouldReturnAssemblyFileName()
     {
-        Assert.IsNull(this.fileOperations.GetFullFilePath(null));
-        Assert.AreEqual("assemblyFileName", this.fileOperations.GetFullFilePath("assemblyFileName"));
+        Assert.IsNull(fileOperations.GetFullFilePath(null));
+        Assert.AreEqual("assemblyFileName", fileOperations.GetFullFilePath("assemblyFileName"));
     }
 }
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

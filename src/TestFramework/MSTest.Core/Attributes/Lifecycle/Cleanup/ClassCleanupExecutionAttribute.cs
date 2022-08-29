@@ -34,7 +34,7 @@ public class ClassCleanupExecutionAttribute : Attribute
     /// </param>
     public ClassCleanupExecutionAttribute(ClassCleanupBehavior cleanupBehavior)
     {
-        this.CleanupBehavior = cleanupBehavior;
+        CleanupBehavior = cleanupBehavior;
     }
 
     /// <summary>

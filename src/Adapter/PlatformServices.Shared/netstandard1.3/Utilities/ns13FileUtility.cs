@@ -18,7 +18,7 @@ internal class FileUtility
 
     public FileUtility()
     {
-        this.assemblyUtility = new AssemblyUtility();
+        assemblyUtility = new AssemblyUtility();
     }
 
     public virtual void CreateDirectoryIfNotExists(string directory)
@@ -140,12 +140,12 @@ internal class FileUtility
         Debug.Assert(!string.IsNullOrEmpty(sourceFile), "sourceFile should not be null or empty.");
         Debug.Assert(destToSource != null, "destToSource should not be null.");
 
-        if (!this.assemblyUtility.IsAssemblyExtension(Path.GetExtension(destinationFile)))
+        if (!assemblyUtility.IsAssemblyExtension(Path.GetExtension(destinationFile)))
         {
             return null;
         }
 
-        string pdbSource = this.GetSymbolsFileName(sourceFile);
+        string pdbSource = GetSymbolsFileName(sourceFile);
         if (string.IsNullOrEmpty(pdbSource))
         {
             return null;
@@ -168,9 +168,9 @@ internal class FileUtility
         // If already processed, do nothing.
         if (!destToSource.ContainsKey(relativePdbDestination))
         {
-            if (this.DoesFileExist(pdbSource))
+            if (DoesFileExist(pdbSource))
             {
-                pdbDestination = this.CopyFileOverwrite(pdbSource, pdbDestination, out var warning);
+                pdbDestination = CopyFileOverwrite(pdbSource, pdbDestination, out var warning);
                 if (!string.IsNullOrEmpty(pdbDestination))
                 {
                     destToSource.Add(relativePdbDestination, pdbSource);
@@ -192,7 +192,7 @@ internal class FileUtility
 
     public virtual List<string> AddFilesFromDirectory(string directoryPath, bool ignoreIOExceptions)
     {
-        return this.AddFilesFromDirectory(directoryPath, null, ignoreIOExceptions);
+        return AddFilesFromDirectory(directoryPath, null, ignoreIOExceptions);
     }
 
     public virtual List<string> AddFilesFromDirectory(string directoryPath, Func<string, bool> ignoreDirectory, bool ignoreIOExceptions)
@@ -201,7 +201,7 @@ internal class FileUtility
 
         try
         {
-            var files = this.GetFilesInADirectory(directoryPath);
+            var files = GetFilesInADirectory(directoryPath);
             fileContents.AddRange(files);
         }
         catch (IOException)
@@ -212,14 +212,14 @@ internal class FileUtility
             }
         }
 
-        foreach (var subDirectoryPath in this.GetDirectoriesInADirectory(directoryPath))
+        foreach (var subDirectoryPath in GetDirectoriesInADirectory(directoryPath))
         {
             if (ignoreDirectory != null && ignoreDirectory(subDirectoryPath))
             {
                 continue;
             }
 
-            var subDirectoryContents = this.AddFilesFromDirectory(subDirectoryPath, ignoreDirectory, true);
+            var subDirectoryContents = AddFilesFromDirectory(subDirectoryPath, ignoreDirectory, true);
             if (subDirectoryContents?.Count > 0)
             {
                 fileContents.AddRange(subDirectoryContents);

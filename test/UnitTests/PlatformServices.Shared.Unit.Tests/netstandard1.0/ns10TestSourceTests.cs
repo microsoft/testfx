@@ -28,33 +28,33 @@ public class TestSourceTests
     [TestInitialize]
     public void TestInit()
     {
-        this.testSource = new TestSource();
+        testSource = new TestSource();
     }
 
     [TestMethod]
     public void ValidSourceExtensionsShouldContainDllExtensions()
     {
-        CollectionAssert.Contains(this.testSource.ValidSourceExtensions.ToList(), ".dll");
+        CollectionAssert.Contains(testSource.ValidSourceExtensions.ToList(), ".dll");
     }
 
     [TestMethod]
     public void ValidSourceExtensionsShouldContainExeExtensions()
     {
-        CollectionAssert.Contains(this.testSource.ValidSourceExtensions.ToList(), ".exe");
+        CollectionAssert.Contains(testSource.ValidSourceExtensions.ToList(), ".exe");
     }
 
     [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueIfSourceOrAssemblyNameIsNull()
     {
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(null, null));
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(null, string.Empty));
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(new AssemblyName(), null));
+        Assert.IsTrue(testSource.IsAssemblyReferenced(null, null));
+        Assert.IsTrue(testSource.IsAssemblyReferenced(null, string.Empty));
+        Assert.IsTrue(testSource.IsAssemblyReferenced(new AssemblyName(), null));
     }
 
     [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames()
     {
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
+        Assert.IsTrue(testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
     }
 }
 

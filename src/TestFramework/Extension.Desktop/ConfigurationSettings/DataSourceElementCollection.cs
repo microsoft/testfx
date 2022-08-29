@@ -30,7 +30,7 @@ public sealed class DataSourceElementCollection : ConfigurationElementCollection
     {
         get
         {
-            return (DataSourceElement)this.BaseGet(name);
+            return (DataSourceElement)BaseGet(name);
         }
     }
 
@@ -42,17 +42,17 @@ public sealed class DataSourceElementCollection : ConfigurationElementCollection
     {
         get
         {
-            return (DataSourceElement)this.BaseGet(index);
+            return (DataSourceElement)BaseGet(index);
         }
 
         set
         {
-            if (this.BaseGet(index) != null)
+            if (BaseGet(index) != null)
             {
-                this.BaseRemoveAt(index);
+                BaseRemoveAt(index);
             }
 
-            this.BaseAdd(index, value);
+            BaseAdd(index, value);
         }
     }
 
@@ -62,7 +62,7 @@ public sealed class DataSourceElementCollection : ConfigurationElementCollection
     /// <param name="element">The System.Configuration.ConfigurationElement to add.</param>
     public void Add(DataSourceElement element)
     {
-        this.BaseAdd(element, false);
+        BaseAdd(element, false);
     }
 
     /// <summary>
@@ -71,9 +71,9 @@ public sealed class DataSourceElementCollection : ConfigurationElementCollection
     /// <param name="element">The <see cref="DataSourceElement"/> .</param>
     public void Remove(DataSourceElement element)
     {
-        if (this.BaseIndexOf(element) >= 0)
+        if (BaseIndexOf(element) >= 0)
         {
-            this.BaseRemove(element.Key);
+            BaseRemove(element.Key);
         }
     }
 
@@ -83,7 +83,7 @@ public sealed class DataSourceElementCollection : ConfigurationElementCollection
     /// <param name="name">The key of the System.Configuration.ConfigurationElement to remove.</param>
     public void Remove(string name)
     {
-        this.BaseRemove(name);
+        BaseRemove(name);
     }
 
     /// <summary>
@@ -91,7 +91,7 @@ public sealed class DataSourceElementCollection : ConfigurationElementCollection
     /// </summary>
     public void Clear()
     {
-        this.BaseClear();
+        BaseClear();
     }
 
     /// <summary>
@@ -120,7 +120,7 @@ public sealed class DataSourceElementCollection : ConfigurationElementCollection
     /// <param name="element">The System.Configuration.ConfigurationElement to add.</param>
     protected override void BaseAdd(ConfigurationElement element)
     {
-        this.BaseAdd(element, false);
+        BaseAdd(element, false);
     }
 
     /// <summary>
@@ -132,7 +132,7 @@ public sealed class DataSourceElementCollection : ConfigurationElementCollection
     {
         if (index == -1)
         {
-            this.BaseAdd(element, false);
+            BaseAdd(element, false);
         }
         else
         {

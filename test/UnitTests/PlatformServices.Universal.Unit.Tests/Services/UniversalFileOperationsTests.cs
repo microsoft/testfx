@@ -25,7 +25,7 @@ public class UniversalFileOperationsTests
     [TestInitialize]
     public void TestInit()
     {
-        this.fileOperations = new FileOperations();
+        fileOperations = new FileOperations();
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public class UniversalFileOperationsTests
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
     {
         var filePath = "temp<>txt";
-        void a() => this.fileOperations.LoadAssembly(filePath, false);
+        void a() => fileOperations.LoadAssembly(filePath, false);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentException));
     }
 
@@ -46,7 +46,7 @@ public class UniversalFileOperationsTests
     public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound()
     {
         var filePath = "temptxt";
-        void a() => this.fileOperations.LoadAssembly(filePath, false);
+        void a() => fileOperations.LoadAssembly(filePath, false);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
     }
 
@@ -59,7 +59,7 @@ public class UniversalFileOperationsTests
         var filePath = Assembly.GetExecutingAssembly().Location;
 
         // This should not throw.
-        this.fileOperations.LoadAssembly(filePath, false);
+        fileOperations.LoadAssembly(filePath, false);
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ public class UniversalFileOperationsTests
     public void DoesFileExistReturnsFalseIfFileNameHasInvalidCharacters()
     {
         var filePath = "temp<>txt";
-        Assert.IsFalse(this.fileOperations.DoesFileExist(filePath));
+        Assert.IsFalse(fileOperations.DoesFileExist(filePath));
     }
 
     /// This Test is not yet validated. Will validate with new adapter.
@@ -80,7 +80,7 @@ public class UniversalFileOperationsTests
     public void DoesFileExistReturnsFalseIfFileIsNotFound()
     {
         var filePath = "C:\\footemp.txt";
-        void a() => this.fileOperations.DoesFileExist(filePath);
+        void a() => fileOperations.DoesFileExist(filePath);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
     }
 
@@ -92,7 +92,7 @@ public class UniversalFileOperationsTests
     public void DoesFileExistReturnsTrueWhenFileExists()
     {
         var filePath = Assembly.GetExecutingAssembly().Location;
-        Assert.IsTrue(this.fileOperations.DoesFileExist(filePath));
+        Assert.IsTrue(fileOperations.DoesFileExist(filePath));
     }
 
     /// <summary>
@@ -102,14 +102,14 @@ public class UniversalFileOperationsTests
     [Ignore] // TODO: Re-enable this tests when we have merged projects
     public void CreateNavigationSessionShouldReturnNullForAllSources()
     {
-        Assert.IsNull(this.fileOperations.CreateNavigationSession(null));
-        Assert.IsNull(this.fileOperations.CreateNavigationSession("foobar"));
+        Assert.IsNull(fileOperations.CreateNavigationSession(null));
+        Assert.IsNull(fileOperations.CreateNavigationSession("foobar"));
     }
 
     [TestMethod]
     public void GetNavigationDataShouldReturnNullFileName()
     {
-        this.fileOperations.GetNavigationData(null, null, null, out var minLineNumber, out var fileName);
+        fileOperations.GetNavigationData(null, null, null, out var minLineNumber, out var fileName);
         Assert.IsNull(fileName);
         Assert.AreEqual(-1, minLineNumber);
     }
@@ -171,7 +171,7 @@ public class UniversalFileOperationsTests
     [TestMethod]
     public void GetFullFilePathShouldReturnAssemblyFileName()
     {
-        Assert.IsNull(this.fileOperations.GetFullFilePath(null));
-        Assert.AreEqual("assemblyFileName", this.fileOperations.GetFullFilePath("assemblyFileName"));
+        Assert.IsNull(fileOperations.GetFullFilePath(null));
+        Assert.AreEqual("assemblyFileName", fileOperations.GetFullFilePath("assemblyFileName"));
     }
 }

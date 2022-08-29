@@ -30,7 +30,7 @@ public partial class CLITestBase
     /// Gets the path of test assets folder
     /// </summary>
     /// <returns>Path to testassets folder</returns>
-    protected string GetAssetFolderPath() => Path.Combine(Environment.CurrentDirectory, this.GetRelativeRepositoryRootPath(), ArtifactsFolder, TestAssetsFolder);
+    protected string GetAssetFolderPath() => Path.Combine(Environment.CurrentDirectory, GetRelativeRepositoryRootPath(), ArtifactsFolder, TestAssetsFolder);
 
     /// <summary>
     /// Gets the full path to a test asset.
@@ -46,7 +46,7 @@ public partial class CLITestBase
     /// </remarks>
     protected string GetAssetFullPath(string assetName)
     {
-        var assetPath = Path.GetFullPath(Path.Combine(this.GetAssetFolderPath(), assetName));
+        var assetPath = Path.GetFullPath(Path.Combine(GetAssetFolderPath(), assetName));
         Assert.IsTrue(File.Exists(assetPath), "GetTestAsset: Path not found: {0}.", assetPath);
         return assetPath;
     }
@@ -55,7 +55,7 @@ public partial class CLITestBase
     {
         var testAdapterPath = Path.Combine(
             Environment.CurrentDirectory,
-            this.GetRelativeRepositoryRootPath(),
+            GetRelativeRepositoryRootPath(),
             ArtifactsFolder,
             TestAssetsFolder);
 

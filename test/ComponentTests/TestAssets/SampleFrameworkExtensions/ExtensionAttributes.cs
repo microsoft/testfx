@@ -11,7 +11,7 @@ public sealed class DurationAttribute : TestPropertyAttribute
 {
     public DurationAttribute(string duration) : base("Duration", duration)
     {
-        this.Duration = duration;
+        Duration = duration;
     }
 
     public string Duration { get; private set; }
@@ -22,7 +22,7 @@ public sealed class CategoryArrayAttribute : Attribute
 {
     public CategoryArrayAttribute(params string[] value)
     {
-        this.Value = value;
+        Value = value;
     }
 
     public string[] Value { get; private set; }

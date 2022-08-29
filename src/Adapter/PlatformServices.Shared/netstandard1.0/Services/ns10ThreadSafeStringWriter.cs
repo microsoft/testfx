@@ -30,7 +30,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// <inheritdoc/>
     public override string ToString()
     {
-        lock (this.lockObject)
+        lock (lockObject)
         {
             try
             {
@@ -45,11 +45,11 @@ public class ThreadSafeStringWriter : StringWriter
 
     public string ToStringAndClear()
     {
-        lock (this.lockObject)
+        lock (lockObject)
         {
             try
             {
-                var sb = this.GetStringBuilder();
+                var sb = GetStringBuilder();
                 var output = sb.ToString();
                 sb.Clear();
                 return output;
@@ -64,7 +64,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// <inheritdoc/>
     public override void Write(char value)
     {
-        lock (this.lockObject)
+        lock (lockObject)
         {
             InvokeBaseClass(() => base.Write(value));
         }
@@ -73,7 +73,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// <inheritdoc/>
     public override void Write(string value)
     {
-        lock (this.lockObject)
+        lock (lockObject)
         {
             InvokeBaseClass(() => base.Write(value));
         }
@@ -82,7 +82,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// <inheritdoc/>
     public override void Write(char[] buffer, int index, int count)
     {
-        lock (this.lockObject)
+        lock (lockObject)
         {
             InvokeBaseClass(() => base.Write(buffer, index, count));
         }
@@ -91,7 +91,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
-        lock (this.lockObject)
+        lock (lockObject)
         {
             InvokeBaseClass(() => base.Dispose(disposing));
         }

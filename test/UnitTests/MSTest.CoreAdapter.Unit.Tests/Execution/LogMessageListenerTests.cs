@@ -29,8 +29,8 @@ public class LogMessageListenerTests
     [TestInitialize]
     public void TestInit()
     {
-        this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
+        testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+        PlatformServiceProvider.Instance = testablePlatformServiceProvider;
     }
 
     [TestCleanup]
@@ -52,14 +52,14 @@ public class LogMessageListenerTests
     public void NoTraceListenerOperationShouldBePerformedIfDebugTraceIsNotEnabled()
     {
         using var logMessageListener = new LogMessageListener(false);
-        this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Add(It.IsAny<ITraceListener>()), Times.Never);
+        testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Add(It.IsAny<ITraceListener>()), Times.Never);
     }
 
     [TestMethod]
     public void AddTraceListenerOperationShouldBePerformedIfDebugTraceIsEnabled()
     {
         using var logMessageListener = new LogMessageListener(true);
-        this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Add(this.testablePlatformServiceProvider.MockTraceListener.Object), Times.Once);
+        testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Add(testablePlatformServiceProvider.MockTraceListener.Object), Times.Once);
     }
 
     #region Dispose Tests
@@ -68,7 +68,7 @@ public class LogMessageListenerTests
     {
         using var logMessageListener = new LogMessageListener(false);
         logMessageListener.Dispose();
-        this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Remove(It.IsAny<ITraceListener>()), Times.Never);
+        testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Remove(It.IsAny<ITraceListener>()), Times.Never);
     }
 
     [TestMethod]
@@ -80,7 +80,7 @@ public class LogMessageListenerTests
         }
 
         // Once when Dispose() is called and second time when destructor is called
-        this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Remove(It.IsAny<ITraceListener>()), Times.Exactly(1));
+        testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Remove(It.IsAny<ITraceListener>()), Times.Exactly(1));
     }
 
     [TestMethod]
@@ -88,7 +88,7 @@ public class LogMessageListenerTests
     {
         using var logMessageListener = new LogMessageListener(true);
         logMessageListener.Dispose();
-        this.testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Dispose(this.testablePlatformServiceProvider.MockTraceListener.Object), Times.Once);
+        testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Dispose(testablePlatformServiceProvider.MockTraceListener.Object), Times.Once);
     }
 
     #endregion

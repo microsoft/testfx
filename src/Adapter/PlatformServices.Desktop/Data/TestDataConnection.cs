@@ -162,6 +162,6 @@ internal abstract class TestDataConnection : IDisposable
 
     protected string FixPath(string path)
     {
-        return FixPath(path, this.dataFolders);
+        return FixPath(path, dataFolders);
     }
 }

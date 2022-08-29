@@ -48,18 +48,18 @@ public class DeploymentUtilityTests
     [TestInitialize]
     public void TestInit()
     {
-        this.mockReflectionUtility = new Mock<ReflectionUtility>();
-        this.mockFileUtility = new Mock<FileUtility>();
-        this.mockAssemblyUtility = new Mock<AssemblyUtility>();
-        this.warnings = new List<string>();
+        mockReflectionUtility = new Mock<ReflectionUtility>();
+        mockFileUtility = new Mock<FileUtility>();
+        mockAssemblyUtility = new Mock<AssemblyUtility>();
+        warnings = new List<string>();
 
-        this.deploymentUtility = new DeploymentUtility(
-            new DeploymentItemUtility(this.mockReflectionUtility.Object),
-            this.mockAssemblyUtility.Object,
-            this.mockFileUtility.Object);
+        deploymentUtility = new DeploymentUtility(
+            new DeploymentItemUtility(mockReflectionUtility.Object),
+            mockAssemblyUtility.Object,
+            mockFileUtility.Object);
 
-        this.mockRunContext = new Mock<IRunContext>();
-        this.mocktestExecutionRecorder = new Mock<ITestExecutionRecorder>();
+        mockRunContext = new Mock<IRunContext>();
+        mocktestExecutionRecorder = new Mock<ITestExecutionRecorder>();
     }
 
     #region Deploy tests
@@ -71,60 +71,60 @@ public class DeploymentUtilityTests
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testRunDirectories = new TestRunDirectories(RootDeploymentDirectory);
 
-        this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
-        this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        this.mockAssemblyUtility.Setup(
-            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
+        mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
+        mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
+        mockAssemblyUtility.Setup(
+            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out warnings))
             .Returns(new string[] { });
-        this.mockAssemblyUtility.Setup(
+        mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });
 
         Assert.IsFalse(
-            this.deploymentUtility.Deploy(
+            deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
-                this.mockRunContext.Object,
-                this.mocktestExecutionRecorder.Object,
+                mockRunContext.Object,
+                mocktestExecutionRecorder.Object,
                 testRunDirectories));
     }
 
     [TestMethod]
     public void DeployShouldDeploySourceAndItsConfigFile()
     {
-        var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
+        var testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
 
         // Setup mocks.
-        this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
-        this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        this.mockAssemblyUtility.Setup(
-            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
+        mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
+        mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
+        mockAssemblyUtility.Setup(
+            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out warnings))
             .Returns(new string[] { });
-        this.mockAssemblyUtility.Setup(
+        mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });
 
         // Act.
         Assert.IsTrue(
-            this.deploymentUtility.Deploy(
+            deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
-                this.mockRunContext.Object,
-                this.mocktestExecutionRecorder.Object,
+                mockRunContext.Object,
+                mocktestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
         string warning;
         var sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
         var configFile = Assembly.GetExecutingAssembly().GetName().Name + ".dll.config";
-        this.mockFileUtility.Verify(
+        mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
                 It.Is<string>(s => s.Contains(sourceFile)),
                 Path.Combine(testRunDirectories.OutDirectory, sourceFile),
                 out warning),
             Times.Once);
-        this.mockFileUtility.Verify(
+        mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
                 It.Is<string>(s => s.Contains(configFile)),
@@ -138,31 +138,31 @@ public class DeploymentUtilityTests
     {
         var dependencyFile = "C:\\temp\\dependency.dll";
 
-        var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
+        var testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
 
         // Setup mocks.
-        this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
-        this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        this.mockAssemblyUtility.Setup(
-            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
+        mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
+        mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
+        mockAssemblyUtility.Setup(
+            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out warnings))
             .Returns(new string[] { dependencyFile });
-        this.mockAssemblyUtility.Setup(
+        mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });
 
         // Act.
         Assert.IsTrue(
-            this.deploymentUtility.Deploy(
+            deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
-                this.mockRunContext.Object,
-                this.mocktestExecutionRecorder.Object,
+                mockRunContext.Object,
+                mocktestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
         string warning;
 
-        this.mockFileUtility.Verify(
+        mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
                 It.Is<string>(s => s.Contains(dependencyFile)),
@@ -174,33 +174,33 @@ public class DeploymentUtilityTests
     [TestMethod]
     public void DeployShouldDeploySatelliteAssemblies()
     {
-        var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
+        var testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
         var assemblyFullPath = Assembly.GetExecutingAssembly().Location;
         var satelliteFullPath = Path.Combine(Path.GetDirectoryName(assemblyFullPath), "de", "satellite.dll");
 
         // Setup mocks.
-        this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
-        this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        this.mockAssemblyUtility.Setup(
-            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
+        mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
+        mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
+        mockAssemblyUtility.Setup(
+            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out warnings))
             .Returns(new string[] { });
-        this.mockAssemblyUtility.Setup(
+        mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(assemblyFullPath))
             .Returns(new List<string> { satelliteFullPath });
 
         // Act.
         Assert.IsTrue(
-            this.deploymentUtility.Deploy(
+            deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
-                this.mockRunContext.Object,
-                this.mocktestExecutionRecorder.Object,
+                mockRunContext.Object,
+                mocktestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
         string warning;
 
-        this.mockFileUtility.Verify(
+        mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
                 It.Is<string>(s => s.Contains(satelliteFullPath)),
@@ -216,31 +216,31 @@ public class DeploymentUtilityTests
         var deploymentItemPath = "C:\\temp\\sample.dll";
         var deploymentItemOutputDirectory = "..\\..\\out";
 
-        var testCase = this.GetTestCaseAndTestRunDirectories(deploymentItemPath, deploymentItemOutputDirectory, out var testRunDirectories);
+        var testCase = GetTestCaseAndTestRunDirectories(deploymentItemPath, deploymentItemOutputDirectory, out var testRunDirectories);
 
         // Setup mocks.
-        this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
-        this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        this.mockAssemblyUtility.Setup(
-            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
+        mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
+        mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
+        mockAssemblyUtility.Setup(
+            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out warnings))
             .Returns(new string[] { });
-        this.mockAssemblyUtility.Setup(
+        mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });
 
         // Act.
         Assert.IsTrue(
-            this.deploymentUtility.Deploy(
+            deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
-                this.mockRunContext.Object,
-                this.mocktestExecutionRecorder.Object,
+                mockRunContext.Object,
+                mocktestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
         string warning;
 
-        this.mockFileUtility.Verify(
+        mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
                 It.Is<string>(s => s.Contains(deploymentItemPath)),
@@ -249,7 +249,7 @@ public class DeploymentUtilityTests
             Times.Never);
 
         // Verify the warning.
-        this.mocktestExecutionRecorder.Verify(
+        mocktestExecutionRecorder.Verify(
             ter =>
             ter.SendMessage(
                 TestMessageLevel.Warning,
@@ -265,37 +265,37 @@ public class DeploymentUtilityTests
     {
         var assemblyFullPath = Assembly.GetExecutingAssembly().Location;
 
-        var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
+        var testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
         var content1 = Path.Combine(DefaultDeploymentItemPath, "directoryContents.dll");
         var directoryContentFiles = new List<string> { content1 };
 
         // Setup mocks.
-        this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
-        this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        this.mockAssemblyUtility.Setup(
-            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
+        mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !(s.EndsWith(".dll") || s.EndsWith(".config"))))).Returns(true);
+        mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
+        mockAssemblyUtility.Setup(
+            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out warnings))
             .Returns(new string[] { });
-        this.mockFileUtility.Setup(
+        mockFileUtility.Setup(
             fu => fu.AddFilesFromDirectory(DefaultDeploymentItemPath, It.IsAny<bool>())).Returns(directoryContentFiles);
-        this.mockFileUtility.Setup(
+        mockFileUtility.Setup(
             fu => fu.AddFilesFromDirectory(DefaultDeploymentItemPath, It.IsAny<Func<string, bool>>(), It.IsAny<bool>())).Returns(directoryContentFiles);
-        this.mockAssemblyUtility.Setup(
+        mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });
 
         // Act.
         Assert.IsTrue(
-            this.deploymentUtility.Deploy(
+            deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
-                this.mockRunContext.Object,
-                this.mocktestExecutionRecorder.Object,
+                mockRunContext.Object,
+                mocktestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
         string warning;
 
-        this.mockFileUtility.Verify(
+        mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
                 It.Is<string>(s => s.Contains(content1)),
@@ -307,19 +307,19 @@ public class DeploymentUtilityTests
     [TestMethod]
     public void DeployShouldDeployPdbWithSourceIfPdbFileIsPresentInSourceDirectory()
     {
-        var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
+        var testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
 
         // Setup mocks.
-        this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
-        this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        this.mockAssemblyUtility.Setup(
-            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
+        mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
+        mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
+        mockAssemblyUtility.Setup(
+            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out warnings))
             .Returns(new string[] { });
-        this.mockAssemblyUtility.Setup(
+        mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });
         string warning;
-        this.mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
+        mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
             .Returns(
                 (string x, string y, string z) =>
                     {
@@ -329,24 +329,24 @@ public class DeploymentUtilityTests
 
         // Act.
         Assert.IsTrue(
-            this.deploymentUtility.Deploy(
+            deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
-                this.mockRunContext.Object,
-                this.mocktestExecutionRecorder.Object,
+                mockRunContext.Object,
+                mocktestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
         var sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
         var pdbFile = Assembly.GetExecutingAssembly().GetName().Name + ".pdb";
-        this.mockFileUtility.Verify(
+        mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
                 It.Is<string>(s => s.Contains(sourceFile)),
                 Path.Combine(testRunDirectories.OutDirectory, sourceFile),
                 out warning),
             Times.Once);
-        this.mockFileUtility.Verify(
+        mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
                 It.Is<string>(s => s.Contains(pdbFile)),
@@ -363,19 +363,19 @@ public class DeploymentUtilityTests
         // Path for pdb file of dependent assembly if pdb file is present.
         var pdbFile = Path.ChangeExtension(dependencyFile, "pdb");
 
-        var testCase = this.GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
+        var testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
 
         // Setup mocks.
-        this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
-        this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
-        this.mockAssemblyUtility.Setup(
-            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
+        mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
+        mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
+        mockAssemblyUtility.Setup(
+            au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out warnings))
             .Returns(new string[] { dependencyFile });
-        this.mockAssemblyUtility.Setup(
+        mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });
         string warning;
-        this.mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
+        mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
             .Returns(
                 (string x, string y, string z) =>
                 {
@@ -385,15 +385,15 @@ public class DeploymentUtilityTests
 
         // Act.
         Assert.IsTrue(
-            this.deploymentUtility.Deploy(
+            deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
-                this.mockRunContext.Object,
-                this.mocktestExecutionRecorder.Object,
+                mockRunContext.Object,
+                mocktestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
-        this.mockFileUtility.Verify(
+        mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
                 It.Is<string>(s => s.Contains(dependencyFile)),
@@ -401,7 +401,7 @@ public class DeploymentUtilityTests
                 out warning),
             Times.Once);
 
-        this.mockFileUtility.Verify(
+        mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
                 It.Is<string>(s => s.Contains(pdbFile)),

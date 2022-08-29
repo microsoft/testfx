@@ -33,7 +33,7 @@ internal class DeploymentItemUtility
     internal DeploymentItemUtility(ReflectionUtility reflectionUtility)
     {
         this.reflectionUtility = reflectionUtility;
-        this.classLevelDeploymentItems = new Dictionary<Type, IList<DeploymentItem>>();
+        classLevelDeploymentItems = new Dictionary<Type, IList<DeploymentItem>>();
     }
 
     /// <summary>
@@ -44,16 +44,16 @@ internal class DeploymentItemUtility
     /// <returns> The <see cref="IList{T}"/> of deployment items on a class. </returns>
     internal IList<DeploymentItem> GetClassLevelDeploymentItems(Type type, ICollection<string> warnings)
     {
-        if (!this.classLevelDeploymentItems.ContainsKey(type))
+        if (!classLevelDeploymentItems.ContainsKey(type))
         {
-            var deploymentItemAttributes = this.reflectionUtility.GetCustomAttributes(
+            var deploymentItemAttributes = reflectionUtility.GetCustomAttributes(
                 type.GetTypeInfo(),
                 typeof(DeploymentItemAttribute));
 
-            this.classLevelDeploymentItems[type] = this.GetDeploymentItems(deploymentItemAttributes, warnings);
+            classLevelDeploymentItems[type] = GetDeploymentItems(deploymentItemAttributes, warnings);
         }
 
-        return this.classLevelDeploymentItems[type];
+        return classLevelDeploymentItems[type];
     }
 
     /// <summary>
@@ -64,9 +64,9 @@ internal class DeploymentItemUtility
     /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>.of deployment item information. </returns>
     internal KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, IList<DeploymentItem> classLevelDeploymentItems, ICollection<string> warnings)
     {
-        var testLevelDeploymentItems = this.GetDeploymentItems(this.reflectionUtility.GetCustomAttributes(method, typeof(DeploymentItemAttribute)), warnings);
+        var testLevelDeploymentItems = GetDeploymentItems(reflectionUtility.GetCustomAttributes(method, typeof(DeploymentItemAttribute)), warnings);
 
-        return this.ToKeyValuePairs(this.Concat(testLevelDeploymentItems, classLevelDeploymentItems));
+        return ToKeyValuePairs(Concat(testLevelDeploymentItems, classLevelDeploymentItems));
     }
 
     /// <summary>
@@ -91,7 +91,7 @@ internal class DeploymentItemUtility
             return false;
         }
 
-        if (this.IsInvalidPath(sourcePath) || this.IsInvalidPath(relativeOutputDirectory))
+        if (IsInvalidPath(sourcePath) || IsInvalidPath(relativeOutputDirectory))
         {
             warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItemContainsInvalidCharacters, sourcePath, relativeOutputDirectory);
             return false;
@@ -114,7 +114,7 @@ internal class DeploymentItemUtility
     /// <returns> True if has deployment items.</returns>
     internal bool HasDeploymentItems(TestCase testCase)
     {
-        var deploymentItems = this.GetDeploymentItems(testCase);
+        var deploymentItems = GetDeploymentItems(testCase);
 
         return deploymentItems != null && deploymentItems.Length > 0;
     }
@@ -124,16 +124,16 @@ internal class DeploymentItemUtility
         List<DeploymentItem> allDeploymentItems = new();
         foreach (var test in tests)
         {
-            KeyValuePair<string, string>[] items = this.GetDeploymentItems(test);
+            KeyValuePair<string, string>[] items = GetDeploymentItems(test);
             if (items == null || items.Length == 0)
             {
                 continue;
             }
 
-            IList<DeploymentItem> deploymentItemsToBeAdded = this.FromKeyValuePairs(items);
+            IList<DeploymentItem> deploymentItemsToBeAdded = FromKeyValuePairs(items);
             foreach (var deploymentItemToBeAdded in deploymentItemsToBeAdded)
             {
-                this.AddDeploymentItem(allDeploymentItems, deploymentItemToBeAdded);
+                AddDeploymentItem(allDeploymentItems, deploymentItemToBeAdded);
             }
         }
 
@@ -181,9 +181,9 @@ internal class DeploymentItemUtility
 
         foreach (DeploymentItemAttribute deploymentItemAttribute in deploymentItemAttributes)
         {
-            if (this.IsValidDeploymentItem(deploymentItemAttribute.Path, deploymentItemAttribute.OutputDirectory, out var warning))
+            if (IsValidDeploymentItem(deploymentItemAttribute.Path, deploymentItemAttribute.OutputDirectory, out var warning))
             {
-                this.AddDeploymentItem(deploymentItems, new DeploymentItem(deploymentItemAttribute.Path, deploymentItemAttribute.OutputDirectory));
+                AddDeploymentItem(deploymentItems, new DeploymentItem(deploymentItemAttribute.Path, deploymentItemAttribute.OutputDirectory));
             }
             else
             {
@@ -215,7 +215,7 @@ internal class DeploymentItemUtility
 
         foreach (var item in deploymentItemList2)
         {
-            this.AddDeploymentItem(result, item);
+            AddDeploymentItem(result, item);
         }
 
         return result;
@@ -264,7 +264,7 @@ internal class DeploymentItemUtility
 
         foreach (var deploymentItemData in deploymentItemsData)
         {
-            this.AddDeploymentItem(result, new DeploymentItem(deploymentItemData.Key, deploymentItemData.Value));
+            AddDeploymentItem(result, new DeploymentItem(deploymentItemData.Key, deploymentItemData.Value));
         }
 
         return result;

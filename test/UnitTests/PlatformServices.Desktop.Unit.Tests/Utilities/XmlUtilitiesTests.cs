@@ -23,16 +23,16 @@ public class XmlUtilitiesTests
     [TestInitialize]
     public void TestInit()
     {
-        this.testableXmlUtilities = new TestableXmlUtilities();
+        testableXmlUtilities = new TestableXmlUtilities();
     }
 
     [TestMethod]
     public void AddAssemblyRedirectionShouldAddRedirectionToAnEmptyXml()
     {
-        this.testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>";
+        testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>";
         var assemblyName = Assembly.GetExecutingAssembly().GetName();
 
-        var configBytes = this.testableXmlUtilities.AddAssemblyRedirection(
+        var configBytes = testableXmlUtilities.AddAssemblyRedirection(
             "foo.xml",
             assemblyName,
             "99.99.99.99",
@@ -57,12 +57,12 @@ public class XmlUtilitiesTests
     [TestMethod]
     public void AddAssemblyRedirectionShouldAddRedirectionToAnEmptyConfig()
     {
-        this.testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+        testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <configuration>
 </configuration>";
         var assemblyName = Assembly.GetExecutingAssembly().GetName();
 
-        var configBytes = this.testableXmlUtilities.AddAssemblyRedirection(
+        var configBytes = testableXmlUtilities.AddAssemblyRedirection(
             "foo.xml",
             assemblyName,
             "99.99.99.99",
@@ -87,14 +87,14 @@ public class XmlUtilitiesTests
     [TestMethod]
     public void AddAssemblyRedirectionShouldAddRedirectionToAConfigWithARuntimeSectionOnly()
     {
-        this.testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+        testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <configuration>
 <runtime>
 </runtime>
 </configuration>";
         var assemblyName = Assembly.GetExecutingAssembly().GetName();
 
-        var configBytes = this.testableXmlUtilities.AddAssemblyRedirection(
+        var configBytes = testableXmlUtilities.AddAssemblyRedirection(
             "foo.xml",
             assemblyName,
             "99.99.99.99",
@@ -119,10 +119,10 @@ public class XmlUtilitiesTests
     [TestMethod]
     public void AddAssemblyRedirectionShouldAddRedirectionToAConfigWithRedirections()
     {
-        this.testableXmlUtilities.ConfigXml = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><configuration><runtime><assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\"><dependentAssembly><assemblyIdentity name=\"Random.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly></assemblyBinding></runtime></configuration>";
+        testableXmlUtilities.ConfigXml = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><configuration><runtime><assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\"><dependentAssembly><assemblyIdentity name=\"Random.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly></assemblyBinding></runtime></configuration>";
         var assemblyName = Assembly.GetExecutingAssembly().GetName();
 
-        var configBytes = this.testableXmlUtilities.AddAssemblyRedirection(
+        var configBytes = testableXmlUtilities.AddAssemblyRedirection(
             "foo.xml",
             assemblyName,
             "99.99.99.99",

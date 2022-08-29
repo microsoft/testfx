@@ -38,14 +38,14 @@ internal sealed class CsvDataConnection : TestDataConnection
         get
         {
             // Only one table based on the name of the file, with dots converted to # signs
-            return Path.GetFileName(this.fileName).Replace('.', '#');
+            return Path.GetFileName(fileName).Replace('.', '#');
         }
     }
 
     public override List<string> GetDataTablesAndViews()
     {
         List<string> tableNames = new(1);
-        tableNames.Add(this.TableName);
+        tableNames.Add(TableName);
         return tableNames;
     }
 
@@ -56,7 +56,7 @@ internal sealed class CsvDataConnection : TestDataConnection
         // read the table in then check the columns...
         try
         {
-            DataTable table = this.ReadTable(tableName, null);
+            DataTable table = ReadTable(tableName, null);
             if (table != null)
             {
                 List<string> columnNames = new();
@@ -70,7 +70,7 @@ internal sealed class CsvDataConnection : TestDataConnection
         }
         catch (Exception exception)
         {
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for CSV data source " + this.fileName);
+            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for CSV data source " + fileName);
         }
 
         return null;
@@ -85,7 +85,7 @@ internal sealed class CsvDataConnection : TestDataConnection
         WriteDiagnostics("Current Directory: {0}", Directory.GetCurrentDirectory());
 
         // We better work with a full path, if nothing else, errors become easier to report
-        string fullPath = this.FixPath(this.fileName) ?? Path.GetFullPath(this.fileName);
+        string fullPath = FixPath(fileName) ?? Path.GetFullPath(fileName);
 
         // We can map simplified CSVs to an OLEDB/Text connection, then proceed as normal
         using OleDbConnection connection = new();
@@ -162,6 +162,6 @@ internal sealed class CsvDataConnection : TestDataConnection
 
     public override DataTable ReadTable(string tableName, IEnumerable columns)
     {
-        return this.ReadTable(tableName, columns, -1);
+        return ReadTable(tableName, columns, -1);
     }
 }

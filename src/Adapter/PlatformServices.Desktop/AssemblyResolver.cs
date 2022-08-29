@@ -84,14 +84,14 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             throw new ArgumentNullException(nameof(directories));
         }
 
-        this.searchDirectories = new List<string>(directories);
-        this.directoryList = new Queue<RecursiveDirectoryPath>();
+        searchDirectories = new List<string>(directories);
+        directoryList = new Queue<RecursiveDirectoryPath>();
 
-        AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(this.OnResolve);
-        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(this.ReflectionOnlyOnResolve);
+        AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
+        AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
 
         // This is required for winmd resolution for arm built sources discovery on desktop.
-        WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += new EventHandler<NamespaceResolveEventArgs>(this.WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
+        WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
     }
 
     /// <summary>
@@ -99,7 +99,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// </summary>
     ~AssemblyResolver()
     {
-        this.Dispose(false);
+        Dispose(false);
     }
 
     /// <summary>
@@ -107,7 +107,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// </summary>
     public void Dispose()
     {
-        this.Dispose(true);
+        Dispose(true);
         GC.SuppressFinalize(this);
     }
 
@@ -143,7 +143,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
 
         foreach (var recPath in recursiveDirectoryPath)
         {
-            this.directoryList.Enqueue(recPath);
+            directoryList.Enqueue(recPath);
         }
     }
 
@@ -155,7 +155,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <returns> The <see cref="Assembly"/>. </returns>
     internal Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
     {
-        return this.OnResolveInternal(sender, args, true);
+        return OnResolveInternal(sender, args, true);
     }
 
     /// <summary>
@@ -166,7 +166,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <returns> The <see cref="Assembly"/>.  </returns>
     internal Assembly OnResolve(object sender, ResolveEventArgs args)
     {
-        return this.OnResolveInternal(sender, args, false);
+        return OnResolveInternal(sender, args, false);
     }
 
     /// <summary>
@@ -180,17 +180,17 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         Debug.Assert(searchDirectories != null, "'searchDirectories' cannot be null.");
 
         // If the directory exists, get it's subdirectories
-        if (this.DoesDirectoryExist(path))
+        if (DoesDirectoryExist(path))
         {
             // Get the directories in the path provided.
-            var directories = this.GetDirectories(path);
+            var directories = GetDirectories(path);
 
             // Add each directory and its subdirectories to the collection.
             foreach (var directory in directories)
             {
                 searchDirectories.Add(directory);
 
-                this.AddSubdirectories(directory, searchDirectories);
+                AddSubdirectories(directory, searchDirectories);
             }
         }
     }
@@ -203,19 +203,19 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// </param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!this.disposed)
+        if (!disposed)
         {
             if (disposing)
             {
                 // cleanup Managed resources like calling dispose on other managed object created.
-                AppDomain.CurrentDomain.AssemblyResolve -= new ResolveEventHandler(this.OnResolve);
-                AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= new ResolveEventHandler(this.ReflectionOnlyOnResolve);
+                AppDomain.CurrentDomain.AssemblyResolve -= new ResolveEventHandler(OnResolve);
+                AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= new ResolveEventHandler(ReflectionOnlyOnResolve);
 
-                WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve -= new EventHandler<NamespaceResolveEventArgs>(this.WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
+                WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve -= new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
             }
 
             // cleanup native resources
-            this.disposed = true;
+            disposed = true;
         }
     }
 
@@ -280,7 +280,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         }
         catch (Exception ex)
         {
-            this.SafeLog(
+            SafeLog(
                 name,
                 () =>
                     {
@@ -305,7 +305,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
                 continue;
             }
 
-            this.SafeLog(
+            SafeLog(
                 name,
                 () =>
                     {
@@ -319,7 +319,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             {
                 var assemblyPath = Path.Combine(dir, requestedName.Name + extension);
 
-                var assembly = this.SearchAndLoadAssembly(assemblyPath, name, requestedName, isReflectionOnly);
+                var assembly = SearchAndLoadAssembly(assemblyPath, name, requestedName, isReflectionOnly);
                 if (assembly != null)
                 {
                     return assembly;
@@ -374,7 +374,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         IEnumerable<string> fileNames = WindowsRuntimeMetadata.ResolveNamespace(
             args.NamespaceName,
             null,   // Will use OS installed .winmd files, you can pass explicit Windows SDK path here for searching 1st party WinRT types
-            this.searchDirectories);  // You can pass package graph paths, they will be used for searching .winmd files with 3rd party WinRT types
+            searchDirectories);  // You can pass package graph paths, they will be used for searching .winmd files with 3rd party WinRT types
 
         foreach (string fileName in fileNames)
         {
@@ -399,7 +399,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             return null;
         }
 
-        this.SafeLog(
+        SafeLog(
             args.Name,
             () =>
             {
@@ -411,7 +411,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
 
         string assemblyNameToLoad = AppDomain.CurrentDomain.ApplyPolicy(args.Name);
 
-        this.SafeLog(
+        SafeLog(
             assemblyNameToLoad,
             () =>
             {
@@ -421,52 +421,52 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
                 }
             });
 
-        lock (this.syncLock)
+        lock (syncLock)
         {
             // Since both normal and reflection only cache are accessed in same block, putting only one lock should be sufficient.
-            if (this.TryLoadFromCache(assemblyNameToLoad, isReflectionOnly, out var assembly))
+            if (TryLoadFromCache(assemblyNameToLoad, isReflectionOnly, out var assembly))
             {
                 return assembly;
             }
 
-            assembly = this.SearchAssembly(this.searchDirectories, assemblyNameToLoad, isReflectionOnly);
+            assembly = SearchAssembly(searchDirectories, assemblyNameToLoad, isReflectionOnly);
 
             if (assembly != null)
             {
                 return assembly;
             }
 
-            if (this.directoryList != null && this.directoryList.Any())
+            if (directoryList != null && directoryList.Any())
             {
                 // required assembly is not present in searchDirectories??
                 // see, if we can find it in user specified search directories.
-                while (assembly == null && this.directoryList.Count > 0)
+                while (assembly == null && directoryList.Count > 0)
                 {
                     // instead of loading whole search directory in one time, we are adding directory on the basis of need
-                    var currentNode = this.directoryList.Dequeue();
+                    var currentNode = directoryList.Dequeue();
 
                     List<string> increamentalSearchDirectory = new();
 
-                    if (this.DoesDirectoryExist(currentNode.DirectoryPath))
+                    if (DoesDirectoryExist(currentNode.DirectoryPath))
                     {
                         increamentalSearchDirectory.Add(currentNode.DirectoryPath);
 
                         if (currentNode.IncludeSubDirectories)
                         {
                             // Add all its sub-directory in depth first search order.
-                            this.AddSubdirectories(currentNode.DirectoryPath, increamentalSearchDirectory);
+                            AddSubdirectories(currentNode.DirectoryPath, increamentalSearchDirectory);
                         }
 
                         // Add this directory list in this.searchDirectories so that when we will try to resolve some other
                         // assembly, then it will look in this whole directory first.
-                        this.searchDirectories.AddRange(increamentalSearchDirectory);
+                        searchDirectories.AddRange(increamentalSearchDirectory);
 
-                        assembly = this.SearchAssembly(increamentalSearchDirectory, assemblyNameToLoad, isReflectionOnly);
+                        assembly = SearchAssembly(increamentalSearchDirectory, assemblyNameToLoad, isReflectionOnly);
                     }
                     else
                     {
                         // generate warning that path does not exist.
-                        this.SafeLog(
+                        SafeLog(
                             assemblyNameToLoad,
                             () =>
                             {
@@ -493,26 +493,26 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
                 {
                     // Put it in the resolved assembly cache so that if the Load call below
                     // triggers another assembly resolution, then we don't end up in stack overflow.
-                    this.reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = null;
+                    reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = null;
 
                     assembly = Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
 
                     if (assembly != null)
                     {
-                        this.reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = assembly;
+                        reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = assembly;
                     }
                 }
                 else
                 {
                     // Put it in the resolved assembly cache so that if the Load call below
                     // triggers another assembly resolution, then we don't end up in stack overflow.
-                    this.resolvedAssemblies[assemblyNameToLoad] = null;
+                    resolvedAssemblies[assemblyNameToLoad] = null;
 
                     assembly = Assembly.Load(assemblyNameToLoad);
 
                     if (assembly != null)
                     {
-                        this.resolvedAssemblies[assemblyNameToLoad] = assembly;
+                        resolvedAssemblies[assemblyNameToLoad] = assembly;
                     }
                 }
 
@@ -520,7 +520,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             }
             catch (Exception ex)
             {
-                this.SafeLog(
+                SafeLog(
                             args?.Name,
                             () =>
                             {
@@ -548,16 +548,16 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
 
         if (isReflectionOnly)
         {
-            isFoundInCache = this.reflectionOnlyResolvedAssemblies.TryGetValue(assemblyName, out assembly);
+            isFoundInCache = reflectionOnlyResolvedAssemblies.TryGetValue(assemblyName, out assembly);
         }
         else
         {
-            isFoundInCache = this.resolvedAssemblies.TryGetValue(assemblyName, out assembly);
+            isFoundInCache = resolvedAssemblies.TryGetValue(assemblyName, out assembly);
         }
 
         if (isFoundInCache)
         {
-            this.SafeLog(
+            SafeLog(
                 assemblyName,
                 () =>
                 {
@@ -603,7 +603,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     {
         try
         {
-            if (!this.DoesFileExist(assemblyPath))
+            if (!DoesFileExist(assemblyPath))
             {
                 return null;
             }
@@ -619,16 +619,16 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
 
             if (isReflectionOnly)
             {
-                assembly = this.ReflectionOnlyLoadAssemblyFrom(assemblyPath);
-                this.reflectionOnlyResolvedAssemblies[assemblyName] = assembly;
+                assembly = ReflectionOnlyLoadAssemblyFrom(assemblyPath);
+                reflectionOnlyResolvedAssemblies[assemblyName] = assembly;
             }
             else
             {
-                assembly = this.LoadAssemblyFrom(assemblyPath);
-                this.resolvedAssemblies[assemblyName] = assembly;
+                assembly = LoadAssemblyFrom(assemblyPath);
+                resolvedAssemblies[assemblyName] = assembly;
             }
 
-            this.SafeLog(
+            SafeLog(
                 assemblyName,
                 () =>
                     {
@@ -641,7 +641,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         }
         catch (FileLoadException ex)
         {
-            this.SafeLog(
+            SafeLog(
                 assemblyName,
                 () =>
                     {
@@ -659,7 +659,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         catch (Exception ex)
         {
             // For all other exceptions, try the next extension.
-            this.SafeLog(
+            SafeLog(
                 assemblyName,
                 () =>
                     {

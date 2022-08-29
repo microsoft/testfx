@@ -17,7 +17,7 @@ public sealed class CssProjectStructureAttribute : Attribute
     /// <param name="cssProjectStructure">The CSS Project Structure URI.</param>
     public CssProjectStructureAttribute(string cssProjectStructure)
     {
-        this.CssProjectStructure = cssProjectStructure;
+        CssProjectStructure = cssProjectStructure;
     }
 
     /// <summary>

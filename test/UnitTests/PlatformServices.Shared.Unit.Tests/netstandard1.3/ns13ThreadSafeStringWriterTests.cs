@@ -49,7 +49,7 @@ public class ThreadSafeStringWriterTests
                 stringWriter.WriteLine("content1");
                 stringWriter.WriteLine("content1");
                 stringWriter.WriteLine("content1");
-                while (this.task2flag != true && timeout.Elapsed < TimeSpan.FromSeconds(5))
+                while (task2flag != true && timeout.Elapsed < TimeSpan.FromSeconds(5))
                 {
                 }
                 stringWriter.WriteLine("content1");
@@ -64,7 +64,7 @@ public class ThreadSafeStringWriterTests
                 stringWriter.WriteLine("content2");
                 stringWriter.WriteLine("content2");
                 stringWriter.WriteLine("content2");
-                this.task2flag = true;
+                task2flag = true;
                 stringWriter.WriteLine("content2");
                 stringWriter.WriteLine("content2");
                 stringWriter.WriteLine("content2");

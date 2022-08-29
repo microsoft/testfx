@@ -26,13 +26,13 @@ public class TestSourceHostTests
     [TestInitialize]
     public void TestInit()
     {
-        this.testSourceHost = new TestSourceHost(null, null, null);
+        testSourceHost = new TestSourceHost(null, null, null);
     }
 
     [TestMethod]
     public void CreateInstanceForTypeCreatesAnInstanceOfAGivenTypeThroughDefaultConstructor()
     {
-        var type = this.testSourceHost.CreateInstanceForType(typeof(DummyType), null) as DummyType;
+        var type = testSourceHost.CreateInstanceForType(typeof(DummyType), null) as DummyType;
 
         Assert.IsNotNull(type);
         Assert.IsTrue(type.IsDefaultConstructorCalled);
@@ -43,7 +43,7 @@ public class DummyType
 {
     public DummyType()
     {
-        this.IsDefaultConstructorCalled = true;
+        IsDefaultConstructorCalled = true;
     }
 
     public bool IsDefaultConstructorCalled { get; set; }

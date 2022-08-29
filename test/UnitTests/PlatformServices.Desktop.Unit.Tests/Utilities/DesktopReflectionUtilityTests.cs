@@ -25,7 +25,7 @@ public class ReflectionUtilityTests
 
     public ReflectionUtilityTests()
     {
-        this.reflectionUtility = new ReflectionUtility();
+        reflectionUtility = new ReflectionUtility();
     }
 
     [TestMethod]
@@ -33,7 +33,7 @@ public class ReflectionUtilityTests
     {
         var asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
+        var attribs = reflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -96,7 +96,7 @@ public class ReflectionUtilityTests
     {
         public DummyAAttribute(string foo)
         {
-            this.Value = foo;
+            Value = foo;
         }
 
         public string Value { get; set; }
@@ -107,7 +107,7 @@ public class ReflectionUtilityTests
     {
         public DummySingleAAttribute(string foo)
         {
-            this.Value = foo;
+            Value = foo;
         }
 
         public string Value { get; set; }

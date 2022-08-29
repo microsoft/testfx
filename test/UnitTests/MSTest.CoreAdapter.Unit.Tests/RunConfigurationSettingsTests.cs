@@ -29,11 +29,11 @@ public class RunConfigurationSettingsTests
     [TestInitialize]
     public void TestInit()
     {
-        this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        this.mockDiscoveryContext = new Mock<IDiscoveryContext>();
-        this.mockRunSettings = new Mock<IRunSettings>();
-        this.mockMessageLogger = new Mock<IMessageLogger>();
-        PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
+        testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+        mockDiscoveryContext = new Mock<IDiscoveryContext>();
+        mockRunSettings = new Mock<IRunSettings>();
+        mockMessageLogger = new Mock<IMessageLogger>();
+        PlatformServiceProvider.Instance = testablePlatformServiceProvider;
     }
 
     [TestCleanup]
@@ -105,7 +105,7 @@ public class RunConfigurationSettingsTests
     [TestMethod]
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
     {
-        MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Assert.IsTrue(settings.CollectSourceInformation);
@@ -114,8 +114,8 @@ public class RunConfigurationSettingsTests
     [TestMethod]
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
-        this.mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
-        MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+        mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
+        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Assert.IsTrue(settings.CollectSourceInformation);
@@ -131,9 +131,9 @@ public class RunConfigurationSettingsTests
                  </FooUnit>
                </RunSettings>";
 
-        this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
-        this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Assert.IsNotNull(settings);
@@ -153,9 +153,9 @@ public class RunConfigurationSettingsTests
                      </RunConfiguration>
               </RunSettings>";
 
-        this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
-        this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
+        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Assert.IsNotNull(settings);

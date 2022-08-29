@@ -45,7 +45,7 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
         // Load the source.
         var testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
 
-        var parallelizeAttribute = this.reflectHelper.GetParallelizeAttribute(testAssembly);
+        var parallelizeAttribute = reflectHelper.GetParallelizeAttribute(testAssembly);
 
         if (parallelizeAttribute != null)
         {
@@ -58,9 +58,9 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
             }
         }
 
-        testAssemblySettings.CanParallelizeAssembly = !this.reflectHelper.IsDoNotParallelizeSet(testAssembly);
+        testAssemblySettings.CanParallelizeAssembly = !reflectHelper.IsDoNotParallelizeSet(testAssembly);
 
-        var classCleanupSequencingAttribute = this.reflectHelper.GetClassCleanupAttribute(testAssembly);
+        var classCleanupSequencingAttribute = reflectHelper.GetClassCleanupAttribute(testAssembly);
         if (classCleanupSequencingAttribute != null)
         {
             testAssemblySettings.ClassCleanupLifecycle = classCleanupSequencingAttribute.CleanupBehavior;

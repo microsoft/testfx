@@ -86,17 +86,17 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     public IEnumerable<object[]> GetData(MethodInfo methodInfo)
     {
         // Check if the declaring type of test data is passed in constructor. If not, default to test method's class type.
-        this.dynamicDataDeclaringType ??= methodInfo.DeclaringType;
+        dynamicDataDeclaringType ??= methodInfo.DeclaringType;
 
         object obj = null;
 
-        switch (this.dynamicDataSourceType)
+        switch (dynamicDataSourceType)
         {
             case DynamicDataSourceType.Property:
-                var property = this.dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(this.dynamicDataSourceName);
+                var property = dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(dynamicDataSourceName);
                 if (property == null)
                 {
-                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Property, this.dynamicDataSourceName));
+                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Property, dynamicDataSourceName));
                 }
 
                 obj = property.GetValue(null, null);
@@ -104,10 +104,10 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                 break;
 
             case DynamicDataSourceType.Method:
-                var method = this.dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(this.dynamicDataSourceName);
+                var method = dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(dynamicDataSourceName);
                 if (method == null)
                 {
-                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, this.dynamicDataSourceName));
+                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, dynamicDataSourceName));
                 }
 
                 obj = method.Invoke(null, null);
@@ -120,8 +120,8 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
             throw new ArgumentNullException(
                 string.Format(
                     FrameworkMessages.DynamicDataValueNull,
-                    this.dynamicDataSourceName,
-                    this.dynamicDataDeclaringType.FullName));
+                    dynamicDataSourceName,
+                    dynamicDataDeclaringType.FullName));
         }
 
 
@@ -130,16 +130,16 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
             throw new ArgumentNullException(
                 string.Format(
                     FrameworkMessages.DynamicDataIEnumerableNull,
-                    this.dynamicDataSourceName,
-                    this.dynamicDataDeclaringType.FullName));
+                    dynamicDataSourceName,
+                    dynamicDataDeclaringType.FullName));
         }
         else if (!enumerable.Any())
         {
             throw new ArgumentException(
                 string.Format(
                     FrameworkMessages.DynamicDataIEnumerableEmpty,
-                    this.dynamicDataSourceName,
-                    this.dynamicDataDeclaringType.FullName));
+                    dynamicDataSourceName,
+                    dynamicDataDeclaringType.FullName));
         }
 
         return enumerable;
@@ -148,14 +148,14 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     /// <inheritdoc />
     public string GetDisplayName(MethodInfo methodInfo, object[] data)
     {
-        if (this.DynamicDataDisplayName != null)
+        if (DynamicDataDisplayName != null)
         {
-            var dynamicDisplayNameDeclaringType = this.DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
+            var dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
 
-            var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(this.DynamicDataDisplayName);
+            var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName);
             if (method == null)
             {
-                throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, this.DynamicDataDisplayName));
+                throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, DynamicDataDisplayName));
             }
 
             var parameters = method.GetParameters();
@@ -169,7 +169,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                 throw new ArgumentNullException(
                     string.Format(
                         FrameworkMessages.DynamicDataDisplayName,
-                        this.DynamicDataDisplayName,
+                        DynamicDataDisplayName,
                         typeof(string).Name,
                         string.Join(", ", typeof(MethodInfo).Name, typeof(object[]).Name)));
             }

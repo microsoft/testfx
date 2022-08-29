@@ -49,9 +49,9 @@ public class TestDeploymentTests
     [TestInitialize]
     public void TestInit()
     {
-        this.mockReflectionUtility = new Mock<ReflectionUtility>();
-        this.mockFileUtility = new Mock<FileUtility>();
-        this.warnings = new List<string>();
+        mockReflectionUtility = new Mock<ReflectionUtility>();
+        mockFileUtility = new Mock<FileUtility>();
+        warnings = new List<string>();
 
         // Reset adapter settings.
         MSTestSettingsProvider.Reset();
@@ -65,14 +65,14 @@ public class TestDeploymentTests
         var methodInfo =
             typeof(TestDeploymentTests).GetMethod("GetDeploymentItemsReturnsNullWhenNoDeploymentItems");
 
-        Assert.IsNull(new TestDeployment().GetDeploymentItems(methodInfo, typeof(TestDeploymentTests), this.warnings));
+        Assert.IsNull(new TestDeployment().GetDeploymentItems(methodInfo, typeof(TestDeploymentTests), warnings));
     }
 
     [TestMethod]
     public void GetDeploymentItemsReturnsDeploymentItems()
     {
         // Arrange.
-        var testDeployment = new TestDeployment(new DeploymentItemUtility(this.mockReflectionUtility.Object), null, null);
+        var testDeployment = new TestDeployment(new DeploymentItemUtility(mockReflectionUtility.Object), null, null);
 
         // setup mocks
         var methodLevelDeploymentItems = new[]
@@ -90,11 +90,11 @@ public class TestDeploymentTests
         var memberInfo =
             typeof(TestDeploymentTests).GetMethod(
                 "GetDeploymentItemsReturnsDeploymentItems");
-        this.SetupDeploymentItems(memberInfo, methodLevelDeploymentItems);
-        this.SetupDeploymentItems(typeof(TestDeploymentTests).GetTypeInfo(), classLevelDeploymentItems);
+        SetupDeploymentItems(memberInfo, methodLevelDeploymentItems);
+        SetupDeploymentItems(typeof(TestDeploymentTests).GetTypeInfo(), classLevelDeploymentItems);
 
         // Act.
-        var deploymentItems = testDeployment.GetDeploymentItems(memberInfo, typeof(TestDeploymentTests), this.warnings);
+        var deploymentItems = testDeployment.GetDeploymentItems(memberInfo, typeof(TestDeploymentTests), warnings);
 
         // Assert.
         var expectedDeploymentItems = new KeyValuePair<string, string>[]
@@ -117,11 +117,11 @@ public class TestDeploymentTests
     [TestMethod]
     public void CleanupShouldNotDeleteDirectoriesIfRunDirectoiresIsNull()
     {
-        var testDeployment = new TestDeployment(null, null, this.mockFileUtility.Object);
+        var testDeployment = new TestDeployment(null, null, mockFileUtility.Object);
 
         testDeployment.Cleanup();
 
-        this.mockFileUtility.Verify(fu => fu.DeleteDirectories(It.IsAny<string>()), Times.Never);
+        mockFileUtility.Verify(fu => fu.DeleteDirectories(It.IsAny<string>()), Times.Never);
     }
 
     [TestMethod]
@@ -134,10 +134,10 @@ public class TestDeploymentTests
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
 
-        var testCase = this.GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        var testCase = GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
 
         // Setup mocks.
-        var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
+        var testDeployment = CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -146,16 +146,16 @@ public class TestDeploymentTests
 
         testDeployment.Cleanup();
 
-        this.mockFileUtility.Verify(fu => fu.DeleteDirectories(It.IsAny<string>()), Times.Never);
+        mockFileUtility.Verify(fu => fu.DeleteDirectories(It.IsAny<string>()), Times.Never);
     }
 
     [TestMethod]
     public void CleanupShouldDeleteRootDeploymentDirectory()
     {
-        var testCase = this.GetTestCase(typeof(DeploymentUtilityTests).GetTypeInfo().Assembly.Location);
+        var testCase = GetTestCase(typeof(DeploymentUtilityTests).GetTypeInfo().Assembly.Location);
 
         // Setup mocks.
-        var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
+        var testDeployment = CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -165,7 +165,7 @@ public class TestDeploymentTests
         // Act.
         testDeployment.Cleanup();
 
-        this.mockFileUtility.Verify(fu => fu.DeleteDirectories(testRunDirectories.RootDeploymentDirectory), Times.Once);
+        mockFileUtility.Verify(fu => fu.DeleteDirectories(testRunDirectories.RootDeploymentDirectory), Times.Once);
     }
 
     #endregion
@@ -181,10 +181,10 @@ public class TestDeploymentTests
     [TestMethod]
     public void GetDeploymentDirectoryShouldReturnDeploymentOutputDirectory()
     {
-        var testCase = this.GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        var testCase = GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
 
         // Setup mocks.
-        var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
+        var testDeployment = CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -212,9 +212,9 @@ public class TestDeploymentTests
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvparray);
 
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(this.mockReflectionUtility.Object),
+            new DeploymentItemUtility(mockReflectionUtility.Object),
             new DeploymentUtility(),
-            this.mockFileUtility.Object);
+            mockFileUtility.Object);
 
         string runSettingxml =
              "<DeploymentEnabled>False</DeploymentEnabled>";
@@ -236,9 +236,9 @@ public class TestDeploymentTests
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(this.mockReflectionUtility.Object),
+            new DeploymentItemUtility(mockReflectionUtility.Object),
             new DeploymentUtility(),
-            this.mockFileUtility.Object);
+            mockFileUtility.Object);
 
         string runSettingxml =
             "<DeploymentEnabled>False</DeploymentEnabled>";
@@ -260,9 +260,9 @@ public class TestDeploymentTests
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(this.mockReflectionUtility.Object),
+            new DeploymentItemUtility(mockReflectionUtility.Object),
             new DeploymentUtility(),
-            this.mockFileUtility.Object);
+            mockFileUtility.Object);
 
         string runSettingxml =
             "<DeploymentEnabled>True</DeploymentEnabled>";
@@ -292,9 +292,9 @@ public class TestDeploymentTests
                 };
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         var testDeployment = new TestDeployment(
-            new DeploymentItemUtility(this.mockReflectionUtility.Object),
+            new DeploymentItemUtility(mockReflectionUtility.Object),
             new DeploymentUtility(),
-            this.mockFileUtility.Object);
+            mockFileUtility.Object);
 
         string runSettingxml =
             "<DeploymentEnabled>True</DeploymentEnabled>";
@@ -366,10 +366,10 @@ public class TestDeploymentTests
     public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNull()
     {
         // Arrange.
-        var testCase = this.GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        var testCase = GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
 
         // Setup mocks.
-        var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
+        var testDeployment = CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -426,10 +426,10 @@ public class TestDeploymentTests
     public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNotNull()
     {
         // Arrange.
-        var testCase = this.GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        var testCase = GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
 
         // Setup mocks.
-        var testDeployment = this.CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
+        var testDeployment = CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
 
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -495,7 +495,7 @@ public class TestDeploymentTests
             deploymentItemAttributes.Add(new TestFrameworkV2Extension.DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
         }
 
-        this.mockReflectionUtility.Setup(
+        mockReflectionUtility.Setup(
             ru =>
             ru.GetCustomAttributes(
                 memberInfo,
@@ -522,26 +522,26 @@ public class TestDeploymentTests
 
         testRunDirectories = new TestRunDirectories(currentExecutingFolder);
 
-        this.mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
-        this.mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
+        mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll")))).Returns(true);
+        mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
         var mockAssemblyUtility = new Mock<AssemblyUtility>();
 #if !NETCOREAPP
         mockAssemblyUtility.Setup(
-           au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out this.warnings))
+           au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out warnings))
            .Returns(new string[] { });
         mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });
 #endif
-        this.mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.IsAny<string>(), It.IsAny<string>()))
+        mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(testRunDirectories.RootDeploymentDirectory);
 
-        var deploymentItemUtility = new DeploymentItemUtility(this.mockReflectionUtility.Object);
+        var deploymentItemUtility = new DeploymentItemUtility(mockReflectionUtility.Object);
 
         return new TestDeployment(
             deploymentItemUtility,
-            new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, this.mockFileUtility.Object),
-            this.mockFileUtility.Object);
+            new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, mockFileUtility.Object),
+            mockFileUtility.Object);
     }
     #endregion
 }

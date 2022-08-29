@@ -17,16 +17,16 @@ public class TestDataSourceTests : CLITestBase
     public void ExecuteCsvTestDataSourceTests()
     {
         // Arrange & Act
-        this.InvokeVsTestForExecution(
+        InvokeVsTestForExecution(
             new string[] { TestAssembly },
             testCaseFilter: "CsvTestMethod");
 
         // Assert
-        this.ValidatePassedTests(
+        ValidatePassedTests(
             "CsvTestMethod (Data Row 0)",
             "CsvTestMethod (Data Row 2)");
 
-        this.ValidateFailedTests(
+        ValidateFailedTests(
             TestAssembly,
             "CsvTestMethod (Data Row 1)",
             "CsvTestMethod (Data Row 3)");
@@ -36,27 +36,27 @@ public class TestDataSourceTests : CLITestBase
     public void ExecuteDynamicDataTests()
     {
         // Arrange & Act
-        this.InvokeVsTestForExecution(
+        InvokeVsTestForExecution(
             new string[] { TestAssembly },
             testCaseFilter: "DynamicDataTest");
 
         // Assert
-        this.ValidatePassedTests(
+        ValidatePassedTests(
             "DynamicDataTest (John;Doe,DataSourceTestProject.ITestDataSourceTests.User)");
 
-        this.ValidateFailedTestsCount(0);
+        ValidateFailedTestsCount(0);
     }
 
     [TestMethod]
     public void ExecuteDataRowTests_Enums()
     {
         // Arrange & Act
-        this.InvokeVsTestForExecution(
+        InvokeVsTestForExecution(
             new string[] { TestAssembly },
             testCaseFilter: "FullyQualifiedName~DataRowTests_Enums");
 
         // Assert
-        this.ValidatePassedTests(
+        ValidatePassedTests(
             "DataRowEnums_SByte (Alfa)",
             "DataRowEnums_SByte (Beta)",
             "DataRowEnums_SByte (Gamma)",
@@ -117,36 +117,36 @@ public class TestDataSourceTests : CLITestBase
             "DataRowEnums_MixedTypes_Byte (Beta,False,2)",
             "DataRowEnums_MixedTypes_Byte (Gamma,True,3)");
 
-        this.ValidateFailedTestsCount(0);
+        ValidateFailedTestsCount(0);
     }
 
     [TestMethod]
     public void ExecuteDataRowTests_NonSerializablePaths()
     {
         // Arrange & Act
-        this.InvokeVsTestForExecution(
+        InvokeVsTestForExecution(
             new string[] { TestAssembly },
             testCaseFilter: "FullyQualifiedName~DataRowTests_NonSerializablePaths");
 
         // Assert
-        this.ValidatePassedTests(
+        ValidatePassedTests(
             "DataRowNonSerializable (System.String)",
             "DataRowNonSerializable (System.Int32)",
             "DataRowNonSerializable (DataSourceTestProject.ITestDataSourceTests.DataRowTests_Enums)");
 
-        this.ValidateFailedTestsCount(0);
+        ValidateFailedTestsCount(0);
     }
 
     [TestMethod]
     public void ExecuteRegular_DataRowTests()
     {
         // Arrange & Act
-        this.InvokeVsTestForExecution(
+        InvokeVsTestForExecution(
             new string[] { TestAssembly },
             testCaseFilter: "FullyQualifiedName~Regular_DataRowTests");
 
         // Assert
-        this.ValidatePassedTests(
+        ValidatePassedTests(
             "DataRow1 (10)",
             "DataRow1 (20)",
             "DataRow1 (30)",
@@ -167,6 +167,6 @@ public class TestDataSourceTests : CLITestBase
             "NullValueInData (john.doe@example.com,abc123,)",
             "NullValueInData (john.doe@example.com,abc123,/unit/test)");
 
-        this.ValidateFailedTestsCount(0);
+        ValidateFailedTestsCount(0);
     }
 }

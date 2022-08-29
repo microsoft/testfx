@@ -17,7 +17,7 @@ public sealed class ClassInitializeAttribute : Attribute
     /// </summary>
     public ClassInitializeAttribute()
     {
-        this.InheritanceBehavior = InheritanceBehavior.None;
+        InheritanceBehavior = InheritanceBehavior.None;
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ public sealed class ClassInitializeAttribute : Attribute
     /// </param>
     public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior)
     {
-        this.InheritanceBehavior = inheritanceBehavior;
+        InheritanceBehavior = inheritanceBehavior;
     }
 
     /// <summary>

@@ -20,19 +20,19 @@ public class RunEventsHandler : ITestRunEventsHandler
     /// <summary>
     /// Gets a list of Tests which passed.
     /// </summary>
-    public ReadOnlyCollection<TestResult> PassedTests => this.passedTests.AsReadOnly();
+    public ReadOnlyCollection<TestResult> PassedTests => passedTests.AsReadOnly();
 
     /// <summary>
     /// Gets a list of Tests which failed.
     /// </summary>
-    public ReadOnlyCollection<TestResult> FailedTests => this.failedTests.AsReadOnly();
+    public ReadOnlyCollection<TestResult> FailedTests => failedTests.AsReadOnly();
 
     /// <summary>
     /// Gets a list of Tests which skipped.
     /// </summary>
-    public ReadOnlyCollection<TestResult> SkippedTests => this.skippedTests.AsReadOnly();
+    public ReadOnlyCollection<TestResult> SkippedTests => skippedTests.AsReadOnly();
 
-    public ReadOnlyCollection<string> Errors => this.errors.AsReadOnly();
+    public ReadOnlyCollection<string> Errors => errors.AsReadOnly();
 
     public double ElapsedTimeInRunningTests { get; private set; }
 
@@ -47,7 +47,7 @@ public class RunEventsHandler : ITestRunEventsHandler
                 EqtTrace.Warning(message);
                 break;
             case TestMessageLevel.Error:
-                this.errors.Add(message);
+                errors.Add(message);
                 EqtTrace.Error(message);
                 break;
             default:
@@ -69,19 +69,19 @@ public class RunEventsHandler : ITestRunEventsHandler
                 switch (testResult.Outcome)
                 {
                     case TestOutcome.Passed:
-                        this.passedTests.Add(testResult);
+                        passedTests.Add(testResult);
                         break;
                     case TestOutcome.Failed:
-                        this.failedTests.Add(testResult);
+                        failedTests.Add(testResult);
                         break;
                     case TestOutcome.Skipped:
-                        this.skippedTests.Add(testResult);
+                        skippedTests.Add(testResult);
                         break;
                 }
             }
         }
 
-        this.ElapsedTimeInRunningTests = testRunCompleteArgs.ElapsedTimeInRunningTests.TotalMilliseconds;
+        ElapsedTimeInRunningTests = testRunCompleteArgs.ElapsedTimeInRunningTests.TotalMilliseconds;
     }
 
     public void HandleTestRunStatsChange(TestRunChangedEventArgs testRunChangedArgs)
@@ -93,13 +93,13 @@ public class RunEventsHandler : ITestRunEventsHandler
                 switch (testResult.Outcome)
                 {
                     case TestOutcome.Passed:
-                        this.passedTests.Add(testResult);
+                        passedTests.Add(testResult);
                         break;
                     case TestOutcome.Failed:
-                        this.failedTests.Add(testResult);
+                        failedTests.Add(testResult);
                         break;
                     case TestOutcome.Skipped:
-                        this.skippedTests.Add(testResult);
+                        skippedTests.Add(testResult);
                         break;
                     default:
                         break;

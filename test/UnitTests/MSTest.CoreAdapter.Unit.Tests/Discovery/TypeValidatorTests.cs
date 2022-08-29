@@ -40,9 +40,9 @@ public class TypeValidatorTests
     [TestInitialize]
     public void TestInit()
     {
-        this.mockReflectHelper = new Mock<ReflectHelper>();
-        this.typeValidator = new TypeValidator(this.mockReflectHelper.Object);
-        this.warnings = new List<string>();
+        mockReflectHelper = new Mock<ReflectHelper>();
+        typeValidator = new TypeValidator(mockReflectHelper.Object);
+        warnings = new List<string>();
     }
 
     #endregion
@@ -52,23 +52,23 @@ public class TypeValidatorTests
     [TestMethod]
     public void IsValidTestClassShouldReturnFalseForNonClassTypes()
     {
-        Assert.IsFalse(this.typeValidator.IsValidTestClass(typeof(IDummyInterface), this.warnings));
+        Assert.IsFalse(typeValidator.IsValidTestClass(typeof(IDummyInterface), warnings));
     }
 
     [TestMethod]
     public void IsValidTestClassShouldReturnFalseForClassesNotHavingTestClassAttributeOrDerivedAttributeTypes()
     {
-        this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(It.IsAny<Type>(), typeof(UTF.TestClassAttribute), false)).Returns(false);
-        Assert.IsFalse(this.typeValidator.IsValidTestClass(typeof(TypeValidatorTests), this.warnings));
+        mockReflectHelper.Setup(rh => rh.IsAttributeDefined(It.IsAny<Type>(), typeof(UTF.TestClassAttribute), false)).Returns(false);
+        Assert.IsFalse(typeValidator.IsValidTestClass(typeof(TypeValidatorTests), warnings));
     }
 
     [TestMethod]
     public void IsValidTestClassShouldReturnTrueForClassesMarkedByAnAttributeDerivedFromTestClass()
     {
-        this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(It.IsAny<Type>(), typeof(UTF.TestClassAttribute), false)).Returns(false);
-        this.mockReflectHelper.Setup(
+        mockReflectHelper.Setup(rh => rh.IsAttributeDefined(It.IsAny<Type>(), typeof(UTF.TestClassAttribute), false)).Returns(false);
+        mockReflectHelper.Setup(
             rh => rh.HasAttributeDerivedFrom(It.IsAny<Type>(), typeof(UTF.TestClassAttribute), false)).Returns(true);
-        Assert.IsTrue(this.typeValidator.IsValidTestClass(typeof(TypeValidatorTests), this.warnings));
+        Assert.IsTrue(typeValidator.IsValidTestClass(typeof(TypeValidatorTests), warnings));
     }
 
     #endregion
@@ -78,47 +78,47 @@ public class TypeValidatorTests
     [TestMethod]
     public void IsValidTestClassShouldReturnFalseForNonPublicTestClasses()
     {
-        this.SetupTestClass();
-        Assert.IsFalse(this.typeValidator.IsValidTestClass(typeof(InternalTestClass), this.warnings));
+        SetupTestClass();
+        Assert.IsFalse(typeValidator.IsValidTestClass(typeof(InternalTestClass), warnings));
     }
 
     [TestMethod]
     public void IsValidTestClassShouldReportWarningForNonPublicTestClasses()
     {
-        this.SetupTestClass();
-        this.typeValidator.IsValidTestClass(typeof(InternalTestClass), this.warnings);
-        Assert.AreEqual(1, this.warnings.Count);
-        CollectionAssert.Contains(this.warnings, string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(InternalTestClass).FullName));
+        SetupTestClass();
+        typeValidator.IsValidTestClass(typeof(InternalTestClass), warnings);
+        Assert.AreEqual(1, warnings.Count);
+        CollectionAssert.Contains(warnings, string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(InternalTestClass).FullName));
     }
 
     [TestMethod]
     public void IsValidTestClassShouldReturnFalseForNestedNonPublicTestClasses()
     {
-        this.SetupTestClass();
-        Assert.IsFalse(this.typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), this.warnings));
+        SetupTestClass();
+        Assert.IsFalse(typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), warnings));
     }
 
     [TestMethod]
     public void IsValidTestClassShouldReportWarningsForNestedNonPublicTestClasses()
     {
-        this.SetupTestClass();
-        this.typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), this.warnings);
-        Assert.AreEqual(1, this.warnings.Count);
-        CollectionAssert.Contains(this.warnings, string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(OuterClass.NestedInternalClass).FullName));
+        SetupTestClass();
+        typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), warnings);
+        Assert.AreEqual(1, warnings.Count);
+        CollectionAssert.Contains(warnings, string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(OuterClass.NestedInternalClass).FullName));
     }
 
     [TestMethod]
     public void IsValidTestClassShouldReturnTrueForPublicTestClasses()
     {
-        this.SetupTestClass();
-        Assert.IsTrue(this.typeValidator.IsValidTestClass(typeof(PublicTestClass), this.warnings));
+        SetupTestClass();
+        Assert.IsTrue(typeValidator.IsValidTestClass(typeof(PublicTestClass), warnings));
     }
 
     [TestMethod]
     public void IsValidTestClassShouldReturnTrueForNestedPublicTestClasses()
     {
-        this.SetupTestClass();
-        Assert.IsTrue(this.typeValidator.IsValidTestClass(typeof(OuterClass.NestedPublicClass), this.warnings));
+        SetupTestClass();
+        Assert.IsTrue(typeValidator.IsValidTestClass(typeof(OuterClass.NestedPublicClass), warnings));
     }
 
     #endregion
@@ -128,61 +128,61 @@ public class TypeValidatorTests
     [TestMethod]
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnTrueForInternalTestClasses()
     {
-        var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+        var typeValidator = new TypeValidator(mockReflectHelper.Object, true);
 
-        this.SetupTestClass();
-        Assert.IsTrue(typeValidator.IsValidTestClass(typeof(InternalTestClass), this.warnings));
+        SetupTestClass();
+        Assert.IsTrue(typeValidator.IsValidTestClass(typeof(InternalTestClass), warnings));
     }
 
     [TestMethod]
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldNotReportWarningForInternalTestClasses()
     {
-        var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+        var typeValidator = new TypeValidator(mockReflectHelper.Object, true);
 
-        this.SetupTestClass();
-        typeValidator.IsValidTestClass(typeof(InternalTestClass), this.warnings);
-        Assert.AreEqual(0, this.warnings.Count);
+        SetupTestClass();
+        typeValidator.IsValidTestClass(typeof(InternalTestClass), warnings);
+        Assert.AreEqual(0, warnings.Count);
     }
 
     [TestMethod]
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnTrueForNestedInternalTestClasses()
     {
-        var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+        var typeValidator = new TypeValidator(mockReflectHelper.Object, true);
 
-        this.SetupTestClass();
-        Assert.IsTrue(typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), this.warnings));
+        SetupTestClass();
+        Assert.IsTrue(typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), warnings));
     }
 
     [TestMethod]
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnFalseForPrivateTestClasses()
     {
-        var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+        var typeValidator = new TypeValidator(mockReflectHelper.Object, true);
 
         var nestedPrivateClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "NestedPrivateClass");
 
-        this.SetupTestClass();
-        Assert.IsFalse(typeValidator.IsValidTestClass(nestedPrivateClassType, this.warnings));
+        SetupTestClass();
+        Assert.IsFalse(typeValidator.IsValidTestClass(nestedPrivateClassType, warnings));
     }
 
     [TestMethod]
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnFalseForInaccessibleTestClasses()
     {
-        var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+        var typeValidator = new TypeValidator(mockReflectHelper.Object, true);
 
         var inaccessibleClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "InaccessiblePublicClass");
 
-        this.SetupTestClass();
-        Assert.IsFalse(typeValidator.IsValidTestClass(inaccessibleClassType, this.warnings));
+        SetupTestClass();
+        Assert.IsFalse(typeValidator.IsValidTestClass(inaccessibleClassType, warnings));
     }
 
     [TestMethod]
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldNotReportWarningsForNestedInternalTestClasses()
     {
-        var typeValidator = new TypeValidator(this.mockReflectHelper.Object, true);
+        var typeValidator = new TypeValidator(mockReflectHelper.Object, true);
 
-        this.SetupTestClass();
-        typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), this.warnings);
-        Assert.AreEqual(0, this.warnings.Count);
+        SetupTestClass();
+        typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), warnings);
+        Assert.AreEqual(0, warnings.Count);
     }
 
     #endregion
@@ -192,17 +192,17 @@ public class TypeValidatorTests
     [TestMethod]
     public void IsValidTestClassShouldReturnFalseForNonAbstractGenericTypes()
     {
-        this.SetupTestClass();
-        Assert.IsFalse(this.typeValidator.IsValidTestClass(typeof(GenericClass<>), this.warnings));
+        SetupTestClass();
+        Assert.IsFalse(typeValidator.IsValidTestClass(typeof(GenericClass<>), warnings));
     }
 
     [TestMethod]
     public void IsValidTestClassShouldReportWarningsForNonAbstractGenericTypes()
     {
-        this.SetupTestClass();
-        this.typeValidator.IsValidTestClass(typeof(GenericClass<>), this.warnings);
-        Assert.AreEqual(1, this.warnings.Count);
-        CollectionAssert.Contains(this.warnings, string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(GenericClass<>).FullName));
+        SetupTestClass();
+        typeValidator.IsValidTestClass(typeof(GenericClass<>), warnings);
+        Assert.AreEqual(1, warnings.Count);
+        CollectionAssert.Contains(warnings, string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(GenericClass<>).FullName));
     }
 
     #endregion
@@ -212,24 +212,24 @@ public class TypeValidatorTests
     [TestMethod]
     public void IsValidTestClassShouldReturnFalseForTestClassesWithInvalidTestContextSignature()
     {
-        this.SetupTestClass();
-        Assert.IsFalse(this.typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), this.warnings));
+        SetupTestClass();
+        Assert.IsFalse(typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), warnings));
     }
 
     [TestMethod]
     public void IsValidTestClassShouldReportWarningsForTestClassesWithInvalidTestContextSignature()
     {
-        this.SetupTestClass();
-        this.typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), this.warnings);
-        Assert.AreEqual(1, this.warnings.Count);
-        CollectionAssert.Contains(this.warnings, string.Format(Resource.UTA_ErrorInValidTestContextSignature, typeof(ClassWithTestContextGetterOnly).FullName));
+        SetupTestClass();
+        typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), warnings);
+        Assert.AreEqual(1, warnings.Count);
+        CollectionAssert.Contains(warnings, string.Format(Resource.UTA_ErrorInValidTestContextSignature, typeof(ClassWithTestContextGetterOnly).FullName));
     }
 
     [TestMethod]
     public void IsValidTestClassShouldReturnTrueForTestClassesWithValidTestContextSignature()
     {
-        this.SetupTestClass();
-        Assert.IsTrue(this.typeValidator.IsValidTestClass(typeof(ClassWithTestContext), this.warnings));
+        SetupTestClass();
+        Assert.IsTrue(typeValidator.IsValidTestClass(typeof(ClassWithTestContext), warnings));
     }
 
     #endregion
@@ -239,24 +239,24 @@ public class TypeValidatorTests
     [TestMethod]
     public void IsValidTestClassShouldReturnFalseForAbstractTestClasses()
     {
-        this.SetupTestClass();
-        Assert.IsFalse(this.typeValidator.IsValidTestClass(typeof(AbstractTestClass), this.warnings));
+        SetupTestClass();
+        Assert.IsFalse(typeValidator.IsValidTestClass(typeof(AbstractTestClass), warnings));
     }
 
     [TestMethod]
     public void IsValidTestClassShouldNotReportWarningsForAbstractTestClasses()
     {
-        this.SetupTestClass();
-        this.typeValidator.IsValidTestClass(typeof(AbstractTestClass), this.warnings);
-        Assert.AreEqual(0, this.warnings.Count);
+        SetupTestClass();
+        typeValidator.IsValidTestClass(typeof(AbstractTestClass), warnings);
+        Assert.AreEqual(0, warnings.Count);
     }
 
     [TestMethod]
     public void IsValidTestClassShouldReturnFalseForGenericAbstractTestClasses()
     {
-        this.SetupTestClass();
-        Assert.IsFalse(this.typeValidator.IsValidTestClass(typeof(AbstractGenericClass<>), this.warnings));
-        Assert.AreEqual(0, this.warnings.Count);
+        SetupTestClass();
+        Assert.IsFalse(typeValidator.IsValidTestClass(typeof(AbstractGenericClass<>), warnings));
+        Assert.AreEqual(0, warnings.Count);
     }
 
     #endregion
@@ -266,43 +266,43 @@ public class TypeValidatorTests
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnTrueForClassesWithNoTestContextProperty()
     {
-        Assert.IsTrue(this.typeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)));
+        Assert.IsTrue(typeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithNoSetters()
     {
-        Assert.IsFalse(this.typeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
+        Assert.IsFalse(typeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithPrivateSetter()
     {
-        Assert.IsFalse(this.typeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
+        Assert.IsFalse(typeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithStaticSetter()
     {
-        Assert.IsFalse(this.typeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)));
+        Assert.IsFalse(typeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithAbstractSetter()
     {
-        Assert.IsFalse(this.typeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext)));
+        Assert.IsFalse(typeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldNotThrowForAGenericClassWithRandomProperties()
     {
-        Assert.IsTrue(this.typeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>)));
+        Assert.IsTrue(typeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnTrueForAGenericClassWithTestContext()
     {
-        Assert.IsTrue(this.typeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>)));
+        Assert.IsTrue(typeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>)));
     }
 
     #endregion
@@ -336,7 +336,7 @@ public class TypeValidatorTests
 
         var discoverInternal = false;
         var actualDiscoveredTypes = allTypes
-            .Where(t => this.typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
         actualDiscoveredTypes.Should().BeEquivalentTo(expectedDiscoveredTypes);
@@ -378,7 +378,7 @@ public class TypeValidatorTests
 
         var discoverInternal = false;
         var actualDiscoveredTypes = allTypes
-            .Where(t => !this.typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => !typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
         actualDiscoveredTypes.Should().BeEquivalentTo(expectedNonDiscoveredTypes, o => o.WithTracing());
@@ -412,7 +412,7 @@ public class TypeValidatorTests
 
         var discoverInternal = true;
         var actualDiscoveredTypes = allTypes
-            .Where(t => this.typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
         actualDiscoveredTypes.Should().BeEquivalentTo(expectedDiscoveredTypes);
@@ -441,7 +441,7 @@ public class TypeValidatorTests
 
         var discoverInternal = true;
         var actualDiscoveredTypes = allTypes
-            .Where(t => !this.typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => !typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
         actualDiscoveredTypes.Should().BeEquivalentTo(expectedNonDiscoveredTypes, o => o.WithTracing());
@@ -461,7 +461,7 @@ public class TypeValidatorTests
 
     private void SetupTestClass()
     {
-        this.mockReflectHelper.Setup(rh => rh.IsAttributeDefined(It.IsAny<Type>(), typeof(UTF.TestClassAttribute), false)).Returns(true);
+        mockReflectHelper.Setup(rh => rh.IsAttributeDefined(It.IsAny<Type>(), typeof(UTF.TestClassAttribute), false)).Returns(true);
     }
 
     #endregion

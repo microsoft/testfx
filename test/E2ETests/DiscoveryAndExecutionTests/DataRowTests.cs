@@ -19,7 +19,7 @@ public class DataRowTests : CLITestBase
     public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerviedClassHasDataRows_SimpleDataRows()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSimple");
@@ -39,7 +39,7 @@ public class DataRowTests : CLITestBase
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
@@ -56,7 +56,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSomeOptional");
@@ -74,7 +74,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsExecuteWithParamsArrayParameter()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowParamsArgument");
@@ -93,7 +93,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsFailWhenInvalidArgumentsProvided()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowOptionalInvalidArguments");
@@ -111,7 +111,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldSerializeDoublesProperly()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTestDouble");
@@ -128,7 +128,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldSerializeMixedTypesProperly()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTestMixed");
@@ -144,7 +144,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldSerializeEnumsProperly()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowEnums");
@@ -163,7 +163,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldHandleNonSerializableValues()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowNonSerializable");

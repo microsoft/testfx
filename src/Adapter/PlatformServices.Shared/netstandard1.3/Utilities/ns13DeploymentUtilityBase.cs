@@ -34,9 +34,9 @@ internal abstract class DeploymentUtilityBase
 
     public DeploymentUtilityBase(DeploymentItemUtility deploymentItemUtility, AssemblyUtility assemblyUtility, FileUtility fileUtility)
     {
-        this.DeploymentItemUtility = deploymentItemUtility;
-        this.AssemblyUtility = assemblyUtility;
-        this.FileUtility = fileUtility;
+        DeploymentItemUtility = deploymentItemUtility;
+        AssemblyUtility = assemblyUtility;
+        FileUtility = fileUtility;
     }
 
     protected FileUtility FileUtility { get; set; }
@@ -47,10 +47,10 @@ internal abstract class DeploymentUtilityBase
 
     public bool Deploy(IEnumerable<TestCase> tests, string source, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, TestRunDirectories runDirectories)
     {
-        IList<DeploymentItem> deploymentItems = this.DeploymentItemUtility.GetDeploymentItems(tests);
+        IList<DeploymentItem> deploymentItems = DeploymentItemUtility.GetDeploymentItems(tests);
 
         // we just deploy source if there are no deployment items for current source but there are deployment items for other sources
-        return this.Deploy(source, runContext, testExecutionRecorder, deploymentItems, runDirectories);
+        return Deploy(source, runContext, testExecutionRecorder, deploymentItems, runDirectories);
     }
 
     /// <summary>
@@ -60,18 +60,18 @@ internal abstract class DeploymentUtilityBase
     /// <returns>TestRunDirectories instance.</returns>
     public TestRunDirectories CreateDeploymentDirectories(IRunContext runContext)
     {
-        var resultsDirectory = this.GetTestResultsDirectory(runContext);
-        var rootDeploymentDirectory = this.GetRootDeploymentDirectory(resultsDirectory);
+        var resultsDirectory = GetTestResultsDirectory(runContext);
+        var rootDeploymentDirectory = GetRootDeploymentDirectory(resultsDirectory);
 
         var result = new TestRunDirectories(rootDeploymentDirectory);
         var inDirectory = result.InDirectory;
         var outDirectory = result.OutDirectory;
         var inMachineDirectory = result.InMachineNameDirectory;
 
-        this.FileUtility.CreateDirectoryIfNotExists(rootDeploymentDirectory);
-        this.FileUtility.CreateDirectoryIfNotExists(inDirectory);
-        this.FileUtility.CreateDirectoryIfNotExists(outDirectory);
-        this.FileUtility.CreateDirectoryIfNotExists(inMachineDirectory);
+        FileUtility.CreateDirectoryIfNotExists(rootDeploymentDirectory);
+        FileUtility.CreateDirectoryIfNotExists(inDirectory);
+        FileUtility.CreateDirectoryIfNotExists(outDirectory);
+        FileUtility.CreateDirectoryIfNotExists(inMachineDirectory);
 
         return result;
     }
@@ -114,7 +114,7 @@ internal abstract class DeploymentUtilityBase
         string configFile = null;
 
         var assemblyConfigFile = testSource + TestAssemblyConfigFileExtension;
-        if (this.FileUtility.DoesFileExist(assemblyConfigFile))
+        if (FileUtility.DoesFileExist(assemblyConfigFile))
         {
             // Path to config file cannot be bad: storage is already checked, and extension is valid.
             configFile = testSource + TestAssemblyConfigFileExtension;
@@ -122,7 +122,7 @@ internal abstract class DeploymentUtilityBase
         else
         {
             var netAppConfigFile = Path.Combine(Path.GetDirectoryName(testSource), NetAppConfigFile);
-            if (this.FileUtility.DoesFileExist(netAppConfigFile))
+            if (FileUtility.DoesFileExist(netAppConfigFile))
             {
                 configFile = netAppConfigFile;
             }
@@ -142,14 +142,14 @@ internal abstract class DeploymentUtilityBase
     protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory)
     {
         Validate.IsFalse(string.IsNullOrWhiteSpace(deploymentDirectory), "Deployment directory is null or empty");
-        Validate.IsTrue(this.FileUtility.DoesDirectoryExist(deploymentDirectory), $"Deployment directory {deploymentDirectory} does not exist");
+        Validate.IsTrue(FileUtility.DoesDirectoryExist(deploymentDirectory), $"Deployment directory {deploymentDirectory} does not exist");
         Validate.IsFalse(string.IsNullOrWhiteSpace(testSource), "TestSource directory is null/empty");
-        Validate.IsTrue(this.FileUtility.DoesFileExist(testSource), $"TestSource {testSource} does not exist.");
+        Validate.IsTrue(FileUtility.DoesFileExist(testSource), $"TestSource {testSource} does not exist.");
 
         testSource = Path.GetFullPath(testSource);
         var warnings = new List<string>();
 
-        this.AddDeploymentItemsBasedOnMsTestSetting(testSource, deploymentItems, warnings);
+        AddDeploymentItemsBasedOnMsTestSetting(testSource, deploymentItems, warnings);
 
         // Maps relative to Out dir destination -> source and used to determine if there are conflicted items.
         var destToSource = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -160,19 +160,19 @@ internal abstract class DeploymentUtilityBase
             ValidateArg.NotNull(deploymentItem, "deploymentItem should not be null.");
 
             // Validate the output directory.
-            if (!this.IsOutputDirectoryValid(deploymentItem, deploymentDirectory, warnings))
+            if (!IsOutputDirectoryValid(deploymentItem, deploymentDirectory, warnings))
             {
                 continue;
             }
 
             // Get the files corresponding to this deployment item
-            var deploymentItemFiles = this.GetFullPathToFilesCorrespondingToDeploymentItem(deploymentItem, testSource, resultsDirectory, warnings, out bool itemIsDirectory);
+            var deploymentItemFiles = GetFullPathToFilesCorrespondingToDeploymentItem(deploymentItem, testSource, resultsDirectory, warnings, out bool itemIsDirectory);
             if (deploymentItemFiles == null)
             {
                 continue;
             }
 
-            var fullPathToDeploymentItemSource = this.GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSource);
+            var fullPathToDeploymentItemSource = GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSource);
 
             // Note: source is already rooted.
             foreach (var deploymentItemFile in deploymentItemFiles)
@@ -185,9 +185,9 @@ internal abstract class DeploymentUtilityBase
 
                 // Find dependencies of test deployment items and deploy them at the same time as the main file.
                 if (deploymentItem.OriginType == DeploymentItemOriginType.PerTestDeployment &&
-                    this.AssemblyUtility.IsAssemblyExtension(Path.GetExtension(deploymentItemFile)))
+                    AssemblyUtility.IsAssemblyExtension(Path.GetExtension(deploymentItemFile)))
                 {
-                    this.AddDependenciesOfDeploymentItem(deploymentItemFile, filesToDeploy, warnings);
+                    AddDependenciesOfDeploymentItem(deploymentItemFile, filesToDeploy, warnings);
                 }
 
                 foreach (var fileToDeploy in filesToDeploy)
@@ -196,7 +196,7 @@ internal abstract class DeploymentUtilityBase
 
                     // Ignore the test platform files.
                     var tempFile = Path.GetFileName(fileToDeploy);
-                    var assemblyName = Path.GetFileName(this.GetType().GetTypeInfo().Assembly.Location);
+                    var assemblyName = Path.GetFileName(GetType().GetTypeInfo().Assembly.Location);
                     if (tempFile.Equals(assemblyName, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
@@ -207,7 +207,7 @@ internal abstract class DeploymentUtilityBase
                     {
                         // Deploy into subdirectory of deployment (Out) dir.
                         Debug.Assert(fileToDeploy.StartsWith(fullPathToDeploymentItemSource, StringComparison.Ordinal), "Somehow source is outside original dir.");
-                        relativeDestination = this.FileUtility.TryConvertPathToRelative(fileToDeploy, fullPathToDeploymentItemSource);
+                        relativeDestination = FileUtility.TryConvertPathToRelative(fileToDeploy, fullPathToDeploymentItemSource);
                     }
                     else
                     {
@@ -234,7 +234,7 @@ internal abstract class DeploymentUtilityBase
                         destToSource.Add(relativeDestination, fileToDeploy);
 
                         // Now, finally we can copy the file...
-                        destination = this.FileUtility.CopyFileOverwrite(fileToDeploy, destination, out string warning);
+                        destination = FileUtility.CopyFileOverwrite(fileToDeploy, destination, out string warning);
                         if (!string.IsNullOrEmpty(warning))
                         {
                             warnings.Add(warning);
@@ -246,10 +246,10 @@ internal abstract class DeploymentUtilityBase
                         }
 
                         // We clear the attributes so that e.g. you can write to the copies of files originally under SCC.
-                        this.FileUtility.SetAttributes(destination, FileAttributes.Normal);
+                        FileUtility.SetAttributes(destination, FileAttributes.Normal);
 
                         // Deploy PDB for line number info in stack trace.
-                        this.FileUtility.FindAndDeployPdb(destination, relativeDestination, fileToDeploy, destToSource);
+                        FileUtility.FindAndDeployPdb(destination, relativeDestination, fileToDeploy, destToSource);
                     }
                     else if (
                         !string.Equals(
@@ -290,14 +290,14 @@ internal abstract class DeploymentUtilityBase
 
         try
         {
-            isDirectory = this.IsDeploymentItemSourceADirectory(deploymentItem, testSource, out string directory);
+            isDirectory = IsDeploymentItemSourceADirectory(deploymentItem, testSource, out string directory);
             if (isDirectory)
             {
-                return this.FileUtility.AddFilesFromDirectory(
+                return FileUtility.AddFilesFromDirectory(
                     directory, (deployDirectory) => string.Equals(deployDirectory, resultsDirectory, StringComparison.OrdinalIgnoreCase), false).ToArray();
             }
 
-            if (this.IsDeploymentItemSourceAFile(deploymentItem.SourcePath, testSource, out string fileName))
+            if (IsDeploymentItemSourceAFile(deploymentItem.SourcePath, testSource, out string fileName))
             {
                 return new[] { fileName };
             }
@@ -305,7 +305,7 @@ internal abstract class DeploymentUtilityBase
             // If file/directory is not found, then try removing the prefix and see if it is present.
             string fileOrDirNameOnly = Path.GetFileName(deploymentItem.SourcePath.TrimEnd(
                         new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }));
-            if (this.IsDeploymentItemSourceAFile(fileOrDirNameOnly, testSource, out fileName))
+            if (IsDeploymentItemSourceAFile(fileOrDirNameOnly, testSource, out fileName))
             {
                 return new[] { fileName };
             }
@@ -388,11 +388,11 @@ internal abstract class DeploymentUtilityBase
 
     protected string AddTestSourceConfigFileIfExists(string testSource, IList<DeploymentItem> deploymentItems)
     {
-        string configFile = this.GetConfigFile(testSource);
+        string configFile = GetConfigFile(testSource);
 
         if (string.IsNullOrEmpty(configFile) == false)
         {
-            this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(configFile));
+            DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(configFile));
         }
 
         return configFile;
@@ -433,7 +433,7 @@ internal abstract class DeploymentUtilityBase
 
         // Do the deployment.
         EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: Using deployment directory {0} for source {1}.", runDirectories.OutDirectory, source);
-        var warnings = this.Deploy(new List<DeploymentItem>(deploymentItems), source, runDirectories.OutDirectory, this.GetTestResultsDirectory(runContext));
+        var warnings = Deploy(new List<DeploymentItem>(deploymentItems), source, runDirectories.OutDirectory, GetTestResultsDirectory(runContext));
 
         // Log warnings
         LogWarnings(testExecutionRecorder, warnings);
@@ -442,19 +442,19 @@ internal abstract class DeploymentUtilityBase
 
     private bool IsDeploymentItemSourceAFile(string deploymentItemSourcePath, string testSource, out string file)
     {
-        file = this.GetFullPathToDeploymentItemSource(deploymentItemSourcePath, testSource);
+        file = GetFullPathToDeploymentItemSource(deploymentItemSourcePath, testSource);
 
-        return this.FileUtility.DoesFileExist(file);
+        return FileUtility.DoesFileExist(file);
     }
 
     private bool IsDeploymentItemSourceADirectory(DeploymentItem deploymentItem, string testSource, out string resultDirectory)
     {
         resultDirectory = null;
 
-        string directory = this.GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSource);
+        string directory = GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSource);
         directory = directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
-        if (this.FileUtility.DoesDirectoryExist(directory))
+        if (FileUtility.DoesDirectoryExist(directory))
         {
             resultDirectory = directory;
             return true;

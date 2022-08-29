@@ -23,25 +23,25 @@ public class DeploymentTests : CLITestBase
     [TestMethod]
     public void ValidateTestSourceDependencyDeployment()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssemblyDependency });
-        this.ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.FailIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
-        this.ValidateFailedTestsContain(TestAssemblyMSBuild, true, "DeploymentTestProject.DeploymentTestProject.PassIfFilePresent");
+        InvokeVsTestForExecution(new string[] { TestAssemblyDependency });
+        ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.FailIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
+        ValidateFailedTestsContain(TestAssemblyMSBuild, true, "DeploymentTestProject.DeploymentTestProject.PassIfFilePresent");
     }
 
     [TestMethod]
     public void ValidateTestSourceLocationDeployment()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssemblyMSBuild }, RunSetting);
-        this.ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.PassIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
-        this.ValidateFailedTestsContain(TestAssemblyMSBuild, true, "DeploymentTestProject.DeploymentTestProject.FailIfFilePresent");
+        InvokeVsTestForExecution(new string[] { TestAssemblyMSBuild }, RunSetting);
+        ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.PassIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
+        ValidateFailedTestsContain(TestAssemblyMSBuild, true, "DeploymentTestProject.DeploymentTestProject.FailIfFilePresent");
     }
 
     [TestMethod]
     public void ValidateTestSourceLocationDeploymentNetCore3_1()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssemblyNetCore31 }, null);
-        this.ValidatePassedTestsContain("DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.FailIfFilePresent", "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfDeclaredFilesPresent");
-        this.ValidateFailedTestsContain(TestAssemblyMSBuild, true, "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfFilePresent");
+        InvokeVsTestForExecution(new string[] { TestAssemblyNetCore31 }, null);
+        ValidatePassedTestsContain("DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.FailIfFilePresent", "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfDeclaredFilesPresent");
+        ValidateFailedTestsContain(TestAssemblyMSBuild, true, "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfFilePresent");
     }
 
     // TODO @haplois | @evangelink: We need to work on our netcoreapp2.1 tests.

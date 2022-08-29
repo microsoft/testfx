@@ -26,7 +26,7 @@ public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
     {
         List<string> categories = new(1);
         categories.Add(testCategory);
-        this.testCategories = categories;
+        testCategories = categories;
     }
 
     /// <summary>
@@ -34,6 +34,6 @@ public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
     /// </summary>
     public override IList<string> TestCategories
     {
-        get { return this.testCategories; }
+        get { return testCategories; }
     }
 }

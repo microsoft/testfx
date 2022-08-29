@@ -41,7 +41,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// </remarks>
     public GenericParameterHelper()
     {
-        this.Data = Randomizer.Next();
+        Data = Randomizer.Next();
     }
 
     /// <summary>
@@ -51,7 +51,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// <param name="data">Any integer value</param>
     public GenericParameterHelper(int data)
     {
-        this.Data = data;
+        Data = data;
     }
     #endregion
 
@@ -62,8 +62,8 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// </summary>
     public int Data
     {
-        get { return this.data; }
-        set { this.data = value; }
+        get { return data; }
+        set { data = value; }
     }
     #endregion
 
@@ -79,7 +79,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     {
         GenericParameterHelper other = obj as GenericParameterHelper;
 
-        return this.Data == other?.Data;
+        return Data == other?.Data;
     }
 
     /// <summary>
@@ -88,7 +88,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// <returns>The hash code.</returns>
     public override int GetHashCode()
     {
-        return this.Data.GetHashCode();
+        return Data.GetHashCode();
     }
     #endregion
 
@@ -108,7 +108,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     {
         if (obj is GenericParameterHelper gpf)
         {
-            return this.Data.CompareTo(gpf.Data);
+            return Data.CompareTo(gpf.Data);
         }
 
         throw new NotSupportedException("GenericParameterHelper object is designed to compare objects of GenericParameterHelper type only.");
@@ -125,18 +125,18 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// <returns>The IEnumerator object</returns>
     public IEnumerator GetEnumerator()
     {
-        int size = this.Data % 10;
-        if (this.ienumerableStore == null)
+        int size = Data % 10;
+        if (ienumerableStore == null)
         {
-            this.ienumerableStore = new List<object>(size);
+            ienumerableStore = new List<object>(size);
 
             for (int i = 0; i < size; i++)
             {
-                this.ienumerableStore.Add(new object());
+                ienumerableStore.Add(new object());
             }
         }
 
-        return this.ienumerableStore.GetEnumerator();
+        return ienumerableStore.GetEnumerator();
     }
 
     #endregion
@@ -150,7 +150,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// <returns>The cloned object.</returns>
     public object Clone()
     {
-        GenericParameterHelper clone = new() { data = this.data };
+        GenericParameterHelper clone = new() { data = data };
         return clone;
     }
 

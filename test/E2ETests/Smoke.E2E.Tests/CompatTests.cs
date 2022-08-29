@@ -15,7 +15,7 @@ public class CompatTests : CLITestBase
     [TestMethod]
     public void DiscoverCompatTests()
     {
-        this.InvokeVsTestForDiscovery(new string[] { OldAdapterTestProject, LatestAdapterTestProject });
+        InvokeVsTestForDiscovery(new string[] { OldAdapterTestProject, LatestAdapterTestProject });
         var listOfTests = new string[]
         {
             "CompatTestProject.UnitTest1.PassingTest",
@@ -25,29 +25,29 @@ public class CompatTests : CLITestBase
             "SampleUnitTestProject.UnitTest1.FailingTest",
             "SampleUnitTestProject.UnitTest1.SkippingTest"
         };
-        this.ValidateDiscoveredTests(listOfTests);
+        ValidateDiscoveredTests(listOfTests);
     }
 
     [TestMethod]
     public void RunAllCompatTests()
     {
-        this.InvokeVsTestForExecution(new string[] { OldAdapterTestProject, LatestAdapterTestProject });
+        InvokeVsTestForExecution(new string[] { OldAdapterTestProject, LatestAdapterTestProject });
 
-        this.ValidatePassedTestsContain(
+        ValidatePassedTestsContain(
             "CompatTestProject.UnitTest1.PassingTest",
              "SampleUnitTestProject.UnitTest1.PassingTest");
 
-        this.ValidateFailedTestsContain(
+        ValidateFailedTestsContain(
             OldAdapterTestProject,
             true,
             "CompatTestProject.UnitTest1.FailingTest");
 
-        this.ValidateFailedTestsContain(
+        ValidateFailedTestsContain(
             LatestAdapterTestProject,
             true,
             "SampleUnitTestProject.UnitTest1.FailingTest");
 
-        this.ValidateSkippedTestsContain(
+        ValidateSkippedTestsContain(
             "CompatTestProject.UnitTest1.SkippingTest",
             "SampleUnitTestProject.UnitTest1.SkippingTest");
     }

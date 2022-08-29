@@ -40,15 +40,15 @@ public class TestMethodInfo : ITestMethod
         Debug.Assert(testMethod != null, "TestMethod should not be null");
         Debug.Assert(parent != null, "Parent should not be null");
 
-        this.TestMethod = testMethod;
-        this.Parent = parent;
-        this.TestMethodOptions = testmethodOptions;
+        TestMethod = testMethod;
+        Parent = parent;
+        TestMethodOptions = testmethodOptions;
     }
 
     /// <summary>
     /// Gets a value indicating whether timeout is set.
     /// </summary>
-    public bool IsTimeoutSet => this.TestMethodOptions.Timeout != TimeoutWhenNotSet;
+    public bool IsTimeoutSet => TestMethodOptions.Timeout != TimeoutWhenNotSet;
 
     /// <summary>
     /// Gets the reason why the test is not runnable
@@ -58,19 +58,19 @@ public class TestMethodInfo : ITestMethod
     /// <summary>
     /// Gets a value indicating whether test is runnable
     /// </summary>
-    public bool IsRunnable => string.IsNullOrEmpty(this.NotRunnableReason);
+    public bool IsRunnable => string.IsNullOrEmpty(NotRunnableReason);
 
-    public ParameterInfo[] ParameterTypes => this.TestMethod.GetParameters();
+    public ParameterInfo[] ParameterTypes => TestMethod.GetParameters();
 
-    public Type ReturnType => this.TestMethod.ReturnType;
+    public Type ReturnType => TestMethod.ReturnType;
 
-    public string TestClassName => this.Parent.ClassType.FullName;
+    public string TestClassName => Parent.ClassType.FullName;
 
-    public string TestMethodName => this.TestMethod.Name;
+    public string TestMethodName => TestMethod.Name;
 
-    public MethodInfo MethodInfo => this.TestMethod;
+    public MethodInfo MethodInfo => TestMethod;
 
-    public object[] Arguments => this.arguments;
+    public object[] Arguments => arguments;
 
     /// <summary>
     /// Gets testMethod referred by this object
@@ -89,12 +89,12 @@ public class TestMethodInfo : ITestMethod
 
     public Attribute[] GetAllAttributes(bool inherit)
     {
-        return ReflectHelper.GetCustomAttributes(this.TestMethod, inherit) as Attribute[];
+        return ReflectHelper.GetCustomAttributes(TestMethod, inherit) as Attribute[];
     }
 
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
-        => ReflectHelper.GetAttributes<TAttributeType>(this.TestMethod, inherit)
+        => ReflectHelper.GetAttributes<TAttributeType>(TestMethod, inherit)
         ?? EmptyHolder<TAttributeType>.Array;
 
     /// <summary>
@@ -110,20 +110,20 @@ public class TestMethodInfo : ITestMethod
         TestResult result = null;
 
         // check if arguments are set for data driven tests
-        arguments ??= this.Arguments;
+        arguments ??= Arguments;
 
-        using (LogMessageListener listener = new(this.TestMethodOptions.CaptureDebugTraces))
+        using (LogMessageListener listener = new(TestMethodOptions.CaptureDebugTraces))
         {
             watch.Start();
             try
             {
-                if (this.IsTimeoutSet)
+                if (IsTimeoutSet)
                 {
-                    result = this.ExecuteInternalWithTimeout(arguments);
+                    result = ExecuteInternalWithTimeout(arguments);
                 }
                 else
                 {
-                    result = this.ExecuteInternal(arguments);
+                    result = ExecuteInternal(arguments);
                 }
             }
             finally
@@ -137,8 +137,8 @@ public class TestMethodInfo : ITestMethod
                     result.DebugTrace = listener.GetAndClearDebugTrace();
                     result.LogOutput = listener.GetAndClearStandardOutput();
                     result.LogError = listener.GetAndClearStandardError();
-                    result.TestContextMessages = this.TestMethodOptions.TestContext.GetAndClearDiagnosticMessages();
-                    result.ResultFiles = this.TestMethodOptions.TestContext.GetResultFiles();
+                    result.TestContextMessages = TestMethodOptions.TestContext.GetAndClearDiagnosticMessages();
+                    result.ResultFiles = TestMethodOptions.TestContext.GetResultFiles();
                 }
             }
         }
@@ -154,13 +154,13 @@ public class TestMethodInfo : ITestMethod
         }
         else
         {
-            this.arguments = this.ResolveArguments(arguments);
+            this.arguments = ResolveArguments(arguments);
         }
     }
 
     internal object[] ResolveArguments(object[] arguments)
     {
-        ParameterInfo[] parameterInfos = this.TestMethod.GetParameters();
+        ParameterInfo[] parameterInfos = TestMethod.GetParameters();
         int requiredParameterCount = 0;
         bool hasParamsValue = false;
         object paramsValues = null;
@@ -246,12 +246,12 @@ public class TestMethodInfo : ITestMethod
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private TestResult ExecuteInternal(object[] arguments)
     {
-        Debug.Assert(this.TestMethod != null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
+        Debug.Assert(TestMethod != null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
 
         var result = new TestResult();
 
         // TODO remove dry violation with TestMethodRunner
-        var classInstance = this.CreateTestClassInstance(result);
+        var classInstance = CreateTestClassInstance(result);
         var testContextSetup = false;
         bool isExceptionThrown = false;
         bool hasTestInitializePassed = false;
@@ -261,16 +261,16 @@ public class TestMethodInfo : ITestMethod
         {
             try
             {
-                if (classInstance != null && this.SetTestContext(classInstance, result))
+                if (classInstance != null && SetTestContext(classInstance, result))
                 {
                     // For any failure after this point, we must run TestCleanup
                     testContextSetup = true;
 
-                    if (this.RunTestInitializeMethod(classInstance, result))
+                    if (RunTestInitializeMethod(classInstance, result))
                     {
                         hasTestInitializePassed = true;
                         PlatformServiceProvider.Instance.ThreadOperations.ExecuteWithAbortSafety(
-                            () => this.TestMethod.InvokeAsSynchronousTask(classInstance, arguments));
+                            () => TestMethod.InvokeAsSynchronousTask(classInstance, arguments));
                         result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed;
                     }
                 }
@@ -279,17 +279,17 @@ public class TestMethodInfo : ITestMethod
             {
                 isExceptionThrown = true;
 
-                if (this.IsExpectedException(ex, result))
+                if (IsExpectedException(ex, result))
                 {
                     // Expected Exception was thrown, so Pass the test
                     result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed;
                 }
                 else                         // This block should not throw. If it needs to throw, then handling of
                     // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
-                    result.TestFailureException ??= this.HandleMethodException(
+                    result.TestFailureException ??= HandleMethodException(
                         ex,
-                        this.TestClassName,
-                        this.TestMethodName);
+                        TestClassName,
+                        TestMethodName);
 
                 if (result.Outcome != TestTools.UnitTesting.UnitTestOutcome.Passed)
                 {
@@ -308,11 +308,11 @@ public class TestMethodInfo : ITestMethod
             // if the user specified that the test was going to throw an exception, and
             // it did not, we should fail the test
             // We only perform this check if the test initialize passes and the test method is actually run.
-            if (hasTestInitializePassed && !isExceptionThrown && this.TestMethodOptions.ExpectedException != null)
+            if (hasTestInitializePassed && !isExceptionThrown && TestMethodOptions.ExpectedException != null)
             {
                 result.TestFailureException = new TestFailedException(
                     ObjectModelUnitTestOutcome.Failed,
-                    this.TestMethodOptions.ExpectedException.NoExceptionMessage);
+                    TestMethodOptions.ExpectedException.NoExceptionMessage);
                 result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
             }
         }
@@ -322,7 +322,7 @@ public class TestMethodInfo : ITestMethod
         }
 
         // Set the current tests outcome before cleanup so it can be used in the cleanup logic.
-        this.TestMethodOptions.TestContext.SetOutcome(result.Outcome);
+        TestMethodOptions.TestContext.SetOutcome(result.Outcome);
 
         // TestCleanup can potentially be a long running operation which shouldn't ideally be in a finally block.
         // Pulling it out so extension writers can abort custom cleanups if need be. Having this in a finally block
@@ -330,7 +330,7 @@ public class TestMethodInfo : ITestMethod
         // crashing the process. This was blocking writing an extension for Dynamic Timeout in VSO.
         if (classInstance != null && testContextSetup)
         {
-            this.RunTestCleanupMethod(classInstance, result);
+            RunTestCleanupMethod(classInstance, result);
         }
 
         if (testRunnerException != null)
@@ -344,19 +344,19 @@ public class TestMethodInfo : ITestMethod
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private bool IsExpectedException(Exception ex, TestResult result)
     {
-        Exception realException = this.GetRealException(ex);
+        Exception realException = GetRealException(ex);
 
         // if the user specified an expected exception, we need to check if this
         // exception was thrown. If it was thrown, we should pass the test. In
         // case a different exception was thrown, the test is seen as failure
-        if (this.TestMethodOptions.ExpectedException != null)
+        if (TestMethodOptions.ExpectedException != null)
         {
             Exception exceptionFromVerify;
             try
             {
                 // If the expected exception attribute's Verify method returns, then it
                 // considers this exception as expected, so the test passed
-                this.TestMethodOptions.ExpectedException.Verify(realException);
+                TestMethodOptions.ExpectedException.Verify(realException);
                 return true;
             }
             catch (Exception verifyEx)
@@ -428,7 +428,7 @@ public class TestMethodInfo : ITestMethod
         }
 
         // Get the real exception thrown by the test method
-        Exception realException = this.GetRealException(ex);
+        Exception realException = GetRealException(ex);
         var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
 
         if (realException.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var exceptionStackTraceInfo))
@@ -476,7 +476,7 @@ public class TestMethodInfo : ITestMethod
         Debug.Assert(classInstance != null, "classInstance != null");
         Debug.Assert(result != null, "result != null");
 
-        var testCleanupMethod = this.Parent.TestCleanupMethod;
+        var testCleanupMethod = Parent.TestCleanupMethod;
         try
         {
             try
@@ -484,7 +484,7 @@ public class TestMethodInfo : ITestMethod
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
                 testCleanupMethod?.InvokeAsSynchronousTask(classInstance, null);
-                var baseTestCleanupQueue = new Queue<MethodInfo>(this.Parent.BaseTestCleanupMethodsQueue);
+                var baseTestCleanupQueue = new Queue<MethodInfo>(Parent.BaseTestCleanupMethodsQueue);
                 while (baseTestCleanupQueue.Count > 0)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
@@ -525,7 +525,7 @@ public class TestMethodInfo : ITestMethod
                 cleanupError.AppendFormat(
                     CultureInfo.CurrentCulture,
                     Resource.UTA_CleanupMethodThrows,
-                    this.TestClassName,
+                    TestClassName,
                     testCleanupMethod.Name,
                     realException.GetType().ToString(),
                     realException.TryGetMessage());
@@ -536,7 +536,7 @@ public class TestMethodInfo : ITestMethod
                 cleanupError.AppendFormat(
                     CultureInfo.CurrentCulture,
                     Resource.UTA_CleanupMethodThrowsGeneralError,
-                    this.TestClassName,
+                    TestClassName,
                     StackTraceHelper.GetExceptionMessage(realException));
             }
 
@@ -578,14 +578,14 @@ public class TestMethodInfo : ITestMethod
         {
             // TestInitialize methods for base classes are called in reverse order of discovery
             // Grandparent -> Parent -> Child TestClass
-            var baseTestInitializeStack = new Stack<MethodInfo>(this.Parent.BaseTestInitializeMethodsQueue);
+            var baseTestInitializeStack = new Stack<MethodInfo>(Parent.BaseTestInitializeMethodsQueue);
             while (baseTestInitializeStack.Count > 0)
             {
                 testInitializeMethod = baseTestInitializeStack.Pop();
                 testInitializeMethod?.InvokeAsSynchronousTask(classInstance, null);
             }
 
-            testInitializeMethod = this.Parent.TestInitializeMethod;
+            testInitializeMethod = Parent.TestInitializeMethod;
             testInitializeMethod?.InvokeAsSynchronousTask(classInstance, null);
 
             return true;
@@ -601,7 +601,7 @@ public class TestMethodInfo : ITestMethod
             var errorMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_InitMethodThrows,
-                this.TestClassName,
+                TestClassName,
                 testInitializeMethod?.Name,
                 exceptionMessage);
             var stackTrace = StackTraceHelper.GetStackTraceInformation(realException);
@@ -637,9 +637,9 @@ public class TestMethodInfo : ITestMethod
 
         try
         {
-            if (this.Parent.TestContextProperty != null && this.Parent.TestContextProperty.CanWrite)
+            if (Parent.TestContextProperty != null && Parent.TestContextProperty.CanWrite)
             {
-                this.Parent.TestContextProperty.SetValue(classInstance, this.TestMethodOptions.TestContext);
+                Parent.TestContextProperty.SetValue(classInstance, TestMethodOptions.TestContext);
             }
 
             return true;
@@ -650,7 +650,7 @@ public class TestMethodInfo : ITestMethod
             var errorMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_TestContextSetError,
-                this.TestClassName,
+                TestClassName,
                 StackTraceHelper.GetExceptionMessage(ex.GetInnerExceptionOrDefault()));
 
             result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
@@ -676,7 +676,7 @@ public class TestMethodInfo : ITestMethod
         object classInstance = null;
         try
         {
-            classInstance = this.Parent.Constructor.Invoke(null);
+            classInstance = Parent.Constructor.Invoke(null);
         }
         catch (Exception ex)
         {
@@ -704,7 +704,7 @@ public class TestMethodInfo : ITestMethod
             var errorMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_InstanceCreationError,
-                this.TestClassName,
+                TestClassName,
                 exceptionMessage);
 
             result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
@@ -722,7 +722,7 @@ public class TestMethodInfo : ITestMethod
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private TestResult ExecuteInternalWithTimeout(object[] arguments)
     {
-        Debug.Assert(this.IsTimeoutSet, "Timeout should be set");
+        Debug.Assert(IsTimeoutSet, "Timeout should be set");
 
         TestResult result = null;
         Exception failure = null;
@@ -731,7 +731,7 @@ public class TestMethodInfo : ITestMethod
         {
             try
             {
-                result = this.ExecuteInternal(arguments);
+                result = ExecuteInternal(arguments);
             }
             catch (Exception ex)
             {
@@ -739,8 +739,8 @@ public class TestMethodInfo : ITestMethod
             }
         }
 
-        CancellationToken cancelToken = this.TestMethodOptions.TestContext.Context.CancellationTokenSource.Token;
-        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(executeAsyncAction, this.TestMethodOptions.Timeout, cancelToken))
+        CancellationToken cancelToken = TestMethodOptions.TestContext.Context.CancellationTokenSource.Token;
+        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(executeAsyncAction, TestMethodOptions.Timeout, cancelToken))
         {
             if (failure != null)
             {
@@ -752,15 +752,15 @@ public class TestMethodInfo : ITestMethod
         else
         {
             // Timed out or canceled
-            string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, this.TestMethodName);
-            if (this.TestMethodOptions.TestContext.Context.CancellationTokenSource.IsCancellationRequested)
+            string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName);
+            if (TestMethodOptions.TestContext.Context.CancellationTokenSource.IsCancellationRequested)
             {
-                errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, this.TestMethodName);
+                errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName);
             }
             else
             {
                 // Cancel the token source as test has timed out
-                this.TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel();
+                TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel();
             }
 
             TestResult timeoutResult = new() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, errorMessage) };

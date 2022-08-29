@@ -26,7 +26,7 @@ public partial class CLITestBase
         var logger = new InternalLogger();
         var sink = new InternalSink();
 
-        string runSettingXml = this.GetRunSettingXml(string.Empty, this.GetTestAdapterPath());
+        string runSettingXml = GetRunSettingXml(string.Empty, GetTestAdapterPath());
         var context = new InternalDiscoveryContext(runSettingXml, testCaseFilter);
 
         unitTestDiscoverer.DiscoverTestsInSource(assemblyPath, logger, sink, context);
@@ -36,7 +36,7 @@ public partial class CLITestBase
 
     internal ReadOnlyCollection<TestResult> RunTests(string source, IEnumerable<TestCase> testCases)
     {
-        var settings = this.GetSettings(true);
+        var settings = GetSettings(true);
         var testExecutionManager = new TestExecutionManager();
         var frameworkHandle = new InternalFrameworkHandle();
 
@@ -88,9 +88,9 @@ public partial class CLITestBase
     {
         private readonly List<TestCase> testCases = new();
 
-        public ReadOnlyCollection<TestCase> DiscoveredTests => this.testCases.AsReadOnly();
+        public ReadOnlyCollection<TestCase> DiscoveredTests => testCases.AsReadOnly();
 
-        public void SendTestCase(TestCase discoveredTest) => this.testCases.Add(discoveredTest);
+        public void SendTestCase(TestCase discoveredTest) => testCases.Add(discoveredTest);
     }
 
     private class InternalDiscoveryContext : IDiscoveryContext
@@ -108,7 +108,7 @@ public partial class CLITestBase
             }
         }
 
-        public IRunSettings RunSettings => this.runSettings;
+        public IRunSettings RunSettings => runSettings;
 
         public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
         {
@@ -124,7 +124,7 @@ public partial class CLITestBase
                 this.runSettings = runSettings;
             }
 
-            public string SettingsXml => this.runSettings;
+            public string SettingsXml => runSettings;
 
             public ISettingsProvider GetSettings(string settingsName) => throw new NotImplementedException();
         }
@@ -157,14 +157,14 @@ public partial class CLITestBase
             activeResults.Add(testResult);
         }
 
-        public IEnumerable<TestResult> GetFlattenedTestResults() => this.testResults.SelectMany(i => i.Value);
-        public IEnumerable<KeyValuePair<TestCase, List<TestResult>>> GetTestResults() => this.testResults;
+        public IEnumerable<TestResult> GetFlattenedTestResults() => testResults.SelectMany(i => i.Value);
+        public IEnumerable<KeyValuePair<TestCase, List<TestResult>>> GetTestResults() => testResults;
 
         public void RecordAttachments(IList<AttachmentSet> attachmentSets) => throw new NotImplementedException();
 
         public void SendMessage(TestMessageLevel testMessageLevel, string message)
         {
-            this.messageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
+            messageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
         }
 
         public int LaunchProcessWithDebuggerAttached(string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables) => throw new NotImplementedException();

@@ -17,7 +17,7 @@ public sealed class WorkItemAttribute : Attribute
     /// <param name="id">The Id to a work item.</param>
     public WorkItemAttribute(int id)
     {
-        this.Id = id;
+        Id = id;
     }
 
     /// <summary>

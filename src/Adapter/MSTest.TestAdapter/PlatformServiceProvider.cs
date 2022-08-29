@@ -39,7 +39,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.testSource ??= new TestSource();
+            return testSource ??= new TestSource();
         }
     }
 
@@ -50,7 +50,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.testDataSource ??= new TestDataSource();
+            return testDataSource ??= new TestDataSource();
         }
     }
 
@@ -61,7 +61,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.fileOperations ??= new FileOperations();
+            return fileOperations ??= new FileOperations();
         }
     }
 
@@ -72,7 +72,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.traceLogger ??= new AdapterTraceLogger();
+            return traceLogger ??= new AdapterTraceLogger();
         }
     }
 
@@ -83,7 +83,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.testDeployment ??= new TestDeployment();
+            return testDeployment ??= new TestDeployment();
         }
     }
 
@@ -94,7 +94,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.settingsProvider ??= new MSTestSettingsProvider();
+            return settingsProvider ??= new MSTestSettingsProvider();
         }
     }
 
@@ -105,7 +105,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.threadOperations ??= new ThreadOperations();
+            return threadOperations ??= new ThreadOperations();
         }
     }
 
@@ -116,7 +116,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.reflectionOperations ??= new ReflectionOperations();
+            return reflectionOperations ??= new ReflectionOperations();
         }
     }
 

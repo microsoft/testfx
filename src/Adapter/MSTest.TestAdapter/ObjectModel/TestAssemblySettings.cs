@@ -11,7 +11,7 @@ internal class TestAssemblySettings
 {
     public TestAssemblySettings()
     {
-        this.Workers = -1;
+        Workers = -1;
     }
 
     /// <summary>

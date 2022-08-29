@@ -26,7 +26,7 @@ public class ExpectedExceptionBaseAttributeTests
     [TestFrameworkV1.TestInitialize]
     public void TestInitialize()
     {
-        this.sut = new TestableExpectedExceptionBaseAttributeClass();
+        sut = new TestableExpectedExceptionBaseAttributeClass();
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public class ExpectedExceptionBaseAttributeTests
     [TestFrameworkV1.TestMethod]
     public void RethrowIfAssertExceptionThrowsExceptionOnAssertFailure()
     {
-        void a() => this.sut.RethrowIfAssertException(new TestFrameworkV2.AssertFailedException());
+        void a() => sut.RethrowIfAssertException(new TestFrameworkV2.AssertFailedException());
 
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(TestFrameworkV2.AssertFailedException));
     }
@@ -46,7 +46,7 @@ public class ExpectedExceptionBaseAttributeTests
     [TestFrameworkV1.TestMethod]
     public void RethrowIfAssertExceptionThrowsExceptionOnAssertInconclusive()
     {
-        void a() => this.sut.RethrowIfAssertException(new TestFrameworkV2.AssertInconclusiveException());
+        void a() => sut.RethrowIfAssertException(new TestFrameworkV2.AssertInconclusiveException());
 
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(TestFrameworkV2.AssertInconclusiveException));
     }
@@ -55,9 +55,9 @@ public class ExpectedExceptionBaseAttributeTests
     public void VerifyCorrectMessageIsGettingSetInVariablenoExceptionMessage()
     {
         string expected = "DummyString";
-        this.sut = new TestableExpectedExceptionBaseAttributeClass(expected);
+        sut = new TestableExpectedExceptionBaseAttributeClass(expected);
 
-        string result = this.sut.GetNoExceptionMessage();
+        string result = sut.GetNoExceptionMessage();
 
         TestFrameworkV1.Assert.AreEqual(expected, result);
     }
@@ -65,9 +65,9 @@ public class ExpectedExceptionBaseAttributeTests
     [TestFrameworkV1.TestMethod]
     public void VerifyEmptytMessageIsGettingSetInVariablenoExceptionMessage()
     {
-        this.sut = new TestableExpectedExceptionBaseAttributeClass(null);
+        sut = new TestableExpectedExceptionBaseAttributeClass(null);
 
-        string result = this.sut.GetNoExceptionMessage();
+        string result = sut.GetNoExceptionMessage();
 
         TestFrameworkV1.Assert.IsTrue(string.IsNullOrEmpty(result));
     }
@@ -90,7 +90,7 @@ public class TestableExpectedExceptionBaseAttributeClass : TestFrameworkV2.Expec
 
     public string GetNoExceptionMessage()
     {
-        return this.SpecifiedNoExceptionMessage;
+        return SpecifiedNoExceptionMessage;
     }
 
     /// <summary>

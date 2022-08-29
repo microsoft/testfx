@@ -13,7 +13,7 @@ internal sealed class TestExtensionTypesAttribute : Attribute
 {
     public TestExtensionTypesAttribute(params Type[] types)
     {
-        this.Types = types;
+        Types = types;
     }
 
     public Type[] Types { get; }

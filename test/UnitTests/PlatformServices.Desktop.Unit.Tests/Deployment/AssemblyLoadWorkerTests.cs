@@ -124,10 +124,10 @@ public class AssemblyLoadWorkerTests
             // YAGNI *.exe.
             if (!assemblyName.EndsWith(".dll"))
             {
-                this.Name = string.Concat(assemblyName, ".dll");
+                Name = string.Concat(assemblyName, ".dll");
             }
 
-            this.FullNameSetter = () => { return assemblyName; };
+            FullNameSetter = () => { return assemblyName; };
         }
 
         public Func<AssemblyName[]> GetReferencedAssembliesSetter { get; set; }
@@ -136,9 +136,9 @@ public class AssemblyLoadWorkerTests
 
         public override AssemblyName[] GetReferencedAssemblies()
         {
-            if (this.GetReferencedAssembliesSetter != null)
+            if (GetReferencedAssembliesSetter != null)
             {
-                return this.GetReferencedAssembliesSetter.Invoke();
+                return GetReferencedAssembliesSetter.Invoke();
             }
 
             return new AssemblyName[] { };
@@ -153,9 +153,9 @@ public class AssemblyLoadWorkerTests
         {
             get
             {
-                if (this.FullNameSetter != null)
+                if (FullNameSetter != null)
                 {
-                    return this.FullNameSetter.Invoke();
+                    return FullNameSetter.Invoke();
                 }
 
                 return Assembly.GetExecutingAssembly().FullName;
@@ -174,7 +174,7 @@ public class AssemblyLoadWorkerTests
         {
             get
             {
-                return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), this.Name);
+                return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Name);
             }
         }
 

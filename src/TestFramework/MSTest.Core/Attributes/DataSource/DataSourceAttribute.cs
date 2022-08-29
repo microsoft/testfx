@@ -45,10 +45,10 @@ public sealed class DataSourceAttribute : Attribute
     /// <param name="dataAccessMethod">Specifies the order to access data.</param>
     public DataSourceAttribute(string providerInvariantName, string connectionString, string tableName, DataAccessMethod dataAccessMethod)
     {
-        this.ProviderInvariantName = providerInvariantName;
-        this.ConnectionString = connectionString;
-        this.TableName = tableName;
-        this.DataAccessMethod = dataAccessMethod;
+        ProviderInvariantName = providerInvariantName;
+        ConnectionString = connectionString;
+        TableName = tableName;
+        DataAccessMethod = dataAccessMethod;
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ public sealed class DataSourceAttribute : Attribute
     /// <param name="dataSourceSettingName">The name of a data source found in the &lt;microsoft.visualstudio.qualitytools&gt; section in the app.config file.</param>
     public DataSourceAttribute(string dataSourceSettingName)
     {
-        this.DataSourceSettingName = dataSourceSettingName;
+        DataSourceSettingName = dataSourceSettingName;
     }
 
     // Different providers use different connection strings and provider itself is a part of connection string.

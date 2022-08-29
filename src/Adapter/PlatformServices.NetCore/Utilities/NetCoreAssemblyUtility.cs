@@ -21,7 +21,7 @@ internal class AssemblyUtility
     /// <returns> True if this is an assembly extension. </returns>
     internal bool IsAssemblyExtension(string extensionWithLeadingDot)
     {
-        foreach (var realExtension in this.assemblyExtensions)
+        foreach (var realExtension in assemblyExtensions)
         {
             if (string.Equals(extensionWithLeadingDot, realExtension, StringComparison.OrdinalIgnoreCase))
             {

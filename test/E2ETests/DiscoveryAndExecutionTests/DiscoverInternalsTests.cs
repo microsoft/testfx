@@ -18,7 +18,7 @@ public class DiscoverInternalsTests : CLITestBase
     public void InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath);
@@ -36,7 +36,7 @@ public class DiscoverInternalsTests : CLITestBase
     public void AnInternalTestClassDerivedFromAPublicAbstractGenericBaseClassForAnInternalTypeIsDiscovered()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath);
@@ -51,7 +51,7 @@ public class DiscoverInternalsTests : CLITestBase
     [TestMethod]
     public void AnInternalTypeCanBeUsedInADynamicDataTestMethod()
     {
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath);

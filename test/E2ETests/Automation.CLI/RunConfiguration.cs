@@ -22,8 +22,8 @@ public class RunConfiguration
 
     public RunConfiguration(params string[] testAdapterPaths)
     {
-        this.SettingsName = Constants.RunConfigurationSettingsName;
-        this.TestAdaptersPaths = testAdapterPaths;
+        SettingsName = Constants.RunConfigurationSettingsName;
+        TestAdaptersPaths = testAdapterPaths;
     }
 
     /// <summary>
@@ -33,9 +33,9 @@ public class RunConfiguration
     public XmlElement ToXml()
     {
         XmlDocument doc = new();
-        XmlElement root = doc.CreateElement(this.SettingsName);
+        XmlElement root = doc.CreateElement(SettingsName);
 
-        foreach (var p in this.TestAdaptersPaths)
+        foreach (var p in TestAdaptersPaths)
         {
             var testAdaptersPaths = doc.CreateElement("TestAdaptersPaths");
             testAdaptersPaths.InnerText = p;

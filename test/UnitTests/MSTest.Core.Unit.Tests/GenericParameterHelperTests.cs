@@ -26,7 +26,7 @@ public class GenericParameterHelperTests
     [TestFrameworkV1.TestInitialize]
     public void TestInitialize()
     {
-        this.sut = new TestFrameworkV2.GenericParameterHelper(10);
+        sut = new TestFrameworkV2.GenericParameterHelper(10);
     }
 
     [TestFrameworkV1.TestMethod]
@@ -43,7 +43,7 @@ public class GenericParameterHelperTests
     {
         TestFrameworkV2.GenericParameterHelper objectToCompare = new(10);
 
-        TestFrameworkV1.Assert.IsTrue(this.sut.Equals(objectToCompare));
+        TestFrameworkV1.Assert.IsTrue(sut.Equals(objectToCompare));
     }
 
     [TestFrameworkV1.TestMethod]
@@ -51,7 +51,7 @@ public class GenericParameterHelperTests
     {
         TestFrameworkV2.GenericParameterHelper objectToCompare = new(5);
 
-        TestFrameworkV1.Assert.IsFalse(this.sut.Equals(objectToCompare));
+        TestFrameworkV1.Assert.IsFalse(sut.Equals(objectToCompare));
     }
 
     [TestFrameworkV1.TestMethod]
@@ -59,7 +59,7 @@ public class GenericParameterHelperTests
     {
         TestFrameworkV2.GenericParameterHelper objectToCompare = new(10);
 
-        TestFrameworkV1.Assert.AreEqual(0, this.sut.CompareTo(objectToCompare));
+        TestFrameworkV1.Assert.AreEqual(0, sut.CompareTo(objectToCompare));
     }
 
     [TestFrameworkV1.TestMethod]
@@ -67,7 +67,7 @@ public class GenericParameterHelperTests
     {
         int objectToCompare = 5;
 
-        void a() => this.sut.CompareTo(objectToCompare);
+        void a() => sut.CompareTo(objectToCompare);
 
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(NotSupportedException));
     }
@@ -75,12 +75,12 @@ public class GenericParameterHelperTests
     [TestFrameworkV1.TestMethod]
     public void GenericParameterHelperShouldImplementIEnumerator()
     {
-        this.sut = new TestFrameworkV2.GenericParameterHelper(15);
+        sut = new TestFrameworkV2.GenericParameterHelper(15);
 
         int expectedLenghtOfList = 5;  // (15%10)
         int result = 0;
 
-        foreach (var x in this.sut)
+        foreach (var x in sut)
         {
             result++;
         }

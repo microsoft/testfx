@@ -22,33 +22,33 @@ public class TestCaseDiscoverySinkTests
     [TestInitialize]
     public void TestInit()
     {
-        this.testCaseDiscoverySink = new TestCaseDiscoverySink();
+        testCaseDiscoverySink = new TestCaseDiscoverySink();
     }
 
     [TestMethod]
     public void TestCaseDiscoverySinkConstructorShouldInitializeTests()
     {
-        Assert.IsNotNull(this.testCaseDiscoverySink.Tests);
-        Assert.AreEqual(0, this.testCaseDiscoverySink.Tests.Count);
+        Assert.IsNotNull(testCaseDiscoverySink.Tests);
+        Assert.AreEqual(0, testCaseDiscoverySink.Tests.Count);
     }
 
     [TestMethod]
     public void SendTestCaseShouldNotAddTestIfTestCaseIsNull()
     {
-        this.testCaseDiscoverySink.SendTestCase(null);
+        testCaseDiscoverySink.SendTestCase(null);
 
-        Assert.IsNotNull(this.testCaseDiscoverySink.Tests);
-        Assert.AreEqual(0, this.testCaseDiscoverySink.Tests.Count);
+        Assert.IsNotNull(testCaseDiscoverySink.Tests);
+        Assert.AreEqual(0, testCaseDiscoverySink.Tests.Count);
     }
 
     [TestMethod]
     public void SendTestCaseShouldAddTheTestCaseToTests()
     {
         TestCase tc = new("T", new Uri("executor://TestExecutorUri"), "A");
-        this.testCaseDiscoverySink.SendTestCase(tc);
+        testCaseDiscoverySink.SendTestCase(tc);
 
-        Assert.IsNotNull(this.testCaseDiscoverySink.Tests);
-        Assert.AreEqual(1, this.testCaseDiscoverySink.Tests.Count);
-        Assert.AreEqual(tc, this.testCaseDiscoverySink.Tests.ToArray()[0]);
+        Assert.IsNotNull(testCaseDiscoverySink.Tests);
+        Assert.AreEqual(1, testCaseDiscoverySink.Tests.Count);
+        Assert.AreEqual(tc, testCaseDiscoverySink.Tests.ToArray()[0]);
     }
 }

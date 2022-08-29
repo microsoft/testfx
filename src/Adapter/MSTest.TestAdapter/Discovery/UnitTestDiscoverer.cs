@@ -17,8 +17,8 @@ internal class UnitTestDiscoverer
 
     internal UnitTestDiscoverer()
     {
-        this.assemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
-        this.TestMethodFilter = new TestMethodFilter();
+        assemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
+        TestMethodFilter = new TestMethodFilter();
     }
 
     /// <summary>
@@ -41,7 +41,7 @@ internal class UnitTestDiscoverer
     {
         foreach (var source in sources)
         {
-            this.DiscoverTestsInSource(source, logger, discoverySink, discoveryContext);
+            DiscoverTestsInSource(source, logger, discoverySink, discoveryContext);
         }
     }
 
@@ -58,7 +58,7 @@ internal class UnitTestDiscoverer
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext discoveryContext)
     {
-        var testElements = this.assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out var warnings);
+        var testElements = assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out var warnings);
 
         // log the warnings
         foreach (var warning in warnings)
@@ -82,7 +82,7 @@ internal class UnitTestDiscoverer
             testElements.Count,
             source);
 
-        this.SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
+        SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
     }
 
     internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext discoveryContext, IMessageLogger logger)
@@ -98,7 +98,7 @@ internal class UnitTestDiscoverer
             }
 
             // Get filter expression and skip discovery in case filter expression has parsing error.
-            ITestCaseFilterExpression filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, logger, out var filterHasError);
+            ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, logger, out var filterHasError);
             if (filterHasError)
             {
                 return;
@@ -109,7 +109,7 @@ internal class UnitTestDiscoverer
                 var testCase = testElement.ToTestCase();
 
                 // Filter tests based on test case filters
-                if (filterExpression != null && filterExpression.MatchTestCase(testCase, (p) => this.TestMethodFilter.PropertyValueProvider(testCase, p)) == false)
+                if (filterExpression != null && filterExpression.MatchTestCase(testCase, (p) => TestMethodFilter.PropertyValueProvider(testCase, p)) == false)
                 {
                     continue;
                 }

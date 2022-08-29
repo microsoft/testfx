@@ -27,7 +27,7 @@ internal class SequentialIntPermutation : IEnumerable<int>
 
     public IEnumerator<int> GetEnumerator()
     {
-        for (int i = 0; i < this.numberOfObjects; ++i)
+        for (int i = 0; i < numberOfObjects; ++i)
         {
             yield return i;
         }
@@ -35,6 +35,6 @@ internal class SequentialIntPermutation : IEnumerable<int>
 
     IEnumerator IEnumerable.GetEnumerator()
     {
-        return this.GetEnumerator();
+        return GetEnumerator();
     }
 }

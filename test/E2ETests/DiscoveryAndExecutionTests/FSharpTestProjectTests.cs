@@ -18,7 +18,7 @@ public class FSharpTestProjectTests : CLITestBase
     public void TestFSharpTestsWithSpaceAndDotInName()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath);

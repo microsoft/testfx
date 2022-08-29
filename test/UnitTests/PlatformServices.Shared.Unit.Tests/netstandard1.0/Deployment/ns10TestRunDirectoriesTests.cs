@@ -26,6 +26,6 @@ public class TestRunDirectoriesTests
     {
         Assert.AreEqual(
             Path.Combine(@"C:\temp\In", Environment.MachineName),
-            this.testRunDirectories.InMachineNameDirectory);
+            testRunDirectories.InMachineNameDirectory);
     }
 }

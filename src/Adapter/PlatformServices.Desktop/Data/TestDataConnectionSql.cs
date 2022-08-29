@@ -34,27 +34,27 @@ internal class TestDataConnectionSql : TestDataConnection
     internal protected TestDataConnectionSql(string invariantProviderName, string connectionString, List<string> dataFolders)
         : base(dataFolders)
     {
-        this.factory = DbProviderFactories.GetFactory(invariantProviderName);
-        WriteDiagnostics("DbProviderFactory {0}", this.factory);
-        Debug.Assert(this.factory != null, "factory should not be null.");
+        factory = DbProviderFactories.GetFactory(invariantProviderName);
+        WriteDiagnostics("DbProviderFactory {0}", factory);
+        Debug.Assert(factory != null, "factory should not be null.");
 
-        this.connection = this.factory.CreateConnection();
-        WriteDiagnostics("DbConnection {0}", this.connection);
-        Debug.Assert(this.connection != null, "connection");
+        connection = factory.CreateConnection();
+        WriteDiagnostics("DbConnection {0}", connection);
+        Debug.Assert(connection != null, "connection");
 
-        this.commandBuilder = this.factory.CreateCommandBuilder();
-        WriteDiagnostics("DbCommandBuilder {0}", this.commandBuilder);
-        Debug.Assert(this.commandBuilder != null, "builder");
+        commandBuilder = factory.CreateCommandBuilder();
+        WriteDiagnostics("DbCommandBuilder {0}", commandBuilder);
+        Debug.Assert(commandBuilder != null, "builder");
 
         if (!string.IsNullOrEmpty(connectionString))
         {
-            this.connection.ConnectionString = connectionString;
+            connection.ConnectionString = connectionString;
             WriteDiagnostics("Current directory: {0}", Directory.GetCurrentDirectory());
             WriteDiagnostics("Opening connection {0}: {1}", invariantProviderName, connectionString);
-            this.connection.Open();
+            connection.Open();
         }
 
-        WriteDiagnostics("Connection state is {0}", this.connection.State);
+        WriteDiagnostics("Connection state is {0}", connection.State);
     }
 
     #endregion
@@ -63,17 +63,17 @@ internal class TestDataConnectionSql : TestDataConnection
 
     public override DbConnection Connection
     {
-        get { return this.connection; }
+        get { return connection; }
     }
 
     protected DbCommandBuilder CommandBuilder
     {
-        get { return this.commandBuilder; }
+        get { return commandBuilder; }
     }
 
     protected DbProviderFactory Factory
     {
-        get { return this.factory; }
+        get { return factory; }
     }
 
     #endregion
@@ -130,17 +130,17 @@ internal class TestDataConnectionSql : TestDataConnection
     {
         get
         {
-            if (string.IsNullOrEmpty(this.quotePrefix))
+            if (string.IsNullOrEmpty(quotePrefix))
             {
-                this.GetQuoteLiterals();
+                GetQuoteLiterals();
             }
 
-            return this.quotePrefix;
+            return quotePrefix;
         }
 
         set
         {
-            this.quotePrefix = value;
+            quotePrefix = value;
         }
     }
 
@@ -148,17 +148,17 @@ internal class TestDataConnectionSql : TestDataConnection
     {
         get
         {
-            if (string.IsNullOrEmpty(this.quoteSuffix))
+            if (string.IsNullOrEmpty(quoteSuffix))
             {
-                this.GetQuoteLiterals();
+                GetQuoteLiterals();
             }
 
-            return this.quoteSuffix;
+            return quoteSuffix;
         }
 
         set
         {
-            this.quoteSuffix = value;
+            quoteSuffix = value;
         }
     }
 
@@ -166,9 +166,9 @@ internal class TestDataConnectionSql : TestDataConnection
     {
         get
         {
-            if (this.CommandBuilder != null)
+            if (CommandBuilder != null)
             {
-                string catalogSeperator = this.CommandBuilder.CatalogSeparator;
+                string catalogSeperator = CommandBuilder.CatalogSeparator;
                 if (!string.IsNullOrEmpty(catalogSeperator))
                 {
                     Debug.Assert(catalogSeperator.Length == 1, "catalogSeperator should have 1 element.");
@@ -184,9 +184,9 @@ internal class TestDataConnectionSql : TestDataConnection
     {
         get
         {
-            if (this.CommandBuilder != null)
+            if (CommandBuilder != null)
             {
-                string schemaSeperator = this.CommandBuilder.SchemaSeparator;
+                string schemaSeperator = CommandBuilder.SchemaSeparator;
                 if (!string.IsNullOrEmpty(schemaSeperator))
                 {
                     Debug.Assert(schemaSeperator.Length == 1, "schemaSeperator should have 1 element.");
@@ -207,12 +207,12 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <returns>A fully quoted string.</returns>
     public string PrepareNameForSql(string tableName)
     {
-        string[] parts = this.SplitName(tableName);
+        string[] parts = SplitName(tableName);
 
         if (parts != null && parts.Length > 0)
         {
             // Seems to be well formed, so make sure we end up fully quoted
-            return this.JoinAndQuoteName(parts, true);
+            return JoinAndQuoteName(parts, true);
         }
         else
         {
@@ -235,12 +235,12 @@ internal class TestDataConnectionSql : TestDataConnection
         int end = name.Length;
         char firstDelimiter = ' '; // initialize since code analysis is not smart enough
         char currentDelimiter;
-        char catalogSeperatorChar = this.CatalogSeperatorChar;
-        char schemaSeperatorChar = this.SchemaSeperatorChar;
+        char catalogSeperatorChar = CatalogSeperatorChar;
+        char schemaSeperatorChar = SchemaSeperatorChar;
 
         while (here < end)
         {
-            int next = this.FindIdentifierEnd(name, here);
+            int next = FindIdentifierEnd(name, here);
             string identifier = name.Substring(here, next - here);
 
             if (string.IsNullOrEmpty(identifier))
@@ -249,9 +249,9 @@ internal class TestDataConnectionSql : TestDataConnection
                 return null;
             }
 
-            if (identifier.StartsWith(this.QuotePrefix, StringComparison.Ordinal))
+            if (identifier.StartsWith(QuotePrefix, StringComparison.Ordinal))
             {
-                identifier = this.UnquoteIdentifier(identifier);
+                identifier = UnquoteIdentifier(identifier);
             }
 
             parts.Add(identifier);
@@ -329,17 +329,17 @@ internal class TestDataConnectionSql : TestDataConnection
         int currentPart = 0;
         if (partCount > 2)
         {
-            result.Append(this.MaybeQuote(parts[currentPart++], fullyQuote));
-            result.Append(this.CommandBuilder.CatalogSeparator);
+            result.Append(MaybeQuote(parts[currentPart++], fullyQuote));
+            result.Append(CommandBuilder.CatalogSeparator);
         }
 
         if (partCount > 1)
         {
-            result.Append(this.MaybeQuote(parts[currentPart++], fullyQuote));
-            result.Append(this.CommandBuilder.SchemaSeparator);
+            result.Append(MaybeQuote(parts[currentPart++], fullyQuote));
+            result.Append(CommandBuilder.SchemaSeparator);
         }
 
-        result.Append(this.MaybeQuote(parts[currentPart], fullyQuote));
+        result.Append(MaybeQuote(parts[currentPart], fullyQuote));
         return result.ToString();
     }
 
@@ -349,42 +349,42 @@ internal class TestDataConnectionSql : TestDataConnection
     /// </summary>
     public virtual void GetQuoteLiterals()
     {
-        this.quotePrefix = this.CommandBuilder.QuotePrefix;
-        this.quoteSuffix = this.CommandBuilder.QuoteSuffix;
+        quotePrefix = CommandBuilder.QuotePrefix;
+        quoteSuffix = CommandBuilder.QuoteSuffix;
     }
 
     protected virtual string QuoteIdentifier(string identifier)
     {
         Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier should not be null.");
-        return this.CommandBuilder.QuoteIdentifier(identifier);
+        return CommandBuilder.QuoteIdentifier(identifier);
     }
 
     protected virtual string UnquoteIdentifier(string identifier)
     {
         Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier should not be null.");
-        return this.CommandBuilder.UnquoteIdentifier(identifier);
+        return CommandBuilder.UnquoteIdentifier(identifier);
     }
 
     protected void GetQuoteLiteralsHelper()
     {
         // Try to get quote chars by hand for those providers that for some reason return empty QuotePrefix/Suffix.
         string s = "abcdefgh";
-        string quoted = this.QuoteIdentifier(s);
+        string quoted = QuoteIdentifier(s);
         string[] parts = quoted.Split(new string[] { s }, StringSplitOptions.None);
 
         Debug.Assert(parts != null && parts.Length == 2, "TestDataConnectionSql.GetQuotesLiteralHelper: Failure when trying to quote an identifier!");
         Debug.Assert(!string.IsNullOrEmpty(parts[0]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuotePrefix!");
         Debug.Assert(!string.IsNullOrEmpty(parts[1]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuoteSuffix!");
 
-        this.QuotePrefix = parts[0];
-        this.QuoteSuffix = parts[1];
+        QuotePrefix = parts[0];
+        QuoteSuffix = parts[1];
     }
 
     private string MaybeQuote(string identifier, bool force)
     {
-        if (force || this.FindSeperators(identifier, 0) != -1)
+        if (force || FindSeperators(identifier, 0) != -1)
         {
-            return this.QuoteIdentifier(identifier);
+            return QuoteIdentifier(identifier);
         }
 
         return identifier;
@@ -398,7 +398,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <returns>Location of the separator.</returns>
     private int FindSeperators(string text, int from)
     {
-        return text.IndexOfAny(new char[] { this.SchemaSeperatorChar, this.CatalogSeperatorChar }, from);
+        return text.IndexOfAny(new char[] { SchemaSeperatorChar, CatalogSeperatorChar }, from);
     }
 
     /// <summary>
@@ -413,7 +413,7 @@ internal class TestDataConnectionSql : TestDataConnection
     {
         // These routine assumes prefixes and suffixes
         // are single characters
-        string prefix = this.QuotePrefix;
+        string prefix = QuotePrefix;
         Debug.Assert(prefix.Length == 1, "prefix length should be 1.");
         char prefixChar = prefix[0];
 
@@ -428,7 +428,7 @@ internal class TestDataConnectionSql : TestDataConnection
             // Skip opening quote
             int here = start + 1;
 
-            string suffix = this.QuoteSuffix;
+            string suffix = QuoteSuffix;
             Debug.Assert(suffix.Length == 1, "suffix length should be 1.");
             char suffixChar = suffix[0];
 
@@ -466,7 +466,7 @@ internal class TestDataConnectionSql : TestDataConnection
             // In the case of an unquoted strings, the processing is much
             // simpler... the end is end of string, or the first
             // of several possible separators.
-            int seperatorPosition = this.FindSeperators(text, start);
+            int seperatorPosition = FindSeperators(text, start);
             return seperatorPosition == -1 ? end : seperatorPosition;
         }
     }
@@ -501,10 +501,10 @@ internal class TestDataConnectionSql : TestDataConnection
         List<string> tableNames = new();
         try
         {
-            string defaultSchema = this.GetDefaultSchema();
+            string defaultSchema = GetDefaultSchema();
             WriteDiagnostics("Default schema is {0}", defaultSchema);
 
-            SchemaMetaData[] metadatas = this.GetSchemaMetaData();
+            SchemaMetaData[] metadatas = GetSchemaMetaData();
 
             // TODO: may be find better way to enumerate tables/views.
             foreach (SchemaMetaData metadata in metadatas)
@@ -513,7 +513,7 @@ internal class TestDataConnectionSql : TestDataConnection
                 try
                 {
                     WriteDiagnostics("Getting schema table {0}", metadata.SchemaTable);
-                    dataTable = this.Connection.GetSchema(metadata.SchemaTable);
+                    dataTable = Connection.GetSchema(metadata.SchemaTable);
                 }
                 catch (Exception ex)
                 {
@@ -571,11 +571,11 @@ internal class TestDataConnectionSql : TestDataConnection
                     string qualifiedTableName = tableName;
                     if (isDefaultSchema)
                     {
-                        qualifiedTableName = this.FormatTableNameForDisplay(null, tableName);
+                        qualifiedTableName = FormatTableNameForDisplay(null, tableName);
                     }
                     else
                     {
-                        qualifiedTableName = this.FormatTableNameForDisplay(tableSchema, tableName);
+                        qualifiedTableName = FormatTableNameForDisplay(tableSchema, tableName);
                     }
 
                     WriteDiagnostics("Adding Table {0}", qualifiedTableName);
@@ -587,7 +587,7 @@ internal class TestDataConnectionSql : TestDataConnection
         }
         catch (Exception e)
         {
-            WriteDiagnostics("Failed to fetch tables for {0}, exception: {1}", this.Connection.ConnectionString, e);
+            WriteDiagnostics("Failed to fetch tables for {0}, exception: {1}", Connection.ConnectionString, e);
 
             // OK to fall through and return whatever we do have...
         }
@@ -601,7 +601,7 @@ internal class TestDataConnectionSql : TestDataConnection
         WriteDiagnostics("GetColumns for {0}", tableName);
         try
         {
-            this.SplitTableName(tableName, out var targetSchema, out var targetName);
+            SplitTableName(tableName, out var targetSchema, out var targetName);
 
             // This lets us specifically query for columns from the appropriate table name
             // but assumes all databases have the same restrictions on all the column
@@ -617,7 +617,7 @@ internal class TestDataConnectionSql : TestDataConnection
             DataTable columns = null;
             try
             {
-                columns = this.Connection.GetSchema("Columns", restrictions);
+                columns = Connection.GetSchema("Columns", restrictions);
             }
             catch (System.NotSupportedException e)
             {
@@ -663,13 +663,13 @@ internal class TestDataConnectionSql : TestDataConnection
     {
         // Split the name because we need to separately look for
         // tableSchema and tableName
-        string[] parts = this.SplitName(name);
+        string[] parts = SplitName(name);
 
         Debug.Assert(parts.Length > 0, "parts should have more than one element.");
 
         // Right now this processing ignores any three part names (where the catalog is specified)
         // We use the default schema if the name does not specify one explicitly
-        schemaName = parts.Length > 1 ? parts[parts.Length - 2] : this.GetDefaultSchema();
+        schemaName = parts.Length > 1 ? parts[parts.Length - 2] : GetDefaultSchema();
         tableName = parts[parts.Length - 1];
     }
 
@@ -687,11 +687,11 @@ internal class TestDataConnectionSql : TestDataConnection
 
         if (string.IsNullOrEmpty(tableSchema))
         {
-            return this.JoinAndQuoteName(new string[] { tableName }, false);
+            return JoinAndQuoteName(new string[] { tableName }, false);
         }
         else
         {
-            return this.JoinAndQuoteName(new string[] { tableSchema, tableName }, false);
+            return JoinAndQuoteName(new string[] { tableSchema, tableName }, false);
         }
     }
 
@@ -726,7 +726,7 @@ internal class TestDataConnectionSql : TestDataConnection
     public bool IsOpen()
 #pragma warning restore SA1202 // Elements must be ordered by access
     {
-        return this.connection != null && this.connection.State == ConnectionState.Open;
+        return connection != null && connection.State == ConnectionState.Open;
     }
 
     /// <summary>
@@ -762,25 +762,25 @@ internal class TestDataConnectionSql : TestDataConnection
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     protected string GetDefaultSchemaMSSql()
     {
-        Debug.Assert(this.Connection != null, "Connection should not be null.");
+        Debug.Assert(Connection != null, "Connection should not be null.");
 
         try
         {
-            OleDbConnection oleDbConnection = this.Connection as OleDbConnection;
-            OdbcConnection odbcConnection = this.Connection as OdbcConnection;
+            OleDbConnection oleDbConnection = Connection as OleDbConnection;
+            OdbcConnection odbcConnection = Connection as OdbcConnection;
             Debug.Assert(
-                this.Connection is SqlConnection ||
+                Connection is SqlConnection ||
                 (oleDbConnection != null && IsMSSql(oleDbConnection.Provider)) ||
                 (odbcConnection != null && IsMSSql(odbcConnection.Driver)),
                 "GetDefaultSchemaMSSql should be called only for MS SQL (either native or Ole Db or Odbc).");
 
-            Debug.Assert(this.IsOpen(), "The connection must already be open!");
-            Debug.Assert(!string.IsNullOrEmpty(this.Connection.ServerVersion), "GetDefaultSchema: the ServerVersion is null or empty!");
+            Debug.Assert(IsOpen(), "The connection must already be open!");
+            Debug.Assert(!string.IsNullOrEmpty(Connection.ServerVersion), "GetDefaultSchema: the ServerVersion is null or empty!");
 
-            int index = this.Connection.ServerVersion.IndexOf(".", StringComparison.Ordinal);
+            int index = Connection.ServerVersion.IndexOf(".", StringComparison.Ordinal);
             Debug.Assert(index > 0, "GetDefaultSchema: index should be 0");
 
-            string versionString = this.Connection.ServerVersion.Substring(0, index);
+            string versionString = Connection.ServerVersion.Substring(0, index);
             Debug.Assert(!string.IsNullOrEmpty(versionString), "GetDefaultSchema: version string is not present!");
 
             int version = int.Parse(versionString, CultureInfo.InvariantCulture);
@@ -790,7 +790,7 @@ internal class TestDataConnectionSql : TestDataConnection
                 "select default_schema_name from sys.database_principals where name = user_name()" :
                 "select user_name()";
 
-            using DbCommand cmd = this.Connection.CreateCommand();
+            using DbCommand cmd = Connection.CreateCommand();
             cmd.CommandText = sql;
             string defaultSchema = cmd.ExecuteScalar() as string;
             return defaultSchema;
@@ -821,19 +821,19 @@ internal class TestDataConnectionSql : TestDataConnection
     public override DataTable ReadTable(string tableName, IEnumerable columns)
 #pragma warning restore SA1202 // Elements must be ordered by access
     {
-        using DbDataAdapter dataAdapter = this.Factory.CreateDataAdapter();
-        using DbCommand command = this.Factory.CreateCommand();
+        using DbDataAdapter dataAdapter = Factory.CreateDataAdapter();
+        using DbCommand command = Factory.CreateCommand();
         // We need to escape bad characters in table name like [Sheet1$] in Excel.
         // But if table name is quoted in terms of provider, don't touch it to avoid e.g. [dbo.tables.etc].
-        string quotedTableName = this.PrepareNameForSql(tableName);
+        string quotedTableName = PrepareNameForSql(tableName);
         if (EqtTrace.IsInfoEnabled)
         {
             EqtTrace.Info("ReadTable: data driven test: got table name from attribute: {0}", tableName);
             EqtTrace.Info("ReadTable: data driven test: will use table name: {0}", tableName);
         }
 
-        command.Connection = this.Connection;
-        command.CommandText = string.Format(CultureInfo.InvariantCulture, "select {0} from {1}", this.GetColumnsSQL(columns), quotedTableName);
+        command.Connection = Connection;
+        command.CommandText = string.Format(CultureInfo.InvariantCulture, "select {0} from {1}", GetColumnsSQL(columns), quotedTableName);
 
         WriteDiagnostics("ReadTable: SQL Query: {0}", command.CommandText);
         dataAdapter.SelectCommand = command;
@@ -859,7 +859,7 @@ internal class TestDataConnectionSql : TestDataConnection
                     builder.Append(',');
                 }
 
-                builder.Append(this.QuoteIdentifier(columnName));
+                builder.Append(QuoteIdentifier(columnName));
             }
 
             result = builder.ToString();
@@ -877,14 +877,14 @@ internal class TestDataConnectionSql : TestDataConnection
 #pragma warning restore SA1202 // Elements must be ordered by access
     {
         // Ensure that we Dispose of all disposables...
-        if (this.commandBuilder != null)
+        if (commandBuilder != null)
         {
-            this.commandBuilder.Dispose();
+            commandBuilder.Dispose();
         }
 
-        if (this.connection != null)
+        if (connection != null)
         {
-            this.connection.Dispose();
+            connection.Dispose();
         }
 
         GC.SuppressFinalize(this);

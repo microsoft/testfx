@@ -50,7 +50,7 @@ public class TestDeployment : ITestDeployment
         this.deploymentItemUtility = deploymentItemUtility;
         this.deploymentUtility = deploymentUtility;
         this.fileUtility = fileUtility;
-        this.adapterSettings = null;
+        adapterSettings = null;
         RunDirectories = null;
     }
 
@@ -76,7 +76,7 @@ public class TestDeployment : ITestDeployment
     /// <returns> A string of deployment items. </returns>
     public KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings)
     {
-        return this.deploymentItemUtility.GetDeploymentItems(method, this.deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
+        return deploymentItemUtility.GetDeploymentItems(method, deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
     }
 
     /// <summary>
@@ -85,11 +85,11 @@ public class TestDeployment : ITestDeployment
     public void Cleanup()
     {
         // Delete the deployment directory
-        if (RunDirectories != null && this.adapterSettings.DeleteDeploymentDirectoryAfterTestRunIsComplete)
+        if (RunDirectories != null && adapterSettings.DeleteDeploymentDirectoryAfterTestRunIsComplete)
         {
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "Deleting deployment directory {0}", RunDirectories.RootDeploymentDirectory);
 
-            this.fileUtility.DeleteDirectories(RunDirectories.RootDeploymentDirectory);
+            fileUtility.DeleteDirectories(RunDirectories.RootDeploymentDirectory);
 
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "Deleted deployment directory {0}", RunDirectories.RootDeploymentDirectory);
         }
@@ -119,9 +119,9 @@ public class TestDeployment : ITestDeployment
         // even if test host is kept alive.
         RunDirectories = null;
 
-        this.adapterSettings = MSTestSettingsProvider.Settings;
-        bool canDeploy = this.CanDeploy();
-        var hasDeploymentItems = tests.Any(test => this.deploymentItemUtility.HasDeploymentItems(test));
+        adapterSettings = MSTestSettingsProvider.Settings;
+        bool canDeploy = CanDeploy();
+        var hasDeploymentItems = tests.Any(test => deploymentItemUtility.HasDeploymentItems(test));
 
         // deployment directories should not be created in this case,simply return
         if (!canDeploy && hasDeploymentItems)
@@ -129,7 +129,7 @@ public class TestDeployment : ITestDeployment
             return false;
         }
 
-        RunDirectories = this.deploymentUtility.CreateDeploymentDirectories(runContext);
+        RunDirectories = deploymentUtility.CreateDeploymentDirectories(runContext);
 
         // Deployment directories are created but deployment will not happen.
         // This is added just to keep consistency with MSTestv1 behavior.
@@ -152,7 +152,7 @@ public class TestDeployment : ITestDeployment
             foreach (var group in testsBySource)
             {
                 // do the deployment
-                this.deploymentUtility.Deploy(@group.Tests, @group.Source, runContext, frameworkHandle, RunDirectories);
+                deploymentUtility.Deploy(@group.Tests, @group.Source, runContext, frameworkHandle, RunDirectories);
             }
 
             // Update the runDirectories
@@ -217,7 +217,7 @@ public class TestDeployment : ITestDeployment
     /// <returns>True if deployment can be done.</returns>
     private bool CanDeploy()
     {
-        if (!this.adapterSettings.DeploymentEnabled)
+        if (!adapterSettings.DeploymentEnabled)
         {
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: CanDeploy is false.");
             return false;

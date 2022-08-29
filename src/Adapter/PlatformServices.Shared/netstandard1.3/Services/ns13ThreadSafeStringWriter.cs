@@ -44,7 +44,7 @@ public class ThreadSafeStringWriter : StringWriter
         // otherwise if there is `async Task` test method, the method will run as child async flow
         // populate it but the parent will remain null, because the changes to context only flow downwards
         // and not upwards.
-        this.GetOrAddStringBuilder();
+        GetOrAddStringBuilder();
     }
 
     public override StringBuilder GetStringBuilder()
@@ -57,7 +57,7 @@ public class ThreadSafeStringWriter : StringWriter
     {
         try
         {
-            return this.GetStringBuilderOrNull()?.ToString();
+            return GetStringBuilderOrNull()?.ToString();
         }
         catch (ObjectDisposedException)
         {
@@ -69,7 +69,7 @@ public class ThreadSafeStringWriter : StringWriter
     {
         try
         {
-            return this.GetStringBuilderOrNull()?.ToStringAndClear();
+            return GetStringBuilderOrNull()?.ToStringAndClear();
         }
         catch (ObjectDisposedException)
         {
@@ -83,7 +83,7 @@ public class ThreadSafeStringWriter : StringWriter
 #if DEBUG
         AllOutput.Append(value);
 #endif
-        this.GetOrAddStringBuilder().Append(value);
+        GetOrAddStringBuilder().Append(value);
     }
 
     /// <inheritdoc/>
@@ -92,7 +92,7 @@ public class ThreadSafeStringWriter : StringWriter
 #if DEBUG
         AllOutput.Append(value);
 #endif
-        this.GetOrAddStringBuilder().Append(value);
+        GetOrAddStringBuilder().Append(value);
     }
 
     public override void WriteLine(string value)
@@ -100,7 +100,7 @@ public class ThreadSafeStringWriter : StringWriter
 #if DEBUG
         AllOutput.AppendLine(value);
 #endif
-        this.GetOrAddStringBuilder().AppendLine(value);
+        GetOrAddStringBuilder().AppendLine(value);
     }
 
     /// <inheritdoc/>
@@ -109,7 +109,7 @@ public class ThreadSafeStringWriter : StringWriter
 #if DEBUG
         AllOutput.Append(buffer, index, count);
 #endif
-        this.GetOrAddStringBuilder().Append(buffer, index, count);
+        GetOrAddStringBuilder().Append(buffer, index, count);
     }
 
     /// <inheritdoc/>
@@ -117,7 +117,7 @@ public class ThreadSafeStringWriter : StringWriter
     {
         lock (StaticLockObject)
         {
-            ThreadSafeStringWriter.State?.Value?.Remove(this.outputType);
+            ThreadSafeStringWriter.State?.Value?.Remove(outputType);
             try
             {
                 base.Dispose(disposing);
@@ -137,7 +137,7 @@ public class ThreadSafeStringWriter : StringWriter
             {
                 return null;
             }
-            else if (!State.Value.TryGetValue(this.outputType, out var stringBuilder))
+            else if (!State.Value.TryGetValue(outputType, out var stringBuilder))
             {
                 return null;
             }
@@ -158,15 +158,15 @@ public class ThreadSafeStringWriter : StringWriter
                 // create the dictionary and appropriate stringbuilder.
                 // Avoid looking up the value after we add it to the dictionary.
                 var sb = new ThreadSafeStringBuilder();
-                State.Value = new Dictionary<string, ThreadSafeStringBuilder> { [this.outputType] = sb };
+                State.Value = new Dictionary<string, ThreadSafeStringBuilder> { [outputType] = sb };
                 return sb;
             }
-            else if (!State.Value.TryGetValue(this.outputType, out var stringBuilder))
+            else if (!State.Value.TryGetValue(outputType, out var stringBuilder))
             {
                 // The storage for the current async operation has the dictionary, but not the key
                 // for the output type, add it, and avoid looking up the value again.
                 var sb = new ThreadSafeStringBuilder();
-                State.Value.Add(this.outputType, sb);
+                State.Value.Add(outputType, sb);
                 return sb;
             }
             else
@@ -188,58 +188,58 @@ public class ThreadSafeStringWriter : StringWriter
 
         public void Append(string value)
         {
-            lock (this.instanceLockObject)
+            lock (instanceLockObject)
             {
-                this.stringBuilder.Append(value);
+                stringBuilder.Append(value);
             }
         }
 
         public void Append(char[] buffer, int index, int count)
         {
-            lock (this.instanceLockObject)
+            lock (instanceLockObject)
             {
-                this.stringBuilder.Append(buffer, index, count);
+                stringBuilder.Append(buffer, index, count);
             }
         }
 
         public void Append(char value)
         {
-            lock (this.instanceLockObject)
+            lock (instanceLockObject)
             {
-                this.stringBuilder.Append(value);
+                stringBuilder.Append(value);
             }
         }
 
         public void AppendLine(string value)
         {
-            lock (this.instanceLockObject)
+            lock (instanceLockObject)
             {
-                this.stringBuilder.AppendLine(value);
+                stringBuilder.AppendLine(value);
             }
         }
 
         public void Clear()
         {
-            lock (this.instanceLockObject)
+            lock (instanceLockObject)
             {
-                this.stringBuilder.Clear();
+                stringBuilder.Clear();
             }
         }
 
         public override string ToString()
         {
-            lock (this.instanceLockObject)
+            lock (instanceLockObject)
             {
-                return this.stringBuilder.ToString();
+                return stringBuilder.ToString();
             }
         }
 
         internal string ToStringAndClear()
         {
-            lock (this.instanceLockObject)
+            lock (instanceLockObject)
             {
-                var output = this.stringBuilder.ToString();
-                this.stringBuilder.Clear();
+                var output = stringBuilder.ToString();
+                stringBuilder.Clear();
                 return output;
             }
         }

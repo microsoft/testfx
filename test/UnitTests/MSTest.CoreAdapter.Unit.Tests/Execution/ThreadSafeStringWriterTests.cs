@@ -45,7 +45,7 @@ public class ThreadSafeStringWriterTests
                 action("content1");
                 action("content1");
                 action("content1");
-                while (this.task2flag != true && timeout.Elapsed < TimeSpan.FromSeconds(5))
+                while (task2flag != true && timeout.Elapsed < TimeSpan.FromSeconds(5))
                 {
                 }
                 action("content1");
@@ -59,7 +59,7 @@ public class ThreadSafeStringWriterTests
                 action("content2");
                 action("content2");
                 action("content2");
-                this.task2flag = true;
+                task2flag = true;
                 action("content2");
                 action("content2");
                 action("content2");

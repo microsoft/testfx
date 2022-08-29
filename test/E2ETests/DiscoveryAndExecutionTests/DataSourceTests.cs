@@ -21,7 +21,7 @@ public class DataSourceTests : CLITestBase
     public void ExecuteCsvTestDataSourceTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "CsvTestMethod");

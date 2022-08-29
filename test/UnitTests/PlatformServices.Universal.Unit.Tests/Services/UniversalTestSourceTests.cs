@@ -23,7 +23,7 @@ public class UniversalTestSourceTests
     [TestInitialize]
     public void TestInit()
     {
-        this.testSource = new TestSource();
+        testSource = new TestSource();
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ public class UniversalTestSourceTests
     [TestMethod]
     public void ValidSourceExtensionsShouldContainDllExtensions()
     {
-        CollectionAssert.Contains(this.testSource.ValidSourceExtensions.ToList(), ".dll");
+        CollectionAssert.Contains(testSource.ValidSourceExtensions.ToList(), ".dll");
     }
 
     /// <summary>
@@ -41,7 +41,7 @@ public class UniversalTestSourceTests
     [TestMethod]
     public void ValidSourceExtensionsShouldContainExeExtensions()
     {
-        CollectionAssert.Contains(this.testSource.ValidSourceExtensions.ToList(), ".exe");
+        CollectionAssert.Contains(testSource.ValidSourceExtensions.ToList(), ".exe");
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ public class UniversalTestSourceTests
     [TestMethod]
     public void ValidSourceExtensionsShouldContainAppxExtensions()
     {
-        CollectionAssert.Contains(this.testSource.ValidSourceExtensions.ToList(), ".appx");
+        CollectionAssert.Contains(testSource.ValidSourceExtensions.ToList(), ".appx");
     }
 
     /// <summary>
@@ -59,7 +59,7 @@ public class UniversalTestSourceTests
     [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueIfAssemblyNameIsNull()
     {
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(null, "DummySource"));
+        Assert.IsTrue(testSource.IsAssemblyReferenced(null, "DummySource"));
     }
 
     /// <summary>
@@ -68,7 +68,7 @@ public class UniversalTestSourceTests
     [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueIfSourceIsNull()
     {
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(Assembly.GetExecutingAssembly().GetName(), null));
+        Assert.IsTrue(testSource.IsAssemblyReferenced(Assembly.GetExecutingAssembly().GetName(), null));
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public class UniversalTestSourceTests
     [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueIfAnAssemblyIsReferencedInSource()
     {
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(typeof(TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location));
+        Assert.IsTrue(testSource.IsAssemblyReferenced(typeof(TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location));
     }
 
     /// <summary>
@@ -86,6 +86,6 @@ public class UniversalTestSourceTests
     [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames()
     {
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
+        Assert.IsTrue(testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
     }
 }

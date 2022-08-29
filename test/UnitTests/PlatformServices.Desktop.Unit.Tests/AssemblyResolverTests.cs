@@ -213,61 +213,61 @@ public class TestableAssemblyResolver : AssemblyResolver
 
     protected override bool DoesDirectoryExist(string path)
     {
-        if (this.DoesDirectoryExistSetter == null)
+        if (DoesDirectoryExistSetter == null)
         {
             return base.DoesDirectoryExist(path);
         }
 
-        return this.DoesDirectoryExistSetter(path);
+        return DoesDirectoryExistSetter(path);
     }
 
     protected override string[] GetDirectories(string path)
     {
-        if (this.GetDirectoriesSetter == null)
+        if (GetDirectoriesSetter == null)
         {
             return base.GetDirectories(path);
         }
 
-        return this.GetDirectoriesSetter(path);
+        return GetDirectoriesSetter(path);
     }
 
     protected override Assembly SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
     {
-        if (this.SearchAssemblySetter == null)
+        if (SearchAssemblySetter == null)
         {
             return base.SearchAssembly(searchDirectorypaths, name, isReflectionOnly);
         }
 
-        return this.SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
+        return SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
     }
 
     protected override bool DoesFileExist(string filePath)
     {
-        if (this.DoesFileExistSetter == null)
+        if (DoesFileExistSetter == null)
         {
             return base.DoesFileExist(filePath);
         }
 
-        return this.DoesFileExistSetter(filePath);
+        return DoesFileExistSetter(filePath);
     }
 
     protected override Assembly LoadAssemblyFrom(string path)
     {
-        if (this.LoadAssemblyFromSetter == null)
+        if (LoadAssemblyFromSetter == null)
         {
             return base.LoadAssemblyFrom(path);
         }
 
-        return this.LoadAssemblyFromSetter(path);
+        return LoadAssemblyFromSetter(path);
     }
 
     protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path)
     {
-        if (this.ReflectionOnlyLoadAssemblyFromSetter == null)
+        if (ReflectionOnlyLoadAssemblyFromSetter == null)
         {
             return base.ReflectionOnlyLoadAssemblyFrom(path);
         }
 
-        return this.ReflectionOnlyLoadAssemblyFromSetter(path);
+        return ReflectionOnlyLoadAssemblyFromSetter(path);
     }
 }

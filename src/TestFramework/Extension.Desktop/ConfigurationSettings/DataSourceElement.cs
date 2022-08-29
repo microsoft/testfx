@@ -71,7 +71,7 @@ public sealed class DataSourceElement : ConfigurationElement
     /// </summary>
     internal string Key
     {
-        get { return this.Name; }
+        get { return Name; }
     }
 
     /// <summary>

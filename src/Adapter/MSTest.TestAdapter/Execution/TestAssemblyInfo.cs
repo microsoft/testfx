@@ -32,8 +32,8 @@ public class TestAssemblyInfo
     /// <param name="assembly">Sets the <see cref="Assembly"/> this class is representing. </param>
     internal TestAssemblyInfo(Assembly assembly)
     {
-        this.assemblyInfoExecuteSyncObject = new object();
-        this.Assembly = assembly;
+        assemblyInfoExecuteSyncObject = new object();
+        Assembly = assembly;
     }
 
     /// <summary>
@@ -43,18 +43,18 @@ public class TestAssemblyInfo
     {
         get
         {
-            return this.assemblyInitializeMethod;
+            return assemblyInitializeMethod;
         }
 
         internal set
         {
-            if (this.assemblyInitializeMethod != null)
+            if (assemblyInitializeMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyInit, this.assemblyInitializeMethod.DeclaringType.FullName);
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyInit, assemblyInitializeMethod.DeclaringType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            this.assemblyInitializeMethod = value;
+            assemblyInitializeMethod = value;
         }
     }
 
@@ -65,18 +65,18 @@ public class TestAssemblyInfo
     {
         get
         {
-            return this.assemblyCleanupMethod;
+            return assemblyCleanupMethod;
         }
 
         internal set
         {
-            if (this.assemblyCleanupMethod != null)
+            if (assemblyCleanupMethod != null)
             {
-                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyClean, this.assemblyCleanupMethod.DeclaringType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyClean, assemblyCleanupMethod.DeclaringType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            this.assemblyCleanupMethod = value;
+            assemblyCleanupMethod = value;
         }
     }
 
@@ -98,7 +98,7 @@ public class TestAssemblyInfo
         get
         {
             // If no assembly cleanup, then continue with the next one.
-            if (this.AssemblyCleanupMethod == null)
+            if (AssemblyCleanupMethod == null)
             {
                 return false;
             }
@@ -121,7 +121,7 @@ public class TestAssemblyInfo
     public void RunAssemblyInitialize(TestContext testContext)
     {
         // No assembly initialize => nothing to do.
-        if (this.AssemblyInitializeMethod == null)
+        if (AssemblyInitializeMethod == null)
         {
             return;
         }
@@ -132,44 +132,44 @@ public class TestAssemblyInfo
         }
 
         // If assembly initialization is not done, then do it.
-        if (!this.IsAssemblyInitializeExecuted)
+        if (!IsAssemblyInitializeExecuted)
         {
             // Acquiring a lock is usually a costly operation which does not need to be
             // performed every time if the assembly init is already executed.
-            lock (this.assemblyInfoExecuteSyncObject)
+            lock (assemblyInfoExecuteSyncObject)
             {
                 // Perform a check again.
-                if (!this.IsAssemblyInitializeExecuted)
+                if (!IsAssemblyInitializeExecuted)
                 {
                     try
                     {
-                        this.AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                        AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
                     }
                     catch (Exception ex)
                     {
-                        this.AssemblyInitializationException = ex;
+                        AssemblyInitializationException = ex;
                     }
                     finally
                     {
-                        this.IsAssemblyInitializeExecuted = true;
+                        IsAssemblyInitializeExecuted = true;
                     }
                 }
             }
         }
 
         // If assemblyInitialization was successful, then don't do anything
-        if (this.AssemblyInitializationException == null)
+        if (AssemblyInitializationException == null)
         {
             return;
         }
 
         // Cache and return an already created TestFailedException.
-        if (this.AssemblyInitializationException is TestFailedException)
+        if (AssemblyInitializationException is TestFailedException)
         {
-            throw this.AssemblyInitializationException;
+            throw AssemblyInitializationException;
         }
 
-        var realException = this.AssemblyInitializationException.InnerException ?? this.AssemblyInitializationException;
+        var realException = AssemblyInitializationException.InnerException ?? AssemblyInitializationException;
 
         var outcome = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
 
@@ -178,14 +178,14 @@ public class TestAssemblyInfo
         var errorMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.UTA_AssemblyInitMethodThrows,
-            this.AssemblyInitializeMethod.DeclaringType.FullName,
-            this.AssemblyInitializeMethod.Name,
+            AssemblyInitializeMethod.DeclaringType.FullName,
+            AssemblyInitializeMethod.Name,
             realException.GetType().ToString(),
             exceptionMessage);
         var exceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
 
         var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo, realException);
-        this.AssemblyInitializationException = testFailedException;
+        AssemblyInitializationException = testFailedException;
 
         throw testFailedException;
     }
@@ -199,16 +199,16 @@ public class TestAssemblyInfo
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public string RunAssemblyCleanup()
     {
-        if (this.AssemblyCleanupMethod == null)
+        if (AssemblyCleanupMethod == null)
         {
             return null;
         }
 
-        lock (this.assemblyInfoExecuteSyncObject)
+        lock (assemblyInfoExecuteSyncObject)
         {
             try
             {
-                this.AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+                AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
 
                 return null;
             }
@@ -232,8 +232,8 @@ public class TestAssemblyInfo
                 return string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
-                    this.AssemblyCleanupMethod.DeclaringType.Name,
-                    this.AssemblyCleanupMethod.Name,
+                    AssemblyCleanupMethod.DeclaringType.Name,
+                    AssemblyCleanupMethod.Name,
                     errorMessage,
                     StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
             }

@@ -317,7 +317,7 @@ public class TestableMSTestAdapterSettings : MSTestAdapterSettings
 
     public TestableMSTestAdapterSettings(List<RecursiveDirectoryPath> expectedResult)
     {
-        this.SearchDirectories.AddRange(expectedResult);
+        SearchDirectories.AddRange(expectedResult);
     }
 
     public Func<string, bool> DoesDirectoryExistSetter { get; set; }
@@ -326,21 +326,21 @@ public class TestableMSTestAdapterSettings : MSTestAdapterSettings
 
     protected override bool DoesDirectoryExist(string path)
     {
-        if (this.DoesDirectoryExistSetter == null)
+        if (DoesDirectoryExistSetter == null)
         {
             return base.DoesDirectoryExist(path);
         }
 
-        return this.DoesDirectoryExistSetter(path);
+        return DoesDirectoryExistSetter(path);
     }
 
     protected override string ExpandEnvironmentVariables(string path)
     {
-        if (this.ExpandEnvironmentVariablesSetter == null)
+        if (ExpandEnvironmentVariablesSetter == null)
         {
             return base.ExpandEnvironmentVariables(path);
         }
 
-        return this.ExpandEnvironmentVariablesSetter(path);
+        return ExpandEnvironmentVariablesSetter(path);
     }
 }

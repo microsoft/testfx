@@ -14,7 +14,7 @@ internal class ReflectionUtility
 {
     internal virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
     {
-        return this.GetCustomAttributes(attributeProvider, type, true);
+        return GetCustomAttributes(attributeProvider, type, true);
     }
 
     /// <summary>
@@ -25,7 +25,7 @@ internal class ReflectionUtility
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
     internal object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
     {
-        return this.GetCustomAttributes(memberInfo, type: null, inherit: inherit);
+        return GetCustomAttributes(memberInfo, type: null, inherit: inherit);
     }
 
     internal object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)

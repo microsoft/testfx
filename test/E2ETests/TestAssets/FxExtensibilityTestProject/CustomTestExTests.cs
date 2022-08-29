@@ -4,6 +4,7 @@
 namespace FxExtensibilityTestProject;
 
 using System.Collections.Generic;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [IterativeTestClass(5)]
@@ -47,7 +48,7 @@ public class IterativeTestMethodAttribute : TestMethodAttribute
     public override TestResult[] Execute(ITestMethod testMethod)
     {
         var results = new List<TestResult>();
-        for (int count = 0; count < this.stabilityThreshold; count++)
+        for (int count = 0; count < stabilityThreshold; count++)
         {
             var testResults = base.Execute(testMethod);
             foreach (var testResult in testResults)
@@ -74,6 +75,6 @@ public class IterativeTestClassAttribute : TestClassAttribute
     {
         if (testMethodAttribute is IterativeTestMethodAttribute) return testMethodAttribute;
 
-        return new IterativeTestMethodAttribute(this.stabilityThreshold);
+        return new IterativeTestMethodAttribute(stabilityThreshold);
     }
 }

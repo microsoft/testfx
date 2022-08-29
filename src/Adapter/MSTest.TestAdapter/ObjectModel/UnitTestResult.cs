@@ -22,7 +22,7 @@ public class UnitTestResult
     /// </summary>
     internal UnitTestResult()
     {
-        this.DatarowIndex = -1;
+        DatarowIndex = -1;
     }
 
     /// <summary>
@@ -32,15 +32,15 @@ public class UnitTestResult
     internal UnitTestResult(TestFailedException testFailedException)
         : this()
     {
-        this.Outcome = testFailedException.Outcome;
-        this.ErrorMessage = testFailedException.Message;
+        Outcome = testFailedException.Outcome;
+        ErrorMessage = testFailedException.Message;
 
         if (testFailedException.StackTraceInformation != null)
         {
-            this.ErrorStackTrace = testFailedException.StackTraceInformation.ErrorStackTrace;
-            this.ErrorLineNumber = testFailedException.StackTraceInformation.ErrorLineNumber;
-            this.ErrorFilePath = testFailedException.StackTraceInformation.ErrorFilePath;
-            this.ErrorColumnNumber = testFailedException.StackTraceInformation.ErrorColumnNumber;
+            ErrorStackTrace = testFailedException.StackTraceInformation.ErrorStackTrace;
+            ErrorLineNumber = testFailedException.StackTraceInformation.ErrorLineNumber;
+            ErrorFilePath = testFailedException.StackTraceInformation.ErrorFilePath;
+            ErrorColumnNumber = testFailedException.StackTraceInformation.ErrorColumnNumber;
         }
     }
 
@@ -52,8 +52,8 @@ public class UnitTestResult
     internal UnitTestResult(UnitTestOutcome outcome, string errorMessage)
         : this()
     {
-        this.Outcome = outcome;
-        this.ErrorMessage = errorMessage;
+        Outcome = outcome;
+        ErrorMessage = errorMessage;
     }
 
     /// <summary>
@@ -156,49 +156,49 @@ public class UnitTestResult
 
         var testResult = new TestResult(testCase)
         {
-            DisplayName = this.DisplayName,
-            Duration = this.Duration,
-            ErrorMessage = this.ErrorMessage,
-            ErrorStackTrace = this.ErrorStackTrace,
-            Outcome = UnitTestOutcomeHelper.ToTestOutcome(this.Outcome, currentSettings),
+            DisplayName = DisplayName,
+            Duration = Duration,
+            ErrorMessage = ErrorMessage,
+            ErrorStackTrace = ErrorStackTrace,
+            Outcome = UnitTestOutcomeHelper.ToTestOutcome(Outcome, currentSettings),
             StartTime = startTime,
             EndTime = endTime
         };
 
-        testResult.SetPropertyValue<Guid>(Constants.ExecutionIdProperty, this.ExecutionId);
-        testResult.SetPropertyValue<Guid>(Constants.ParentExecIdProperty, this.ParentExecId);
-        testResult.SetPropertyValue<int>(Constants.InnerResultsCountProperty, this.InnerResultsCount);
+        testResult.SetPropertyValue<Guid>(Constants.ExecutionIdProperty, ExecutionId);
+        testResult.SetPropertyValue<Guid>(Constants.ParentExecIdProperty, ParentExecId);
+        testResult.SetPropertyValue<int>(Constants.InnerResultsCountProperty, InnerResultsCount);
 
-        if (!string.IsNullOrEmpty(this.StandardOut))
+        if (!string.IsNullOrEmpty(StandardOut))
         {
-            TestResultMessage message = new(TestResultMessage.StandardOutCategory, this.StandardOut);
+            TestResultMessage message = new(TestResultMessage.StandardOutCategory, StandardOut);
             testResult.Messages.Add(message);
         }
 
-        if (!string.IsNullOrEmpty(this.StandardError))
+        if (!string.IsNullOrEmpty(StandardError))
         {
-            TestResultMessage message = new(TestResultMessage.StandardErrorCategory, this.StandardError);
+            TestResultMessage message = new(TestResultMessage.StandardErrorCategory, StandardError);
             testResult.Messages.Add(message);
         }
 
-        if (!string.IsNullOrEmpty(this.DebugTrace))
+        if (!string.IsNullOrEmpty(DebugTrace))
         {
-            string debugTraceMessagesinStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.DebugTraceBanner, this.DebugTrace);
+            string debugTraceMessagesinStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.DebugTraceBanner, DebugTrace);
             TestResultMessage debugTraceMessage = new(TestResultMessage.StandardOutCategory, debugTraceMessagesinStdOut);
             testResult.Messages.Add(debugTraceMessage);
         }
 
-        if (!string.IsNullOrEmpty(this.TestContextMessages))
+        if (!string.IsNullOrEmpty(TestContextMessages))
         {
-            string testContextMessagesInStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.TestContextMessageBanner, this.TestContextMessages);
+            string testContextMessagesInStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.TestContextMessageBanner, TestContextMessages);
             TestResultMessage testContextMessage = new(TestResultMessage.StandardOutCategory, testContextMessagesInStdOut);
             testResult.Messages.Add(testContextMessage);
         }
 
-        if (this.ResultFiles != null && this.ResultFiles.Count > 0)
+        if (ResultFiles != null && ResultFiles.Count > 0)
         {
             AttachmentSet attachmentSet = new(Constants.ExecutorUri, Resource.AttachmentSetDisplayName);
-            foreach (var resultFile in this.ResultFiles)
+            foreach (var resultFile in ResultFiles)
             {
                 string pathToResultFile = PlatformServiceProvider.Instance.FileOperations.GetFullFilePath(resultFile);
                 UriDataAttachment attachment = new(new Uri(pathToResultFile), resultFile);

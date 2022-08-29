@@ -14,7 +14,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
     [TestMethod]
     public void ExecuteTestDataSourceExtensibilityTests()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssembly });
-        this.ValidatePassedTestsContain("CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
+        InvokeVsTestForExecution(new string[] { TestAssembly });
+        ValidatePassedTestsContain("CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
     }
 }

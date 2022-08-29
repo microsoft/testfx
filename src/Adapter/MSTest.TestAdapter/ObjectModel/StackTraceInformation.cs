@@ -20,10 +20,10 @@ internal class StackTraceInformation
         Debug.Assert(lineNumber >= 0, "Line number should be greater than or equal to 0");
         Debug.Assert(columnNumber >= 0, "Column number should be greater than or equal to 0");
 
-        this.ErrorStackTrace = stackTrace;
-        this.ErrorFilePath = filePath;
-        this.ErrorLineNumber = lineNumber;
-        this.ErrorColumnNumber = columnNumber;
+        ErrorStackTrace = stackTrace;
+        ErrorFilePath = filePath;
+        ErrorLineNumber = lineNumber;
+        ErrorColumnNumber = columnNumber;
     }
 
     /// <summary>

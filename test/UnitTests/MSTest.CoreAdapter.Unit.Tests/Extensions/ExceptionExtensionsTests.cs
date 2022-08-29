@@ -153,7 +153,7 @@ public class ExceptionExtensionsTests
             this.getStackTrace = getStackTrace;
         }
 
-        public override string StackTrace => this.getStackTrace();
+        public override string StackTrace => getStackTrace();
     }
 
     internal class DummyException : Exception
@@ -162,10 +162,10 @@ public class ExceptionExtensionsTests
 
         public DummyException(Func<string> message)
         {
-            this.getMessage = message;
+            getMessage = message;
         }
 
-        public override string Message => this.getMessage();
+        public override string Message => getMessage();
     }
 
     #endregion

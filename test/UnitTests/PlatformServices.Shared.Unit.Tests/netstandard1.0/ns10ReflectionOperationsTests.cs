@@ -26,7 +26,7 @@ public class ReflectionOperationsTests
 
     public ReflectionOperationsTests()
     {
-        this.reflectionOperations = new ReflectionOperations();
+        reflectionOperations = new ReflectionOperations();
     }
 
     [TestMethod]
@@ -34,13 +34,13 @@ public class ReflectionOperationsTests
     {
         var minfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(minfo, false);
+        var attribs = reflectionOperations.GetCustomAttributes(minfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : base", "DummySingleA : base" };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -48,13 +48,13 @@ public class ReflectionOperationsTests
     {
         var minfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(minfo, false);
+        var attribs = reflectionOperations.GetCustomAttributes(minfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : derived", "DummySingleA : derived" };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -62,14 +62,14 @@ public class ReflectionOperationsTests
     {
         var minfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(minfo, true);
+        var attribs = reflectionOperations.GetCustomAttributes(minfo, true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(3, attribs.Length);
 
         // Notice that the DummySingleA on the base method does not show up since it can only be defined once.
         var expectedAttribs = new string[] { "DummyA : derived", "DummySingleA : derived", "DummyA : base", };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -77,13 +77,13 @@ public class ReflectionOperationsTests
     {
         var tinfo = typeof(DummyBaseTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(tinfo, false);
+        var attribs = reflectionOperations.GetCustomAttributes(tinfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : ba" };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -91,13 +91,13 @@ public class ReflectionOperationsTests
     {
         var tinfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(tinfo, false);
+        var attribs = reflectionOperations.GetCustomAttributes(tinfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : a" };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -105,13 +105,13 @@ public class ReflectionOperationsTests
     {
         var minfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(minfo, true);
+        var attribs = reflectionOperations.GetCustomAttributes(minfo, true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : a", "DummyA : ba" };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -119,13 +119,13 @@ public class ReflectionOperationsTests
     {
         var minfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(minfo, typeof(DummyAAttribute), false);
+        var attribs = reflectionOperations.GetCustomAttributes(minfo, typeof(DummyAAttribute), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : base" };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -133,13 +133,13 @@ public class ReflectionOperationsTests
     {
         var minfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(minfo, typeof(DummyAAttribute), false);
+        var attribs = reflectionOperations.GetCustomAttributes(minfo, typeof(DummyAAttribute), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : derived" };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -147,13 +147,13 @@ public class ReflectionOperationsTests
     {
         var minfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(minfo, typeof(DummyAAttribute), true);
+        var attribs = reflectionOperations.GetCustomAttributes(minfo, typeof(DummyAAttribute), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : derived", "DummyA : base", };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -161,13 +161,13 @@ public class ReflectionOperationsTests
     {
         var tinfo = typeof(DummyBaseTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(tinfo, typeof(DummyAAttribute), false);
+        var attribs = reflectionOperations.GetCustomAttributes(tinfo, typeof(DummyAAttribute), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : ba" };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -175,13 +175,13 @@ public class ReflectionOperationsTests
     {
         var tinfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(tinfo, typeof(DummyAAttribute), false);
+        var attribs = reflectionOperations.GetCustomAttributes(tinfo, typeof(DummyAAttribute), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : a" };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -189,13 +189,13 @@ public class ReflectionOperationsTests
     {
         var minfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(minfo, typeof(DummyAAttribute), true);
+        var attribs = reflectionOperations.GetCustomAttributes(minfo, typeof(DummyAAttribute), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : a", "DummyA : ba" };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     [TestMethod]
@@ -203,13 +203,13 @@ public class ReflectionOperationsTests
     {
         var asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
 
-        var attribs = this.reflectionOperations.GetCustomAttributes(asm, typeof(DummyAAttribute));
+        var attribs = reflectionOperations.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
 
         var expectedAttribs = new string[] { "DummyA : a1", "DummyA : a2" };
-        CollectionAssert.AreEqual(expectedAttribs, this.GetAttributeValuePairs(attribs));
+        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
     }
 
     private string[] GetAttributeValuePairs(object[] attributes)
@@ -237,7 +237,7 @@ public class ReflectionOperationsTests
     {
         public DummyAAttribute(string foo)
         {
-            this.Value = foo;
+            Value = foo;
         }
 
         public string Value { get; set; }
@@ -248,7 +248,7 @@ public class ReflectionOperationsTests
     {
         public DummySingleAAttribute(string foo)
         {
-            this.Value = foo;
+            Value = foo;
         }
 
         public string Value { get; set; }

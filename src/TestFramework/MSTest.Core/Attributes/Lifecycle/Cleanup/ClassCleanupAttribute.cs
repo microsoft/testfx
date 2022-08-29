@@ -72,8 +72,8 @@ public sealed class ClassCleanupAttribute : Attribute
     /// </param>
     private ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior, ClassCleanupBehavior? cleanupBehavior)
     {
-        this.InheritanceBehavior = inheritanceBehavior;
-        this.CleanupBehavior = cleanupBehavior;
+        InheritanceBehavior = inheritanceBehavior;
+        CleanupBehavior = cleanupBehavior;
     }
 
     /// <summary>

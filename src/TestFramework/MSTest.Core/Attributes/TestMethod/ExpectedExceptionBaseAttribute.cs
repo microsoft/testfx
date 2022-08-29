@@ -21,7 +21,7 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     protected ExpectedExceptionBaseAttribute()
         : this(string.Empty)
     {
-        this.SpecifiedNoExceptionMessage = string.Empty;
+        SpecifiedNoExceptionMessage = string.Empty;
     }
 
     /// <summary>
@@ -33,7 +33,7 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     /// </param>
     protected ExpectedExceptionBaseAttribute(string noExceptionMessage)
     {
-        this.SpecifiedNoExceptionMessage =
+        SpecifiedNoExceptionMessage =
             noExceptionMessage == null ?
                 string.Empty :
                 noExceptionMessage.Trim();
@@ -52,15 +52,15 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     {
         get
         {
-            Debug.Assert(this.SpecifiedNoExceptionMessage != null, "'noExceptionMessage' is null");
+            Debug.Assert(SpecifiedNoExceptionMessage != null, "'noExceptionMessage' is null");
 
-            if (string.IsNullOrEmpty(this.SpecifiedNoExceptionMessage))
+            if (string.IsNullOrEmpty(SpecifiedNoExceptionMessage))
             {
                 // Provide a default message when none was provided by a derived class
-                return GetDefaultNoExceptionMessage(this.GetType().FullName);
+                return GetDefaultNoExceptionMessage(GetType().FullName);
             }
 
-            return this.SpecifiedNoExceptionMessage;
+            return SpecifiedNoExceptionMessage;
         }
     }
 

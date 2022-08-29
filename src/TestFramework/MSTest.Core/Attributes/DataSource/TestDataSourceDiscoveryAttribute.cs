@@ -19,7 +19,7 @@ public class TestDataSourceDiscoveryAttribute : Attribute
     /// </param>
     public TestDataSourceDiscoveryAttribute(TestDataSourceDiscoveryOption discoveryOption)
     {
-        this.DiscoveryOption = discoveryOption;
+        DiscoveryOption = discoveryOption;
     }
 
     /// <summary>

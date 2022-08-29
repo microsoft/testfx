@@ -22,7 +22,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     {
         if (EqtTrace.IsErrorEnabled)
         {
-            EqtTrace.Error(this.PrependAdapterName(format), args);
+            EqtTrace.Error(PrependAdapterName(format), args);
         }
     }
 
@@ -35,7 +35,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     {
         if (EqtTrace.IsWarningEnabled)
         {
-            EqtTrace.Warning(this.PrependAdapterName(format), args);
+            EqtTrace.Warning(PrependAdapterName(format), args);
         }
     }
 
@@ -48,7 +48,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     {
         if (EqtTrace.IsInfoEnabled)
         {
-            EqtTrace.Info(this.PrependAdapterName(format), args);
+            EqtTrace.Info(PrependAdapterName(format), args);
         }
     }
 

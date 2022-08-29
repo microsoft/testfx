@@ -25,19 +25,19 @@ internal class TestableReflectHelper : ReflectHelper
 
     public TestableReflectHelper()
     {
-        this.customAttributes = new Dictionary<int, Attribute[]>();
+        customAttributes = new Dictionary<int, Attribute[]>();
     }
 
     public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
     {
         var hashcode = type.FullName.GetHashCode() + memberTypes.GetHashCode();
-        if (this.customAttributes.ContainsKey(hashcode))
+        if (customAttributes.ContainsKey(hashcode))
         {
-            this.customAttributes[hashcode] = this.customAttributes[hashcode].Concat(values).ToArray();
+            customAttributes[hashcode] = customAttributes[hashcode].Concat(values).ToArray();
         }
         else
         {
-            this.customAttributes[hashcode] = values;
+            customAttributes[hashcode] = values;
         }
     }
 
@@ -45,9 +45,9 @@ internal class TestableReflectHelper : ReflectHelper
     {
         var hashcode = MemberTypes.All.GetHashCode() + type.FullName.GetHashCode();
 
-        if (this.customAttributes.ContainsKey(hashcode))
+        if (customAttributes.ContainsKey(hashcode))
         {
-            return this.customAttributes[hashcode];
+            return customAttributes[hashcode];
         }
         else
         {
@@ -59,9 +59,9 @@ internal class TestableReflectHelper : ReflectHelper
     {
         var hashcode = memberInfo.MemberType.GetHashCode() + type.FullName.GetHashCode();
 
-        if (this.customAttributes.ContainsKey(hashcode))
+        if (customAttributes.ContainsKey(hashcode))
         {
-            return this.customAttributes[hashcode];
+            return customAttributes[hashcode];
         }
         else
         {

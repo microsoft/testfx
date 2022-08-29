@@ -48,16 +48,16 @@ public class TestClassInfo
         Debug.Assert(parent != null, "Parent should not be null");
         Debug.Assert(classAttribute != null, "ClassAtribute should not be null");
 
-        this.ClassType = type;
-        this.Constructor = constructor;
-        this.TestContextProperty = testContextProperty;
-        this.BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
-        this.BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo, MethodInfo>>();
-        this.BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
-        this.BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
-        this.Parent = parent;
-        this.ClassAttribute = classAttribute;
-        this.testClassExecuteSyncObject = new object();
+        ClassType = type;
+        Constructor = constructor;
+        TestContextProperty = testContextProperty;
+        BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
+        BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo, MethodInfo>>();
+        BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
+        BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
+        Parent = parent;
+        ClassAttribute = classAttribute;
+        testClassExecuteSyncObject = new object();
     }
 
     /// <summary>
@@ -92,18 +92,18 @@ public class TestClassInfo
     {
         get
         {
-            return this.classInitializeMethod;
+            return classInitializeMethod;
         }
 
         internal set
         {
-            if (this.classInitializeMethod != null)
+            if (classInitializeMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassInit, this.ClassType.FullName);
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            this.classInitializeMethod = value;
+            classInitializeMethod = value;
         }
     }
 
@@ -139,18 +139,18 @@ public class TestClassInfo
     {
         get
         {
-            return this.classCleanupMethod;
+            return classCleanupMethod;
         }
 
         internal set
         {
-            if (this.classCleanupMethod != null)
+            if (classCleanupMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassClean, this.ClassType.FullName);
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            this.classCleanupMethod = value;
+            classCleanupMethod = value;
         }
     }
 
@@ -161,14 +161,14 @@ public class TestClassInfo
     {
         get
         {
-            if (this.BaseClassCleanupMethodsStack.Any())
+            if (BaseClassCleanupMethodsStack.Any())
             {
                 // If any base cleanups were pushed to the stack we need to run them
                 return true;
             }
 
             // If no class cleanup, then continue with the next one.
-            if (this.ClassCleanupMethod == null)
+            if (ClassCleanupMethod == null)
             {
                 return false;
             }
@@ -189,18 +189,18 @@ public class TestClassInfo
     {
         get
         {
-            return this.testInitializeMethod;
+            return testInitializeMethod;
         }
 
         internal set
         {
-            if (this.testInitializeMethod != null)
+            if (testInitializeMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiInit, this.ClassType.FullName);
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            this.testInitializeMethod = value;
+            testInitializeMethod = value;
         }
     }
 
@@ -211,18 +211,18 @@ public class TestClassInfo
     {
         get
         {
-            return this.testCleanupMethod;
+            return testCleanupMethod;
         }
 
         internal set
         {
-            if (this.testCleanupMethod != null)
+            if (testCleanupMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClean, this.ClassType.FullName);
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            this.testCleanupMethod = value;
+            testCleanupMethod = value;
         }
     }
 
@@ -245,7 +245,7 @@ public class TestClassInfo
     public void RunClassInitialize(TestContext testContext)
     {
         // If no class initialize and no base class initialize, return
-        if (this.ClassInitializeMethod is null && !this.BaseClassInitAndCleanupMethods.Any(p => p.Item1 != null))
+        if (ClassInitializeMethod is null && !BaseClassInitAndCleanupMethods.Any(p => p.Item1 != null))
         {
             return;
         }
@@ -259,21 +259,21 @@ public class TestClassInfo
         string failedClassInitializeMethodName = string.Empty;
 
         // If class initialization is not done, then do it.
-        if (!this.IsClassInitializeExecuted)
+        if (!IsClassInitializeExecuted)
         {
             // Acquiring a lock is usually a costly operation which does not need to be
             // performed every time if the class init is already executed.
-            lock (this.testClassExecuteSyncObject)
+            lock (testClassExecuteSyncObject)
             {
                 // Perform a check again.
-                if (!this.IsClassInitializeExecuted)
+                if (!IsClassInitializeExecuted)
                 {
                     try
                     {
                         // ClassInitialize methods for base classes are called in reverse order of discovery
                         // Base -> Child TestClass
                         var baseClassInitializeStack = new Stack<Tuple<MethodInfo, MethodInfo>>(
-                                this.BaseClassInitAndCleanupMethods.Where(p => p.Item1 != null));
+                                BaseClassInitAndCleanupMethods.Where(p => p.Item1 != null));
 
                         while (baseClassInitializeStack.Count > 0)
                         {
@@ -283,43 +283,43 @@ public class TestClassInfo
 
                             if (baseInitCleanupMethods.Item2 != null)
                             {
-                                this.BaseClassCleanupMethodsStack.Push(baseInitCleanupMethods.Item2);
+                                BaseClassCleanupMethodsStack.Push(baseInitCleanupMethods.Item2);
                             }
                         }
 
                         initializeMethod = null;
 
-                        if (this.classInitializeMethod != null)
+                        if (classInitializeMethod != null)
                         {
-                            this.ClassInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                            ClassInitializeMethod.InvokeAsSynchronousTask(null, testContext);
                         }
                     }
                     catch (Exception ex)
                     {
-                        this.ClassInitializationException = ex;
-                        failedClassInitializeMethodName = initializeMethod?.Name ?? this.ClassInitializeMethod.Name;
+                        ClassInitializationException = ex;
+                        failedClassInitializeMethodName = initializeMethod?.Name ?? ClassInitializeMethod.Name;
                     }
                     finally
                     {
-                        this.IsClassInitializeExecuted = true;
+                        IsClassInitializeExecuted = true;
                     }
                 }
             }
         }
 
         // If classInitialization was successful, then don't do anything
-        if (this.ClassInitializationException == null)
+        if (ClassInitializationException == null)
         {
             return;
         }
 
-        if (this.ClassInitializationException is TestFailedException)
+        if (ClassInitializationException is TestFailedException)
         {
-            throw this.ClassInitializationException;
+            throw ClassInitializationException;
         }
 
         // Fail the current test if it was a failure.
-        var realException = this.ClassInitializationException.InnerException ?? this.ClassInitializationException;
+        var realException = ClassInitializationException.InnerException ?? ClassInitializationException;
 
         var outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
 
@@ -328,14 +328,14 @@ public class TestClassInfo
         var errorMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.UTA_ClassInitMethodThrows,
-            this.ClassType.FullName,
+            ClassType.FullName,
             failedClassInitializeMethodName,
             realException.GetType().ToString(),
             exceptionMessage);
         var exceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
 
         var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo, realException);
-        this.ClassInitializationException = testFailedException;
+        ClassInitializationException = testFailedException;
 
         throw testFailedException;
     }
@@ -349,43 +349,43 @@ public class TestClassInfo
     /// </returns>
     public string RunClassCleanup(ClassCleanupBehavior classCleanupLifecycle = ClassCleanupBehavior.EndOfAssembly)
     {
-        if (this.ClassCleanupMethod is null && this.BaseClassInitAndCleanupMethods.All(p => p.Item2 == null))
+        if (ClassCleanupMethod is null && BaseClassInitAndCleanupMethods.All(p => p.Item2 == null))
         {
             return null;
         }
 
-        if (!this.IsClassCleanupExecuted)
+        if (!IsClassCleanupExecuted)
         {
-            lock (this.testClassExecuteSyncObject)
+            lock (testClassExecuteSyncObject)
             {
-                if (this.IsClassCleanupExecuted)
+                if (IsClassCleanupExecuted)
                 {
                     return null;
                 }
 
-                if (this.IsClassInitializeExecuted || this.ClassInitializeMethod is null)
+                if (IsClassInitializeExecuted || ClassInitializeMethod is null)
                 {
                     MethodInfo classCleanupMethod = null;
 
                     try
                     {
-                        classCleanupMethod = this.ClassCleanupMethod;
+                        classCleanupMethod = ClassCleanupMethod;
                         classCleanupMethod?.InvokeAsSynchronousTask(null);
-                        var baseClassCleanupQueue = new Queue<MethodInfo>(this.BaseClassCleanupMethodsStack);
+                        var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
                         while (baseClassCleanupQueue.Count > 0)
                         {
                             classCleanupMethod = baseClassCleanupQueue.Dequeue();
                             classCleanupMethod?.InvokeAsSynchronousTask(null);
                         }
 
-                        this.IsClassCleanupExecuted = true;
+                        IsClassCleanupExecuted = true;
 
                         return null;
                     }
                     catch (Exception exception)
                     {
                         var realException = exception.InnerException ?? exception;
-                        this.ClassCleanupException = realException;
+                        ClassCleanupException = realException;
 
                         string errorMessage;
 
@@ -413,7 +413,7 @@ public class TestClassInfo
                         if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
                         {
                             var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
-                            this.ClassCleanupException = testFailedException;
+                            ClassCleanupException = testFailedException;
                             throw testFailedException;
                         }
 
