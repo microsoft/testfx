@@ -11,7 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
 
     internal class TestAssemblySettingsProvider : MarshalByRefObject
     {
-        private ReflectHelper reflectHelper;
+        private readonly ReflectHelper reflectHelper;
 
         public TestAssemblySettingsProvider()
             : this(ReflectHelper.Instance)

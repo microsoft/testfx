@@ -49,8 +49,8 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities
         private DeploymentItemUtility deploymentItemUtility;
         private ICollection<string> warnings;
 
-        private string defaultDeploymentItemPath = @"c:\temp";
-        private string defaultDeploymentItemOutputDirectory = "out";
+        private readonly string defaultDeploymentItemPath = @"c:\temp";
+        private readonly string defaultDeploymentItemOutputDirectory = "out";
 
         [TestInitialize]
         public void TestInit()

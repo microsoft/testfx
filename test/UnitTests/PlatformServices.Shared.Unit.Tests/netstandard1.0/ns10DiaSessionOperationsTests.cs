@@ -22,7 +22,7 @@ namespace MSTestAdapter.PlatformServices.Tests.Services
     [TestClass]
     public class DiaSessionOperationsTests
     {
-        private FileOperations fileOperations;
+        private readonly FileOperations fileOperations;
 
         public DiaSessionOperationsTests()
         {

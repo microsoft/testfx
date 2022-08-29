@@ -37,14 +37,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// <summary>
         /// Determines whether child-appdomain needs to be created based on DisableAppDomain Flag set in runsettings
         /// </summary>
-        private bool isAppDomainCreationDisabled;
+        private readonly bool isAppDomainCreationDisabled;
 
-        private string sourceFileName;
-        private IRunSettings runSettings;
-        private IFrameworkHandle frameworkHandle;
+        private readonly string sourceFileName;
+        private readonly IRunSettings runSettings;
+        private readonly IFrameworkHandle frameworkHandle;
 
         private string currentDirectory = null;
-        private IAppDomain appDomain;
+        private readonly IAppDomain appDomain;
 
         private string targetFrameworkVersion;
 

@@ -24,9 +24,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
     {
         #region Service Utility Variables
 
-        private DeploymentItemUtility deploymentItemUtility;
-        private DeploymentUtility deploymentUtility;
-        private FileUtility fileUtility;
+        private readonly DeploymentItemUtility deploymentItemUtility;
+        private readonly DeploymentUtility deploymentUtility;
+        private readonly FileUtility fileUtility;
         private MSTestAdapterSettings adapterSettings;
 
         #endregion

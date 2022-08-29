@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution
         /// <summary>
         /// Dictionary for test run parameters
         /// </summary>
-        private IDictionary<string, object> sessionParameters;
+        private readonly IDictionary<string, object> sessionParameters;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Justification = "Need to over-write the keys in dictionary.")]
         public TestExecutionManager()

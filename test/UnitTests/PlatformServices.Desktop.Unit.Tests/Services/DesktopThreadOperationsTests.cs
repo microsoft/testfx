@@ -19,7 +19,7 @@ namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services
     [TestClass]
     public class DesktopThreadOperationsTests
     {
-        private ThreadOperations asyncOperations;
+        private readonly ThreadOperations asyncOperations;
 
         public DesktopThreadOperationsTests()
         {
