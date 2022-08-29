@@ -14,8 +14,8 @@
       Supported platforms:
       - .NET 4.6.2+
       - .NET Core 3.1+ (Universal Windows Apps 10+)
-      - .NET 5.0
-      - .NET 5.0 Windows.18362+
+      - .NET 6.0
+      - .NET 6.0 Windows.18362+
       - ASP.NET Core 1.0+
 
       To discover and execute tests install MSTest.TestAdapter.

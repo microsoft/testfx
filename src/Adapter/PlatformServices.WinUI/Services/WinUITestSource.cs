@@ -95,7 +95,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
                             && !platformAssemblies.Contains(fileName.ToUpperInvariant())
                             && !systemAssemblies.Contains(fileName.ToUpperInvariant()))
                     {
-                        // WinUI Desktop uses .net 5, which builds both a .dll and an .exe.
+                        // WinUI Desktop uses .net 6, which builds both a .dll and an .exe.
                         // The manifest will provide the .exe, but the tests are inside the .dll, so we replace the name here.
                         newSources.Add(Path.Combine(appxSourceDirectory, Path.ChangeExtension(fileName, Constants.DllExtension)));
                     }
