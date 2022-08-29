@@ -78,9 +78,9 @@
     <!-- uap10.0 -->
     <file src="Build\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />
     <file src="Build\Universal\MSTest.TestAdapter.targets" target="build\uap10.0\MSTest.TestAdapter.targets" />
-    <file src="PlatformServices.Universal\uap10.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\uap10.0\" />
-    <file src="PlatformServices.Universal\uap10.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="build\uap10.0\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\uap10.0\" target="build\uap10.0\" />
+    <file src="PlatformServices.Universal\uap10.0.10240\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\uap10.0\" />
+    <file src="PlatformServices.Universal\uap10.0.10240\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="build\uap10.0\" />
 
     <!-- net5.0 -->
     <file src="Build\Net5\MSTest.TestAdapter.props" target="build\net5.0\MSTest.TestAdapter.props" />
