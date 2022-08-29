@@ -1,40 +1,39 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using System;
+
+/// <summary>
+/// The test property attribute.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+public class TestPropertyAttribute : Attribute
 {
-    using System;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestPropertyAttribute"/> class.
+    /// </summary>
+    /// <param name="name">
+    /// The name.
+    /// </param>
+    /// <param name="value">
+    /// The value.
+    /// </param>
+    public TestPropertyAttribute(string name, string value)
+    {
+        // NOTE : DONT THROW EXCEPTIONS FROM HERE IT WILL CRASH GetCustomAttributes() call
+        this.Name = name;
+        this.Value = value;
+    }
 
     /// <summary>
-    /// The test property attribute.
+    /// Gets the name.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class TestPropertyAttribute : Attribute
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TestPropertyAttribute"/> class.
-        /// </summary>
-        /// <param name="name">
-        /// The name.
-        /// </param>
-        /// <param name="value">
-        /// The value.
-        /// </param>
-        public TestPropertyAttribute(string name, string value)
-        {
-            // NOTE : DONT THROW EXCEPTIONS FROM HERE IT WILL CRASH GetCustomAttributes() call
-            this.Name = name;
-            this.Value = value;
-        }
+    public string Name { get; }
 
-        /// <summary>
-        /// Gets the name.
-        /// </summary>
-        public string Name { get; }
-
-        /// <summary>
-        /// Gets the value.
-        /// </summary>
-        public string Value { get; }
-    }
+    /// <summary>
+    /// Gets the value.
+    /// </summary>
+    public string Value { get; }
 }

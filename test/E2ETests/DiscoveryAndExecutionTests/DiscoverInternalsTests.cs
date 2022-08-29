@@ -3,68 +3,67 @@
 
 using System.Linq;
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests
+namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+
+using System.IO;
+using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class DiscoverInternalsTests : CLITestBase
 {
-    using System.IO;
-    using Microsoft.MSTestV2.CLIAutomation;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+    private const string TestAssembly = "DiscoverInternalsProject.dll";
 
-    [TestClass]
-    public class DiscoverInternalsTests : CLITestBase
+    [TestMethod]
+    public void InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
     {
-        private const string TestAssembly = "DiscoverInternalsProject.dll";
+        // Arrange
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
 
-        [TestMethod]
-        public void InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
-        {
-            // Arrange
-            var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        // Act
+        var testCases = DiscoverTests(assemblyPath);
+        var testResults = RunTests(assemblyPath, testCases);
 
-            // Act
-            var testCases = DiscoverTests(assemblyPath);
-            var testResults = RunTests(assemblyPath, testCases);
+        // Assert
+        Assert.That.AtLeastTestsDiscovered(
+            testCases,
+            "TopLevelInternalClass_TestMethod1",
+            "NestedInternalClass_TestMethod1"
+        );
+    }
 
-            // Assert
-            Assert.That.AtLeastTestsDiscovered(
-                testCases,
-                "TopLevelInternalClass_TestMethod1",
-                "NestedInternalClass_TestMethod1"
-            );
-        }
+    [TestMethod]
+    public void AnInternalTestClassDerivedFromAPublicAbstractGenericBaseClassForAnInternalTypeIsDiscovered()
+    {
+        // Arrange
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
 
-        [TestMethod]
-        public void AnInternalTestClassDerivedFromAPublicAbstractGenericBaseClassForAnInternalTypeIsDiscovered()
-        {
-            // Arrange
-            var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        // Act
+        var testCases = DiscoverTests(assemblyPath);
 
-            // Act
-            var testCases = DiscoverTests(assemblyPath);
+        // Assert
+        Assert.That.AtLeastTestsDiscovered(
+            testCases,
+            "EqualityIsCaseInsensitive"
+        );
+    }
 
-            // Assert
-            Assert.That.AtLeastTestsDiscovered(
-                testCases,
-                "EqualityIsCaseInsensitive"
-            );
-        }
+    [TestMethod]
+    public void AnInternalTypeCanBeUsedInADynamicDataTestMethod()
+    {
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
 
-        [TestMethod]
-        public void AnInternalTypeCanBeUsedInADynamicDataTestMethod()
-        {
-            var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        // Act
+        var testCases = DiscoverTests(assemblyPath);
 
-            // Act
-            var testCases = DiscoverTests(assemblyPath);
+        var targetTestCases = testCases.Where(t => t.DisplayName == "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)");
 
-            var targetTestCases = testCases.Where(t => t.DisplayName == "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)");
+        var testResults = RunTests(assemblyPath, targetTestCases);
 
-            var testResults = RunTests(assemblyPath, targetTestCases);
-
-            // Assert
-            Assert.That.TestsPassed(
-                testResults,
-                "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)"
-            );
-        }
+        // Assert
+        Assert.That.TestsPassed(
+            testResults,
+            "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)"
+        );
     }
 }

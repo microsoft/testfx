@@ -1,38 +1,37 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using System.Configuration;
+
+/// <summary>
+/// Support for configuration settings for Tests.
+/// </summary>
+public static class TestConfiguration
 {
-    using System.Configuration;
+    private static TestConfigurationSection configurationSection = LoadConfiguration();
 
     /// <summary>
-    /// Support for configuration settings for Tests.
+    /// Gets the configuration section for tests.
     /// </summary>
-    public static class TestConfiguration
+    public static TestConfigurationSection ConfigurationSection => configurationSection;
+
+    private static TestConfigurationSection LoadConfiguration()
     {
-        private static TestConfigurationSection configurationSection = LoadConfiguration();
+        TestConfigurationSection configSection =
+            (TestConfigurationSection)ConfigurationManager.GetSection(ConfigurationNames.SectionName);
 
-        /// <summary>
-        /// Gets the configuration section for tests.
-        /// </summary>
-        public static TestConfigurationSection ConfigurationSection => configurationSection;
+        // If could not find RTM section, try Beta2 section name.
+        configSection ??= (TestConfigurationSection)ConfigurationManager.GetSection(ConfigurationNames.Beta2SectionName);
 
-        private static TestConfigurationSection LoadConfiguration()
+        if (configSection == null)
         {
-            TestConfigurationSection configSection =
-                (TestConfigurationSection)ConfigurationManager.GetSection(ConfigurationNames.SectionName);
-
-            // If could not find RTM section, try Beta2 section name.
-            configSection ??= (TestConfigurationSection)ConfigurationManager.GetSection(ConfigurationNames.Beta2SectionName);
-
-            if (configSection == null)
-            {
-                return new TestConfigurationSection();
-            }
-            else
-            {
-                return configSection;
-            }
+            return new TestConfigurationSection();
+        }
+        else
+        {
+            return configSection;
         }
     }
 }

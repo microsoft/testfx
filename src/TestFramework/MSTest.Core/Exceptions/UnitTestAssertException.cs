@@ -1,42 +1,41 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using System;
+
+/// <summary>
+/// Base class for Framework Exceptions.
+/// </summary>
+#if !NETSTANDARD1_4
+[Serializable]
+#endif
+public abstract partial class UnitTestAssertException : Exception
 {
-    using System;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnitTestAssertException"/> class.
+    /// </summary>
+    protected UnitTestAssertException()
+    {
+    }
 
     /// <summary>
-    /// Base class for Framework Exceptions.
+    /// Initializes a new instance of the <see cref="UnitTestAssertException"/> class.
     /// </summary>
-#if !NETSTANDARD1_4
-    [Serializable]
-#endif
-    public abstract partial class UnitTestAssertException : Exception
+    /// <param name="msg"> The message. </param>
+    /// <param name="ex"> The exception. </param>
+    protected UnitTestAssertException(string msg, Exception ex)
+        : base(msg, ex)
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UnitTestAssertException"/> class.
-        /// </summary>
-        protected UnitTestAssertException()
-        {
-        }
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UnitTestAssertException"/> class.
-        /// </summary>
-        /// <param name="msg"> The message. </param>
-        /// <param name="ex"> The exception. </param>
-        protected UnitTestAssertException(string msg, Exception ex)
-            : base(msg, ex)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UnitTestAssertException"/> class.
-        /// </summary>
-        /// <param name="msg"> The message. </param>
-        protected UnitTestAssertException(string msg)
-            : base(msg)
-        {
-        }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnitTestAssertException"/> class.
+    /// </summary>
+    /// <param name="msg"> The message. </param>
+    protected UnitTestAssertException(string msg)
+        : base(msg)
+    {
     }
 }
