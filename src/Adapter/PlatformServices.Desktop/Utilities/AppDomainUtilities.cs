@@ -55,10 +55,7 @@ internal static class AppDomainUtilities
         if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(Version45) > 0)
         {
             PropertyInfo pInfo = typeof(AppDomainSetup).GetProperty(PlatformServices.Constants.TargetFrameworkName);
-            if (pInfo != null)
-            {
-                pInfo.SetValue(setup, frameworkVersionString, null);
-            }
+            pInfo?.SetValue(setup, frameworkVersionString, null);
         }
     }
 

@@ -1239,10 +1239,7 @@ internal class TestableTestExecutionManager : TestExecutionManager
 
     internal override void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
     {
-        if (ExecuteTestsWrapper != null)
-        {
-            ExecuteTestsWrapper.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
-        }
+        ExecuteTestsWrapper?.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
     }
 
     internal override UnitTestDiscoverer GetUnitTestDiscoverer()
