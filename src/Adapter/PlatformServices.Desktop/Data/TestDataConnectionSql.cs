@@ -324,7 +324,7 @@ internal class TestDataConnectionSql : TestDataConnection
         int partCount = parts.Length;
         StringBuilder result = new();
 
-        Debug.Assert(partCount > 0 && partCount < 4, "partCount should be 1,2 or 3.");
+        Debug.Assert(partCount is > 0 and < 4, "partCount should be 1,2 or 3.");
 
         int currentPart = 0;
         if (partCount > 2)
@@ -838,8 +838,10 @@ internal class TestDataConnectionSql : TestDataConnection
         WriteDiagnostics("ReadTable: SQL Query: {0}", command.CommandText);
         dataAdapter.SelectCommand = command;
 
-        DataTable table = new();
-        table.Locale = CultureInfo.InvariantCulture;
+        DataTable table = new()
+        {
+            Locale = CultureInfo.InvariantCulture
+        };
         dataAdapter.Fill(table);
 
         table.TableName = tableName;    // Make table name in the data set the same as original table name.
@@ -877,15 +879,8 @@ internal class TestDataConnectionSql : TestDataConnection
 #pragma warning restore SA1202 // Elements must be ordered by access
     {
         // Ensure that we Dispose of all disposables...
-        if (_commandBuilder != null)
-        {
-            _commandBuilder.Dispose();
-        }
-
-        if (_connection != null)
-        {
-            _connection.Dispose();
-        }
+        _commandBuilder?.Dispose();
+        _connection?.Dispose();
 
         GC.SuppressFinalize(this);
     }

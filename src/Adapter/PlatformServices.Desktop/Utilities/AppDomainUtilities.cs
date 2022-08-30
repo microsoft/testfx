@@ -55,10 +55,7 @@ internal static class AppDomainUtilities
         if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(Version45) > 0)
         {
             PropertyInfo pInfo = typeof(AppDomainSetup).GetProperty(PlatformServices.Constants.TargetFrameworkName);
-            if (pInfo != null)
-            {
-                pInfo.SetValue(setup, frameworkVersionString, null);
-            }
+            pInfo?.SetValue(setup, frameworkVersionString, null);
         }
     }
 
@@ -75,9 +72,10 @@ internal static class AppDomainUtilities
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
     internal static string GetTargetFrameworkVersionString(string testSourcePath)
     {
-        AppDomainSetup appDomainSetup = new();
-
-        appDomainSetup.LoaderOptimization = LoaderOptimization.MultiDomainHost;
+        AppDomainSetup appDomainSetup = new()
+        {
+            LoaderOptimization = LoaderOptimization.MultiDomainHost
+        };
 
         AppDomainUtilities.SetConfigurationFile(appDomainSetup, new DeploymentUtility().GetConfigFile(testSourcePath));
 
@@ -97,8 +95,11 @@ internal static class AppDomainUtilities
                 // IMetaDataImport needs COM registration which is not a guarantee in Dev15.
                 var assemblyResolverType = typeof(AssemblyResolver);
 
-                var resolutionPaths = new List<string> { Path.GetDirectoryName(typeof(TestCase).Assembly.Location) };
-                resolutionPaths.Add(Path.GetDirectoryName(testSourcePath));
+                var resolutionPaths = new List<string>
+                {
+                    Path.GetDirectoryName(typeof(TestCase).Assembly.Location),
+                    Path.GetDirectoryName(testSourcePath)
+                };
 
                 AppDomainUtilities.CreateInstance(
                     appDomain,

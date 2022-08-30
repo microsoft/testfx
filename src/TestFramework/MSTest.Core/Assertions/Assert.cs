@@ -170,7 +170,7 @@ public sealed class Assert
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition,
         [CallerArgumentExpression("condition")] string message = null, params object[] parameters)
     {
-        if (condition == false || condition == null)
+        if (condition is false or null)
         {
             ThrowAssertFailed("Assert.IsTrue", BuildUserMessage(message, parameters));
         }
@@ -294,7 +294,7 @@ public sealed class Assert
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition,
         [CallerArgumentExpression("condition")] string message = null, params object[] parameters)
     {
-        if (condition == true || condition == null)
+        if (condition is true or null)
         {
             ThrowAssertFailed("Assert.IsFalse", BuildUserMessage(message, parameters));
         }

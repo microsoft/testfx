@@ -79,7 +79,7 @@ csharp_style_expression_bodied_local_functions = false:silent
 csharp_style_expression_bodied_methods = false:silent
 csharp_style_expression_bodied_operators = false:silent
 csharp_style_expression_bodied_properties = true:silent
-csharp_style_implicit_object_creation_when_type_is_apparent = true:suggestion
+csharp_style_implicit_object_creation_when_type_is_apparent = true:warning
 csharp_style_inlined_variable_declaration = true:suggestion
 csharp_style_namespace_declarations = file_scoped:silent
 csharp_style_namespace_declarations = file_scoped:warning
@@ -87,7 +87,7 @@ csharp_style_namespace_declarations = file_scoped:warning
 csharp_style_prefer_index_operator = true:suggestion
 csharp_style_prefer_local_over_anonymous_function = true:suggestion
 csharp_style_prefer_method_group_conversion = true:silent
-csharp_style_prefer_null_check_over_type_check = true:suggestion
+csharp_style_prefer_null_check_over_type_check = true:warning
 csharp_style_prefer_range_operator = true:suggestion
 csharp_style_prefer_top_level_statements = true:silent
 csharp_style_prefer_tuple_swap = true:suggestion
@@ -99,15 +99,13 @@ csharp_using_directive_placement = outside_namespace:silent
 dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_collection_initializer = true:suggestion
-dotnet_style_collection_initializer = true:suggestion
+dotnet_style_collection_initializer = true:warning
 dotnet_style_explicit_tuple_names = true:suggestion
 dotnet_style_explicit_tuple_names = true:suggestion
 dotnet_style_namespace_match_folder = true:suggestion
 dotnet_style_namespace_match_folder = true:suggestion
-dotnet_style_null_propagation = true:suggestion
-dotnet_style_null_propagation = true:suggestion
 dotnet_style_object_initializer = true:suggestion
-dotnet_style_object_initializer = true:suggestion
+dotnet_style_object_initializer = true:warning
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 dotnet_style_prefer_auto_properties = true:silent
@@ -132,6 +130,25 @@ dotnet_style_qualification_for_event = false:warning
 dotnet_style_qualification_for_field = false:warning
 dotnet_style_qualification_for_method = false:warning
 dotnet_style_qualification_for_property = false:warning
+
+# IDE0019: Use pattern matching
+dotnet_diagnostic.IDE0019.severity = warning
+
+# IDE0078: Use pattern matching
+dotnet_diagnostic.IDE0078.severity = warning
+
+# IDE0054: Use compound assignment
+dotnet_diagnostic.IDE0054.severity = warning
+
+# IDE0074: Use coalesce compound assignment
+dotnet_diagnostic.IDE0074.severity = warning
+
+# IDE0031: Use null propagation
+dotnet_diagnostic.IDE0031.severity = warning
+dotnet_style_null_propagation = true
+
+# IDE0034: Simplify 'default' expression
+dotnet_diagnostic.IDE0034.severity = warning
 
 #### Naming styles ####
 
@@ -212,3 +229,15 @@ dotnet_naming_style.s_underscore_camel_case.required_prefix = s_
 dotnet_naming_style.s_underscore_camel_case.required_suffix =
 dotnet_naming_style.s_underscore_camel_case.word_separator =
 dotnet_naming_style.s_underscore_camel_case.capitalization = camel_case
+
+# IDE0090: Use 'new(...)'
+dotnet_diagnostic.IDE0090.severity = warning
+
+# IDE0150: Prefer 'null' check over type check
+dotnet_diagnostic.IDE0150.severity = warning
+
+# IDE0028: Simplify collection initialization
+dotnet_diagnostic.IDE0028.severity = warning
+
+# IDE0017: Simplify object initialization
+dotnet_diagnostic.IDE0017.severity = warning

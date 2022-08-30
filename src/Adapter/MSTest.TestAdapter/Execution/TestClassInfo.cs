@@ -390,8 +390,7 @@ public class TestClassInfo
                         string errorMessage;
 
                         // special case AssertFailedException to trim off part of the stack trace
-                        if (realException is AssertFailedException ||
-                            realException is AssertInconclusiveException)
+                        if (realException is AssertFailedException or AssertInconclusiveException)
                         {
                             errorMessage = realException.Message;
                         }

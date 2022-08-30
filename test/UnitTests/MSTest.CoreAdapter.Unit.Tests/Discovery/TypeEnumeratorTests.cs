@@ -592,7 +592,7 @@ public class TypeEnumeratorTests
 
     private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName)
     {
-        return new TypeEnumerator(
+        return new(
             type,
             assemblyName,
             _mockReflectHelper.Object,

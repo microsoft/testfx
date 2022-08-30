@@ -28,31 +28,34 @@ public class AssemblyResolverTests
         string path = @"C:\unitTesting";
         List<string> searchDirectories = new();
 
-        List<string> resultDirectories = new();
-        resultDirectories.Add(@"C:\unitTesting\a");
-        resultDirectories.Add(@"C:\unitTesting\a\c");
-        resultDirectories.Add(@"C:\unitTesting\a\c\d");
-        resultDirectories.Add(@"C:\unitTesting\b");
-
-        TestableAssemblyResolver assemblyResolver = new(new List<string> { @"c:\dummy" });
-
-        assemblyResolver.DoesDirectoryExistSetter = (str) => true;
-        assemblyResolver.GetDirectoriesSetter = (str) =>
+        List<string> resultDirectories = new()
         {
-            if (string.Compare(path, str, StringComparison.OrdinalIgnoreCase) == 0)
-            {
-                return new string[] { @"C:\unitTesting\a", @"C:\unitTesting\b" };
-            }
-            else if (string.Compare(@"C:\unitTesting\a", str, StringComparison.OrdinalIgnoreCase) == 0)
-            {
-                return new string[] { @"C:\unitTesting\a\c" };
-            }
-            else if (string.Compare(@"C:\unitTesting\a\c", str, StringComparison.OrdinalIgnoreCase) == 0)
-            {
-                return new string[] { @"C:\unitTesting\a\c\d" };
-            }
+            @"C:\unitTesting\a",
+            @"C:\unitTesting\a\c",
+            @"C:\unitTesting\a\c\d",
+            @"C:\unitTesting\b"
+        };
 
-            return new List<string>().ToArray();
+        TestableAssemblyResolver assemblyResolver = new(new List<string> { @"c:\dummy" })
+        {
+            DoesDirectoryExistSetter = (str) => true,
+            GetDirectoriesSetter = (str) =>
+            {
+                if (string.Compare(path, str, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    return new string[] { @"C:\unitTesting\a", @"C:\unitTesting\b" };
+                }
+                else if (string.Compare(@"C:\unitTesting\a", str, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    return new string[] { @"C:\unitTesting\a\c" };
+                }
+                else if (string.Compare(@"C:\unitTesting\a\c", str, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    return new string[] { @"C:\unitTesting\a\c\d" };
+                }
+
+                return new List<string>().ToArray();
+            }
         };
 
         // Act.
@@ -69,12 +72,16 @@ public class AssemblyResolverTests
     {
         int count = 0;
 
-        List<RecursiveDirectoryPath> recursiveDirectoryPath = new();
-        recursiveDirectoryPath.Add(new RecursiveDirectoryPath(@"C:\unitTesting", true));
-        recursiveDirectoryPath.Add(new RecursiveDirectoryPath(@"C:\FunctionalTesting", false));
+        List<RecursiveDirectoryPath> recursiveDirectoryPath = new()
+        {
+            new RecursiveDirectoryPath(@"C:\unitTesting", true),
+            new RecursiveDirectoryPath(@"C:\FunctionalTesting", false)
+        };
 
-        List<string> dummyDirectories = new();
-        dummyDirectories.Add(@"c:\dummy");
+        List<string> dummyDirectories = new()
+        {
+            @"c:\dummy"
+        };
         TestableAssemblyResolver assemblyResolver = new(dummyDirectories);
 
         // Adding search directory with recursive property true/false

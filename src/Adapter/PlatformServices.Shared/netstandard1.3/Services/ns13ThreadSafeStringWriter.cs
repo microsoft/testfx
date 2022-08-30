@@ -15,7 +15,7 @@ using System.Threading;
 public class ThreadSafeStringWriter : StringWriter
 {
 #if DEBUG
-    private static readonly ThreadSafeStringBuilder AllOutput = new ThreadSafeStringBuilder();
+    private static readonly ThreadSafeStringBuilder AllOutput = new();
 #endif
     private static readonly AsyncLocal<Dictionary<string, ThreadSafeStringBuilder>> State = new();
 

@@ -8,7 +8,7 @@ namespace OutputTestProject;
 [TestClass]
 public class UnitTest2
 {
-    private static readonly Random Rng = new Random();
+    private static readonly Random Rng = new();
 
     public TestContext TestContext { get; set; }
 

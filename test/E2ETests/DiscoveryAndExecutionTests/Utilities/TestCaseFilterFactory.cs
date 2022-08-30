@@ -122,7 +122,7 @@ internal static class TestCaseFilterFactory
     private static void MergeExpression(Stack<Expression<Func<Func<string, object>, bool>>> exp, Operator op)
     {
         ValidateArg.NotNull(exp, nameof(exp));
-        if (op != Operator.And && op != Operator.Or)
+        if (op is not Operator.And and not Operator.Or)
         {
             throw new ArgumentException($"Unexpected operator: {op}", nameof(op));
         }
@@ -220,7 +220,7 @@ internal static class TestCaseFilterFactory
                     {
                         var op = conditionString[i + 1];
 
-                        if (op == '~' || op == '=')
+                        if (op is '~' or '=')
                         {
                             yield return token.ToString() + conditionString[++i];
                             continue;

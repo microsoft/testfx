@@ -86,7 +86,7 @@ internal sealed class XmlDataConnection : TestDataConnection
         // once for every table in it. Oh well. Reading XML is pretty quick
         // compared to other forms of data source
         DataSet ds = LoadDataSet(false);
-        return ds != null ? ds.Tables[tableName] : null;
+        return ds?.Tables[tableName];
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
@@ -95,8 +95,10 @@ internal sealed class XmlDataConnection : TestDataConnection
     {
         try
         {
-            DataSet dataSet = new();
-            dataSet.Locale = CultureInfo.CurrentCulture;
+            DataSet dataSet = new()
+            {
+                Locale = CultureInfo.CurrentCulture
+            };
             string path = FixPath(_fileName) ?? Path.GetFullPath(_fileName);
             if (schemaOnly)
             {
