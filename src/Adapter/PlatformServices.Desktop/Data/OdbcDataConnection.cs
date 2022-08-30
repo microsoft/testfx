@@ -13,7 +13,7 @@ using System.Diagnostics;
 /// </summary>
 internal sealed class OdbcDataConnection : TestDataConnectionSql
 {
-    private readonly bool isMSSql;
+    private readonly bool _isMSSql;
 
     public OdbcDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
         : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
@@ -21,7 +21,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
         // Need open connection to get Connection.Driver.
         Debug.Assert(IsOpen(), "The connection must be open!");
 
-        isMSSql = Connection != null && IsMSSql(Connection.Driver);
+        _isMSSql = Connection != null && IsMSSql(Connection.Driver);
     }
 
     public new OdbcCommandBuilder CommandBuilder
@@ -44,7 +44,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
 
     public override string GetDefaultSchema()
     {
-        if (isMSSql)
+        if (_isMSSql)
         {
             return GetDefaultSchemaMSSql();
         }

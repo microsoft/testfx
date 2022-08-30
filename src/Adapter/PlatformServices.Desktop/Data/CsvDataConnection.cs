@@ -24,13 +24,13 @@ internal sealed class CsvDataConnection : TestDataConnection
     private const string CsvConnectionTemplate = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Persist Security Info=False;Extended Properties=\"text;HDR=YES;FMT=Delimited\"";
     private const string CsvConnectionTemplate64 = "Provider=Microsoft.Ace.OLEDB.12.0;Data Source={0};Persist Security Info=False;Extended Properties=\"text;HDR=YES;FMT=Delimited\"";
 
-    private readonly string fileName;
+    private readonly string _fileName;
 
     public CsvDataConnection(string fileName, List<string> dataFolders)
         : base(dataFolders)
     {
         Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
-        this.fileName = fileName;
+        _fileName = fileName;
     }
 
     private string TableName
@@ -38,7 +38,7 @@ internal sealed class CsvDataConnection : TestDataConnection
         get
         {
             // Only one table based on the name of the file, with dots converted to # signs
-            return Path.GetFileName(fileName).Replace('.', '#');
+            return Path.GetFileName(_fileName).Replace('.', '#');
         }
     }
 
@@ -70,7 +70,7 @@ internal sealed class CsvDataConnection : TestDataConnection
         }
         catch (Exception exception)
         {
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for CSV data source " + fileName);
+            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for CSV data source " + _fileName);
         }
 
         return null;
@@ -85,7 +85,7 @@ internal sealed class CsvDataConnection : TestDataConnection
         WriteDiagnostics("Current Directory: {0}", Directory.GetCurrentDirectory());
 
         // We better work with a full path, if nothing else, errors become easier to report
-        string fullPath = FixPath(fileName) ?? Path.GetFullPath(fileName);
+        string fullPath = FixPath(_fileName) ?? Path.GetFullPath(_fileName);
 
         // We can map simplified CSVs to an OLEDB/Text connection, then proceed as normal
         using OleDbConnection connection = new();

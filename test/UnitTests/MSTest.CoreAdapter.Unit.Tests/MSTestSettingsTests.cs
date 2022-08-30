@@ -27,19 +27,19 @@ using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class MSTestSettingsTests
 {
-    private TestablePlatformServiceProvider testablePlatformServiceProvider;
-    private Mock<IDiscoveryContext> mockDiscoveryContext;
-    private Mock<IRunSettings> mockRunSettings;
-    private Mock<IMessageLogger> mockMessageLogger;
+    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private Mock<IDiscoveryContext> _mockDiscoveryContext;
+    private Mock<IRunSettings> _mockRunSettings;
+    private Mock<IMessageLogger> _mockMessageLogger;
 
     [TestInitialize]
     public void TestInit()
     {
-        testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        mockDiscoveryContext = new Mock<IDiscoveryContext>();
-        mockRunSettings = new Mock<IRunSettings>();
-        mockMessageLogger = new Mock<IMessageLogger>();
-        PlatformServiceProvider.Instance = testablePlatformServiceProvider;
+        _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+        _mockDiscoveryContext = new Mock<IDiscoveryContext>();
+        _mockRunSettings = new Mock<IRunSettings>();
+        _mockMessageLogger = new Mock<IMessageLogger>();
+        PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
     [TestCleanup]
@@ -537,9 +537,9 @@ public class MSTestSettingsTests
             @"<RunSettings>
                   </RunSettings>";
 
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         Assert.IsFalse(MSTestSettings.CurrentSettings.DisableParallelization);
     }
@@ -554,9 +554,9 @@ public class MSTestSettingsTests
                     </RunConfiguration>
                   </RunSettings>";
 
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         Assert.IsTrue(MSTestSettings.CurrentSettings.DisableParallelization);
     }
@@ -575,7 +575,7 @@ public class MSTestSettingsTests
                      </MSTest>
                    </RunSettings>";
 
-        testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+        _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
             {
                 if (actualReader != null)
@@ -586,7 +586,7 @@ public class MSTestSettingsTests
             });
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
-        testablePlatformServiceProvider.MockSettingsProvider.Verify(sp => sp.Load(It.IsAny<XmlReader>()), Times.Once);
+        _testablePlatformServiceProvider.MockSettingsProvider.Verify(sp => sp.Load(It.IsAny<XmlReader>()), Times.Once);
     }
 
     [TestMethod]
@@ -603,7 +603,7 @@ public class MSTestSettingsTests
         string expectedrunSettingxml = "<DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>";
         string observedxml = null;
 
-        testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+        _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
             {
                 if (actualReader != null)
@@ -632,7 +632,7 @@ public class MSTestSettingsTests
 
         bool dummyPlatformSpecificSetting = false;
 
-        testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+        _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader reader) =>
             {
                 if (reader != null)
@@ -688,7 +688,7 @@ public class MSTestSettingsTests
 
         bool dummyPlatformSpecificSetting = false;
 
-        testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+        _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader reader) =>
             {
                 if (reader != null)
@@ -742,7 +742,7 @@ public class MSTestSettingsTests
 
         var outOfScopeCall = false;
 
-        testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+        _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader reader) =>
             {
                 if (reader != null)
@@ -796,7 +796,7 @@ public class MSTestSettingsTests
 
         bool dummyPlatformSpecificSetting = false;
 
-        testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+        _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader reader) =>
             {
                 if (reader != null)
@@ -861,9 +861,9 @@ public class MSTestSettingsTests
                  </MSTest>
                </RunSettings>";
 
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         var adapterSettings = MSTestSettings.CurrentSettings;
         var adapterSettings2 = MSTestSettings.CurrentSettings;
@@ -922,7 +922,7 @@ public class MSTestSettingsTests
     [TestMethod]
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
     {
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         Assert.IsTrue(adapterSettings.CaptureDebugTraces);
@@ -934,8 +934,8 @@ public class MSTestSettingsTests
     [TestMethod]
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
-        mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        _mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         Assert.IsTrue(adapterSettings.CaptureDebugTraces);
@@ -954,9 +954,9 @@ public class MSTestSettingsTests
                  </FooUnit>
                </RunSettings>";
 
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         var adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -980,9 +980,9 @@ public class MSTestSettingsTests
                  </MSTest>
                </RunSettings>";
 
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         var adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1009,9 +1009,9 @@ public class MSTestSettingsTests
                  </MSTestV2>
                </RunSettings>";
 
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         var adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1041,9 +1041,9 @@ public class MSTestSettingsTests
                  </MSTest>
                </RunSettings>";
 
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         var adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1078,10 +1078,10 @@ public class MSTestSettingsTests
                </MSTest>
           </RunSettings>";
 
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
-        Assert.IsFalse(MSTestSettings.IsLegacyScenario(mockMessageLogger.Object));
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        Assert.IsFalse(MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
     }
 
     [TestMethod]
@@ -1093,10 +1093,10 @@ public class MSTestSettingsTests
                 <ForcedLegacyMode>true</ForcedLegacyMode> 
                </MSTest>
           </RunSettings>";
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
-        Assert.IsFalse(MSTestSettings.IsLegacyScenario(mockMessageLogger.Object));
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        Assert.IsFalse(MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
     }
 
     [TestMethod]
@@ -1108,10 +1108,10 @@ public class MSTestSettingsTests
                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile> 
                </MSTest>
           </RunSettings>";
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
-        Assert.IsTrue(MSTestSettings.IsLegacyScenario(mockMessageLogger.Object));
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        Assert.IsTrue(MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
     }
 
     [TestMethod]
@@ -1123,11 +1123,11 @@ public class MSTestSettingsTests
                 <SettingsFile>DummyPath\\vsmdiFile.vsmdi</SettingsFile> 
                </MSTest>
           </RunSettings>";
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
-        Assert.IsTrue(MSTestSettings.IsLegacyScenario(mockMessageLogger.Object));
-        mockMessageLogger.Verify(logger => logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning), Times.Once);
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        Assert.IsTrue(MSTestSettings.IsLegacyScenario(_mockMessageLogger.Object));
+        _mockMessageLogger.Verify(logger => logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning), Times.Once);
     }
 
     #endregion

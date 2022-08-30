@@ -34,7 +34,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <summary>
     /// Type cache
     /// </summary>
-    private readonly TypeCache typeCache = new(ReflectHelper);
+    private readonly TypeCache _typeCache = new(ReflectHelper);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AssemblyEnumerator"/> class.
@@ -260,7 +260,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "all");
         var testMethod = test.TestMethod;
         var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
-        var testMethodInfo = typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
+        var testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
         if (testMethodInfo == null)
         {
             return false;

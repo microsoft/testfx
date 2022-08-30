@@ -14,11 +14,11 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 internal class FileUtility
 {
-    private readonly AssemblyUtility assemblyUtility;
+    private readonly AssemblyUtility _assemblyUtility;
 
     public FileUtility()
     {
-        assemblyUtility = new AssemblyUtility();
+        _assemblyUtility = new AssemblyUtility();
     }
 
     public virtual void CreateDirectoryIfNotExists(string directory)
@@ -140,7 +140,7 @@ internal class FileUtility
         Debug.Assert(!string.IsNullOrEmpty(sourceFile), "sourceFile should not be null or empty.");
         Debug.Assert(destToSource != null, "destToSource should not be null.");
 
-        if (!assemblyUtility.IsAssemblyExtension(Path.GetExtension(destinationFile)))
+        if (!_assemblyUtility.IsAssemblyExtension(Path.GetExtension(destinationFile)))
         {
             return null;
         }

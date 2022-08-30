@@ -19,14 +19,14 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 /// </remarks>
 public class ReflectionOperations : IReflectionOperations
 {
-    private readonly ReflectionUtility reflectionUtility;
+    private readonly ReflectionUtility _reflectionUtility;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ReflectionOperations"/> class.
     /// </summary>
     public ReflectionOperations()
     {
-        reflectionUtility = new ReflectionUtility();
+        _reflectionUtility = new ReflectionUtility();
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ public class ReflectionOperations : IReflectionOperations
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
     public object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
     {
-        return reflectionUtility.GetCustomAttributes(memberInfo, inherit);
+        return _reflectionUtility.GetCustomAttributes(memberInfo, inherit);
     }
 
     /// <summary>
@@ -49,7 +49,7 @@ public class ReflectionOperations : IReflectionOperations
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
     public object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
     {
-        return reflectionUtility.GetCustomAttributes(memberInfo, type, inherit);
+        return _reflectionUtility.GetCustomAttributes(memberInfo, type, inherit);
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ public class ReflectionOperations : IReflectionOperations
     /// <returns> The list of attributes of the given type on the member. Empty list if none found. </returns>
     public object[] GetCustomAttributes(Assembly assembly, Type type)
     {
-        return reflectionUtility.GetCustomAttributes(assembly, type);
+        return _reflectionUtility.GetCustomAttributes(assembly, type);
     }
 }
 

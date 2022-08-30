@@ -24,18 +24,18 @@ using TestPropertyV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting
 [TestClass]
 public class ReflectionUtilityTests
 {
-    private readonly ReflectionUtility reflectionUtility;
-    private readonly Assembly testAsset;
+    private readonly ReflectionUtility _reflectionUtility;
+    private readonly Assembly _testAsset;
 
     /// <summary>
     /// Dictionary of Assemblies discovered to date. Must be locked as it may
     /// be accessed in a multi-threaded context.
     /// </summary>
-    private readonly Dictionary<string, Assembly> resolvedAssemblies = new();
+    private readonly Dictionary<string, Assembly> _resolvedAssemblies = new();
 
     public ReflectionUtilityTests()
     {
-        reflectionUtility = new ReflectionUtility();
+        _reflectionUtility = new ReflectionUtility();
 
         var currentAssemblyDirectory = new FileInfo(typeof(ReflectionUtilityTests).Assembly.Location).Directory;
         var testAssetPath =
@@ -43,7 +43,7 @@ public class ReflectionUtilityTests
                 currentAssemblyDirectory.Parent.Parent.Parent.FullName,
                 "TestAssets",
                 currentAssemblyDirectory.Name /* TFM (e.g. net462) */);
-        testAsset = Assembly.ReflectionOnlyLoadFrom(Path.Combine(testAssetPath, "TestProjectForDiscovery.dll"));
+        _testAsset = Assembly.ReflectionOnlyLoadFrom(Path.Combine(testAssetPath, "TestProjectForDiscovery.dll"));
 
         // This is needed for System assemblies.
         AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
@@ -52,9 +52,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetCustomAttributesShouldReturnAllAttributes()
     {
-        var minfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
+        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = reflectionUtility.GetCustomAttributes(minfo, false);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -66,9 +66,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var minfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
+        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = reflectionUtility.GetCustomAttributes(minfo, false);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -80,9 +80,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
-        var minfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
+        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = reflectionUtility.GetCustomAttributes(minfo, true);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(3, attribs.Length);
@@ -95,9 +95,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
     {
-        var tinfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
+        var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
 
-        var attribs = reflectionUtility.GetCustomAttributes(tinfo, false);
+        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -109,9 +109,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var tinfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = reflectionUtility.GetCustomAttributes(tinfo, false);
+        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -123,9 +123,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
-        var minfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = reflectionUtility.GetCustomAttributes(minfo, true);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -137,9 +137,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetSpecificCustomAttributesShouldReturnAllAttributes()
     {
-        var minfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
+        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), false);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -151,9 +151,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var minfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
+        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), false);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -166,9 +166,9 @@ public class ReflectionUtilityTests
     public void GetSpecificCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
         var minfo =
-            testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
+            _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), true);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -180,9 +180,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()
     {
-        var minfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
+        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
 
-        var attribs = reflectionUtility.GetCustomAttributes(minfo, null, true);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, null, true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(3, attribs.Length);
@@ -194,9 +194,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()
     {
-        var minfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
+        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
 
-        var attribs = reflectionUtility.GetCustomAttributes(minfo, typeof(TestPropertyV2), true);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(TestPropertyV2), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -208,9 +208,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetSpecificCustomAttributesShouldReturnArrayAttributesAsWell()
     {
-        var minfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyTestMethod2");
+        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyTestMethod2");
 
-        var attribs = reflectionUtility.GetCustomAttributes(minfo, typeof(CategoryArrayAttribute), true);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(CategoryArrayAttribute), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -222,9 +222,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributes()
     {
-        var tinfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
+        var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
 
-        var attribs = reflectionUtility.GetCustomAttributes(tinfo, typeof(TestCategoryV2), false);
+        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, typeof(TestCategoryV2), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -236,9 +236,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var tinfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = reflectionUtility.GetCustomAttributes(tinfo, typeof(TestCategoryV2), false);
+        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, typeof(TestCategoryV2), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -250,9 +250,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
-        var minfo = testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), true);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -264,9 +264,9 @@ public class ReflectionUtilityTests
     [TestMethod]
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
     {
-        var asm = testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").Assembly;
+        var asm = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").Assembly;
 
-        var attribs = reflectionUtility.GetCustomAttributes(asm, typeof(TestCategoryV2));
+        var attribs = _reflectionUtility.GetCustomAttributes(asm, typeof(TestCategoryV2));
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -281,13 +281,13 @@ public class ReflectionUtilityTests
 
         // Put it in the resolved assembly cache so that if the Load call below
         // triggers another assembly resolution, then we don't end up in stack overflow.
-        resolvedAssemblies[assemblyNameToLoad] = null;
+        _resolvedAssemblies[assemblyNameToLoad] = null;
 
         var assembly = Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
 
         if (assembly != null)
         {
-            resolvedAssemblies[assemblyNameToLoad] = assembly;
+            _resolvedAssemblies[assemblyNameToLoad] = assembly;
             return assembly;
         }
 

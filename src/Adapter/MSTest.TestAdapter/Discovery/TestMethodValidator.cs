@@ -17,8 +17,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 internal class TestMethodValidator
 {
-    private readonly ReflectHelper reflectHelper;
-    private readonly bool discoverInternals;
+    private readonly ReflectHelper _reflectHelper;
+    private readonly bool _discoverInternals;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodValidator"/> class.
@@ -37,8 +37,8 @@ internal class TestMethodValidator
     /// which are declared public.</param>
     internal TestMethodValidator(ReflectHelper reflectHelper, bool discoverInternals)
     {
-        this.reflectHelper = reflectHelper;
-        this.discoverInternals = discoverInternals;
+        _reflectHelper = reflectHelper;
+        _discoverInternals = discoverInternals;
     }
 
     /// <summary>
@@ -50,8 +50,8 @@ internal class TestMethodValidator
     /// <returns> Return true if a method is a valid test method. </returns>
     internal virtual bool IsValidTestMethod(MethodInfo testMethodInfo, Type type, ICollection<string> warnings)
     {
-        if (!reflectHelper.IsAttributeDefined(testMethodInfo, typeof(TestMethodAttribute), false)
-            && !reflectHelper.HasAttributeDerivedFrom(testMethodInfo, typeof(TestMethodAttribute), false))
+        if (!_reflectHelper.IsAttributeDefined(testMethodInfo, typeof(TestMethodAttribute), false)
+            && !_reflectHelper.HasAttributeDerivedFrom(testMethodInfo, typeof(TestMethodAttribute), false))
         {
             return false;
         }
@@ -65,7 +65,7 @@ internal class TestMethodValidator
         }
 
         var isAccessible = testMethodInfo.IsPublic
-            || (discoverInternals && testMethodInfo.IsAssembly);
+            || (_discoverInternals && testMethodInfo.IsAssembly);
 
         // Todo: Decide whether parameter count matters.
         // The isGenericMethod check below id to verify that there are no closed generic methods slipping through.

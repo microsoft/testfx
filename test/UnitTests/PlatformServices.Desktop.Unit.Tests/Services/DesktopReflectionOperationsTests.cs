@@ -20,11 +20,11 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class DesktopReflectionOperationsTests
 {
-    private readonly ReflectionOperations reflectionOperations;
+    private readonly ReflectionOperations _reflectionOperations;
 
     public DesktopReflectionOperationsTests()
     {
-        reflectionOperations = new ReflectionOperations();
+        _reflectionOperations = new ReflectionOperations();
     }
 
     [TestMethod]
@@ -32,7 +32,7 @@ public class DesktopReflectionOperationsTests
     {
         var minfo = typeof(ReflectionUtilityTests.DummyBaseTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = reflectionOperations.GetCustomAttributes(minfo, false);
+        var attribs = _reflectionOperations.GetCustomAttributes(minfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -46,7 +46,7 @@ public class DesktopReflectionOperationsTests
     {
         var tinfo = typeof(ReflectionUtilityTests.DummyBaseTestClass).GetTypeInfo();
 
-        var attribs = reflectionOperations.GetCustomAttributes(tinfo, false);
+        var attribs = _reflectionOperations.GetCustomAttributes(tinfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -60,7 +60,7 @@ public class DesktopReflectionOperationsTests
     {
         var asm = typeof(ReflectionUtilityTests.DummyTestClass).Assembly;
 
-        var attribs = reflectionOperations.GetCustomAttributes(asm, typeof(ReflectionUtilityTests.DummyAAttribute));
+        var attribs = _reflectionOperations.GetCustomAttributes(asm, typeof(ReflectionUtilityTests.DummyAAttribute));
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);

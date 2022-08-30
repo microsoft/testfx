@@ -23,7 +23,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Contains the memberInfo Vs the name/type of the attributes defined on that member. (FYI: - MemberInfo denotes properties, fields, methods, events)
     /// </summary>
-    private readonly Dictionary<MemberInfo, Dictionary<string, object>> attributeCache = new();
+    private readonly Dictionary<MemberInfo, Dictionary<string, object>> _attributeCache = new();
 
     internal ReflectHelper()
     {
@@ -689,9 +689,9 @@ internal class ReflectHelper : MarshalByRefObject
         // If the information is cached, then use it otherwise populate the cache using
         // the reflection APIs.
         Dictionary<string, object> attributes;
-        lock (attributeCache)
+        lock (_attributeCache)
         {
-            if (!attributeCache.TryGetValue(memberInfo, out attributes))
+            if (!_attributeCache.TryGetValue(memberInfo, out attributes))
             {
                 // Populate the cache
                 attributes = new Dictionary<string, object>();
@@ -731,7 +731,7 @@ internal class ReflectHelper : MarshalByRefObject
                     attributes[attrType.AssemblyQualifiedName] = customAttribute;
                 }
 
-                attributeCache.Add(memberInfo, attributes);
+                _attributeCache.Add(memberInfo, attributes);
             }
         }
 

@@ -18,7 +18,7 @@ using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting
 [TestFrameworkV1.TestClass]
 public class GenericParameterHelperTests
 {
-    private TestFrameworkV2.GenericParameterHelper sut = null;
+    private TestFrameworkV2.GenericParameterHelper _sut = null;
 
     /// <summary>
     /// Test initialization function.
@@ -26,7 +26,7 @@ public class GenericParameterHelperTests
     [TestFrameworkV1.TestInitialize]
     public void TestInitialize()
     {
-        sut = new TestFrameworkV2.GenericParameterHelper(10);
+        _sut = new TestFrameworkV2.GenericParameterHelper(10);
     }
 
     [TestFrameworkV1.TestMethod]
@@ -43,7 +43,7 @@ public class GenericParameterHelperTests
     {
         TestFrameworkV2.GenericParameterHelper objectToCompare = new(10);
 
-        TestFrameworkV1.Assert.IsTrue(sut.Equals(objectToCompare));
+        TestFrameworkV1.Assert.IsTrue(_sut.Equals(objectToCompare));
     }
 
     [TestFrameworkV1.TestMethod]
@@ -51,7 +51,7 @@ public class GenericParameterHelperTests
     {
         TestFrameworkV2.GenericParameterHelper objectToCompare = new(5);
 
-        TestFrameworkV1.Assert.IsFalse(sut.Equals(objectToCompare));
+        TestFrameworkV1.Assert.IsFalse(_sut.Equals(objectToCompare));
     }
 
     [TestFrameworkV1.TestMethod]
@@ -59,7 +59,7 @@ public class GenericParameterHelperTests
     {
         TestFrameworkV2.GenericParameterHelper objectToCompare = new(10);
 
-        TestFrameworkV1.Assert.AreEqual(0, sut.CompareTo(objectToCompare));
+        TestFrameworkV1.Assert.AreEqual(0, _sut.CompareTo(objectToCompare));
     }
 
     [TestFrameworkV1.TestMethod]
@@ -67,7 +67,7 @@ public class GenericParameterHelperTests
     {
         int objectToCompare = 5;
 
-        void a() => sut.CompareTo(objectToCompare);
+        void a() => _sut.CompareTo(objectToCompare);
 
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(NotSupportedException));
     }
@@ -75,12 +75,12 @@ public class GenericParameterHelperTests
     [TestFrameworkV1.TestMethod]
     public void GenericParameterHelperShouldImplementIEnumerator()
     {
-        sut = new TestFrameworkV2.GenericParameterHelper(15);
+        _sut = new TestFrameworkV2.GenericParameterHelper(15);
 
         int expectedLenghtOfList = 5;  // (15%10)
         int result = 0;
 
-        foreach (var x in sut)
+        foreach (var x in _sut)
         {
             result++;
         }

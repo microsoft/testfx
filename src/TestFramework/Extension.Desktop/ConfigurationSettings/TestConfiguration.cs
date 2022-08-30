@@ -10,12 +10,10 @@ using System.Configuration;
 /// </summary>
 public static class TestConfiguration
 {
-    private static TestConfigurationSection configurationSection = LoadConfiguration();
-
     /// <summary>
     /// Gets the configuration section for tests.
     /// </summary>
-    public static TestConfigurationSection ConfigurationSection => configurationSection;
+    public static TestConfigurationSection ConfigurationSection { get; } = LoadConfiguration();
 
     private static TestConfigurationSection LoadConfiguration()
     {

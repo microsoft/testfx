@@ -30,7 +30,7 @@ public class TestMethodInfo : ITestMethod
     /// </summary>
     public const int TimeoutWhenNotSet = 0;
 
-    private object[] arguments;
+    private object[] _arguments;
 
     internal TestMethodInfo(
         MethodInfo testMethod,
@@ -70,7 +70,7 @@ public class TestMethodInfo : ITestMethod
 
     public MethodInfo MethodInfo => TestMethod;
 
-    public object[] Arguments => arguments;
+    public object[] Arguments => _arguments;
 
     /// <summary>
     /// Gets testMethod referred by this object
@@ -150,11 +150,11 @@ public class TestMethodInfo : ITestMethod
     {
         if (arguments == null)
         {
-            this.arguments = null;
+            _arguments = null;
         }
         else
         {
-            this.arguments = ResolveArguments(arguments);
+            _arguments = ResolveArguments(arguments);
         }
     }
 

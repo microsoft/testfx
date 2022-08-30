@@ -105,18 +105,18 @@ internal static class TestCaseFilterFactory
 
     private class TestFilterExpression : ITestCaseFilterExpression
     {
-        private readonly string filter;
-        private readonly Func<Func<string, object>, bool> expression;
+        private readonly string _filter;
+        private readonly Func<Func<string, object>, bool> _expression;
 
         public TestFilterExpression(string filter, Func<Func<string, object>, bool> expression)
         {
-            this.filter = filter;
-            this.expression = expression;
+            _filter = filter;
+            _expression = expression;
         }
 
-        public string TestCaseFilterValue => filter;
+        public string TestCaseFilterValue => _filter;
 
-        public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider) => expression(propertyValueProvider);
+        public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider) => _expression(propertyValueProvider);
     }
 
     private static void MergeExpression(Stack<Expression<Func<Func<string, object>, bool>>> exp, Operator op)

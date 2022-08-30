@@ -13,11 +13,11 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 internal class UnitTestDiscoverer
 {
-    private readonly AssemblyEnumeratorWrapper assemblyEnumeratorWrapper;
+    private readonly AssemblyEnumeratorWrapper _assemblyEnumeratorWrapper;
 
     internal UnitTestDiscoverer()
     {
-        assemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
+        _assemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
         TestMethodFilter = new TestMethodFilter();
     }
 
@@ -58,7 +58,7 @@ internal class UnitTestDiscoverer
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext discoveryContext)
     {
-        var testElements = assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out var warnings);
+        var testElements = _assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out var warnings);
 
         // log the warnings
         foreach (var warning in warnings)

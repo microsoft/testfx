@@ -18,13 +18,13 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class AppDomainUtilitiesTests
 {
-    private TestableXmlUtilities testableXmlUtilities;
+    private TestableXmlUtilities _testableXmlUtilities;
 
     [TestInitialize]
     public void TestInit()
     {
-        testableXmlUtilities = new TestableXmlUtilities();
-        AppDomainUtilities.XmlUtilities = testableXmlUtilities;
+        _testableXmlUtilities = new TestableXmlUtilities();
+        AppDomainUtilities.XmlUtilities = _testableXmlUtilities;
     }
 
     [TestCleanup]
@@ -40,7 +40,7 @@ public class AppDomainUtilitiesTests
         var configFile = @"C:\temp\foo.dll.config";
 
         // Setup mocks.
-        testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+        _testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <configuration>
 </configuration>";
 

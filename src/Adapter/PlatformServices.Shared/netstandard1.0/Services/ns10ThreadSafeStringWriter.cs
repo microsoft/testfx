@@ -11,7 +11,7 @@ using System.IO;
 /// </summary>
 public class ThreadSafeStringWriter : StringWriter
 {
-    private readonly object lockObject = new();
+    private readonly object _lockObject = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ThreadSafeStringWriter"/> class.
@@ -30,7 +30,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// <inheritdoc/>
     public override string ToString()
     {
-        lock (lockObject)
+        lock (_lockObject)
         {
             try
             {
@@ -45,7 +45,7 @@ public class ThreadSafeStringWriter : StringWriter
 
     public string ToStringAndClear()
     {
-        lock (lockObject)
+        lock (_lockObject)
         {
             try
             {
@@ -64,7 +64,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// <inheritdoc/>
     public override void Write(char value)
     {
-        lock (lockObject)
+        lock (_lockObject)
         {
             InvokeBaseClass(() => base.Write(value));
         }
@@ -73,7 +73,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// <inheritdoc/>
     public override void Write(string value)
     {
-        lock (lockObject)
+        lock (_lockObject)
         {
             InvokeBaseClass(() => base.Write(value));
         }
@@ -82,7 +82,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// <inheritdoc/>
     public override void Write(char[] buffer, int index, int count)
     {
-        lock (lockObject)
+        lock (_lockObject)
         {
             InvokeBaseClass(() => base.Write(buffer, index, count));
         }
@@ -91,7 +91,7 @@ public class ThreadSafeStringWriter : StringWriter
     /// <inheritdoc/>
     protected override void Dispose(bool disposing)
     {
-        lock (lockObject)
+        lock (_lockObject)
         {
             InvokeBaseClass(() => base.Dispose(disposing));
         }

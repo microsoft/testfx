@@ -214,11 +214,11 @@ public class TestMethodFilterTests
 
     private class TestableRunContext : IRunContext
     {
-        private readonly Func<ITestCaseFilterExpression> getFilter;
+        private readonly Func<ITestCaseFilterExpression> _getFilter;
 
         public TestableRunContext(Func<ITestCaseFilterExpression> getFilter)
         {
-            this.getFilter = getFilter;
+            _getFilter = getFilter;
         }
 
         public IRunSettings RunSettings { get; }
@@ -239,17 +239,17 @@ public class TestMethodFilterTests
             IEnumerable<string> supportedProperties,
             Func<string, TestProperty> propertyProvider)
         {
-            return getFilter();
+            return _getFilter();
         }
     }
 
     private class TestableDiscoveryContextWithGetTestCaseFilter : IDiscoveryContext
     {
-        private readonly Func<ITestCaseFilterExpression> getFilter;
+        private readonly Func<ITestCaseFilterExpression> _getFilter;
 
         public TestableDiscoveryContextWithGetTestCaseFilter(Func<ITestCaseFilterExpression> getFilter)
         {
-            this.getFilter = getFilter;
+            _getFilter = getFilter;
         }
 
         public IRunSettings RunSettings { get; }
@@ -258,7 +258,7 @@ public class TestMethodFilterTests
             IEnumerable<string> supportedProperties,
             Func<string, TestProperty> propertyProvider)
         {
-            return getFilter();
+            return _getFilter();
         }
     }
 

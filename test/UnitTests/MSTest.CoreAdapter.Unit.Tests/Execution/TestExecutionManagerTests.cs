@@ -39,17 +39,17 @@ using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.
 [TestClass]
 public class TestExecutionManagerTests
 {
-    private TestableRunContextTestExecutionTests runContext;
+    private TestableRunContextTestExecutionTests _runContext;
 
-    private TestableFrameworkHandle frameworkHandle;
+    private TestableFrameworkHandle _frameworkHandle;
 
-    private TestRunCancellationToken cancellationToken;
+    private TestRunCancellationToken _cancellationToken;
 
-    private List<string> callers;
+    private List<string> _callers;
 
     private TestExecutionManager TestExecutionManager { get; set; }
 
-    private readonly TestProperty[] tcmKnownProperties = new TestProperty[]
+    private readonly TestProperty[] _tcmKnownProperties = new TestProperty[]
     {
         TestAdapterConstants.TestRunIdProperty,
         TestAdapterConstants.TestPlanIdProperty,
@@ -71,9 +71,9 @@ public class TestExecutionManagerTests
     [TestInitialize]
     public void TestInit()
     {
-        runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => true));
-        frameworkHandle = new TestableFrameworkHandle();
-        cancellationToken = new TestRunCancellationToken();
+        _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => true));
+        _frameworkHandle = new TestableFrameworkHandle();
+        _cancellationToken = new TestRunCancellationToken();
 
         TestExecutionManager = new TestExecutionManager();
     }
@@ -95,14 +95,14 @@ public class TestExecutionManagerTests
         TestCase[] tests = new[] { testCase };
 
         // Causing the FilterExpressionError
-        runContext = new TestableRunContextTestExecutionTests(() => { throw new TestPlatformFormatException(); });
+        _runContext = new TestableRunContextTestExecutionTests(() => { throw new TestPlatformFormatException(); });
 
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, cancellationToken);
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
         // No Results
-        Assert.AreEqual(0, frameworkHandle.TestCaseStartList.Count);
-        Assert.AreEqual(0, frameworkHandle.ResultsList.Count);
-        Assert.AreEqual(0, frameworkHandle.TestCaseEndList.Count);
+        Assert.AreEqual(0, _frameworkHandle.TestCaseStartList.Count);
+        Assert.AreEqual(0, _frameworkHandle.ResultsList.Count);
+        Assert.AreEqual(0, _frameworkHandle.TestCaseEndList.Count);
     }
 
     [TestMethodV1]
@@ -112,18 +112,18 @@ public class TestExecutionManagerTests
         var failingTestCase = GetTestCase(typeof(DummyTestClass), "FailingTest");
         TestCase[] tests = new[] { testCase, failingTestCase };
 
-        runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => (p.DisplayName == "PassingTest")));
+        _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => (p.DisplayName == "PassingTest")));
 
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, cancellationToken);
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
         // FailingTest should be skipped because it does not match the filter criteria.
         List<string> expectedTestCaseStartList = new() { "PassingTest" };
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
         List<string> expectedResultList = new() { "PassingTest  Passed" };
 
-        CollectionAssert.AreEqual(expectedTestCaseStartList, frameworkHandle.TestCaseStartList);
-        CollectionAssert.AreEqual(expectedTestCaseEndList, frameworkHandle.TestCaseEndList);
-        CollectionAssert.AreEqual(expectedResultList, frameworkHandle.ResultsList);
+        CollectionAssert.AreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
+        CollectionAssert.AreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
+        CollectionAssert.AreEqual(expectedResultList, _frameworkHandle.ResultsList);
     }
 
     [TestMethodV1]
@@ -132,11 +132,11 @@ public class TestExecutionManagerTests
         var testCase = GetTestCase(typeof(DummyTestClass), "IgnoredTest", ignore: true);
         TestCase[] tests = new[] { testCase };
 
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, cancellationToken);
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
-        Assert.AreEqual("IgnoredTest", frameworkHandle.TestCaseStartList[0]);
-        Assert.AreEqual("IgnoredTest:Skipped", frameworkHandle.TestCaseEndList[0]);
-        Assert.AreEqual("IgnoredTest  Skipped", frameworkHandle.ResultsList[0]);
+        Assert.AreEqual("IgnoredTest", _frameworkHandle.TestCaseStartList[0]);
+        Assert.AreEqual("IgnoredTest:Skipped", _frameworkHandle.TestCaseEndList[0]);
+        Assert.AreEqual("IgnoredTest  Skipped", _frameworkHandle.ResultsList[0]);
     }
 
     [TestMethodV1]
@@ -146,15 +146,15 @@ public class TestExecutionManagerTests
 
         TestCase[] tests = new[] { testCase };
 
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         List<string> expectedTestCaseStartList = new() { "PassingTest" };
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
         List<string> expectedResultList = new() { "PassingTest  Passed" };
 
-        CollectionAssert.AreEqual(expectedTestCaseStartList, frameworkHandle.TestCaseStartList);
-        CollectionAssert.AreEqual(expectedTestCaseEndList, frameworkHandle.TestCaseEndList);
-        CollectionAssert.AreEqual(expectedResultList, frameworkHandle.ResultsList);
+        CollectionAssert.AreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
+        CollectionAssert.AreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
+        CollectionAssert.AreEqual(expectedResultList, _frameworkHandle.ResultsList);
     }
 
     [TestMethodV1]
@@ -164,16 +164,16 @@ public class TestExecutionManagerTests
         var failingTestCase = GetTestCase(typeof(DummyTestClass), "FailingTest");
         TestCase[] tests = new[] { testCase, failingTestCase };
 
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, cancellationToken);
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
         List<string> expectedTestCaseStartList = new() { "PassingTest", "FailingTest" };
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed", "FailingTest:Failed" };
         List<string> expectedResultList = new() { "PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail failed." };
 
-        CollectionAssert.AreEqual(expectedTestCaseStartList, frameworkHandle.TestCaseStartList);
-        CollectionAssert.AreEqual(expectedTestCaseEndList, frameworkHandle.TestCaseEndList);
-        Assert.AreEqual(expectedResultList[0], frameworkHandle.ResultsList[0]);
-        StringAssert.Contains(frameworkHandle.ResultsList[1], expectedResultList[1]);
+        CollectionAssert.AreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
+        CollectionAssert.AreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
+        Assert.AreEqual(expectedResultList[0], _frameworkHandle.ResultsList[0]);
+        StringAssert.Contains(_frameworkHandle.ResultsList[1], expectedResultList[1]);
     }
 
     [TestMethodV1]
@@ -184,37 +184,37 @@ public class TestExecutionManagerTests
         TestCase[] tests = new[] { testCase };
 
         // Cancel the test run
-        cancellationToken.Cancel();
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, cancellationToken);
+        _cancellationToken.Cancel();
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
         // No Results
-        Assert.AreEqual(0, frameworkHandle.TestCaseStartList.Count);
-        Assert.AreEqual(0, frameworkHandle.ResultsList.Count);
-        Assert.AreEqual(0, frameworkHandle.TestCaseEndList.Count);
+        Assert.AreEqual(0, _frameworkHandle.TestCaseStartList.Count);
+        Assert.AreEqual(0, _frameworkHandle.ResultsList.Count);
+        Assert.AreEqual(0, _frameworkHandle.TestCaseEndList.Count);
     }
 
     [TestMethodV1]
     public void RunTestsShouldLogResultCleanupWarningsAsErrorsWhenTreatClassCleanupWarningsAsErrorsIsTrue()
     {
         // Arrange
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                               <MSTest>
                                                  <TreatClassAndAssemblyCleanupWarningsAsErrors>true</TreatClassAndAssemblyCleanupWarningsAsErrors>
                                               </MSTest>
                                             </RunSettings>");
-        MSTestSettings.PopulateSettings(runContext);
+        MSTestSettings.PopulateSettings(_runContext);
         var testCase = GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
         TestCase[] tests = new[] { testCase };
 
         // Act
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         // Assert
-        CollectionAssert.Contains(frameworkHandle.TestCaseEndList, "TestMethod:Passed");
-        Assert.AreEqual(1, frameworkHandle.MessageList.Count);
-        StringAssert.StartsWith(frameworkHandle.MessageList[0], "Error");
-        Assert.IsTrue(frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
+        CollectionAssert.Contains(_frameworkHandle.TestCaseEndList, "TestMethod:Passed");
+        Assert.AreEqual(1, _frameworkHandle.MessageList.Count);
+        StringAssert.StartsWith(_frameworkHandle.MessageList[0], "Error");
+        Assert.IsTrue(_frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
     }
 
     [TestMethodV1]
@@ -223,12 +223,12 @@ public class TestExecutionManagerTests
         var testCase = GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
         TestCase[] tests = new[] { testCase };
 
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         // Warnings should get logged.
-        Assert.AreEqual(1, frameworkHandle.MessageList.Count);
-        StringAssert.StartsWith(frameworkHandle.MessageList[0], "Warning");
-        Assert.IsTrue(frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
+        Assert.AreEqual(1, _frameworkHandle.MessageList.Count);
+        StringAssert.StartsWith(_frameworkHandle.MessageList[0], "Warning");
+        Assert.IsTrue(_frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
     }
 
     [TestMethodV1]
@@ -240,16 +240,16 @@ public class TestExecutionManagerTests
         // Setup mocks.
         var testablePlatformService = SetupTestablePlatformService();
         testablePlatformService.MockTestDeployment.Setup(
-            td => td.Deploy(tests, runContext, frameworkHandle)).Callback(() => SetCaller("Deploy"));
+            td => td.Deploy(tests, _runContext, _frameworkHandle)).Callback(() => SetCaller("Deploy"));
 
         TestExecutionManager.RunTests(
             tests,
-            runContext,
-            frameworkHandle,
+            _runContext,
+            _frameworkHandle,
             new TestRunCancellationToken());
 
-        Assert.AreEqual("Deploy", callers[0], "Deploy should be called before execution.");
-        Assert.AreEqual("LoadAssembly", callers[1], "Deploy should be called before execution.");
+        Assert.AreEqual("Deploy", _callers[0], "Deploy should be called before execution.");
+        Assert.AreEqual("LoadAssembly", _callers[1], "Deploy should be called before execution.");
     }
 
     [TestMethodV1]
@@ -263,10 +263,10 @@ public class TestExecutionManagerTests
         testablePlatformService.MockTestDeployment.Setup(
             td => td.Cleanup()).Callback(() => SetCaller("Cleanup"));
 
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-        Assert.AreEqual("LoadAssembly", callers[0], "Cleanup should be called after execution.");
-        Assert.AreEqual("Cleanup", callers.LastOrDefault(), "Cleanup should be called after execution.");
+        Assert.AreEqual("LoadAssembly", _callers[0], "Cleanup should be called after execution.");
+        Assert.AreEqual("Cleanup", _callers.LastOrDefault(), "Cleanup should be called after execution.");
     }
 
     [TestMethodV1]
@@ -277,7 +277,7 @@ public class TestExecutionManagerTests
         TestCase[] tests = new[] { testCase, failingTestCase };
 
         var testablePlatformService = SetupTestablePlatformService();
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         testablePlatformService.MockTestDeployment.Verify(td => td.Cleanup(), Times.Never);
     }
@@ -293,11 +293,11 @@ public class TestExecutionManagerTests
 
         // Setup mocks.
         testablePlatformService.MockTestDeployment.Setup(
-            td => td.Deploy(tests, runContext, frameworkHandle)).Returns(true);
+            td => td.Deploy(tests, _runContext, _frameworkHandle)).Returns(true);
         testablePlatformService.MockTestDeployment.Setup(td => td.GetDeploymentDirectory())
             .Returns(@"C:\temp");
 
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         testablePlatformService.MockFileOperations.Verify(
             fo => fo.LoadAssembly(It.Is<string>(s => s.StartsWith("C:\\temp")), It.IsAny<bool>()),
@@ -310,7 +310,7 @@ public class TestExecutionManagerTests
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
 
         TestCase[] tests = new[] { testCase };
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                             <TestRunParameters>
                                               <Parameter name=""webAppUrl"" value=""http://localhost"" />
@@ -318,7 +318,7 @@ public class TestExecutionManagerTests
                                               </TestRunParameters>
                                             </RunSettings>");
 
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         CollectionAssert.Contains(
             DummyTestClass.TestContextProperties.ToList(),
@@ -334,7 +334,7 @@ public class TestExecutionManagerTests
 
         TestCase[] tests = new[] { testCase };
 
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         VerifyTcmProperties(DummyTestClass.TestContextProperties, testCase);
     }
@@ -348,7 +348,7 @@ public class TestExecutionManagerTests
         // Setup mocks.
         var testablePlatformService = SetupTestablePlatformService();
 
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         testablePlatformService.MockSettingsProvider.Verify(sp => sp.GetProperties(It.IsAny<string>()), Times.Once);
     }
@@ -359,7 +359,7 @@ public class TestExecutionManagerTests
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
 
         TestCase[] tests = new[] { testCase };
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                             <TestRunParameters>
                                               <Parameter name=""webAppUrl"" value=""http://localhost"" />
@@ -368,10 +368,10 @@ public class TestExecutionManagerTests
                                             </RunSettings>");
 
         // Trigger First Run
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         // Update runsettings to have different values for similar keys
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                          @"<RunSettings> 
                                             <TestRunParameters>
                                               <Parameter name=""webAppUrl"" value=""http://updatedLocalHost"" />
@@ -380,7 +380,7 @@ public class TestExecutionManagerTests
                                             </RunSettings>");
 
         // Trigger another Run
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         Assert.AreEqual("http://updatedLocalHost", DummyTestClass.TestContextProperties["webAppUrl"]);
     }
@@ -396,11 +396,11 @@ public class TestExecutionManagerTests
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        TestExecutionManager.RunTests(sources, runContext, frameworkHandle, cancellationToken);
+        TestExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
 
-        CollectionAssert.Contains(frameworkHandle.TestCaseStartList, "PassingTest");
-        CollectionAssert.Contains(frameworkHandle.TestCaseEndList, "PassingTest:Passed");
-        CollectionAssert.Contains(frameworkHandle.ResultsList, "PassingTest  Passed");
+        CollectionAssert.Contains(_frameworkHandle.TestCaseStartList, "PassingTest");
+        CollectionAssert.Contains(_frameworkHandle.TestCaseEndList, "PassingTest:Passed");
+        CollectionAssert.Contains(_frameworkHandle.ResultsList, "PassingTest  Passed");
     }
 
     // TODO: This tests needs to be mocked.
@@ -410,7 +410,7 @@ public class TestExecutionManagerTests
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                             <TestRunParameters>
                                               <Parameter name=""webAppUrl"" value=""http://localhost"" />
@@ -418,7 +418,7 @@ public class TestExecutionManagerTests
                                               </TestRunParameters>
                                             </RunSettings>");
 
-        TestExecutionManager.RunTests(sources, runContext, frameworkHandle, cancellationToken);
+        TestExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
 
         CollectionAssert.Contains(
             DummyTestClass.TestContextProperties.ToList(),
@@ -432,7 +432,7 @@ public class TestExecutionManagerTests
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
-        TestExecutionManager.RunTests(sources, runContext, frameworkHandle, cancellationToken);
+        TestExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
 
         Assert.IsNotNull(DummyTestClass.TestContextProperties);
     }
@@ -450,7 +450,7 @@ public class TestExecutionManagerTests
             }
         };
 
-        testableTestExecutionmanager.RunTests(sources, runContext, frameworkHandle, cancellationToken);
+        testableTestExecutionmanager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
         Assert.AreEqual(4, testsCount);
     }
 
@@ -464,9 +464,9 @@ public class TestExecutionManagerTests
         var testCase = new TestCase("DummyTest", new System.Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
         UnitTestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
         UnitTestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
-        TestExecutionManager.SendTestResults(testCase, new UnitTestResult[] { unitTestResult1, unitTestResult2 }, default, default, frameworkHandle);
-        Assert.AreEqual("DummyTest (Data Row 0)", frameworkHandle.TestDisplayNameList[0]);
-        Assert.AreEqual("DummyTest (Data Row 1)", frameworkHandle.TestDisplayNameList[1]);
+        TestExecutionManager.SendTestResults(testCase, new UnitTestResult[] { unitTestResult1, unitTestResult2 }, default, default, _frameworkHandle);
+        Assert.AreEqual("DummyTest (Data Row 0)", _frameworkHandle.TestDisplayNameList[0]);
+        Assert.AreEqual("DummyTest (Data Row 1)", _frameworkHandle.TestDisplayNameList[1]);
     }
 
     #endregion
@@ -482,7 +482,7 @@ public class TestExecutionManagerTests
         var testCase22 = GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod2");
 
         TestCase[] tests = new[] { testCase11, testCase12, testCase21, testCase22 };
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                               <MSTest>
                                                  <Parallelize>
@@ -493,8 +493,8 @@ public class TestExecutionManagerTests
 
         try
         {
-            MSTestSettings.PopulateSettings(runContext);
-            TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+            MSTestSettings.PopulateSettings(_runContext);
+            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Assert.AreEqual(1, DummyTestClassForParallelize.ThreadIds.Count);
             Assert.AreEqual(1, DummyTestClassForParallelize2.ThreadIds.Count);
@@ -517,7 +517,7 @@ public class TestExecutionManagerTests
         var testCase12 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
 
         TestCase[] tests = new[] { testCase11, testCase12 };
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                               <MSTest>
                                                  <Parallelize>
@@ -529,8 +529,8 @@ public class TestExecutionManagerTests
 
         try
         {
-            MSTestSettings.PopulateSettings(runContext);
-            TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+            MSTestSettings.PopulateSettings(_runContext);
+            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Assert.AreEqual(2, DummyTestClassForParallelize.ThreadIds.Count);
         }
@@ -548,7 +548,7 @@ public class TestExecutionManagerTests
         var testCase3 = GetTestCase(typeof(DummyTestClassForParallelize3), "TestMethod1");
 
         TestCase[] tests = new[] { testCase1, testCase2, testCase3 };
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                               <MSTest>
                                                  <Parallelize>
@@ -559,8 +559,8 @@ public class TestExecutionManagerTests
 
         try
         {
-            MSTestSettings.PopulateSettings(runContext);
-            TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+            MSTestSettings.PopulateSettings(_runContext);
+            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             var allThreadIds = new HashSet<int>(DummyTestClassForParallelize.ThreadIds);
             allThreadIds.UnionWith(DummyTestClassForParallelize2.ThreadIds);
@@ -583,7 +583,7 @@ public class TestExecutionManagerTests
         var testCase2 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
 
         TestCase[] tests = new[] { testCase1, testCase2 };
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                               <RunConfiguration>
                                                  <DisableParallelization>true</DisableParallelization>
@@ -592,7 +592,7 @@ public class TestExecutionManagerTests
 
         try
         {
-            MSTestSettings.PopulateSettings(runContext);
+            MSTestSettings.PopulateSettings(_runContext);
             var testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -617,7 +617,7 @@ public class TestExecutionManagerTests
                     return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
                 });
 
-            TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Assert.AreEqual(1, DummyTestClassForParallelize.ThreadIds.Count);
         }
@@ -634,7 +634,7 @@ public class TestExecutionManagerTests
         var testCase2 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
 
         TestCase[] tests = new[] { testCase1, testCase2 };
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                               <MSTest>
                                                  <Parallelize>
@@ -646,7 +646,7 @@ public class TestExecutionManagerTests
 
         try
         {
-            MSTestSettings.PopulateSettings(runContext);
+            MSTestSettings.PopulateSettings(_runContext);
             var testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -671,7 +671,7 @@ public class TestExecutionManagerTests
                     return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
                 });
 
-            TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Assert.AreEqual(1, DummyTestClassForParallelize.ThreadIds.Count);
         }
@@ -693,7 +693,7 @@ public class TestExecutionManagerTests
         testCase4.SetPropertyValue(MSTest.TestAdapter.Constants.DoNotParallelizeProperty, true);
 
         TestCase[] tests = new[] { testCase1, testCase2, testCase3, testCase4 };
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                               <MSTest>
                                                  <Parallelize>
@@ -705,8 +705,8 @@ public class TestExecutionManagerTests
 
         try
         {
-            MSTestSettings.PopulateSettings(runContext);
-            TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+            MSTestSettings.PopulateSettings(_runContext);
+            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Assert.AreEqual(2, DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count);
             Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.UnParallelizableTestsThreadIds.Count);
@@ -725,7 +725,7 @@ public class TestExecutionManagerTests
         var testCase2 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
 
         TestCase[] tests = new[] { testCase1, testCase2 };
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                               <MSTest>
                                                  <Parallelize>
@@ -737,7 +737,7 @@ public class TestExecutionManagerTests
 
         try
         {
-            MSTestSettings.PopulateSettings(runContext);
+            MSTestSettings.PopulateSettings(_runContext);
             var testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -762,7 +762,7 @@ public class TestExecutionManagerTests
                     return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
                 });
 
-            TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Assert.AreEqual(2, DummyTestClassForParallelize.ThreadIds.Count);
         }
@@ -786,7 +786,7 @@ public class TestExecutionManagerTests
         testCase4.SetPropertyValue(MSTest.TestAdapter.Constants.DoNotParallelizeProperty, true);
 
         TestCase[] tests = new[] { testCase1, testCase2, testCase3, testCase4 };
-        runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                               <MSTest>
                                                  <Parallelize>
@@ -798,8 +798,8 @@ public class TestExecutionManagerTests
 
         try
         {
-            MSTestSettings.PopulateSettings(runContext);
-            TestExecutionManager.RunTests(tests, runContext, frameworkHandle, new TestRunCancellationToken());
+            MSTestSettings.PopulateSettings(_runContext);
+            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.Count);
             Assert.AreEqual(Thread.CurrentThread.GetApartmentState(), DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.ToArray()[0]);
@@ -860,14 +860,14 @@ public class TestExecutionManagerTests
 
     private void SetCaller(string caller)
     {
-        callers ??= new List<string>();
+        _callers ??= new List<string>();
 
-        callers.Add(caller);
+        _callers.Add(caller);
     }
 
     private void VerifyTcmProperties(IDictionary<string, object> tcmProperties, TestCase testCase)
     {
-        foreach (var property in tcmKnownProperties)
+        foreach (var property in _tcmKnownProperties)
         {
             Assert.AreEqual(testCase.GetPropertyValue(property), tcmProperties[property.Id]);
         }
@@ -875,7 +875,7 @@ public class TestExecutionManagerTests
 
     private void SetTestCaseProperties(TestCase testCase, object[] propertiesValue)
     {
-        var tcmKnownPropertiesEnumerator = tcmKnownProperties.GetEnumerator();
+        var tcmKnownPropertiesEnumerator = _tcmKnownProperties.GetEnumerator();
 
         var propertiesValueEnumerator = propertiesValue.GetEnumerator();
         while (tcmKnownPropertiesEnumerator.MoveNext() && propertiesValueEnumerator.MoveNext())
@@ -941,16 +941,14 @@ public class TestExecutionManagerTests
     [DummyTestClass]
     private class DummyTestClassWithCleanupMethods
     {
-        public static int ClassCleanupCount => classCleanupCount;
+        public static int ClassCleanupCount { get; private set; } = 0;
 
-        public static void Cleanup() => classCleanupCount = 0;
-
-        private static int classCleanupCount = 0;
+        public static void Cleanup() => ClassCleanupCount = 0;
 
         [UTF.ClassCleanup]
         public static void ClassCleanup()
         {
-            classCleanupCount++;
+            ClassCleanupCount++;
         }
 
         [UTF.TestMethod]
@@ -962,19 +960,11 @@ public class TestExecutionManagerTests
     [DummyTestClass]
     private class DummyTestClassForParallelize
     {
-        private static HashSet<int> threadIds = new();
-
-        public static HashSet<int> ThreadIds
-        {
-            get
-            {
-                return threadIds;
-            }
-        }
+        public static HashSet<int> ThreadIds { get; } = new();
 
         public static void Cleanup()
         {
-            threadIds.Clear();
+            ThreadIds.Clear();
         }
 
         [UTF.TestMethod]
@@ -982,7 +972,7 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             System.Threading.Thread.Sleep(2000);
-            threadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
         }
 
         [UTF.TestMethod]
@@ -990,26 +980,18 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             System.Threading.Thread.Sleep(2000);
-            threadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
         }
     }
 
     [DummyTestClass]
     private class DummyTestClassForParallelize2
     {
-        private static HashSet<int> threadIds = new();
-
-        public static HashSet<int> ThreadIds
-        {
-            get
-            {
-                return threadIds;
-            }
-        }
+        public static HashSet<int> ThreadIds { get; } = new();
 
         public static void Cleanup()
         {
-            threadIds.Clear();
+            ThreadIds.Clear();
         }
 
         [UTF.TestMethod]
@@ -1017,7 +999,7 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             System.Threading.Thread.Sleep(2000);
-            threadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
         }
 
         [UTF.TestMethod]
@@ -1025,26 +1007,18 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             System.Threading.Thread.Sleep(2000);
-            threadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
         }
     }
 
     [DummyTestClass]
     private class DummyTestClassForParallelize3
     {
-        private static HashSet<int> threadIds = new();
-
-        public static HashSet<int> ThreadIds
-        {
-            get
-            {
-                return threadIds;
-            }
-        }
+        public static HashSet<int> ThreadIds { get; } = new();
 
         public static void Cleanup()
         {
-            threadIds.Clear();
+            ThreadIds.Clear();
         }
 
         [UTF.TestMethod]
@@ -1052,41 +1026,20 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             Thread.Sleep(2000);
-            threadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
         }
     }
 
     [DummyTestClass]
     private class DummyTestClassWithDoNotParallelizeMethods
     {
-        private static HashSet<int> parallelizableTestsThreadIds = new();
-        private static HashSet<int> unParallelizableTestsThreadIds = new();
-        private static HashSet<ApartmentState> threadApartmentStates = new();
-        private static bool isFirstUnParallelizedTestRunTimeSet = false;
+        private static bool s_isFirstUnParallelizedTestRunTimeSet = false;
 
-        public static HashSet<int> ParallelizableTestsThreadIds
-        {
-            get
-            {
-                return parallelizableTestsThreadIds;
-            }
-        }
+        public static HashSet<int> ParallelizableTestsThreadIds { get; private set; } = new();
 
-        public static HashSet<int> UnParallelizableTestsThreadIds
-        {
-            get
-            {
-                return unParallelizableTestsThreadIds;
-            }
-        }
+        public static HashSet<int> UnParallelizableTestsThreadIds { get; private set; } = new();
 
-        public static HashSet<ApartmentState> ThreadApartmentStates
-        {
-            get
-            {
-                return threadApartmentStates;
-            }
-        }
+        public static HashSet<ApartmentState> ThreadApartmentStates { get; private set; } = new();
 
         public static DateTime LastParallelizableTestRun { get; set; }
 
@@ -1094,10 +1047,10 @@ public class TestExecutionManagerTests
 
         public static void Cleanup()
         {
-            parallelizableTestsThreadIds.Clear();
-            unParallelizableTestsThreadIds.Clear();
-            threadApartmentStates.Clear();
-            isFirstUnParallelizedTestRunTimeSet = false;
+            ParallelizableTestsThreadIds.Clear();
+            UnParallelizableTestsThreadIds.Clear();
+            ThreadApartmentStates.Clear();
+            s_isFirstUnParallelizedTestRunTimeSet = false;
         }
 
         [UTF.TestMethod]
@@ -1105,8 +1058,8 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             Thread.Sleep(2000);
-            parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
-            threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
+            ParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
             LastParallelizableTestRun = DateTime.Now;
         }
@@ -1116,8 +1069,8 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             Thread.Sleep(2000);
-            parallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
-            threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
+            ParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
             LastParallelizableTestRun = DateTime.Now;
         }
@@ -1126,26 +1079,26 @@ public class TestExecutionManagerTests
         [UTF.DoNotParallelize]
         public void TestMethod3()
         {
-            if (!isFirstUnParallelizedTestRunTimeSet)
+            if (!s_isFirstUnParallelizedTestRunTimeSet)
             {
                 FirstUnParallelizableTestRun = DateTime.Now;
             }
 
-            unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
-            threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
+            UnParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
         }
 
         [UTF.TestMethod]
         [UTF.DoNotParallelize]
         public void TestMethod4()
         {
-            if (!isFirstUnParallelizedTestRunTimeSet)
+            if (!s_isFirstUnParallelizedTestRunTimeSet)
             {
                 FirstUnParallelizableTestRun = DateTime.Now;
             }
 
-            unParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
-            threadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
+            UnParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
         }
     }
 
@@ -1160,32 +1113,32 @@ public class TestExecutionManagerTests
 
 internal class TestableFrameworkHandle : IFrameworkHandle
 {
-    private readonly List<string> messageList;
-    private readonly List<string> resultsList;
-    private readonly List<string> testCaseStartList;
-    private readonly List<string> testCaseEndList;
-    private readonly List<string> testDisplayNameList;
+    private readonly List<string> _messageList;
+    private readonly List<string> _resultsList;
+    private readonly List<string> _testCaseStartList;
+    private readonly List<string> _testCaseEndList;
+    private readonly List<string> _testDisplayNameList;
 
     public TestableFrameworkHandle()
     {
-        messageList = new List<string>();
-        resultsList = new List<string>();
-        testCaseStartList = new List<string>();
-        testCaseEndList = new List<string>();
-        testDisplayNameList = new List<string>();
+        _messageList = new List<string>();
+        _resultsList = new List<string>();
+        _testCaseStartList = new List<string>();
+        _testCaseEndList = new List<string>();
+        _testDisplayNameList = new List<string>();
     }
 
     public bool EnableShutdownAfterTestRun { get; set; }
 
-    public List<string> MessageList => messageList;
+    public List<string> MessageList => _messageList;
 
-    public List<string> ResultsList => resultsList;
+    public List<string> ResultsList => _resultsList;
 
-    public List<string> TestCaseStartList => testCaseStartList;
+    public List<string> TestCaseStartList => _testCaseStartList;
 
-    public List<string> TestCaseEndList => testCaseEndList;
+    public List<string> TestCaseEndList => _testCaseEndList;
 
-    public List<string> TestDisplayNameList => testDisplayNameList;
+    public List<string> TestDisplayNameList => _testDisplayNameList;
 
     public void RecordResult(TestResult testResult)
     {
@@ -1225,11 +1178,11 @@ internal class TestableFrameworkHandle : IFrameworkHandle
 
 internal class TestableRunContextTestExecutionTests : IRunContext
 {
-    private readonly Func<ITestCaseFilterExpression> getFilter;
+    private readonly Func<ITestCaseFilterExpression> _getFilter;
 
     public TestableRunContextTestExecutionTests(Func<ITestCaseFilterExpression> getFilter)
     {
-        this.getFilter = getFilter;
+        _getFilter = getFilter;
         MockRunSettings = new Mock<IRunSettings>();
     }
 
@@ -1259,24 +1212,24 @@ internal class TestableRunContextTestExecutionTests : IRunContext
         IEnumerable<string> supportedProperties,
         Func<string, TestProperty> propertyProvider)
     {
-        return getFilter();
+        return _getFilter();
     }
 }
 
 internal class TestableTestCaseFilterExpression : ITestCaseFilterExpression
 {
-    private readonly Func<TestCase, bool> matchTest;
+    private readonly Func<TestCase, bool> _matchTest;
 
     public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase)
     {
-        matchTest = matchTestCase;
+        _matchTest = matchTestCase;
     }
 
     public string TestCaseFilterValue { get; }
 
     public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
     {
-        return matchTest(testCase);
+        return _matchTest(testCase);
     }
 }
 

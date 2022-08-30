@@ -22,11 +22,11 @@ using ObjectModelUnitTestOutcome = ObjectModel.UnitTestOutcome;
 /// </summary>
 public class TestClassInfo
 {
-    private readonly object testClassExecuteSyncObject;
-    private MethodInfo classCleanupMethod;
-    private MethodInfo classInitializeMethod;
-    private MethodInfo testCleanupMethod;
-    private MethodInfo testInitializeMethod;
+    private readonly object _testClassExecuteSyncObject;
+    private MethodInfo _classCleanupMethod;
+    private MethodInfo _classInitializeMethod;
+    private MethodInfo _testCleanupMethod;
+    private MethodInfo _testInitializeMethod;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestClassInfo"/> class.
@@ -57,7 +57,7 @@ public class TestClassInfo
         BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
         Parent = parent;
         ClassAttribute = classAttribute;
-        testClassExecuteSyncObject = new object();
+        _testClassExecuteSyncObject = new object();
     }
 
     /// <summary>
@@ -92,18 +92,18 @@ public class TestClassInfo
     {
         get
         {
-            return classInitializeMethod;
+            return _classInitializeMethod;
         }
 
         internal set
         {
-            if (classInitializeMethod != null)
+            if (_classInitializeMethod != null)
             {
                 var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            classInitializeMethod = value;
+            _classInitializeMethod = value;
         }
     }
 
@@ -139,18 +139,18 @@ public class TestClassInfo
     {
         get
         {
-            return classCleanupMethod;
+            return _classCleanupMethod;
         }
 
         internal set
         {
-            if (classCleanupMethod != null)
+            if (_classCleanupMethod != null)
             {
                 var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            classCleanupMethod = value;
+            _classCleanupMethod = value;
         }
     }
 
@@ -189,18 +189,18 @@ public class TestClassInfo
     {
         get
         {
-            return testInitializeMethod;
+            return _testInitializeMethod;
         }
 
         internal set
         {
-            if (testInitializeMethod != null)
+            if (_testInitializeMethod != null)
             {
                 var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            testInitializeMethod = value;
+            _testInitializeMethod = value;
         }
     }
 
@@ -211,18 +211,18 @@ public class TestClassInfo
     {
         get
         {
-            return testCleanupMethod;
+            return _testCleanupMethod;
         }
 
         internal set
         {
-            if (testCleanupMethod != null)
+            if (_testCleanupMethod != null)
             {
                 var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            testCleanupMethod = value;
+            _testCleanupMethod = value;
         }
     }
 
@@ -263,7 +263,7 @@ public class TestClassInfo
         {
             // Acquiring a lock is usually a costly operation which does not need to be
             // performed every time if the class init is already executed.
-            lock (testClassExecuteSyncObject)
+            lock (_testClassExecuteSyncObject)
             {
                 // Perform a check again.
                 if (!IsClassInitializeExecuted)
@@ -289,7 +289,7 @@ public class TestClassInfo
 
                         initializeMethod = null;
 
-                        if (classInitializeMethod != null)
+                        if (_classInitializeMethod != null)
                         {
                             ClassInitializeMethod.InvokeAsSynchronousTask(null, testContext);
                         }
@@ -356,7 +356,7 @@ public class TestClassInfo
 
         if (!IsClassCleanupExecuted)
         {
-            lock (testClassExecuteSyncObject)
+            lock (_testClassExecuteSyncObject)
             {
                 if (IsClassCleanupExecuted)
                 {

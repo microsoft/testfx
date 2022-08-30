@@ -13,7 +13,7 @@ using System.Collections.Generic;
 /// </summary>
 internal class SequentialIntPermutation : IEnumerable<int>
 {
-    private readonly int numberOfObjects;
+    private readonly int _numberOfObjects;
 
     public SequentialIntPermutation(int numberOfObjects)
     {
@@ -22,12 +22,12 @@ internal class SequentialIntPermutation : IEnumerable<int>
             throw new ArgumentException(Resource.WrongNumberOfObjects, nameof(numberOfObjects));
         }
 
-        this.numberOfObjects = numberOfObjects;
+        _numberOfObjects = numberOfObjects;
     }
 
     public IEnumerator<int> GetEnumerator()
     {
-        for (int i = 0; i < numberOfObjects; ++i)
+        for (int i = 0; i < _numberOfObjects; ++i)
         {
             yield return i;
         }

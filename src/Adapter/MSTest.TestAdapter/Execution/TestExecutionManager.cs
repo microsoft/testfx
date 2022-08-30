@@ -30,18 +30,18 @@ public class TestExecutionManager
     /// <summary>
     /// Specifies whether the test run is canceled or not
     /// </summary>
-    private TestRunCancellationToken cancellationToken;
+    private TestRunCancellationToken _cancellationToken;
 
     /// <summary>
     /// Dictionary for test run parameters
     /// </summary>
-    private readonly IDictionary<string, object> sessionParameters;
+    private readonly IDictionary<string, object> _sessionParameters;
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Justification = "Need to over-write the keys in dictionary.")]
     public TestExecutionManager()
     {
         TestMethodFilter = new TestMethodFilter();
-        sessionParameters = new Dictionary<string, object>();
+        _sessionParameters = new Dictionary<string, object>();
     }
 
     /// <summary>
@@ -68,7 +68,7 @@ public class TestExecutionManager
         Debug.Assert(frameworkHandle != null, "frameworkHandle");
         Debug.Assert(runCancellationToken != null, "runCancellationToken");
 
-        cancellationToken = runCancellationToken;
+        _cancellationToken = runCancellationToken;
 
         var isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
 
@@ -86,7 +86,7 @@ public class TestExecutionManager
 
     public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
     {
-        this.cancellationToken = cancellationToken;
+        _cancellationToken = cancellationToken;
 
         var discoverySink = new TestCaseDiscoverySink();
 
@@ -95,7 +95,7 @@ public class TestExecutionManager
         // deploy everything first.
         foreach (var source in sources)
         {
-            if (this.cancellationToken.Canceled)
+            if (_cancellationToken.Canceled)
             {
                 break;
             }
@@ -239,9 +239,9 @@ public class TestExecutionManager
         // and are merged with session level parameters
         var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
 
-        if (sessionParameters != null && sessionParameters.Count > 0)
+        if (_sessionParameters != null && _sessionParameters.Count > 0)
         {
-            sourceLevelParameters = sessionParameters.ConcatWithOverwrites(sourceLevelParameters);
+            sourceLevelParameters = _sessionParameters.ConcatWithOverwrites(sourceLevelParameters);
         }
 
         TestAssemblySettingsProvider sourceSettingsProvider = null;
@@ -316,7 +316,7 @@ public class TestExecutionManager
                         {
                             while (!queue.IsEmpty)
                             {
-                                if (cancellationToken != null && cancellationToken.Canceled)
+                                if (_cancellationToken != null && _cancellationToken.Canceled)
                                 {
                                     // if a cancellation has been requested, do not queue any more test runs.
                                     break;
@@ -379,7 +379,7 @@ public class TestExecutionManager
     {
         foreach (var currentTest in tests)
         {
-            if (cancellationToken != null && cancellationToken.Canceled)
+            if (_cancellationToken != null && _cancellationToken.Canceled)
             {
                 break;
             }
@@ -460,10 +460,10 @@ public class TestExecutionManager
                 {
                     // Clear sessionParameters to prevent key collisions of test run parameters in case
                     // "Keep Test Execution Engine Alive" is selected in VS.
-                    sessionParameters.Clear();
+                    _sessionParameters.Clear();
                     foreach (var kvp in testRunParameters)
                     {
-                        sessionParameters.Add(kvp);
+                        _sessionParameters.Add(kvp);
                     }
                 }
             }

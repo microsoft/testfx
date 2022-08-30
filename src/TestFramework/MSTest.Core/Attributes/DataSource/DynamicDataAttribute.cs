@@ -31,11 +31,11 @@ public enum DynamicDataSourceType
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public sealed class DynamicDataAttribute : Attribute, ITestDataSource
 {
-    private readonly string dynamicDataSourceName;
+    private readonly string _dynamicDataSourceName;
 
-    private Type dynamicDataDeclaringType;
+    private Type _dynamicDataDeclaringType;
 
-    private readonly DynamicDataSourceType dynamicDataSourceType;
+    private readonly DynamicDataSourceType _dynamicDataSourceType;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
@@ -48,8 +48,8 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     /// </param>
     public DynamicDataAttribute(string dynamicDataSourceName, DynamicDataSourceType dynamicDataSourceType = DynamicDataSourceType.Property)
     {
-        this.dynamicDataSourceName = dynamicDataSourceName;
-        this.dynamicDataSourceType = dynamicDataSourceType;
+        _dynamicDataSourceName = dynamicDataSourceName;
+        _dynamicDataSourceType = dynamicDataSourceType;
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     public DynamicDataAttribute(string dynamicDataSourceName, Type dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType = DynamicDataSourceType.Property)
         : this(dynamicDataSourceName, dynamicDataSourceType)
     {
-        this.dynamicDataDeclaringType = dynamicDataDeclaringType;
+        _dynamicDataDeclaringType = dynamicDataDeclaringType;
     }
 
     /// <summary>
@@ -86,17 +86,17 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     public IEnumerable<object[]> GetData(MethodInfo methodInfo)
     {
         // Check if the declaring type of test data is passed in constructor. If not, default to test method's class type.
-        dynamicDataDeclaringType ??= methodInfo.DeclaringType;
+        _dynamicDataDeclaringType ??= methodInfo.DeclaringType;
 
         object obj = null;
 
-        switch (dynamicDataSourceType)
+        switch (_dynamicDataSourceType)
         {
             case DynamicDataSourceType.Property:
-                var property = dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(dynamicDataSourceName);
+                var property = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(_dynamicDataSourceName);
                 if (property == null)
                 {
-                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Property, dynamicDataSourceName));
+                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Property, _dynamicDataSourceName));
                 }
 
                 obj = property.GetValue(null, null);
@@ -104,10 +104,10 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                 break;
 
             case DynamicDataSourceType.Method:
-                var method = dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(dynamicDataSourceName);
+                var method = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(_dynamicDataSourceName);
                 if (method == null)
                 {
-                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, dynamicDataSourceName));
+                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, _dynamicDataSourceName));
                 }
 
                 obj = method.Invoke(null, null);
@@ -120,8 +120,8 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
             throw new ArgumentNullException(
                 string.Format(
                     FrameworkMessages.DynamicDataValueNull,
-                    dynamicDataSourceName,
-                    dynamicDataDeclaringType.FullName));
+                    _dynamicDataSourceName,
+                    _dynamicDataDeclaringType.FullName));
         }
 
 
@@ -130,16 +130,16 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
             throw new ArgumentNullException(
                 string.Format(
                     FrameworkMessages.DynamicDataIEnumerableNull,
-                    dynamicDataSourceName,
-                    dynamicDataDeclaringType.FullName));
+                    _dynamicDataSourceName,
+                    _dynamicDataDeclaringType.FullName));
         }
         else if (!enumerable.Any())
         {
             throw new ArgumentException(
                 string.Format(
                     FrameworkMessages.DynamicDataIEnumerableEmpty,
-                    dynamicDataSourceName,
-                    dynamicDataDeclaringType.FullName));
+                    _dynamicDataSourceName,
+                    _dynamicDataDeclaringType.FullName));
         }
 
         return enumerable;

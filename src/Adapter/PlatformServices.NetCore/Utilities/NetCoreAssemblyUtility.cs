@@ -10,7 +10,7 @@ using System;
 /// </summary>
 internal class AssemblyUtility
 {
-    private readonly string[] assemblyExtensions = new string[] { ".dll", ".exe" };
+    private readonly string[] _assemblyExtensions = new string[] { ".dll", ".exe" };
 
     /// <summary>
     /// Whether file extension is an assembly file extension.
@@ -21,7 +21,7 @@ internal class AssemblyUtility
     /// <returns> True if this is an assembly extension. </returns>
     internal bool IsAssemblyExtension(string extensionWithLeadingDot)
     {
-        foreach (var realExtension in assemblyExtensions)
+        foreach (var realExtension in _assemblyExtensions)
         {
             if (string.Equals(extensionWithLeadingDot, realExtension, StringComparison.OrdinalIgnoreCase))
             {

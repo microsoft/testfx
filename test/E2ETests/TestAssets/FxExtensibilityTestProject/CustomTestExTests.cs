@@ -10,12 +10,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [IterativeTestClass(5)]
 public class CustomTestExTests
 {
-    private static int customTestMethod1ExecutionCount;
+    private static int s_customTestMethod1ExecutionCount;
     [IterativeTestMethod(5)]
     public void CustomTestMethod1()
     {
-        customTestMethod1ExecutionCount++;
-        Assert.AreNotEqual(3, customTestMethod1ExecutionCount);
+        s_customTestMethod1ExecutionCount++;
+        Assert.AreNotEqual(3, s_customTestMethod1ExecutionCount);
     }
 
     [IterativeTestMethod(3)]
@@ -27,28 +27,28 @@ public class CustomTestExTests
         Assert.AreEqual("B", value);
     }
 
-    private static int customTestClass1ExecutionCount;
+    private static int s_customTestClass1ExecutionCount;
     [TestMethod]
     public void CustomTestClass1()
     {
-        customTestClass1ExecutionCount++;
-        Assert.AreNotEqual(3, customTestClass1ExecutionCount);
+        s_customTestClass1ExecutionCount++;
+        Assert.AreNotEqual(3, s_customTestClass1ExecutionCount);
     }
 }
 
 public class IterativeTestMethodAttribute : TestMethodAttribute
 {
-    private readonly int stabilityThreshold;
+    private readonly int _stabilityThreshold;
 
     public IterativeTestMethodAttribute(int stabilityThreshold)
     {
-        this.stabilityThreshold = stabilityThreshold;
+        _stabilityThreshold = stabilityThreshold;
     }
 
     public override TestResult[] Execute(ITestMethod testMethod)
     {
         var results = new List<TestResult>();
-        for (int count = 0; count < stabilityThreshold; count++)
+        for (int count = 0; count < _stabilityThreshold; count++)
         {
             var testResults = base.Execute(testMethod);
             foreach (var testResult in testResults)
@@ -64,17 +64,17 @@ public class IterativeTestMethodAttribute : TestMethodAttribute
 
 public class IterativeTestClassAttribute : TestClassAttribute
 {
-    private readonly int stabilityThreshold;
+    private readonly int _stabilityThreshold;
 
     public IterativeTestClassAttribute(int stabilityThreshold)
     {
-        this.stabilityThreshold = stabilityThreshold;
+        _stabilityThreshold = stabilityThreshold;
     }
 
     public override TestMethodAttribute GetTestMethodAttribute(TestMethodAttribute testMethodAttribute)
     {
         if (testMethodAttribute is IterativeTestMethodAttribute) return testMethodAttribute;
 
-        return new IterativeTestMethodAttribute(stabilityThreshold);
+        return new IterativeTestMethodAttribute(_stabilityThreshold);
     }
 }

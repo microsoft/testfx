@@ -19,11 +19,11 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class DesktopThreadOperationsTests
 {
-    private readonly ThreadOperations asyncOperations;
+    private readonly ThreadOperations _asyncOperations;
 
     public DesktopThreadOperationsTests()
     {
-        asyncOperations = new ThreadOperations();
+        _asyncOperations = new ThreadOperations();
     }
 
     [TestMethod]
@@ -36,7 +36,7 @@ public class DesktopThreadOperationsTests
             actionThreadID = Thread.CurrentThread.ManagedThreadId;
         }
 
-        Assert.IsTrue(asyncOperations.Execute(action, 1000, cancellationTokenSource.Token));
+        Assert.IsTrue(_asyncOperations.Execute(action, 1000, cancellationTokenSource.Token));
         Assert.AreNotEqual(Thread.CurrentThread.ManagedThreadId, actionThreadID);
     }
 
@@ -69,7 +69,7 @@ public class DesktopThreadOperationsTests
             }
         }
 
-        Assert.IsFalse(asyncOperations.Execute(action, 1, cancellationTokenSource.Token));
+        Assert.IsFalse(_asyncOperations.Execute(action, 1, cancellationTokenSource.Token));
         timeoutMutex.Set();
         actionCompleted.WaitOne();
 
@@ -91,7 +91,7 @@ public class DesktopThreadOperationsTests
             isBackground = Thread.CurrentThread.IsBackground;
         }
 
-        Assert.IsTrue(asyncOperations.Execute(action, 100, cancellationTokenSource.Token));
+        Assert.IsTrue(_asyncOperations.Execute(action, 100, cancellationTokenSource.Token));
 
         Assert.AreEqual("MSTestAdapter Thread", name);
         Assert.AreEqual(Thread.CurrentThread.GetApartmentState(), apartmentState);
@@ -103,7 +103,7 @@ public class DesktopThreadOperationsTests
     {
         static void action() => Thread.CurrentThread.Abort();
 
-        var exception = ActionUtility.PerformActionAndReturnException(() => asyncOperations.ExecuteWithAbortSafety(action));
+        var exception = ActionUtility.PerformActionAndReturnException(() => _asyncOperations.ExecuteWithAbortSafety(action));
 
         Assert.IsNotNull(exception);
         Assert.AreEqual(typeof(TargetInvocationException), exception.GetType());
@@ -118,7 +118,7 @@ public class DesktopThreadOperationsTests
 
         // act
         cancellationTokenSource.CancelAfter(100);
-        var result = asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
+        var result = _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
 
         // validate
         Assert.IsFalse(result, "The execution failed to abort");
@@ -132,7 +132,7 @@ public class DesktopThreadOperationsTests
         cancellationTokenSource.Cancel();
 
         // act
-        var result = asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
+        var result = _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
 
         // validate
         Assert.IsFalse(result, "The execution failed to abort");

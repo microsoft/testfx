@@ -20,13 +20,13 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 /// </summary>
 internal sealed class XmlDataConnection : TestDataConnection
 {
-    private string fileName;
+    private readonly string _fileName;
 
     public XmlDataConnection(string fileName, List<string> dataFolders)
         : base(dataFolders)
     {
         Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
-        this.fileName = fileName;
+        _fileName = fileName;
     }
 
     public override List<string> GetDataTablesAndViews()
@@ -97,7 +97,7 @@ internal sealed class XmlDataConnection : TestDataConnection
         {
             DataSet dataSet = new();
             dataSet.Locale = CultureInfo.CurrentCulture;
-            string path = FixPath(fileName) ?? Path.GetFullPath(fileName);
+            string path = FixPath(_fileName) ?? Path.GetFullPath(_fileName);
             if (schemaOnly)
             {
                 dataSet.ReadXmlSchema(path);
@@ -111,16 +111,16 @@ internal sealed class XmlDataConnection : TestDataConnection
         }
         catch (SecurityException securityException)
         {
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, securityException.Message + " for XML data source " + fileName);
+            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, securityException.Message + " for XML data source " + _fileName);
         }
         catch (XmlException xmlException)
         {
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, xmlException.Message + " for XML data source " + fileName);
+            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, xmlException.Message + " for XML data source " + _fileName);
         }
         catch (Exception exception)
         {
             // Yes, we get other exceptions too!
-            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for XML data source " + fileName);
+            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for XML data source " + _fileName);
         }
 
         return null;

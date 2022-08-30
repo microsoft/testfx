@@ -18,7 +18,7 @@ using System.Runtime.CompilerServices;
 /// </summary>
 public sealed class CollectionAssert
 {
-    private static CollectionAssert that;
+    private static CollectionAssert s_that;
 
     #region Singleton constructor
 
@@ -39,9 +39,9 @@ public sealed class CollectionAssert
     {
         get
         {
-            that ??= new CollectionAssert();
+            s_that ??= new CollectionAssert();
 
-            return that;
+            return s_that;
         }
     }
 

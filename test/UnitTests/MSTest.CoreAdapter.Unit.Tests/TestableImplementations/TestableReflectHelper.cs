@@ -21,23 +21,23 @@ internal class TestableReflectHelper : ReflectHelper
     /// MemberTypes.TypeInfo for class level
     /// MemberTypes.Method for method level
     /// </summary>
-    private readonly Dictionary<int, Attribute[]> customAttributes;
+    private readonly Dictionary<int, Attribute[]> _customAttributes;
 
     public TestableReflectHelper()
     {
-        customAttributes = new Dictionary<int, Attribute[]>();
+        _customAttributes = new Dictionary<int, Attribute[]>();
     }
 
     public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
     {
         var hashcode = type.FullName.GetHashCode() + memberTypes.GetHashCode();
-        if (customAttributes.ContainsKey(hashcode))
+        if (_customAttributes.ContainsKey(hashcode))
         {
-            customAttributes[hashcode] = customAttributes[hashcode].Concat(values).ToArray();
+            _customAttributes[hashcode] = _customAttributes[hashcode].Concat(values).ToArray();
         }
         else
         {
-            customAttributes[hashcode] = values;
+            _customAttributes[hashcode] = values;
         }
     }
 
@@ -45,9 +45,9 @@ internal class TestableReflectHelper : ReflectHelper
     {
         var hashcode = MemberTypes.All.GetHashCode() + type.FullName.GetHashCode();
 
-        if (customAttributes.ContainsKey(hashcode))
+        if (_customAttributes.ContainsKey(hashcode))
         {
-            return customAttributes[hashcode];
+            return _customAttributes[hashcode];
         }
         else
         {
@@ -59,9 +59,9 @@ internal class TestableReflectHelper : ReflectHelper
     {
         var hashcode = memberInfo.MemberType.GetHashCode() + type.FullName.GetHashCode();
 
-        if (customAttributes.ContainsKey(hashcode))
+        if (_customAttributes.ContainsKey(hashcode))
         {
-            return customAttributes[hashcode];
+            return _customAttributes[hashcode];
         }
         else
         {

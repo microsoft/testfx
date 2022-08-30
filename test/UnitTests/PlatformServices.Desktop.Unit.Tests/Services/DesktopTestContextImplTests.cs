@@ -27,81 +27,81 @@ using UnitTestOutcome = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTestin
 [TestClass]
 public class DesktopTestContextImplTests
 {
-    private Mock<ITestMethod> testMethod;
+    private Mock<ITestMethod> _testMethod;
 
-    private IDictionary<string, object> properties;
+    private IDictionary<string, object> _properties;
 
-    private TestContextImplementation testContextImplementation;
+    private TestContextImplementation _testContextImplementation;
 
     [TestInitialize]
     public void TestInit()
     {
-        testMethod = new Mock<ITestMethod>();
-        properties = new Dictionary<string, object>();
+        _testMethod = new Mock<ITestMethod>();
+        _properties = new Dictionary<string, object>();
     }
 
     [TestMethod]
     public void TestContextConstructorShouldInitializeProperties()
     {
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Assert.IsNotNull(testContextImplementation.Properties);
+        Assert.IsNotNull(_testContextImplementation.Properties);
     }
 
     [TestMethod]
     public void TestContextConstructorShouldInitializeDefaultProperties()
     {
-        testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
-        testMethod.Setup(tm => tm.Name).Returns("M");
+        _testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
+        _testMethod.Setup(tm => tm.Name).Returns("M");
 
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Assert.IsNotNull(testContextImplementation.Properties);
+        Assert.IsNotNull(_testContextImplementation.Properties);
 
         CollectionAssert.Contains(
-            testContextImplementation.Properties,
+            _testContextImplementation.Properties,
             new KeyValuePair<string, object>("FullyQualifiedTestClassName", "A.C.M"));
         CollectionAssert.Contains(
-            testContextImplementation.Properties,
+            _testContextImplementation.Properties,
             new KeyValuePair<string, object>("TestName", "M"));
     }
 
     [TestMethod]
     public void CurrentTestOutcomeShouldReturnDefaultOutcome()
     {
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Assert.AreEqual(UnitTestOutcome.Failed, testContextImplementation.CurrentTestOutcome);
+        Assert.AreEqual(UnitTestOutcome.Failed, _testContextImplementation.CurrentTestOutcome);
     }
 
     [TestMethod]
     public void CurrentTestOutcomeShouldReturnOutcomeSet()
     {
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        testContextImplementation.SetOutcome(UnitTestOutcome.InProgress);
+        _testContextImplementation.SetOutcome(UnitTestOutcome.InProgress);
 
-        Assert.AreEqual(UnitTestOutcome.InProgress, testContextImplementation.CurrentTestOutcome);
+        Assert.AreEqual(UnitTestOutcome.InProgress, _testContextImplementation.CurrentTestOutcome);
     }
 
     [TestMethod]
     public void FullyQualifiedTestClassNameShouldReturnTestMethodsFullClassName()
     {
-        testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
+        _testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
 
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Assert.AreEqual("A.C.M", testContextImplementation.FullyQualifiedTestClassName);
+        Assert.AreEqual("A.C.M", _testContextImplementation.FullyQualifiedTestClassName);
     }
 
     [TestMethod]
     public void TestNameShouldReturnTestMethodsName()
     {
-        testMethod.Setup(tm => tm.Name).Returns("M");
+        _testMethod.Setup(tm => tm.Name).Returns("M");
 
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Assert.AreEqual("M", testContextImplementation.TestName);
+        Assert.AreEqual("M", _testContextImplementation.TestName);
     }
 
     [TestMethod]
@@ -110,64 +110,64 @@ public class DesktopTestContextImplTests
         var property1 = new KeyValuePair<string, object>("IntProperty", 1);
         var property2 = new KeyValuePair<string, object>("DoubleProperty", 2.023);
 
-        properties.Add(property1);
-        properties.Add(property2);
+        _properties.Add(property1);
+        _properties.Add(property2);
 
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        CollectionAssert.Contains(testContextImplementation.Properties, property1);
-        CollectionAssert.Contains(testContextImplementation.Properties, property2);
+        CollectionAssert.Contains(_testContextImplementation.Properties, property1);
+        CollectionAssert.Contains(_testContextImplementation.Properties, property2);
     }
 
     [TestMethod]
     public void ContextShouldReturnTestContextObject()
     {
-        testMethod.Setup(tm => tm.Name).Returns("M");
+        _testMethod.Setup(tm => tm.Name).Returns("M");
 
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Assert.IsNotNull(testContextImplementation.Context);
-        Assert.AreEqual("M", testContextImplementation.Context.TestName);
+        Assert.IsNotNull(_testContextImplementation.Context);
+        Assert.AreEqual("M", _testContextImplementation.Context.TestName);
     }
 
     [TestMethod]
     public void TryGetPropertyValueShouldReturnTrueIfPropertyIsPresent()
     {
-        testMethod.Setup(tm => tm.Name).Returns("M");
+        _testMethod.Setup(tm => tm.Name).Returns("M");
 
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Assert.IsTrue(testContextImplementation.TryGetPropertyValue("TestName", out var propValue));
+        Assert.IsTrue(_testContextImplementation.TryGetPropertyValue("TestName", out var propValue));
         Assert.AreEqual("M", propValue);
     }
 
     [TestMethod]
     public void TryGetPropertyValueShouldReturnFalseIfPropertyIsNotPresent()
     {
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Assert.IsFalse(testContextImplementation.TryGetPropertyValue("Random", out var propValue));
+        Assert.IsFalse(_testContextImplementation.TryGetPropertyValue("Random", out var propValue));
         Assert.IsNull(propValue);
     }
 
     [TestMethod]
     public void AddPropertyShouldAddPropertiesToThePropertyBag()
     {
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
-        testContextImplementation.AddProperty("SomeNewProperty", "SomeValue");
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
+        _testContextImplementation.AddProperty("SomeNewProperty", "SomeValue");
 
         CollectionAssert.Contains(
-            testContextImplementation.Properties,
+            _testContextImplementation.Properties,
             new KeyValuePair<string, object>("SomeNewProperty", "SomeValue"));
     }
 
     [TestMethod]
     public void AddResultFileShouldThrowIfFileNameIsNull()
     {
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
         var exception =
-            ActionUtility.PerformActionAndReturnException(() => testContextImplementation.AddResultFile(null));
+            ActionUtility.PerformActionAndReturnException(() => _testContextImplementation.AddResultFile(null));
 
         Assert.AreEqual(typeof(ArgumentException), exception.GetType());
         StringAssert.Contains(exception.Message, Resource.Common_CannotBeNullOrEmpty);
@@ -176,10 +176,10 @@ public class DesktopTestContextImplTests
     [TestMethod]
     public void AddResultFileShouldThrowIfFileNameIsEmpty()
     {
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
         var exception =
-            ActionUtility.PerformActionAndReturnException(() => testContextImplementation.AddResultFile(string.Empty));
+            ActionUtility.PerformActionAndReturnException(() => _testContextImplementation.AddResultFile(string.Empty));
 
         Assert.AreEqual(typeof(ArgumentException), exception.GetType());
         StringAssert.Contains(exception.Message, Resource.Common_CannotBeNullOrEmpty);
@@ -188,11 +188,11 @@ public class DesktopTestContextImplTests
     [TestMethod]
     public void AddResultFileShouldAddFiletoResultsFiles()
     {
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        testContextImplementation.AddResultFile("C:\\temp.txt");
+        _testContextImplementation.AddResultFile("C:\\temp.txt");
 
-        var resultsFiles = testContextImplementation.GetResultFiles();
+        var resultsFiles = _testContextImplementation.GetResultFiles();
 
         CollectionAssert.Contains(resultsFiles.ToList(), "C:\\temp.txt");
     }
@@ -200,12 +200,12 @@ public class DesktopTestContextImplTests
     [TestMethod]
     public void AddResultFileShouldAddMultipleFilestoResultsFiles()
     {
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        testContextImplementation.AddResultFile("C:\\temp.txt");
-        testContextImplementation.AddResultFile("C:\\temp2.txt");
+        _testContextImplementation.AddResultFile("C:\\temp.txt");
+        _testContextImplementation.AddResultFile("C:\\temp2.txt");
 
-        var resultsFiles = testContextImplementation.GetResultFiles();
+        var resultsFiles = _testContextImplementation.GetResultFiles();
 
         CollectionAssert.Contains(resultsFiles.ToList(), "C:\\temp.txt");
         CollectionAssert.Contains(resultsFiles.ToList(), "C:\\temp2.txt");
@@ -215,8 +215,8 @@ public class DesktopTestContextImplTests
     public void WriteShouldWriteToStringWriter()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
-        testContextImplementation.Write("{0} Testing write", 1);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
+        _testContextImplementation.Write("{0} Testing write", 1);
         StringAssert.Contains(stringWriter.ToString(), "1 Testing write");
     }
 
@@ -224,8 +224,8 @@ public class DesktopTestContextImplTests
     public void WriteShouldWriteToStringWriterForNullCharacters()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
-        testContextImplementation.Write("{0} Testing \0 write \0", 1);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
+        _testContextImplementation.Write("{0} Testing \0 write \0", 1);
         StringAssert.Contains(stringWriter.ToString(), "1 Testing \\0 write \\0");
     }
 
@@ -233,20 +233,20 @@ public class DesktopTestContextImplTests
     public void WriteShouldNotThrowIfStringWriterIsDisposed()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
         stringWriter.Dispose();
-        testContextImplementation.Write("{0} Testing write", 1);
+        _testContextImplementation.Write("{0} Testing write", 1);
 
         // Calling it twice to cover the direct return when we know the object has been disposed.
-        testContextImplementation.Write("{0} Testing write", 1);
+        _testContextImplementation.Write("{0} Testing write", 1);
     }
 
     [TestMethod]
     public void WriteWithMessageShouldWriteToStringWriter()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
-        testContextImplementation.Write("1 Testing write");
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
+        _testContextImplementation.Write("1 Testing write");
         StringAssert.Contains(stringWriter.ToString(), "1 Testing write");
     }
 
@@ -254,8 +254,8 @@ public class DesktopTestContextImplTests
     public void WriteWithMessageShouldWriteToStringWriterForNullCharacters()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
-        testContextImplementation.Write("1 Testing \0 write \0");
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
+        _testContextImplementation.Write("1 Testing \0 write \0");
         StringAssert.Contains(stringWriter.ToString(), "1 Testing \\0 write \\0");
     }
 
@@ -263,21 +263,21 @@ public class DesktopTestContextImplTests
     public void WriteWithMessageShouldNotThrowIfStringWriterIsDisposed()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
         stringWriter.Dispose();
-        testContextImplementation.Write("1 Testing write");
+        _testContextImplementation.Write("1 Testing write");
 
         // Calling it twice to cover the direct return when we know the object has been disposed.
-        testContextImplementation.Write("1 Testing write");
+        _testContextImplementation.Write("1 Testing write");
     }
 
     [TestMethod]
     public void WriteWithMessageShouldWriteToStringWriterForReturnCharacters()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
-        testContextImplementation.Write("2 Testing write \n\r");
-        testContextImplementation.Write("3 Testing write\n\r");
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
+        _testContextImplementation.Write("2 Testing write \n\r");
+        _testContextImplementation.Write("3 Testing write\n\r");
         StringAssert.Equals(stringWriter.ToString(), "2 Testing write 3 Testing write");
     }
 
@@ -285,9 +285,9 @@ public class DesktopTestContextImplTests
     public void WriteLineShouldWriteToStringWriter()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
 
-        testContextImplementation.WriteLine("{0} Testing write", 1);
+        _testContextImplementation.WriteLine("{0} Testing write", 1);
 
         StringAssert.Contains(stringWriter.ToString(), "1 Testing write");
     }
@@ -296,9 +296,9 @@ public class DesktopTestContextImplTests
     public void WriteLineShouldWriteToStringWriterForNullCharacters()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
 
-        testContextImplementation.WriteLine("{0} Testing \0 write \0", 1);
+        _testContextImplementation.WriteLine("{0} Testing \0 write \0", 1);
 
         StringAssert.Contains(stringWriter.ToString(), "1 Testing \\0 write \\0");
     }
@@ -307,23 +307,23 @@ public class DesktopTestContextImplTests
     public void WriteLineShouldNotThrowIfStringWriterIsDisposed()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
 
         stringWriter.Dispose();
 
-        testContextImplementation.WriteLine("{0} Testing write", 1);
+        _testContextImplementation.WriteLine("{0} Testing write", 1);
 
         // Calling it twice to cover the direct return when we know the object has been disposed.
-        testContextImplementation.WriteLine("{0} Testing write", 1);
+        _testContextImplementation.WriteLine("{0} Testing write", 1);
     }
 
     [TestMethod]
     public void WriteLineWithMessageShouldWriteToStringWriter()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
 
-        testContextImplementation.WriteLine("1 Testing write");
+        _testContextImplementation.WriteLine("1 Testing write");
 
         StringAssert.Contains(stringWriter.ToString(), "1 Testing write");
     }
@@ -332,9 +332,9 @@ public class DesktopTestContextImplTests
     public void WriteLineWithMessageShouldWriteToStringWriterForNullCharacters()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
 
-        testContextImplementation.WriteLine("1 Testing \0 write \0");
+        _testContextImplementation.WriteLine("1 Testing \0 write \0");
 
         StringAssert.Contains(stringWriter.ToString(), "1 Testing \\0 write \\0");
     }
@@ -343,38 +343,38 @@ public class DesktopTestContextImplTests
     public void WriteLineWithMessageShouldNotThrowIfStringWriterIsDisposed()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
 
         stringWriter.Dispose();
 
-        testContextImplementation.WriteLine("1 Testing write");
+        _testContextImplementation.WriteLine("1 Testing write");
 
         // Calling it twice to cover the direct return when we know the object has been disposed.
-        testContextImplementation.WriteLine("1 Testing write");
+        _testContextImplementation.WriteLine("1 Testing write");
     }
 
     [TestMethod]
     public void GetDiagnosticMessagesShouldReturnMessagesFromWriteLine()
     {
-        testContextImplementation = new TestContextImplementation(testMethod.Object, new ThreadSafeStringWriter(null, "test"), properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        testContextImplementation.WriteLine("1 Testing write");
-        testContextImplementation.WriteLine("2 Its a happy day");
+        _testContextImplementation.WriteLine("1 Testing write");
+        _testContextImplementation.WriteLine("2 Its a happy day");
 
-        StringAssert.Contains(testContextImplementation.GetDiagnosticMessages(), "1 Testing write");
-        StringAssert.Contains(testContextImplementation.GetDiagnosticMessages(), "2 Its a happy day");
+        StringAssert.Contains(_testContextImplementation.GetDiagnosticMessages(), "1 Testing write");
+        StringAssert.Contains(_testContextImplementation.GetDiagnosticMessages(), "2 Its a happy day");
     }
 
     [TestMethod]
     public void ClearDiagnosticMessagesShouldClearMessagesFromWriteLine()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
 
-        testContextImplementation.WriteLine("1 Testing write");
-        testContextImplementation.WriteLine("2 Its a happy day");
+        _testContextImplementation.WriteLine("1 Testing write");
+        _testContextImplementation.WriteLine("2 Its a happy day");
 
-        testContextImplementation.ClearDiagnosticMessages();
+        _testContextImplementation.ClearDiagnosticMessages();
 
         Assert.AreEqual(string.Empty, stringWriter.ToString());
     }
@@ -383,7 +383,7 @@ public class DesktopTestContextImplTests
     public void SetDataRowShouldSetDataRowObjectForCurrentRun()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
 
         DataTable dataTable = new();
 
@@ -393,24 +393,24 @@ public class DesktopTestContextImplTests
 
         dataTable.LoadDataRow(new object[] { 2, "Hello" }, true);
 
-        testContextImplementation.SetDataRow(dataTable.Select()[0]);
+        _testContextImplementation.SetDataRow(dataTable.Select()[0]);
 
-        Assert.AreEqual(2, testContextImplementation.DataRow.ItemArray[0]);
-        Assert.AreEqual("Hello", testContextImplementation.DataRow.ItemArray[1]);
+        Assert.AreEqual(2, _testContextImplementation.DataRow.ItemArray[0]);
+        Assert.AreEqual("Hello", _testContextImplementation.DataRow.ItemArray[1]);
     }
 
     [TestMethod]
     public void SetDataConnectionShouldSetDbConnectionForFetchingData()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
-        testContextImplementation = new TestContextImplementation(testMethod.Object, stringWriter, properties);
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
 
         DbProviderFactory factory = DbProviderFactories.GetFactory("System.Data.Odbc");
         DbConnection connection = factory.CreateConnection();
         connection.ConnectionString = @"Dsn=Excel Files;dbq=.\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5";
 
-        testContextImplementation.SetDataConnection(connection);
+        _testContextImplementation.SetDataConnection(connection);
 
-        Assert.AreEqual("Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5", testContextImplementation.DataConnection.ConnectionString);
+        Assert.AreEqual("Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5", _testContextImplementation.DataConnection.ConnectionString);
     }
 }

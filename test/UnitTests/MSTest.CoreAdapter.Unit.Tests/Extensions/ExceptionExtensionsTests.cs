@@ -146,26 +146,26 @@ public class ExceptionExtensionsTests
 
     public class DummyExceptionForStackTrace : Exception
     {
-        private readonly Func<string> getStackTrace;
+        private readonly Func<string> _getStackTrace;
 
         public DummyExceptionForStackTrace(Func<string> getStackTrace)
         {
-            this.getStackTrace = getStackTrace;
+            _getStackTrace = getStackTrace;
         }
 
-        public override string StackTrace => getStackTrace();
+        public override string StackTrace => _getStackTrace();
     }
 
     internal class DummyException : Exception
     {
-        private readonly Func<string> getMessage;
+        private readonly Func<string> _getMessage;
 
         public DummyException(Func<string> message)
         {
-            getMessage = message;
+            _getMessage = message;
         }
 
-        public override string Message => getMessage();
+        public override string Message => _getMessage();
     }
 
     #endregion

@@ -22,14 +22,14 @@ internal abstract class TestDataConnection : IDisposable
 {
     internal const string ConnectionDirectoryKey = "|DataDirectory|\\";
 
-    private static bool? extendedDiagnosticsEnabled;
+    private static bool? s_extendedDiagnosticsEnabled;
 
     // List of places to look for files when substituting |DataDirectory|
-    private readonly List<string> dataFolders;
+    private readonly List<string> _dataFolders;
 
     internal protected TestDataConnection(List<string> dataFolders)
     {
-        this.dataFolders = dataFolders;
+        _dataFolders = dataFolders;
     }
 
     /// <summary>
@@ -45,22 +45,22 @@ internal abstract class TestDataConnection : IDisposable
     {
         get
         {
-            if (!extendedDiagnosticsEnabled.HasValue)
+            if (!s_extendedDiagnosticsEnabled.HasValue)
             {
                 // We use an environment variable so that we can enable this extended
                 // diagnostic trace
                 try
                 {
                     string value = Environment.GetEnvironmentVariable("VSTS_DIAGNOSTICS");
-                    extendedDiagnosticsEnabled = (value != null) && value.Contains("TestDataConnection");
+                    s_extendedDiagnosticsEnabled = (value != null) && value.Contains("TestDataConnection");
                 }
                 catch (SecurityException)
                 {
-                    extendedDiagnosticsEnabled = false;
+                    s_extendedDiagnosticsEnabled = false;
                 }
             }
 
-            return extendedDiagnosticsEnabled.Value;
+            return s_extendedDiagnosticsEnabled.Value;
         }
     }
 
@@ -162,6 +162,6 @@ internal abstract class TestDataConnection : IDisposable
 
     protected string FixPath(string path)
     {
-        return FixPath(path, dataFolders);
+        return FixPath(path, _dataFolders);
     }
 }

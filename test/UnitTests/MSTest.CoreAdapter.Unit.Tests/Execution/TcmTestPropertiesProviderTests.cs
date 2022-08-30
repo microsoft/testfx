@@ -20,7 +20,7 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class TcmTestPropertiesProviderTests
 {
-    private readonly TestProperty[] tcmKnownProperties = new TestProperty[]
+    private readonly TestProperty[] _tcmKnownProperties = new TestProperty[]
     {
         TestAdapterConstants.TestRunIdProperty,
         TestAdapterConstants.TestPlanIdProperty,
@@ -156,7 +156,7 @@ public class TcmTestPropertiesProviderTests
 
     private void SetTestCaseProperties(TestCase testCase, object[] propertiesValue)
     {
-        var tcmKnownPropertiesEnumerator = tcmKnownProperties.GetEnumerator();
+        var tcmKnownPropertiesEnumerator = _tcmKnownProperties.GetEnumerator();
 
         var propertiesValueEnumerator = propertiesValue.GetEnumerator();
         while (tcmKnownPropertiesEnumerator.MoveNext() && propertiesValueEnumerator.MoveNext())
@@ -169,7 +169,7 @@ public class TcmTestPropertiesProviderTests
 
     private void VerifyTcmProperties(IDictionary<TestProperty, object> tcmProperties, TestCase testCase)
     {
-        foreach (var property in tcmKnownProperties)
+        foreach (var property in _tcmKnownProperties)
         {
             Assert.AreEqual(testCase.GetPropertyValue(property), tcmProperties[property]);
         }

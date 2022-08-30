@@ -17,11 +17,11 @@ internal class TestMethodFilter
     /// <summary>
     /// Supported properties for filtering
     /// </summary>
-    private readonly Dictionary<string, TestProperty> supportedProperties;
+    private readonly Dictionary<string, TestProperty> _supportedProperties;
 
     internal TestMethodFilter()
     {
-        supportedProperties = new Dictionary<string, TestProperty>(StringComparer.OrdinalIgnoreCase)
+        _supportedProperties = new Dictionary<string, TestProperty>(StringComparer.OrdinalIgnoreCase)
         {
             [Constants.TestCategoryProperty.Label] = Constants.TestCategoryProperty,
             [Constants.PriorityProperty.Label] = Constants.PriorityProperty,
@@ -65,7 +65,7 @@ internal class TestMethodFilter
     /// <returns>a TestProperty instance.</returns>
     internal TestProperty PropertyProvider(string propertyName)
     {
-        supportedProperties.TryGetValue(propertyName, out var testProperty);
+        _supportedProperties.TryGetValue(propertyName, out var testProperty);
         Debug.Assert(testProperty != null, "Invalid property queried");
         return testProperty;
     }
@@ -80,7 +80,7 @@ internal class TestMethodFilter
     {
         if (currentTest != null && propertyName != null)
         {
-            if (supportedProperties.TryGetValue(propertyName, out var testProperty))
+            if (_supportedProperties.TryGetValue(propertyName, out var testProperty))
             {
                 // Test case might not have defined this property. In that case GetPropertyValue()
                 // would return default value. For filtering, if property is not defined return null.
@@ -101,7 +101,7 @@ internal class TestMethodFilter
     /// <returns>Filter expression.</returns>
     private ITestCaseFilterExpression GetTestCaseFilterFromRunContext(IRunContext context)
     {
-        return context.GetTestCaseFilter(supportedProperties.Keys, PropertyProvider);
+        return context.GetTestCaseFilter(_supportedProperties.Keys, PropertyProvider);
     }
 
     /// <summary>
@@ -116,7 +116,7 @@ internal class TestMethodFilter
         {
             // GetTestCaseFilter is present in DiscoveryContext but not in IDiscoveryContext interface.
             MethodInfo methodGetTestCaseFilter = context.GetType().GetRuntimeMethod("GetTestCaseFilter", new[] { typeof(IEnumerable<string>), typeof(Func<string, TestProperty>) });
-            return (ITestCaseFilterExpression)methodGetTestCaseFilter?.Invoke(context, new object[] { supportedProperties.Keys, (Func<string, TestProperty>)PropertyProvider });
+            return (ITestCaseFilterExpression)methodGetTestCaseFilter?.Invoke(context, new object[] { _supportedProperties.Keys, (Func<string, TestProperty>)PropertyProvider });
         }
         catch (Exception ex)
         {

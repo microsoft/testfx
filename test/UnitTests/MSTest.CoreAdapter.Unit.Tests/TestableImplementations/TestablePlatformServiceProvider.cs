@@ -14,7 +14,7 @@ using PlatformServices.Interface.ObjectModel;
 public class TestablePlatformServiceProvider : IPlatformServiceProvider
 {
     // Using the actual reflection operations implementation since this does not need mocking for existing tests.
-    private IReflectionOperations reflectionOperations;
+    private IReflectionOperations _reflectionOperations;
 
     public TestablePlatformServiceProvider()
     {
@@ -121,7 +121,7 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
                 return MockReflectionOperations.Object;
             }
 
-            return reflectionOperations ??= new ReflectionOperations();
+            return _reflectionOperations ??= new ReflectionOperations();
         }
     }
 

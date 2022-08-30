@@ -10,11 +10,11 @@ using System.Reflection;
 
 internal static class DiaSessionOperations
 {
-    private static MethodInfo methodGetNavigationData;
-    private static PropertyInfo propertyFileName;
-    private static PropertyInfo propertyMinLineNumber;
-    private static Type typeDiaSession;
-    private static Type typeDiaNavigationData;
+    private static MethodInfo s_methodGetNavigationData;
+    private static PropertyInfo s_propertyFileName;
+    private static PropertyInfo s_propertyMinLineNumber;
+    private static Type s_typeDiaSession;
+    private static Type s_typeDiaNavigationData;
 
     /// <summary>
     /// Initializes static members of the <see cref="DiaSessionOperations"/> class.
@@ -37,10 +37,10 @@ internal static class DiaSessionOperations
     internal static object CreateNavigationSession(string source)
     {
         // Create instance only when DiaSession is found in Object Model.
-        if (typeDiaSession != null && typeDiaNavigationData != null)
+        if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
             var messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
-            return SafeInvoke(() => Activator.CreateInstance(typeDiaSession, source), messageFormatOnException);
+            return SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source), messageFormatOnException);
         }
 
         return null;
@@ -61,15 +61,15 @@ internal static class DiaSessionOperations
         minLineNumber = -1;
 
         // Get navigation data only when DiaSession is found in Object Model.
-        if (typeDiaSession != null && typeDiaNavigationData != null)
+        if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
             var messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not get navigation data for class:", className, ". Reason:{0}");
-            var data = SafeInvoke(() => methodGetNavigationData.Invoke(navigationSession, new object[] { className, methodName }), messageFormatOnException);
+            var data = SafeInvoke(() => s_methodGetNavigationData.Invoke(navigationSession, new object[] { className, methodName }), messageFormatOnException);
 
             if (data != null)
             {
-                fileName = (string)propertyFileName?.GetValue(data);
-                minLineNumber = (int)(propertyMinLineNumber?.GetValue(data) ?? -1);
+                fileName = (string)s_propertyFileName?.GetValue(data);
+                minLineNumber = (int)(s_propertyMinLineNumber?.GetValue(data) ?? -1);
             }
         }
     }
@@ -92,14 +92,14 @@ internal static class DiaSessionOperations
     /// <param name="diaNavigationData">Type name of DiaNavigationData class.</param>
     internal static void Initialize(string diaSession, string diaNavigationData)
     {
-        typeDiaSession = Type.GetType(diaSession, false);
-        typeDiaNavigationData = Type.GetType(diaNavigationData, false);
+        s_typeDiaSession = Type.GetType(diaSession, false);
+        s_typeDiaNavigationData = Type.GetType(diaNavigationData, false);
 
-        if (typeDiaSession != null && typeDiaNavigationData != null)
+        if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
-            methodGetNavigationData = typeDiaSession.GetRuntimeMethod("GetNavigationData", new[] { typeof(string), typeof(string) });
-            propertyFileName = typeDiaNavigationData.GetRuntimeProperty("FileName");
-            propertyMinLineNumber = typeDiaNavigationData.GetRuntimeProperty("MinLineNumber");
+            s_methodGetNavigationData = s_typeDiaSession.GetRuntimeMethod("GetNavigationData", new[] { typeof(string), typeof(string) });
+            s_propertyFileName = s_typeDiaNavigationData.GetRuntimeProperty("FileName");
+            s_propertyMinLineNumber = s_typeDiaNavigationData.GetRuntimeProperty("MinLineNumber");
         }
     }
 

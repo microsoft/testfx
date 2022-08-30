@@ -17,7 +17,7 @@ using global::MSTestAdapter.TestUtilities;
 [TestClass]
 public class UniversalFileOperationsTests
 {
-    private FileOperations fileOperations;
+    private FileOperations _fileOperations;
 
     /// <summary>
     /// The test initialization.
@@ -25,7 +25,7 @@ public class UniversalFileOperationsTests
     [TestInitialize]
     public void TestInit()
     {
-        fileOperations = new FileOperations();
+        _fileOperations = new FileOperations();
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public class UniversalFileOperationsTests
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
     {
         var filePath = "temp<>txt";
-        void a() => fileOperations.LoadAssembly(filePath, false);
+        void a() => _fileOperations.LoadAssembly(filePath, false);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentException));
     }
 
@@ -46,7 +46,7 @@ public class UniversalFileOperationsTests
     public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound()
     {
         var filePath = "temptxt";
-        void a() => fileOperations.LoadAssembly(filePath, false);
+        void a() => _fileOperations.LoadAssembly(filePath, false);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
     }
 
@@ -59,7 +59,7 @@ public class UniversalFileOperationsTests
         var filePath = Assembly.GetExecutingAssembly().Location;
 
         // This should not throw.
-        fileOperations.LoadAssembly(filePath, false);
+        _fileOperations.LoadAssembly(filePath, false);
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ public class UniversalFileOperationsTests
     public void DoesFileExistReturnsFalseIfFileNameHasInvalidCharacters()
     {
         var filePath = "temp<>txt";
-        Assert.IsFalse(fileOperations.DoesFileExist(filePath));
+        Assert.IsFalse(_fileOperations.DoesFileExist(filePath));
     }
 
     /// This Test is not yet validated. Will validate with new adapter.
@@ -80,7 +80,7 @@ public class UniversalFileOperationsTests
     public void DoesFileExistReturnsFalseIfFileIsNotFound()
     {
         var filePath = "C:\\footemp.txt";
-        void a() => fileOperations.DoesFileExist(filePath);
+        void a() => _fileOperations.DoesFileExist(filePath);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
     }
 
@@ -92,7 +92,7 @@ public class UniversalFileOperationsTests
     public void DoesFileExistReturnsTrueWhenFileExists()
     {
         var filePath = Assembly.GetExecutingAssembly().Location;
-        Assert.IsTrue(fileOperations.DoesFileExist(filePath));
+        Assert.IsTrue(_fileOperations.DoesFileExist(filePath));
     }
 
     /// <summary>
@@ -102,14 +102,14 @@ public class UniversalFileOperationsTests
     [Ignore] // TODO: Re-enable this tests when we have merged projects
     public void CreateNavigationSessionShouldReturnNullForAllSources()
     {
-        Assert.IsNull(fileOperations.CreateNavigationSession(null));
-        Assert.IsNull(fileOperations.CreateNavigationSession("foobar"));
+        Assert.IsNull(_fileOperations.CreateNavigationSession(null));
+        Assert.IsNull(_fileOperations.CreateNavigationSession("foobar"));
     }
 
     [TestMethod]
     public void GetNavigationDataShouldReturnNullFileName()
     {
-        fileOperations.GetNavigationData(null, null, null, out var minLineNumber, out var fileName);
+        _fileOperations.GetNavigationData(null, null, null, out var minLineNumber, out var fileName);
         Assert.IsNull(fileName);
         Assert.AreEqual(-1, minLineNumber);
     }
@@ -171,7 +171,7 @@ public class UniversalFileOperationsTests
     [TestMethod]
     public void GetFullFilePathShouldReturnAssemblyFileName()
     {
-        Assert.IsNull(fileOperations.GetFullFilePath(null));
-        Assert.AreEqual("assemblyFileName", fileOperations.GetFullFilePath("assemblyFileName"));
+        Assert.IsNull(_fileOperations.GetFullFilePath(null));
+        Assert.AreEqual("assemblyFileName", _fileOperations.GetFullFilePath("assemblyFileName"));
     }
 }

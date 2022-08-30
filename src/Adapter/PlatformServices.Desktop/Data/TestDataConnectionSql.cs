@@ -23,38 +23,38 @@ using ObjectModel;
 /// </summary>
 internal class TestDataConnectionSql : TestDataConnection
 {
-    private string quoteSuffix;
-    private string quotePrefix;
-    private readonly DbCommandBuilder commandBuilder;
-    private readonly DbConnection connection;
-    private readonly DbProviderFactory factory;
+    private string _quoteSuffix;
+    private string _quotePrefix;
+    private readonly DbCommandBuilder _commandBuilder;
+    private readonly DbConnection _connection;
+    private readonly DbProviderFactory _factory;
 
     #region Constructor
 
     internal protected TestDataConnectionSql(string invariantProviderName, string connectionString, List<string> dataFolders)
         : base(dataFolders)
     {
-        factory = DbProviderFactories.GetFactory(invariantProviderName);
-        WriteDiagnostics("DbProviderFactory {0}", factory);
-        Debug.Assert(factory != null, "factory should not be null.");
+        _factory = DbProviderFactories.GetFactory(invariantProviderName);
+        WriteDiagnostics("DbProviderFactory {0}", _factory);
+        Debug.Assert(_factory != null, "factory should not be null.");
 
-        connection = factory.CreateConnection();
-        WriteDiagnostics("DbConnection {0}", connection);
-        Debug.Assert(connection != null, "connection");
+        _connection = _factory.CreateConnection();
+        WriteDiagnostics("DbConnection {0}", _connection);
+        Debug.Assert(_connection != null, "connection");
 
-        commandBuilder = factory.CreateCommandBuilder();
-        WriteDiagnostics("DbCommandBuilder {0}", commandBuilder);
-        Debug.Assert(commandBuilder != null, "builder");
+        _commandBuilder = _factory.CreateCommandBuilder();
+        WriteDiagnostics("DbCommandBuilder {0}", _commandBuilder);
+        Debug.Assert(_commandBuilder != null, "builder");
 
         if (!string.IsNullOrEmpty(connectionString))
         {
-            connection.ConnectionString = connectionString;
+            _connection.ConnectionString = connectionString;
             WriteDiagnostics("Current directory: {0}", Directory.GetCurrentDirectory());
             WriteDiagnostics("Opening connection {0}: {1}", invariantProviderName, connectionString);
-            connection.Open();
+            _connection.Open();
         }
 
-        WriteDiagnostics("Connection state is {0}", connection.State);
+        WriteDiagnostics("Connection state is {0}", _connection.State);
     }
 
     #endregion
@@ -63,17 +63,17 @@ internal class TestDataConnectionSql : TestDataConnection
 
     public override DbConnection Connection
     {
-        get { return connection; }
+        get { return _connection; }
     }
 
     protected DbCommandBuilder CommandBuilder
     {
-        get { return commandBuilder; }
+        get { return _commandBuilder; }
     }
 
     protected DbProviderFactory Factory
     {
-        get { return factory; }
+        get { return _factory; }
     }
 
     #endregion
@@ -130,17 +130,17 @@ internal class TestDataConnectionSql : TestDataConnection
     {
         get
         {
-            if (string.IsNullOrEmpty(quotePrefix))
+            if (string.IsNullOrEmpty(_quotePrefix))
             {
                 GetQuoteLiterals();
             }
 
-            return quotePrefix;
+            return _quotePrefix;
         }
 
         set
         {
-            quotePrefix = value;
+            _quotePrefix = value;
         }
     }
 
@@ -148,17 +148,17 @@ internal class TestDataConnectionSql : TestDataConnection
     {
         get
         {
-            if (string.IsNullOrEmpty(quoteSuffix))
+            if (string.IsNullOrEmpty(_quoteSuffix))
             {
                 GetQuoteLiterals();
             }
 
-            return quoteSuffix;
+            return _quoteSuffix;
         }
 
         set
         {
-            quoteSuffix = value;
+            _quoteSuffix = value;
         }
     }
 
@@ -349,8 +349,8 @@ internal class TestDataConnectionSql : TestDataConnection
     /// </summary>
     public virtual void GetQuoteLiterals()
     {
-        quotePrefix = CommandBuilder.QuotePrefix;
-        quoteSuffix = CommandBuilder.QuoteSuffix;
+        _quotePrefix = CommandBuilder.QuotePrefix;
+        _quoteSuffix = CommandBuilder.QuoteSuffix;
     }
 
     protected virtual string QuoteIdentifier(string identifier)
@@ -726,7 +726,7 @@ internal class TestDataConnectionSql : TestDataConnection
     public bool IsOpen()
 #pragma warning restore SA1202 // Elements must be ordered by access
     {
-        return connection != null && connection.State == ConnectionState.Open;
+        return _connection != null && _connection.State == ConnectionState.Open;
     }
 
     /// <summary>
@@ -877,14 +877,14 @@ internal class TestDataConnectionSql : TestDataConnection
 #pragma warning restore SA1202 // Elements must be ordered by access
     {
         // Ensure that we Dispose of all disposables...
-        if (commandBuilder != null)
+        if (_commandBuilder != null)
         {
-            commandBuilder.Dispose();
+            _commandBuilder.Dispose();
         }
 
-        if (connection != null)
+        if (_connection != null)
         {
-            connection.Dispose();
+            _connection.Dispose();
         }
 
         GC.SuppressFinalize(this);

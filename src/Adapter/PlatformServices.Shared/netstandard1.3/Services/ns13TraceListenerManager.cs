@@ -20,12 +20,12 @@ public class TraceListenerManager : ITraceListenerManager
     /// <summary>
     /// Original output stream
     /// </summary>
-    private readonly TextWriter origStdOut;
+    private readonly TextWriter _origStdOut;
 
     /// <summary>
     /// Original error stream
     /// </summary>
-    private readonly TextWriter origStdErr;
+    private readonly TextWriter _origStdErr;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TraceListenerManager"/> class.
@@ -34,8 +34,8 @@ public class TraceListenerManager : ITraceListenerManager
     /// <param name="errorWriter">A writer instance to log error messages.</param>
     public TraceListenerManager(TextWriter outputWriter, TextWriter errorWriter)
     {
-        origStdOut = Console.Out;
-        origStdErr = Console.Error;
+        _origStdOut = Console.Out;
+        _origStdErr = Console.Error;
 
         // Update the output/error streams with redirected streams
         Console.SetOut(outputWriter);
@@ -70,8 +70,8 @@ public class TraceListenerManager : ITraceListenerManager
     public void Dispose(ITraceListener traceListener)
     {
         traceListener.Dispose();
-        Console.SetOut(origStdOut);
-        Console.SetError(origStdErr);
+        Console.SetOut(_origStdOut);
+        Console.SetError(_origStdErr);
     }
 }
 

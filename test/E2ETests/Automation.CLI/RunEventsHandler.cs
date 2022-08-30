@@ -12,27 +12,27 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 public class RunEventsHandler : ITestRunEventsHandler
 {
-    private readonly List<TestResult> passedTests = new();
-    private readonly List<TestResult> failedTests = new();
-    private readonly List<TestResult> skippedTests = new();
-    private readonly List<string> errors = new();
+    private readonly List<TestResult> _passedTests = new();
+    private readonly List<TestResult> _failedTests = new();
+    private readonly List<TestResult> _skippedTests = new();
+    private readonly List<string> _errors = new();
 
     /// <summary>
     /// Gets a list of Tests which passed.
     /// </summary>
-    public ReadOnlyCollection<TestResult> PassedTests => passedTests.AsReadOnly();
+    public ReadOnlyCollection<TestResult> PassedTests => _passedTests.AsReadOnly();
 
     /// <summary>
     /// Gets a list of Tests which failed.
     /// </summary>
-    public ReadOnlyCollection<TestResult> FailedTests => failedTests.AsReadOnly();
+    public ReadOnlyCollection<TestResult> FailedTests => _failedTests.AsReadOnly();
 
     /// <summary>
     /// Gets a list of Tests which skipped.
     /// </summary>
-    public ReadOnlyCollection<TestResult> SkippedTests => skippedTests.AsReadOnly();
+    public ReadOnlyCollection<TestResult> SkippedTests => _skippedTests.AsReadOnly();
 
-    public ReadOnlyCollection<string> Errors => errors.AsReadOnly();
+    public ReadOnlyCollection<string> Errors => _errors.AsReadOnly();
 
     public double ElapsedTimeInRunningTests { get; private set; }
 
@@ -47,7 +47,7 @@ public class RunEventsHandler : ITestRunEventsHandler
                 EqtTrace.Warning(message);
                 break;
             case TestMessageLevel.Error:
-                errors.Add(message);
+                _errors.Add(message);
                 EqtTrace.Error(message);
                 break;
             default:
@@ -69,13 +69,13 @@ public class RunEventsHandler : ITestRunEventsHandler
                 switch (testResult.Outcome)
                 {
                     case TestOutcome.Passed:
-                        passedTests.Add(testResult);
+                        _passedTests.Add(testResult);
                         break;
                     case TestOutcome.Failed:
-                        failedTests.Add(testResult);
+                        _failedTests.Add(testResult);
                         break;
                     case TestOutcome.Skipped:
-                        skippedTests.Add(testResult);
+                        _skippedTests.Add(testResult);
                         break;
                 }
             }
@@ -93,13 +93,13 @@ public class RunEventsHandler : ITestRunEventsHandler
                 switch (testResult.Outcome)
                 {
                     case TestOutcome.Passed:
-                        passedTests.Add(testResult);
+                        _passedTests.Add(testResult);
                         break;
                     case TestOutcome.Failed:
-                        failedTests.Add(testResult);
+                        _failedTests.Add(testResult);
                         break;
                     case TestOutcome.Skipped:
-                        skippedTests.Add(testResult);
+                        _skippedTests.Add(testResult);
                         break;
                     default:
                         break;

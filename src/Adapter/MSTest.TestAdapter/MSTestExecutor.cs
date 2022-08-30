@@ -21,7 +21,7 @@ public class MSTestExecutor : ITestExecutor
     /// <summary>
     /// Token for canceling the test run.
     /// </summary>
-    private TestRunCancellationToken cancellationToken = null;
+    private TestRunCancellationToken _cancellationToken = null;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestExecutor"/> class.
@@ -71,9 +71,9 @@ public class MSTestExecutor : ITestExecutor
             return;
         }
 
-        cancellationToken = new TestRunCancellationToken();
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, cancellationToken);
-        cancellationToken = null;
+        _cancellationToken = new TestRunCancellationToken();
+        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, _cancellationToken);
+        _cancellationToken = null;
     }
 
     public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
@@ -105,14 +105,14 @@ public class MSTestExecutor : ITestExecutor
         }
 
         sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);
-        cancellationToken = new TestRunCancellationToken();
-        TestExecutionManager.RunTests(sources, runContext, frameworkHandle, cancellationToken);
+        _cancellationToken = new TestRunCancellationToken();
+        TestExecutionManager.RunTests(sources, runContext, frameworkHandle, _cancellationToken);
 
-        cancellationToken = null;
+        _cancellationToken = null;
     }
 
     public void Cancel()
     {
-        cancellationToken?.Cancel();
+        _cancellationToken?.Cancel();
     }
 }

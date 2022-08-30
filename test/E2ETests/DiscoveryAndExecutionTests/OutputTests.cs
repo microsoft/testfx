@@ -59,9 +59,9 @@ public class OutputTests : CLITestBase
         ValidateInitializationsAndCleanups(testResults);
     }
 
-    private static Func<TestResultMessage, bool> IsDebugMessage = m => m.Category == "StdOutMsgs" && m.Text.StartsWith("\n\nDebug Trace:\n");
-    private static Func<TestResultMessage, bool> IsStandardOutputMessage = m => m.Category == "StdOutMsgs" && !m.Text.StartsWith("\n\nDebug Trace:\n");
-    private static Func<TestResultMessage, bool> IsStandardErrorMessage = m => m.Category == "StdErrMsgs";
+    private static readonly Func<TestResultMessage, bool> IsDebugMessage = m => m.Category == "StdOutMsgs" && m.Text.StartsWith("\n\nDebug Trace:\n");
+    private static readonly Func<TestResultMessage, bool> IsStandardOutputMessage = m => m.Category == "StdOutMsgs" && !m.Text.StartsWith("\n\nDebug Trace:\n");
+    private static readonly Func<TestResultMessage, bool> IsStandardErrorMessage = m => m.Category == "StdErrMsgs";
 
     private static void ValidateOutputsAreNotMixed(ReadOnlyCollection<OM.TestResult> testResults, string methodName, string[] shouldNotContain)
     {

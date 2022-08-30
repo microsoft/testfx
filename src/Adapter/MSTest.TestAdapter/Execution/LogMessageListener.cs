@@ -17,23 +17,23 @@ using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 /// </summary>
 public class LogMessageListener : IDisposable
 {
-    private static object traceLock = new();
-    private static int listenerCount;
-    private static ThreadSafeStringWriter redirectedDebugTrace;
+    private static readonly object TraceLock = new();
+    private static int s_listenerCount;
+    private static ThreadSafeStringWriter s_redirectedDebugTrace;
 
     /// <summary>
     /// Trace listener to capture Trace.WriteLines in the test cases
     /// </summary>
-    private static ITraceListener traceListener;
-    private readonly ThreadSafeStringWriter redirectedStandardOutput;
-    private readonly ThreadSafeStringWriter redirectedStandardError;
-    private readonly bool captureDebugTraces;
+    private static ITraceListener s_traceListener;
+    private readonly ThreadSafeStringWriter _redirectedStandardOutput;
+    private readonly ThreadSafeStringWriter _redirectedStandardError;
+    private readonly bool _captureDebugTraces;
 
     /// <summary>
     /// Trace listener Manager to perform operation on tracelistener objects.
     /// </summary>
-    private ITraceListenerManager traceListenerManager;
-    private bool isDisposed;
+    private ITraceListenerManager _traceListenerManager;
+    private bool _isDisposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LogMessageListener"/> class.
@@ -41,19 +41,19 @@ public class LogMessageListener : IDisposable
     /// <param name="captureDebugTraces">Captures debug traces if true.</param>
     public LogMessageListener(bool captureDebugTraces)
     {
-        this.captureDebugTraces = captureDebugTraces;
+        _captureDebugTraces = captureDebugTraces;
 
         // Cache the original output/error streams and replace it with the own stream.
-        redirectedStandardOutput = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out");
-        redirectedStandardError = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "err");
+        _redirectedStandardOutput = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out");
+        _redirectedStandardError = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "err");
 
-        Logger.OnLogMessage += redirectedStandardOutput.WriteLine;
+        Logger.OnLogMessage += _redirectedStandardOutput.WriteLine;
 
-        if (this.captureDebugTraces)
+        if (_captureDebugTraces)
         {
             // This is awkward, it has a side-effect of setting up Console output redirection, but the naming is suggesting that we are
             // just getting TraceListener manager.
-            traceListenerManager = PlatformServiceProvider.Instance.GetTraceListenerManager(redirectedStandardOutput, redirectedStandardError);
+            _traceListenerManager = PlatformServiceProvider.Instance.GetTraceListenerManager(_redirectedStandardOutput, _redirectedStandardError);
 
             // The Debug listener uses Debug.WriteLine and Debug.Write to write the messages, which end up written into Trace.Listeners.
             // These listeners are static and hence shared across the whole process. We need to capture Debug output only for the current
@@ -69,16 +69,16 @@ public class LogMessageListener : IDisposable
             // to only add the listener when there is none, and remove it when we are the last one to dispose.
             //
             // This would break the behavior for net451, but that functionality was moved further into ThreadSafeStringWriter.
-            lock (traceLock)
+            lock (TraceLock)
             {
-                if (listenerCount == 0)
+                if (s_listenerCount == 0)
                 {
-                    redirectedDebugTrace = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "trace");
-                    traceListener = PlatformServiceProvider.Instance.GetTraceListener(redirectedDebugTrace);
-                    traceListenerManager.Add(traceListener);
+                    s_redirectedDebugTrace = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "trace");
+                    s_traceListener = PlatformServiceProvider.Instance.GetTraceListener(s_redirectedDebugTrace);
+                    _traceListenerManager.Add(s_traceListener);
                 }
 
-                listenerCount++;
+                s_listenerCount++;
             }
         }
     }
@@ -91,12 +91,12 @@ public class LogMessageListener : IDisposable
     /// <summary>
     /// Gets logger output
     /// </summary>
-    public string StandardOutput => redirectedStandardOutput.ToString();
+    public string StandardOutput => _redirectedStandardOutput.ToString();
 
     /// <summary>
     /// Gets 'Error' Output from the redirected stream
     /// </summary>
-    public string StandardError => redirectedStandardError.ToString();
+    public string StandardError => _redirectedStandardError.ToString();
 
     /// <summary>
     /// Gets 'Trace' Output from the redirected stream
@@ -105,30 +105,30 @@ public class LogMessageListener : IDisposable
     {
         get
         {
-            return redirectedDebugTrace?.ToString();
+            return s_redirectedDebugTrace?.ToString();
         }
     }
 
     public string GetAndClearStandardOutput()
     {
-        var output = redirectedStandardOutput.ToStringAndClear();
+        var output = _redirectedStandardOutput.ToStringAndClear();
         return output;
     }
 
     public string GetAndClearStandardError()
     {
-        var output = redirectedStandardError.ToStringAndClear();
+        var output = _redirectedStandardError.ToStringAndClear();
         return output;
     }
 
     public string GetAndClearDebugTrace()
     {
-        if (redirectedDebugTrace == null)
+        if (s_redirectedDebugTrace == null)
         {
             return null;
         }
 
-        var output = redirectedDebugTrace.ToStringAndClear();
+        var output = s_redirectedDebugTrace.ToStringAndClear();
         return output;
     }
 
@@ -140,26 +140,26 @@ public class LogMessageListener : IDisposable
 
     private void Dispose(bool disposing)
     {
-        if (disposing && !isDisposed)
+        if (disposing && !_isDisposed)
         {
-            isDisposed = true;
-            Logger.OnLogMessage -= redirectedStandardOutput.WriteLine;
-            Logger.OnLogMessage -= redirectedStandardError.WriteLine;
+            _isDisposed = true;
+            Logger.OnLogMessage -= _redirectedStandardOutput.WriteLine;
+            Logger.OnLogMessage -= _redirectedStandardError.WriteLine;
 
-            redirectedStandardOutput.Dispose();
-            redirectedStandardError.Dispose();
+            _redirectedStandardOutput.Dispose();
+            _redirectedStandardError.Dispose();
 
-            if (captureDebugTraces)
+            if (_captureDebugTraces)
             {
-                lock (traceLock)
+                lock (TraceLock)
                 {
-                    if (listenerCount == 1)
+                    if (s_listenerCount == 1)
                     {
                         try
                         {
-                            if (traceListener != null)
+                            if (s_traceListener != null)
                             {
-                                traceListenerManager.Remove(traceListener);
+                                _traceListenerManager.Remove(s_traceListener);
                             }
                         }
                         catch (Exception e)
@@ -168,16 +168,16 @@ public class LogMessageListener : IDisposable
                             PlatformServiceProvider.Instance.AdapterTraceLogger.LogError("ConsoleOutputRedirector.Dispose threw exception: {0}", e);
                         }
 
-                        if (traceListener != null)
+                        if (s_traceListener != null)
                         {
                             // Dispose trace manager and listeners
-                            traceListenerManager.Dispose(traceListener);
-                            traceListenerManager = null;
-                            traceListener = null;
+                            _traceListenerManager.Dispose(s_traceListener);
+                            _traceListenerManager = null;
+                            s_traceListener = null;
                         }
                     }
 
-                    listenerCount--;
+                    s_listenerCount--;
                 }
             }
         }

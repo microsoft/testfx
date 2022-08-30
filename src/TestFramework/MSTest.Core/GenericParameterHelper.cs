@@ -25,8 +25,8 @@ public class GenericParameterHelper : IComparable, IEnumerable
 {
     #region Private Fields
     private static readonly Random Randomizer = new();
-    private int data;
-    private IList ienumerableStore;
+    private int _data;
+    private IList _ienumerableStore;
 
     #endregion
 
@@ -62,8 +62,8 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// </summary>
     public int Data
     {
-        get { return data; }
-        set { data = value; }
+        get { return _data; }
+        set { _data = value; }
     }
     #endregion
 
@@ -126,17 +126,17 @@ public class GenericParameterHelper : IComparable, IEnumerable
     public IEnumerator GetEnumerator()
     {
         int size = Data % 10;
-        if (ienumerableStore == null)
+        if (_ienumerableStore == null)
         {
-            ienumerableStore = new List<object>(size);
+            _ienumerableStore = new List<object>(size);
 
             for (int i = 0; i < size; i++)
             {
-                ienumerableStore.Add(new object());
+                _ienumerableStore.Add(new object());
             }
         }
 
-        return ienumerableStore.GetEnumerator();
+        return _ienumerableStore.GetEnumerator();
     }
 
     #endregion
@@ -150,7 +150,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// <returns>The cloned object.</returns>
     public object Clone()
     {
-        GenericParameterHelper clone = new() { data = data };
+        GenericParameterHelper clone = new() { _data = _data };
         return clone;
     }
 

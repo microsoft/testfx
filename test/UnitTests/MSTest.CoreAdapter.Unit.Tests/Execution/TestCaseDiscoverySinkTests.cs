@@ -17,38 +17,38 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class TestCaseDiscoverySinkTests
 {
-    private TestCaseDiscoverySink testCaseDiscoverySink;
+    private TestCaseDiscoverySink _testCaseDiscoverySink;
 
     [TestInitialize]
     public void TestInit()
     {
-        testCaseDiscoverySink = new TestCaseDiscoverySink();
+        _testCaseDiscoverySink = new TestCaseDiscoverySink();
     }
 
     [TestMethod]
     public void TestCaseDiscoverySinkConstructorShouldInitializeTests()
     {
-        Assert.IsNotNull(testCaseDiscoverySink.Tests);
-        Assert.AreEqual(0, testCaseDiscoverySink.Tests.Count);
+        Assert.IsNotNull(_testCaseDiscoverySink.Tests);
+        Assert.AreEqual(0, _testCaseDiscoverySink.Tests.Count);
     }
 
     [TestMethod]
     public void SendTestCaseShouldNotAddTestIfTestCaseIsNull()
     {
-        testCaseDiscoverySink.SendTestCase(null);
+        _testCaseDiscoverySink.SendTestCase(null);
 
-        Assert.IsNotNull(testCaseDiscoverySink.Tests);
-        Assert.AreEqual(0, testCaseDiscoverySink.Tests.Count);
+        Assert.IsNotNull(_testCaseDiscoverySink.Tests);
+        Assert.AreEqual(0, _testCaseDiscoverySink.Tests.Count);
     }
 
     [TestMethod]
     public void SendTestCaseShouldAddTheTestCaseToTests()
     {
         TestCase tc = new("T", new Uri("executor://TestExecutorUri"), "A");
-        testCaseDiscoverySink.SendTestCase(tc);
+        _testCaseDiscoverySink.SendTestCase(tc);
 
-        Assert.IsNotNull(testCaseDiscoverySink.Tests);
-        Assert.AreEqual(1, testCaseDiscoverySink.Tests.Count);
-        Assert.AreEqual(tc, testCaseDiscoverySink.Tests.ToArray()[0]);
+        Assert.IsNotNull(_testCaseDiscoverySink.Tests);
+        Assert.AreEqual(1, _testCaseDiscoverySink.Tests.Count);
+        Assert.AreEqual(tc, _testCaseDiscoverySink.Tests.ToArray()[0]);
     }
 }

@@ -43,29 +43,29 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <summary>
     /// This will have the list of all directories read from runsettings.
     /// </summary>
-    private readonly Queue<RecursiveDirectoryPath> directoryList;
+    private readonly Queue<RecursiveDirectoryPath> _directoryList;
 
     /// <summary>
     /// The directories to look for assemblies to resolve.
     /// </summary>
-    private readonly List<string> searchDirectories;
+    private readonly List<string> _searchDirectories;
 
     /// <summary>
     /// Dictionary of Assemblies discovered to date.
     /// </summary>
-    private readonly Dictionary<string, Assembly> resolvedAssemblies = new();
+    private readonly Dictionary<string, Assembly> _resolvedAssemblies = new();
 
     /// <summary>
     /// Dictionary of Reflection-Only Assemblies discovered to date.
     /// </summary>
-    private readonly Dictionary<string, Assembly> reflectionOnlyResolvedAssemblies = new();
+    private readonly Dictionary<string, Assembly> _reflectionOnlyResolvedAssemblies = new();
 
     /// <summary>
     /// lock for the loaded assemblies cache.
     /// </summary>
-    private readonly object syncLock = new();
+    private readonly object _syncLock = new();
 
-    private bool disposed;
+    private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AssemblyResolver"/> class.
@@ -84,8 +84,8 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             throw new ArgumentNullException(nameof(directories));
         }
 
-        searchDirectories = new List<string>(directories);
-        directoryList = new Queue<RecursiveDirectoryPath>();
+        _searchDirectories = new List<string>(directories);
+        _directoryList = new Queue<RecursiveDirectoryPath>();
 
         AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
         AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
@@ -143,7 +143,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
 
         foreach (var recPath in recursiveDirectoryPath)
         {
-            directoryList.Enqueue(recPath);
+            _directoryList.Enqueue(recPath);
         }
     }
 
@@ -203,7 +203,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// </param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!disposed)
+        if (!_disposed)
         {
             if (disposing)
             {
@@ -215,7 +215,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             }
 
             // cleanup native resources
-            disposed = true;
+            _disposed = true;
         }
     }
 
@@ -374,7 +374,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         IEnumerable<string> fileNames = WindowsRuntimeMetadata.ResolveNamespace(
             args.NamespaceName,
             null,   // Will use OS installed .winmd files, you can pass explicit Windows SDK path here for searching 1st party WinRT types
-            searchDirectories);  // You can pass package graph paths, they will be used for searching .winmd files with 3rd party WinRT types
+            _searchDirectories);  // You can pass package graph paths, they will be used for searching .winmd files with 3rd party WinRT types
 
         foreach (string fileName in fileNames)
         {
@@ -421,7 +421,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
                 }
             });
 
-        lock (syncLock)
+        lock (_syncLock)
         {
             // Since both normal and reflection only cache are accessed in same block, putting only one lock should be sufficient.
             if (TryLoadFromCache(assemblyNameToLoad, isReflectionOnly, out var assembly))
@@ -429,21 +429,21 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
                 return assembly;
             }
 
-            assembly = SearchAssembly(searchDirectories, assemblyNameToLoad, isReflectionOnly);
+            assembly = SearchAssembly(_searchDirectories, assemblyNameToLoad, isReflectionOnly);
 
             if (assembly != null)
             {
                 return assembly;
             }
 
-            if (directoryList != null && directoryList.Any())
+            if (_directoryList != null && _directoryList.Any())
             {
                 // required assembly is not present in searchDirectories??
                 // see, if we can find it in user specified search directories.
-                while (assembly == null && directoryList.Count > 0)
+                while (assembly == null && _directoryList.Count > 0)
                 {
                     // instead of loading whole search directory in one time, we are adding directory on the basis of need
-                    var currentNode = directoryList.Dequeue();
+                    var currentNode = _directoryList.Dequeue();
 
                     List<string> increamentalSearchDirectory = new();
 
@@ -459,7 +459,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
 
                         // Add this directory list in this.searchDirectories so that when we will try to resolve some other
                         // assembly, then it will look in this whole directory first.
-                        searchDirectories.AddRange(increamentalSearchDirectory);
+                        _searchDirectories.AddRange(increamentalSearchDirectory);
 
                         assembly = SearchAssembly(increamentalSearchDirectory, assemblyNameToLoad, isReflectionOnly);
                     }
@@ -493,26 +493,26 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
                 {
                     // Put it in the resolved assembly cache so that if the Load call below
                     // triggers another assembly resolution, then we don't end up in stack overflow.
-                    reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = null;
+                    _reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = null;
 
                     assembly = Assembly.ReflectionOnlyLoad(assemblyNameToLoad);
 
                     if (assembly != null)
                     {
-                        reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = assembly;
+                        _reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = assembly;
                     }
                 }
                 else
                 {
                     // Put it in the resolved assembly cache so that if the Load call below
                     // triggers another assembly resolution, then we don't end up in stack overflow.
-                    resolvedAssemblies[assemblyNameToLoad] = null;
+                    _resolvedAssemblies[assemblyNameToLoad] = null;
 
                     assembly = Assembly.Load(assemblyNameToLoad);
 
                     if (assembly != null)
                     {
-                        resolvedAssemblies[assemblyNameToLoad] = assembly;
+                        _resolvedAssemblies[assemblyNameToLoad] = assembly;
                     }
                 }
 
@@ -548,11 +548,11 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
 
         if (isReflectionOnly)
         {
-            isFoundInCache = reflectionOnlyResolvedAssemblies.TryGetValue(assemblyName, out assembly);
+            isFoundInCache = _reflectionOnlyResolvedAssemblies.TryGetValue(assemblyName, out assembly);
         }
         else
         {
-            isFoundInCache = resolvedAssemblies.TryGetValue(assemblyName, out assembly);
+            isFoundInCache = _resolvedAssemblies.TryGetValue(assemblyName, out assembly);
         }
 
         if (isFoundInCache)
@@ -620,12 +620,12 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             if (isReflectionOnly)
             {
                 assembly = ReflectionOnlyLoadAssemblyFrom(assemblyPath);
-                reflectionOnlyResolvedAssemblies[assemblyName] = assembly;
+                _reflectionOnlyResolvedAssemblies[assemblyName] = assembly;
             }
             else
             {
                 assembly = LoadAssemblyFrom(assemblyPath);
-                resolvedAssemblies[assemblyName] = assembly;
+                _resolvedAssemblies[assemblyName] = assembly;
             }
 
             SafeLog(

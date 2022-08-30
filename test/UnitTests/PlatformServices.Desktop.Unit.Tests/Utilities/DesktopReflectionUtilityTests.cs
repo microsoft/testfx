@@ -21,11 +21,11 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 public class ReflectionUtilityTests
 #pragma warning restore SA1649 // File name must match first type name
 {
-    private readonly ReflectionUtility reflectionUtility;
+    private readonly ReflectionUtility _reflectionUtility;
 
     public ReflectionUtilityTests()
     {
-        reflectionUtility = new ReflectionUtility();
+        _reflectionUtility = new ReflectionUtility();
     }
 
     [TestMethod]
@@ -33,7 +33,7 @@ public class ReflectionUtilityTests
     {
         var asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
 
-        var attribs = reflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
+        var attribs = _reflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);

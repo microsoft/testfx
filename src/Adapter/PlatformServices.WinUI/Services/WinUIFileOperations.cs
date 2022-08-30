@@ -17,11 +17,11 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 /// </summary>
 public class FileOperations : IFileOperations
 {
-    private readonly bool isPackaged;
+    private readonly bool _isPackaged;
 
     public FileOperations()
     {
-        isPackaged = AppContainer.AppModel.IsPackagedProcess();
+        _isPackaged = AppContainer.AppModel.IsPackagedProcess();
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ public class FileOperations : IFileOperations
     /// <returns> The <see cref="Assembly"/>. </returns>
     public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly)
     {
-        if (!isPackaged && Path.IsPathRooted(assemblyName))
+        if (!_isPackaged && Path.IsPathRooted(assemblyName))
         {
             return Assembly.LoadFrom(assemblyName);
         }

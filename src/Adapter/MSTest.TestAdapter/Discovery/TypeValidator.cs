@@ -20,8 +20,8 @@ internal class TypeValidator
     // Setting this to a string representation instead of a typeof(TestContext).FullName
     // since the later would require a load of the Test Framework extension assembly at this point.
     private const string TestContextFullName = "Microsoft.VisualStudio.TestTools.UnitTesting.TestContext";
-    private readonly ReflectHelper reflectHelper;
-    private readonly bool discoverInternals;
+    private readonly ReflectHelper _reflectHelper;
+    private readonly bool _discoverInternals;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeValidator"/> class.
@@ -40,8 +40,8 @@ internal class TypeValidator
     /// addition to test classes which are declared public.</param>
     internal TypeValidator(ReflectHelper reflectHelper, bool discoverInternals)
     {
-        this.reflectHelper = reflectHelper;
-        this.discoverInternals = discoverInternals;
+        _reflectHelper = reflectHelper;
+        _discoverInternals = discoverInternals;
     }
 
     /// <summary>
@@ -53,11 +53,11 @@ internal class TypeValidator
     internal virtual bool IsValidTestClass(Type type, ICollection<string> warnings)
     {
         if (type.GetTypeInfo().IsClass &&
-                (reflectHelper.IsAttributeDefined(type, typeof(TestClassAttribute), false) ||
-                reflectHelper.HasAttributeDerivedFrom(type, typeof(TestClassAttribute), false)))
+                (_reflectHelper.IsAttributeDefined(type, typeof(TestClassAttribute), false) ||
+                _reflectHelper.HasAttributeDerivedFrom(type, typeof(TestClassAttribute), false)))
         {
             // inaccessible class
-            if (!TypeHasValidAccessibility(type.GetTypeInfo(), discoverInternals))
+            if (!TypeHasValidAccessibility(type.GetTypeInfo(), _discoverInternals))
             {
                 var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
                 warnings.Add(warning);

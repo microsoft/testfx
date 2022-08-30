@@ -18,7 +18,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 /// </summary>
 internal class AssemblyLoadWorker : MarshalByRefObject
 {
-    private readonly IAssemblyUtility assemblyUtility;
+    private readonly IAssemblyUtility _assemblyUtility;
 
     public AssemblyLoadWorker()
         : this(new AssemblyUtility())
@@ -27,7 +27,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
 
     internal AssemblyLoadWorker(IAssemblyUtility assemblyUtility)
     {
-        this.assemblyUtility = assemblyUtility;
+        _assemblyUtility = assemblyUtility;
     }
 
     /// <summary>
@@ -49,7 +49,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
             EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Reflection loading {assemblyPath}.");
 
             // First time we load in LoadFromContext to avoid issues.
-            assembly = assemblyUtility.ReflectionOnlyLoadFrom(assemblyPath);
+            assembly = _assemblyUtility.ReflectionOnlyLoadFrom(assemblyPath);
         }
         catch (Exception ex)
         {
@@ -93,7 +93,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         {
             try
             {
-                Assembly a = assemblyUtility.ReflectionOnlyLoadFrom(path);
+                Assembly a = _assemblyUtility.ReflectionOnlyLoadFrom(path);
                 return GetTargetFrameworkStringFromAssembly(a);
             }
             catch (BadImageFormatException)
@@ -244,7 +244,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
             string postPolicyAssembly = AppDomain.CurrentDomain.ApplyPolicy(assemblyString);
             Debug.Assert(!string.IsNullOrEmpty(postPolicyAssembly), "postPolicyAssembly");
 
-            assembly = assemblyUtility.ReflectionOnlyLoad(postPolicyAssembly);
+            assembly = _assemblyUtility.ReflectionOnlyLoad(postPolicyAssembly);
             visitedAssemblies.Add(assembly.FullName);   // Just in case.
         }
         catch (Exception ex)

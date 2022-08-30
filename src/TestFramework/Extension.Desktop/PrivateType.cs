@@ -23,7 +23,7 @@ public class PrivateType
     /// <summary>
     /// The wrapped type.
     /// </summary>
-    private readonly Type type;
+    private readonly Type _type;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PrivateType"/> class that contains the private type.
@@ -36,7 +36,7 @@ public class PrivateType
         Helper.CheckParameterNotNullOrEmpty(typeName, "typeName", string.Empty);
         Assembly asm = Assembly.Load(assemblyName);
 
-        type = asm.GetType(typeName, true);
+        _type = asm.GetType(typeName, true);
     }
 
     /// <summary>
@@ -46,13 +46,13 @@ public class PrivateType
     /// <param name="type">The wrapped Type to create.</param>
     public PrivateType(Type type)
     {
-        this.type = type ?? throw new ArgumentNullException(nameof(type));
+        _type = type ?? throw new ArgumentNullException(nameof(type));
     }
 
     /// <summary>
     /// Gets the referenced type
     /// </summary>
-    public Type ReferencedType => type;
+    public Type ReferencedType => _type;
 
     /// <summary>
     /// Invokes static member
@@ -182,7 +182,7 @@ public class PrivateType
         Helper.CheckParameterNotNull(name, "name", string.Empty);
         if (parameterTypes != null)
         {
-            MethodInfo member = type.GetMethod(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, parameterTypes, null);
+            MethodInfo member = _type.GetMethod(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, parameterTypes, null);
             if (member == null)
             {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
@@ -432,7 +432,7 @@ public class PrivateType
         Helper.CheckParameterNotNull(name, "name", string.Empty);
         if (parameterTypes != null)
         {
-            PropertyInfo pi = type.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null);
+            PropertyInfo pi = _type.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null);
             if (pi == null)
             {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
@@ -472,7 +472,7 @@ public class PrivateType
 
         if (parameterTypes != null)
         {
-            PropertyInfo pi = type.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null);
+            PropertyInfo pi = _type.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null);
             if (pi == null)
             {
                 throw new ArgumentException(
@@ -503,7 +503,7 @@ public class PrivateType
         Helper.CheckParameterNotNull(name, "name", string.Empty);
         try
         {
-            return type.InvokeMember(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, null, args, culture);
+            return _type.InvokeMember(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, null, args, culture);
         }
         catch (TargetInvocationException e)
         {

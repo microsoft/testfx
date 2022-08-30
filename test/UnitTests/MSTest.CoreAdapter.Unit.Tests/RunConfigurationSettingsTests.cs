@@ -21,19 +21,19 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class RunConfigurationSettingsTests
 {
-    private TestablePlatformServiceProvider testablePlatformServiceProvider;
-    private Mock<IDiscoveryContext> mockDiscoveryContext;
-    private Mock<IRunSettings> mockRunSettings;
-    private Mock<IMessageLogger> mockMessageLogger;
+    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private Mock<IDiscoveryContext> _mockDiscoveryContext;
+    private Mock<IRunSettings> _mockRunSettings;
+    private Mock<IMessageLogger> _mockMessageLogger;
 
     [TestInitialize]
     public void TestInit()
     {
-        testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        mockDiscoveryContext = new Mock<IDiscoveryContext>();
-        mockRunSettings = new Mock<IRunSettings>();
-        mockMessageLogger = new Mock<IMessageLogger>();
-        PlatformServiceProvider.Instance = testablePlatformServiceProvider;
+        _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+        _mockDiscoveryContext = new Mock<IDiscoveryContext>();
+        _mockRunSettings = new Mock<IRunSettings>();
+        _mockMessageLogger = new Mock<IMessageLogger>();
+        PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
     [TestCleanup]
@@ -105,7 +105,7 @@ public class RunConfigurationSettingsTests
     [TestMethod]
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
     {
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Assert.IsTrue(settings.CollectSourceInformation);
@@ -114,8 +114,8 @@ public class RunConfigurationSettingsTests
     [TestMethod]
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
-        mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        _mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Assert.IsTrue(settings.CollectSourceInformation);
@@ -131,9 +131,9 @@ public class RunConfigurationSettingsTests
                  </FooUnit>
                </RunSettings>";
 
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Assert.IsNotNull(settings);
@@ -153,9 +153,9 @@ public class RunConfigurationSettingsTests
                      </RunConfiguration>
               </RunSettings>";
 
-        mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        MSTestSettings.PopulateSettings(mockDiscoveryContext.Object);
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         Assert.IsNotNull(settings);

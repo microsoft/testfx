@@ -24,7 +24,7 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class DesktopTestSourceHostTests
 {
-    private TestSourceHost testSourceHost;
+    private TestSourceHost _testSourceHost;
 
     [TestMethod]
     public void ParentDomainShouldHonourSearchDirectoriesSpecifiedInRunsettings()
@@ -44,8 +44,8 @@ public class DesktopTestSourceHostTests
              </RunSettings>";
 
         var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
-        testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingxml).Object, null);
-        testSourceHost.SetupHost();
+        _testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingxml).Object, null);
+        _testSourceHost.SetupHost();
 
         // Loading TestProjectForAssemblyResolution.dll should not throw.
         // It is present in  <Directory path = ".\ComponentTests" />  specified in runsettings
@@ -70,8 +70,8 @@ public class DesktopTestSourceHostTests
              </RunSettings>";
 
         var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
-        testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingxml).Object, null);
-        testSourceHost.SetupHost();
+        _testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingxml).Object, null);
+        _testSourceHost.SetupHost();
 
         var assemblyResolution = "ComponentTests\\TestProjectForAssemblyResolution.dll";
         var asm = Assembly.LoadFrom(assemblyResolution);
@@ -79,22 +79,22 @@ public class DesktopTestSourceHostTests
 
         // Creating instance of TestProjectForAssemblyResolution should not throw.
         // It is present in  <Directory path = ".\ComponentTests" />  specified in runsettings
-        AppDomainUtilities.CreateInstance(testSourceHost.AppDomain, type, null);
+        AppDomainUtilities.CreateInstance(_testSourceHost.AppDomain, type, null);
     }
 
     [TestMethod]
     public void DisposeShouldUnloadChildAppDomain()
     {
         var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
-        testSourceHost = new TestSourceHost(testSource, null, null);
-        testSourceHost.SetupHost();
+        _testSourceHost = new TestSourceHost(testSource, null, null);
+        _testSourceHost.SetupHost();
 
         // Check that child appdomain was indeed created
-        Assert.IsNotNull(testSourceHost.AppDomain);
-        testSourceHost.Dispose();
+        Assert.IsNotNull(_testSourceHost.AppDomain);
+        _testSourceHost.Dispose();
 
         // Check that child-appdomain is now unloaded.
-        Assert.IsNull(testSourceHost.AppDomain);
+        Assert.IsNull(_testSourceHost.AppDomain);
     }
 
     private static string GetTestAssemblyPath(string assemblyName)

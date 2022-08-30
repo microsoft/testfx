@@ -14,7 +14,7 @@ using System.Diagnostics.CodeAnalysis;
 [SuppressMessage("Microsoft.Naming", "CA1706", Justification = "OleDb instead of Oledb to match System.Data.OleDb")]
 internal sealed class OleDataConnection : TestDataConnectionSql
 {
-    private readonly bool isMSSql;
+    private readonly bool _isMSSql;
 
     public OleDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
         : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
@@ -23,7 +23,7 @@ internal sealed class OleDataConnection : TestDataConnectionSql
         Debug.Assert(IsOpen(), "The connection must be open!");
 
         // Fill m_isMSSql.
-        isMSSql = Connection != null && IsMSSql(Connection.Provider);
+        _isMSSql = Connection != null && IsMSSql(Connection.Provider);
     }
 
     public new OleDbCommandBuilder CommandBuilder
@@ -46,7 +46,7 @@ internal sealed class OleDataConnection : TestDataConnectionSql
 
     public override string GetDefaultSchema()
     {
-        if (isMSSql)
+        if (_isMSSql)
         {
             return GetDefaultSchemaMSSql();
         }

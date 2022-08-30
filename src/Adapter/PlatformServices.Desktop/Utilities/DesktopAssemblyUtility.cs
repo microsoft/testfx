@@ -18,8 +18,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 /// </summary>
 internal class AssemblyUtility : IAssemblyUtility
 {
-    private static Dictionary<string, object> cultures;
-    private readonly string[] assemblyExtensions = new string[] { ".dll", ".exe" };
+    private static Dictionary<string, object> s_cultures;
+    private readonly string[] _assemblyExtensions = new string[] { ".dll", ".exe" };
 
     /// <summary>
     /// Gets all supported culture names in Keys. The Values are always null.
@@ -28,16 +28,16 @@ internal class AssemblyUtility : IAssemblyUtility
     {
         get
         {
-            if (cultures == null)
+            if (s_cultures == null)
             {
-                cultures = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                s_cultures = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
                 foreach (var info in CultureInfo.GetCultures(CultureTypes.AllCultures))
                 {
-                    cultures.Add(info.Name, null);
+                    s_cultures.Add(info.Name, null);
                 }
             }
 
-            return cultures;
+            return s_cultures;
         }
     }
 
@@ -70,7 +70,7 @@ internal class AssemblyUtility : IAssemblyUtility
     /// <returns> True if this is an assembly extension. </returns>
     internal bool IsAssemblyExtension(string extensionWithLeadingDot)
     {
-        foreach (var realExtension in assemblyExtensions)
+        foreach (var realExtension in _assemblyExtensions)
         {
             if (string.Equals(extensionWithLeadingDot, realExtension, StringComparison.OrdinalIgnoreCase))
             {
@@ -147,7 +147,7 @@ internal class AssemblyUtility : IAssemblyUtility
             // Check if the satellite exists in this dir.
             // We check filenames like: MyAssembly.dll -> MyAssembly.resources.dll.
             // Surprisingly, but both DLL and EXE are found by resource manager.
-            foreach (var extension in assemblyExtensions)
+            foreach (var extension in _assemblyExtensions)
             {
                 // extension contains leading dot.
                 string satellite = Path.ChangeExtension(Path.GetFileName(assemblyPath), "resources" + extension);

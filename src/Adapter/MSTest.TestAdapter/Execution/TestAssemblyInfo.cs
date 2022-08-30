@@ -21,10 +21,10 @@ using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.O
 /// </summary>
 public class TestAssemblyInfo
 {
-    private MethodInfo assemblyCleanupMethod;
+    private MethodInfo _assemblyCleanupMethod;
 
-    private MethodInfo assemblyInitializeMethod;
-    private readonly object assemblyInfoExecuteSyncObject;
+    private MethodInfo _assemblyInitializeMethod;
+    private readonly object _assemblyInfoExecuteSyncObject;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestAssemblyInfo"/> class.
@@ -32,7 +32,7 @@ public class TestAssemblyInfo
     /// <param name="assembly">Sets the <see cref="Assembly"/> this class is representing. </param>
     internal TestAssemblyInfo(Assembly assembly)
     {
-        assemblyInfoExecuteSyncObject = new object();
+        _assemblyInfoExecuteSyncObject = new object();
         Assembly = assembly;
     }
 
@@ -43,18 +43,18 @@ public class TestAssemblyInfo
     {
         get
         {
-            return assemblyInitializeMethod;
+            return _assemblyInitializeMethod;
         }
 
         internal set
         {
-            if (assemblyInitializeMethod != null)
+            if (_assemblyInitializeMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyInit, assemblyInitializeMethod.DeclaringType.FullName);
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyInit, _assemblyInitializeMethod.DeclaringType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            assemblyInitializeMethod = value;
+            _assemblyInitializeMethod = value;
         }
     }
 
@@ -65,18 +65,18 @@ public class TestAssemblyInfo
     {
         get
         {
-            return assemblyCleanupMethod;
+            return _assemblyCleanupMethod;
         }
 
         internal set
         {
-            if (assemblyCleanupMethod != null)
+            if (_assemblyCleanupMethod != null)
             {
-                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyClean, assemblyCleanupMethod.DeclaringType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyClean, _assemblyCleanupMethod.DeclaringType.FullName);
                 throw new TypeInspectionException(message);
             }
 
-            assemblyCleanupMethod = value;
+            _assemblyCleanupMethod = value;
         }
     }
 
@@ -136,7 +136,7 @@ public class TestAssemblyInfo
         {
             // Acquiring a lock is usually a costly operation which does not need to be
             // performed every time if the assembly init is already executed.
-            lock (assemblyInfoExecuteSyncObject)
+            lock (_assemblyInfoExecuteSyncObject)
             {
                 // Perform a check again.
                 if (!IsAssemblyInitializeExecuted)
@@ -204,7 +204,7 @@ public class TestAssemblyInfo
             return null;
         }
 
-        lock (assemblyInfoExecuteSyncObject)
+        lock (_assemblyInfoExecuteSyncObject)
         {
             try
             {

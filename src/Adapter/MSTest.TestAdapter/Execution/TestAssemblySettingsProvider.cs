@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 internal class TestAssemblySettingsProvider : MarshalByRefObject
 {
-    private readonly ReflectHelper reflectHelper;
+    private readonly ReflectHelper _reflectHelper;
 
     public TestAssemblySettingsProvider()
         : this(ReflectHelper.Instance)
@@ -20,7 +20,7 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
 
     internal TestAssemblySettingsProvider(ReflectHelper reflectHelper)
     {
-        this.reflectHelper = reflectHelper;
+        _reflectHelper = reflectHelper;
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
         // Load the source.
         var testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
 
-        var parallelizeAttribute = reflectHelper.GetParallelizeAttribute(testAssembly);
+        var parallelizeAttribute = _reflectHelper.GetParallelizeAttribute(testAssembly);
 
         if (parallelizeAttribute != null)
         {
@@ -58,9 +58,9 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
             }
         }
 
-        testAssemblySettings.CanParallelizeAssembly = !reflectHelper.IsDoNotParallelizeSet(testAssembly);
+        testAssemblySettings.CanParallelizeAssembly = !_reflectHelper.IsDoNotParallelizeSet(testAssembly);
 
-        var classCleanupSequencingAttribute = reflectHelper.GetClassCleanupAttribute(testAssembly);
+        var classCleanupSequencingAttribute = _reflectHelper.GetClassCleanupAttribute(testAssembly);
         if (classCleanupSequencingAttribute != null)
         {
             testAssemblySettings.ClassCleanupLifecycle = classCleanupSequencingAttribute.CleanupBehavior;

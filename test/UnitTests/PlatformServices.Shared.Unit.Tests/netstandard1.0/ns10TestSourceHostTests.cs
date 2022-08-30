@@ -21,18 +21,18 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 [TestClass]
 public class TestSourceHostTests
 {
-    private TestSourceHost testSourceHost;
+    private TestSourceHost _testSourceHost;
 
     [TestInitialize]
     public void TestInit()
     {
-        testSourceHost = new TestSourceHost(null, null, null);
+        _testSourceHost = new TestSourceHost(null, null, null);
     }
 
     [TestMethod]
     public void CreateInstanceForTypeCreatesAnInstanceOfAGivenTypeThroughDefaultConstructor()
     {
-        var type = testSourceHost.CreateInstanceForType(typeof(DummyType), null) as DummyType;
+        var type = _testSourceHost.CreateInstanceForType(typeof(DummyType), null) as DummyType;
 
         Assert.IsNotNull(type);
         Assert.IsTrue(type.IsDefaultConstructorCalled);

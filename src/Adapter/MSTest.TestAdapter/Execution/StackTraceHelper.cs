@@ -20,7 +20,7 @@ internal static class StackTraceHelper
     /// <summary>
     /// Type that need to be excluded.
     /// </summary>
-    private static List<string> typesToBeExcluded = new() { typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Namespace, typeof(MSTestExecutor).Namespace };
+    private static List<string> s_typesToBeExcluded = new() { typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Namespace, typeof(MSTestExecutor).Namespace };
 
     /// <summary>
     /// Gets the types whose methods should be ignored in the reported call stacks.
@@ -30,7 +30,7 @@ internal static class StackTraceHelper
     {
         get
         {
-            return typesToBeExcluded;
+            return s_typesToBeExcluded;
         }
     }
 

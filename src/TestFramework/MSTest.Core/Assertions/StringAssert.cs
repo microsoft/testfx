@@ -14,7 +14,7 @@ public sealed class StringAssert
 {
     private static readonly object[] Empty = new object[0];
 
-    private static StringAssert that;
+    private static StringAssert s_that;
 
     #region Singleton constructor
 
@@ -35,9 +35,9 @@ public sealed class StringAssert
     {
         get
         {
-            that ??= new StringAssert();
+            s_that ??= new StringAssert();
 
-            return that;
+            return s_that;
         }
     }
 

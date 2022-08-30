@@ -14,7 +14,7 @@ using System.Diagnostics.CodeAnalysis;
 [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments", Justification = "The TestCategories accessor property exposes the testCategory argument.")]
 public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
 {
-    private readonly IList<string> testCategories;
+    private readonly IList<string> _testCategories;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestCategoryAttribute"/> class and applies the category to the test.
@@ -26,7 +26,7 @@ public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
     {
         List<string> categories = new(1);
         categories.Add(testCategory);
-        testCategories = categories;
+        _testCategories = categories;
     }
 
     /// <summary>
@@ -34,6 +34,6 @@ public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
     /// </summary>
     public override IList<string> TestCategories
     {
-        get { return testCategories; }
+        get { return _testCategories; }
     }
 }

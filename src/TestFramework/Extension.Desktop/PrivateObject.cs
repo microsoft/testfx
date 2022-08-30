@@ -20,12 +20,12 @@ public class PrivateObject
     // bind everything
     private const BindingFlags BindToEveryThing = BindingFlags.Default | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
 
-    private static BindingFlags constructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.NonPublic;
+    private static readonly BindingFlags ConstructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.NonPublic;
 
-    private object target;     // automatically initialized to null
-    private Type originalType; // automatically initialized to null
+    private object _target;     // automatically initialized to null
+    private Type _originalType; // automatically initialized to null
 
-    private Dictionary<string, LinkedList<MethodInfo>> methodCache; // automatically initialized to null
+    private Dictionary<string, LinkedList<MethodInfo>> _methodCache; // automatically initialized to null
 
     #endregion
 
@@ -55,8 +55,8 @@ public class PrivateObject
             temp = new PrivateObject(next);
         }
 
-        target = temp.target;
-        originalType = temp.originalType;
+        _target = temp._target;
+        _originalType = temp._originalType;
     }
 
     /// <summary>
@@ -134,7 +134,7 @@ public class PrivateObject
         }
         else
         {
-            o = Activator.CreateInstance(type, constructorFlags, null, args, null);
+            o = Activator.CreateInstance(type, ConstructorFlags, null, args, null);
         }
 
         ConstructFrom(o);
@@ -162,8 +162,8 @@ public class PrivateObject
     public PrivateObject(object obj, PrivateType type)
     {
         Helper.CheckParameterNotNull(type, "type", string.Empty);
-        target = obj;
-        originalType = type.ReferencedType;
+        _target = obj;
+        _originalType = type.ReferencedType;
     }
 
     #endregion
@@ -175,14 +175,14 @@ public class PrivateObject
     {
         get
         {
-            return target;
+            return _target;
         }
 
         set
         {
             Helper.CheckParameterNotNull(value, "Target", string.Empty);
-            target = value;
-            originalType = value.GetType();
+            _target = value;
+            _originalType = value.GetType();
         }
     }
 
@@ -193,7 +193,7 @@ public class PrivateObject
     {
         get
         {
-            return originalType;
+            return _originalType;
         }
     }
 
@@ -201,14 +201,14 @@ public class PrivateObject
     {
         get
         {
-            if (methodCache == null)
+            if (_methodCache == null)
             {
-                BuildGenericMethodCacheForType(originalType);
+                BuildGenericMethodCacheForType(_originalType);
             }
 
-            Debug.Assert(methodCache != null, "Invalid method cache for type.");
+            Debug.Assert(_methodCache != null, "Invalid method cache for type.");
 
-            return methodCache;
+            return _methodCache;
         }
     }
 
@@ -218,8 +218,8 @@ public class PrivateObject
     /// <returns>int representing hashcode of the target object</returns>
     public override int GetHashCode()
     {
-        Debug.Assert(target != null, "target should not be null.");
-        return target.GetHashCode();
+        Debug.Assert(_target != null, "target should not be null.");
+        return _target.GetHashCode();
     }
 
     /// <summary>
@@ -231,10 +231,10 @@ public class PrivateObject
     {
         if (this != obj)
         {
-            Debug.Assert(target != null, "target should not be null.");
+            Debug.Assert(_target != null, "target should not be null.");
             if (typeof(PrivateObject) == obj?.GetType())
             {
-                return target.Equals(((PrivateObject)obj).target);
+                return _target.Equals(((PrivateObject)obj)._target);
             }
             else
             {
@@ -377,7 +377,7 @@ public class PrivateObject
             bindingFlags |= BindToEveryThing | BindingFlags.Instance;
 
             // Fix up the parameter types
-            MethodInfo member = originalType.GetMethod(name, bindingFlags, null, parameterTypes, null);
+            MethodInfo member = _originalType.GetMethod(name, bindingFlags, null, parameterTypes, null);
 
             // If the method was not found and type arguments were provided for generic parameters,
             // attempt to look up a generic method.
@@ -402,11 +402,11 @@ public class PrivateObject
                 if (member.IsGenericMethodDefinition)
                 {
                     MethodInfo constructed = member.MakeGenericMethod(typeArguments);
-                    return constructed.Invoke(target, bindingFlags, null, args, culture);
+                    return constructed.Invoke(_target, bindingFlags, null, args, culture);
                 }
                 else
                 {
-                    return member.Invoke(target, bindingFlags, null, args, culture);
+                    return member.Invoke(_target, bindingFlags, null, args, culture);
                 }
             }
             catch (TargetInvocationException e)
@@ -641,14 +641,14 @@ public class PrivateObject
         Helper.CheckParameterNotNull(name, "name", string.Empty);
         if (parameterTypes != null)
         {
-            PropertyInfo pi = originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
+            PropertyInfo pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
             if (pi == null)
             {
                 throw new ArgumentException(
                     string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
             }
 
-            return pi.GetValue(target, args);
+            return pi.GetValue(_target, args);
         }
         else
         {
@@ -682,14 +682,14 @@ public class PrivateObject
 
         if (parameterTypes != null)
         {
-            PropertyInfo pi = originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
+            PropertyInfo pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
             if (pi == null)
             {
                 throw new ArgumentException(
                     string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
             }
 
-            pi.SetValue(target, value, args);
+            pi.SetValue(_target, value, args);
         }
         else
         {
@@ -735,12 +735,12 @@ public class PrivateObject
     private object InvokeHelper(string name, BindingFlags bindingFlags, object[] args, CultureInfo culture)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        Debug.Assert(target != null, "Internal Error: Null reference is returned for internal object");
+        Debug.Assert(_target != null, "Internal Error: Null reference is returned for internal object");
 
         // Invoke the actual Method
         try
         {
-            return originalType.InvokeMember(name, bindingFlags, null, target, args, culture);
+            return _originalType.InvokeMember(name, bindingFlags, null, _target, args, culture);
         }
         catch (TargetInvocationException e)
         {
@@ -757,14 +757,14 @@ public class PrivateObject
     private void ConstructFrom(object obj)
     {
         Helper.CheckParameterNotNull(obj, "obj", string.Empty);
-        target = obj;
-        originalType = obj.GetType();
+        _target = obj;
+        _originalType = obj.GetType();
     }
 
     private void BuildGenericMethodCacheForType(Type t)
     {
         Debug.Assert(t != null, "type should not be null.");
-        methodCache = new Dictionary<string, LinkedList<MethodInfo>>();
+        _methodCache = new Dictionary<string, LinkedList<MethodInfo>>();
 
         MethodInfo[] members = t.GetMethods(BindToEveryThing);
 

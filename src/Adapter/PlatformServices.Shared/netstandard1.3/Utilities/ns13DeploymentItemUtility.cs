@@ -19,12 +19,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 internal class DeploymentItemUtility
 {
-    private readonly ReflectionUtility reflectionUtility;
+    private readonly ReflectionUtility _reflectionUtility;
 
     /// <summary>
     /// A cache for class level deployment items.
     /// </summary>
-    private readonly Dictionary<Type, IList<DeploymentItem>> classLevelDeploymentItems;
+    private readonly Dictionary<Type, IList<DeploymentItem>> _classLevelDeploymentItems;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeploymentItemUtility"/> class.
@@ -32,8 +32,8 @@ internal class DeploymentItemUtility
     /// <param name="reflectionUtility"> The reflect helper. </param>
     internal DeploymentItemUtility(ReflectionUtility reflectionUtility)
     {
-        this.reflectionUtility = reflectionUtility;
-        classLevelDeploymentItems = new Dictionary<Type, IList<DeploymentItem>>();
+        _reflectionUtility = reflectionUtility;
+        _classLevelDeploymentItems = new Dictionary<Type, IList<DeploymentItem>>();
     }
 
     /// <summary>
@@ -44,16 +44,16 @@ internal class DeploymentItemUtility
     /// <returns> The <see cref="IList{T}"/> of deployment items on a class. </returns>
     internal IList<DeploymentItem> GetClassLevelDeploymentItems(Type type, ICollection<string> warnings)
     {
-        if (!classLevelDeploymentItems.ContainsKey(type))
+        if (!_classLevelDeploymentItems.ContainsKey(type))
         {
-            var deploymentItemAttributes = reflectionUtility.GetCustomAttributes(
+            var deploymentItemAttributes = _reflectionUtility.GetCustomAttributes(
                 type.GetTypeInfo(),
                 typeof(DeploymentItemAttribute));
 
-            classLevelDeploymentItems[type] = GetDeploymentItems(deploymentItemAttributes, warnings);
+            _classLevelDeploymentItems[type] = GetDeploymentItems(deploymentItemAttributes, warnings);
         }
 
-        return classLevelDeploymentItems[type];
+        return _classLevelDeploymentItems[type];
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ internal class DeploymentItemUtility
     /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>.of deployment item information. </returns>
     internal KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, IList<DeploymentItem> classLevelDeploymentItems, ICollection<string> warnings)
     {
-        var testLevelDeploymentItems = GetDeploymentItems(reflectionUtility.GetCustomAttributes(method, typeof(DeploymentItemAttribute)), warnings);
+        var testLevelDeploymentItems = GetDeploymentItems(_reflectionUtility.GetCustomAttributes(method, typeof(DeploymentItemAttribute)), warnings);
 
         return ToKeyValuePairs(Concat(testLevelDeploymentItems, classLevelDeploymentItems));
     }

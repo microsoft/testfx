@@ -23,7 +23,7 @@ public class ThreadSafeStringWriter : StringWriter
     // accessing the state at the same time, and we need to give them the correct state for their async context. Non-concurrent dictionary is used to store the
     // state because we need to lock around it anyway, to ensure that the State is populated, but not overwritten by every new instance of ThreadSafeStringWriter.
     private static readonly object StaticLockObject = new();
-    private readonly string outputType;
+    private readonly string _outputType;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ThreadSafeStringWriter"/> class.
@@ -37,7 +37,7 @@ public class ThreadSafeStringWriter : StringWriter
     public ThreadSafeStringWriter(IFormatProvider formatProvider, string outputType)
         : base(formatProvider)
     {
-        this.outputType = outputType;
+        _outputType = outputType;
 
         // Ensure that State.Value is populated, so we can inherit it to the child
         // async flow, and also keep reference to it here in the parent flow.
@@ -117,7 +117,7 @@ public class ThreadSafeStringWriter : StringWriter
     {
         lock (StaticLockObject)
         {
-            ThreadSafeStringWriter.State?.Value?.Remove(outputType);
+            ThreadSafeStringWriter.State?.Value?.Remove(_outputType);
             try
             {
                 base.Dispose(disposing);
@@ -137,7 +137,7 @@ public class ThreadSafeStringWriter : StringWriter
             {
                 return null;
             }
-            else if (!State.Value.TryGetValue(outputType, out var stringBuilder))
+            else if (!State.Value.TryGetValue(_outputType, out var stringBuilder))
             {
                 return null;
             }
@@ -158,15 +158,15 @@ public class ThreadSafeStringWriter : StringWriter
                 // create the dictionary and appropriate stringbuilder.
                 // Avoid looking up the value after we add it to the dictionary.
                 var sb = new ThreadSafeStringBuilder();
-                State.Value = new Dictionary<string, ThreadSafeStringBuilder> { [outputType] = sb };
+                State.Value = new Dictionary<string, ThreadSafeStringBuilder> { [_outputType] = sb };
                 return sb;
             }
-            else if (!State.Value.TryGetValue(outputType, out var stringBuilder))
+            else if (!State.Value.TryGetValue(_outputType, out var stringBuilder))
             {
                 // The storage for the current async operation has the dictionary, but not the key
                 // for the output type, add it, and avoid looking up the value again.
                 var sb = new ThreadSafeStringBuilder();
-                State.Value.Add(outputType, sb);
+                State.Value.Add(_outputType, sb);
                 return sb;
             }
             else
@@ -183,63 +183,63 @@ public class ThreadSafeStringWriter : StringWriter
     /// </summary>
     private class ThreadSafeStringBuilder
     {
-        private readonly StringBuilder stringBuilder = new();
-        private readonly object instanceLockObject = new();
+        private readonly StringBuilder _stringBuilder = new();
+        private readonly object _instanceLockObject = new();
 
         public void Append(string value)
         {
-            lock (instanceLockObject)
+            lock (_instanceLockObject)
             {
-                stringBuilder.Append(value);
+                _stringBuilder.Append(value);
             }
         }
 
         public void Append(char[] buffer, int index, int count)
         {
-            lock (instanceLockObject)
+            lock (_instanceLockObject)
             {
-                stringBuilder.Append(buffer, index, count);
+                _stringBuilder.Append(buffer, index, count);
             }
         }
 
         public void Append(char value)
         {
-            lock (instanceLockObject)
+            lock (_instanceLockObject)
             {
-                stringBuilder.Append(value);
+                _stringBuilder.Append(value);
             }
         }
 
         public void AppendLine(string value)
         {
-            lock (instanceLockObject)
+            lock (_instanceLockObject)
             {
-                stringBuilder.AppendLine(value);
+                _stringBuilder.AppendLine(value);
             }
         }
 
         public void Clear()
         {
-            lock (instanceLockObject)
+            lock (_instanceLockObject)
             {
-                stringBuilder.Clear();
+                _stringBuilder.Clear();
             }
         }
 
         public override string ToString()
         {
-            lock (instanceLockObject)
+            lock (_instanceLockObject)
             {
-                return stringBuilder.ToString();
+                return _stringBuilder.ToString();
             }
         }
 
         internal string ToStringAndClear()
         {
-            lock (instanceLockObject)
+            lock (_instanceLockObject)
             {
-                var output = stringBuilder.ToString();
-                stringBuilder.Clear();
+                var output = _stringBuilder.ToString();
+                _stringBuilder.Clear();
                 return output;
             }
         }
