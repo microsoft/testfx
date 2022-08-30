@@ -133,6 +133,12 @@ dotnet_style_qualification_for_field = false:warning
 dotnet_style_qualification_for_method = false:warning
 dotnet_style_qualification_for_property = false:warning
 
+# IDE0019: Use pattern matching
+dotnet_diagnostic.IDE0019.severity = warning
+
+# IDE0078: Use pattern matching
+dotnet_diagnostic.IDE0078.severity = warning
+
 #### Naming styles ####
 
 # Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)

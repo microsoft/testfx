@@ -324,7 +324,7 @@ internal class TestDataConnectionSql : TestDataConnection
         int partCount = parts.Length;
         StringBuilder result = new();
 
-        Debug.Assert(partCount > 0 && partCount < 4, "partCount should be 1,2 or 3.");
+        Debug.Assert(partCount is > 0 and < 4, "partCount should be 1,2 or 3.");
 
         int currentPart = 0;
         if (partCount > 2)
