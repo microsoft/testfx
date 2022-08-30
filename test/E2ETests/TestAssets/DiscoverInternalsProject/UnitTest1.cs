@@ -50,7 +50,7 @@ public abstract class CaseInsensitivityTests<T>
 internal class FancyStringsAreCaseInsensitive : CaseInsensitivityTests<FancyString>
 {
     protected override Tuple<FancyString, FancyString> EquivalentInstancesDistinctInCase =>
-        new Tuple<FancyString, FancyString>(new FancyString(), new FancyString());
+        new(new FancyString(), new FancyString());
 }
 
 [DataContract]
