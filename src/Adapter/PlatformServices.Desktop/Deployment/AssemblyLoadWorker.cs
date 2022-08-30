@@ -60,9 +60,10 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         Debug.Assert(assembly != null, "assembly");
 
         List<string> result = new();
-        HashSet<string> visitedAssemblies = new();
-
-        visitedAssemblies.Add(assembly.FullName);
+        HashSet<string> visitedAssemblies = new()
+        {
+            assembly.FullName
+        };
 
         ProcessChildren(assembly, result, visitedAssemblies, warnings);
 

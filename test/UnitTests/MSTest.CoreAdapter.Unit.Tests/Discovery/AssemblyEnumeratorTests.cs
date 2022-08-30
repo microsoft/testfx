@@ -344,9 +344,10 @@ public class AssemblyEnumeratorTests
     {
         var mockAssembly = CreateMockTestableAssembly();
         var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
-        ICollection<string> warningsFromTypeEnumerator = new Collection<string>();
-
-        warningsFromTypeEnumerator.Add("DummyWarning");
+        ICollection<string> warningsFromTypeEnumerator = new Collection<string>
+        {
+            "DummyWarning"
+        };
 
         // Setup mocks
         mockAssembly.Setup(a => a.DefinedTypes)

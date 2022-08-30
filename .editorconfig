@@ -99,7 +99,7 @@ csharp_using_directive_placement = outside_namespace:silent
 dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_collection_initializer = true:suggestion
-dotnet_style_collection_initializer = true:suggestion
+dotnet_style_collection_initializer = true:warning
 dotnet_style_explicit_tuple_names = true:suggestion
 dotnet_style_explicit_tuple_names = true:suggestion
 dotnet_style_namespace_match_folder = true:suggestion
@@ -236,3 +236,6 @@ dotnet_naming_style.s_underscore_camel_case.capitalization = camel_case
 
 # IDE0090: Use 'new(...)'
 dotnet_diagnostic.IDE0090.severity = warning
+
+# IDE0028: Simplify collection initialization
+dotnet_diagnostic.IDE0028.severity = warning

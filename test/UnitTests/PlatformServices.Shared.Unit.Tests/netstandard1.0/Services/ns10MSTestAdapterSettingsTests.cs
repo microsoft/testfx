@@ -161,9 +161,11 @@ public class MSTestAdapterSettingsTests
     {
         string baseDirectory = @"C:\unitTesting";
 
-        List<RecursiveDirectoryPath> expectedResult = new();
-        expectedResult.Add(new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true));
-        expectedResult.Add(new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false));
+        List<RecursiveDirectoryPath> expectedResult = new()
+        {
+            new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true),
+            new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false)
+        };
 
         var adapterSettings = new TestableMSTestAdapterSettings(expectedResult);
         adapterSettings.ExpandEnvironmentVariablesSetter = (str) => str.Replace("%temp%", "C:\\foo");
