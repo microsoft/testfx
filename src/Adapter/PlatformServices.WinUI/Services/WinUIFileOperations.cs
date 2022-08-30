@@ -7,8 +7,8 @@ using global::System;
 using global::System.IO;
 using global::System.Reflection;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
@@ -21,7 +21,7 @@ public class FileOperations : IFileOperations
 
     public FileOperations()
     {
-        _isPackaged = AppContainer.AppModel.IsPackagedProcess();
+        _isPackaged = AppModel.IsPackagedProcess();
     }
 
     /// <summary>
