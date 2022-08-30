@@ -587,7 +587,7 @@ public class TypeEnumeratorTests
             rh => rh.IsMethodDeclaredInSameAssemblyAsType(It.IsAny<MethodInfo>(), It.IsAny<Type>())).Returns(isMethodFromSameAssembly);
     }
 
-    private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName) => new TypeEnumerator(
+    private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName) => new(
             type,
             assemblyName,
             _mockReflectHelper.Object,
