@@ -139,6 +139,11 @@ dotnet_diagnostic.IDE0019.severity = warning
 # IDE0078: Use pattern matching
 dotnet_diagnostic.IDE0078.severity = warning
 
+
+# IDE0044: Add readonly modifier
+dotnet_diagnostic.IDE0044.severity = warning
+dotnet_style_readonly_field = true
+
 #### Naming styles ####
 
 # Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)

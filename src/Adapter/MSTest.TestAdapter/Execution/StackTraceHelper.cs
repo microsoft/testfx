@@ -18,21 +18,10 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 internal static class StackTraceHelper
 {
     /// <summary>
-    /// Type that need to be excluded.
-    /// </summary>
-    private static List<string> s_typesToBeExcluded = new() { typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Namespace, typeof(MSTestExecutor).Namespace };
-
-    /// <summary>
     /// Gets the types whose methods should be ignored in the reported call stacks.
     /// This is used to remove our stack that the user will not care about.
     /// </summary>
-    private static List<string> TypeToBeExcluded
-    {
-        get
-        {
-            return s_typesToBeExcluded;
-        }
-    }
+    private static readonly List<string> TypesToBeExcluded = new() { typeof(Microsoft.VisualStudio.TestTools.UnitTesting.Assert).Namespace, typeof(MSTestExecutor).Namespace };
 
     /// <summary>
     /// Gets the stack trace for an exception, including all stack traces for inner
@@ -229,7 +218,7 @@ internal static class StackTraceHelper
     /// </returns>
     internal static bool HasReferenceToUTF(string stackFrame)
     {
-        foreach (var type in TypeToBeExcluded)
+        foreach (var type in TypesToBeExcluded)
         {
             if (stackFrame.IndexOf(type, StringComparison.Ordinal) > -1)
             {
