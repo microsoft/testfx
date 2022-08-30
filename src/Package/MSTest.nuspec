@@ -13,8 +13,8 @@
       Supported platforms:
       - .NET 4.6.2+
       - .NET Core 3.1+ (Universal Windows Apps 10+)
-      - .NET 5.0
-      - .NET 5.0 Windows.18362+
+      - .NET 6.0
+      - .NET 6.0 Windows.18362+
       - ASP.NET Core 1.0+
     </description>
     <projectUrl>https://github.com/microsoft/testfx</projectUrl>
@@ -49,7 +49,7 @@
         <!-- <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" /> -->
       </group>
 
-      <group targetFramework="net5.0">
+      <group targetFramework="net6.0">
         <dependency id="MSTest.TestAdapter" version="[$version$]" />
         <dependency id="MSTest.TestFramework" version="[$version$]" />
         <dependency id="Microsoft.NET.Test.Sdk" version="[$TestPlatformVersion$]" />

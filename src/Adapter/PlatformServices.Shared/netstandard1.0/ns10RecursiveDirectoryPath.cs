@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         /// The <see cref="object"/>.
         /// </returns>
         [SecurityCritical]
-#if NET5_0
+#if NET5_0_OR_GREATER
         [Obsolete]
 #endif
         public override object InitializeLifetimeService()
