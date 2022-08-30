@@ -44,7 +44,7 @@
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netstandard2.0\" />
     <file src="PlatformServices.NetCore\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard2.0\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard2.0\" target="build\netstandard2.0\" />
-    <file src="MSTest.TestAdapter\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdThrowsExceptionapter.dll" target="build\netstandard2.0\" />
+    <file src="MSTest.TestAdapter\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\netstandard2.0\" />
     <file src="PlatformServices.Interface\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="build\netstandard2.0\" />
     <file src="MSTest.Core\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="build\netstandard2.0\" />
 
