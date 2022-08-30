@@ -44,8 +44,10 @@ internal sealed class CsvDataConnection : TestDataConnection
 
     public override List<string> GetDataTablesAndViews()
     {
-        List<string> tableNames = new(1);
-        tableNames.Add(TableName);
+        List<string> tableNames = new(1)
+        {
+            TableName
+        };
         return tableNames;
     }
 
