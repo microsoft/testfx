@@ -139,6 +139,12 @@ dotnet_diagnostic.IDE0019.severity = warning
 # IDE0078: Use pattern matching
 dotnet_diagnostic.IDE0078.severity = warning
 
+# IDE0054: Use compound assignment
+dotnet_diagnostic.IDE0054.severity = warning
+
+# IDE0074: Use coalesce compound assignment
+dotnet_diagnostic.IDE0074.severity = warning
+
 #### Naming styles ####
 
 # Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)
