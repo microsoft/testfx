@@ -50,7 +50,7 @@ public class DynamicDataAttributeTests
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
         var data = _dynamicDataAttribute.GetData(methodInfo);
-        Assert.IsTrue(data is IEnumerable<object[]>);
+        Assert.IsNotNull(data);
         Assert.IsTrue(data.ToList().Count == 2);
     }
 
@@ -60,7 +60,7 @@ public class DynamicDataAttributeTests
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty2", typeof(DummyTestClass2));
         var data = _dynamicDataAttribute.GetData(methodInfo);
-        Assert.IsTrue(data is IEnumerable<object[]>);
+        Assert.IsNotNull(data);
         Assert.IsTrue(data.ToList().Count == 2);
     }
 
@@ -70,7 +70,7 @@ public class DynamicDataAttributeTests
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod", DynamicDataSourceType.Method);
         var data = _dynamicDataAttribute.GetData(methodInfo);
-        Assert.IsTrue(data is IEnumerable<object[]>);
+        Assert.IsNotNull(data);
         Assert.IsTrue(data.ToList().Count == 2);
     }
 
@@ -80,7 +80,7 @@ public class DynamicDataAttributeTests
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod2", typeof(DummyTestClass2), DynamicDataSourceType.Method);
         var data = _dynamicDataAttribute.GetData(methodInfo);
-        Assert.IsTrue(data is IEnumerable<object[]>);
+        Assert.IsNotNull(data);
         Assert.IsTrue(data.ToList().Count == 2);
     }
 

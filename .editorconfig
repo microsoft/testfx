@@ -87,7 +87,7 @@ csharp_style_namespace_declarations = file_scoped:warning
 csharp_style_prefer_index_operator = true:suggestion
 csharp_style_prefer_local_over_anonymous_function = true:suggestion
 csharp_style_prefer_method_group_conversion = true:silent
-csharp_style_prefer_null_check_over_type_check = true:suggestion
+csharp_style_prefer_null_check_over_type_check = true:warning
 csharp_style_prefer_range_operator = true:suggestion
 csharp_style_prefer_top_level_statements = true:silent
 csharp_style_prefer_tuple_swap = true:suggestion
@@ -232,3 +232,6 @@ dotnet_naming_style.s_underscore_camel_case.capitalization = camel_case
 
 # IDE0090: Use 'new(...)'
 dotnet_diagnostic.IDE0090.severity = warning
+
+# IDE0150: Prefer 'null' check over type check
+dotnet_diagnostic.IDE0150.severity = warning
