@@ -6,10 +6,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
 
-namespace ParallelMethodsTestProject
+namespace ParallelMethodsTestProject;
+
+internal class Constants
 {
-    internal class Constants
-    {
-        internal const int WaitTimeInMS = 1000;
-    }
+    internal const int WaitTimeInMS = 1000;
 }

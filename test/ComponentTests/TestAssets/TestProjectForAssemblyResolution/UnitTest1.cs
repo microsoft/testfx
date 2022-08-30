@@ -1,15 +1,14 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-namespace PlatformServices.Desktop.ComponentTests
+namespace PlatformServices.Desktop.ComponentTests;
+
+[TestClass]
+[Serializable]
+public class TestProjectForAssemblyResolution : MarshalByRefObject
 {
-    [TestClass]
-    [Serializable]
-    public class TestProjectForAssemblyResolution : MarshalByRefObject
+    [TestMethod]
+    public void TestMethod1()
     {
-        [TestMethod]
-        public void TestMethod1()
-        {
-        }
     }
 }

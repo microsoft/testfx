@@ -7,33 +7,32 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TimeoutTestProject
+namespace TimeoutTestProject;
+
+[TestClass]
+public class TerminateLongRunningTasksUsingTokenTestClass
 {
-    [TestClass]
-    public class TerminateLongRunningTasksUsingTokenTestClass
+    public TestContext TestContext { get; set; }
+
+    [TestMethod]
+    [Timeout(5000)]
+    public void TerminateLongRunningTasksUsingToken()
     {
-        public TestContext TestContext { get; set; }
+        var longTask = new Thread(ExecuteLong);
+        longTask.Start();
+        longTask.Join();
+    }
 
-        [TestMethod]
-        [Timeout(5000)]
-        public void TerminateLongRunningTasksUsingToken()
+    private void ExecuteLong()
+    {
+        try
         {
-            var longTask = new Thread(ExecuteLong);
-            longTask.Start();
-            longTask.Join();
+            File.Delete("TimeoutTestOutputNetCore.txt");
+            Task.Delay(100000).Wait(TestContext.CancellationTokenSource.Token);
         }
-
-        private void ExecuteLong()
+        catch (OperationCanceledException)
         {
-            try
-            {
-                File.Delete("TimeoutTestOutputNetCore.txt");
-                Task.Delay(100000).Wait(TestContext.CancellationTokenSource.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                File.WriteAllText("TimeoutTestOutputNetCore.txt", "Written from long running thread post termination");
-            }
+            File.WriteAllText("TimeoutTestOutputNetCore.txt", "Written from long running thread post termination");
         }
     }
 }
