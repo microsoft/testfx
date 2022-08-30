@@ -1,129 +1,128 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Security;
+using System.Xml;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+/// <summary>
+///      Utility classes to access databases, and to handle quoted strings etc for XML data.
+/// </summary>
+internal sealed class XmlDataConnection : TestDataConnection
 {
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.Data;
-    using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Globalization;
-    using System.IO;
-    using System.Security;
-    using System.Xml;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+    private string fileName;
 
-    /// <summary>
-    ///      Utility classes to access databases, and to handle quoted strings etc for XML data.
-    /// </summary>
-    internal sealed class XmlDataConnection : TestDataConnection
+    public XmlDataConnection(string fileName, List<string> dataFolders)
+        : base(dataFolders)
     {
-        private string fileName;
+        Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
+        this.fileName = fileName;
+    }
 
-        public XmlDataConnection(string fileName, List<string> dataFolders)
-            : base(dataFolders)
+    public override List<string> GetDataTablesAndViews()
+    {
+        DataSet dataSet = this.LoadDataSet(true);
+
+        if (dataSet != null)
         {
-            Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
-            this.fileName = fileName;
-        }
+            List<string> tableNames = new();
 
-        public override List<string> GetDataTablesAndViews()
-        {
-            DataSet dataSet = this.LoadDataSet(true);
-
-            if (dataSet != null)
+            int tableCount = dataSet.Tables.Count;
+            for (int i = 0; i < tableCount; i++)
             {
-                List<string> tableNames = new();
+                DataTable table = dataSet.Tables[i];
+                tableNames.Add(table.TableName);
+            }
 
-                int tableCount = dataSet.Tables.Count;
-                for (int i = 0; i < tableCount; i++)
+            return tableNames;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public override List<string> GetColumns(string tableName)
+    {
+        DataSet dataSet = this.LoadDataSet(true);
+        if (dataSet != null)
+        {
+            DataTable table = dataSet.Tables[tableName];
+            if (table != null)
+            {
+                List<string> columnNames = new();
+                foreach (DataColumn column in table.Columns)
                 {
-                    DataTable table = dataSet.Tables[i];
-                    tableNames.Add(table.TableName);
+                    // Only show "normal" columns, we try to hide derived columns used as part
+                    // of the support for relations
+                    if (column.ColumnMapping != MappingType.Hidden)
+                    {
+                        columnNames.Add(column.ColumnName);
+                    }
                 }
 
-                return tableNames;
+                return columnNames;
+            }
+        }
+
+        return null;
+    }
+
+    public override DataTable ReadTable(string tableName, IEnumerable columns)
+    {
+        // Reading XML is very simple...
+        // We do not ask it to just load a specific table, or specific columns
+        // so there is inefficiency since we will reload the entire file
+        // once for every table in it. Oh well. Reading XML is pretty quick
+        // compared to other forms of data source
+        DataSet ds = this.LoadDataSet(false);
+        return ds != null ? ds.Tables[tableName] : null;
+    }
+
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
+    [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Un-tested. Preserving behavior.")]
+    private DataSet LoadDataSet(bool schemaOnly)
+    {
+        try
+        {
+            DataSet dataSet = new();
+            dataSet.Locale = CultureInfo.CurrentCulture;
+            string path = this.FixPath(this.fileName) ?? Path.GetFullPath(this.fileName);
+            if (schemaOnly)
+            {
+                dataSet.ReadXmlSchema(path);
             }
             else
             {
-                return null;
+                dataSet.ReadXml(path);
             }
-        }
 
-        public override List<string> GetColumns(string tableName)
+            return dataSet;
+        }
+        catch (SecurityException securityException)
         {
-            DataSet dataSet = this.LoadDataSet(true);
-            if (dataSet != null)
-            {
-                DataTable table = dataSet.Tables[tableName];
-                if (table != null)
-                {
-                    List<string> columnNames = new();
-                    foreach (DataColumn column in table.Columns)
-                    {
-                        // Only show "normal" columns, we try to hide derived columns used as part
-                        // of the support for relations
-                        if (column.ColumnMapping != MappingType.Hidden)
-                        {
-                            columnNames.Add(column.ColumnName);
-                        }
-                    }
-
-                    return columnNames;
-                }
-            }
-
-            return null;
+            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, securityException.Message + " for XML data source " + this.fileName);
         }
-
-        public override DataTable ReadTable(string tableName, IEnumerable columns)
+        catch (XmlException xmlException)
         {
-            // Reading XML is very simple...
-            // We do not ask it to just load a specific table, or specific columns
-            // so there is inefficiency since we will reload the entire file
-            // once for every table in it. Oh well. Reading XML is pretty quick
-            // compared to other forms of data source
-            DataSet ds = this.LoadDataSet(false);
-            return ds != null ? ds.Tables[tableName] : null;
+            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, xmlException.Message + " for XML data source " + this.fileName);
         }
-
-        [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Un-tested. Preserving behavior.")]
-        private DataSet LoadDataSet(bool schemaOnly)
+        catch (Exception exception)
         {
-            try
-            {
-                DataSet dataSet = new();
-                dataSet.Locale = CultureInfo.CurrentCulture;
-                string path = this.FixPath(this.fileName) ?? Path.GetFullPath(this.fileName);
-                if (schemaOnly)
-                {
-                    dataSet.ReadXmlSchema(path);
-                }
-                else
-                {
-                    dataSet.ReadXml(path);
-                }
-
-                return dataSet;
-            }
-            catch (SecurityException securityException)
-            {
-                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, securityException.Message + " for XML data source " + this.fileName);
-            }
-            catch (XmlException xmlException)
-            {
-                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, xmlException.Message + " for XML data source " + this.fileName);
-            }
-            catch (Exception exception)
-            {
-                // Yes, we get other exceptions too!
-                EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for XML data source " + this.fileName);
-            }
-
-            return null;
+            // Yes, we get other exceptions too!
+            EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, exception.Message + " for XML data source " + this.fileName);
         }
+
+        return null;
     }
 }

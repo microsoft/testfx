@@ -1,49 +1,48 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTestV2.CLIAutomation
+namespace Microsoft.MSTestV2.CLIAutomation;
+
+using System.Xml;
+
+/// <summary>
+/// Stores information about a run setting.
+/// </summary>
+public class RunConfiguration
 {
-    using System.Xml;
+    /// <summary>
+    /// Gets or sets name of RunConfiguration settings node in RunSettings.
+    /// </summary>
+    public string SettingsName { get; set; }
 
     /// <summary>
-    /// Stores information about a run setting.
+    /// Gets the paths at which engine should look for test adapters
     /// </summary>
-    public class RunConfiguration
+    public string[] TestAdaptersPaths { get; }
+
+    public RunConfiguration(params string[] testAdapterPaths)
     {
-        /// <summary>
-        /// Gets or sets name of RunConfiguration settings node in RunSettings.
-        /// </summary>
-        public string SettingsName { get; set; }
+        this.SettingsName = Constants.RunConfigurationSettingsName;
+        this.TestAdaptersPaths = testAdapterPaths;
+    }
 
-        /// <summary>
-        /// Gets the paths at which engine should look for test adapters
-        /// </summary>
-        public string[] TestAdaptersPaths { get; }
+    /// <summary>
+    /// Converts the setting to be an XmlElement.
+    /// </summary>
+    /// <returns>The XmlElement instance.</returns>
+    public XmlElement ToXml()
+    {
+        XmlDocument doc = new();
+        XmlElement root = doc.CreateElement(this.SettingsName);
 
-        public RunConfiguration(params string[] testAdapterPaths)
+        foreach (var p in this.TestAdaptersPaths)
         {
-            this.SettingsName = Constants.RunConfigurationSettingsName;
-            this.TestAdaptersPaths = testAdapterPaths;
+            var testAdaptersPaths = doc.CreateElement("TestAdaptersPaths");
+            testAdaptersPaths.InnerText = p;
+
+            root.AppendChild(testAdaptersPaths);
         }
 
-        /// <summary>
-        /// Converts the setting to be an XmlElement.
-        /// </summary>
-        /// <returns>The XmlElement instance.</returns>
-        public XmlElement ToXml()
-        {
-            XmlDocument doc = new();
-            XmlElement root = doc.CreateElement(this.SettingsName);
-
-            foreach (var p in this.TestAdaptersPaths)
-            {
-                var testAdaptersPaths = doc.CreateElement("TestAdaptersPaths");
-                testAdaptersPaths.InnerText = p;
-
-                root.AppendChild(testAdaptersPaths);
-            }
-
-            return root;
-        }
+        return root;
     }
 }

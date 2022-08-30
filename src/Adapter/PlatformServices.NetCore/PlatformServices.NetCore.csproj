@@ -4,7 +4,6 @@
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
     <TargetFramework>netstandard2.0</TargetFramework>
     <UseSharedResources>true</UseSharedResources>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <!-- Remove after ARCADE transition -->

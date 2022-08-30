@@ -6,10 +6,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: DoNotParallelize()]
 
-namespace DoNotParallelizeTestProject
+namespace DoNotParallelizeTestProject;
+
+internal class Constants
 {
-    internal class Constants
-    {
-        internal const int WaitTimeInMS = 1000;
-    }
+    internal const int WaitTimeInMS = 1000;
 }

@@ -1,169 +1,168 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
+using System.Collections.Generic;
+using System.Globalization;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
+internal class UnitTestDiscoverer
 {
-    using System.Collections.Generic;
-    using System.Globalization;
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-    using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-    using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+    private readonly AssemblyEnumeratorWrapper assemblyEnumeratorWrapper;
 
-    internal class UnitTestDiscoverer
+    internal UnitTestDiscoverer()
     {
-        private readonly AssemblyEnumeratorWrapper assemblyEnumeratorWrapper;
+        this.assemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
+        this.TestMethodFilter = new TestMethodFilter();
+    }
 
-        internal UnitTestDiscoverer()
+    /// <summary>
+    /// Gets or sets method filter for filtering tests
+    /// </summary>
+    private TestMethodFilter TestMethodFilter { get; set; }
+
+    /// <summary>
+    /// Discovers the tests available from the provided sources.
+    /// </summary>
+    /// <param name="sources"> The sources. </param>
+    /// <param name="logger"> The logger. </param>
+    /// <param name="discoverySink"> The discovery Sink. </param>
+    /// <param name="discoveryContext"> The discovery context. </param>
+    internal void DiscoverTests(
+        IEnumerable<string> sources,
+        IMessageLogger logger,
+        ITestCaseDiscoverySink discoverySink,
+        IDiscoveryContext discoveryContext)
+    {
+        foreach (var source in sources)
         {
-            this.assemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
-            this.TestMethodFilter = new TestMethodFilter();
+            this.DiscoverTestsInSource(source, logger, discoverySink, discoveryContext);
+        }
+    }
+
+    /// <summary>
+    /// Get the tests from the parameter source
+    /// </summary>
+    /// <param name="source"> The source. </param>
+    /// <param name="logger"> The logger. </param>
+    /// <param name="discoverySink"> The discovery Sink. </param>
+    /// <param name="discoveryContext"> The discovery context. </param>
+    internal virtual void DiscoverTestsInSource(
+        string source,
+        IMessageLogger logger,
+        ITestCaseDiscoverySink discoverySink,
+        IDiscoveryContext discoveryContext)
+    {
+        var testElements = this.assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out var warnings);
+
+        // log the warnings
+        foreach (var warning in warnings)
+        {
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+                "MSTestDiscoverer: Warning during discovery from {0}. {1} ",
+                source,
+                warning);
+            var message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
+            logger.SendMessage(TestMessageLevel.Warning, message);
         }
 
-        /// <summary>
-        /// Gets or sets method filter for filtering tests
-        /// </summary>
-        private TestMethodFilter TestMethodFilter { get; set; }
-
-        /// <summary>
-        /// Discovers the tests available from the provided sources.
-        /// </summary>
-        /// <param name="sources"> The sources. </param>
-        /// <param name="logger"> The logger. </param>
-        /// <param name="discoverySink"> The discovery Sink. </param>
-        /// <param name="discoveryContext"> The discovery context. </param>
-        internal void DiscoverTests(
-            IEnumerable<string> sources,
-            IMessageLogger logger,
-            ITestCaseDiscoverySink discoverySink,
-            IDiscoveryContext discoveryContext)
+        // No tests found => nothing to do
+        if (testElements == null || testElements.Count == 0)
         {
-            foreach (var source in sources)
-            {
-                this.DiscoverTestsInSource(source, logger, discoverySink, discoveryContext);
-            }
+            return;
         }
 
-        /// <summary>
-        /// Get the tests from the parameter source
-        /// </summary>
-        /// <param name="source"> The source. </param>
-        /// <param name="logger"> The logger. </param>
-        /// <param name="discoverySink"> The discovery Sink. </param>
-        /// <param name="discoveryContext"> The discovery context. </param>
-        internal virtual void DiscoverTestsInSource(
-            string source,
-            IMessageLogger logger,
-            ITestCaseDiscoverySink discoverySink,
-            IDiscoveryContext discoveryContext)
-        {
-            var testElements = this.assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out var warnings);
+        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
+            "MSTestDiscoverer: Found {0} tests from source {1}",
+            testElements.Count,
+            source);
 
-            // log the warnings
-            foreach (var warning in warnings)
+        this.SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
+    }
+
+    internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext discoveryContext, IMessageLogger logger)
+    {
+        var shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
+
+        var navigationSessions = new Dictionary<string, object>();
+        try
+        {
+            if (shouldCollectSourceInformation)
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                    "MSTestDiscoverer: Warning during discovery from {0}. {1} ",
-                    source,
-                    warning);
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
-                logger.SendMessage(TestMessageLevel.Warning, message);
+                navigationSessions.Add(source, PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source));
             }
 
-            // No tests found => nothing to do
-            if (testElements == null || testElements.Count == 0)
+            // Get filter expression and skip discovery in case filter expression has parsing error.
+            ITestCaseFilterExpression filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, logger, out var filterHasError);
+            if (filterHasError)
             {
                 return;
             }
 
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
-                "MSTestDiscoverer: Found {0} tests from source {1}",
-                testElements.Count,
-                source);
-
-            this.SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
-        }
-
-        internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext discoveryContext, IMessageLogger logger)
-        {
-            var shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
-
-            var navigationSessions = new Dictionary<string, object>();
-            try
+            foreach (var testElement in testElements)
             {
+                var testCase = testElement.ToTestCase();
+
+                // Filter tests based on test case filters
+                if (filterExpression != null && filterExpression.MatchTestCase(testCase, (p) => this.TestMethodFilter.PropertyValueProvider(testCase, p)) == false)
+                {
+                    continue;
+                }
+
                 if (shouldCollectSourceInformation)
                 {
-                    navigationSessions.Add(source, PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(source));
-                }
+                    string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
 
-                // Get filter expression and skip discovery in case filter expression has parsing error.
-                ITestCaseFilterExpression filterExpression = this.TestMethodFilter.GetFilterExpression(discoveryContext, logger, out var filterHasError);
-                if (filterHasError)
-                {
-                    return;
-                }
-
-                foreach (var testElement in testElements)
-                {
-                    var testCase = testElement.ToTestCase();
-
-                    // Filter tests based on test case filters
-                    if (filterExpression != null && filterExpression.MatchTestCase(testCase, (p) => this.TestMethodFilter.PropertyValueProvider(testCase, p)) == false)
+                    if (!navigationSessions.TryGetValue(testSource, out var testNavigationSession))
                     {
-                        continue;
+                        testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
+                        navigationSessions.Add(testSource, testNavigationSession);
                     }
 
-                    if (shouldCollectSourceInformation)
+                    if (testNavigationSession != null)
                     {
-                        string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
+                        var className = testElement.TestMethod.DeclaringClassFullName
+                                        ?? testElement.TestMethod.FullClassName;
 
-                        if (!navigationSessions.TryGetValue(testSource, out var testNavigationSession))
+                        var methodName = testElement.TestMethod.Name;
+
+                        // If it is async test method use compiler generated type and method name for navigation data.
+                        if (!string.IsNullOrEmpty(testElement.AsyncTypeName))
                         {
-                            testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
-                            navigationSessions.Add(testSource, testNavigationSession);
+                            className = testElement.AsyncTypeName;
+
+                            // compiler generated method name is "MoveNext".
+                            methodName = "MoveNext";
                         }
 
-                        if (testNavigationSession != null)
+                        PlatformServiceProvider.Instance.FileOperations.GetNavigationData(
+                            testNavigationSession,
+                            className,
+                            methodName,
+                            out var minLineNumber,
+                            out var fileName);
+
+                        if (!string.IsNullOrEmpty(fileName))
                         {
-                            var className = testElement.TestMethod.DeclaringClassFullName
-                                            ?? testElement.TestMethod.FullClassName;
-
-                            var methodName = testElement.TestMethod.Name;
-
-                            // If it is async test method use compiler generated type and method name for navigation data.
-                            if (!string.IsNullOrEmpty(testElement.AsyncTypeName))
-                            {
-                                className = testElement.AsyncTypeName;
-
-                                // compiler generated method name is "MoveNext".
-                                methodName = "MoveNext";
-                            }
-
-                            PlatformServiceProvider.Instance.FileOperations.GetNavigationData(
-                                testNavigationSession,
-                                className,
-                                methodName,
-                                out var minLineNumber,
-                                out var fileName);
-
-                            if (!string.IsNullOrEmpty(fileName))
-                            {
-                                testCase.LineNumber = minLineNumber;
-                                testCase.CodeFilePath = fileName;
-                            }
+                            testCase.LineNumber = minLineNumber;
+                            testCase.CodeFilePath = fileName;
                         }
                     }
-
-                    discoverySink.SendTestCase(testCase);
                 }
+
+                discoverySink.SendTestCase(testCase);
             }
-            finally
+        }
+        finally
+        {
+            foreach (object navigationSession in navigationSessions.Values)
             {
-                foreach (object navigationSession in navigationSessions.Values)
-                {
-                    PlatformServiceProvider.Instance.FileOperations.DisposeNavigationSession(navigationSession);
-                }
+                PlatformServiceProvider.Instance.FileOperations.DisposeNavigationSession(navigationSession);
             }
         }
     }

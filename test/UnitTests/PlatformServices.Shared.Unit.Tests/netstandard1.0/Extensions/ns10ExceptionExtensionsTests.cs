@@ -1,43 +1,42 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Tests.Extensions
-{
+namespace MSTestAdapter.PlatformServices.Tests.Extensions;
+
 #if NETCOREAPP
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
-    extern alias FrameworkV1;
+extern alias FrameworkV1;
 
-    using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 #endif
-    using System;
+using System;
 
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 
-    [TestClass]
-    public class ExceptionExtensionsTests
+[TestClass]
+public class ExceptionExtensionsTests
+{
+    [TestMethod]
+    public void GetExceptionMessageShouldReturnExceptionMessage()
     {
-        [TestMethod]
-        public void GetExceptionMessageShouldReturnExceptionMessage()
-        {
-            Exception ex = new("something bad happened");
-            Assert.AreEqual("something bad happened", ex.GetExceptionMessage());
-        }
+        Exception ex = new("something bad happened");
+        Assert.AreEqual("something bad happened", ex.GetExceptionMessage());
+    }
 
-        [TestMethod]
-        public void GetExceptionMessageShouldReturnInnerExceptionMessageAsWell()
-        {
-            Exception ex = new("something bad happened", new Exception("inner exception", new Exception("the real exception")));
-            var expectedMessage = string.Concat(
-                "something bad happened",
-                Environment.NewLine,
-                "inner exception",
-                Environment.NewLine,
-                "the real exception");
+    [TestMethod]
+    public void GetExceptionMessageShouldReturnInnerExceptionMessageAsWell()
+    {
+        Exception ex = new("something bad happened", new Exception("inner exception", new Exception("the real exception")));
+        var expectedMessage = string.Concat(
+            "something bad happened",
+            Environment.NewLine,
+            "inner exception",
+            Environment.NewLine,
+            "the real exception");
 
-            Assert.AreEqual(expectedMessage, ex.GetExceptionMessage());
-        }
+        Assert.AreEqual(expectedMessage, ex.GetExceptionMessage());
     }
 }

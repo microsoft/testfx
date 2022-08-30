@@ -1,32 +1,31 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Tests.Deployment
-{
+namespace MSTestAdapter.PlatformServices.Tests.Deployment;
+
 #if NETCOREAPP
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 #else
-    extern alias FrameworkV1;
+extern alias FrameworkV1;
 
-    using Assert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-    using TestClass = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-    using TestMethod = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using Assert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using TestClass = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+using TestMethod = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 #endif
-    using System;
-    using System.IO;
-    using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+using System;
+using System.IO;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
-    [TestClass]
-    public class TestRunDirectoriesTests
+[TestClass]
+public class TestRunDirectoriesTests
+{
+    private readonly TestRunDirectories testRunDirectories = new(@"C:\temp");
+
+    [TestMethod]
+    public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory()
     {
-        private readonly TestRunDirectories testRunDirectories = new(@"C:\temp");
-
-        [TestMethod]
-        public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory()
-        {
-            Assert.AreEqual(
-                Path.Combine(@"C:\temp\In", Environment.MachineName),
-                this.testRunDirectories.InMachineNameDirectory);
-        }
+        Assert.AreEqual(
+            Path.Combine(@"C:\temp\In", Environment.MachineName),
+            this.testRunDirectories.InMachineNameDirectory);
     }
 }

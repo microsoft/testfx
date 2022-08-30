@@ -1,30 +1,29 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace SampleFrameworkExtensions
+namespace SampleFrameworkExtensions;
+
+using System;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public sealed class DurationAttribute : TestPropertyAttribute
 {
-    using System;
-
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-    public sealed class DurationAttribute : TestPropertyAttribute
+    public DurationAttribute(string duration) : base("Duration", duration)
     {
-        public DurationAttribute(string duration) : base("Duration", duration)
-        {
-            this.Duration = duration;
-        }
-
-        public string Duration { get; private set; }
+        this.Duration = duration;
     }
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class CategoryArrayAttribute : Attribute
-    {
-        public CategoryArrayAttribute(params string[] value)
-        {
-            this.Value = value;
-        }
+    public string Duration { get; private set; }
+}
 
-        public string[] Value { get; private set; }
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public sealed class CategoryArrayAttribute : Attribute
+{
+    public CategoryArrayAttribute(params string[] value)
+    {
+        this.Value = value;
     }
+
+    public string[] Value { get; private set; }
 }

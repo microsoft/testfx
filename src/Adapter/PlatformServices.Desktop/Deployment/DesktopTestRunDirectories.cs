@@ -1,78 +1,77 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+
+using System;
+using System.Diagnostics;
+using System.IO;
+
+/// <summary>
+/// The test run directories.
+/// </summary>
+[Serializable]
+#pragma warning disable SA1649 // File name must match first type name
+public class TestRunDirectories
+#pragma warning restore SA1649 // File name must match first type name
 {
-    using System;
-    using System.Diagnostics;
-    using System.IO;
+    /// <summary>
+    /// The default deployment root directory. We do not want to localize it.
+    /// </summary>
+    internal const string DefaultDeploymentRootDirectory = "TestResults";
 
     /// <summary>
-    /// The test run directories.
+    /// The deployment in directory suffix.
     /// </summary>
-    [Serializable]
-#pragma warning disable SA1649 // File name must match first type name
-    public class TestRunDirectories
-#pragma warning restore SA1649 // File name must match first type name
+    internal const string DeploymentInDirectorySuffix = "In";
+
+    /// <summary>
+    /// The deployment out directory suffix.
+    /// </summary>
+    internal const string DeploymentOutDirectorySuffix = "Out";
+
+    public TestRunDirectories(string rootDirectory)
     {
-        /// <summary>
-        /// The default deployment root directory. We do not want to localize it.
-        /// </summary>
-        internal const string DefaultDeploymentRootDirectory = "TestResults";
+        Debug.Assert(!string.IsNullOrEmpty(rootDirectory), "rootDirectory");
 
-        /// <summary>
-        /// The deployment in directory suffix.
-        /// </summary>
-        internal const string DeploymentInDirectorySuffix = "In";
+        this.RootDeploymentDirectory = rootDirectory;
+    }
 
-        /// <summary>
-        /// The deployment out directory suffix.
-        /// </summary>
-        internal const string DeploymentOutDirectorySuffix = "Out";
+    /// <summary>
+    /// Gets or sets the root deployment directory
+    /// </summary>
+    public string RootDeploymentDirectory { get; set; }
 
-        public TestRunDirectories(string rootDirectory)
+    /// <summary>
+    /// Gets the In directory
+    /// </summary>
+    public string InDirectory
+    {
+        get
         {
-            Debug.Assert(!string.IsNullOrEmpty(rootDirectory), "rootDirectory");
-
-            this.RootDeploymentDirectory = rootDirectory;
+            return Path.Combine(this.RootDeploymentDirectory, DeploymentInDirectorySuffix);
         }
+    }
 
-        /// <summary>
-        /// Gets or sets the root deployment directory
-        /// </summary>
-        public string RootDeploymentDirectory { get; set; }
-
-        /// <summary>
-        /// Gets the In directory
-        /// </summary>
-        public string InDirectory
+    /// <summary>
+    /// Gets the Out directory
+    /// </summary>
+    public string OutDirectory
+    {
+        get
         {
-            get
-            {
-                return Path.Combine(this.RootDeploymentDirectory, DeploymentInDirectorySuffix);
-            }
+            return Path.Combine(this.RootDeploymentDirectory, DeploymentOutDirectorySuffix);
         }
+    }
 
-        /// <summary>
-        /// Gets the Out directory
-        /// </summary>
-        public string OutDirectory
+    /// <summary>
+    /// Gets In\MachineName directory
+    /// </summary>
+    public string InMachineNameDirectory
+    {
+        get
         {
-            get
-            {
-                return Path.Combine(this.RootDeploymentDirectory, DeploymentOutDirectorySuffix);
-            }
-        }
-
-        /// <summary>
-        /// Gets In\MachineName directory
-        /// </summary>
-        public string InMachineNameDirectory
-        {
-            get
-            {
-                return Path.Combine(Path.Combine(this.RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
-            }
+            return Path.Combine(Path.Combine(this.RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
         }
     }
 }

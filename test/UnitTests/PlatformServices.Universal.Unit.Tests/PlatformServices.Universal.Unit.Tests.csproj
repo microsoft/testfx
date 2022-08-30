@@ -4,7 +4,6 @@
   <PropertyGroup>
     <TargetFrameworks>uap10.0.16299</TargetFrameworks>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    <LangVersion>Latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
