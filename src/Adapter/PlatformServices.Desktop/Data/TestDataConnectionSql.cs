@@ -877,15 +877,8 @@ internal class TestDataConnectionSql : TestDataConnection
 #pragma warning restore SA1202 // Elements must be ordered by access
     {
         // Ensure that we Dispose of all disposables...
-        if (_commandBuilder != null)
-        {
-            _commandBuilder.Dispose();
-        }
-
-        if (_connection != null)
-        {
-            _connection.Dispose();
-        }
+        _commandBuilder?.Dispose();
+        _connection?.Dispose();
 
         GC.SuppressFinalize(this);
     }
