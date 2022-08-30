@@ -44,8 +44,10 @@ public class MSTestAdapterSettingsTests
         string baseDirectory = null;
         string expectedResult = @"C:\MsTest\Adapter";
 
-        var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.DoesDirectoryExistSetter = (str) => true;
+        var adapterSettings = new TestableMSTestAdapterSettings
+        {
+            DoesDirectoryExistSetter = (str) => true
+        };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -60,9 +62,11 @@ public class MSTestAdapterSettingsTests
         string baseDirectory = null;
         string expectedResult = @"C:\foo\unitTesting\MsTest\Adapter";
 
-        var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.ExpandEnvironmentVariablesSetter = (str) => str.Replace("%temp%", "C:\\foo");
-        adapterSettings.DoesDirectoryExistSetter = (str) => true;
+        var adapterSettings = new TestableMSTestAdapterSettings
+        {
+            ExpandEnvironmentVariablesSetter = (str) => str.Replace("%temp%", "C:\\foo"),
+            DoesDirectoryExistSetter = (str) => true
+        };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -77,8 +81,10 @@ public class MSTestAdapterSettingsTests
         string baseDirectory = @"C:\unitTesting";
         string expectedResult = @"C:\unitTesting\MsTest\Adapter";
 
-        var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.DoesDirectoryExistSetter = (str) => true;
+        var adapterSettings = new TestableMSTestAdapterSettings
+        {
+            DoesDirectoryExistSetter = (str) => true
+        };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -93,8 +99,10 @@ public class MSTestAdapterSettingsTests
         string baseDirectory = @"C:\unitTesting";
         string expectedResult = @"C:\unitTesting\MsTest\Adapter";
 
-        var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.DoesDirectoryExistSetter = (str) => true;
+        var adapterSettings = new TestableMSTestAdapterSettings
+        {
+            DoesDirectoryExistSetter = (str) => true
+        };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -115,8 +123,10 @@ public class MSTestAdapterSettingsTests
         string currentDrive = currentDirectory.Split('\\').First() + "\\";
         string expectedResult = Path.Combine(currentDrive, @"MsTest\Adapter");
 
-        var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.DoesDirectoryExistSetter = (str) => true;
+        var adapterSettings = new TestableMSTestAdapterSettings
+        {
+            DoesDirectoryExistSetter = (str) => true
+        };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -132,8 +142,10 @@ public class MSTestAdapterSettingsTests
 
         string expectedResult = path;
 
-        var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.DoesDirectoryExistSetter = (str) => true;
+        var adapterSettings = new TestableMSTestAdapterSettings
+        {
+            DoesDirectoryExistSetter = (str) => true
+        };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -167,9 +179,11 @@ public class MSTestAdapterSettingsTests
             new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false)
         };
 
-        var adapterSettings = new TestableMSTestAdapterSettings(expectedResult);
-        adapterSettings.ExpandEnvironmentVariablesSetter = (str) => str.Replace("%temp%", "C:\\foo");
-        adapterSettings.DoesDirectoryExistSetter = (str) => true;
+        var adapterSettings = new TestableMSTestAdapterSettings(expectedResult)
+        {
+            ExpandEnvironmentVariablesSetter = (str) => str.Replace("%temp%", "C:\\foo"),
+            DoesDirectoryExistSetter = (str) => true
+        };
 
         IList<RecursiveDirectoryPath> result = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
         Assert.IsNotNull(result);

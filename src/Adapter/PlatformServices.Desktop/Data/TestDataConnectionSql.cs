@@ -808,8 +808,10 @@ internal class TestDataConnectionSql : TestDataConnection
         WriteDiagnostics("ReadTable: SQL Query: {0}", command.CommandText);
         dataAdapter.SelectCommand = command;
 
-        DataTable table = new();
-        table.Locale = CultureInfo.InvariantCulture;
+        DataTable table = new()
+        {
+            Locale = CultureInfo.InvariantCulture
+        };
         dataAdapter.Fill(table);
 
         table.TableName = tableName;    // Make table name in the data set the same as original table name.

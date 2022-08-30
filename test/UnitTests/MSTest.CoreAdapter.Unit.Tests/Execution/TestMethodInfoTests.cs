@@ -863,8 +863,10 @@ public class TestMethodInfoTests
         DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
         DummyTestClassWithDisposable.DummyTestCleanupMethodBody = classInstance => throw new NotImplementedException();
         var ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructors().Single();
-        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, null, _classAttribute, _testAssemblyInfo);
-        testClass.TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod");
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, null, _classAttribute, _testAssemblyInfo)
+        {
+            TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod")
+        };
         var method = new TestMethodInfo(typeof(DummyTestClassWithDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
         method.Invoke(null);
@@ -1073,8 +1075,10 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void VerifyShouldNotThrowIfThrownExceptionCanBeAssignedToExpectedException()
     {
-        UTF.ExpectedExceptionAttribute expectedException = new(typeof(Exception));
-        expectedException.AllowDerivedTypes = true;
+        UTF.ExpectedExceptionAttribute expectedException = new(typeof(Exception))
+        {
+            AllowDerivedTypes = true
+        };
         _testMethodOptions.Timeout = 0;
         _testMethodOptions.ExpectedException = expectedException;
         var method = new TestMethodInfo(
@@ -1090,8 +1094,10 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void VerifyShouldThrowExceptionIfThrownExceptionCannotBeAssignedToExpectedException()
     {
-        UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException), "Custom Exception");
-        expectedException.AllowDerivedTypes = true;
+        UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException), "Custom Exception")
+        {
+            AllowDerivedTypes = true
+        };
         _testMethodOptions.Timeout = 0;
         _testMethodOptions.ExpectedException = expectedException;
         var method = new TestMethodInfo(
@@ -1110,8 +1116,10 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void VerifyShouldRethrowExceptionIfThrownExceptionIsAssertFailedException()
     {
-        UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException));
-        expectedException.AllowDerivedTypes = true;
+        UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException))
+        {
+            AllowDerivedTypes = true
+        };
         _testMethodOptions.Timeout = 0;
         _testMethodOptions.ExpectedException = expectedException;
         var method = new TestMethodInfo(
@@ -1129,8 +1137,10 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void VerifyShouldRethrowExceptionIfThrownExceptionIsAssertInconclusiveException()
     {
-        UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException));
-        expectedException.AllowDerivedTypes = true;
+        UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException))
+        {
+            AllowDerivedTypes = true
+        };
         _testMethodOptions.Timeout = 0;
         _testMethodOptions.ExpectedException = expectedException;
         var method = new TestMethodInfo(

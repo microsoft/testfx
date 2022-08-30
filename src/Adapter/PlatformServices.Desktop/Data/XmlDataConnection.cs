@@ -95,8 +95,10 @@ internal sealed class XmlDataConnection : TestDataConnection
     {
         try
         {
-            DataSet dataSet = new();
-            dataSet.Locale = CultureInfo.CurrentCulture;
+            DataSet dataSet = new()
+            {
+                Locale = CultureInfo.CurrentCulture
+            };
             string path = FixPath(_fileName) ?? Path.GetFullPath(_fileName);
             if (schemaOnly)
             {

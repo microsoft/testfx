@@ -28,8 +28,10 @@ public class AssemblyLoadWorkerTests
     {
         // Arrange.
         var v1AssemblyName = new AssemblyName("Microsoft.VisualStudio.QualityTools.UnitTestFramework");
-        var testableAssembly = new TestableAssembly();
-        testableAssembly.GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName };
+        var testableAssembly = new TestableAssembly
+        {
+            GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName }
+        };
 
         var mockAssemblyUtility = new Mock<IAssemblyUtility>();
         mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoadFrom(It.IsAny<string>())).Returns(testableAssembly);
@@ -53,11 +55,15 @@ public class AssemblyLoadWorkerTests
         var v1AssemblyName = new AssemblyName("Microsoft.VisualStudio.QualityTools.UnitTestFramework");
 
         var dependentAssemblyName = new AssemblyName("Common.TestFramework");
-        var dependentAssembly = new TestableAssembly(dependentAssemblyName.Name);
-        dependentAssembly.GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName };
+        var dependentAssembly = new TestableAssembly(dependentAssemblyName.Name)
+        {
+            GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName }
+        };
 
-        var testableAssembly = new TestableAssembly();
-        testableAssembly.GetReferencedAssembliesSetter = () => new AssemblyName[] { dependentAssemblyName };
+        var testableAssembly = new TestableAssembly
+        {
+            GetReferencedAssembliesSetter = () => new AssemblyName[] { dependentAssemblyName }
+        };
 
         var mockAssemblyUtility = new Mock<IAssemblyUtility>();
         mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoadFrom(It.IsAny<string>()))

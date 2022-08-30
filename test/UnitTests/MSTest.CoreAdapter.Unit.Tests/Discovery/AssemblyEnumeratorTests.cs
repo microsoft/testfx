@@ -74,8 +74,10 @@ public class AssemblyEnumeratorTests
             });
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName);
-        var assemblyEnumerator = new AssemblyEnumerator(adapterSettings);
-        assemblyEnumerator.RunSettingsXml = runSettingsXml;
+        var assemblyEnumerator = new AssemblyEnumerator(adapterSettings)
+        {
+            RunSettingsXml = runSettingsXml
+        };
 
         Assert.IsTrue(MSTestSettings.CurrentSettings.ForcedLegacyMode);
         Assert.AreEqual("DummyPath\\TestSettings1.testsettings", MSTestSettings.CurrentSettings.TestSettingsFile);

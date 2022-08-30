@@ -151,8 +151,10 @@ internal sealed class CsvDataConnection : TestDataConnection
 
         dataAdapter.SelectCommand = command;
 
-        DataTable table = new();
-        table.Locale = CultureInfo.InvariantCulture;
+        DataTable table = new()
+        {
+            Locale = CultureInfo.InvariantCulture
+        };
         dataAdapter.Fill(table);
         return table;
     }

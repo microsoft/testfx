@@ -20,8 +20,10 @@ public class TestCaseExtensionsTests
     [TestMethod]
     public void ToUnitTestElementShouldReturnUnitTestElementWithFieldsSet()
     {
-        TestCase testCase = new("DummyClassName.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
-        testCase.DisplayName = "DummyDisplayName";
+        TestCase testCase = new("DummyClassName.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName)
+        {
+            DisplayName = "DummyDisplayName"
+        };
         var testCategories = new[] { "DummyCategory" };
 
         testCase.SetPropertyValue(Constants.AsyncTestProperty, true);
