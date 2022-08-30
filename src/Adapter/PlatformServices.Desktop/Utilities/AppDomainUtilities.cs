@@ -72,9 +72,10 @@ internal static class AppDomainUtilities
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
     internal static string GetTargetFrameworkVersionString(string testSourcePath)
     {
-        AppDomainSetup appDomainSetup = new();
-
-        appDomainSetup.LoaderOptimization = LoaderOptimization.MultiDomainHost;
+        AppDomainSetup appDomainSetup = new()
+        {
+            LoaderOptimization = LoaderOptimization.MultiDomainHost
+        };
 
         AppDomainUtilities.SetConfigurationFile(appDomainSetup, new DeploymentUtility().GetConfigFile(testSourcePath));
 

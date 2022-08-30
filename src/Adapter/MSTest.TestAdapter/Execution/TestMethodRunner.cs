@@ -255,9 +255,11 @@ internal class TestMethodRunner
                 if (dataRows == null)
                 {
                     watch.Stop();
-                    var inconclusiveResult = new UTF.TestResult();
-                    inconclusiveResult.Outcome = UTF.UnitTestOutcome.Inconclusive;
-                    inconclusiveResult.Duration = watch.Elapsed;
+                    var inconclusiveResult = new UTF.TestResult
+                    {
+                        Outcome = UTF.UnitTestOutcome.Inconclusive,
+                        Duration = watch.Elapsed
+                    };
                     results.Add(inconclusiveResult);
                 }
                 else
@@ -282,10 +284,12 @@ internal class TestMethodRunner
             catch (Exception ex)
             {
                 watch.Stop();
-                var failedResult = new UTF.TestResult();
-                failedResult.Outcome = UTF.UnitTestOutcome.Error;
-                failedResult.TestFailureException = ex;
-                failedResult.Duration = watch.Elapsed;
+                var failedResult = new UTF.TestResult
+                {
+                    Outcome = UTF.UnitTestOutcome.Error,
+                    TestFailureException = ex,
+                    Duration = watch.Elapsed
+                };
                 results.Add(failedResult);
             }
         }

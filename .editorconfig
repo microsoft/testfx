@@ -105,7 +105,7 @@ dotnet_style_explicit_tuple_names = true:suggestion
 dotnet_style_namespace_match_folder = true:suggestion
 dotnet_style_namespace_match_folder = true:suggestion
 dotnet_style_object_initializer = true:suggestion
-dotnet_style_object_initializer = true:suggestion
+dotnet_style_object_initializer = true:warning
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 dotnet_style_prefer_auto_properties = true:silent
@@ -238,3 +238,6 @@ dotnet_diagnostic.IDE0150.severity = warning
 
 # IDE0028: Simplify collection initialization
 dotnet_diagnostic.IDE0028.severity = warning
+
+# IDE0017: Simplify object initialization
+dotnet_diagnostic.IDE0017.severity = warning

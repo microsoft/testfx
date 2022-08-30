@@ -93,8 +93,10 @@ public class DataRowAttributeTests
     [TestMethod]
     public void GetDisplayNameShouldReturnSpecifiedDisplayName()
     {
-        var dataRowAttribute = new DataRowAttribute(null);
-        dataRowAttribute.DisplayName = "DataRowTestWithDisplayName";
+        var dataRowAttribute = new DataRowAttribute(null)
+        {
+            DisplayName = "DataRowTestWithDisplayName"
+        };
 
         _dummyTestClass = new DummyTestClass();
         _testMethodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");

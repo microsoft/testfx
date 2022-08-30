@@ -130,8 +130,10 @@ internal class UnitTestElement
         //                 : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
         var fullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", TestMethod.FullClassName, TestMethod.Name);
 
-        TestCase testCase = new(fullName, TestAdapter.Constants.ExecutorUri, TestMethod.AssemblyName);
-        testCase.DisplayName = GetDisplayName();
+        TestCase testCase = new(fullName, TestAdapter.Constants.ExecutorUri, TestMethod.AssemblyName)
+        {
+            DisplayName = GetDisplayName()
+        };
 
         if (TestMethod.HasManagedMethodAndTypeProperties)
         {

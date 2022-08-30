@@ -206,8 +206,10 @@ public class UITestMethodAttribute : TestMethodAttribute
         }
 
         var treadStart = new ThreadStart(() => Application.Start(onApplicationInitialized));
-        var uiThread = new Thread(treadStart);
-        uiThread.Name = "UI Thread for Tests";
+        var uiThread = new Thread(treadStart)
+        {
+            Name = "UI Thread for Tests"
+        };
         uiThread.Start();
         tsc.Task.Wait();
 

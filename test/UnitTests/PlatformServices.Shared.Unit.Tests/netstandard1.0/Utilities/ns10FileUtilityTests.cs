@@ -28,10 +28,10 @@ public class FileUtilityTests
 
     [TestInitialize]
     public void TestInit()
-    {
-        _fileUtility = new Mock<FileUtility>();
-        _fileUtility.CallBase = true;
-    }
+        => _fileUtility = new Mock<FileUtility>
+        {
+            CallBase = true
+        };
 
     [TestMethod]
     public void ReplaceInvalidFileNameCharactersShouldReturnFileNameIfItHasNoInvalidChars()

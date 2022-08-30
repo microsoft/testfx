@@ -36,25 +36,26 @@ public class AssemblyResolverTests
             @"C:\unitTesting\b"
         };
 
-        TestableAssemblyResolver assemblyResolver = new(new List<string> { @"c:\dummy" });
-
-        assemblyResolver.DoesDirectoryExistSetter = (str) => true;
-        assemblyResolver.GetDirectoriesSetter = (str) =>
+        TestableAssemblyResolver assemblyResolver = new(new List<string> { @"c:\dummy" })
         {
-            if (string.Compare(path, str, StringComparison.OrdinalIgnoreCase) == 0)
+            DoesDirectoryExistSetter = (str) => true,
+            GetDirectoriesSetter = (str) =>
             {
-                return new string[] { @"C:\unitTesting\a", @"C:\unitTesting\b" };
-            }
-            else if (string.Compare(@"C:\unitTesting\a", str, StringComparison.OrdinalIgnoreCase) == 0)
-            {
-                return new string[] { @"C:\unitTesting\a\c" };
-            }
-            else if (string.Compare(@"C:\unitTesting\a\c", str, StringComparison.OrdinalIgnoreCase) == 0)
-            {
-                return new string[] { @"C:\unitTesting\a\c\d" };
-            }
+                if (string.Compare(path, str, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    return new string[] { @"C:\unitTesting\a", @"C:\unitTesting\b" };
+                }
+                else if (string.Compare(@"C:\unitTesting\a", str, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    return new string[] { @"C:\unitTesting\a\c" };
+                }
+                else if (string.Compare(@"C:\unitTesting\a\c", str, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    return new string[] { @"C:\unitTesting\a\c\d" };
+                }
 
-            return new List<string>().ToArray();
+                return new List<string>().ToArray();
+            }
         };
 
         // Act.
