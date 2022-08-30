@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 /// </summary>
 public sealed class Assert
 {
-    private static Assert that;
+    private static Assert s_that;
 
     #region Singleton constructor
 
@@ -42,9 +42,9 @@ public sealed class Assert
     {
         get
         {
-            that ??= new Assert();
+            s_that ??= new Assert();
 
-            return that;
+            return s_that;
         }
     }
 

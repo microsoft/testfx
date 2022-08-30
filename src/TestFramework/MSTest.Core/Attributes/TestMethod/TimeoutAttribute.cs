@@ -21,7 +21,7 @@ public sealed class TimeoutAttribute : Attribute
     /// </param>
     public TimeoutAttribute(int timeout)
     {
-        this.Timeout = timeout;
+        Timeout = timeout;
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ public sealed class TimeoutAttribute : Attribute
     /// </param>
     public TimeoutAttribute(TestTimeout timeout)
     {
-        this.Timeout = (int)timeout;
+        Timeout = (int)timeout;
     }
 
     #endregion

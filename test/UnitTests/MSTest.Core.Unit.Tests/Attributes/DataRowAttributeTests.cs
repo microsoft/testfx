@@ -17,8 +17,8 @@ using TestMethod = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.Test
 [TestClass]
 public class DataRowAttributeTests
 {
-    private DummyTestClass dummyTestClass;
-    private MethodInfo testMethodInfo;
+    private DummyTestClass _dummyTestClass;
+    private MethodInfo _testMethodInfo;
 
     [TestMethod]
     public void DefaultConstructorSetsEmptyArrayPassed()
@@ -73,20 +73,20 @@ public class DataRowAttributeTests
     {
         var dataRowAttribute = new DataRowAttribute(null);
 
-        this.dummyTestClass = new DummyTestClass();
-        this.testMethodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
+        _dummyTestClass = new DummyTestClass();
+        _testMethodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
 
         var data = new string[] { "First", "Second", null };
         var data1 = new string[] { null, "First", "Second" };
         var data2 = new string[] { "First", null, "Second" };
 
-        var displayName = dataRowAttribute.GetDisplayName(this.testMethodInfo, data);
+        var displayName = dataRowAttribute.GetDisplayName(_testMethodInfo, data);
         Assert.AreEqual("DataRowTestMethod (First,Second,)", displayName);
 
-        displayName = dataRowAttribute.GetDisplayName(this.testMethodInfo, data1);
+        displayName = dataRowAttribute.GetDisplayName(_testMethodInfo, data1);
         Assert.AreEqual("DataRowTestMethod (,First,Second)", displayName);
 
-        displayName = dataRowAttribute.GetDisplayName(this.testMethodInfo, data2);
+        displayName = dataRowAttribute.GetDisplayName(_testMethodInfo, data2);
         Assert.AreEqual("DataRowTestMethod (First,,Second)", displayName);
     }
 
@@ -96,12 +96,12 @@ public class DataRowAttributeTests
         var dataRowAttribute = new DataRowAttribute(null);
         dataRowAttribute.DisplayName = "DataRowTestWithDisplayName";
 
-        this.dummyTestClass = new DummyTestClass();
-        this.testMethodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
+        _dummyTestClass = new DummyTestClass();
+        _testMethodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
 
         var data = new string[] { "First", "Second", null };
 
-        var displayName = dataRowAttribute.GetDisplayName(this.testMethodInfo, data);
+        var displayName = dataRowAttribute.GetDisplayName(_testMethodInfo, data);
         Assert.AreEqual("DataRowTestWithDisplayName", displayName);
     }
 }

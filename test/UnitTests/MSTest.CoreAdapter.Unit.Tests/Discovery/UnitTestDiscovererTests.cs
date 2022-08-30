@@ -27,40 +27,40 @@ using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.T
 public class UnitTestDiscovererTests
 {
     private const string Source = "DummyAssembly.dll";
-    private UnitTestDiscoverer unitTestDiscoverer;
+    private UnitTestDiscoverer _unitTestDiscoverer;
 
-    private TestablePlatformServiceProvider testablePlatformServiceProvider;
+    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    private Mock<IMessageLogger> mockMessageLogger;
-    private Mock<ITestCaseDiscoverySink> mockTestCaseDiscoverySink;
-    private Mock<IRunSettings> mockRunSettings;
-    private Mock<IDiscoveryContext> mockDiscoveryContext;
-    private UnitTestElement test;
-    private List<UnitTestElement> testElements;
+    private Mock<IMessageLogger> _mockMessageLogger;
+    private Mock<ITestCaseDiscoverySink> _mockTestCaseDiscoverySink;
+    private Mock<IRunSettings> _mockRunSettings;
+    private Mock<IDiscoveryContext> _mockDiscoveryContext;
+    private UnitTestElement _test;
+    private List<UnitTestElement> _testElements;
 
     [TestInitialize]
     public void TestInit()
     {
-        this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        this.unitTestDiscoverer = new UnitTestDiscoverer();
+        _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+        _unitTestDiscoverer = new UnitTestDiscoverer();
 
-        this.mockMessageLogger = new Mock<IMessageLogger>();
-        this.mockTestCaseDiscoverySink = new Mock<ITestCaseDiscoverySink>();
-        this.mockRunSettings = new Mock<IRunSettings>();
+        _mockMessageLogger = new Mock<IMessageLogger>();
+        _mockTestCaseDiscoverySink = new Mock<ITestCaseDiscoverySink>();
+        _mockRunSettings = new Mock<IRunSettings>();
 
-        this.mockDiscoveryContext = new Mock<IDiscoveryContext>();
-        this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
+        _mockDiscoveryContext = new Mock<IDiscoveryContext>();
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
 
-        this.test = new UnitTestElement(new TestMethod("M", "C", "A", false));
-        this.testElements = new List<UnitTestElement> { this.test };
-        PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
+        _test = new UnitTestElement(new TestMethod("M", "C", "A", false));
+        _testElements = new List<UnitTestElement> { _test };
+        PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
     [TestCleanup]
     public void Cleanup()
     {
-        this.test = null;
-        this.testElements = null;
+        _test = null;
+        _testElements = null;
         PlatformServiceProvider.Instance = null;
         MSTestSettings.Reset();
     }
@@ -73,87 +73,87 @@ public class UnitTestDiscovererTests
         // Setup mocks.
         foreach (var source in sources)
         {
-            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(source))
+            _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(source))
                 .Returns(source);
-            this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(source))
+            _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(source))
                 .Returns(false);
         }
 
-        this.unitTestDiscoverer.DiscoverTests(sources, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object, this.mockDiscoveryContext.Object);
+        _unitTestDiscoverer.DiscoverTests(sources, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
 
         // Assert.
-        this.mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(2));
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(2));
     }
 
     [TestMethodV1]
     public void DiscoverTestsInSourceShouldSendBackAllWarnings()
     {
         // Setup mocks.
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(Source))
             .Returns(Source);
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
             .Returns(false);
 
-        this.unitTestDiscoverer.DiscoverTestsInSource(Source, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object, this.mockDiscoveryContext.Object);
+        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
 
         // Assert.
-        this.mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Once);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Once);
     }
 
     [TestMethodV1]
     public void DiscoverTestsInSourceShouldSendBackTestCasesDiscovered()
     {
         // Setup mocks.
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(Source))
             .Returns(Source);
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
             .Returns(true);
-        this.testablePlatformServiceProvider.MockTestSourceValidator.Setup(
+        _testablePlatformServiceProvider.MockTestSourceValidator.Setup(
             tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), Source)).Returns(true);
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source, It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(Source, It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
             .Returns((object)null);
-        this.testablePlatformServiceProvider.MockTestSourceHost.Setup(
+        _testablePlatformServiceProvider.MockTestSourceHost.Setup(
             ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
             .Returns(new AssemblyEnumerator());
 
-        this.unitTestDiscoverer.DiscoverTestsInSource(Source, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object, this.mockDiscoveryContext.Object);
+        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
 
         // Assert.
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.AtLeastOnce);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.AtLeastOnce);
     }
 
     [TestMethodV1]
     public void SendTestCasesShouldNotSendAnyTestCasesIfThereAreNoTestElements()
     {
         // Setup mocks.
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
             .Returns((object)null);
 
         // There is a null check for testElements in the code flow before this function call. So not adding a unit test for that.
-        this.unitTestDiscoverer.SendTestCases(Source, new List<UnitTestElement> { }, this.mockTestCaseDiscoverySink.Object, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(Source, new List<UnitTestElement> { }, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         // Assert.
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
     }
 
     [TestMethodV1]
     public void SendTestCasesShouldSendAllTestCaseData()
     {
         // Setup mocks.
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
             .Returns((object)null);
 
         var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", false));
         var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));
         var testElements = new List<UnitTestElement> { test1, test2 };
 
-        this.unitTestDiscoverer.SendTestCases(Source, testElements, this.mockTestCaseDiscoverySink.Object, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(Source, testElements, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         // Assert.
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Once);
     }
 
     [TestMethodV1]
@@ -169,94 +169,94 @@ public class UnitTestDiscovererTests
                 </RunSettings>";
 
         // Setup mocks.
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
             .Returns((object)null);
 
-        this.SetupNavigation(Source, this.test, this.test.TestMethod.FullClassName, this.test.TestMethod.Name);
-        this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
+        SetupNavigation(Source, _test, _test.TestMethod.FullClassName, _test.TestMethod.Name);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
 
         // Act
-        MSTestSettings.PopulateSettings(this.mockDiscoveryContext.Object);
-        this.unitTestDiscoverer.SendTestCases(Source, this.testElements, this.mockTestCaseDiscoverySink.Object, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+        _unitTestDiscoverer.SendTestCases(Source, _testElements, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         // Assert
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.LineNumber == -1)), Times.Once);
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.CodeFilePath == null)), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.LineNumber == -1)), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.CodeFilePath == null)), Times.Once);
     }
 
     [TestMethodV1]
     public void SendTestCasesShouldSendTestCasesWithNavigationData()
     {
         // Setup mocks.
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
             .Returns((object)null);
 
-        this.SetupNavigation(Source, this.test, this.test.TestMethod.FullClassName, this.test.TestMethod.Name);
+        SetupNavigation(Source, _test, _test.TestMethod.FullClassName, _test.TestMethod.Name);
 
         // Act
-        this.unitTestDiscoverer.SendTestCases(Source, this.testElements, this.mockTestCaseDiscoverySink.Object, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(Source, _testElements, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         // Assert
-        this.VerifyNavigationDataIsPresent();
+        VerifyNavigationDataIsPresent();
     }
 
     [TestMethodV1]
     public void SendTestCasesShouldSendTestCasesWithNavigationDataWhenDeclaredClassFullNameIsNonNull()
     {
         // Setup mocks.
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
             .Returns((object)null);
 
-        this.test.TestMethod.DeclaringClassFullName = "DC";
+        _test.TestMethod.DeclaringClassFullName = "DC";
 
-        this.SetupNavigation(Source, this.test, this.test.TestMethod.DeclaringClassFullName, this.test.TestMethod.Name);
+        SetupNavigation(Source, _test, _test.TestMethod.DeclaringClassFullName, _test.TestMethod.Name);
 
         // Act
-        this.unitTestDiscoverer.SendTestCases(Source, this.testElements, this.mockTestCaseDiscoverySink.Object, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(Source, _testElements, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         // Assert
-        this.VerifyNavigationDataIsPresent();
+        VerifyNavigationDataIsPresent();
     }
 
     [TestMethodV1]
     public void SendTestCasesShouldUseNaigationSessionForDeclaredAssemblyName()
     {
         // Setup mocks.
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
             .Returns((object)null);
 
-        this.test.TestMethod.DeclaringAssemblyName = "DummyAssembly2.dll";
+        _test.TestMethod.DeclaringAssemblyName = "DummyAssembly2.dll";
         ////var test = new UnitTestElement(
         ////    new TestMethod("M", "C", "A", false)
         ////    {
         ////        DeclaringAssemblyName = "DummyAssembly2.dll"
         ////    });
 
-        this.SetupNavigation(Source, this.test, this.test.TestMethod.DeclaringClassFullName, this.test.TestMethod.Name);
+        SetupNavigation(Source, _test, _test.TestMethod.DeclaringClassFullName, _test.TestMethod.Name);
 
         // Act
-        this.unitTestDiscoverer.SendTestCases(Source, this.testElements, this.mockTestCaseDiscoverySink.Object, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(Source, _testElements, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         // Assert
-        this.testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.CreateNavigationSession("DummyAssembly2.dll"), Times.Once);
+        _testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.CreateNavigationSession("DummyAssembly2.dll"), Times.Once);
     }
 
     [TestMethodV1]
     public void SendTestCasesShouldSendTestCasesWithNavigationDataForAsyncMethods()
     {
         // Setup mocks.
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))
             .Returns((object)null);
 
-        this.test.AsyncTypeName = "ATN";
+        _test.AsyncTypeName = "ATN";
 
-        this.SetupNavigation(Source, this.test, this.test.AsyncTypeName, "MoveNext");
+        SetupNavigation(Source, _test, _test.AsyncTypeName, "MoveNext");
 
         // Act
-        this.unitTestDiscoverer.SendTestCases(Source, this.testElements, this.mockTestCaseDiscoverySink.Object, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(Source, _testElements, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object, _mockMessageLogger.Object);
 
         // Assert
-        this.VerifyNavigationDataIsPresent();
+        VerifyNavigationDataIsPresent();
     }
 
     /// <summary>
@@ -272,11 +272,11 @@ public class UnitTestDiscovererTests
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action
-        this.unitTestDiscoverer.SendTestCases(Source, testElements, this.mockTestCaseDiscoverySink.Object, discoveryContext, this.mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(Source, testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
 
         // Assert.
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Never);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Never);
     }
 
     /// <summary>
@@ -292,11 +292,11 @@ public class UnitTestDiscovererTests
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action
-        this.unitTestDiscoverer.SendTestCases(Source, testElements, this.mockTestCaseDiscoverySink.Object, discoveryContext, this.mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(Source, testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
 
         // Assert.
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Once);
     }
 
     /// <summary>
@@ -312,11 +312,11 @@ public class UnitTestDiscovererTests
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action
-        this.unitTestDiscoverer.SendTestCases(Source, testElements, this.mockTestCaseDiscoverySink.Object, discoveryContext, this.mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(Source, testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
 
         // Assert.
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Once);
     }
 
     /// <summary>
@@ -332,23 +332,23 @@ public class UnitTestDiscovererTests
         var testElements = new List<UnitTestElement> { test1, test2 };
 
         // Action
-        this.unitTestDiscoverer.SendTestCases(Source, testElements, this.mockTestCaseDiscoverySink.Object, discoveryContext, this.mockMessageLogger.Object);
+        _unitTestDiscoverer.SendTestCases(Source, testElements, _mockTestCaseDiscoverySink.Object, discoveryContext, _mockMessageLogger.Object);
 
         // Assert.
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Never);
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Never);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M1")), Times.Never);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Never);
     }
 
     private void SetupNavigation(string source, UnitTestElement test, string className, string methodName)
     {
         var testNavigationData = new DummyNavigationData("DummyFileName.cs", 1, 10);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
             .Returns(testNavigationData);
         int minLineNumber = testNavigationData.MinLineNumber;
         string fileName = testNavigationData.FileName;
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(
+        _testablePlatformServiceProvider.MockFileOperations.Setup(
             fo =>
             fo.GetNavigationData(
                 testNavigationData,
@@ -359,7 +359,7 @@ public class UnitTestDiscovererTests
 
         var testCase1 = test.ToTestCase();
 
-        this.SetTestCaseNavigationData(testCase1, testNavigationData.FileName, testNavigationData.MinLineNumber);
+        SetTestCaseNavigationData(testCase1, testNavigationData.FileName, testNavigationData.MinLineNumber);
     }
 
     private void SetTestCaseNavigationData(TestCase testCase, string fileName, int lineNumber)
@@ -370,8 +370,8 @@ public class UnitTestDiscovererTests
 
     private void VerifyNavigationDataIsPresent()
     {
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.LineNumber == 1)), Times.Once);
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.CodeFilePath.Equals("DummyFileName.cs"))), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.LineNumber == 1)), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.CodeFilePath.Equals("DummyFileName.cs"))), Times.Once);
     }
 }
 
@@ -379,9 +379,9 @@ internal class DummyNavigationData
 {
     public DummyNavigationData(string fileName, int minLineNumber, int maxLineNumber)
     {
-        this.FileName = fileName;
-        this.MinLineNumber = minLineNumber;
-        this.MaxLineNumber = maxLineNumber;
+        FileName = fileName;
+        MinLineNumber = minLineNumber;
+        MaxLineNumber = maxLineNumber;
     }
 
     public string FileName { get; set; }
@@ -408,11 +408,11 @@ internal class TestableUnitTestDiscoverer : UnitTestDiscoverer
 
 internal class TestableDiscoveryContextWithGetTestCaseFilter : IDiscoveryContext
 {
-    private readonly Func<ITestCaseFilterExpression> getFilter;
+    private readonly Func<ITestCaseFilterExpression> _getFilter;
 
     public TestableDiscoveryContextWithGetTestCaseFilter(Func<ITestCaseFilterExpression> getFilter)
     {
-        this.getFilter = getFilter;
+        _getFilter = getFilter;
     }
 
     public IRunSettings RunSettings { get; }
@@ -421,7 +421,7 @@ internal class TestableDiscoveryContextWithGetTestCaseFilter : IDiscoveryContext
         IEnumerable<string> supportedProperties,
         Func<string, TestProperty> propertyProvider)
     {
-        return this.getFilter();
+        return _getFilter();
     }
 }
 
@@ -432,17 +432,17 @@ internal class TestableDiscoveryContextWithoutGetTestCaseFilter : IDiscoveryCont
 
 internal class TestableTestCaseFilterExpression : ITestCaseFilterExpression
 {
-    private readonly Func<TestCase, bool> matchTest;
+    private readonly Func<TestCase, bool> _matchTest;
 
     public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase)
     {
-        this.matchTest = matchTestCase;
+        _matchTest = matchTestCase;
     }
 
     public string TestCaseFilterValue { get; }
 
     public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
     {
-        return this.matchTest(testCase);
+        return _matchTest(testCase);
     }
 }

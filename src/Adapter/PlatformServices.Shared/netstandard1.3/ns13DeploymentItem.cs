@@ -72,9 +72,9 @@ internal class DeploymentItem
         Debug.Assert(!string.IsNullOrEmpty(sourcePath), "sourcePath");
         Debug.Assert(relativeOutputDirectory != null, "relativeOutputDirectory");
 
-        this.SourcePath = sourcePath;
-        this.RelativeOutputDirectory = relativeOutputDirectory;
-        this.OriginType = originType;
+        SourcePath = sourcePath;
+        RelativeOutputDirectory = relativeOutputDirectory;
+        OriginType = originType;
     }
 
     /// <summary>
@@ -112,10 +112,10 @@ internal class DeploymentItem
             return false;
         }
 
-        Debug.Assert(this.SourcePath != null, "SourcePath");
-        Debug.Assert(this.RelativeOutputDirectory != null, "RelativeOutputDirectory");
-        return this.SourcePath.Equals(otherItem.SourcePath, StringComparison.OrdinalIgnoreCase) &&
-               this.RelativeOutputDirectory.Equals(otherItem.RelativeOutputDirectory, StringComparison.OrdinalIgnoreCase);
+        Debug.Assert(SourcePath != null, "SourcePath");
+        Debug.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
+        return SourcePath.Equals(otherItem.SourcePath, StringComparison.OrdinalIgnoreCase) &&
+               RelativeOutputDirectory.Equals(otherItem.RelativeOutputDirectory, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -124,9 +124,9 @@ internal class DeploymentItem
     /// <returns> The hash code value. </returns>
     public override int GetHashCode()
     {
-        Debug.Assert(this.SourcePath != null, "SourcePath");
-        Debug.Assert(this.RelativeOutputDirectory != null, "RelativeOutputDirectory");
-        return this.SourcePath.GetHashCode() + this.RelativeOutputDirectory.GetHashCode();
+        Debug.Assert(SourcePath != null, "SourcePath");
+        Debug.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
+        return SourcePath.GetHashCode() + RelativeOutputDirectory.GetHashCode();
     }
 
     /// <summary>
@@ -135,13 +135,13 @@ internal class DeploymentItem
     /// <returns> The <see cref="string"/> value. </returns>
     public override string ToString()
     {
-        Debug.Assert(this.SourcePath != null, "SourcePath");
-        Debug.Assert(this.RelativeOutputDirectory != null, "RelativeOutputDirectory");
+        Debug.Assert(SourcePath != null, "SourcePath");
+        Debug.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
 
         return
-            string.IsNullOrEmpty(this.RelativeOutputDirectory) ?
-                string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItem, this.SourcePath) :
-                string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItemWithOutputDirectory, this.SourcePath, this.RelativeOutputDirectory);
+            string.IsNullOrEmpty(RelativeOutputDirectory) ?
+                string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItem, SourcePath) :
+                string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItemWithOutputDirectory, SourcePath, RelativeOutputDirectory);
     }
 
     #endregion

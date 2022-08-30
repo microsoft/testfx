@@ -21,12 +21,12 @@ public class TestSource : ITestSource
 {
     private const string SystemAssembliesPrefix = "system.";
 
-    private static IEnumerable<string> executableExtensions = new HashSet<string>()
+    private static readonly IEnumerable<string> ExecutableExtensions = new HashSet<string>()
     {
          Constants.ExeExtension
     };
 
-    private static HashSet<string> systemAssemblies = new(new string[]
+    private static readonly HashSet<string> SystemAssemblies = new(new string[]
     {
         "MICROSOFT.CSHARP.DLL",
         "MICROSOFT.VISUALBASIC.DLL",
@@ -34,7 +34,7 @@ public class TestSource : ITestSource
     });
 
     // Well known platform assemblies.
-    private static HashSet<string> platformAssemblies = new(new string[]
+    private static readonly HashSet<string> PlatformAssemblies = new(new string[]
     {
         "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.DLL",
         "MICROSOFT.VISUALSTUDIO.TESTPLATFORM.TESTFRAMEWORK.EXTENSIONS.CORE.DLL",
@@ -77,7 +77,7 @@ public class TestSource : ITestSource
     public IEnumerable<string> GetTestSources(IEnumerable<string> sources)
     {
         string appxSource;
-        if ((appxSource = this.FindAppxSource(sources)) != null)
+        if ((appxSource = FindAppxSource(sources)) != null)
         {
             var appxSourceDirectory = Path.GetDirectoryName(appxSource);
 
@@ -89,11 +89,11 @@ public class TestSource : ITestSource
             {
                 var fileName = filePath.Name;
                 var isExtSupported =
-                    executableExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
+                    ExecutableExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
 
                 if (isExtSupported && !fileName.StartsWith(SystemAssembliesPrefix, StringComparison.OrdinalIgnoreCase)
-                        && !platformAssemblies.Contains(fileName.ToUpperInvariant())
-                        && !systemAssemblies.Contains(fileName.ToUpperInvariant()))
+                        && !PlatformAssemblies.Contains(fileName.ToUpperInvariant())
+                        && !SystemAssemblies.Contains(fileName.ToUpperInvariant()))
                 {
                     // WinUI Desktop uses .NET 6, which builds both a .dll and an .exe.
                     // The manifest will provide the .exe, but the tests are inside the .dll, so we replace the name here.

@@ -30,36 +30,26 @@ public class DeploymentUtilityTests
 {
     private const string TestRunDirectory = "C:\\temp\\testRunDirectory";
     private const string RootDeploymentDirectory = "C:\\temp\\testRunDirectory\\Deploy";
-    private const string DefaultDeploymentItemPath = @"c:\temp";
-    private const string DefaultDeploymentItemOutputDirectory = "out";
 
-    private Mock<ReflectionUtility> mockReflectionUtility;
-    private Mock<FileUtility> mockFileUtility;
-
-    private Mock<AssemblyUtility> mockAssemblyUtility;
-
-    private DeploymentUtility deploymentUtility;
-
-    private Mock<IRunContext> mockRunContext;
-    private Mock<ITestExecutionRecorder> mocktestExecutionRecorder;
-
-    private IList<string> warnings;
+    private Mock<ReflectionUtility> _mockReflectionUtility;
+    private Mock<FileUtility> _mockFileUtility;
+    private Mock<AssemblyUtility> _mockAssemblyUtility;
+    private DeploymentUtility _deploymentUtility;
+    private Mock<IRunContext> _mockRunContext;
 
     [TestInitialize]
     public void TestInit()
     {
-        this.mockReflectionUtility = new Mock<ReflectionUtility>();
-        this.mockFileUtility = new Mock<FileUtility>();
-        this.mockAssemblyUtility = new Mock<AssemblyUtility>();
-        this.warnings = new List<string>();
+        _mockReflectionUtility = new Mock<ReflectionUtility>();
+        _mockFileUtility = new Mock<FileUtility>();
+        _mockAssemblyUtility = new Mock<AssemblyUtility>();
 
-        this.deploymentUtility = new DeploymentUtility(
-            new DeploymentItemUtility(this.mockReflectionUtility.Object),
-            this.mockAssemblyUtility.Object,
-            this.mockFileUtility.Object);
+        _deploymentUtility = new DeploymentUtility(
+            new DeploymentItemUtility(_mockReflectionUtility.Object),
+            _mockAssemblyUtility.Object,
+            _mockFileUtility.Object);
 
-        this.mockRunContext = new Mock<IRunContext>();
-        this.mocktestExecutionRecorder = new Mock<ITestExecutionRecorder>();
+        _mockRunContext = new Mock<IRunContext>();
     }
 
     #region CreateDeploymentDirectories tests
@@ -68,53 +58,53 @@ public class DeploymentUtilityTests
     public void CreateDeploymentDirectoriesShouldCreateDeploymentDirectoryFromRunContext()
     {
         // Setup mocks
-        this.mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(TestRunDirectory);
-        this.mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(TestRunDirectory, It.IsAny<string>()))
+        _mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(TestRunDirectory);
+        _mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(TestRunDirectory, It.IsAny<string>()))
             .Returns(RootDeploymentDirectory);
 
         // Act.
-        this.deploymentUtility.CreateDeploymentDirectories(this.mockRunContext.Object);
+        _deploymentUtility.CreateDeploymentDirectories(_mockRunContext.Object);
 
         // Assert.
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix)), Times.Once);
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix)), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
     }
 
     [TestMethod]
     public void CreateDeploymentDirectoriesShouldCreateDefaultDeploymentDirectoryIfTestRunDirectoryIsNull()
     {
         // Setup mocks
-        this.mockRunContext.Setup(rc => rc.TestRunDirectory).Returns((string)null);
-        this.mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.Is<string>(s => s.Contains(TestRunDirectories.DefaultDeploymentRootDirectory)), It.IsAny<string>()))
+        _mockRunContext.Setup(rc => rc.TestRunDirectory).Returns((string)null);
+        _mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.Is<string>(s => s.Contains(TestRunDirectories.DefaultDeploymentRootDirectory)), It.IsAny<string>()))
             .Returns(RootDeploymentDirectory);
 
         // Act.
-        this.deploymentUtility.CreateDeploymentDirectories(this.mockRunContext.Object);
+        _deploymentUtility.CreateDeploymentDirectories(_mockRunContext.Object);
 
         // Assert.
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix)), Times.Once);
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix)), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
     }
 
     [TestMethod]
     public void CreateDeploymentDirectoriesShouldCreateDefaultDeploymentDirectoryIfRunContextIsNull()
     {
         // Setup mocks
-        this.mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.Is<string>(s => s.Contains(TestRunDirectories.DefaultDeploymentRootDirectory)), It.IsAny<string>()))
+        _mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.Is<string>(s => s.Contains(TestRunDirectories.DefaultDeploymentRootDirectory)), It.IsAny<string>()))
             .Returns(RootDeploymentDirectory);
 
         // Act.
-        this.deploymentUtility.CreateDeploymentDirectories(null);
+        _deploymentUtility.CreateDeploymentDirectories(null);
 
         // Assert.
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix)), Times.Once);
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
-        this.mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix)), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
+        _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
     }
 
     #endregion

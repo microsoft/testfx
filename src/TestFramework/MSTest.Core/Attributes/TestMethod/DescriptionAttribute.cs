@@ -17,7 +17,7 @@ public sealed class DescriptionAttribute : Attribute
     /// <param name="description">The description.</param>
     public DescriptionAttribute(string description)
     {
-        this.Description = description;
+        Description = description;
     }
 
     /// <summary>

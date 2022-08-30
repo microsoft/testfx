@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public static class AssertEx
 {
-    private static AssertIs assertis;
+    private static AssertIs s_assertIs;
 
     /// <summary>
     /// A simple assert extension to validate if an object is of a given type.
@@ -38,8 +38,8 @@ public static class AssertEx
     /// <returns>The class that contains the assert methods for this grouping.</returns>
     public static AssertIs Is(this Assert assert)
     {
-        assertis ??= new AssertIs();
+        s_assertIs ??= new AssertIs();
 
-        return assertis;
+        return s_assertIs;
     }
 }

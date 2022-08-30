@@ -19,7 +19,7 @@ public sealed class OwnerAttribute : Attribute
     /// </param>
     public OwnerAttribute(string owner)
     {
-        this.Owner = owner;
+        Owner = owner;
     }
 
     /// <summary>

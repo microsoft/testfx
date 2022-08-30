@@ -17,7 +17,7 @@ public sealed class CssIterationAttribute : Attribute
     /// <param name="cssIteration">The CSS Iteration URI.</param>
     public CssIterationAttribute(string cssIteration)
     {
-        this.CssIteration = cssIteration;
+        CssIteration = cssIteration;
     }
 
     /// <summary>

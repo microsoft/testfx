@@ -15,15 +15,15 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 /// </summary>
 internal class PlatformServiceProvider : IPlatformServiceProvider
 {
-    private static IPlatformServiceProvider instance;
-    private ITestSource testSource;
-    private IFileOperations fileOperations;
-    private IAdapterTraceLogger traceLogger;
-    private ITestDeployment testDeployment;
-    private ISettingsProvider settingsProvider;
-    private ITestDataSource testDataSource;
-    private IThreadOperations threadOperations;
-    private IReflectionOperations reflectionOperations;
+    private static IPlatformServiceProvider s_instance;
+    private ITestSource _testSource;
+    private IFileOperations _fileOperations;
+    private IAdapterTraceLogger _traceLogger;
+    private ITestDeployment _testDeployment;
+    private ISettingsProvider _settingsProvider;
+    private ITestDataSource _testDataSource;
+    private IThreadOperations _threadOperations;
+    private IReflectionOperations _reflectionOperations;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
@@ -39,7 +39,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.testSource ??= new TestSource();
+            return _testSource ??= new TestSource();
         }
     }
 
@@ -50,7 +50,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.testDataSource ??= new TestDataSource();
+            return _testDataSource ??= new TestDataSource();
         }
     }
 
@@ -61,7 +61,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.fileOperations ??= new FileOperations();
+            return _fileOperations ??= new FileOperations();
         }
     }
 
@@ -72,7 +72,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.traceLogger ??= new AdapterTraceLogger();
+            return _traceLogger ??= new AdapterTraceLogger();
         }
     }
 
@@ -83,7 +83,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.testDeployment ??= new TestDeployment();
+            return _testDeployment ??= new TestDeployment();
         }
     }
 
@@ -94,7 +94,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.settingsProvider ??= new MSTestSettingsProvider();
+            return _settingsProvider ??= new MSTestSettingsProvider();
         }
     }
 
@@ -105,7 +105,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.threadOperations ??= new ThreadOperations();
+            return _threadOperations ??= new ThreadOperations();
         }
     }
 
@@ -116,7 +116,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return this.reflectionOperations ??= new ReflectionOperations();
+            return _reflectionOperations ??= new ReflectionOperations();
         }
     }
 
@@ -127,12 +127,12 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            return instance ??= new PlatformServiceProvider();
+            return s_instance ??= new PlatformServiceProvider();
         }
 
         set
         {
-            instance = value;
+            s_instance = value;
         }
     }
 

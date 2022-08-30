@@ -29,12 +29,12 @@ using MSTestAdapter.TestUtilities;
 public class DesktopSettingsProviderTests
 #pragma warning restore SA1649 // File name must match first type name
 {
-    private MSTestSettingsProvider settingsProvider;
+    private MSTestSettingsProvider _settingsProvider;
 
     [TestInitialize]
     public void TestInit()
     {
-        this.settingsProvider = new MSTestSettingsProvider();
+        _settingsProvider = new MSTestSettingsProvider();
         MSTestSettingsProvider.Reset();
     }
 
@@ -43,7 +43,7 @@ public class DesktopSettingsProviderTests
     {
         // this is a base case and we just validating that properties does not remain un-initialized,
         // so passing 'null' source will also suffice.
-        var properties = this.settingsProvider.GetProperties(null);
+        var properties = _settingsProvider.GetProperties(null);
 
         Assert.IsNotNull(properties);
         Assert.IsTrue(properties.Count > 0);
@@ -68,14 +68,14 @@ public class DesktopSettingsProviderTests
         StringReader stringReader = new(runSettingxml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
-        this.settingsProvider.Load(reader);
+        _settingsProvider.Load(reader);
         Assert.IsFalse(MSTestSettingsProvider.Settings.DeploymentEnabled);
     }
 
     [TestMethod]
     public void LoadShouldThrowIfReaderIsNull()
     {
-        ActionUtility.ActionShouldThrowExceptionOfType(() => this.settingsProvider.Load(null), typeof(ArgumentNullException));
+        ActionUtility.ActionShouldThrowExceptionOfType(() => _settingsProvider.Load(null), typeof(ArgumentNullException));
     }
 
     [TestMethod]
@@ -88,7 +88,7 @@ public class DesktopSettingsProviderTests
         StringReader stringReader = new(runSettingxml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
-        this.settingsProvider.Load(reader);
+        _settingsProvider.Load(reader);
         Assert.IsFalse(MSTestSettingsProvider.Settings.DeploymentEnabled);
     }
 }

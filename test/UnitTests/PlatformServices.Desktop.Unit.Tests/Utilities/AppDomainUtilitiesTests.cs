@@ -18,13 +18,13 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class AppDomainUtilitiesTests
 {
-    private TestableXmlUtilities testableXmlUtilities;
+    private TestableXmlUtilities _testableXmlUtilities;
 
     [TestInitialize]
     public void TestInit()
     {
-        this.testableXmlUtilities = new TestableXmlUtilities();
-        AppDomainUtilities.XmlUtilities = this.testableXmlUtilities;
+        _testableXmlUtilities = new TestableXmlUtilities();
+        AppDomainUtilities.XmlUtilities = _testableXmlUtilities;
     }
 
     [TestCleanup]
@@ -40,7 +40,7 @@ public class AppDomainUtilitiesTests
         var configFile = @"C:\temp\foo.dll.config";
 
         // Setup mocks.
-        this.testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+        _testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <configuration>
 </configuration>";
 
@@ -101,12 +101,12 @@ public class AppDomainUtilitiesTests
 
         internal override XmlDocument GetXmlDocument(string configFile)
         {
-            if (!string.IsNullOrEmpty(this.ConfigXml))
+            if (!string.IsNullOrEmpty(ConfigXml))
             {
                 var doc = new XmlDocument();
                 try
                 {
-                    doc.LoadXml(this.ConfigXml);
+                    doc.LoadXml(ConfigXml);
                 }
                 catch (XmlException)
                 {

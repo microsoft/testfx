@@ -14,14 +14,14 @@ public class DynamicDataExtensibilityTests : CLITestBase
     [TestMethod]
     public void ExecuteDynamicDataExtensibilityTests()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssembly });
-        this.ValidatePassedTestsContain(
+        InvokeVsTestForExecution(new string[] { TestAssembly });
+        ValidatePassedTestsContain(
             "DynamicDataTestMethod1 (string,2,True)",
             "DynamicDataTestMethod2 (string,4,True)",
             "DynamicDataTestMethod3 (string,2,True)",
             "DynamicDataTestMethod3 (string,4,True)");
 
-        this.ValidatePassedTestsContain(
+        ValidatePassedTestsContain(
             "DynamicDataTestMethod4 (string,2,True)",
             "DynamicDataTestMethod5 (string,4,True)",
             "DynamicDataTestMethod6 (string,2,True)",

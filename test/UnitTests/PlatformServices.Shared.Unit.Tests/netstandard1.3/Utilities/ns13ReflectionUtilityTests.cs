@@ -24,11 +24,11 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 public class ReflectionUtilityTests
 #pragma warning restore SA1649 // File name must match first type name
 {
-    private readonly ReflectionUtility reflectionUtility;
+    private readonly ReflectionUtility _reflectionUtility;
 
     public ReflectionUtilityTests()
     {
-        this.reflectionUtility = new ReflectionUtility();
+        _reflectionUtility = new ReflectionUtility();
     }
 
     [TestMethod]
@@ -36,7 +36,7 @@ public class ReflectionUtilityTests
     {
         var minfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(minfo, false);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -50,7 +50,7 @@ public class ReflectionUtilityTests
     {
         var minfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(minfo, false);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -64,7 +64,7 @@ public class ReflectionUtilityTests
     {
         var minfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(minfo, true);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(3, attribs.Length);
@@ -79,7 +79,7 @@ public class ReflectionUtilityTests
     {
         var tinfo = typeof(DummyBaseTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(tinfo, false);
+        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -93,7 +93,7 @@ public class ReflectionUtilityTests
     {
         var tinfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(tinfo, false);
+        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -107,7 +107,7 @@ public class ReflectionUtilityTests
     {
         var minfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(minfo, true);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -121,7 +121,7 @@ public class ReflectionUtilityTests
     {
         var minfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(minfo, typeof(DummyAAttribute), false);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(DummyAAttribute), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -135,7 +135,7 @@ public class ReflectionUtilityTests
     {
         var minfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(minfo, typeof(DummyAAttribute), false);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(DummyAAttribute), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -149,7 +149,7 @@ public class ReflectionUtilityTests
     {
         var minfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(minfo, typeof(DummyAAttribute), true);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(DummyAAttribute), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -163,7 +163,7 @@ public class ReflectionUtilityTests
     {
         var tinfo = typeof(DummyBaseTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(tinfo, typeof(DummyAAttribute), false);
+        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, typeof(DummyAAttribute), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -177,7 +177,7 @@ public class ReflectionUtilityTests
     {
         var tinfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(tinfo, typeof(DummyAAttribute), false);
+        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, typeof(DummyAAttribute), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -191,7 +191,7 @@ public class ReflectionUtilityTests
     {
         var minfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attribs = this.reflectionUtility.GetCustomAttributes(minfo, typeof(DummyAAttribute), true);
+        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(DummyAAttribute), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -254,7 +254,7 @@ public class ReflectionUtilityTests
     {
         public DummyAAttribute(string foo)
         {
-            this.Value = foo;
+            Value = foo;
         }
 
         public string Value { get; set; }
@@ -265,7 +265,7 @@ public class ReflectionUtilityTests
     {
         public DummySingleAAttribute(string foo)
         {
-            this.Value = foo;
+            Value = foo;
         }
 
         public string Value { get; set; }

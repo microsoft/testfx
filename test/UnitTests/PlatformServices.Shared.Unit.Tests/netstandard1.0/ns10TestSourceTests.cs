@@ -23,38 +23,38 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 [TestClass]
 public class TestSourceTests
 {
-    private TestSource testSource;
+    private TestSource _testSource;
 
     [TestInitialize]
     public void TestInit()
     {
-        this.testSource = new TestSource();
+        _testSource = new TestSource();
     }
 
     [TestMethod]
     public void ValidSourceExtensionsShouldContainDllExtensions()
     {
-        CollectionAssert.Contains(this.testSource.ValidSourceExtensions.ToList(), ".dll");
+        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".dll");
     }
 
     [TestMethod]
     public void ValidSourceExtensionsShouldContainExeExtensions()
     {
-        CollectionAssert.Contains(this.testSource.ValidSourceExtensions.ToList(), ".exe");
+        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".exe");
     }
 
     [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueIfSourceOrAssemblyNameIsNull()
     {
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(null, null));
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(null, string.Empty));
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(new AssemblyName(), null));
+        Assert.IsTrue(_testSource.IsAssemblyReferenced(null, null));
+        Assert.IsTrue(_testSource.IsAssemblyReferenced(null, string.Empty));
+        Assert.IsTrue(_testSource.IsAssemblyReferenced(new AssemblyName(), null));
     }
 
     [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames()
     {
-        Assert.IsTrue(this.testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
+        Assert.IsTrue(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
     }
 }
 

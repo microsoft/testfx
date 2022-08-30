@@ -26,9 +26,9 @@ public sealed class TestMethod : ITestMethod
     public const int TotalHierarchyLevels = HierarchyConstants.Levels.TotalLevelCount;
 
     #region Fields
-    private IReadOnlyCollection<string> hierarchy;
-    private string declaringClassFullName = null;
-    private string declaringAssemblyName = null;
+    private readonly IReadOnlyCollection<string> _hierarchy;
+    private string _declaringClassFullName = null;
+    private string _declaringAssemblyName = null;
     #endregion
 
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
@@ -41,10 +41,10 @@ public sealed class TestMethod : ITestMethod
         Debug.Assert(!string.IsNullOrEmpty(name), "TestName cannot be empty");
         Debug.Assert(!string.IsNullOrEmpty(fullClassName), "Full className cannot be empty");
 
-        this.Name = name;
-        this.FullClassName = fullClassName;
-        this.AssemblyName = assemblyName;
-        this.IsAsync = isAsync;
+        Name = name;
+        FullClassName = fullClassName;
+        AssemblyName = assemblyName;
+        IsAsync = isAsync;
 
         var hierarchy = new string[HierarchyConstants.Levels.TotalLevelCount];
         hierarchy[HierarchyConstants.Levels.ContainerIndex] = null;
@@ -52,7 +52,7 @@ public sealed class TestMethod : ITestMethod
         hierarchy[HierarchyConstants.Levels.ClassIndex] = name;
         hierarchy[HierarchyConstants.Levels.TestGroupIndex] = name;
 
-        this.hierarchy = new ReadOnlyCollection<string>(hierarchy);
+        _hierarchy = new ReadOnlyCollection<string>(hierarchy);
     }
 
     internal TestMethod(MethodBase method, string name, string fullClassName, string assemblyName, bool isAsync)
@@ -66,17 +66,17 @@ public sealed class TestMethod : ITestMethod
         ManagedNameHelper.GetManagedName(method, out var managedType, out var managedMethod, out var hierarchyValues);
         hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
 
-        this.ManagedTypeName = managedType;
-        this.ManagedMethodName = managedMethod;
-        this.hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
+        ManagedTypeName = managedType;
+        ManagedMethodName = managedMethod;
+        _hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
     }
 
     internal TestMethod(string managedTypeName, string managedMethodName, string[] hierarchyValues, string name, string fullClassName, string assemblyName, bool isAsync)
         : this(name, fullClassName, assemblyName, isAsync)
     {
-        this.ManagedTypeName = managedTypeName;
-        this.ManagedMethodName = managedMethodName;
-        this.hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
+        ManagedTypeName = managedTypeName;
+        ManagedMethodName = managedMethodName;
+        _hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
     }
 
     /// <inheritdoc />
@@ -94,13 +94,13 @@ public sealed class TestMethod : ITestMethod
     {
         get
         {
-            return this.declaringAssemblyName;
+            return _declaringAssemblyName;
         }
 
         set
         {
-            Debug.Assert(value != this.AssemblyName, "DeclaringAssemblyName should not be the same as AssemblyName.");
-            this.declaringAssemblyName = value;
+            Debug.Assert(value != AssemblyName, "DeclaringAssemblyName should not be the same as AssemblyName.");
+            _declaringAssemblyName = value;
         }
     }
 
@@ -114,13 +114,13 @@ public sealed class TestMethod : ITestMethod
     {
         get
         {
-            return this.declaringClassFullName;
+            return _declaringClassFullName;
         }
 
         set
         {
-            Debug.Assert(value != this.FullClassName, "DeclaringClassFullName should not be the same as FullClassName.");
-            this.declaringClassFullName = value;
+            Debug.Assert(value != FullClassName, "DeclaringClassFullName should not be the same as FullClassName.");
+            _declaringClassFullName = value;
         }
     }
 
@@ -137,10 +137,10 @@ public sealed class TestMethod : ITestMethod
     public string ManagedMethodName { get; }
 
     /// <inheritdoc />
-    public bool HasManagedMethodAndTypeProperties => !string.IsNullOrWhiteSpace(this.ManagedTypeName) && !string.IsNullOrWhiteSpace(this.ManagedMethodName);
+    public bool HasManagedMethodAndTypeProperties => !string.IsNullOrWhiteSpace(ManagedTypeName) && !string.IsNullOrWhiteSpace(ManagedMethodName);
 
     /// <inheritdoc />
-    public IReadOnlyCollection<string> Hierarchy => this.hierarchy;
+    public IReadOnlyCollection<string> Hierarchy => _hierarchy;
 
     /// <summary>
     /// Gets or sets type of dynamic data if any
@@ -162,5 +162,5 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     internal string DisplayName { get; set; }
 
-    internal TestMethod Clone() => this.MemberwiseClone() as TestMethod;
+    internal TestMethod Clone() => MemberwiseClone() as TestMethod;
 }

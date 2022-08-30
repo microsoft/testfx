@@ -13,15 +13,15 @@ using System.Diagnostics;
 /// </summary>
 internal sealed class OdbcDataConnection : TestDataConnectionSql
 {
-    private readonly bool isMSSql;
+    private readonly bool _isMSSql;
 
     public OdbcDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
         : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
     {
         // Need open connection to get Connection.Driver.
-        Debug.Assert(this.IsOpen(), "The connection must be open!");
+        Debug.Assert(IsOpen(), "The connection must be open!");
 
-        this.isMSSql = this.Connection != null && IsMSSql(this.Connection.Driver);
+        _isMSSql = Connection != null && IsMSSql(Connection.Driver);
     }
 
     public new OdbcCommandBuilder CommandBuilder
@@ -39,14 +39,14 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
     /// </summary>
     public override void GetQuoteLiterals()
     {
-        this.GetQuoteLiteralsHelper();
+        GetQuoteLiteralsHelper();
     }
 
     public override string GetDefaultSchema()
     {
-        if (this.isMSSql)
+        if (_isMSSql)
         {
-            return this.GetDefaultSchemaMSSql();
+            return GetDefaultSchemaMSSql();
         }
 
         return base.GetDefaultSchema();
@@ -79,13 +79,13 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
     protected override string QuoteIdentifier(string identifier)
     {
         Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier");
-        return this.CommandBuilder.QuoteIdentifier(identifier, this.Connection);  // Must pass connection.
+        return CommandBuilder.QuoteIdentifier(identifier, Connection);  // Must pass connection.
     }
 
     protected override string UnquoteIdentifier(string identifier)
     {
         Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier");
-        return this.CommandBuilder.UnquoteIdentifier(identifier, this.Connection);  // Must pass connection.
+        return CommandBuilder.UnquoteIdentifier(identifier, Connection);  // Must pass connection.
     }
 
     // Need to fix up excel connections

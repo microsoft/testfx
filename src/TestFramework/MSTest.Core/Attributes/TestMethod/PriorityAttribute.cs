@@ -19,7 +19,7 @@ public sealed class PriorityAttribute : Attribute
     /// </param>
     public PriorityAttribute(int priority)
     {
-        this.Priority = priority;
+        Priority = priority;
     }
 
     /// <summary>

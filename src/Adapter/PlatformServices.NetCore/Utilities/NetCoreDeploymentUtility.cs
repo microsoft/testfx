@@ -41,9 +41,9 @@ internal class DeploymentUtility : DeploymentUtilityBase
     {
         string dateTimeSufix = DateTime.Now.ToString("yyyyMMddTHHmmss", DateTimeFormatInfo.InvariantInfo);
         string directoryName = string.Format(CultureInfo.InvariantCulture, Resource.TestRunName, DeploymentFolderPrefix, Environment.GetEnvironmentVariable("USERNAME") ?? Environment.GetEnvironmentVariable("USER"), dateTimeSufix);
-        directoryName = this.FileUtility.ReplaceInvalidFileNameCharacters(directoryName);
+        directoryName = FileUtility.ReplaceInvalidFileNameCharacters(directoryName);
 
-        return this.FileUtility.GetNextIterationDirectoryName(baseDirectory, directoryName);
+        return FileUtility.GetNextIterationDirectoryName(baseDirectory, directoryName);
     }
 
     /// <summary>

@@ -21,18 +21,18 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class MSTestExecutorTests
 {
-    private Mock<IRunContext> mockRunContext;
-    private Mock<IRunSettings> mockRunSettings;
-    private Mock<IFrameworkHandle> mockFrameworkHandle;
-    private MSTestExecutor mstestExecutor;
+    private Mock<IRunContext> _mockRunContext;
+    private Mock<IRunSettings> _mockRunSettings;
+    private Mock<IFrameworkHandle> _mockFrameworkHandle;
+    private MSTestExecutor _mstestExecutor;
 
     [TestInitialize]
     public void TestInit()
     {
-        this.mockRunContext = new Mock<IRunContext>();
-        this.mockRunSettings = new Mock<IRunSettings>();
-        this.mockFrameworkHandle = new Mock<IFrameworkHandle>();
-        this.mstestExecutor = new MSTestExecutor();
+        _mockRunContext = new Mock<IRunContext>();
+        _mockRunSettings = new Mock<IRunSettings>();
+        _mockFrameworkHandle = new Mock<IFrameworkHandle>();
+        _mstestExecutor = new MSTestExecutor();
     }
 
     [TestMethod]
@@ -54,18 +54,18 @@ public class MSTestExecutorTests
         TestCase[] tests = new[] { testCase };
         string runSettingxml =
         @"<RunSettings>   
-			        <MSTest>   
-				        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-				        <ForcedLegacyMode>true</ForcedLegacyMode>    
-				        <IgnoreTestImpact>true</IgnoreTestImpact>  
-			        </MSTest>
-		    </RunSettings>";
-        this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
-        this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        this.mstestExecutor.RunTests(tests, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
+                    <MSTest>   
+                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                        <ForcedLegacyMode>true</ForcedLegacyMode>    
+                        <IgnoreTestImpact>true</IgnoreTestImpact>  
+                    </MSTest>
+            </RunSettings>";
+        _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mstestExecutor.RunTests(tests, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         // Test should not start if TestSettings is given.
-        this.mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
+        _mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
     }
 
     [TestMethod]
@@ -75,21 +75,21 @@ public class MSTestExecutorTests
         TestCase[] tests = new[] { testCase };
         string runSettingxml =
         @"<RunSettings>   
-			        <MSTest>   
-				        <Parallelize>
-				          <Scope>Pond</Scope>
-				        </Parallelize>
-			        </MSTest>
-		    </RunSettings>";
-        this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
-        this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+                    <MSTest>   
+                        <Parallelize>
+                          <Scope>Pond</Scope>
+                        </Parallelize>
+                    </MSTest>
+            </RunSettings>";
+        _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
         // Act.
-        this.mstestExecutor.RunTests(tests, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
+        _mstestExecutor.RunTests(tests, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         // Assert.
-        this.mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
-        this.mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
+        _mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
+        _mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
     }
 
     [TestMethod]
@@ -98,18 +98,18 @@ public class MSTestExecutorTests
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingxml =
         @"<RunSettings>
-			        <MSTest>   
-				        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-				        <ForcedLegacyMode>true</ForcedLegacyMode>    
-				        <IgnoreTestImpact>true</IgnoreTestImpact>
-			        </MSTest>
-		    </RunSettings>";
-        this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
-        this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
+                    <MSTest>   
+                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                        <ForcedLegacyMode>true</ForcedLegacyMode>    
+                        <IgnoreTestImpact>true</IgnoreTestImpact>
+                    </MSTest>
+            </RunSettings>";
+        _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         // Test should not start if TestSettings is given.
-        this.mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
+        _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
     }
 
     [TestMethod]
@@ -118,21 +118,21 @@ public class MSTestExecutorTests
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingxml =
         @"<RunSettings>   
-			        <MSTest>   
-				        <Parallelize>
-				          <Scope>Pond</Scope>
-				        </Parallelize>
-			        </MSTest>
-		    </RunSettings>";
-        this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
-        this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+                    <MSTest>   
+                        <Parallelize>
+                          <Scope>Pond</Scope>
+                        </Parallelize>
+                    </MSTest>
+            </RunSettings>";
+        _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
         // Act.
-        this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
+        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         // Assert.
-        this.mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
-        this.mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
+        _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
+        _mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
     }
 
     [TestMethod]
@@ -141,10 +141,10 @@ public class MSTestExecutorTests
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingxml =
         @"<RunSettings>
-		    </RunSettings>";
-        this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
-        this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
+            </RunSettings>";
+        _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         Assert.IsTrue(MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
     }
@@ -158,10 +158,10 @@ public class MSTestExecutorTests
                 <RunConfiguration>
                     <CollectSourceInformation>false</CollectSourceInformation>
                 </RunConfiguration>
-		    </RunSettings>";
-        this.mockRunContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
-        this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        this.mstestExecutor.RunTests(sources, this.mockRunContext.Object, this.mockFrameworkHandle.Object);
+            </RunSettings>";
+        _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         Assert.IsFalse(MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
     }

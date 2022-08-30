@@ -34,19 +34,19 @@ internal class DeploymentUtility : DeploymentUtilityBase
             EqtTrace.Info("Adding the references and satellite assemblies to the deployment items list");
 
             // Get the referenced assemblies.
-            this.ProcessNewStorage(testSource, deploymentItems, warnings);
+            ProcessNewStorage(testSource, deploymentItems, warnings);
 
             // Get the satellite assemblies
-            var satelliteItems = this.GetSatellites(deploymentItems, testSource, warnings);
+            var satelliteItems = GetSatellites(deploymentItems, testSource, warnings);
             foreach (var satelliteItem in satelliteItems)
             {
-                this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, satelliteItem);
+                DeploymentItemUtility.AddDeploymentItem(deploymentItems, satelliteItem);
             }
         }
         else
         {
             EqtTrace.Info("Adding the test source directory to the deployment items list");
-            this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
+            DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
         }
     }
 
@@ -59,35 +59,35 @@ internal class DeploymentUtility : DeploymentUtilityBase
     {
         string dateTimeSufix = DateTime.Now.ToString("yyyyMMddTHHmmss", DateTimeFormatInfo.InvariantInfo);
         string directoryName = string.Format(CultureInfo.InvariantCulture, Resource.TestRunName, DeploymentFolderPrefix, Environment.UserName, dateTimeSufix);
-        directoryName = this.FileUtility.ReplaceInvalidFileNameCharacters(directoryName);
+        directoryName = FileUtility.ReplaceInvalidFileNameCharacters(directoryName);
 
-        return this.FileUtility.GetNextIterationDirectoryName(baseDirectory, directoryName);
+        return FileUtility.GetNextIterationDirectoryName(baseDirectory, directoryName);
     }
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     protected void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings)
     {
         // Add deployment items and process .config files only for storages we have not processed before.
-        if (!this.DeploymentItemUtility.IsValidDeploymentItem(testSource, string.Empty, out var errorMessage))
+        if (!DeploymentItemUtility.IsValidDeploymentItem(testSource, string.Empty, out var errorMessage))
         {
             warnings.Add(errorMessage);
             return;
         }
 
-        this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(testSource, string.Empty, DeploymentItemOriginType.TestStorage));
+        DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(testSource, string.Empty, DeploymentItemOriginType.TestStorage));
 
         // Deploy .config file if exists, only for assemblies, i.e. DLL and EXE.
         // First check <TestStorage>.config, then if not found check for App.Config
         // and deploy AppConfig to <TestStorage>.config.
-        if (this.AssemblyUtility.IsAssemblyExtension(Path.GetExtension(testSource)))
+        if (AssemblyUtility.IsAssemblyExtension(Path.GetExtension(testSource)))
         {
-            var configFile = this.AddTestSourceConfigFileIfExists(testSource, deploymentItems);
+            var configFile = AddTestSourceConfigFileIfExists(testSource, deploymentItems);
 
             // Deal with test dependencies: update dependencyDeploymentItems and missingDependentAssemblies.
             try
             {
                 // We look for dependent assemblies only for DLL and EXE's.
-                this.AddDependencies(testSource, configFile, deploymentItems, warnings);
+                AddDependencies(testSource, configFile, deploymentItems, warnings);
             }
             catch (Exception e)
             {
@@ -101,7 +101,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
     {
         var dependencies = new List<DeploymentItem>();
 
-        this.AddDependencies(deploymentItemFile, null, dependencies, warnings);
+        AddDependencies(deploymentItemFile, null, dependencies, warnings);
 
         foreach (var dependencyItem in dependencies)
         {
@@ -121,11 +121,11 @@ internal class DeploymentUtility : DeploymentUtilityBase
             string path = null;
             try
             {
-                path = this.GetFullPathToDeploymentItemSource(item.SourcePath, testSource);
+                path = GetFullPathToDeploymentItemSource(item.SourcePath, testSource);
                 path = Path.GetFullPath(path);
 
-                if (string.IsNullOrEmpty(path) || !this.AssemblyUtility.IsAssemblyExtension(Path.GetExtension(path))
-                    || !this.FileUtility.DoesFileExist(path) || !this.AssemblyUtility.IsAssembly(path))
+                if (string.IsNullOrEmpty(path) || !AssemblyUtility.IsAssemblyExtension(Path.GetExtension(path))
+                    || !FileUtility.DoesFileExist(path) || !AssemblyUtility.IsAssembly(path))
                 {
                     continue;
                 }
@@ -156,7 +156,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
             {
                 string itemDir = Path.GetDirectoryName(path).TrimEnd(
                     new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-                List<string> itemSatellites = this.AssemblyUtility.GetSatelliteAssemblies(path);
+                List<string> itemSatellites = AssemblyUtility.GetSatelliteAssemblies(path);
                 foreach (string satellite in itemSatellites)
                 {
                     Debug.Assert(!string.IsNullOrEmpty(satellite), "DeploymentManager.DoDeployment: got empty satellite!");
@@ -177,7 +177,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
 
                     // Now finally add the item!
                     DeploymentItem satelliteItem = new(satellite, relativeOutputDir, DeploymentItemOriginType.Satellite);
-                    this.DeploymentItemUtility.AddDeploymentItem(satellites, satelliteItem);
+                    DeploymentItemUtility.AddDeploymentItem(satellites, satelliteItem);
                 }
             }
             catch (ArgumentException ex)
@@ -223,7 +223,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
 
         // Note: if this is not an assembly we simply return empty array, also:
         //       we do recursive search and report missing.
-        string[] references = this.AssemblyUtility.GetFullPathToDependentAssemblies(testSource, configFile, out var warningList);
+        string[] references = AssemblyUtility.GetFullPathToDependentAssemblies(testSource, configFile, out var warningList);
         if (warningList != null && warningList.Count > 0)
         {
             warnings = warnings.Concat(warningList).ToList();
@@ -238,7 +238,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
         foreach (string reference in references)
         {
             DeploymentItem deploymentItem = new(reference, string.Empty, DeploymentItemOriginType.Dependency);
-            this.DeploymentItemUtility.AddDeploymentItem(deploymentItems, deploymentItem);
+            DeploymentItemUtility.AddDeploymentItem(deploymentItems, deploymentItem);
 
             if (EqtTrace.IsInfoEnabled)
             {

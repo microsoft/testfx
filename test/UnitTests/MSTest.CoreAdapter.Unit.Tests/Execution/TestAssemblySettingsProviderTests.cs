@@ -24,20 +24,20 @@ using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class TestAssemblySettingsProviderTests
 {
-    private TestablePlatformServiceProvider testablePlatformServiceProvider;
-    private Mock<ReflectHelper> mockReflectHelper;
-    private TestAssemblySettingsProvider testAssemblySettingProvider;
+    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private Mock<ReflectHelper> _mockReflectHelper;
+    private TestAssemblySettingsProvider _testAssemblySettingProvider;
 
     [TestInitialize]
     public void TestInit()
     {
-        this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        this.testablePlatformServiceProvider.SetupMockReflectionOperations();
+        _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+        _testablePlatformServiceProvider.SetupMockReflectionOperations();
 
-        PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
+        PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
-        this.mockReflectHelper = new Mock<ReflectHelper>();
-        this.testAssemblySettingProvider = new TestAssemblySettingsProvider(this.mockReflectHelper.Object);
+        _mockReflectHelper = new Mock<ReflectHelper>();
+        _testAssemblySettingProvider = new TestAssemblySettingsProvider(_mockReflectHelper.Object);
     }
 
     [TestCleanup]
@@ -50,13 +50,13 @@ public class TestAssemblySettingsProviderTests
     public void GetSettingsShouldSetParallelWorkersToNegativeByDefault()
     {
         // Arrange.
-        this.testablePlatformServiceProvider
+        _testablePlatformServiceProvider
             .MockFileOperations
             .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
-        var settings = this.testAssemblySettingProvider.GetSettings("Foo");
+        var settings = _testAssemblySettingProvider.GetSettings("Foo");
 
         // Assert.
         Assert.AreEqual(-1, settings.Workers);
@@ -66,17 +66,17 @@ public class TestAssemblySettingsProviderTests
     public void GetSettingsShouldSetParallelWorkers()
     {
         // Arrange.
-        this.testablePlatformServiceProvider
+        _testablePlatformServiceProvider
             .MockFileOperations
             .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
             .Returns(Assembly.GetExecutingAssembly());
-        this.testablePlatformServiceProvider
+        _testablePlatformServiceProvider
             .MockReflectionOperations
             .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.ParallelizeAttribute)))
             .Returns(new[] { new UTF.ParallelizeAttribute { Workers = 10 } });
 
         // Act.
-        var settings = this.testAssemblySettingProvider.GetSettings("Foo");
+        var settings = _testAssemblySettingProvider.GetSettings("Foo");
 
         // Assert.
         Assert.AreEqual(10, settings.Workers);
@@ -86,17 +86,17 @@ public class TestAssemblySettingsProviderTests
     public void GetSettingsShouldSetParallelWorkersToProcessorCountIfZero()
     {
         // Arrange.
-        this.testablePlatformServiceProvider
+        _testablePlatformServiceProvider
             .MockFileOperations
             .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
             .Returns(Assembly.GetExecutingAssembly());
-        this.testablePlatformServiceProvider
+        _testablePlatformServiceProvider
             .MockReflectionOperations
             .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.ParallelizeAttribute)))
             .Returns(new[] { new UTF.ParallelizeAttribute { Workers = 0 } });
 
         // Act.
-        var settings = this.testAssemblySettingProvider.GetSettings("Foo");
+        var settings = _testAssemblySettingProvider.GetSettings("Foo");
 
         // Assert.
         Assert.AreEqual(Environment.ProcessorCount, settings.Workers);
@@ -106,13 +106,13 @@ public class TestAssemblySettingsProviderTests
     public void GetSettingsShouldSetParallelScopeToClassLevelByDefault()
     {
         // Arrange.
-        this.testablePlatformServiceProvider
+        _testablePlatformServiceProvider
             .MockFileOperations
             .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
-        var settings = this.testAssemblySettingProvider.GetSettings("Foo");
+        var settings = _testAssemblySettingProvider.GetSettings("Foo");
 
         // Assert.
         Assert.AreEqual(UTF.ExecutionScope.ClassLevel, settings.Scope);
@@ -122,17 +122,17 @@ public class TestAssemblySettingsProviderTests
     public void GetSettingsShouldSetParallelScope()
     {
         // Arrange.
-        this.testablePlatformServiceProvider
+        _testablePlatformServiceProvider
             .MockFileOperations
             .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
             .Returns(Assembly.GetExecutingAssembly());
-        this.testablePlatformServiceProvider
+        _testablePlatformServiceProvider
             .MockReflectionOperations
             .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.ParallelizeAttribute)))
             .Returns(new[] { new UTF.ParallelizeAttribute { Scope = UTF.ExecutionScope.MethodLevel } });
 
         // Act.
-        var settings = this.testAssemblySettingProvider.GetSettings("Foo");
+        var settings = _testAssemblySettingProvider.GetSettings("Foo");
 
         // Assert.
         Assert.AreEqual(UTF.ExecutionScope.MethodLevel, settings.Scope);
@@ -142,13 +142,13 @@ public class TestAssemblySettingsProviderTests
     public void GetSettingsShouldSetCanParallelizeAssemblyToTrueByDefault()
     {
         // Arrange.
-        this.testablePlatformServiceProvider
+        _testablePlatformServiceProvider
             .MockFileOperations
             .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
             .Returns(Assembly.GetExecutingAssembly());
 
         // Act.
-        var settings = this.testAssemblySettingProvider.GetSettings("Foo");
+        var settings = _testAssemblySettingProvider.GetSettings("Foo");
 
         // Assert.
         Assert.IsTrue(settings.CanParallelizeAssembly);
@@ -158,17 +158,17 @@ public class TestAssemblySettingsProviderTests
     public void GetSettingsShouldSetCanParallelizeAssemblyToFalseIfDoNotParallelizeIsSet()
     {
         // Arrange.
-        this.testablePlatformServiceProvider
+        _testablePlatformServiceProvider
             .MockFileOperations
             .Setup(fo => fo.LoadAssembly(It.IsAny<string>(), false))
             .Returns(Assembly.GetExecutingAssembly());
-        this.testablePlatformServiceProvider
+        _testablePlatformServiceProvider
             .MockReflectionOperations
             .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.DoNotParallelizeAttribute)))
             .Returns(new[] { new UTF.DoNotParallelizeAttribute() });
 
         // Act.
-        var settings = this.testAssemblySettingProvider.GetSettings("Foo");
+        var settings = _testAssemblySettingProvider.GetSettings("Foo");
 
         // Assert.
         Assert.IsFalse(settings.CanParallelizeAssembly);

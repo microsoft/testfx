@@ -15,12 +15,12 @@ public class TestRunCancellationToken
     /// <summary>
     /// Stores whether the test run is canceled or not.
     /// </summary>
-    private bool canceled;
+    private bool _canceled;
 
     /// <summary>
     /// Callback to be invoked when canceled.
     /// </summary>
-    private Action registeredCallback;
+    private Action _registeredCallback;
 
     /// <summary>
     /// Gets a value indicating whether the test run is canceled.
@@ -29,15 +29,15 @@ public class TestRunCancellationToken
     {
         get
         {
-            return this.canceled;
+            return _canceled;
         }
 
         private set
         {
-            this.canceled = value;
-            if (this.canceled)
+            _canceled = value;
+            if (_canceled)
             {
-                this.registeredCallback?.Invoke();
+                _registeredCallback?.Invoke();
             }
         }
     }
@@ -47,7 +47,7 @@ public class TestRunCancellationToken
     /// </summary>
     public void Cancel()
     {
-        this.Canceled = true;
+        Canceled = true;
     }
 
     /// <summary>
@@ -58,9 +58,9 @@ public class TestRunCancellationToken
     {
         ValidateArg.NotNull(callback, "callback");
 
-        Debug.Assert(this.registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
+        Debug.Assert(_registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
 
-        this.registeredCallback = callback;
+        _registeredCallback = callback;
     }
 
     /// <summary>
@@ -68,6 +68,6 @@ public class TestRunCancellationToken
     /// </summary>
     public void Unregister()
     {
-        this.registeredCallback = null;
+        _registeredCallback = null;
     }
 }

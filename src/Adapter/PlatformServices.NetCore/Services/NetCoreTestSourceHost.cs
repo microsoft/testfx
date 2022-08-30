@@ -15,8 +15,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 /// </summary>
 public class TestSourceHost : ITestSourceHost
 {
-    private readonly string sourceFileName;
-    private string currentDirectory = null;
+    private readonly string _sourceFileName;
+    private string _currentDirectory = null;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestSourceHost"/> class.
@@ -26,10 +26,10 @@ public class TestSourceHost : ITestSourceHost
     /// <param name="frameworkHandle"> The handle to the test platform. </param>
     public TestSourceHost(string sourceFileName, IRunSettings runSettings, IFrameworkHandle frameworkHandle)
     {
-        this.sourceFileName = sourceFileName;
+        _sourceFileName = sourceFileName;
 
         // Set the environment context.
-        this.SetContext(sourceFileName);
+        SetContext(sourceFileName);
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     public void Dispose()
     {
-        this.ResetContext();
+        ResetContext();
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public class TestSourceHost : ITestSourceHost
         }
 
         Exception setWorkingDirectoryException = null;
-        this.currentDirectory = Directory.GetCurrentDirectory();
+        _currentDirectory = Directory.GetCurrentDirectory();
         try
         {
             Directory.SetCurrentDirectory(Path.GetDirectoryName(source));
@@ -102,9 +102,9 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     private void ResetContext()
     {
-        if (!string.IsNullOrEmpty(this.currentDirectory))
+        if (!string.IsNullOrEmpty(_currentDirectory))
         {
-            Directory.SetCurrentDirectory(this.currentDirectory);
+            Directory.SetCurrentDirectory(_currentDirectory);
         }
     }
 }

@@ -27,27 +27,27 @@ internal class TestMethodRunner
     /// <summary>
     /// Test context which needs to be passed to the various methods of the test
     /// </summary>
-    private readonly ITestContext testContext;
+    private readonly ITestContext _testContext;
 
     /// <summary>
     /// TestMethod that needs to be executed.
     /// </summary>
-    private readonly TestMethod test;
+    private readonly TestMethod _test;
 
     /// <summary>
     /// TestMethod referred by the above test element
     /// </summary>
-    private readonly TestMethodInfo testMethodInfo;
+    private readonly TestMethodInfo _testMethodInfo;
 
     /// <summary>
     /// Specifies whether debug traces should be captured or not
     /// </summary>
-    private readonly bool captureDebugTraces;
+    private readonly bool _captureDebugTraces;
 
     /// <summary>
     /// Helper for reflection API's.
     /// </summary>
-    private readonly ReflectHelper reflectHelper;
+    private readonly ReflectHelper _reflectHelper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodRunner"/> class.
@@ -93,11 +93,11 @@ internal class TestMethodRunner
         Debug.Assert(testMethod != null, "testMethod should not be null");
         Debug.Assert(testContext != null, "testContext should not be null");
 
-        this.testMethodInfo = testMethodInfo;
-        this.test = testMethod;
-        this.testContext = testContext;
-        this.captureDebugTraces = captureDebugTraces;
-        this.reflectHelper = reflectHelper;
+        _testMethodInfo = testMethodInfo;
+        _test = testMethod;
+        _testContext = testContext;
+        _captureDebugTraces = captureDebugTraces;
+        _reflectHelper = reflectHelper;
     }
 
     /// <summary>
@@ -115,27 +115,27 @@ internal class TestMethodRunner
 
         try
         {
-            using (LogMessageListener logListener = new(this.captureDebugTraces))
+            using (LogMessageListener logListener = new(_captureDebugTraces))
             {
                 try
                 {
                     // Run the assembly and class Initialize methods if required.
                     // Assembly or class initialize can throw exceptions in which case we need to ensure that we fail the test.
-                    this.testMethodInfo.Parent.Parent.RunAssemblyInitialize(this.testContext.Context);
-                    this.testMethodInfo.Parent.RunClassInitialize(this.testContext.Context);
+                    _testMethodInfo.Parent.Parent.RunAssemblyInitialize(_testContext.Context);
+                    _testMethodInfo.Parent.RunClassInitialize(_testContext.Context);
                 }
                 finally
                 {
                     initLogs = logListener.GetAndClearStandardOutput();
                     initTrace = logListener.GetAndClearDebugTrace();
                     initErrorLogs = logListener.GetAndClearStandardError();
-                    inittestContextMessages = this.testContext.GetAndClearDiagnosticMessages();
+                    inittestContextMessages = _testContext.GetAndClearDiagnosticMessages();
                 }
             }
 
             // Listening to log messages when running the test method with its Test Initialize and cleanup later on in the stack.
             // This allows us to differentiate logging when data driven methods are used.
-            result = this.RunTestMethod();
+            result = RunTestMethod();
         }
         catch (TestFailedException ex)
         {
@@ -177,33 +177,33 @@ internal class TestMethodRunner
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     internal UnitTestResult[] RunTestMethod()
     {
-        Debug.Assert(this.test != null, "Test should not be null.");
-        Debug.Assert(this.testMethodInfo.TestMethod != null, "Test method should not be null.");
+        Debug.Assert(_test != null, "Test should not be null.");
+        Debug.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
 
         List<UTF.TestResult> results = new();
         var isDataDriven = false;
 
-        if (this.testMethodInfo.TestMethodOptions.Executor != null)
+        if (_testMethodInfo.TestMethodOptions.Executor != null)
         {
-            if (this.test.DataType == DynamicDataType.ITestDataSource)
+            if (_test.DataType == DynamicDataType.ITestDataSource)
             {
-                var data = DataSerializationHelper.Deserialize(this.test.SerializedData);
-                var testResults = this.ExecuteTestWithDataSource(null, data);
+                var data = DataSerializationHelper.Deserialize(_test.SerializedData);
+                var testResults = ExecuteTestWithDataSource(null, data);
                 results.AddRange(testResults);
             }
-            else if (this.ExecuteDataSourceBasedTests(results))
+            else if (ExecuteDataSourceBasedTests(results))
             {
                 isDataDriven = true;
             }
             else
             {
-                var testResults = this.ExecuteTest(this.testMethodInfo);
+                var testResults = ExecuteTest(_testMethodInfo);
 
                 foreach (var testResult in testResults)
                 {
                     if (string.IsNullOrWhiteSpace(testResult.DisplayName))
                     {
-                        testResult.DisplayName = this.test.DisplayName;
+                        testResult.DisplayName = _test.DisplayName;
                     }
                 }
 
@@ -214,13 +214,13 @@ internal class TestMethodRunner
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogError(
             "Not able to get executor for method {0}.{1}",
-            this.testMethodInfo.TestClassName,
-            this.testMethodInfo.TestMethodName);
+            _testMethodInfo.TestClassName,
+            _testMethodInfo.TestMethodName);
         }
 
         // Get aggregate outcome.
-        var aggregateOutcome = this.GetAggregateOutcome(results);
-        this.testContext.SetOutcome(aggregateOutcome);
+        var aggregateOutcome = GetAggregateOutcome(results);
+        _testContext.SetOutcome(aggregateOutcome);
 
         // Set a result in case no result is present.
         if (!results.Any())
@@ -231,7 +231,7 @@ internal class TestMethodRunner
         // In case of data driven, set parent info in results.
         if (isDataDriven)
         {
-            results = this.UpdateResultsWithParentInfo(results, Guid.NewGuid());
+            results = UpdateResultsWithParentInfo(results, Guid.NewGuid());
         }
 
         return results.ToArray().ToUnitTestResults();
@@ -241,7 +241,7 @@ internal class TestMethodRunner
     {
         var isDataDriven = false;
 
-        UTF.DataSourceAttribute[] dataSourceAttribute = this.testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
+        UTF.DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
         if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
         {
             isDataDriven = true;
@@ -250,7 +250,7 @@ internal class TestMethodRunner
 
             try
             {
-                IEnumerable<object> dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(this.testMethodInfo, this.testContext);
+                IEnumerable<object> dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(_testMethodInfo, _testContext);
 
                 if (dataRows == null)
                 {
@@ -268,14 +268,14 @@ internal class TestMethodRunner
 
                         foreach (object dataRow in dataRows)
                         {
-                            UTF.TestResult[] testResults = this.ExecuteTestWithDataRow(dataRow, rowIndex++);
+                            UTF.TestResult[] testResults = ExecuteTestWithDataRow(dataRow, rowIndex++);
                             results.AddRange(testResults);
                         }
                     }
                     finally
                     {
-                        this.testContext.SetDataConnection(null);
-                        this.testContext.SetDataRow(null);
+                        _testContext.SetDataConnection(null);
+                        _testContext.SetDataRow(null);
                     }
                 }
             }
@@ -291,24 +291,24 @@ internal class TestMethodRunner
         }
         else
         {
-            UTF.ITestDataSource[] testDataSources = this.testMethodInfo.GetAttributes<Attribute>(false)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
+            UTF.ITestDataSource[] testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
 
             if (testDataSources != null && testDataSources.Length > 0)
             {
                 isDataDriven = true;
                 foreach (var testDataSource in testDataSources)
                 {
-                    foreach (var data in testDataSource.GetData(this.testMethodInfo.MethodInfo))
+                    foreach (var data in testDataSource.GetData(_testMethodInfo.MethodInfo))
                     {
                         try
                         {
-                            var testResults = this.ExecuteTestWithDataSource(testDataSource, data);
+                            var testResults = ExecuteTestWithDataSource(testDataSource, data);
 
                             results.AddRange(testResults);
                         }
                         finally
                         {
-                            this.testMethodInfo.SetArguments(null);
+                            _testMethodInfo.SetArguments(null);
                         }
                     }
                 }
@@ -322,11 +322,11 @@ internal class TestMethodRunner
     {
         var stopwatch = Stopwatch.StartNew();
 
-        this.testMethodInfo.SetArguments(data);
-        var testResults = this.ExecuteTest(this.testMethodInfo);
+        _testMethodInfo.SetArguments(data);
+        var testResults = ExecuteTest(_testMethodInfo);
         stopwatch.Stop();
 
-        var hasDisplayName = !string.IsNullOrWhiteSpace(this.test.DisplayName);
+        var hasDisplayName = !string.IsNullOrWhiteSpace(_test.DisplayName);
         foreach (var testResult in testResults)
         {
             if (testResult.Duration == TimeSpan.Zero)
@@ -334,14 +334,14 @@ internal class TestMethodRunner
                 testResult.Duration = stopwatch.Elapsed;
             }
 
-            var displayName = this.test.Name;
+            var displayName = _test.Name;
             if (testDataSource != null)
             {
-                displayName = testDataSource.GetDisplayName(this.testMethodInfo.MethodInfo, data);
+                displayName = testDataSource.GetDisplayName(_testMethodInfo.MethodInfo, data);
             }
             else if (hasDisplayName)
             {
-                displayName = this.test.DisplayName;
+                displayName = _test.DisplayName;
             }
 
             testResult.DisplayName = displayName;
@@ -352,20 +352,20 @@ internal class TestMethodRunner
 
     private UTF.TestResult[] ExecuteTestWithDataRow(object dataRow, int rowIndex)
     {
-        var displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, this.test.DisplayName, rowIndex);
+        var displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, _test.DisplayName, rowIndex);
         Stopwatch stopwatch = null;
 
         UTF.TestResult[] testResults = null;
         try
         {
             stopwatch = Stopwatch.StartNew();
-            this.testContext.SetDataRow(dataRow);
-            testResults = this.ExecuteTest(this.testMethodInfo);
+            _testContext.SetDataRow(dataRow);
+            testResults = ExecuteTest(_testMethodInfo);
         }
         finally
         {
             stopwatch?.Stop();
-            this.testContext.SetDataRow(null);
+            _testContext.SetDataRow(null);
         }
 
         foreach (var testResult in testResults)
@@ -382,7 +382,7 @@ internal class TestMethodRunner
     {
         try
         {
-            return this.testMethodInfo.TestMethodOptions.Executor.Execute(testMethodInfo);
+            return _testMethodInfo.TestMethodOptions.Executor.Execute(testMethodInfo);
         }
         catch (Exception ex)
         {

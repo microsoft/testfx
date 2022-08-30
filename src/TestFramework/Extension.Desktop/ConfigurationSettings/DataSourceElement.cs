@@ -15,16 +15,13 @@ public sealed class DataSourceElement : ConfigurationElement
     private static readonly ConfigurationProperty DataTableNameValue = new(ConfigurationNames.DataTableAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
     private static readonly ConfigurationProperty DataAccessMethodValue = new(ConfigurationNames.DataAccessMethodAttributeName, typeof(string), string.Empty);
 
-    private static ConfigurationPropertyCollection properties;
-
-    static DataSourceElement()
+    private static readonly ConfigurationPropertyCollection SharedProperties = new()
     {
-        properties = new ConfigurationPropertyCollection();
-        properties.Add(NameValue);
-        properties.Add(ConnectionStringValue);
-        properties.Add(DataAccessMethodValue);
-        properties.Add(DataTableNameValue);
-    }
+        NameValue,
+        ConnectionStringValue,
+        DataAccessMethodValue,
+        DataTableNameValue
+    };
 
     /// <summary>
     /// Gets or sets the name of this configuration.
@@ -71,11 +68,11 @@ public sealed class DataSourceElement : ConfigurationElement
     /// </summary>
     internal string Key
     {
-        get { return this.Name; }
+        get { return Name; }
     }
 
     /// <summary>
     /// Gets the configuration properties.
     /// </summary>
-    protected override ConfigurationPropertyCollection Properties => properties;
+    protected override ConfigurationPropertyCollection Properties => SharedProperties;
 }

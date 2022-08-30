@@ -17,8 +17,8 @@ using Microsoft.UI.Xaml;
 /// </summary>
 public class UITestMethodAttribute : TestMethodAttribute
 {
-    private static bool isApplicationInitialized = false;
-    private static UI.Dispatching.DispatcherQueue applicationDispatcherQueue;
+    private static bool s_isApplicationInitialized = false;
+    private static UI.Dispatching.DispatcherQueue s_applicationDispatcherQueue;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
@@ -124,12 +124,12 @@ public class UITestMethodAttribute : TestMethodAttribute
 
     private static DispatcherQueue GetApplicationDispatcherQueue(Assembly assembly)
     {
-        if (applicationDispatcherQueue != null)
+        if (s_applicationDispatcherQueue != null)
         {
-            return applicationDispatcherQueue;
+            return s_applicationDispatcherQueue;
         }
 
-        if (isApplicationInitialized)
+        if (s_isApplicationInitialized)
         {
             return null;
         }
@@ -191,13 +191,13 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             try
             {
-                isApplicationInitialized = true;
+                s_isApplicationInitialized = true;
                 var dispatcher = DispatcherQueue.GetForCurrentThread();
                 var context = new DispatcherQueueSynchronizationContext(dispatcher);
                 SynchronizationContext.SetSynchronizationContext(context);
 
                 _ = Activator.CreateInstance(applicationType) as Application;
-                applicationDispatcherQueue = dispatcher;
+                s_applicationDispatcherQueue = dispatcher;
                 tsc.SetResult(dispatcher);
             }
             catch

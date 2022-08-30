@@ -37,27 +37,27 @@ public class MSTestSettings
     /// <summary>
     /// Member variable for Adapter settings
     /// </summary>
-    private static MSTestSettings currentSettings;
+    private static MSTestSettings s_currentSettings;
 
     /// <summary>
     /// Member variable for RunConfiguration settings
     /// </summary>
-    private static RunConfigurationSettings runConfigurationSettings;
+    private static RunConfigurationSettings s_runConfigurationSettings;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestSettings"/> class.
     /// </summary>
     public MSTestSettings()
     {
-        this.CaptureDebugTraces = true;
-        this.MapInconclusiveToFailed = false;
-        this.MapNotRunnableToFailed = true;
-        this.EnableBaseClassTestMethodsFromOtherAssemblies = true;
-        this.ForcedLegacyMode = false;
-        this.TestSettingsFile = null;
-        this.DisableParallelization = false;
-        this.TestTimeout = 0;
-        this.TreatClassAndAssemblyCleanupWarningsAsErrors = false;
+        CaptureDebugTraces = true;
+        MapInconclusiveToFailed = false;
+        MapNotRunnableToFailed = true;
+        EnableBaseClassTestMethodsFromOtherAssemblies = true;
+        ForcedLegacyMode = false;
+        TestSettingsFile = null;
+        DisableParallelization = false;
+        TestTimeout = 0;
+        TreatClassAndAssemblyCleanupWarningsAsErrors = false;
     }
 
     /// <summary>
@@ -67,14 +67,14 @@ public class MSTestSettings
     {
         get
         {
-            currentSettings ??= new MSTestSettings();
+            s_currentSettings ??= new MSTestSettings();
 
-            return currentSettings;
+            return s_currentSettings;
         }
 
         private set
         {
-            currentSettings = value;
+            s_currentSettings = value;
         }
     }
 
@@ -85,14 +85,14 @@ public class MSTestSettings
     {
         get
         {
-            runConfigurationSettings ??= new RunConfigurationSettings();
+            s_runConfigurationSettings ??= new RunConfigurationSettings();
 
-            return runConfigurationSettings;
+            return s_runConfigurationSettings;
         }
 
         private set
         {
-            runConfigurationSettings = value;
+            s_runConfigurationSettings = value;
         }
     }
 

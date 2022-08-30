@@ -29,7 +29,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 [TestClass]
 public class ThreadSafeStringWriterTests
 {
-    private bool task2flag;
+    private bool _task2flag;
 
     [TestMethod]
     public void ThreadSafeStringWriterWritesLinesFromDifferentsTasksSeparately()
@@ -49,7 +49,7 @@ public class ThreadSafeStringWriterTests
                 stringWriter.WriteLine("content1");
                 stringWriter.WriteLine("content1");
                 stringWriter.WriteLine("content1");
-                while (this.task2flag != true && timeout.Elapsed < TimeSpan.FromSeconds(5))
+                while (_task2flag != true && timeout.Elapsed < TimeSpan.FromSeconds(5))
                 {
                 }
                 stringWriter.WriteLine("content1");
@@ -64,7 +64,7 @@ public class ThreadSafeStringWriterTests
                 stringWriter.WriteLine("content2");
                 stringWriter.WriteLine("content2");
                 stringWriter.WriteLine("content2");
-                this.task2flag = true;
+                _task2flag = true;
                 stringWriter.WriteLine("content2");
                 stringWriter.WriteLine("content2");
                 stringWriter.WriteLine("content2");

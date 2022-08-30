@@ -19,7 +19,7 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class ThreadSafeStringWriterTests
 {
-    private bool task2flag;
+    private bool _task2flag;
 
     [TestMethod]
     public void ThreadSafeStringWriterWriteLineHasContentFromMultipleThreads()
@@ -45,7 +45,7 @@ public class ThreadSafeStringWriterTests
                 action("content1");
                 action("content1");
                 action("content1");
-                while (this.task2flag != true && timeout.Elapsed < TimeSpan.FromSeconds(5))
+                while (_task2flag != true && timeout.Elapsed < TimeSpan.FromSeconds(5))
                 {
                 }
                 action("content1");
@@ -59,7 +59,7 @@ public class ThreadSafeStringWriterTests
                 action("content2");
                 action("content2");
                 action("content2");
-                this.task2flag = true;
+                _task2flag = true;
                 action("content2");
                 action("content2");
                 action("content2");

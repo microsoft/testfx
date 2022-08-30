@@ -23,18 +23,18 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class DesktopTestDataSourceTests
 {
-    private Mock<TestFrameworkV2.ITestMethod> mockTestMethodInfo;
-    private Mock<ITestMethod> testMethod;
-    private IDictionary<string, object> properties;
-    private Mock<ITestContext> mockTestContext;
+    private Mock<TestFrameworkV2.ITestMethod> _mockTestMethodInfo;
+    private Mock<ITestMethod> _testMethod;
+    private IDictionary<string, object> _properties;
+    private Mock<ITestContext> _mockTestContext;
 
     [TestInitialize]
     public void TestInit()
     {
-        this.testMethod = new Mock<ITestMethod>();
-        this.properties = new Dictionary<string, object>();
-        this.mockTestMethodInfo = new Mock<TestFrameworkV2.ITestMethod>();
-        this.mockTestContext = new Mock<ITestContext>();
+        _testMethod = new Mock<ITestMethod>();
+        _properties = new Dictionary<string, object>();
+        _mockTestMethodInfo = new Mock<TestFrameworkV2.ITestMethod>();
+        _mockTestContext = new Mock<ITestContext>();
     }
 
     [TestMethod]
@@ -44,12 +44,12 @@ public class DesktopTestDataSourceTests
         TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new(
             "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", TestFrameworkV2.DataAccessMethod.Sequential);
 
-        this.mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
+        _mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
             .Returns(new TestFrameworkV2.DataSourceAttribute[] { dataSourceAttribute });
-        this.mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
+        _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
         TestDataSource testDataSource = new();
-        IEnumerable<object> dataRows = testDataSource.GetData(this.mockTestMethodInfo.Object, this.mockTestContext.Object);
+        IEnumerable<object> dataRows = testDataSource.GetData(_mockTestMethodInfo.Object, _mockTestContext.Object);
 
         foreach (DataRow dataRow in dataRows)
         {
@@ -64,40 +64,40 @@ public class DesktopTestDataSourceTests
         TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new(
             "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", TestFrameworkV2.DataAccessMethod.Sequential);
 
-        this.mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
+        _mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
             .Returns(new TestFrameworkV2.DataSourceAttribute[] { dataSourceAttribute });
-        this.mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
+        _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
         TestDataSource testDataSource = new();
-        IEnumerable<object> dataRows = testDataSource.GetData(this.mockTestMethodInfo.Object, this.mockTestContext.Object);
+        IEnumerable<object> dataRows = testDataSource.GetData(_mockTestMethodInfo.Object, _mockTestContext.Object);
 
-        this.mockTestContext.Verify(tc => tc.SetDataConnection(It.IsAny<object>()), Times.Once);
+        _mockTestContext.Verify(tc => tc.SetDataConnection(It.IsAny<object>()), Times.Once);
     }
 
     #region Dummy implementation
 
     public class DummyTestClass
     {
-        private DesktopTestFrameworkV2.TestContext testContextInstance;
+        private DesktopTestFrameworkV2.TestContext _testContextInstance;
 
         public DesktopTestFrameworkV2.TestContext TestContext
         {
-            get { return this.testContextInstance; }
-            set { this.testContextInstance = value; }
+            get { return _testContextInstance; }
+            set { _testContextInstance = value; }
         }
 
         [TestFrameworkV2.TestMethod]
         public void PassingTest()
         {
-            Assert.AreEqual("v1", this.testContextInstance.DataRow["adapter"].ToString());
-            Assert.AreEqual("x86", this.testContextInstance.DataRow["targetPlatform"].ToString());
-            this.TestContext.AddResultFile("C:\\temp.txt");
+            Assert.AreEqual("v1", _testContextInstance.DataRow["adapter"].ToString());
+            Assert.AreEqual("x86", _testContextInstance.DataRow["targetPlatform"].ToString());
+            TestContext.AddResultFile("C:\\temp.txt");
         }
 
         [TestFrameworkV2.TestMethod]
         public void FailingTest()
         {
-            Assert.AreEqual("Release", this.testContextInstance.DataRow["configuration"].ToString());
+            Assert.AreEqual("Release", _testContextInstance.DataRow["configuration"].ToString());
         }
     }
 

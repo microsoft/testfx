@@ -20,10 +20,10 @@ internal static class AppDomainUtilities
 {
     private const string ObjectModelVersionBuiltAgainst = "11.0.0.0";
 
-    private static Version defaultVersion = new();
-    private static Version version45 = new("4.5");
+    private static readonly Version DefaultVersion = new();
+    private static readonly Version Version45 = new("4.5");
 
-    private static XmlUtilities xmlUtilities = null;
+    private static XmlUtilities s_xmlUtilities = null;
 
     /// <summary>
     /// Gets or sets the Xml Utilities instance.
@@ -32,14 +32,14 @@ internal static class AppDomainUtilities
     {
         get
         {
-            xmlUtilities ??= new XmlUtilities();
+            s_xmlUtilities ??= new XmlUtilities();
 
-            return xmlUtilities;
+            return s_xmlUtilities;
         }
 
         set
         {
-            xmlUtilities = value;
+            s_xmlUtilities = value;
         }
     }
 
@@ -52,7 +52,7 @@ internal static class AppDomainUtilities
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
     internal static void SetAppDomainFrameworkVersionBasedOnTestSource(AppDomainSetup setup, string frameworkVersionString)
     {
-        if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(version45) > 0)
+        if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(Version45) > 0)
         {
             PropertyInfo pInfo = typeof(AppDomainSetup).GetProperty(PlatformServices.Constants.TargetFrameworkName);
             if (pInfo != null)
@@ -243,6 +243,6 @@ internal static class AppDomainUtilities
             EqtTrace.Warning(string.Format("AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{0}' due to error '{1}':", version, ex.Message));
         }
 
-        return defaultVersion;
+        return DefaultVersion;
     }
 }

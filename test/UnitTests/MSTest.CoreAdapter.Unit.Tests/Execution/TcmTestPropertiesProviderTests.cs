@@ -20,7 +20,7 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class TcmTestPropertiesProviderTests
 {
-    private readonly TestProperty[] tcmKnownProperties = new TestProperty[]
+    private readonly TestProperty[] _tcmKnownProperties = new TestProperty[]
     {
         TestAdapterConstants.TestRunIdProperty,
         TestAdapterConstants.TestPlanIdProperty,
@@ -57,7 +57,7 @@ public class TcmTestPropertiesProviderTests
             "http://samplecollectionuri/", "sample team project", false,
             0, 54, "sample configuration name", 345
         };
-        this.SetTestCaseProperties(testCase, propertiesValue);
+        SetTestCaseProperties(testCase, propertiesValue);
 
         var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
         Assert.AreEqual(0, tcmProperties.Count);
@@ -74,11 +74,11 @@ public class TcmTestPropertiesProviderTests
             "http://samplecollectionuri/", "sample team project", false,
             1401, 54, "sample configuration name", 345
         };
-        this.SetTestCaseProperties(testCase, propertiesValue);
+        SetTestCaseProperties(testCase, propertiesValue);
 
         var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
 
-        this.VerifyTcmProperties(tcmProperties, testCase);
+        VerifyTcmProperties(tcmProperties, testCase);
     }
 
     [TestMethod]
@@ -93,9 +93,9 @@ public class TcmTestPropertiesProviderTests
             "http://samplecollectionuri/", "sample team project", false,
             1401, 54, "sample configuration name", 345
         };
-        this.SetTestCaseProperties(testCase1, propertiesValue1);
+        SetTestCaseProperties(testCase1, propertiesValue1);
         var tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
-        this.VerifyTcmProperties(tcmProperties1, testCase1);
+        VerifyTcmProperties(tcmProperties1, testCase1);
 
         // Verify 2nd call.
         var testCase2 = new TestCase("PassingTestFomTestCase2", new Uri("http://sampleUri2/"), "unittestproject2.dll");
@@ -106,9 +106,9 @@ public class TcmTestPropertiesProviderTests
             "http://samplecollectionuri2/", "sample team project", true,
             1403, 55, "sample configuration name 2", 346
         };
-        this.SetTestCaseProperties(testCase2, propertiesValue2);
+        SetTestCaseProperties(testCase2, propertiesValue2);
         var tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
-        this.VerifyTcmProperties(tcmProperties2, testCase2);
+        VerifyTcmProperties(tcmProperties2, testCase2);
     }
 
     [TestMethod]
@@ -123,9 +123,9 @@ public class TcmTestPropertiesProviderTests
             "http://samplecollectionuri/", "sample team project", false,
             1401, 54, "sample configuration name", 345
         };
-        this.SetTestCaseProperties(testCase1, propertiesValue1);
+        SetTestCaseProperties(testCase1, propertiesValue1);
         var tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
-        this.VerifyTcmProperties(tcmProperties1, testCase1);
+        VerifyTcmProperties(tcmProperties1, testCase1);
 
         // Verify 2nd call.
         var testCase2 = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
@@ -136,9 +136,9 @@ public class TcmTestPropertiesProviderTests
             "http://samplecollectionuri2/", "sample team project", true,
             1403, 55, "sample configuration name 2", 346
         };
-        this.SetTestCaseProperties(testCase2, propertiesValue2);
+        SetTestCaseProperties(testCase2, propertiesValue2);
         var tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
-        this.VerifyTcmProperties(tcmProperties2, testCase2);
+        VerifyTcmProperties(tcmProperties2, testCase2);
 
         // Verify 3rd call.
         var testCase3 = new TestCase("PassingTestFomTestCase2", new Uri("http://sampleUri/"), "unittestproject2.dll");
@@ -149,14 +149,14 @@ public class TcmTestPropertiesProviderTests
             "http://samplecollectionuri3/", "sample team project2", true,
             1404, 55, "sample configuration name 3", 347
         };
-        this.SetTestCaseProperties(testCase3, propertiesValue3);
+        SetTestCaseProperties(testCase3, propertiesValue3);
         var tcmProperties3 = TcmTestPropertiesProvider.GetTcmProperties(testCase3);
-        this.VerifyTcmProperties(tcmProperties3, testCase3);
+        VerifyTcmProperties(tcmProperties3, testCase3);
     }
 
     private void SetTestCaseProperties(TestCase testCase, object[] propertiesValue)
     {
-        var tcmKnownPropertiesEnumerator = this.tcmKnownProperties.GetEnumerator();
+        var tcmKnownPropertiesEnumerator = _tcmKnownProperties.GetEnumerator();
 
         var propertiesValueEnumerator = propertiesValue.GetEnumerator();
         while (tcmKnownPropertiesEnumerator.MoveNext() && propertiesValueEnumerator.MoveNext())
@@ -169,7 +169,7 @@ public class TcmTestPropertiesProviderTests
 
     private void VerifyTcmProperties(IDictionary<TestProperty, object> tcmProperties, TestCase testCase)
     {
-        foreach (var property in this.tcmKnownProperties)
+        foreach (var property in _tcmKnownProperties)
         {
             Assert.AreEqual(testCase.GetPropertyValue(property), tcmProperties[property]);
         }

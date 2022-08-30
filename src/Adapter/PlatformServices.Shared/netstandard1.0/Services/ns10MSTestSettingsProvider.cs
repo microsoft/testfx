@@ -16,7 +16,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// <summary>
     /// Member variable for Adapter settings
     /// </summary>
-    private static MSTestAdapterSettings settings;
+    private static MSTestAdapterSettings s_settings;
 
     /// <summary>
     /// Gets settings provided to the adapter.
@@ -25,9 +25,9 @@ public class MSTestSettingsProvider : ISettingsProvider
     {
         get
         {
-            settings ??= new MSTestAdapterSettings();
+            s_settings ??= new MSTestAdapterSettings();
 
-            return settings;
+            return s_settings;
         }
     }
 
@@ -36,7 +36,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// </summary>
     public static void Reset()
     {
-        settings = null;
+        s_settings = null;
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     public void Load(XmlReader reader)
     {
         ValidateArg.NotNull(reader, "reader");
-        settings = MSTestAdapterSettings.ToSettings(reader);
+        s_settings = MSTestAdapterSettings.ToSettings(reader);
     }
 
     public IDictionary<string, object> GetProperties(string source)

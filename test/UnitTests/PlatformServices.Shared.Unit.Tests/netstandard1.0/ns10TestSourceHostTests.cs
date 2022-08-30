@@ -21,18 +21,18 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 [TestClass]
 public class TestSourceHostTests
 {
-    private TestSourceHost testSourceHost;
+    private TestSourceHost _testSourceHost;
 
     [TestInitialize]
     public void TestInit()
     {
-        this.testSourceHost = new TestSourceHost(null, null, null);
+        _testSourceHost = new TestSourceHost(null, null, null);
     }
 
     [TestMethod]
     public void CreateInstanceForTypeCreatesAnInstanceOfAGivenTypeThroughDefaultConstructor()
     {
-        var type = this.testSourceHost.CreateInstanceForType(typeof(DummyType), null) as DummyType;
+        var type = _testSourceHost.CreateInstanceForType(typeof(DummyType), null) as DummyType;
 
         Assert.IsNotNull(type);
         Assert.IsTrue(type.IsDefaultConstructorCalled);
@@ -43,7 +43,7 @@ public class DummyType
 {
     public DummyType()
     {
-        this.IsDefaultConstructorCalled = true;
+        IsDefaultConstructorCalled = true;
     }
 
     public bool IsDefaultConstructorCalled { get; set; }

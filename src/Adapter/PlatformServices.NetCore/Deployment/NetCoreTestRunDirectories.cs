@@ -27,7 +27,7 @@ public class TestRunDirectories
     {
         Debug.Assert(!string.IsNullOrEmpty(rootDirectory), "rootDirectory");
 
-        this.RootDeploymentDirectory = rootDirectory;
+        RootDeploymentDirectory = rootDirectory;
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ public class TestRunDirectories
     {
         get
         {
-            return Path.Combine(this.RootDeploymentDirectory, DeploymentInDirectorySuffix);
+            return Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
         }
     }
 
@@ -64,7 +64,7 @@ public class TestRunDirectories
     {
         get
         {
-            return Path.Combine(Path.Combine(this.RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
+            return Path.Combine(Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
         }
     }
 }

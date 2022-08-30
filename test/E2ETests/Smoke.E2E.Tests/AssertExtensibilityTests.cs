@@ -14,12 +14,12 @@ public class AssertExtensibilityTests : CLITestBase
     [TestMethod]
     public void ExecuteAssertExtensibilityTests()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssembly });
-        this.ValidatePassedTestsContain(
+        InvokeVsTestForExecution(new string[] { TestAssembly });
+        ValidatePassedTestsContain(
             "FxExtensibilityTestProject.AssertExTest.BasicAssertExtensionTest",
             "FxExtensibilityTestProject.AssertExTest.ChainedAssertExtensionTest");
 
-        this.ValidateFailedTestsContain(
+        ValidateFailedTestsContain(
             TestAssembly,
             true,
             "FxExtensibilityTestProject.AssertExTest.BasicFailingAssertExtensionTest",

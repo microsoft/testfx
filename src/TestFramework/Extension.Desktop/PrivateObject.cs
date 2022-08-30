@@ -20,12 +20,12 @@ public class PrivateObject
     // bind everything
     private const BindingFlags BindToEveryThing = BindingFlags.Default | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
 
-    private static BindingFlags constructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.NonPublic;
+    private static readonly BindingFlags ConstructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.NonPublic;
 
-    private object target;     // automatically initialized to null
-    private Type originalType; // automatically initialized to null
+    private object _target;     // automatically initialized to null
+    private Type _originalType; // automatically initialized to null
 
-    private Dictionary<string, LinkedList<MethodInfo>> methodCache; // automatically initialized to null
+    private Dictionary<string, LinkedList<MethodInfo>> _methodCache; // automatically initialized to null
 
     #endregion
 
@@ -55,8 +55,8 @@ public class PrivateObject
             temp = new PrivateObject(next);
         }
 
-        this.target = temp.target;
-        this.originalType = temp.originalType;
+        _target = temp._target;
+        _originalType = temp._originalType;
     }
 
     /// <summary>
@@ -134,10 +134,10 @@ public class PrivateObject
         }
         else
         {
-            o = Activator.CreateInstance(type, constructorFlags, null, args, null);
+            o = Activator.CreateInstance(type, ConstructorFlags, null, args, null);
         }
 
-        this.ConstructFrom(o);
+        ConstructFrom(o);
     }
 
     /// <summary>
@@ -149,7 +149,7 @@ public class PrivateObject
     public PrivateObject(object obj)
     {
         Helper.CheckParameterNotNull(obj, "obj", string.Empty);
-        this.ConstructFrom(obj);
+        ConstructFrom(obj);
     }
 
     /// <summary>
@@ -162,8 +162,8 @@ public class PrivateObject
     public PrivateObject(object obj, PrivateType type)
     {
         Helper.CheckParameterNotNull(type, "type", string.Empty);
-        this.target = obj;
-        this.originalType = type.ReferencedType;
+        _target = obj;
+        _originalType = type.ReferencedType;
     }
 
     #endregion
@@ -175,14 +175,14 @@ public class PrivateObject
     {
         get
         {
-            return this.target;
+            return _target;
         }
 
         set
         {
             Helper.CheckParameterNotNull(value, "Target", string.Empty);
-            this.target = value;
-            this.originalType = value.GetType();
+            _target = value;
+            _originalType = value.GetType();
         }
     }
 
@@ -193,7 +193,7 @@ public class PrivateObject
     {
         get
         {
-            return this.originalType;
+            return _originalType;
         }
     }
 
@@ -201,14 +201,14 @@ public class PrivateObject
     {
         get
         {
-            if (this.methodCache == null)
+            if (_methodCache == null)
             {
-                this.BuildGenericMethodCacheForType(this.originalType);
+                BuildGenericMethodCacheForType(_originalType);
             }
 
-            Debug.Assert(this.methodCache != null, "Invalid method cache for type.");
+            Debug.Assert(_methodCache != null, "Invalid method cache for type.");
 
-            return this.methodCache;
+            return _methodCache;
         }
     }
 
@@ -218,8 +218,8 @@ public class PrivateObject
     /// <returns>int representing hashcode of the target object</returns>
     public override int GetHashCode()
     {
-        Debug.Assert(this.target != null, "target should not be null.");
-        return this.target.GetHashCode();
+        Debug.Assert(_target != null, "target should not be null.");
+        return _target.GetHashCode();
     }
 
     /// <summary>
@@ -231,10 +231,10 @@ public class PrivateObject
     {
         if (this != obj)
         {
-            Debug.Assert(this.target != null, "target should not be null.");
+            Debug.Assert(_target != null, "target should not be null.");
             if (typeof(PrivateObject) == obj?.GetType())
             {
-                return this.target.Equals(((PrivateObject)obj).target);
+                return _target.Equals(((PrivateObject)obj)._target);
             }
             else
             {
@@ -254,7 +254,7 @@ public class PrivateObject
     public object Invoke(string name, params object[] args)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        return this.Invoke(name, null, args, CultureInfo.InvariantCulture);
+        return Invoke(name, null, args, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -266,7 +266,7 @@ public class PrivateObject
     /// <returns>Result of method call</returns>
     public object Invoke(string name, Type[] parameterTypes, object[] args)
     {
-        return this.Invoke(name, parameterTypes, args, CultureInfo.InvariantCulture);
+        return Invoke(name, parameterTypes, args, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -279,7 +279,7 @@ public class PrivateObject
     /// <returns>Result of method call</returns>
     public object Invoke(string name, Type[] parameterTypes, object[] args, Type[] typeArguments)
     {
-        return this.Invoke(name, BindToEveryThing, parameterTypes, args, CultureInfo.InvariantCulture, typeArguments);
+        return Invoke(name, BindToEveryThing, parameterTypes, args, CultureInfo.InvariantCulture, typeArguments);
     }
 
     /// <summary>
@@ -291,7 +291,7 @@ public class PrivateObject
     /// <returns>Result of method call</returns>
     public object Invoke(string name, object[] args, CultureInfo culture)
     {
-        return this.Invoke(name, null, args, culture);
+        return Invoke(name, null, args, culture);
     }
 
     /// <summary>
@@ -304,7 +304,7 @@ public class PrivateObject
     /// <returns>Result of method call</returns>
     public object Invoke(string name, Type[] parameterTypes, object[] args, CultureInfo culture)
     {
-        return this.Invoke(name, BindToEveryThing, parameterTypes, args, culture);
+        return Invoke(name, BindToEveryThing, parameterTypes, args, culture);
     }
 
     /// <summary>
@@ -316,7 +316,7 @@ public class PrivateObject
     /// <returns>Result of method call</returns>
     public object Invoke(string name, BindingFlags bindingFlags, params object[] args)
     {
-        return this.Invoke(name, bindingFlags, null, args, CultureInfo.InvariantCulture);
+        return Invoke(name, bindingFlags, null, args, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -329,7 +329,7 @@ public class PrivateObject
     /// <returns>Result of method call</returns>
     public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args)
     {
-        return this.Invoke(name, bindingFlags, parameterTypes, args, CultureInfo.InvariantCulture);
+        return Invoke(name, bindingFlags, parameterTypes, args, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -342,7 +342,7 @@ public class PrivateObject
     /// <returns>Result of method call</returns>
     public object Invoke(string name, BindingFlags bindingFlags, object[] args, CultureInfo culture)
     {
-        return this.Invoke(name, bindingFlags, null, args, culture);
+        return Invoke(name, bindingFlags, null, args, culture);
     }
 
     /// <summary>
@@ -356,7 +356,7 @@ public class PrivateObject
     /// <returns>Result of method call</returns>
     public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args, CultureInfo culture)
     {
-        return this.Invoke(name, bindingFlags, parameterTypes, args, culture, null);
+        return Invoke(name, bindingFlags, parameterTypes, args, culture, null);
     }
 
     /// <summary>
@@ -377,7 +377,7 @@ public class PrivateObject
             bindingFlags |= BindToEveryThing | BindingFlags.Instance;
 
             // Fix up the parameter types
-            MethodInfo member = this.originalType.GetMethod(name, bindingFlags, null, parameterTypes, null);
+            MethodInfo member = _originalType.GetMethod(name, bindingFlags, null, parameterTypes, null);
 
             // If the method was not found and type arguments were provided for generic parameters,
             // attempt to look up a generic method.
@@ -388,7 +388,7 @@ public class PrivateObject
 
                 // Look in the method cache to see if there is a generic method
                 // on the incoming type that contains the correct signature.
-                member = this.GetGenericMethodFromCache(name, parameterTypes, typeArguments, bindingFlags, null);
+                member = GetGenericMethodFromCache(name, parameterTypes, typeArguments, bindingFlags, null);
             }
 
             if (member == null)
@@ -402,11 +402,11 @@ public class PrivateObject
                 if (member.IsGenericMethodDefinition)
                 {
                     MethodInfo constructed = member.MakeGenericMethod(typeArguments);
-                    return constructed.Invoke(this.target, bindingFlags, null, args, culture);
+                    return constructed.Invoke(_target, bindingFlags, null, args, culture);
                 }
                 else
                 {
-                    return member.Invoke(this.target, bindingFlags, null, args, culture);
+                    return member.Invoke(_target, bindingFlags, null, args, culture);
                 }
             }
             catch (TargetInvocationException e)
@@ -422,7 +422,7 @@ public class PrivateObject
         }
         else
         {
-            return this.InvokeHelper(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
+            return InvokeHelper(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
         }
     }
 
@@ -435,7 +435,7 @@ public class PrivateObject
     public object GetArrayElement(string name, params int[] indices)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        return this.GetArrayElement(name, BindToEveryThing, indices);
+        return GetArrayElement(name, BindToEveryThing, indices);
     }
 
     /// <summary>
@@ -447,7 +447,7 @@ public class PrivateObject
     public void SetArrayElement(string name, object value, params int[] indices)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        this.SetArrayElement(name, BindToEveryThing, value, indices);
+        SetArrayElement(name, BindToEveryThing, value, indices);
     }
 
     /// <summary>
@@ -460,7 +460,7 @@ public class PrivateObject
     public object GetArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        Array arr = (Array)this.InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
+        Array arr = (Array)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
         return arr.GetValue(indices);
     }
 
@@ -474,7 +474,7 @@ public class PrivateObject
     public void SetArrayElement(string name, BindingFlags bindingFlags, object value, params int[] indices)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        Array arr = (Array)this.InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
+        Array arr = (Array)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
         arr.SetValue(value, indices);
     }
 
@@ -486,7 +486,7 @@ public class PrivateObject
     public object GetField(string name)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        return this.GetField(name, BindToEveryThing);
+        return GetField(name, BindToEveryThing);
     }
 
     /// <summary>
@@ -497,7 +497,7 @@ public class PrivateObject
     public void SetField(string name, object value)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        this.SetField(name, BindToEveryThing, value);
+        SetField(name, BindToEveryThing, value);
     }
 
     /// <summary>
@@ -509,7 +509,7 @@ public class PrivateObject
     public object GetField(string name, BindingFlags bindingFlags)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        return this.InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
+        return InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -521,7 +521,7 @@ public class PrivateObject
     public void SetField(string name, BindingFlags bindingFlags, object value)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        this.InvokeHelper(name, BindingFlags.SetField | bindingFlags, new object[] { value }, CultureInfo.InvariantCulture);
+        InvokeHelper(name, BindingFlags.SetField | bindingFlags, new object[] { value }, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -532,7 +532,7 @@ public class PrivateObject
     public object GetFieldOrProperty(string name)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        return this.GetFieldOrProperty(name, BindToEveryThing);
+        return GetFieldOrProperty(name, BindToEveryThing);
     }
 
     /// <summary>
@@ -543,7 +543,7 @@ public class PrivateObject
     public void SetFieldOrProperty(string name, object value)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        this.SetFieldOrProperty(name, BindToEveryThing, value);
+        SetFieldOrProperty(name, BindToEveryThing, value);
     }
 
     /// <summary>
@@ -555,7 +555,7 @@ public class PrivateObject
     public object GetFieldOrProperty(string name, BindingFlags bindingFlags)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        return this.InvokeHelper(name, BindingFlags.GetField | BindingFlags.GetProperty | bindingFlags, null, CultureInfo.InvariantCulture);
+        return InvokeHelper(name, BindingFlags.GetField | BindingFlags.GetProperty | bindingFlags, null, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -567,7 +567,7 @@ public class PrivateObject
     public void SetFieldOrProperty(string name, BindingFlags bindingFlags, object value)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        this.InvokeHelper(name, BindingFlags.SetField | BindingFlags.SetProperty | bindingFlags, new object[] { value }, CultureInfo.InvariantCulture);
+        InvokeHelper(name, BindingFlags.SetField | BindingFlags.SetProperty | bindingFlags, new object[] { value }, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -578,7 +578,7 @@ public class PrivateObject
     /// <returns>The property.</returns>
     public object GetProperty(string name, params object[] args)
     {
-        return this.GetProperty(name, null, args);
+        return GetProperty(name, null, args);
     }
 
     /// <summary>
@@ -590,7 +590,7 @@ public class PrivateObject
     /// <returns>The property.</returns>
     public object GetProperty(string name, Type[] parameterTypes, object[] args)
     {
-        return this.GetProperty(name, BindToEveryThing, parameterTypes, args);
+        return GetProperty(name, BindToEveryThing, parameterTypes, args);
     }
 
     /// <summary>
@@ -601,7 +601,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetProperty(string name, object value, params object[] args)
     {
-        this.SetProperty(name, null, value, args);
+        SetProperty(name, null, value, args);
     }
 
     /// <summary>
@@ -613,7 +613,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetProperty(string name, Type[] parameterTypes, object value, object[] args)
     {
-        this.SetProperty(name, BindToEveryThing, value, parameterTypes, args);
+        SetProperty(name, BindToEveryThing, value, parameterTypes, args);
     }
 
     /// <summary>
@@ -625,7 +625,7 @@ public class PrivateObject
     /// <returns>The property.</returns>
     public object GetProperty(string name, BindingFlags bindingFlags, params object[] args)
     {
-        return this.GetProperty(name, bindingFlags, null, args);
+        return GetProperty(name, bindingFlags, null, args);
     }
 
     /// <summary>
@@ -641,18 +641,18 @@ public class PrivateObject
         Helper.CheckParameterNotNull(name, "name", string.Empty);
         if (parameterTypes != null)
         {
-            PropertyInfo pi = this.originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
+            PropertyInfo pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
             if (pi == null)
             {
                 throw new ArgumentException(
                     string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
             }
 
-            return pi.GetValue(this.target, args);
+            return pi.GetValue(_target, args);
         }
         else
         {
-            return this.InvokeHelper(name, bindingFlags | BindingFlags.GetProperty, args, null);
+            return InvokeHelper(name, bindingFlags | BindingFlags.GetProperty, args, null);
         }
     }
 
@@ -665,7 +665,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetProperty(string name, BindingFlags bindingFlags, object value, params object[] args)
     {
-        this.SetProperty(name, bindingFlags, value, null, args);
+        SetProperty(name, bindingFlags, value, null, args);
     }
 
     /// <summary>
@@ -682,21 +682,21 @@ public class PrivateObject
 
         if (parameterTypes != null)
         {
-            PropertyInfo pi = this.originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
+            PropertyInfo pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
             if (pi == null)
             {
                 throw new ArgumentException(
                     string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
             }
 
-            pi.SetValue(this.target, value, args);
+            pi.SetValue(_target, value, args);
         }
         else
         {
             object[] pass = new object[(args?.Length ?? 0) + 1];
             pass[0] = value;
             args?.CopyTo(pass, 1);
-            this.InvokeHelper(name, bindingFlags | BindingFlags.SetProperty, pass, null);
+            InvokeHelper(name, bindingFlags | BindingFlags.SetProperty, pass, null);
         }
     }
 
@@ -735,12 +735,12 @@ public class PrivateObject
     private object InvokeHelper(string name, BindingFlags bindingFlags, object[] args, CultureInfo culture)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        Debug.Assert(this.target != null, "Internal Error: Null reference is returned for internal object");
+        Debug.Assert(_target != null, "Internal Error: Null reference is returned for internal object");
 
         // Invoke the actual Method
         try
         {
-            return this.originalType.InvokeMember(name, bindingFlags, null, this.target, args, culture);
+            return _originalType.InvokeMember(name, bindingFlags, null, _target, args, culture);
         }
         catch (TargetInvocationException e)
         {
@@ -757,14 +757,14 @@ public class PrivateObject
     private void ConstructFrom(object obj)
     {
         Helper.CheckParameterNotNull(obj, "obj", string.Empty);
-        this.target = obj;
-        this.originalType = obj.GetType();
+        _target = obj;
+        _originalType = obj.GetType();
     }
 
     private void BuildGenericMethodCacheForType(Type t)
     {
         Debug.Assert(t != null, "type should not be null.");
-        this.methodCache = new Dictionary<string, LinkedList<MethodInfo>>();
+        _methodCache = new Dictionary<string, LinkedList<MethodInfo>>();
 
         MethodInfo[] members = t.GetMethods(BindToEveryThing);
 
@@ -773,10 +773,10 @@ public class PrivateObject
             if (member.IsGenericMethod || member.IsGenericMethodDefinition)
             {
                 // automatically initialized to null
-                if (!this.GenericMethodCache.TryGetValue(member.Name, out LinkedList<MethodInfo> listByName))
+                if (!GenericMethodCache.TryGetValue(member.Name, out LinkedList<MethodInfo> listByName))
                 {
                     listByName = new LinkedList<MethodInfo>();
-                    this.GenericMethodCache.Add(member.Name, listByName);
+                    GenericMethodCache.Add(member.Name, listByName);
                 }
 
                 Debug.Assert(listByName != null, "list should not be null.");
@@ -801,7 +801,7 @@ public class PrivateObject
         Debug.Assert(typeArguments != null, "Invalid type arguments array.");
 
         // Build a preliminary list of method candidates that contain roughly the same signature.
-        var methodCandidates = this.GetMethodCandidates(methodName, parameterTypes, typeArguments, bindingFlags, modifiers);
+        var methodCandidates = GetMethodCandidates(methodName, parameterTypes, typeArguments, bindingFlags, modifiers);
 
         // Search of ambiguous methods (methods with the same signature).
         MethodInfo[] finalCandidates = new MethodInfo[methodCandidates.Count];
@@ -835,7 +835,7 @@ public class PrivateObject
 
         LinkedList<MethodInfo> methodCandidates = new();
 
-        if (!this.GenericMethodCache.TryGetValue(methodName, out var methods))
+        if (!GenericMethodCache.TryGetValue(methodName, out var methods))
         {
             return methodCandidates;
         }

@@ -23,8 +23,8 @@ public class TestPropertyAttribute : Attribute
     public TestPropertyAttribute(string name, string value)
     {
         // NOTE : DONT THROW EXCEPTIONS FROM HERE IT WILL CRASH GetCustomAttributes() call
-        this.Name = name;
-        this.Value = value;
+        Name = name;
+        Value = value;
     }
 
     /// <summary>

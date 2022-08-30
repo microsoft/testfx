@@ -37,7 +37,7 @@ public class TraceListenerWrapper : TextWriterTraceListener, ITraceListener
     //     that receives the tracing or debugging output.
     public TextWriter GetWriter()
     {
-        return this.Writer;
+        return Writer;
     }
 }
 

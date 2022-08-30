@@ -19,7 +19,7 @@ internal class TestCaseDiscoverySink : ITestCaseDiscoverySink
     /// </summary>
     public TestCaseDiscoverySink()
     {
-        this.Tests = new Collection<TestCase>();
+        Tests = new Collection<TestCase>();
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ internal class TestCaseDiscoverySink : ITestCaseDiscoverySink
     {
         if (discoveredTest != null)
         {
-            this.Tests.Add(discoveredTest);
+            Tests.Add(discoveredTest);
         }
     }
 }

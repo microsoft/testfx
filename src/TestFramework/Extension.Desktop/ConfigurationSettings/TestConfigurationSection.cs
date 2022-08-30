@@ -11,7 +11,6 @@ using System.Configuration;
 public sealed class TestConfigurationSection : ConfigurationSection
 {
     private static readonly ConfigurationProperty DataSourcesValue = new(ConfigurationNames.DataSourcesSectionName, typeof(DataSourceElementCollection), null);
-    private static readonly ConfigurationPropertyCollection properties = new ConfigurationPropertyCollection { DataSourcesValue };
 
     /// <summary>
     /// Gets the data sources for this configuration section.
@@ -25,5 +24,5 @@ public sealed class TestConfigurationSection : ConfigurationSection
     /// <returns>
     /// The <see cref="T:System.Configuration.ConfigurationPropertyCollection"/> of properties for the element.
     /// </returns>
-    protected override ConfigurationPropertyCollection Properties => properties;
+    protected override ConfigurationPropertyCollection Properties { get; } = new ConfigurationPropertyCollection { DataSourcesValue };
 }

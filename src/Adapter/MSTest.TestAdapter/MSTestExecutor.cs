@@ -21,15 +21,15 @@ public class MSTestExecutor : ITestExecutor
     /// <summary>
     /// Token for canceling the test run.
     /// </summary>
-    private TestRunCancellationToken cancellationToken = null;
+    private TestRunCancellationToken _cancellationToken = null;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestExecutor"/> class.
     /// </summary>
     public MSTestExecutor()
     {
-        this.TestExecutionManager = new TestExecutionManager();
-        this.MSTestDiscoverer = new MSTestDiscoverer();
+        TestExecutionManager = new TestExecutionManager();
+        MSTestDiscoverer = new MSTestDiscoverer();
     }
 
     /// <summary>
@@ -49,7 +49,7 @@ public class MSTestExecutor : ITestExecutor
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
         ValidateArg.NotNullOrEmpty(tests, "tests");
 
-        if (!this.MSTestDiscoverer.AreValidSources(from test in tests select test.Source))
+        if (!MSTestDiscoverer.AreValidSources(from test in tests select test.Source))
         {
             throw new NotSupportedException();
         }
@@ -71,9 +71,9 @@ public class MSTestExecutor : ITestExecutor
             return;
         }
 
-        this.cancellationToken = new TestRunCancellationToken();
-        this.TestExecutionManager.RunTests(tests, runContext, frameworkHandle, this.cancellationToken);
-        this.cancellationToken = null;
+        _cancellationToken = new TestRunCancellationToken();
+        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, _cancellationToken);
+        _cancellationToken = null;
     }
 
     public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
@@ -82,7 +82,7 @@ public class MSTestExecutor : ITestExecutor
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
         ValidateArg.NotNullOrEmpty(sources, "sources");
 
-        if (!this.MSTestDiscoverer.AreValidSources(sources))
+        if (!MSTestDiscoverer.AreValidSources(sources))
         {
             throw new NotSupportedException();
         }
@@ -105,14 +105,14 @@ public class MSTestExecutor : ITestExecutor
         }
 
         sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);
-        this.cancellationToken = new TestRunCancellationToken();
-        this.TestExecutionManager.RunTests(sources, runContext, frameworkHandle, this.cancellationToken);
+        _cancellationToken = new TestRunCancellationToken();
+        TestExecutionManager.RunTests(sources, runContext, frameworkHandle, _cancellationToken);
 
-        this.cancellationToken = null;
+        _cancellationToken = null;
     }
 
     public void Cancel()
     {
-        this.cancellationToken?.Cancel();
+        _cancellationToken?.Cancel();
     }
 }

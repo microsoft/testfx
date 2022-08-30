@@ -36,21 +36,21 @@ using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.
 [TestClass]
 public class UnitTestRunnerTests
 {
-    private UnitTestRunner unitTestRunner;
+    private UnitTestRunner _unitTestRunner;
 
-    private Dictionary<string, object> testRunParameters;
+    private Dictionary<string, object> _testRunParameters;
 
-    private TestablePlatformServiceProvider testablePlatformServiceProvider;
+    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     [TestInitialize]
     public void TestInit()
     {
-        this.testRunParameters = new Dictionary<string, object>();
-        this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+        _testRunParameters = new Dictionary<string, object>();
+        _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
 
-        PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
+        PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
-        this.unitTestRunner = new UnitTestRunner(this.GetSettingsWithDebugTrace(false));
+        _unitTestRunner = new UnitTestRunner(GetSettingsWithDebugTrace(false));
     }
 
     [TestCleanup]
@@ -72,7 +72,7 @@ public class UnitTestRunnerTests
                      </MSTest>
                    </RunSettings>";
 
-        this.testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+        _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
             {
                 if (actualReader != null)
@@ -96,7 +96,7 @@ public class UnitTestRunnerTests
     [TestMethodV1]
     public void RunSingleTestShouldThrowIfTestMethodIsNull()
     {
-        void a() => this.unitTestRunner.RunSingleTest(null, null);
+        void a() => _unitTestRunner.RunSingleTest(null, null);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
     }
 
@@ -104,7 +104,7 @@ public class UnitTestRunnerTests
     public void RunSingleTestShouldThrowIfTestRunParamtersIsNull()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-        void a() => this.unitTestRunner.RunSingleTest(testMethod, null);
+        void a() => _unitTestRunner.RunSingleTest(testMethod, null);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
     }
 
@@ -113,10 +113,10 @@ public class UnitTestRunnerTests
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Assert.IsNotNull(results);
         Assert.AreEqual(1, results.Length);
@@ -131,10 +131,10 @@ public class UnitTestRunnerTests
         var methodInfo = type.GetMethod("TestMethodWithNullCustomPropertyName");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         var expectedMessage = string.Format(
             "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
@@ -154,10 +154,10 @@ public class UnitTestRunnerTests
         var methodInfo = type.GetMethod("TestMethod");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Assert.IsNotNull(results);
         Assert.AreEqual(1, results.Length);
@@ -172,10 +172,10 @@ public class UnitTestRunnerTests
         var methodInfo = type.GetMethod("TestMethod");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Assert.IsNotNull(results);
         Assert.AreEqual(1, results.Length);
@@ -190,10 +190,10 @@ public class UnitTestRunnerTests
         var methodInfo = type.GetMethod("TestMethod");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Assert.IsNotNull(results);
         Assert.AreEqual(1, results.Length);
@@ -208,10 +208,10 @@ public class UnitTestRunnerTests
         var methodInfo = type.GetMethod("TestMethod");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Assert.IsNotNull(results);
         Assert.AreEqual(1, results.Length);
@@ -226,10 +226,10 @@ public class UnitTestRunnerTests
         var methodInfo = type.GetMethod("TestMethod");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Assert.IsNotNull(results);
         Assert.AreEqual(1, results.Length);
@@ -244,10 +244,10 @@ public class UnitTestRunnerTests
         var methodInfo = type.GetMethod("TestMethod");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Assert.IsNotNull(results);
         Assert.AreEqual(1, results.Length);
@@ -261,10 +261,10 @@ public class UnitTestRunnerTests
         var type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
         var testMethod = new TestMethod("ImaginaryTestMethod", type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         var expectedMessage = string.Format(
             "Method {0}.{1} does not exist.",
@@ -284,10 +284,10 @@ public class UnitTestRunnerTests
         var methodInfo = type.GetMethod("TestMethod");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Assert.IsNotNull(results);
         Assert.AreEqual(1, results.Length);
@@ -302,11 +302,11 @@ public class UnitTestRunnerTests
         var methodInfo = type.GetMethod("TestMethodToTestInProgress");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
         // Asserting in the test method execution flow itself.
-        var results = this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Assert.IsNotNull(results);
         Assert.AreEqual(1, results.Length);
@@ -317,13 +317,13 @@ public class UnitTestRunnerTests
     public void RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
     {
         var mockReflectHelper = new Mock<ReflectHelper>();
-        this.unitTestRunner = new UnitTestRunner(new MSTestSettings(), mockReflectHelper.Object);
+        _unitTestRunner = new UnitTestRunner(new MSTestSettings(), mockReflectHelper.Object);
 
         var type = typeof(DummyTestClassWithInitializeMethods);
         var methodInfo = type.GetMethod("TestMethod");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
         mockReflectHelper.Setup(
             rh =>
@@ -336,7 +336,7 @@ public class UnitTestRunnerTests
         DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => { validator <<= 2; };
         DummyTestClassWithInitializeMethods.ClassInitializeMethodBody = () => { validator >>= 2; };
 
-        this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Assert.AreEqual(1, validator);
     }
@@ -348,7 +348,7 @@ public class UnitTestRunnerTests
     [TestMethodV1]
     public void RunCleanupShouldReturnNullOnNoCleanUpMethods()
     {
-        Assert.IsNull(this.unitTestRunner.RunCleanup());
+        Assert.IsNull(_unitTestRunner.RunCleanup());
     }
 
     [TestMethodV1]
@@ -358,10 +358,10 @@ public class UnitTestRunnerTests
         var methodInfo = type.GetMethod("TestMethod");
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        this.unitTestRunner.RunSingleTest(testMethod, this.testRunParameters);
+        _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         var assemblyCleanupCount = 0;
         var classCleanupCount = 0;
@@ -378,7 +378,7 @@ public class UnitTestRunnerTests
             throw new NotImplementedException();
         };
 
-        var cleanupresult = this.unitTestRunner.RunCleanup();
+        var cleanupresult = _unitTestRunner.RunCleanup();
 
         Assert.AreEqual(1, assemblyCleanupCount);
         Assert.AreEqual(1, classCleanupCount);
@@ -399,7 +399,7 @@ public class UnitTestRunnerTests
                      </MSTest>
                    </RunSettings>";
 
-        this.testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
+        _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
             {
                 if (actualReader != null)
@@ -424,7 +424,7 @@ public class UnitTestRunnerTests
         [UTF.TestMethod]
         public void TestMethodToTestInProgress()
         {
-            Assert.AreEqual(UTF.UnitTestOutcome.InProgress, this.TestContext.CurrentTestOutcome);
+            Assert.AreEqual(UTF.UnitTestOutcome.InProgress, TestContext.CurrentTestOutcome);
         }
     }
 
@@ -484,7 +484,7 @@ public class UnitTestRunnerTests
         [UTF.TestMethod]
         public void TestMethod()
         {
-            TestMethodBody?.Invoke(this.TestContext);
+            TestMethodBody?.Invoke(TestContext);
         }
     }
 

@@ -19,13 +19,13 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deploym
 [TestClass]
 public class TestRunDirectoriesTests
 {
-    private readonly TestRunDirectories testRunDirectories = new(@"C:\temp");
+    private readonly TestRunDirectories _testRunDirectories = new(@"C:\temp");
 
     [TestMethod]
     public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory()
     {
         Assert.AreEqual(
             Path.Combine(@"C:\temp\In", Environment.MachineName),
-            this.testRunDirectories.InMachineNameDirectory);
+            _testRunDirectories.InMachineNameDirectory);
     }
 }

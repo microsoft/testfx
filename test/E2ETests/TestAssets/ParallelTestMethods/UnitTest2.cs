@@ -9,23 +9,23 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class UnitTest2
 {
-    private static bool assemblyInitCalled;
-    private static bool assemblyCleanCalled;
-    private static bool classInitCalled;
-    private static bool classCleanCalled;
+    private static bool s_assemblyInitCalled;
+    private static bool s_assemblyCleanCalled;
+    private static bool s_classInitCalled;
+    private static bool s_classCleanCalled;
 
     [AssemblyInitialize]
     public static void AssemblyInit(TestContext context)
     {
-        Assert.IsFalse(assemblyInitCalled);
-        assemblyInitCalled = true;
+        Assert.IsFalse(s_assemblyInitCalled);
+        s_assemblyInitCalled = true;
     }
 
     [ClassInitialize]
     public static void ClassInit(TestContext context)
     {
-        Assert.IsFalse(classInitCalled);
-        classInitCalled = true;
+        Assert.IsFalse(s_classInitCalled);
+        s_classInitCalled = true;
     }
 
     [TestInitialize]
@@ -41,15 +41,15 @@ public class UnitTest2
     [ClassCleanup]
     public static void ClassCleanup()
     {
-        Assert.IsFalse(classCleanCalled);
-        classCleanCalled = true;
+        Assert.IsFalse(s_classCleanCalled);
+        s_classCleanCalled = true;
     }
 
     [AssemblyCleanup]
     public static void AssemblyCleanup()
     {
-        Assert.IsFalse(assemblyCleanCalled);
-        assemblyCleanCalled = true;
+        Assert.IsFalse(s_assemblyCleanCalled);
+        s_assemblyCleanCalled = true;
     }
 
     [TestMethod]

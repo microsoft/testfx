@@ -27,7 +27,7 @@ public class TestMethodAttribute : Attribute
     /// </param>
     public TestMethodAttribute(string displayName)
     {
-        this.DisplayName = displayName;
+        DisplayName = displayName;
     }
 
     /// <summary>

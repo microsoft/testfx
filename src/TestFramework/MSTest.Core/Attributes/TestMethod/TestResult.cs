@@ -16,7 +16,7 @@ public class TestResult
     /// </summary>
     public TestResult()
     {
-        this.DatarowIndex = -1;
+        DatarowIndex = -1;
     }
 
     /// <summary>

@@ -17,7 +17,7 @@ public class DiscoveryEventsHandler : ITestDiscoveryEventsHandler
 
     public DiscoveryEventsHandler()
     {
-        this.Tests = new List<string>();
+        Tests = new List<string>();
     }
 
     public void HandleDiscoveredTests(IEnumerable<TestCase> discoveredTestCases)
@@ -26,7 +26,7 @@ public class DiscoveryEventsHandler : ITestDiscoveryEventsHandler
         {
             foreach (TestCase testCase in discoveredTestCases)
             {
-                this.Tests.Add(testCase.FullyQualifiedName);
+                Tests.Add(testCase.FullyQualifiedName);
             }
         }
     }
@@ -37,7 +37,7 @@ public class DiscoveryEventsHandler : ITestDiscoveryEventsHandler
         {
             foreach (TestCase testCase in lastChunk)
             {
-                this.Tests.Add(testCase.FullyQualifiedName);
+                Tests.Add(testCase.FullyQualifiedName);
             }
         }
     }

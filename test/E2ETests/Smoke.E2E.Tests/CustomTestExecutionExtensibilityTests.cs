@@ -14,9 +14,9 @@ public class CustomTestExecutionExtensibilityTests : CLITestBase
     [TestMethod]
     public void ExecuteCustomTestExtensibilityTests()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssembly });
+        InvokeVsTestForExecution(new string[] { TestAssembly });
 
-        this.ValidatePassedTestsContain(
+        ValidatePassedTestsContain(
             "CustomTestMethod1 - Execution number 1",
             "CustomTestMethod1 - Execution number 2",
             "CustomTestMethod1 - Execution number 4",
@@ -25,7 +25,7 @@ public class CustomTestExecutionExtensibilityTests : CLITestBase
             "CustomTestClass1 - Execution number 2",
             "CustomTestClass1 - Execution number 4",
             "CustomTestClass1 - Execution number 5");
-        this.ValidateFailedTestsContain(
+        ValidateFailedTestsContain(
             TestAssembly,
             true,
             "CustomTestMethod1 - Execution number 3",
@@ -35,14 +35,14 @@ public class CustomTestExecutionExtensibilityTests : CLITestBase
     [TestMethod]
     public void ExecuteCustomTestExtensibilityWithTestDataTests()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~CustomTestExTests.CustomTestMethod2");
+        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~CustomTestExTests.CustomTestMethod2");
 
-        this.ValidatePassedTests(
+        ValidatePassedTests(
             "CustomTestMethod2 (B)",
             "CustomTestMethod2 (B)",
             "CustomTestMethod2 (B)");
-        this.ValidateFailedTestsCount(6);
-        this.ValidateFailedTestsContain(
+        ValidateFailedTestsCount(6);
+        ValidateFailedTestsContain(
             TestAssembly,
             true,
             "CustomTestMethod2 (A)",

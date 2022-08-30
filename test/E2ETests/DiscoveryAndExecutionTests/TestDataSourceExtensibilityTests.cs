@@ -25,7 +25,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
     public void CustomTestDataSourceTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "CustomTestDataSourceTestMethod1");
@@ -39,7 +39,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
     public void AssertExtensibilityTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FxExtensibilityTestProject.AssertExTest");
@@ -54,7 +54,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
     public void ExecuteCustomTestExtensibilityTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "(Name~CustomTestMethod1)|(Name~CustomTestClass1)");
@@ -82,7 +82,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
     public void ExecuteCustomTestExtensibilityWithTestDataTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "Name~CustomTestMethod2");
@@ -109,7 +109,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
     public void BailOutWhenDuplicateTestDisplayName()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "Name~DynamicDataDiscoveryBailOutTestMethod1");

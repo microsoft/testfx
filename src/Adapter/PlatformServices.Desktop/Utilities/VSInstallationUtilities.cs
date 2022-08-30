@@ -26,9 +26,9 @@ public static class VSInstallationUtilities
     /// </summary>
     private const string PortableVsTestManifestFilename = "Portable.VsTest.Manifest";
 
-    private static string vsInstallPath = null;
+    private static string s_vsInstallPath = null;
 
-    private static bool vsInstallPathEvaluated = false;
+    private static bool s_vsInstallPathEvaluated = false;
 
     /// <summary>
     /// Gets the visual studio installation path on the local machine.
@@ -39,18 +39,18 @@ public static class VSInstallationUtilities
     {
         get
         {
-            if (!vsInstallPathEvaluated)
+            if (!s_vsInstallPathEvaluated)
             {
                 try
                 {
-                    vsInstallPath = null;
+                    s_vsInstallPath = null;
 
                     // Use the Setup API to find the installation folder for currently running VS instance.
                     if (new SetupConfiguration() is ISetupConfiguration setupConfiguration)
                     {
                         var currentConfiguration = setupConfiguration.GetInstanceForCurrentProcess();
                         var currentInstallationPath = currentConfiguration.GetInstallationPath();
-                        vsInstallPath = Path.Combine(currentInstallationPath, @"Common7\IDE");
+                        s_vsInstallPath = Path.Combine(currentInstallationPath, @"Common7\IDE");
                     }
                 }
                 catch
@@ -60,11 +60,11 @@ public static class VSInstallationUtilities
                 }
                 finally
                 {
-                    vsInstallPathEvaluated = true;
+                    s_vsInstallPathEvaluated = true;
                 }
             }
 
-            return vsInstallPath;
+            return s_vsInstallPath;
         }
     }
 

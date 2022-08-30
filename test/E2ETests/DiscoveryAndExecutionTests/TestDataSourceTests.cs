@@ -21,7 +21,7 @@ public class TestDataSourceTests : CLITestBase
     public void ExecuteCsvTestDataSourceTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "CsvTestMethod");
@@ -43,7 +43,7 @@ public class TestDataSourceTests : CLITestBase
     public void ExecuteDynamicDataTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "DynamicDataTest");
@@ -61,7 +61,7 @@ public class TestDataSourceTests : CLITestBase
     public void ExecuteDataRowTests_Enums()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Enums");
@@ -139,7 +139,7 @@ public class TestDataSourceTests : CLITestBase
     public void ExecuteDataRowTests_NonSerializablePaths()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_NonSerializablePaths");
@@ -157,7 +157,7 @@ public class TestDataSourceTests : CLITestBase
     public void ExecuteRegular_DataRowTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : this.GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~Regular_DataRowTests");

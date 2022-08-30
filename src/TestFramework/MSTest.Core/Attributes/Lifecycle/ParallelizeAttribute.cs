@@ -25,8 +25,8 @@ public class ParallelizeAttribute : Attribute
     /// </summary>
     public ParallelizeAttribute()
     {
-        this.Workers = DefaultParallelWorkers;
-        this.Scope = DefaultExecutionScope;
+        Workers = DefaultParallelWorkers;
+        Scope = DefaultExecutionScope;
     }
 
     /// <summary>

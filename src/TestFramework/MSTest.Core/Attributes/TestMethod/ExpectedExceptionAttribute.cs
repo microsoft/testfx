@@ -48,7 +48,7 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
                     nameof(exceptionType));
         }
 
-        this.ExceptionType = exceptionType;
+        ExceptionType = exceptionType;
     }
 
     #endregion
@@ -84,8 +84,8 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
             return string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.UTF_TestMethodNoException,
-                this.ExceptionType.FullName,
-                this.SpecifiedNoExceptionMessage);
+                ExceptionType.FullName,
+                SpecifiedNoExceptionMessage);
         }
     }
 
@@ -102,36 +102,36 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
         Debug.Assert(exception != null, "'exception' is null");
 
         Type thrownExceptionType = exception.GetType();
-        if (this.AllowDerivedTypes)
+        if (AllowDerivedTypes)
         {
-            if (!this.ExceptionType.GetTypeInfo().IsAssignableFrom(thrownExceptionType.GetTypeInfo()))
+            if (!ExceptionType.GetTypeInfo().IsAssignableFrom(thrownExceptionType.GetTypeInfo()))
             {
                 // If the exception is an AssertFailedException or an AssertInconclusiveException, then re-throw it to
                 // preserve the test outcome and error message
-                this.RethrowIfAssertException(exception);
+                RethrowIfAssertException(exception);
 
                 string message = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.UTF_TestMethodWrongExceptionDerivedAllowed,
                     thrownExceptionType.FullName,
-                    this.ExceptionType.FullName,
+                    ExceptionType.FullName,
                     UtfHelper.GetExceptionMsg(exception));
                 throw new Exception(message);
             }
         }
         else
         {
-            if (thrownExceptionType != this.ExceptionType)
+            if (thrownExceptionType != ExceptionType)
             {
                 // If the exception is an AssertFailedException or an AssertInconclusiveException, then re-throw it to
                 // preserve the test outcome and error message
-                this.RethrowIfAssertException(exception);
+                RethrowIfAssertException(exception);
 
                 string message = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.UTF_TestMethodWrongException,
                     thrownExceptionType.FullName,
-                    this.ExceptionType.FullName,
+                    ExceptionType.FullName,
                     UtfHelper.GetExceptionMsg(exception));
                 throw new Exception(message);
             }

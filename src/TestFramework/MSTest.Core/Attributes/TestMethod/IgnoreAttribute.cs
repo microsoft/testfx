@@ -27,7 +27,7 @@ public sealed class IgnoreAttribute : Attribute
     /// </param>
     public IgnoreAttribute(string message)
     {
-        this.IgnoreMessage = message;
+        IgnoreMessage = message;
     }
 
     /// <summary>

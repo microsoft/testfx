@@ -20,18 +20,16 @@ using TestFrameworkV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTestin
 [TestFrameworkV1.TestClassAttribute]
 public class DynamicDataAttributeTests
 {
-    private DummyTestClass dummyTestClass;
-
-    private DynamicDataAttribute dynamicDataAttribute;
-
-    private MethodInfo testMethodInfo;
+    private DummyTestClass _dummyTestClass;
+    private DynamicDataAttribute _dynamicDataAttribute;
+    private MethodInfo _testMethodInfo;
 
     [TestFrameworkV1.TestInitialize]
     public void TestInit()
     {
-        this.dummyTestClass = new DummyTestClass();
-        this.testMethodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
-        this.dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
+        _dummyTestClass = new DummyTestClass();
+        _testMethodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
     }
 
     [TestFrameworkV1.TestMethod]
@@ -39,8 +37,8 @@ public class DynamicDataAttributeTests
     {
         void action()
         {
-            this.dynamicDataAttribute = new DynamicDataAttribute("ABC");
-            this.dynamicDataAttribute.GetData(this.testMethodInfo);
+            _dynamicDataAttribute = new DynamicDataAttribute("ABC");
+            _dynamicDataAttribute.GetData(_testMethodInfo);
         }
 
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
@@ -49,9 +47,9 @@ public class DynamicDataAttributeTests
     [TestFrameworkV1.TestMethod]
     public void GetDataShouldReadDataFromProperty()
     {
-        var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
-        this.dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
-        var data = this.dynamicDataAttribute.GetData(methodInfo);
+        var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
+        var data = _dynamicDataAttribute.GetData(methodInfo);
         Assert.IsTrue(data is IEnumerable<object[]>);
         Assert.IsTrue(data.ToList().Count == 2);
     }
@@ -59,9 +57,9 @@ public class DynamicDataAttributeTests
     [TestFrameworkV1.TestMethod]
     public void GetDataShouldReadDataFromPropertyInDifferntClass()
     {
-        var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
-        this.dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty2", typeof(DummyTestClass2));
-        var data = this.dynamicDataAttribute.GetData(methodInfo);
+        var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty2", typeof(DummyTestClass2));
+        var data = _dynamicDataAttribute.GetData(methodInfo);
         Assert.IsTrue(data is IEnumerable<object[]>);
         Assert.IsTrue(data.ToList().Count == 2);
     }
@@ -69,9 +67,9 @@ public class DynamicDataAttributeTests
     [TestFrameworkV1.TestMethod]
     public void GetDataShouldReadDataFromMethod()
     {
-        var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
-        this.dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod", DynamicDataSourceType.Method);
-        var data = this.dynamicDataAttribute.GetData(methodInfo);
+        var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod", DynamicDataSourceType.Method);
+        var data = _dynamicDataAttribute.GetData(methodInfo);
         Assert.IsTrue(data is IEnumerable<object[]>);
         Assert.IsTrue(data.ToList().Count == 2);
     }
@@ -79,9 +77,9 @@ public class DynamicDataAttributeTests
     [TestFrameworkV1.TestMethod]
     public void GetDataShouldReadDataFromMethodInDifferentClass()
     {
-        var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
-        this.dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod2", typeof(DummyTestClass2), DynamicDataSourceType.Method);
-        var data = this.dynamicDataAttribute.GetData(methodInfo);
+        var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
+        _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod2", typeof(DummyTestClass2), DynamicDataSourceType.Method);
+        var data = _dynamicDataAttribute.GetData(methodInfo);
         Assert.IsTrue(data is IEnumerable<object[]>);
         Assert.IsTrue(data.ToList().Count == 2);
     }
@@ -91,9 +89,9 @@ public class DynamicDataAttributeTests
     {
         void action()
         {
-            var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod4");
-            this.dynamicDataAttribute = new DynamicDataAttribute("NullProperty", typeof(DummyTestClass));
-            this.dynamicDataAttribute.GetData(methodInfo);
+            var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod4");
+            _dynamicDataAttribute = new DynamicDataAttribute("NullProperty", typeof(DummyTestClass));
+            _dynamicDataAttribute.GetData(methodInfo);
         }
 
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
@@ -104,9 +102,9 @@ public class DynamicDataAttributeTests
     {
         void action()
         {
-            var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod5");
-            this.dynamicDataAttribute = new DynamicDataAttribute("EmptyProperty", typeof(DummyTestClass));
-            this.dynamicDataAttribute.GetData(methodInfo);
+            var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod5");
+            _dynamicDataAttribute = new DynamicDataAttribute("EmptyProperty", typeof(DummyTestClass));
+            _dynamicDataAttribute.GetData(methodInfo);
         }
 
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentException));
@@ -117,9 +115,9 @@ public class DynamicDataAttributeTests
     {
         void action()
         {
-            var methodInfo = this.dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod3");
-            this.dynamicDataAttribute = new DynamicDataAttribute("WrongDataTypeProperty", typeof(DummyTestClass));
-            this.dynamicDataAttribute.GetData(methodInfo);
+            var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod3");
+            _dynamicDataAttribute = new DynamicDataAttribute("WrongDataTypeProperty", typeof(DummyTestClass));
+            _dynamicDataAttribute.GetData(methodInfo);
         }
 
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
@@ -130,7 +128,7 @@ public class DynamicDataAttributeTests
     {
         var data = new object[] { 1, 2, 3 };
 
-        var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+        var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         Assert.AreEqual("TestMethod1 (1,2,3)", displayName);
     }
 
@@ -139,8 +137,8 @@ public class DynamicDataAttributeTests
     {
         var data = new object[] { 1, 2, 3 };
 
-        this.dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName";
-        var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+        _dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName";
+        var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         Assert.AreEqual("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters", displayName);
     }
 
@@ -149,9 +147,9 @@ public class DynamicDataAttributeTests
     {
         var data = new object[] { 1, 2, 3 };
 
-        this.dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName2";
-        this.dynamicDataAttribute.DynamicDataDisplayNameDeclaringType = typeof(DummyTestClass2);
-        var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+        _dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName2";
+        _dynamicDataAttribute.DynamicDataDisplayNameDeclaringType = typeof(DummyTestClass2);
+        var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         Assert.AreEqual("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters", displayName);
     }
 
@@ -162,8 +160,8 @@ public class DynamicDataAttributeTests
         {
             var data = new object[] { 1, 2, 3 };
 
-            this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithMissingParameters";
-            var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithMissingParameters";
+            var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
@@ -176,8 +174,8 @@ public class DynamicDataAttributeTests
         {
             var data = new object[] { 1, 2, 3 };
 
-            this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidReturnType";
-            var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidReturnType";
+            var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
@@ -190,8 +188,8 @@ public class DynamicDataAttributeTests
         {
             var data = new object[] { 1, 2, 3 };
 
-            this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidFirstParameterType";
-            var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidFirstParameterType";
+            var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
@@ -204,8 +202,8 @@ public class DynamicDataAttributeTests
         {
             var data = new object[] { 1, 2, 3 };
 
-            this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidSecondParameterType";
-            var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidSecondParameterType";
+            var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
@@ -218,8 +216,8 @@ public class DynamicDataAttributeTests
         {
             var data = new object[] { 1, 2, 3 };
 
-            this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameNonStatic";
-            var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameNonStatic";
+            var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
@@ -232,8 +230,8 @@ public class DynamicDataAttributeTests
         {
             var data = new object[] { 1, 2, 3 };
 
-            this.dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNamePrivate";
-            var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNamePrivate";
+            var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
@@ -246,8 +244,8 @@ public class DynamicDataAttributeTests
         {
             var data = new object[] { 1, 2, 3 };
 
-            this.dynamicDataAttribute.DynamicDataDisplayName = "MissingCustomDynamicDataDisplayName";
-            var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+            _dynamicDataAttribute.DynamicDataDisplayName = "MissingCustomDynamicDataDisplayName";
+            var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
@@ -256,7 +254,7 @@ public class DynamicDataAttributeTests
     [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldReturnEmptyStringIfDataIsNull()
     {
-        var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, null);
+        var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, null);
         Assert.IsNull(displayName);
     }
 
@@ -267,13 +265,13 @@ public class DynamicDataAttributeTests
         var data1 = new string[] { null, "value1", "value2" };
         var data2 = new string[] { "value1", null, "value2" };
 
-        var displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data);
+        var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         Assert.AreEqual("TestMethod1 (value1,value2,)", displayName);
 
-        displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data1);
+        displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data1);
         Assert.AreEqual("TestMethod1 (,value1,value2)", displayName);
 
-        displayName = this.dynamicDataAttribute.GetDisplayName(this.testMethodInfo, data2);
+        displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data2);
         Assert.AreEqual("TestMethod1 (value1,,value2)", displayName);
     }
 }

@@ -17,11 +17,11 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 /// </summary>
 public class FileOperations : IFileOperations
 {
-    private readonly bool isPackaged;
+    private readonly bool _isPackaged;
 
     public FileOperations()
     {
-        this.isPackaged = AppContainer.AppModel.IsPackagedProcess();
+        _isPackaged = AppContainer.AppModel.IsPackagedProcess();
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ public class FileOperations : IFileOperations
     /// <returns> The <see cref="Assembly"/>. </returns>
     public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly)
     {
-        if (!this.isPackaged && Path.IsPathRooted(assemblyName))
+        if (!_isPackaged && Path.IsPathRooted(assemblyName))
         {
             return Assembly.LoadFrom(assemblyName);
         }
@@ -60,7 +60,7 @@ public class FileOperations : IFileOperations
     /// <returns> The <see cref="bool"/>. </returns>
     public bool DoesFileExist(string assemblyFileName)
     {
-        var path = this.GetFullFilePath(assemblyFileName);
+        var path = GetFullFilePath(assemblyFileName);
         return File.Exists(path);
     }
 

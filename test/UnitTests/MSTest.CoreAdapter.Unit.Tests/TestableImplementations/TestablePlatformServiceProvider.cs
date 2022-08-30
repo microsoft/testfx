@@ -14,20 +14,20 @@ using PlatformServices.Interface.ObjectModel;
 public class TestablePlatformServiceProvider : IPlatformServiceProvider
 {
     // Using the actual reflection operations implementation since this does not need mocking for existing tests.
-    private IReflectionOperations reflectionOperations;
+    private IReflectionOperations _reflectionOperations;
 
     public TestablePlatformServiceProvider()
     {
-        this.MockTestSourceValidator = new Mock<ITestSource>();
-        this.MockFileOperations = new Mock<IFileOperations>();
-        this.MockTraceLogger = new Mock<IAdapterTraceLogger>();
-        this.MockTestSourceHost = new Mock<ITestSourceHost>();
-        this.MockTestDeployment = new Mock<ITestDeployment>();
-        this.MockSettingsProvider = new Mock<ISettingsProvider>();
-        this.MockTestDataSource = new Mock<ITestDataSource>();
-        this.MockTraceListener = new Mock<ITraceListener>();
-        this.MockTraceListenerManager = new Mock<ITraceListenerManager>();
-        this.MockThreadOperations = new Mock<IThreadOperations>();
+        MockTestSourceValidator = new Mock<ITestSource>();
+        MockFileOperations = new Mock<IFileOperations>();
+        MockTraceLogger = new Mock<IAdapterTraceLogger>();
+        MockTestSourceHost = new Mock<ITestSourceHost>();
+        MockTestDeployment = new Mock<ITestDeployment>();
+        MockSettingsProvider = new Mock<ISettingsProvider>();
+        MockTestDataSource = new Mock<ITestDataSource>();
+        MockTraceListener = new Mock<ITraceListener>();
+        MockTraceListenerManager = new Mock<ITraceListenerManager>();
+        MockThreadOperations = new Mock<IThreadOperations>();
     }
 
     #region Mock Implementations
@@ -100,32 +100,32 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     #endregion
 
-    public ITestSource TestSource => this.MockTestSourceValidator.Object;
+    public ITestSource TestSource => MockTestSourceValidator.Object;
 
-    public IFileOperations FileOperations => this.MockFileOperations.Object;
+    public IFileOperations FileOperations => MockFileOperations.Object;
 
-    public IAdapterTraceLogger AdapterTraceLogger => this.MockTraceLogger.Object;
+    public IAdapterTraceLogger AdapterTraceLogger => MockTraceLogger.Object;
 
-    public ITestDeployment TestDeployment => this.MockTestDeployment.Object;
+    public ITestDeployment TestDeployment => MockTestDeployment.Object;
 
-    public ISettingsProvider SettingsProvider => this.MockSettingsProvider.Object;
+    public ISettingsProvider SettingsProvider => MockSettingsProvider.Object;
 
-    public IThreadOperations ThreadOperations => this.MockThreadOperations.Object;
+    public IThreadOperations ThreadOperations => MockThreadOperations.Object;
 
     public IReflectionOperations ReflectionOperations
     {
         get
         {
-            if (this.MockReflectionOperations != null)
+            if (MockReflectionOperations != null)
             {
-                return this.MockReflectionOperations.Object;
+                return MockReflectionOperations.Object;
             }
 
-            return this.reflectionOperations ??= new ReflectionOperations();
+            return _reflectionOperations ??= new ReflectionOperations();
         }
     }
 
-    public ITestDataSource TestDataSource => this.MockTestDataSource.Object;
+    public ITestDataSource TestDataSource => MockTestDataSource.Object;
 
     public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties)
     {
@@ -134,21 +134,21 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle)
     {
-        return this.MockTestSourceHost.Object;
+        return MockTestSourceHost.Object;
     }
 
     public ITraceListener GetTraceListener(TextWriter textWriter)
     {
-        return this.MockTraceListener.Object;
+        return MockTraceListener.Object;
     }
 
     public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter)
     {
-        return this.MockTraceListenerManager.Object;
+        return MockTraceListenerManager.Object;
     }
 
     public void SetupMockReflectionOperations()
     {
-        this.MockReflectionOperations = new Mock<IReflectionOperations>();
+        MockReflectionOperations = new Mock<IReflectionOperations>();
     }
 }

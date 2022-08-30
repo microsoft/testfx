@@ -34,7 +34,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <summary>
     /// Type cache
     /// </summary>
-    private readonly TypeCache typeCache = new(ReflectHelper);
+    private readonly TypeCache _typeCache = new(ReflectHelper);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AssemblyEnumerator"/> class.
@@ -85,13 +85,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
     {
         Debug.Assert(!string.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
 
-        var runSettingsXml = this.RunSettingsXml;
+        var runSettingsXml = RunSettingsXml;
         var warningMessages = new List<string>();
         var tests = new List<UnitTestElement>();
 
         var assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
-        var types = this.GetTypes(assembly, assemblyFileName, warningMessages);
+        var types = GetTypes(assembly, assemblyFileName, warningMessages);
         var discoverInternals = assembly.GetCustomAttribute<UTF.DiscoverInternalsAttribute>() != null;
         var testDataSourceDiscovery = assembly.GetCustomAttribute<UTF.TestDataSourceDiscoveryAttribute>()?.DiscoveryOption ?? UTF.TestDataSourceDiscoveryOption.DuringDiscovery;
 
@@ -102,7 +102,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            var testsInType = this.DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals, testDataSourceDiscovery);
+            var testsInType = DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals, testDataSourceDiscovery);
             tests.AddRange(testsInType);
         }
 
@@ -132,7 +132,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             if (ex.LoaderExceptions != null)
             {
                 // If not able to load all type, log a warning and continue with loaded types.
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, assemblyFileName, this.GetLoadExceptionDetails(ex));
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, assemblyFileName, GetLoadExceptionDetails(ex));
 
                 warningMessages?.Add(message);
 
@@ -211,7 +211,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             typeFullName = type.FullName;
-            var testTypeEnumerator = this.GetTypeEnumerator(type, assemblyFileName, discoverInternals);
+            var testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals);
             var unitTestCases = testTypeEnumerator.Enumerate(out var warningsFromTypeEnumerator);
             var typeIgnored = ReflectHelper.IsAttributeDefined(type, typeof(UTF.IgnoreAttribute), false);
 
@@ -226,7 +226,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (discoveryOption == UTF.TestDataSourceDiscoveryOption.DuringDiscovery)
                     {
-                        if (this.DynamicDataAttached(sourceLevelParameters, assembly, test, tests))
+                        if (DynamicDataAttached(sourceLevelParameters, assembly, test, tests))
                         {
                             continue;
                         }
@@ -260,7 +260,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "all");
         var testMethod = test.TestMethod;
         var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
-        var testMethodInfo = this.typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
+        var testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
         if (testMethodInfo == null)
         {
             return false;
@@ -268,7 +268,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         return /* DataSourceAttribute discovery is disabled for now, since we cannot serialize DataRow values.
                    this.TryProcessDataSource(test, testMethodInfo, testContext, tests) || */
-               this.TryProcessTestDataSourceTests(test, testMethodInfo, tests);
+               TryProcessTestDataSourceTests(test, testMethodInfo, tests);
     }
 
     private bool TryProcessDataSource(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
@@ -289,7 +289,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // dataSourceAttributes.Length == 1
         try
         {
-            return this.ProcessDataSourceTests(test, testMethodInfo, testContext, tests);
+            return ProcessDataSourceTests(test, testMethodInfo, testContext, tests);
         }
         catch (Exception ex)
         {
@@ -344,7 +344,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         try
         {
-            return this.ProcessTestDataSourceTests(test, (MethodInfo)methodInfo, testDataSources, tests);
+            return ProcessTestDataSourceTests(test, (MethodInfo)methodInfo, testDataSources, tests);
         }
         catch (Exception ex)
         {

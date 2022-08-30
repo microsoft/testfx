@@ -29,27 +29,27 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 [TestClass]
 public class MSTestDiscovererTests
 {
-    private TestablePlatformServiceProvider testablePlatformServiceProvider;
+    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    private Mock<IMessageLogger> mockMessageLogger;
-    private Mock<ITestCaseDiscoverySink> mockTestCaseDiscoverySink;
-    private Mock<IDiscoveryContext> mockDiscoveryContext;
-    private Mock<IRunSettings> mockRunSettings;
-    private MSTestDiscoverer discoverer;
+    private Mock<IMessageLogger> _mockMessageLogger;
+    private Mock<ITestCaseDiscoverySink> _mockTestCaseDiscoverySink;
+    private Mock<IDiscoveryContext> _mockDiscoveryContext;
+    private Mock<IRunSettings> _mockRunSettings;
+    private MSTestDiscoverer _discoverer;
 
     [TestInitialize]
     public void TestInit()
     {
-        this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+        _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
 
-        this.mockMessageLogger = new Mock<IMessageLogger>();
-        this.mockTestCaseDiscoverySink = new Mock<ITestCaseDiscoverySink>();
-        this.mockDiscoveryContext = new Mock<IDiscoveryContext>();
-        this.mockRunSettings = new Mock<IRunSettings>();
-        this.discoverer = new MSTestDiscoverer();
+        _mockMessageLogger = new Mock<IMessageLogger>();
+        _mockTestCaseDiscoverySink = new Mock<ITestCaseDiscoverySink>();
+        _mockDiscoveryContext = new Mock<IDiscoveryContext>();
+        _mockRunSettings = new Mock<IRunSettings>();
+        _discoverer = new MSTestDiscoverer();
 
-        this.testablePlatformServiceProvider = new TestablePlatformServiceProvider();
-        PlatformServiceProvider.Instance = this.testablePlatformServiceProvider;
+        _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
+        PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
     [TestCleanup]
@@ -101,21 +101,21 @@ public class MSTestDiscovererTests
     [TestMethod]
     public void DiscoverTestsShouldThrowIfSourcesIsNull()
     {
-        void a() => this.discoverer.DiscoverTests(null, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
+        void a() => _discoverer.DiscoverTests(null, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
     }
 
     [TestMethod]
     public void DiscoverTestsShouldThrowIfDiscoverySinkIsNull()
     {
-        void a() => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, null);
+        void a() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
     }
 
     [TestMethod]
     public void DiscoverTestsShouldThrowIfLoggerIsNull()
     {
-        void a() => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, null, this.mockTestCaseDiscoverySink.Object);
+        void a() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, null, _mockTestCaseDiscoverySink.Object);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
     }
 
@@ -123,10 +123,10 @@ public class MSTestDiscovererTests
     public void DiscoverTestsShouldThrowIfSourcesAreNotValid()
     {
         // Setup Mocks.
-        this.testablePlatformServiceProvider.MockTestSourceValidator.Setup(tsv => tsv.ValidSourceExtensions)
+        _testablePlatformServiceProvider.MockTestSourceValidator.Setup(tsv => tsv.ValidSourceExtensions)
             .Returns(new List<string> { });
 
-        void a() => this.discoverer.DiscoverTests(new List<string>(), this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
+        void a() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(NotSupportedException));
     }
 
@@ -135,15 +135,15 @@ public class MSTestDiscovererTests
     {
         var source = Assembly.GetExecutingAssembly().Location;
 
-        this.testablePlatformServiceProvider.MockTestSourceValidator.Setup(tsv => tsv.ValidSourceExtensions)
+        _testablePlatformServiceProvider.MockTestSourceValidator.Setup(tsv => tsv.ValidSourceExtensions)
             .Returns(new List<string> { ".dll" });
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(source))
             .Returns(source);
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(source))
             .Returns(true);
 
         // This call should not throw a null reference exception.
-        this.discoverer.DiscoverTests(new List<string> { source }, null, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
+        _discoverer.DiscoverTests(new List<string> { source }, null, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
     }
 
     [TestMethod]
@@ -152,26 +152,26 @@ public class MSTestDiscovererTests
         var source = Assembly.GetExecutingAssembly().Location;
 
         // Setup mocks.
-        this.testablePlatformServiceProvider.MockTestSourceValidator.Setup(tsv => tsv.ValidSourceExtensions)
+        _testablePlatformServiceProvider.MockTestSourceValidator.Setup(tsv => tsv.ValidSourceExtensions)
             .Returns(new List<string> { ".dll" });
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(source))
             .Returns(source);
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(source))
             .Returns(true);
-        this.testablePlatformServiceProvider.MockTestSourceValidator.Setup(
+        _testablePlatformServiceProvider.MockTestSourceValidator.Setup(
             tsv => tsv.IsAssemblyReferenced(It.IsAny<AssemblyName>(), source)).Returns(true);
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(source, It.IsAny<bool>()))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(source, It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
-        this.testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(source))
             .Returns((object)null);
-        this.testablePlatformServiceProvider.MockTestSourceHost.Setup(
+        _testablePlatformServiceProvider.MockTestSourceHost.Setup(
             ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
             .Returns(new AssemblyEnumerator());
 
-        this.discoverer.DiscoverTests(new List<string> { source }, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
+        _discoverer.DiscoverTests(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
 
         // Assert.
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.AtLeastOnce);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.AtLeastOnce);
     }
 
     [TestMethod]
@@ -185,15 +185,15 @@ public class MSTestDiscovererTests
                         <IgnoreTestImpact>true</IgnoreTestImpact>  
                     </MSTest>
             </RunSettings>";
-        this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
-        this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
 
         var source = Assembly.GetExecutingAssembly().Location;
-        this.discoverer.DiscoverTests(new List<string> { source }, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
+        _discoverer.DiscoverTests(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
 
         // Assert.
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
     }
 
     [TestMethod]
@@ -207,22 +207,22 @@ public class MSTestDiscovererTests
                         </Parallelize>
                     </MSTest>
             </RunSettings>";
-        this.mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(this.mockRunSettings.Object);
-        this.mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
 
         var source = Assembly.GetExecutingAssembly().Location;
-        this.discoverer.DiscoverTests(new List<string> { source }, this.mockDiscoveryContext.Object, this.mockMessageLogger.Object, this.mockTestCaseDiscoverySink.Object);
+        _discoverer.DiscoverTests(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
 
         // Assert.
-        this.mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
-        this.mockMessageLogger.Verify(fh => fh.SendMessage(TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
+        _mockMessageLogger.Verify(fh => fh.SendMessage(TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
     }
 
     [TestMethod]
     public void AreValidSourcesShouldThrowIfPlatformsValidSourceExtensionsIsNull()
     {
-        this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);
+        _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);
         MSTestDiscoverer discoverer = new();
 
         void a() => discoverer.AreValidSources(new List<string> { "dummy" });
@@ -232,7 +232,7 @@ public class MSTestDiscovererTests
     [TestMethod]
     public void AreValidSourcesShouldReturnFalseIfValidSourceExtensionsIsEmpty()
     {
-        this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { });
+        _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { });
         MSTestDiscoverer discoverer = new();
 
         Assert.IsFalse(discoverer.AreValidSources(new List<string> { "dummy.te" }));
@@ -241,7 +241,7 @@ public class MSTestDiscovererTests
     [TestMethod]
     public void AreValidSourcesShouldReturnTrueForValidSourceExtensions()
     {
-        this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".te" });
+        _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".te" });
         MSTestDiscoverer discoverer = new();
 
         Assert.IsTrue(discoverer.AreValidSources(new List<string> { "dummy.te" }));
@@ -250,7 +250,7 @@ public class MSTestDiscovererTests
     [TestMethod]
     public void AreValidSourcesShouldReturnFalseForInvalidSourceExtensions()
     {
-        this.testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".nte", ".tep" });
+        _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".nte", ".tep" });
         MSTestDiscoverer discoverer = new();
 
         Assert.IsFalse(discoverer.AreValidSources(new List<string> { "dummy.te" }));

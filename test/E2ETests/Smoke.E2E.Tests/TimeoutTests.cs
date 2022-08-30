@@ -21,30 +21,30 @@ public class TimeoutTests : CLITestBase
     [TestMethod]
     public void ValidateTimeoutTests()
     {
-        this.Validate(TimeoutTestAssembly, TimeoutFileToValidate);
+        Validate(TimeoutTestAssembly, TimeoutFileToValidate);
     }
 
     [TestMethod]
     public void ValidateTimeoutTestsNetCore()
     {
-        this.Validate(TimeoutTestAssemblyNetCore, TimeoutFileToValidateNetCore);
+        Validate(TimeoutTestAssemblyNetCore, TimeoutFileToValidateNetCore);
     }
 
     private void Validate(string testAssembly, string fileToValidate)
     {
-        this.InvokeVsTestForExecution(new string[] { testAssembly });
+        InvokeVsTestForExecution(new string[] { testAssembly });
 
-        this.ValidateTestRunTime(TestMethodWaitTimeInMs + OverheadTimeInMs);
+        ValidateTestRunTime(TestMethodWaitTimeInMs + OverheadTimeInMs);
 
-        this.ValidateFailedTestsCount(2);
+        ValidateFailedTestsCount(2);
 
-        this.ValidateFailedTestsContain(
+        ValidateFailedTestsContain(
             testAssembly,
             false,
             "TimeoutTestProject.TerminateLongRunningTasksUsingTokenTestClass.TerminateLongRunningTasksUsingToken",
             "TimeoutTestProject.SelfTerminatingTestClass.SelfTerminatingTestMethod");
 
-        Assert.IsTrue(File.Exists(this.GetAssetFullPath(fileToValidate)), "Unable to locate the TimeoutTestOutput.txt file");
+        Assert.IsTrue(File.Exists(GetAssetFullPath(fileToValidate)), "Unable to locate the TimeoutTestOutput.txt file");
     }
 
     // TODO @haplois | @evangelink: We should add netcoreapp2.1 tests here.

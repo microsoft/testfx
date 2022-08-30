@@ -26,7 +26,7 @@ public partial class CLITestBase
         var logger = new InternalLogger();
         var sink = new InternalSink();
 
-        string runSettingXml = this.GetRunSettingXml(string.Empty, this.GetTestAdapterPath());
+        string runSettingXml = GetRunSettingXml(string.Empty, GetTestAdapterPath());
         var context = new InternalDiscoveryContext(runSettingXml, testCaseFilter);
 
         unitTestDiscoverer.DiscoverTestsInSource(assemblyPath, logger, sink, context);
@@ -36,7 +36,7 @@ public partial class CLITestBase
 
     internal ReadOnlyCollection<TestResult> RunTests(string source, IEnumerable<TestCase> testCases)
     {
-        var settings = this.GetSettings(true);
+        var settings = GetSettings(true);
         var testExecutionManager = new TestExecutionManager();
         var frameworkHandle = new InternalFrameworkHandle();
 
@@ -86,45 +86,45 @@ public partial class CLITestBase
 
     private class InternalSink : ITestCaseDiscoverySink
     {
-        private readonly List<TestCase> testCases = new();
+        private readonly List<TestCase> _testCases = new();
 
-        public ReadOnlyCollection<TestCase> DiscoveredTests => this.testCases.AsReadOnly();
+        public ReadOnlyCollection<TestCase> DiscoveredTests => _testCases.AsReadOnly();
 
-        public void SendTestCase(TestCase discoveredTest) => this.testCases.Add(discoveredTest);
+        public void SendTestCase(TestCase discoveredTest) => _testCases.Add(discoveredTest);
     }
 
     private class InternalDiscoveryContext : IDiscoveryContext
     {
-        private readonly IRunSettings runSettings;
-        private readonly ITestCaseFilterExpression filter;
+        private readonly IRunSettings _runSettings;
+        private readonly ITestCaseFilterExpression _filter;
 
         public InternalDiscoveryContext(string runSettings, string testCaseFilter)
         {
-            this.runSettings = new InternalRunSettings(runSettings);
+            _runSettings = new InternalRunSettings(runSettings);
 
             if (testCaseFilter != null)
             {
-                filter = TestCaseFilterFactory.ParseTestFilter(testCaseFilter);
+                _filter = TestCaseFilterFactory.ParseTestFilter(testCaseFilter);
             }
         }
 
-        public IRunSettings RunSettings => this.runSettings;
+        public IRunSettings RunSettings => _runSettings;
 
         public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
         {
-            return filter;
+            return _filter;
         }
 
         private class InternalRunSettings : IRunSettings
         {
-            private readonly string runSettings;
+            private readonly string _runSettings;
 
             public InternalRunSettings(string runSettings)
             {
-                this.runSettings = runSettings;
+                _runSettings = runSettings;
             }
 
-            public string SettingsXml => this.runSettings;
+            public string SettingsXml => _runSettings;
 
             public ISettingsProvider GetSettings(string settingsName) => throw new NotImplementedException();
         }
@@ -132,39 +132,39 @@ public partial class CLITestBase
 
     private class InternalFrameworkHandle : IFrameworkHandle
     {
-        private readonly List<string> messageList = new();
-        private readonly ConcurrentDictionary<TestCase, List<TestResult>> testResults = new();
+        private readonly List<string> _messageList = new();
+        private readonly ConcurrentDictionary<TestCase, List<TestResult>> _testResults = new();
 
-        private TestCase activeTest;
-        private List<TestResult> activeResults;
+        private TestCase _activeTest;
+        private List<TestResult> _activeResults;
 
         public bool EnableShutdownAfterTestRun { get; set; }
 
         public void RecordStart(TestCase testCase)
         {
-            activeResults = testResults.GetOrAdd(testCase, _ => new List<TestResult>());
-            activeTest = testCase;
+            _activeResults = _testResults.GetOrAdd(testCase, _ => new List<TestResult>());
+            _activeTest = testCase;
         }
 
         public void RecordEnd(TestCase testCase, TestOutcome outcome)
         {
-            activeResults = testResults[testCase];
-            activeTest = testCase;
+            _activeResults = _testResults[testCase];
+            _activeTest = testCase;
         }
 
         public void RecordResult(TestResult testResult)
         {
-            activeResults.Add(testResult);
+            _activeResults.Add(testResult);
         }
 
-        public IEnumerable<TestResult> GetFlattenedTestResults() => this.testResults.SelectMany(i => i.Value);
-        public IEnumerable<KeyValuePair<TestCase, List<TestResult>>> GetTestResults() => this.testResults;
+        public IEnumerable<TestResult> GetFlattenedTestResults() => _testResults.SelectMany(i => i.Value);
+        public IEnumerable<KeyValuePair<TestCase, List<TestResult>>> GetTestResults() => _testResults;
 
         public void RecordAttachments(IList<AttachmentSet> attachmentSets) => throw new NotImplementedException();
 
         public void SendMessage(TestMessageLevel testMessageLevel, string message)
         {
-            this.messageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
+            _messageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
         }
 
         public int LaunchProcessWithDebuggerAttached(string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables) => throw new NotImplementedException();

@@ -24,11 +24,11 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 [TestClass]
 public class ThreadOperationsTests
 {
-    private readonly ThreadOperations asyncOperations;
+    private readonly ThreadOperations _asyncOperations;
 
     public ThreadOperationsTests()
     {
-        this.asyncOperations = new ThreadOperations();
+        _asyncOperations = new ThreadOperations();
     }
 
     [TestMethod]
@@ -41,7 +41,7 @@ public class ThreadOperationsTests
         }
 
         CancellationTokenSource tokenSource = new();
-        Assert.IsTrue(this.asyncOperations.Execute(action, 1000, tokenSource.Token));
+        Assert.IsTrue(_asyncOperations.Execute(action, 1000, tokenSource.Token));
         Assert.AreNotEqual(Thread.CurrentThread.ManagedThreadId, actionThreadID);
     }
 
@@ -51,7 +51,7 @@ public class ThreadOperationsTests
         static void action() => Task.Delay(100).Wait();
 
         CancellationTokenSource tokenSource = new();
-        Assert.IsFalse(this.asyncOperations.Execute(action, 1, tokenSource.Token));
+        Assert.IsFalse(_asyncOperations.Execute(action, 1, tokenSource.Token));
     }
 
     [TestMethod]
@@ -60,7 +60,7 @@ public class ThreadOperationsTests
         var isInvoked = false;
         void action() => isInvoked = true;
 
-        this.asyncOperations.ExecuteWithAbortSafety(action);
+        _asyncOperations.ExecuteWithAbortSafety(action);
 
         Assert.IsTrue(isInvoked);
     }

@@ -14,9 +14,9 @@ public class DataRowTests : CLITestBase
     [TestMethod]
     public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerviedClassHasDataRows_SimpleDataRows()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowSimple");
+        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowSimple");
 
-        this.ValidatePassedTestsContain(
+        ValidatePassedTestsContain(
             "DataRowTestMethod (BaseString1)",
             "DataRowTestMethod (BaseString2)",
             "DataRowTestMethod (BaseString3)",
@@ -26,77 +26,77 @@ public class DataRowTests : CLITestBase
         // 3 tests of BaseClass.DataRowTestMethod - 3 data row results and no parent result
         // 2 tests of DerivedClass.DataRowTestMethod - 2 data row results and no parent result
         // Total 5 tests - Making sure that DerivedClass doesn't run BaseClass tests
-        this.ValidatePassedTestsCount(5);
+        ValidatePassedTestsCount(5);
     }
 
     [TestMethod]
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
+        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
 
-        this.ValidatePassedTestsContain(
+        ValidatePassedTestsContain(
             "DataRowTestMethod (DerivedString1)",
             "DataRowTestMethod (DerivedString2)");
 
         // 2 tests of DerivedClass.DataRowTestMethod - 2 datarow result and no parent result
-        this.ValidatePassedTestsCount(2);
+        ValidatePassedTestsCount(2);
     }
 
     [TestMethod]
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowSomeOptional");
+        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowSomeOptional");
 
-        this.ValidatePassedTestsContain(
+        ValidatePassedTestsContain(
             "DataRowTestMethodWithSomeOptionalParameters (123)",
             "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString1)",
             "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString2,DerivedOptionalString3)");
 
         // 3 tests of DerivedClass.DataRowTestMethodWithSomeOptionalParameters - 3 datarow result and no parent result
-        this.ValidatePassedTestsCount(3);
+        ValidatePassedTestsCount(3);
     }
 
     [TestMethod]
     public void DataRowsExecuteWithAllOptionalParameters()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowAllOptional");
+        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowAllOptional");
 
-        this.ValidatePassedTestsContain(
+        ValidatePassedTestsContain(
             "DataRowTestMethodWithAllOptionalParameters ()",
             "DataRowTestMethodWithAllOptionalParameters (123)",
             "DataRowTestMethodWithAllOptionalParameters (123,DerivedOptionalString4)",
             "DataRowTestMethodWithAllOptionalParameters (123,DerivedOptionalString5,DerivedOptionalString6)");
 
         // 4 tests of DerivedClass.DataRowTestMethodWithAllOptionalParameters - 4 datarow result and no parent result
-        this.ValidatePassedTestsCount(4);
+        ValidatePassedTestsCount(4);
     }
 
     [TestMethod]
     public void DataRowsExecuteWithParamsArrayParameter()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowParamsArgument");
+        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowParamsArgument");
 
-        this.ValidatePassedTestsContain(
+        ValidatePassedTestsContain(
             "DataRowTestMethodWithParamsParameters (2)",
             "DataRowTestMethodWithParamsParameters (2,DerivedSingleParamsArg)",
             "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2)",
             "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2,DerivedParamsArg3)");
 
         // 4 tests of DerivedClass.DataRowTestMethodWithParamsParameters - 4 datarow result and no parent result
-        this.ValidatePassedTestsCount(4);
+        ValidatePassedTestsCount(4);
     }
 
     [TestMethod]
     public void DataRowsFailWhenInvalidArgumentsProvided()
     {
-        this.InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowOptionalInvalidArguments");
+        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowOptionalInvalidArguments");
 
-        this.ValidatePassedTestsContain(
+        ValidatePassedTestsContain(
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
             "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
 
         // 3 tests of DerivedClass.DataRowTestMethodFailsWithInvalidArguments - 3 datarow result and no parent result
-        this.ValidatePassedTestsCount(3);
+        ValidatePassedTestsCount(3);
     }
 }
