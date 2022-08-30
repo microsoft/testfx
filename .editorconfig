@@ -151,6 +151,9 @@ dotnet_diagnostic.IDE0074.severity = warning
 dotnet_diagnostic.IDE0031.severity = warning
 dotnet_style_null_propagation = true
 
+# IDE0034: Simplify 'default' expression
+dotnet_diagnostic.IDE0034.severity = warning
+
 #### Naming styles ####
 
 # Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)
