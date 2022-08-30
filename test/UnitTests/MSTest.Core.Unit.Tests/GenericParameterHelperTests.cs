@@ -24,10 +24,7 @@ public class GenericParameterHelperTests
     /// Test initialization function.
     /// </summary>
     [TestFrameworkV1.TestInitialize]
-    public void TestInitialize()
-    {
-        _sut = new TestFrameworkV2.GenericParameterHelper(10);
-    }
+    public void TestInitialize() => _sut = new TestFrameworkV2.GenericParameterHelper(10);
 
     [TestFrameworkV1.TestMethod]
     public void EqualsShouldReturnFalseIfEachObjectHasDefaultDataValue()

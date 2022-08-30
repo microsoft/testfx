@@ -90,10 +90,7 @@ public class TestClassInfo
     /// </summary>
     public MethodInfo ClassInitializeMethod
     {
-        get
-        {
-            return _classInitializeMethod;
-        }
+        get => _classInitializeMethod;
 
         internal set
         {
@@ -137,10 +134,7 @@ public class TestClassInfo
     /// </summary>
     public MethodInfo ClassCleanupMethod
     {
-        get
-        {
-            return _classCleanupMethod;
-        }
+        get => _classCleanupMethod;
 
         internal set
         {
@@ -187,10 +181,7 @@ public class TestClassInfo
     /// </summary>
     public MethodInfo TestInitializeMethod
     {
-        get
-        {
-            return _testInitializeMethod;
-        }
+        get => _testInitializeMethod;
 
         internal set
         {
@@ -209,10 +200,7 @@ public class TestClassInfo
     /// </summary>
     public MethodInfo TestCleanupMethod
     {
-        get
-        {
-            return _testCleanupMethod;
-        }
+        get => _testCleanupMethod;
 
         internal set
         {

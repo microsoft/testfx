@@ -24,10 +24,7 @@ public class DiaSessionOperationsTests
 {
     private readonly FileOperations _fileOperations;
 
-    public DiaSessionOperationsTests()
-    {
-        _fileOperations = new FileOperations();
-    }
+    public DiaSessionOperationsTests() => _fileOperations = new FileOperations();
 
     [TestMethod]
     public void CreateNavigationSessionShouldReurnNullIfSourceIsNull()
@@ -240,10 +237,7 @@ public class MockDiaSession : IDisposable
         return DiaNavigationData;
     }
 
-    public void Dispose()
-    {
-        IsDisposeInvoked = true;
-    }
+    public void Dispose() => IsDisposeInvoked = true;
 }
 
 public interface IDiaNavigationData

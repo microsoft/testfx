@@ -68,10 +68,7 @@ public class TestAssemblyInfoTests
     }
 
     [TestMethod]
-    public void TestAssemblyHasExecutableCleanupMethodShouldReturnFalseIfAssemblyHasNoCleanupMethod()
-    {
-        Assert.IsFalse(_testAssemblyInfo.HasExecutableCleanupMethod);
-    }
+    public void TestAssemblyHasExecutableCleanupMethodShouldReturnFalseIfAssemblyHasNoCleanupMethod() => Assert.IsFalse(_testAssemblyInfo.HasExecutableCleanupMethod);
 
     [TestMethod]
     public void TestAssemblyHasExecutableCleanupMethodShouldReturnTrueEvenIfAssemblyInitializationThrewAnException()
@@ -207,7 +204,7 @@ public class TestAssemblyInfoTests
     [TestMethod]
     public void RunAssemblyInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = tc => { throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message")); };
+        DummyTestClass.AssemblyInitializeMethodBody = tc => throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message"));
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
         var exception = ActionUtility.PerformActionAndReturnException(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
@@ -243,7 +240,7 @@ public class TestAssemblyInfoTests
     [TestMethod]
     public void RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = (tc) => { Assert.AreEqual(tc, _testContext); };
+        DummyTestClass.AssemblyInitializeMethodBody = (tc) => Assert.AreEqual(tc, _testContext);
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
         _testAssemblyInfo.RunAssemblyInitialize(_testContext);
@@ -302,7 +299,7 @@ public class TestAssemblyInfoTests
     [TestMethod]
     public void RunAssemblyCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
     {
-        DummyTestClass.AssemblyCleanupMethodBody = () => { throw new ArgumentException("Argument Exception"); };
+        DummyTestClass.AssemblyCleanupMethodBody = () => throw new ArgumentException("Argument Exception");
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod");
         StringAssert.StartsWith(
@@ -321,14 +318,8 @@ public class TestAssemblyInfoTests
 
         public UTFExtension.TestContext TestContext { get; set; }
 
-        public static void AssemblyInitializeMethod(UTFExtension.TestContext testContext)
-        {
-            AssemblyInitializeMethodBody.Invoke(testContext);
-        }
+        public static void AssemblyInitializeMethod(UTFExtension.TestContext testContext) => AssemblyInitializeMethodBody.Invoke(testContext);
 
-        public static void AssemblyCleanupMethod()
-        {
-            AssemblyCleanupMethodBody.Invoke();
-        }
+        public static void AssemblyCleanupMethod() => AssemblyCleanupMethodBody.Invoke();
     }
 }

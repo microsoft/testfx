@@ -50,10 +50,7 @@ public class TypeValidatorTests
     #region Type is class, TestClassAttribute or attribute derived from TestClassAttribute
 
     [TestMethod]
-    public void IsValidTestClassShouldReturnFalseForNonClassTypes()
-    {
-        Assert.IsFalse(_typeValidator.IsValidTestClass(typeof(IDummyInterface), _warnings));
-    }
+    public void IsValidTestClassShouldReturnFalseForNonClassTypes() => Assert.IsFalse(_typeValidator.IsValidTestClass(typeof(IDummyInterface), _warnings));
 
     [TestMethod]
     public void IsValidTestClassShouldReturnFalseForClassesNotHavingTestClassAttributeOrDerivedAttributeTypes()
@@ -264,46 +261,25 @@ public class TypeValidatorTests
     #region HasCorrectTestContext tests
 
     [TestMethod]
-    public void HasCorrectTestContextSignatureShouldReturnTrueForClassesWithNoTestContextProperty()
-    {
-        Assert.IsTrue(_typeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnTrueForClassesWithNoTestContextProperty() => Assert.IsTrue(_typeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)));
 
     [TestMethod]
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithNoSetters()
-    {
-        Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithNoSetters() => Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
 
     [TestMethod]
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithPrivateSetter()
-    {
-        Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithPrivateSetter() => Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
 
     [TestMethod]
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithStaticSetter()
-    {
-        Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithStaticSetter() => Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)));
 
     [TestMethod]
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithAbstractSetter()
-    {
-        Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithAbstractSetter() => Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext)));
 
     [TestMethod]
-    public void HasCorrectTestContextSignatureShouldNotThrowForAGenericClassWithRandomProperties()
-    {
-        Assert.IsTrue(_typeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>)));
-    }
+    public void HasCorrectTestContextSignatureShouldNotThrowForAGenericClassWithRandomProperties() => Assert.IsTrue(_typeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>)));
 
     [TestMethod]
-    public void HasCorrectTestContextSignatureShouldReturnTrueForAGenericClassWithTestContext()
-    {
-        Assert.IsTrue(_typeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnTrueForAGenericClassWithTestContext() => Assert.IsTrue(_typeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>)));
 
     #endregion
 
@@ -459,10 +435,7 @@ public class TypeValidatorTests
 
     #region private methods
 
-    private void SetupTestClass()
-    {
-        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined(It.IsAny<Type>(), typeof(UTF.TestClassAttribute), false)).Returns(true);
-    }
+    private void SetupTestClass() => _mockReflectHelper.Setup(rh => rh.IsAttributeDefined(It.IsAny<Type>(), typeof(UTF.TestClassAttribute), false)).Returns(true);
 
     #endregion
 }

@@ -13,29 +13,17 @@ public class UnitTest1
     public TestContext TestContext { get; set; }
 
     [ClassInitialize()]
-    public static void ClassInitialize(TestContext _)
-    {
-        WriteLines("UnitTest1 - ClassInitialize");
-    }
+    public static void ClassInitialize(TestContext _) => WriteLines("UnitTest1 - ClassInitialize");
 
     [TestInitialize]
-    public void TestInitialize()
-    {
-        WriteLines("UnitTest1 - TestInitialize");
-    }
+    public void TestInitialize() => WriteLines("UnitTest1 - TestInitialize");
 
     [TestCleanup]
-    public void TestCleanup()
-    {
-        WriteLines("UnitTest1 - TestCleanup");
-    }
+    public void TestCleanup() => WriteLines("UnitTest1 - TestCleanup");
 
 
     [ClassCleanup()]
-    public static void ClassCleanup()
-    {
-        WriteLines($"UnitTest1 - ClassCleanup");
-    }
+    public static void ClassCleanup() => WriteLines($"UnitTest1 - ClassCleanup");
 
     [TestMethod]
     public void TestMethod1()

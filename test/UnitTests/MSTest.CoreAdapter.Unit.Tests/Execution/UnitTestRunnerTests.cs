@@ -54,10 +54,7 @@ public class UnitTestRunnerTests
     }
 
     [TestCleanup]
-    public void Cleanup()
-    {
-        PlatformServiceProvider.Instance = null;
-    }
+    public void Cleanup() => PlatformServiceProvider.Instance = null;
 
     #region Constructor tests
 
@@ -333,8 +330,8 @@ public class UnitTestRunnerTests
                 It.IsAny<bool>())).Returns(true);
 
         var validator = 1;
-        DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => { validator <<= 2; };
-        DummyTestClassWithInitializeMethods.ClassInitializeMethodBody = () => { validator >>= 2; };
+        DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => validator <<= 2;
+        DummyTestClassWithInitializeMethods.ClassInitializeMethodBody = () => validator >>= 2;
 
         _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
@@ -346,10 +343,7 @@ public class UnitTestRunnerTests
     #region RunCleanup Tests
 
     [TestMethodV1]
-    public void RunCleanupShouldReturnNullOnNoCleanUpMethods()
-    {
-        Assert.IsNull(_unitTestRunner.RunCleanup());
-    }
+    public void RunCleanupShouldReturnNullOnNoCleanUpMethods() => Assert.IsNull(_unitTestRunner.RunCleanup());
 
     [TestMethodV1]
     public void RunCleanupShouldReturnCleanupResultsForAssemblyAndClassCleanupMethods()
@@ -422,10 +416,7 @@ public class UnitTestRunnerTests
         public UTFExtension.TestContext TestContext { get; set; }
 
         [UTF.TestMethod]
-        public void TestMethodToTestInProgress()
-        {
-            Assert.AreEqual(UTF.UnitTestOutcome.InProgress, TestContext.CurrentTestOutcome);
-        }
+        public void TestMethodToTestInProgress() => Assert.AreEqual(UTF.UnitTestOutcome.InProgress, TestContext.CurrentTestOutcome);
     }
 
     [DummyTestClass]
@@ -437,16 +428,10 @@ public class UnitTestRunnerTests
 
         // The reflectHelper instance would set the AssemblyInitialize attribute here before running any tests.
         // Setting an attribute causes conflicts with other tests.
-        public static void AssemblyInitialize(UTFExtension.TestContext tc)
-        {
-            AssemblyInitializeMethodBody.Invoke();
-        }
+        public static void AssemblyInitialize(UTFExtension.TestContext tc) => AssemblyInitializeMethodBody.Invoke();
 
         [UTF.ClassInitialize]
-        public static void ClassInitialize(UTFExtension.TestContext tc)
-        {
-            ClassInitializeMethodBody.Invoke();
-        }
+        public static void ClassInitialize(UTFExtension.TestContext tc) => ClassInitializeMethodBody.Invoke();
 
         [UTF.TestMethod]
         public void TestMethod()
@@ -470,22 +455,13 @@ public class UnitTestRunnerTests
         public UTFExtension.TestContext TestContext { get; set; }
 
         [UTF.AssemblyCleanup]
-        public static void AssemblyCleanup()
-        {
-            AssemblyCleanupMethodBody?.Invoke();
-        }
+        public static void AssemblyCleanup() => AssemblyCleanupMethodBody?.Invoke();
 
         [UTF.ClassCleanup]
-        public static void ClassCleanup()
-        {
-            ClassCleanupMethodBody?.Invoke();
-        }
+        public static void ClassCleanup() => ClassCleanupMethodBody?.Invoke();
 
         [UTF.TestMethod]
-        public void TestMethod()
-        {
-            TestMethodBody?.Invoke(TestContext);
-        }
+        public void TestMethod() => TestMethodBody?.Invoke(TestContext);
     }
 
     private class DummyTestClassAttribute : UTF.TestClassAttribute

@@ -99,17 +99,11 @@ internal static class DataSerializationHelper
         return data;
     }
 
-    private static DataContractJsonSerializer GetSerializer(string assemblyQualifiedName)
-    {
-        return SerializerCache.GetOrAdd(
+    private static DataContractJsonSerializer GetSerializer(string assemblyQualifiedName) => SerializerCache.GetOrAdd(
             assemblyQualifiedName,
             _ => new DataContractJsonSerializer(Type.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings));
-    }
 
-    private static DataContractJsonSerializer GetSerializer(Type type)
-    {
-        return SerializerCache.GetOrAdd(
+    private static DataContractJsonSerializer GetSerializer(Type type) => SerializerCache.GetOrAdd(
             type.AssemblyQualifiedName,
             _ => new DataContractJsonSerializer(type, SerializerSettings));
-    }
 }

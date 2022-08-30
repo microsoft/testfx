@@ -14,28 +14,16 @@ using MSTest.Extensibility.Samples;
 public class AssertExTest
 {
     [TestMethod]
-    public void BasicAssertExtensionTest()
-    {
-        Assert.That.IsOfType<ArgumentException>(new ArgumentOutOfRangeException());
-    }
+    public void BasicAssertExtensionTest() => Assert.That.IsOfType<ArgumentException>(new ArgumentOutOfRangeException());
 
     [TestMethod]
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-    public void BasicFailingAssertExtensionTest()
-    {
-        Assert.That.IsOfType<FormatException>(new ArgumentNullException());
-    }
+    public void BasicFailingAssertExtensionTest() => Assert.That.IsOfType<FormatException>(new ArgumentNullException());
 
     [TestMethod]
-    public void ChainedAssertExtensionTest()
-    {
-        Assert.That.Is().Divisor(120, 5);
-    }
+    public void ChainedAssertExtensionTest() => Assert.That.Is().Divisor(120, 5);
 
     [TestMethod]
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-    public void ChainedFailingAssertExtensionTest()
-    {
-        Assert.That.Is().Positive(-10);
-    }
+    public void ChainedFailingAssertExtensionTest() => Assert.That.Is().Positive(-10);
 }

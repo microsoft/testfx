@@ -108,8 +108,5 @@ public class RunEventsHandler : ITestRunEventsHandler
         }
     }
 
-    public int LaunchProcessWithDebuggerAttached(TestProcessStartInfo testProcessStartInfo)
-    {
-        return 0;
-    }
+    public int LaunchProcessWithDebuggerAttached(TestProcessStartInfo testProcessStartInfo) => 0;
 }

@@ -273,19 +273,7 @@ public class DesktopTestSourceHostTests
 
 public class DummyClass : MarshalByRefObject
 {
-    public int AppDomainId
-    {
-        get
-        {
-            return AppDomain.CurrentDomain.Id;
-        }
-    }
+    public int AppDomainId => AppDomain.CurrentDomain.Id;
 
-    public string AppDomainAppBase
-    {
-        get
-        {
-            return AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
-        }
-    }
+    public string AppDomainAppBase => AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
 }

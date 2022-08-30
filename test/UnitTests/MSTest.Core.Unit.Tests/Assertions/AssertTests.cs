@@ -22,16 +22,10 @@ public class AssertTests
     #region That tests
 
     [TestMethod]
-    public void ThatShouldReturnAnInstanceOfAssert()
-    {
-        Assert.IsNotNull(TestFrameworkV2.Assert.That);
-    }
+    public void ThatShouldReturnAnInstanceOfAssert() => Assert.IsNotNull(TestFrameworkV2.Assert.That);
 
     [TestMethod]
-    public void ThatShouldCacheAssertInstance()
-    {
-        Assert.AreEqual(TestFrameworkV2.Assert.That, TestFrameworkV2.Assert.That);
-    }
+    public void ThatShouldCacheAssertInstance() => Assert.AreEqual(TestFrameworkV2.Assert.That, TestFrameworkV2.Assert.That);
 
     #endregion
 
@@ -51,10 +45,7 @@ public class AssertTests
     public void ThrowsExceptionWithLamdaExpressionsShouldThrowAssertionOnWrongException()
     {
         var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.ThrowsException<ArgumentException>(
-             () =>
-             {
-                 throw new FormatException();
-             }));
+             () => throw new FormatException()));
 
         Assert.IsNotNull(ex);
         Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), ex.GetType());
@@ -83,10 +74,7 @@ public class AssertTests
     public void ThrowsExceptionAsyncShouldThrowAssertionOnNoException()
     {
         Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
-            async () =>
-            {
-                await Task.Delay(5).ConfigureAwait(false);
-            });
+            async () => await Task.Delay(5).ConfigureAwait(false));
         var ex = ActionUtility.PerformActionAndReturnException(() => t.Wait());
 
         Assert.IsNotNull(ex);
@@ -122,10 +110,7 @@ public class AssertTests
     public void ThrowsExceptionAsyncWithMessageShouldThrowAssertionOnNoException()
     {
         Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
-            async () =>
-                {
-                    await Task.Delay(5).ConfigureAwait(false);
-                },
+            async () => await Task.Delay(5).ConfigureAwait(false),
             "The world is not on fire.");
         var ex = ActionUtility.PerformActionAndReturnException(() => t.Wait());
 
@@ -175,7 +160,7 @@ public class AssertTests
     {
         static void a()
         {
-            Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(async () => { await Task.FromResult(true).ConfigureAwait(false); }, null, null);
+            Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(async () => await Task.FromResult(true).ConfigureAwait(false), null, null);
             t.Wait();
         }
         ActionUtility.ActionShouldThrowInnerExceptionOfType(a, typeof(ArgumentNullException));
@@ -185,10 +170,7 @@ public class AssertTests
     public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowAssertionOnNoException()
     {
         Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
-            async () =>
-            {
-                await Task.Delay(5).ConfigureAwait(false);
-            },
+            async () => await Task.Delay(5).ConfigureAwait(false),
             "The world is not on fire {0}.{1}-{2}.",
             "ta",
             "da",
@@ -239,10 +221,7 @@ public class AssertTests
     }
 
     [TestMethod]
-    public void ReplaceNullCharsShouldReplaceNullCharsInAString()
-    {
-        Assert.AreEqual("The quick brown fox \\0 jumped over the la\\0zy dog\\0", TestFrameworkV2.Assert.ReplaceNullChars("The quick brown fox \0 jumped over the la\0zy dog\0"));
-    }
+    public void ReplaceNullCharsShouldReplaceNullCharsInAString() => Assert.AreEqual("The quick brown fox \\0 jumped over the la\\0zy dog\\0", TestFrameworkV2.Assert.ReplaceNullChars("The quick brown fox \0 jumped over the la\0zy dog\0"));
 
     #endregion
 
@@ -263,16 +242,10 @@ public class AssertTests
     }
 
     [TestMethod]
-    public void InstanceOfTypeShouldPassOnSameInstance()
-    {
-        TestFrameworkV2.Assert.IsInstanceOfType(5, typeof(int));
-    }
+    public void InstanceOfTypeShouldPassOnSameInstance() => TestFrameworkV2.Assert.IsInstanceOfType(5, typeof(int));
 
     [TestMethod]
-    public void InstanceOfTypeShouldPassOnHigherInstance()
-    {
-        TestFrameworkV2.Assert.IsInstanceOfType(5, typeof(object));
-    }
+    public void InstanceOfTypeShouldPassOnHigherInstance() => TestFrameworkV2.Assert.IsInstanceOfType(5, typeof(object));
 
     [TestMethod]
     public void InstanceNotOfTypeShouldFailWhenValueIsNull()
@@ -288,16 +261,10 @@ public class AssertTests
     }
 
     [TestMethod]
-    public void InstanceNotOfTypeShouldPassOnWrongInstance()
-    {
-        TestFrameworkV2.Assert.IsNotInstanceOfType(5L, typeof(int));
-    }
+    public void InstanceNotOfTypeShouldPassOnWrongInstance() => TestFrameworkV2.Assert.IsNotInstanceOfType(5L, typeof(int));
 
     [TestMethod]
-    public void InstanceNotOfTypeShouldPassOnSubInstance()
-    {
-        TestFrameworkV2.Assert.IsNotInstanceOfType(new object(), typeof(int));
-    }
+    public void InstanceNotOfTypeShouldPassOnSubInstance() => TestFrameworkV2.Assert.IsNotInstanceOfType(new object(), typeof(int));
 
     #endregion
 

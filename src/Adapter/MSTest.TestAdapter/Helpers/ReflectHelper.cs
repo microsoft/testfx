@@ -206,10 +206,7 @@ internal class ReflectHelper : MarshalByRefObject
 #if NET5_0_OR_GREATER
     [Obsolete]
 #endif
-    public override object InitializeLifetimeService()
-    {
-        return null;
-    }
+    public override object InitializeLifetimeService() => null;
 
     internal static T[] GetAttributes<T>(MethodBase methodBase, bool inherit)
         where T : Attribute
@@ -335,10 +332,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="method">The method to check for.</param>
     /// <param name="type">The type declared in the assembly to check.</param>
     /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
-    internal virtual bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
-    {
-        return method.DeclaringType.GetTypeInfo().Assembly.Equals(type.GetTypeInfo().Assembly);
-    }
+    internal virtual bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type) => method.DeclaringType.GetTypeInfo().Assembly.Equals(type.GetTypeInfo().Assembly);
 
     /// <summary>
     /// Get categories applied to the test method
@@ -367,10 +361,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
     /// <returns> The parallelization level if set. -1 otherwise. </returns>
-    internal ParallelizeAttribute GetParallelizeAttribute(Assembly assembly)
-    {
-        return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ParallelizeAttribute)).OfType<ParallelizeAttribute>().FirstOrDefault();
-    }
+    internal ParallelizeAttribute GetParallelizeAttribute(Assembly assembly) => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ParallelizeAttribute)).OfType<ParallelizeAttribute>().FirstOrDefault();
 
     /// <summary>
     /// Get the parallelization behavior for a test method.
@@ -378,31 +369,22 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="testMethod">Test method.</param>
     /// <param name="owningType">The type that owns <paramref name="testMethod"/>.</param>
     /// <returns>True if test method should not run in parallel.</returns>
-    internal bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType)
-    {
-        return GetCustomAttributes(testMethod, typeof(DoNotParallelizeAttribute)).Any()
+    internal bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType) => GetCustomAttributes(testMethod, typeof(DoNotParallelizeAttribute)).Any()
                || GetCustomAttributes(owningType.GetTypeInfo(), typeof(DoNotParallelizeAttribute)).Any();
-    }
 
     /// <summary>
     /// Get the parallelization behavior for a test assembly.
     /// </summary>
     /// <param name="assembly">The test assembly.</param>
     /// <returns>True if test assembly should not run in parallel.</returns>
-    internal bool IsDoNotParallelizeSet(Assembly assembly)
-    {
-        return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute)).Any();
-    }
+    internal bool IsDoNotParallelizeSet(Assembly assembly) => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute)).Any();
 
     /// <summary>
     /// Gets the class cleanup lifecycle set on an assembly.
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
     /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
-    internal ClassCleanupExecutionAttribute GetClassCleanupAttribute(Assembly assembly)
-    {
-        return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute)).OfType<ClassCleanupExecutionAttribute>().FirstOrDefault();
-    }
+    internal ClassCleanupExecutionAttribute GetClassCleanupAttribute(Assembly assembly) => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute)).OfType<ClassCleanupExecutionAttribute>().FirstOrDefault();
 
     /// <summary>
     /// Gets custom attributes at the class and assembly for a method.
@@ -439,12 +421,8 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="memberInfo">The member to inspect.</param>
     /// <param name="type">The attribute type to find.</param>
     /// <returns>Custom attributes defined.</returns>
-    internal virtual Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo, Type type)
-    {
-        return
-            PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
+    internal virtual Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo, Type type) => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
                 memberInfo.Module.Assembly, type).OfType<Attribute>().ToArray();
-    }
 
     /// <summary>
     /// Gets the custom attributes of the provided type on a memberInfo
@@ -452,10 +430,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="attributeProvider"> The member to reflect on. </param>
     /// <param name="type"> The attribute type. </param>
     /// <returns>Attributes defined.</returns>
-    internal virtual Attribute[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
-    {
-        return GetCustomAttributes(attributeProvider, type, true);
-    }
+    internal virtual Attribute[] GetCustomAttributes(MemberInfo attributeProvider, Type type) => GetCustomAttributes(attributeProvider, type, true);
 
     /// <summary>
     /// Gets the first custom attribute of the provided type on a memberInfo
@@ -673,10 +648,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="propertyAttributeProvider">The member to inspect.</param>
     /// <returns>TestProperty attributes if defined. Empty otherwise.</returns>
-    private IEnumerable<Attribute> GetTestPropertyAttributes(MemberInfo propertyAttributeProvider)
-    {
-        return GetCustomAttributes(propertyAttributeProvider, typeof(TestPropertyAttribute), true);
-    }
+    private IEnumerable<Attribute> GetTestPropertyAttributes(MemberInfo propertyAttributeProvider) => GetCustomAttributes(propertyAttributeProvider, typeof(TestPropertyAttribute), true);
 
     /// <summary>
     /// Get the Attributes (TypeName/TypeObject) for a given member.

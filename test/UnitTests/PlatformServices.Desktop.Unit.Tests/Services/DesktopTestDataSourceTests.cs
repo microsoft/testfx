@@ -82,8 +82,8 @@ public class DesktopTestDataSourceTests
 
         public DesktopTestFrameworkV2.TestContext TestContext
         {
-            get { return _testContextInstance; }
-            set { _testContextInstance = value; }
+            get => _testContextInstance;
+            set => _testContextInstance = value;
         }
 
         [TestFrameworkV2.TestMethod]
@@ -95,10 +95,7 @@ public class DesktopTestDataSourceTests
         }
 
         [TestFrameworkV2.TestMethod]
-        public void FailingTest()
-        {
-            Assert.AreEqual("Release", _testContextInstance.DataRow["configuration"].ToString());
-        }
+        public void FailingTest() => Assert.AreEqual("Release", _testContextInstance.DataRow["configuration"].ToString());
     }
 
     #endregion

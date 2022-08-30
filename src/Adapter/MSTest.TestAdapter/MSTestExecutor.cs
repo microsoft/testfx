@@ -111,8 +111,5 @@ public class MSTestExecutor : ITestExecutor
         _cancellationToken = null;
     }
 
-    public void Cancel()
-    {
-        _cancellationToken?.Cancel();
-    }
+    public void Cancel() => _cancellationToken?.Cancel();
 }

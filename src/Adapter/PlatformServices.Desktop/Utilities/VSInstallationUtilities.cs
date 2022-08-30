@@ -86,10 +86,7 @@ public static class VSInstallationUtilities
     /// Is Current process running in Portable Mode
     /// </summary>
     /// <returns>True, if portable mode; false, otherwise</returns>
-    public static bool IsCurrentProcessRunningInPortableMode()
-    {
-        return IsProcessRunningInPortableMode(Process.GetCurrentProcess().MainModule.FileName);
-    }
+    public static bool IsCurrentProcessRunningInPortableMode() => IsProcessRunningInPortableMode(Process.GetCurrentProcess().MainModule.FileName);
 
     /// <summary>
     /// Is the EXE specified running in Portable Mode

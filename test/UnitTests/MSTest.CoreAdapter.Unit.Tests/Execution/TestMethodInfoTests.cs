@@ -118,7 +118,7 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeShouldWaitForAsyncTestMethodsToComplete()
     {
         var methodCalled = false;
-        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => { methodCalled = true; });
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => methodCalled = true);
         var asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod");
 
         var method = new TestMethodInfo(
@@ -135,7 +135,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeAsyncShouldHandleThrowAssertInconclusive()
     {
-        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => { throw new UTF.AssertInconclusiveException(); });
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => throw new UTF.AssertInconclusiveException());
         var asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod");
 
         var method = new TestMethodInfo(
@@ -151,7 +151,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeAsyncShouldHandleAssertInconclusive()
     {
-        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => { UTF.Assert.Inconclusive(); });
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => UTF.Assert.Inconclusive());
         var asyncMethodInfo = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod");
 
         var method = new TestMethodInfo(
@@ -167,7 +167,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldHandleThrowAssertInconclusive()
     {
-        DummyTestClass.TestMethodBody = d => { throw new UTF.AssertInconclusiveException(); };
+        DummyTestClass.TestMethodBody = d => throw new UTF.AssertInconclusiveException();
         var dummyMethodInfo = typeof(DummyTestClass).GetMethod("DummyTestMethod");
 
         var method = new TestMethodInfo(
@@ -183,7 +183,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldHandleAssertInconclusive()
     {
-        DummyTestClass.TestMethodBody = d => { UTF.Assert.Inconclusive(); };
+        DummyTestClass.TestMethodBody = d => UTF.Assert.Inconclusive();
         var dummyMethodInfo = typeof(DummyTestClass).GetMethod("DummyTestMethod");
 
         var method = new TestMethodInfo(
@@ -199,7 +199,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldReportTestContextMessages()
     {
-        DummyTestClass.TestMethodBody = o => { _testContextImplementation.WriteLine("TestContext"); };
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteLine("TestContext");
 
         var method = new TestMethodInfo(
             _methodInfo,
@@ -214,7 +214,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldClearTestContextMessagesAfterReporting()
     {
-        DummyTestClass.TestMethodBody = o => { _testContextImplementation.WriteLine("TestContext"); };
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteLine("TestContext");
 
         var method = new TestMethodInfo(
             _methodInfo,
@@ -225,7 +225,7 @@ public class TestMethodInfoTests
 
         StringAssert.Contains(result.TestContextMessages, "TestContext");
 
-        DummyTestClass.TestMethodBody = o => { _testContextImplementation.WriteLine("SeaShore"); };
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteLine("SeaShore");
 
         result = method.Invoke(null);
 
@@ -252,7 +252,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldMarkOutcomeFailedIfTestClassConstructorThrows()
     {
-        DummyTestClass.TestConstructorMethodBody = () => { throw new NotImplementedException(); };
+        DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException();
 
         var result = _testMethodInfo.Invoke(null);
 
@@ -262,7 +262,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldSetErrorMessageIfTestClassConstructorThrows()
     {
-        DummyTestClass.TestConstructorMethodBody = () => { throw new NotImplementedException("dummyExceptionMessage"); };
+        DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException("dummyExceptionMessage");
 
         var result = _testMethodInfo.Invoke(null);
 
@@ -293,7 +293,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows()
     {
-        DummyTestClass.TestConstructorMethodBody = () => { throw new NotImplementedException("dummyExceptionMessage"); };
+        DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException("dummyExceptionMessage");
 
         var exception = _testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
 
@@ -378,7 +378,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldMarkOutcomeFailedIfSetTestContextThrows()
     {
-        DummyTestClass.TestContextSetterBody = value => { throw new NotImplementedException(); };
+        DummyTestClass.TestContextSetterBody = value => throw new NotImplementedException();
 
         var result = _testMethodInfo.Invoke(null);
 
@@ -388,7 +388,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldSetErrorMessageIfSetTestContextThrows()
     {
-        DummyTestClass.TestContextSetterBody = value => { throw new NotImplementedException("dummyExceptionMessage"); };
+        DummyTestClass.TestContextSetterBody = value => throw new NotImplementedException("dummyExceptionMessage");
 
         var exception = _testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
 
@@ -403,7 +403,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows()
     {
-        DummyTestClass.TestConstructorMethodBody = () => { throw new NotImplementedException("dummyExceptionMessage"); };
+        DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException("dummyExceptionMessage");
 
         var exception = _testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
 
@@ -434,7 +434,7 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeShouldCallAsyncTestInitializeAndWaitForCompletion()
     {
         var testInitializeCalled = false;
-        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => { testInitializeCalled = true; });
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => testInitializeCalled = true);
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod");
 
         var result = _testMethodInfo.Invoke(null);
@@ -447,8 +447,8 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeShouldCallTestInitializeOfAllBaseClasses()
     {
         var callOrder = new List<string>();
-        DummyTestClassBase.BaseTestClassMethodBody = classInstance => { callOrder.Add("baseTestInitializeCalled2"); };
-        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => { callOrder.Add("baseAsyncTestInitializeCalled1"); });
+        DummyTestClassBase.BaseTestClassMethodBody = classInstance => callOrder.Add("baseTestInitializeCalled2");
+        DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => callOrder.Add("baseAsyncTestInitializeCalled1"));
         DummyTestClass.TestInitializeMethodBody = classInstance => callOrder.Add("classTestInitializeCalled");
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
         _testClassInfo.BaseTestInitializeMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod"));
@@ -490,7 +490,7 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult()
     {
         // Arrange.
-        DummyTestClass.TestInitializeMethodBody = classInstance => { throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message")); };
+        DummyTestClass.TestInitializeMethodBody = classInstance => throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message"));
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
         var errorMessage = string.Format(
             Resource.UTA_InitMethodThrows,
@@ -523,7 +523,7 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult()
     {
         // Arrange.
-        DummyTestClass.TestInitializeMethodBody = classInstance => { UTF.Assert.Fail("dummyFailMessage"); };
+        DummyTestClass.TestInitializeMethodBody = classInstance => UTF.Assert.Fail("dummyFailMessage");
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
         var errorMessage = string.Format(
             Resource.UTA_InitMethodThrows,
@@ -555,7 +555,7 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult()
     {
         // Arrange.
-        DummyTestClass.TestInitializeMethodBody = classInstance => { UTF.Assert.Inconclusive("dummyFailMessage"); };
+        DummyTestClass.TestInitializeMethodBody = classInstance => UTF.Assert.Inconclusive("dummyFailMessage");
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
         var errorMessage = string.Format(
             Resource.UTA_InitMethodThrows,
@@ -604,7 +604,7 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeShouldCallAsyncTestCleanup()
     {
         var cleanupMethodCalled = false;
-        DummyTestClass.TestCleanupMethodBody = classInstance => { cleanupMethodCalled = true; };
+        DummyTestClass.TestCleanupMethodBody = classInstance => cleanupMethodCalled = true;
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
         var result = _testMethodInfo.Invoke(null);
@@ -637,7 +637,7 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeShouldCallTestCleanupForBaseTestClasses()
     {
         var callOrder = new List<string>();
-        DummyTestClassBase.BaseTestClassMethodBody = classInstance => { callOrder.Add("baseTestCleanupCalled" + callOrder.Count); };
+        DummyTestClassBase.BaseTestClassMethodBody = classInstance => callOrder.Add("baseTestCleanupCalled" + callOrder.Count);
         DummyTestClass.TestCleanupMethodBody = classInstance => callOrder.Add("classTestCleanupCalled");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
         _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod"));
@@ -659,7 +659,7 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeShouldCallTestCleanupForBaseTestClassesAlways()
     {
         var callOrder = new List<string>();
-        DummyTestClassBase.BaseTestClassMethodBody = classInstance => { callOrder.Add("baseTestCleanupCalled" + callOrder.Count); };
+        DummyTestClassBase.BaseTestClassMethodBody = classInstance => callOrder.Add("baseTestCleanupCalled" + callOrder.Count);
         DummyTestClass.TestCleanupMethodBody = classInstance => callOrder.Add("classTestCleanupCalled");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
         _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod"));
@@ -685,7 +685,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeWhenTestCleanupThrowsReturnsExpectedResult()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => { throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message")); };
+        DummyTestClass.TestCleanupMethodBody = classInstance => throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message"));
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
         var expectedErrorMessage = string.Format(
@@ -715,7 +715,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => { UTF.Assert.Inconclusive("Test inconclusive"); };
+        DummyTestClass.TestCleanupMethodBody = classInstance => UTF.Assert.Inconclusive("Test inconclusive");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
         var expectedErrorMessage = string.Format(
@@ -744,7 +744,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => { UTF.Assert.Fail("Test failed"); };
+        DummyTestClass.TestCleanupMethodBody = classInstance => UTF.Assert.Fail("Test failed");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
         var expectedErrorMessage = string.Format(
@@ -773,8 +773,8 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldAppendErrorMessagesIfBothTestMethodAndTestCleanupThrows()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => { throw new NotImplementedException("dummyErrorMessage"); };
-        DummyTestClass.TestMethodBody = classInstance => { throw new NotImplementedException("dummyMethodError"); };
+        DummyTestClass.TestCleanupMethodBody = classInstance => throw new NotImplementedException("dummyErrorMessage");
+        DummyTestClass.TestMethodBody = classInstance => throw new NotImplementedException("dummyMethodError");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
         var result = _testMethodInfo.Invoke(null);
@@ -801,8 +801,8 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldAppendStackTraceInformationIfBothTestMethodAndTestCleanupThrows()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => { throw new NotImplementedException(); };
-        DummyTestClass.TestMethodBody = classInstance => { throw new NotImplementedException("dummyMethodError"); };
+        DummyTestClass.TestCleanupMethodBody = classInstance => throw new NotImplementedException();
+        DummyTestClass.TestMethodBody = classInstance => throw new NotImplementedException("dummyMethodError");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
         var result = _testMethodInfo.Invoke(null);
@@ -818,7 +818,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldSetOutcomeAsInconclusiveIfTestCleanupIsInconclusive()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => { throw new UTF.AssertInconclusiveException(); };
+        DummyTestClass.TestCleanupMethodBody = classInstance => throw new UTF.AssertInconclusiveException();
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
         var result = _testMethodInfo.Invoke(null);
@@ -832,8 +832,8 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldSetMoreImportantOutcomeIfTestCleanupIsInconclusiveButTestMethodFails()
     {
-        DummyTestClass.TestCleanupMethodBody = classInstance => { throw new UTF.AssertInconclusiveException(); };
-        DummyTestClass.TestMethodBody = classInstance => { Assert.Fail(); };
+        DummyTestClass.TestCleanupMethodBody = classInstance => throw new UTF.AssertInconclusiveException();
+        DummyTestClass.TestMethodBody = classInstance => Assert.Fail();
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
         var result = _testMethodInfo.Invoke(null);
@@ -861,7 +861,7 @@ public class TestMethodInfoTests
     {
         var disposeCalled = false;
         DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
-        DummyTestClassWithDisposable.DummyTestCleanupMethodBody = classInstance => { throw new NotImplementedException(); };
+        DummyTestClassWithDisposable.DummyTestCleanupMethodBody = classInstance => throw new NotImplementedException();
         var ctorInfo = typeof(DummyTestClassWithDisposable).GetConstructors().Single();
         var testClass = new TestClassInfo(typeof(DummyTestClassWithDisposable), ctorInfo, null, _classAttribute, _testAssemblyInfo);
         testClass.TestCleanupMethod = typeof(DummyTestClassWithDisposable).GetMethod("DummyTestCleanupMethod");
@@ -876,7 +876,7 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeShouldCallTestCleanupEvenIfTestMethodThrows()
     {
         var testCleanupMethodCalled = false;
-        DummyTestClass.TestMethodBody = classInstance => { throw new NotImplementedException(); };
+        DummyTestClass.TestMethodBody = classInstance => throw new NotImplementedException();
         DummyTestClass.TestCleanupMethodBody = classInstance => testCleanupMethodCalled = true;
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
@@ -890,7 +890,7 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeShouldCallTestCleanupEvenIfTestInitializeMethodThrows()
     {
         var testCleanupMethodCalled = false;
-        DummyTestClass.TestInitializeMethodBody = classInstance => { throw new NotImplementedException(); };
+        DummyTestClass.TestInitializeMethodBody = classInstance => throw new NotImplementedException();
         DummyTestClass.TestCleanupMethodBody = classInstance => testCleanupMethodCalled = true;
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
@@ -907,7 +907,7 @@ public class TestMethodInfoTests
         var testCleanupMethodCalled = false;
 
         // Throwing in constructor to ensure classInstance is null in TestMethodInfo.Invoke
-        DummyTestClass.TestConstructorMethodBody = () => { throw new NotImplementedException(); };
+        DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException();
         DummyTestClass.TestCleanupMethodBody = classInstance => testCleanupMethodCalled = true;
 
         var result = _testMethodInfo.Invoke(null);
@@ -920,8 +920,8 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeShouldNotCallTestCleanupIfClassSetContextThrows()
     {
         var testCleanupCalled = false;
-        DummyTestClass.TestCleanupMethodBody = classInstance => { testCleanupCalled = true; };
-        DummyTestClass.TestContextSetterBody = o => { throw new NotImplementedException(); };
+        DummyTestClass.TestCleanupMethodBody = classInstance => testCleanupCalled = true;
+        DummyTestClass.TestContextSetterBody = o => throw new NotImplementedException();
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
         _testMethodInfo.Invoke(null);
@@ -932,7 +932,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldSetResultAsPassedIfExpectedExceptionIsThrown()
     {
-        DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
+        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
         _testMethodOptions.ExpectedException = _expectedException;
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions);
 
@@ -944,7 +944,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldSetResultAsFailedIfExceptionDifferentFromExpectedExceptionIsThrown()
     {
-        DummyTestClass.TestMethodBody = o => { throw new IndexOutOfRangeException(); };
+        DummyTestClass.TestMethodBody = o => throw new IndexOutOfRangeException();
         _testMethodOptions.ExpectedException = _expectedException;
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions);
 
@@ -971,7 +971,7 @@ public class TestMethodInfoTests
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldSetResultAsInconclusiveWhenExceptionIsAssertInconclusiveException()
     {
-        DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
+        DummyTestClass.TestMethodBody = o => throw new UTF.AssertInconclusiveException();
         _testMethodOptions.ExpectedException = _expectedException;
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions);
         var result = testMethodInfo.Invoke(null);
@@ -984,7 +984,7 @@ public class TestMethodInfoTests
     public void TestMethodInfoInvokeShouldSetTestOutcomeBeforeTestCleanup()
     {
         UTF.UnitTestOutcome testOutcome = UTF.UnitTestOutcome.Unknown;
-        DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
+        DummyTestClass.TestMethodBody = o => throw new UTF.AssertInconclusiveException();
         DummyTestClass.TestCleanupMethodBody = c =>
                     {
                         if (DummyTestClass.GetTestContext() != null)
@@ -1012,7 +1012,7 @@ public class TestMethodInfoTests
             _testClassInfo,
             _testMethodOptions);
 
-        DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
+        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
         var result = method.Invoke(null);
         Assert.IsTrue(customExpectedException.IsVerifyInvoked);
         Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
@@ -1029,7 +1029,7 @@ public class TestMethodInfoTests
             _testClassInfo,
             _testMethodOptions);
 
-        DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
+        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
         var result = method.Invoke(null);
         Assert.AreEqual("The exception message doesn't contain the string defined in the exception attribute", result.TestFailureException.Message);
         Assert.AreEqual(UTF.UnitTestOutcome.Failed, result.Outcome);
@@ -1046,7 +1046,7 @@ public class TestMethodInfoTests
             _testClassInfo,
             _testMethodOptions);
 
-        DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
+        DummyTestClass.TestMethodBody = o => throw new UTF.AssertInconclusiveException();
         var result = method.Invoke(null);
         var message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
         Assert.AreEqual(result.TestFailureException.Message, message);
@@ -1064,7 +1064,7 @@ public class TestMethodInfoTests
             _testClassInfo,
             _testMethodOptions);
 
-        DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
+        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
         var result = method.Invoke(null);
         Assert.IsTrue(derivedCustomExpectedException.IsVerifyInvoked);
         Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
@@ -1082,7 +1082,7 @@ public class TestMethodInfoTests
             _testClassInfo,
             _testMethodOptions);
 
-        DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
+        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
         var result = method.Invoke(null);
         Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
     }
@@ -1099,7 +1099,7 @@ public class TestMethodInfoTests
             _testClassInfo,
             _testMethodOptions);
 
-        DummyTestClass.TestMethodBody = o => { throw new ArgumentNullException(); };
+        DummyTestClass.TestMethodBody = o => throw new ArgumentNullException();
         var result = method.Invoke(null);
         var message = "Test method threw exception System.ArgumentNullException, but exception System.DivideByZeroException" +
             " or a type derived from it was expected. Exception message: System.ArgumentNullException: Value cannot be null.";
@@ -1119,7 +1119,7 @@ public class TestMethodInfoTests
             _testClassInfo,
             _testMethodOptions);
 
-        DummyTestClass.TestMethodBody = o => { throw new UTF.AssertFailedException(); };
+        DummyTestClass.TestMethodBody = o => throw new UTF.AssertFailedException();
         var result = method.Invoke(null);
         var message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException' was thrown.";
         Assert.AreEqual(result.TestFailureException.Message, message);
@@ -1138,7 +1138,7 @@ public class TestMethodInfoTests
             _testClassInfo,
             _testMethodOptions);
 
-        DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
+        DummyTestClass.TestMethodBody = o => throw new UTF.AssertInconclusiveException();
         var result = method.Invoke(null);
         var message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
         Assert.AreEqual(result.TestFailureException.Message, message);
@@ -1156,7 +1156,7 @@ public class TestMethodInfoTests
             _testClassInfo,
             _testMethodOptions);
 
-        DummyTestClass.TestMethodBody = o => { throw new DivideByZeroException(); };
+        DummyTestClass.TestMethodBody = o => throw new DivideByZeroException();
         var result = method.Invoke(null);
         var message = "Test method threw exception System.DivideByZeroException, but exception System.Exception was expected. " +
             "Exception message: System.DivideByZeroException: Attempted to divide by zero.";
@@ -1175,7 +1175,7 @@ public class TestMethodInfoTests
             _testClassInfo,
             _testMethodOptions);
 
-        DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
+        DummyTestClass.TestMethodBody = o => throw new UTF.AssertInconclusiveException();
         var result = method.Invoke(null);
         var message = "Exception of type 'Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException' was thrown.";
         Assert.AreEqual(result.TestFailureException.Message, message);
@@ -1193,11 +1193,11 @@ public class TestMethodInfoTests
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
-        DummyTestClass.TestConstructorMethodBody = () => { callOrder.Add("classCtor"); };
-        DummyTestClass.TestContextSetterBody = o => { callOrder.Add("testContext"); };
-        DummyTestClass.TestInitializeMethodBody = classInstance => { callOrder.Add("testInit"); };
-        DummyTestClass.TestMethodBody = classInstance => { callOrder.Add("testMethod"); };
-        DummyTestClass.TestCleanupMethodBody = classInstance => { callOrder.Add("testCleanup"); };
+        DummyTestClass.TestConstructorMethodBody = () => callOrder.Add("classCtor");
+        DummyTestClass.TestContextSetterBody = o => callOrder.Add("testContext");
+        DummyTestClass.TestInitializeMethodBody = classInstance => callOrder.Add("testInit");
+        DummyTestClass.TestMethodBody = classInstance => callOrder.Add("testMethod");
+        DummyTestClass.TestCleanupMethodBody = classInstance => callOrder.Add("testCleanup");
 
         var result = _testMethodInfo.Invoke(null);
 
@@ -1426,13 +1426,10 @@ public class TestMethodInfoTests
             testablePlatformServiceProvider.MockThreadOperations.
                 Setup(tho => tho.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).
                 Returns(true).
-                Callback((Action a, int timeout, CancellationToken token) =>
-                {
-                    a.Invoke();
-                });
+                Callback((Action a, int timeout, CancellationToken token) => a.Invoke());
             testablePlatformServiceProvider.MockThreadOperations.
                 Setup(tho => tho.ExecuteWithAbortSafety(It.IsAny<Action>())).
-                Callback((Action a) => { a.Invoke(); });
+                Callback((Action a) => a.Invoke());
 
             action.Invoke();
         }
@@ -1449,20 +1446,14 @@ public class TestMethodInfoTests
     {
         public static Action<DummyTestClassBase> BaseTestClassMethodBody { get; set; }
 
-        public void DummyBaseTestClassMethod()
-        {
-            BaseTestClassMethodBody(this);
-        }
+        public void DummyBaseTestClassMethod() => BaseTestClassMethodBody(this);
     }
 
     public class DummyTestClass : DummyTestClassBase
     {
         private static UTFExtension.TestContext s_tc;
 
-        public DummyTestClass()
-        {
-            TestConstructorMethodBody();
-        }
+        public DummyTestClass() => TestConstructorMethodBody();
 
         public static Action TestConstructorMethodBody { get; set; }
 
@@ -1476,17 +1467,11 @@ public class TestMethodInfoTests
 
         public static Func<Task> DummyAsyncTestMethodBody { get; set; }
 
-        public static UTFExtension.TestContext GetTestContext()
-        {
-            return s_tc;
-        }
+        public static UTFExtension.TestContext GetTestContext() => s_tc;
 
         public UTFExtension.TestContext TestContext
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get => throw new NotImplementedException();
 
             set
             {
@@ -1496,47 +1481,27 @@ public class TestMethodInfoTests
         }
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public void DummyTestInitializeMethod()
-        {
-            TestInitializeMethodBody(this);
-        }
+        public void DummyTestInitializeMethod() => TestInitializeMethodBody(this);
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public void DummyTestCleanupMethod()
-        {
-            TestCleanupMethodBody(this);
-        }
+        public void DummyTestCleanupMethod() => TestCleanupMethodBody(this);
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public void DummyTestMethod()
-        {
-            TestMethodBody(this);
-        }
+        public void DummyTestMethod() => TestMethodBody(this);
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public Task DummyAsyncTestMethod()
-        {
+        public Task DummyAsyncTestMethod() =>
             // We use this method to validate async TestInitialize, TestCleanup, TestMethod
-            return DummyAsyncTestMethodBody();
-        }
+            DummyAsyncTestMethodBody();
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public void DummySimpleArgumentsMethod(string str1, string str2)
-        {
-            TestMethodBody(this);
-        }
+        public void DummySimpleArgumentsMethod(string str1, string str2) => TestMethodBody(this);
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public void DummyOptionalArgumentsMethod(string str1, string str2 = null, string str3 = null)
-        {
-            TestMethodBody(this);
-        }
+        public void DummyOptionalArgumentsMethod(string str1, string str2 = null, string str3 = null) => TestMethodBody(this);
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public void DummyParamsArgumentMethod(int i, params string[] args)
-        {
-            TestMethodBody(this);
-        }
+        public void DummyParamsArgumentMethod(int i, params string[] args) => TestMethodBody(this);
     }
 
     public class DummyTestClassWithParameterizedCtor
@@ -1557,19 +1522,13 @@ public class TestMethodInfoTests
 
         public static Action<DummyTestClassWithDisposable> DummyTestCleanupMethodBody { get; set; }
 
-        public void Dispose()
-        {
-            DisposeMethodBody();
-        }
+        public void Dispose() => DisposeMethodBody();
 
         public void DummyTestMethod()
         {
         }
 
-        public void DummyTestCleanupMethod()
-        {
-            DummyTestCleanupMethodBody(this);
-        }
+        public void DummyTestCleanupMethod() => DummyTestCleanupMethodBody(this);
     }
 
     #region Dummy implementation
@@ -1580,10 +1539,7 @@ public class TestMethodInfoTests
     public class CustomExpectedExceptionAttribute : UTF.ExpectedExceptionBaseAttribute
     {
         public CustomExpectedExceptionAttribute(Type expectionType, string noExceptionMessage)
-            : base(noExceptionMessage)
-        {
-            ExceptionType = expectionType;
-        }
+            : base(noExceptionMessage) => ExceptionType = expectionType;
 
         public bool IsVerifyInvoked { get; set; }
 
@@ -1609,10 +1565,7 @@ public class TestMethodInfoTests
     public class DerivedCustomExpectedExceptionAttribute : CustomExpectedExceptionAttribute
     {
         public DerivedCustomExpectedExceptionAttribute(Type expectionType, string noExceptionMessage)
-            : base(expectionType, noExceptionMessage)
-        {
-            ExceptionType = expectionType;
-        }
+            : base(expectionType, noExceptionMessage) => ExceptionType = expectionType;
 
         public new Type ExceptionType { get; private set; }
 

@@ -203,11 +203,8 @@ public class TestMethodValidatorTests
 
     #endregion
 
-    private void SetupTestMethod()
-    {
-        _mockReflectHelper.Setup(
+    private void SetupTestMethod() => _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined(It.IsAny<MemberInfo>(), typeof(UTF.TestMethodAttribute), false)).Returns(true);
-    }
 }
 
 #region Dummy types
@@ -227,25 +224,13 @@ internal abstract class DummyTestClass
 
     public abstract void AbstractTestMethod();
 
-    public async void AsyncMethodWithVoidReturnType()
-    {
-        await Task.FromResult(true);
-    }
+    public async void AsyncMethodWithVoidReturnType() => await Task.FromResult(true);
 
-    public async Task AsyncMethodWithTaskReturnType()
-    {
-        await Task.Delay(TimeSpan.Zero);
-    }
+    public async Task AsyncMethodWithTaskReturnType() => await Task.Delay(TimeSpan.Zero);
 
-    public Task MethodWithTaskReturnType()
-    {
-        return Task.Delay(TimeSpan.Zero);
-    }
+    public Task MethodWithTaskReturnType() => Task.Delay(TimeSpan.Zero);
 
-    public int MethodWithIntReturnType()
-    {
-        return 0;
-    }
+    public int MethodWithIntReturnType() => 0;
 
     public void MethodWithVoidReturnType()
     {

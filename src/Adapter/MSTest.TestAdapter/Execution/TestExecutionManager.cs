@@ -143,10 +143,7 @@ public class TestExecutionManager
         }
     }
 
-    internal virtual UnitTestDiscoverer GetUnitTestDiscoverer()
-    {
-        return new UnitTestDiscoverer();
-    }
+    internal virtual UnitTestDiscoverer GetUnitTestDiscoverer() => new UnitTestDiscoverer();
 
     internal void SendTestResults(TestCase test, UnitTestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime, ITestExecutionRecorder testExecutionRecorder)
     {

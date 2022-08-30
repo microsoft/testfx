@@ -92,10 +92,7 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     public string DeclaringAssemblyName
     {
-        get
-        {
-            return _declaringAssemblyName;
-        }
+        get => _declaringAssemblyName;
 
         set
         {
@@ -112,10 +109,7 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     public string DeclaringClassFullName
     {
-        get
-        {
-            return _declaringClassFullName;
-        }
+        get => _declaringClassFullName;
 
         set
         {

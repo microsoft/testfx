@@ -46,20 +46,14 @@ internal class AssemblyUtility : IAssemblyUtility
     /// </summary>
     /// <param name="assemblyPath">The path of the file that contains the manifest of the assembly.</param>
     /// <returns>The loaded assembly.</returns>
-    public Assembly ReflectionOnlyLoadFrom(string assemblyPath)
-    {
-        return Assembly.ReflectionOnlyLoadFrom(assemblyPath);
-    }
+    public Assembly ReflectionOnlyLoadFrom(string assemblyPath) => Assembly.ReflectionOnlyLoadFrom(assemblyPath);
 
     /// <summary>
     /// Loads an assembly into the reflection-only context, given its display name.
     /// </summary>
     /// <param name="assemblyString">The display name of the assembly, as returned by the System.Reflection.AssemblyName.FullName property.</param>
     /// <returns>The loaded assembly.</returns>
-    public Assembly ReflectionOnlyLoad(string assemblyString)
-    {
-        return Assembly.ReflectionOnlyLoad(assemblyString);
-    }
+    public Assembly ReflectionOnlyLoad(string assemblyString) => Assembly.ReflectionOnlyLoad(assemblyString);
 
     /// <summary>
     /// Whether file extension is an assembly file extension.

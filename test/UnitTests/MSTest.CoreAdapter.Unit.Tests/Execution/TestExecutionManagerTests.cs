@@ -95,7 +95,7 @@ public class TestExecutionManagerTests
         TestCase[] tests = new[] { testCase };
 
         // Causing the FilterExpressionError
-        _runContext = new TestableRunContextTestExecutionTests(() => { throw new TestPlatformFormatException(); });
+        _runContext = new TestableRunContextTestExecutionTests(() => throw new TestPlatformFormatException());
 
         TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
@@ -444,10 +444,7 @@ public class TestExecutionManagerTests
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location, Assembly.GetExecutingAssembly().Location };
         TestableTestExecutionManager testableTestExecutionmanager = new()
         {
-            ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) =>
-            {
-                testsCount += tests.Count();
-            }
+            ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) => testsCount += tests.Count()
         };
 
         testableTestExecutionmanager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
@@ -612,10 +609,7 @@ public class TestExecutionManagerTests
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
-                Returns((MemberInfo memberInfo, bool inherit) =>
-                {
-                    return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
-                });
+                Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
 
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
@@ -666,10 +660,7 @@ public class TestExecutionManagerTests
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
-                Returns((MemberInfo memberInfo, bool inherit) =>
-                {
-                    return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
-                });
+                Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
 
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
@@ -757,10 +748,7 @@ public class TestExecutionManagerTests
 
             testablePlatformService.MockReflectionOperations.Setup(
                 ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
-                Returns((MemberInfo memberInfo, bool inherit) =>
-                {
-                    return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
-                });
+                Returns((MemberInfo memberInfo, bool inherit) => originalReflectionOperation.GetCustomAttributes(memberInfo, inherit));
 
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
@@ -844,10 +832,7 @@ public class TestExecutionManagerTests
                 It.IsAny<Type>(),
                 It.IsAny<object[]>()))
             .Returns(
-                (Type type, object[] args) =>
-                    {
-                        return Activator.CreateInstance(type, args);
-                    });
+                (Type type, object[] args) => Activator.CreateInstance(type, args));
 
         testablePlatformService.MockSettingsProvider.Setup(sp => sp.GetProperties(It.IsAny<string>()))
             .Returns(new Dictionary<string, object>());
@@ -903,34 +888,22 @@ public class TestExecutionManagerTests
 
         [UTF.TestMethod]
         [UTF.TestCategory("Foo")]
-        public void PassingTest()
-        {
-            TestContextProperties = TestContext.Properties as IDictionary<string, object>;
-        }
+        public void PassingTest() => TestContextProperties = TestContext.Properties as IDictionary<string, object>;
 
         [UTF.TestMethod]
         [UTF.TestCategory("Bar")]
-        public void FailingTest()
-        {
-            UTF.Assert.Fail();
-        }
+        public void FailingTest() => UTF.Assert.Fail();
 
         [UTF.TestMethod]
         [UTF.Ignore]
-        public void IgnoredTest()
-        {
-            UTF.Assert.Fail();
-        }
+        public void IgnoredTest() => UTF.Assert.Fail();
     }
 
     [DummyTestClass]
     private class DummyTestClassWithFailingCleanupMethods
     {
         [UTF.ClassCleanup]
-        public static void ClassCleanup()
-        {
-            throw new Exception("ClassCleanupException");
-        }
+        public static void ClassCleanup() => throw new Exception("ClassCleanupException");
 
         [UTF.TestMethod]
         public void TestMethod()
@@ -946,10 +919,7 @@ public class TestExecutionManagerTests
         public static void Cleanup() => ClassCleanupCount = 0;
 
         [UTF.ClassCleanup]
-        public static void ClassCleanup()
-        {
-            ClassCleanupCount++;
-        }
+        public static void ClassCleanup() => ClassCleanupCount++;
 
         [UTF.TestMethod]
         public void TestMethod()
@@ -962,10 +932,7 @@ public class TestExecutionManagerTests
     {
         public static HashSet<int> ThreadIds { get; } = new();
 
-        public static void Cleanup()
-        {
-            ThreadIds.Clear();
-        }
+        public static void Cleanup() => ThreadIds.Clear();
 
         [UTF.TestMethod]
         public void TestMethod1()
@@ -989,10 +956,7 @@ public class TestExecutionManagerTests
     {
         public static HashSet<int> ThreadIds { get; } = new();
 
-        public static void Cleanup()
-        {
-            ThreadIds.Clear();
-        }
+        public static void Cleanup() => ThreadIds.Clear();
 
         [UTF.TestMethod]
         public void TestMethod1()
@@ -1016,10 +980,7 @@ public class TestExecutionManagerTests
     {
         public static HashSet<int> ThreadIds { get; } = new();
 
-        public static void Cleanup()
-        {
-            ThreadIds.Clear();
-        }
+        public static void Cleanup() => ThreadIds.Clear();
 
         [UTF.TestMethod]
         public void TestMethod1()
@@ -1146,34 +1107,19 @@ internal class TestableFrameworkHandle : IFrameworkHandle
         TestDisplayNameList.Add(testResult.DisplayName);
     }
 
-    public void SendMessage(TestMessageLevel testMessageLevel, string message)
-    {
-        MessageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
-    }
+    public void SendMessage(TestMessageLevel testMessageLevel, string message) => MessageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
 
-    public void RecordStart(TestCase testCase)
-    {
-        TestCaseStartList.Add(testCase.DisplayName);
-    }
+    public void RecordStart(TestCase testCase) => TestCaseStartList.Add(testCase.DisplayName);
 
-    public void RecordEnd(TestCase testCase, TestOutcome outcome)
-    {
-        TestCaseEndList.Add(string.Format("{0}:{1}", testCase.DisplayName, outcome));
-    }
+    public void RecordEnd(TestCase testCase, TestOutcome outcome) => TestCaseEndList.Add(string.Format("{0}:{1}", testCase.DisplayName, outcome));
 
-    public void RecordAttachments(IList<AttachmentSet> attachmentSets)
-    {
-        throw new NotImplementedException();
-    }
+    public void RecordAttachments(IList<AttachmentSet> attachmentSets) => throw new NotImplementedException();
 
     public int LaunchProcessWithDebuggerAttached(
         string filePath,
         string workingDirectory,
         string arguments,
-        IDictionary<string, string> environmentVariables)
-    {
-        throw new NotImplementedException();
-    }
+        IDictionary<string, string> environmentVariables) => throw new NotImplementedException();
 }
 
 internal class TestableRunContextTestExecutionTests : IRunContext
@@ -1188,13 +1134,7 @@ internal class TestableRunContextTestExecutionTests : IRunContext
 
     public Mock<IRunSettings> MockRunSettings { get; set; }
 
-    public IRunSettings RunSettings
-    {
-        get
-        {
-            return MockRunSettings.Object;
-        }
-    }
+    public IRunSettings RunSettings => MockRunSettings.Object;
 
     public bool KeepAlive { get; }
 
@@ -1210,41 +1150,26 @@ internal class TestableRunContextTestExecutionTests : IRunContext
 
     public ITestCaseFilterExpression GetTestCaseFilter(
         IEnumerable<string> supportedProperties,
-        Func<string, TestProperty> propertyProvider)
-    {
-        return _getFilter();
-    }
+        Func<string, TestProperty> propertyProvider) => _getFilter();
 }
 
 internal class TestableTestCaseFilterExpression : ITestCaseFilterExpression
 {
     private readonly Func<TestCase, bool> _matchTest;
 
-    public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase)
-    {
-        _matchTest = matchTestCase;
-    }
+    public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase) => _matchTest = matchTestCase;
 
     public string TestCaseFilterValue { get; }
 
-    public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
-    {
-        return _matchTest(testCase);
-    }
+    public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider) => _matchTest(testCase);
 }
 
 internal class TestableTestExecutionManager : TestExecutionManager
 {
     internal Action<IEnumerable<TestCase>, IRunContext, IFrameworkHandle, bool> ExecuteTestsWrapper { get; set; }
 
-    internal override void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
-    {
-        ExecuteTestsWrapper?.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
-    }
+    internal override void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone) => ExecuteTestsWrapper?.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
 
-    internal override UnitTestDiscoverer GetUnitTestDiscoverer()
-    {
-        return new TestableUnitTestDiscoverer();
-    }
+    internal override UnitTestDiscoverer GetUnitTestDiscoverer() => new TestableUnitTestDiscoverer();
 }
 #endregion

@@ -26,19 +26,13 @@ public class ThreadOperationsTests
 {
     private readonly ThreadOperations _asyncOperations;
 
-    public ThreadOperationsTests()
-    {
-        _asyncOperations = new ThreadOperations();
-    }
+    public ThreadOperationsTests() => _asyncOperations = new ThreadOperations();
 
     [TestMethod]
     public void ExecuteShouldStartTheActionOnANewThread()
     {
         int actionThreadID = 0;
-        void action()
-        {
-            actionThreadID = Thread.CurrentThread.ManagedThreadId;
-        }
+        void action() => actionThreadID = Thread.CurrentThread.ManagedThreadId;
 
         CancellationTokenSource tokenSource = new();
         Assert.IsTrue(_asyncOperations.Execute(action, 1000, tokenSource.Token));

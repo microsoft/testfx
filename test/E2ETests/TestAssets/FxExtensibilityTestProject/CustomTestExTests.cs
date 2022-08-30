@@ -22,10 +22,7 @@ public class CustomTestExTests
     [DataRow("A")]
     [DataRow("B")]
     [DataRow("C")]
-    public void CustomTestMethod2(string value)
-    {
-        Assert.AreEqual("B", value);
-    }
+    public void CustomTestMethod2(string value) => Assert.AreEqual("B", value);
 
     private static int s_customTestClass1ExecutionCount;
     [TestMethod]
@@ -40,10 +37,7 @@ public class IterativeTestMethodAttribute : TestMethodAttribute
 {
     private readonly int _stabilityThreshold;
 
-    public IterativeTestMethodAttribute(int stabilityThreshold)
-    {
-        _stabilityThreshold = stabilityThreshold;
-    }
+    public IterativeTestMethodAttribute(int stabilityThreshold) => _stabilityThreshold = stabilityThreshold;
 
     public override TestResult[] Execute(ITestMethod testMethod)
     {
@@ -66,10 +60,7 @@ public class IterativeTestClassAttribute : TestClassAttribute
 {
     private readonly int _stabilityThreshold;
 
-    public IterativeTestClassAttribute(int stabilityThreshold)
-    {
-        _stabilityThreshold = stabilityThreshold;
-    }
+    public IterativeTestClassAttribute(int stabilityThreshold) => _stabilityThreshold = stabilityThreshold;
 
     public override TestMethodAttribute GetTestMethodAttribute(TestMethodAttribute testMethodAttribute)
     {

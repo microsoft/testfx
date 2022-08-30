@@ -127,28 +127,13 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public ITestDataSource TestDataSource => MockTestDataSource.Object;
 
-    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties)
-    {
-        return new TestContextImplementation(testMethod, writer, properties);
-    }
+    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties) => new TestContextImplementation(testMethod, writer, properties);
 
-    public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle)
-    {
-        return MockTestSourceHost.Object;
-    }
+    public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle) => MockTestSourceHost.Object;
 
-    public ITraceListener GetTraceListener(TextWriter textWriter)
-    {
-        return MockTraceListener.Object;
-    }
+    public ITraceListener GetTraceListener(TextWriter textWriter) => MockTraceListener.Object;
 
-    public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter)
-    {
-        return MockTraceListenerManager.Object;
-    }
+    public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter) => MockTraceListenerManager.Object;
 
-    public void SetupMockReflectionOperations()
-    {
-        MockReflectionOperations = new Mock<IReflectionOperations>();
-    }
+    public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations>();
 }

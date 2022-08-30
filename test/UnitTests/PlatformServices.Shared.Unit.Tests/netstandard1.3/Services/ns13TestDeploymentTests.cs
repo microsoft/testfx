@@ -173,10 +173,7 @@ public class TestDeploymentTests
     #region GetDeploymentDirectory tests
 
     [TestMethod]
-    public void GetDeploymentDirectoryShouldReturnNullIfDeploymentDirectoryIsNull()
-    {
-        Assert.IsNull(new TestDeployment().GetDeploymentDirectory());
-    }
+    public void GetDeploymentDirectoryShouldReturnNullIfDeploymentDirectoryIsNull() => Assert.IsNull(new TestDeployment().GetDeploymentDirectory());
 
     [TestMethod]
     public void GetDeploymentDirectoryShouldReturnDeploymentOutputDirectory()

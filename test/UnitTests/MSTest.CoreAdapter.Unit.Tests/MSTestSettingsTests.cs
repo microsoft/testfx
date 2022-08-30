@@ -43,10 +43,7 @@ public class MSTestSettingsTests
     }
 
     [TestCleanup]
-    public void Cleanup()
-    {
-        PlatformServiceProvider.Instance = null;
-    }
+    public void Cleanup() => PlatformServiceProvider.Instance = null;
 
     #region Property validation.
 

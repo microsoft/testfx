@@ -52,10 +52,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
         }
     }
 
-    private string PrependAdapterName(string format)
-    {
-        return $"MSTest - {format}";
-    }
+    private string PrependAdapterName(string format) => $"MSTest - {format}";
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

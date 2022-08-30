@@ -186,13 +186,10 @@ public class DeploymentItemUtilityTests
     #region GetDeploymentItems tests
 
     [TestMethod]
-    public void GetDeploymentItemsShouldReturnNullOnNoDeploymentItems()
-    {
-        Assert.IsNull(_deploymentItemUtility.GetDeploymentItems(
+    public void GetDeploymentItemsShouldReturnNullOnNoDeploymentItems() => Assert.IsNull(_deploymentItemUtility.GetDeploymentItems(
             typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems"),
             null,
             _warnings));
-    }
 
     [TestMethod]
     public void GetDeploymentItemsShouldReturnMethodLevelDeploymentItemsOnly()

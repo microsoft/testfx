@@ -22,10 +22,7 @@ public class DesktopReflectionOperationsTests
 {
     private readonly ReflectionOperations _reflectionOperations;
 
-    public DesktopReflectionOperationsTests()
-    {
-        _reflectionOperations = new ReflectionOperations();
-    }
+    public DesktopReflectionOperationsTests() => _reflectionOperations = new ReflectionOperations();
 
     [TestMethod]
     public void GetCustomAttributesShouldReturnAllAttributes()

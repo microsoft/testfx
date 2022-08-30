@@ -24,10 +24,7 @@ public class TestSourceHostTests
     private TestSourceHost _testSourceHost;
 
     [TestInitialize]
-    public void TestInit()
-    {
-        _testSourceHost = new TestSourceHost(null, null, null);
-    }
+    public void TestInit() => _testSourceHost = new TestSourceHost(null, null, null);
 
     [TestMethod]
     public void CreateInstanceForTypeCreatesAnInstanceOfAGivenTypeThroughDefaultConstructor()
@@ -41,10 +38,7 @@ public class TestSourceHostTests
 
 public class DummyType
 {
-    public DummyType()
-    {
-        IsDefaultConstructorCalled = true;
-    }
+    public DummyType() => IsDefaultConstructorCalled = true;
 
     public bool IsDefaultConstructorCalled { get; set; }
 }

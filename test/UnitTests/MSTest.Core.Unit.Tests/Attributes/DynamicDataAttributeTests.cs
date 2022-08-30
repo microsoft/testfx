@@ -284,47 +284,23 @@ public class DummyTestClass
     /// <summary>
     /// Gets the reusable test data property.
     /// </summary>
-    public static IEnumerable<object[]> ReusableTestDataProperty
-    {
-        get
-        {
-            return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
-        }
-    }
+    public static IEnumerable<object[]> ReusableTestDataProperty => new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
 
     /// <summary>
     /// Gets the null test data property.
     /// </summary>
-    public static IEnumerable<object[]> NullProperty
-    {
-        get
-        {
-            return null;
-        }
-    }
+    public static IEnumerable<object[]> NullProperty => null;
 
     /// <summary>
     /// Gets the empty test data property.
     /// </summary>
-    public static IEnumerable<object[]> EmptyProperty
-    {
-        get
-        {
-            return new object[][] { };
-        }
-    }
+    public static IEnumerable<object[]> EmptyProperty => new object[][] { };
 
     /// <summary>
     /// Gets the wrong test data property i.e. Property returning something other than
     /// expected data type of IEnumerable<object[]>
     /// </summary>
-    public static string WrongDataTypeProperty
-    {
-        get
-        {
-            return "Dummy";
-        }
-    }
+    public static string WrongDataTypeProperty => "Dummy";
 
     /// <summary>
     /// The reusable test data method.
@@ -332,10 +308,7 @@ public class DummyTestClass
     /// <returns>
     /// The <see cref="IEnumerable{T}"/>.
     /// </returns>
-    public static IEnumerable<object[]> ReusableTestDataMethod()
-    {
-        return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
-    }
+    public static IEnumerable<object[]> ReusableTestDataMethod() => new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
 
     /// <summary>
     /// The custom display name method.
@@ -349,10 +322,7 @@ public class DummyTestClass
     /// <returns>
     /// The <see cref="string"/>.
     /// </returns>
-    public static string GetCustomDynamicDataDisplayName(MethodInfo methodInfo, object[] data)
-    {
-        return string.Format("DynamicDataTestWithDisplayName {0} with {1} parameters", methodInfo.Name, data.Length);
-    }
+    public static string GetCustomDynamicDataDisplayName(MethodInfo methodInfo, object[] data) => string.Format("DynamicDataTestWithDisplayName {0} with {1} parameters", methodInfo.Name, data.Length);
 
     /// <summary>
     /// Custom display name method with missing parameters.
@@ -360,18 +330,12 @@ public class DummyTestClass
     /// <returns>
     /// The <see cref="string"/>.
     /// </returns>
-    public static string GetDynamicDataDisplayNameWithMissingParameters()
-    {
-        throw new InvalidOperationException();
-    }
+    public static string GetDynamicDataDisplayNameWithMissingParameters() => throw new InvalidOperationException();
 
     /// <summary>
     /// Custom display name method with invalid return type.
     /// </summary>
-    public static void GetDynamicDataDisplayNameWithInvalidReturnType()
-    {
-        throw new InvalidOperationException();
-    }
+    public static void GetDynamicDataDisplayNameWithInvalidReturnType() => throw new InvalidOperationException();
 
     /// <summary>
     /// Custom display name method with invalid first parameter type.
@@ -385,10 +349,7 @@ public class DummyTestClass
     /// <returns>
     /// The <see cref="string"/>.
     /// </returns>
-    public static string GetDynamicDataDisplayNameWithInvalidFirstParameterType(string methodInfo, object[] data)
-    {
-        throw new InvalidOperationException();
-    }
+    public static string GetDynamicDataDisplayNameWithInvalidFirstParameterType(string methodInfo, object[] data) => throw new InvalidOperationException();
 
     /// <summary>
     /// Custom display name method with invalid second parameter.
@@ -402,10 +363,7 @@ public class DummyTestClass
     /// <returns>
     /// The <see cref="string"/>.
     /// </returns>
-    public static string GetDynamicDataDisplayNameWithInvalidSecondParameterType(MethodInfo methodInfo, string data)
-    {
-        throw new InvalidOperationException();
-    }
+    public static string GetDynamicDataDisplayNameWithInvalidSecondParameterType(MethodInfo methodInfo, string data) => throw new InvalidOperationException();
 
     /// <summary>
     /// Custom display name method that is not static.
@@ -419,10 +377,7 @@ public class DummyTestClass
     /// <returns>
     /// The <see cref="string"/>.
     /// </returns>
-    public string GetDynamicDataDisplayNameNonStatic(MethodInfo methodInfo, object[] data)
-    {
-        throw new InvalidOperationException();
-    }
+    public string GetDynamicDataDisplayNameNonStatic(MethodInfo methodInfo, object[] data) => throw new InvalidOperationException();
 
     /// <summary>
     /// The test method 1.
@@ -492,10 +447,7 @@ public class DummyTestClass
     /// <returns>
     /// The <see cref="string"/>.
     /// </returns>
-    private static string GetDynamicDataDisplayNamePrivate(MethodInfo methodInfo, object[] data)
-    {
-        throw new InvalidOperationException();
-    }
+    private static string GetDynamicDataDisplayNamePrivate(MethodInfo methodInfo, object[] data) => throw new InvalidOperationException();
 }
 
 public class DummyTestClass2
@@ -503,13 +455,7 @@ public class DummyTestClass2
     /// <summary>
     /// Gets the reusable test data property.
     /// </summary>
-    public static IEnumerable<object[]> ReusableTestDataProperty2
-    {
-        get
-        {
-            return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
-        }
-    }
+    public static IEnumerable<object[]> ReusableTestDataProperty2 => new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
 
     /// <summary>
     /// The reusable test data method.
@@ -517,10 +463,7 @@ public class DummyTestClass2
     /// <returns>
     /// The <see cref="IEnumerable"/>.
     /// </returns>
-    public static IEnumerable<object[]> ReusableTestDataMethod2()
-    {
-        return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
-    }
+    public static IEnumerable<object[]> ReusableTestDataMethod2() => new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
 
     /// <summary>
     /// The custom display name method.
@@ -534,8 +477,5 @@ public class DummyTestClass2
     /// <returns>
     /// The <see cref="string"/>.
     /// </returns>
-    public static string GetCustomDynamicDataDisplayName2(MethodInfo methodInfo, object[] data)
-    {
-        return string.Format("DynamicDataTestWithDisplayName {0} with {1} parameters", methodInfo.Name, data.Length);
-    }
+    public static string GetCustomDynamicDataDisplayName2(MethodInfo methodInfo, object[] data) => string.Format("DynamicDataTestWithDisplayName {0} with {1} parameters", methodInfo.Name, data.Length);
 }

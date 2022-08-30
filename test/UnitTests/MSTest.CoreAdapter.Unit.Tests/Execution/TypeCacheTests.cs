@@ -1436,11 +1436,8 @@ public class TypeCacheTests
 
     #endregion
 
-    private void SetupMocks()
-    {
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
+    private void SetupMocks() => _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
-    }
 
     #region dummy implementations
 

@@ -34,10 +34,7 @@ public class LogMessageListenerTests
     }
 
     [TestCleanup]
-    public void Testcleanup()
-    {
-        PlatformServiceProvider.Instance = null;
-    }
+    public void Testcleanup() => PlatformServiceProvider.Instance = null;
 
     [TestMethod]
     public void LogMessageListenerShouldCaptureTestFrameworkLogMessages()

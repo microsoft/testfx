@@ -33,10 +33,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         TestResult result = null;
         Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
             Windows.UI.Core.CoreDispatcherPriority.Normal,
-            () =>
-            {
-                result = testMethod.Invoke(null);
-            }).AsTask().GetAwaiter().GetResult();
+            () => result = testMethod.Invoke(null)).AsTask().GetAwaiter().GetResult();
 
         return new TestResult[] { result };
     }

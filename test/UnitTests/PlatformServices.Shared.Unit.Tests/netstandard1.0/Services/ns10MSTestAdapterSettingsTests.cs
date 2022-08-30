@@ -33,10 +33,7 @@ public class MSTestAdapterSettingsTests
 #pragma warning restore SA1649 // File name must match first type name
 {
     [TestCleanup]
-    public void Cleanup()
-    {
-        MSTestSettingsProvider.Reset();
-    }
+    public void Cleanup() => MSTestSettingsProvider.Reset();
 
     #region ResolveEnvironmentVariableAndReturnFullPathIfExist tests.
 
@@ -48,7 +45,7 @@ public class MSTestAdapterSettingsTests
         string expectedResult = @"C:\MsTest\Adapter";
 
         var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+        adapterSettings.DoesDirectoryExistSetter = (str) => true;
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -64,8 +61,8 @@ public class MSTestAdapterSettingsTests
         string expectedResult = @"C:\foo\unitTesting\MsTest\Adapter";
 
         var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.ExpandEnvironmentVariablesSetter = (str) => { return str.Replace("%temp%", "C:\\foo"); };
-        adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+        adapterSettings.ExpandEnvironmentVariablesSetter = (str) => str.Replace("%temp%", "C:\\foo");
+        adapterSettings.DoesDirectoryExistSetter = (str) => true;
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -81,7 +78,7 @@ public class MSTestAdapterSettingsTests
         string expectedResult = @"C:\unitTesting\MsTest\Adapter";
 
         var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+        adapterSettings.DoesDirectoryExistSetter = (str) => true;
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -97,7 +94,7 @@ public class MSTestAdapterSettingsTests
         string expectedResult = @"C:\unitTesting\MsTest\Adapter";
 
         var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+        adapterSettings.DoesDirectoryExistSetter = (str) => true;
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -119,7 +116,7 @@ public class MSTestAdapterSettingsTests
         string expectedResult = Path.Combine(currentDrive, @"MsTest\Adapter");
 
         var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+        adapterSettings.DoesDirectoryExistSetter = (str) => true;
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -136,7 +133,7 @@ public class MSTestAdapterSettingsTests
         string expectedResult = path;
 
         var adapterSettings = new TestableMSTestAdapterSettings();
-        adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+        adapterSettings.DoesDirectoryExistSetter = (str) => true;
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
@@ -169,8 +166,8 @@ public class MSTestAdapterSettingsTests
         expectedResult.Add(new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false));
 
         var adapterSettings = new TestableMSTestAdapterSettings(expectedResult);
-        adapterSettings.ExpandEnvironmentVariablesSetter = (str) => { return str.Replace("%temp%", "C:\\foo"); };
-        adapterSettings.DoesDirectoryExistSetter = (str) => { return true; };
+        adapterSettings.ExpandEnvironmentVariablesSetter = (str) => str.Replace("%temp%", "C:\\foo");
+        adapterSettings.DoesDirectoryExistSetter = (str) => true;
 
         IList<RecursiveDirectoryPath> result = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
         Assert.IsNotNull(result);
@@ -315,10 +312,7 @@ public class TestableMSTestAdapterSettings : MSTestAdapterSettings
     {
     }
 
-    public TestableMSTestAdapterSettings(List<RecursiveDirectoryPath> expectedResult)
-    {
-        SearchDirectories.AddRange(expectedResult);
-    }
+    public TestableMSTestAdapterSettings(List<RecursiveDirectoryPath> expectedResult) => SearchDirectories.AddRange(expectedResult);
 
     public Func<string, bool> DoesDirectoryExistSetter { get; set; }
 

@@ -27,18 +27,12 @@ public class TraceListenerWrapper : TextWriterTraceListener, ITraceListener
 
     // Summary:
     //     Wrapper over Dispose() of System.Diagnostics.TextWriterTraceListener object
-    public new void Dispose()
-    {
-        base.Dispose();
-    }
+    public new void Dispose() => base.Dispose();
 
     // Summary:
     //     Gets the text writer of System.Diagnostics.TextWriterTraceListener.Writer
     //     that receives the tracing or debugging output.
-    public TextWriter GetWriter()
-    {
-        return Writer;
-    }
+    public TextWriter GetWriter() => Writer;
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

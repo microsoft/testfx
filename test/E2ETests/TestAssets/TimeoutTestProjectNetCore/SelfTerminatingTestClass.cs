@@ -14,8 +14,5 @@ public class SelfTerminatingTestClass
 
     [TestMethod]
     [Timeout(60000)]
-    public void SelfTerminatingTestMethod()
-    {
-        TestContext.CancellationTokenSource.Cancel();
-    }
+    public void SelfTerminatingTestMethod() => TestContext.CancellationTokenSource.Cancel();
 }

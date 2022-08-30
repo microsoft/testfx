@@ -19,16 +19,10 @@ public class TimeoutTests : CLITestBase
     private const string TimeoutFileToValidate = "TimeoutTestOutput.txt";
 
     [TestMethod]
-    public void ValidateTimeoutTests()
-    {
-        Validate(TimeoutTestAssembly, TimeoutFileToValidate);
-    }
+    public void ValidateTimeoutTests() => Validate(TimeoutTestAssembly, TimeoutFileToValidate);
 
     [TestMethod]
-    public void ValidateTimeoutTestsNetCore()
-    {
-        Validate(TimeoutTestAssemblyNetCore, TimeoutFileToValidateNetCore);
-    }
+    public void ValidateTimeoutTestsNetCore() => Validate(TimeoutTestAssemblyNetCore, TimeoutFileToValidateNetCore);
 
     private void Validate(string testAssembly, string fileToValidate)
     {

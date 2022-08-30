@@ -325,7 +325,7 @@ public class UnitTestDiscovererTests
     [TestMethodV1]
     public void SendTestCasesShouldNotSendAnyTestCasesIfFilterError()
     {
-        TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => { throw new TestPlatformFormatException("DummyException"); });
+        TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => throw new TestPlatformFormatException("DummyException"));
 
         var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", false));
         var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));
@@ -410,19 +410,13 @@ internal class TestableDiscoveryContextWithGetTestCaseFilter : IDiscoveryContext
 {
     private readonly Func<ITestCaseFilterExpression> _getFilter;
 
-    public TestableDiscoveryContextWithGetTestCaseFilter(Func<ITestCaseFilterExpression> getFilter)
-    {
-        _getFilter = getFilter;
-    }
+    public TestableDiscoveryContextWithGetTestCaseFilter(Func<ITestCaseFilterExpression> getFilter) => _getFilter = getFilter;
 
     public IRunSettings RunSettings { get; }
 
     public ITestCaseFilterExpression GetTestCaseFilter(
         IEnumerable<string> supportedProperties,
-        Func<string, TestProperty> propertyProvider)
-    {
-        return _getFilter();
-    }
+        Func<string, TestProperty> propertyProvider) => _getFilter();
 }
 
 internal class TestableDiscoveryContextWithoutGetTestCaseFilter : IDiscoveryContext
@@ -434,15 +428,9 @@ internal class TestableTestCaseFilterExpression : ITestCaseFilterExpression
 {
     private readonly Func<TestCase, bool> _matchTest;
 
-    public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase)
-    {
-        _matchTest = matchTestCase;
-    }
+    public TestableTestCaseFilterExpression(Func<TestCase, bool> matchTestCase) => _matchTest = matchTestCase;
 
     public string TestCaseFilterValue { get; }
 
-    public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
-    {
-        return _matchTest(testCase);
-    }
+    public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider) => _matchTest(testCase);
 }

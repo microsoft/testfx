@@ -28,10 +28,7 @@ public class AppDomainUtilitiesTests
     }
 
     [TestCleanup]
-    public void TestCleanup()
-    {
-        AppDomainUtilities.XmlUtilities = null;
-    }
+    public void TestCleanup() => AppDomainUtilities.XmlUtilities = null;
 
     [TestMethod]
     public void SetConfigurationFileShouldSetOMRedirectionIfConfigFileIsPresent()

@@ -22,16 +22,10 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 public class PlatformServiceProviderTests
 {
     [TestCleanup]
-    public void Cleanup()
-    {
-        PlatformServiceProvider.Instance = null;
-    }
+    public void Cleanup() => PlatformServiceProvider.Instance = null;
 
     [TestMethod]
-    public void ProviderServiceInstanceShouldReturnAnObjectOfItselfByDefault()
-    {
-        Assert.IsInstanceOfType(PlatformServiceProvider.Instance, typeof(PlatformServiceProvider));
-    }
+    public void ProviderServiceInstanceShouldReturnAnObjectOfItselfByDefault() => Assert.IsInstanceOfType(PlatformServiceProvider.Instance, typeof(PlatformServiceProvider));
 
     [TestMethod]
     public void ProviderServiceInstanceShouldReturnTheInstanceSet()
@@ -43,16 +37,10 @@ public class PlatformServiceProviderTests
     }
 
     [TestMethod]
-    public void TestSourceShouldReturnANonNullInstance()
-    {
-        Assert.IsNotNull(PlatformServiceProvider.Instance);
-    }
+    public void TestSourceShouldReturnANonNullInstance() => Assert.IsNotNull(PlatformServiceProvider.Instance);
 
     [TestMethod]
-    public void TestSourceShouldReturnAValidTestSource()
-    {
-        Assert.IsInstanceOfType(PlatformServiceProvider.Instance.TestSource, typeof(TestSource));
-    }
+    public void TestSourceShouldReturnAValidTestSource() => Assert.IsInstanceOfType(PlatformServiceProvider.Instance.TestSource, typeof(TestSource));
 
     [TestMethod]
     public void TestSourceShouldBeCached()
@@ -64,10 +52,7 @@ public class PlatformServiceProviderTests
     }
 
     [TestMethod]
-    public void ReflectionOperationsShouldReturnAValidInstance()
-    {
-        Assert.IsInstanceOfType(PlatformServiceProvider.Instance.ReflectionOperations, typeof(ReflectionOperations));
-    }
+    public void ReflectionOperationsShouldReturnAValidInstance() => Assert.IsInstanceOfType(PlatformServiceProvider.Instance.ReflectionOperations, typeof(ReflectionOperations));
 
     [TestMethod]
     public void ReflectionOperationsShouldBeCached()

@@ -73,10 +73,7 @@ public class DesktopSettingsProviderTests
     }
 
     [TestMethod]
-    public void LoadShouldThrowIfReaderIsNull()
-    {
-        ActionUtility.ActionShouldThrowExceptionOfType(() => _settingsProvider.Load(null), typeof(ArgumentNullException));
-    }
+    public void LoadShouldThrowIfReaderIsNull() => ActionUtility.ActionShouldThrowExceptionOfType(() => _settingsProvider.Load(null), typeof(ArgumentNullException));
 
     [TestMethod]
     public void LoadShouldReadAndFillInSettings()

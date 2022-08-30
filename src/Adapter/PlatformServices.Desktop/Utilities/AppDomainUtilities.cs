@@ -37,10 +37,7 @@ internal static class AppDomainUtilities
             return s_xmlUtilities;
         }
 
-        set
-        {
-            s_xmlUtilities = value;
-        }
+        set => s_xmlUtilities = value;
     }
 
     /// <summary>

@@ -24,10 +24,7 @@ public class ReflectionOperationsTests
 {
     private readonly ReflectionOperations _reflectionOperations;
 
-    public ReflectionOperationsTests()
-    {
-        _reflectionOperations = new ReflectionOperations();
-    }
+    public ReflectionOperationsTests() => _reflectionOperations = new ReflectionOperations();
 
     [TestMethod]
     public void GetCustomAttributesShouldReturnAllAttributes()
@@ -235,10 +232,7 @@ public class ReflectionOperationsTests
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true)]
     public class DummyAAttribute : Attribute
     {
-        public DummyAAttribute(string foo)
-        {
-            Value = foo;
-        }
+        public DummyAAttribute(string foo) => Value = foo;
 
         public string Value { get; set; }
     }
@@ -246,10 +240,7 @@ public class ReflectionOperationsTests
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = false)]
     public class DummySingleAAttribute : Attribute
     {
-        public DummySingleAAttribute(string foo)
-        {
-            Value = foo;
-        }
+        public DummySingleAAttribute(string foo) => Value = foo;
 
         public string Value { get; set; }
     }

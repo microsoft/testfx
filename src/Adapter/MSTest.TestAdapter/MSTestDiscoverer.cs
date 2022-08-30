@@ -72,14 +72,11 @@ public class MSTestDiscoverer : ITestDiscoverer
     /// <param name="sources">The test sources</param>
     /// <remarks>Sources cannot be null.</remarks>
     /// <returns>True if the source has a valid extension for the current platform.</returns>
-    internal bool AreValidSources(IEnumerable<string> sources)
-    {
+    internal bool AreValidSources(IEnumerable<string> sources) =>
         // ValidSourceExtensions is always expected to return a non-null list.
-        return
-            sources.Any(
+        sources.Any(
                 source =>
                 PlatformServiceProvider.Instance.TestSource.ValidSourceExtensions.Any(
                     extension =>
                     string.Equals(Path.GetExtension(source), extension, StringComparison.OrdinalIgnoreCase)));
-    }
 }

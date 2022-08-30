@@ -73,13 +73,7 @@ public class TestSourceHost : ITestSourceHost
         _isAppDomainCreationDisabled = (_runSettings != null) && MSTestAdapterSettings.IsAppDomainCreationDisabled(_runSettings.SettingsXml);
     }
 
-    internal AppDomain AppDomain
-    {
-        get
-        {
-            return _domain;
-        }
-    }
+    internal AppDomain AppDomain => _domain;
 
     /// <summary>
     /// Setup the isolation host.
@@ -283,15 +277,9 @@ public class TestSourceHost : ITestSourceHost
         return resolutionPaths;
     }
 
-    internal virtual string GetTargetFrameworkVersionString(string sourceFileName)
-    {
-        return AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
-    }
+    internal virtual string GetTargetFrameworkVersionString(string sourceFileName) => AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
 
-    private string GetConfigFileForTestSource(string sourceFileName)
-    {
-        return new DeploymentUtility().GetConfigFile(sourceFileName);
-    }
+    private string GetConfigFileForTestSource(string sourceFileName) => new DeploymentUtility().GetConfigFile(sourceFileName);
 
     /// <summary>
     /// Sets context required for running tests.

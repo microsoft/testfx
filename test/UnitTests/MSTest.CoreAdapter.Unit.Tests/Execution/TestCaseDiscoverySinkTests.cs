@@ -20,10 +20,7 @@ public class TestCaseDiscoverySinkTests
     private TestCaseDiscoverySink _testCaseDiscoverySink;
 
     [TestInitialize]
-    public void TestInit()
-    {
-        _testCaseDiscoverySink = new TestCaseDiscoverySink();
-    }
+    public void TestInit() => _testCaseDiscoverySink = new TestCaseDiscoverySink();
 
     [TestMethod]
     public void TestCaseDiscoverySinkConstructorShouldInitializeTests()

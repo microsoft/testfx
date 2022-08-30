@@ -21,20 +21,14 @@ public class DesktopThreadOperationsTests
 {
     private readonly ThreadOperations _asyncOperations;
 
-    public DesktopThreadOperationsTests()
-    {
-        _asyncOperations = new ThreadOperations();
-    }
+    public DesktopThreadOperationsTests() => _asyncOperations = new ThreadOperations();
 
     [TestMethod]
     public void ExecuteShouldRunActionOnANewThread()
     {
         int actionThreadID = 0;
         var cancellationTokenSource = new CancellationTokenSource();
-        void action()
-        {
-            actionThreadID = Thread.CurrentThread.ManagedThreadId;
-        }
+        void action() => actionThreadID = Thread.CurrentThread.ManagedThreadId;
 
         Assert.IsTrue(_asyncOperations.Execute(action, 1000, cancellationTokenSource.Token));
         Assert.AreNotEqual(Thread.CurrentThread.ManagedThreadId, actionThreadID);
@@ -118,7 +112,7 @@ public class DesktopThreadOperationsTests
 
         // act
         cancellationTokenSource.CancelAfter(100);
-        var result = _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
+        var result = _asyncOperations.Execute(() => Thread.Sleep(10000), 100000, cancellationTokenSource.Token);
 
         // validate
         Assert.IsFalse(result, "The execution failed to abort");
@@ -132,7 +126,7 @@ public class DesktopThreadOperationsTests
         cancellationTokenSource.Cancel();
 
         // act
-        var result = _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
+        var result = _asyncOperations.Execute(() => Thread.Sleep(10000), 100000, cancellationTokenSource.Token);
 
         // validate
         Assert.IsFalse(result, "The execution failed to abort");

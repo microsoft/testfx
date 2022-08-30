@@ -25,10 +25,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     {
     }
 
-    internal AssemblyLoadWorker(IAssemblyUtility assemblyUtility)
-    {
-        _assemblyUtility = assemblyUtility;
-    }
+    internal AssemblyLoadWorker(IAssemblyUtility assemblyUtility) => _assemblyUtility = assemblyUtility;
 
     /// <summary>
     /// Returns the full path to the dependent assemblies of the parameter managed assembly recursively.
@@ -76,11 +73,9 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     /// initialize the lifetime service.
     /// </summary>
     /// <returns> The <see cref="object"/>. </returns>
-    public override object InitializeLifetimeService()
-    {
+    public override object InitializeLifetimeService() =>
         // Infinite.
-        return null;
-    }
+        null;
 
     /// <summary>
     /// Get the target dotNet framework string for the assembly

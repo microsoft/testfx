@@ -33,7 +33,7 @@ public class TestContextExtensionsTests
     {
         Mock<ITestContext> mockTestContext = new();
         var message = "foobar";
-        mockTestContext.Setup(tc => tc.GetDiagnosticMessages()).Returns(() => { return message; });
+        mockTestContext.Setup(tc => tc.GetDiagnosticMessages()).Returns(() => message);
         mockTestContext.Setup(tc => tc.ClearDiagnosticMessages()).Callback(() => message = string.Empty);
 
         // First call.

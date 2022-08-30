@@ -43,10 +43,7 @@ public class ReflectHelperTests
     }
 
     [TestCleanup]
-    public void TestCleanup()
-    {
-        PlatformServiceProvider.Instance = null;
-    }
+    public void TestCleanup() => PlatformServiceProvider.Instance = null;
 
     /// <summary>
     /// Testing test category attribute adorned at class level

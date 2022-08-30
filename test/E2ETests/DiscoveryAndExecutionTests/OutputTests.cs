@@ -20,16 +20,10 @@ public class OutputTests : CLITestBase
     private const string TestAssembly = "OutputTestProject.dll";
 
     [TestMethod]
-    public void OutputIsNotMixedWhenTestsRunInParallel()
-    {
-        ValidateOutputForClass(TestAssembly, "UnitTest1");
-    }
+    public void OutputIsNotMixedWhenTestsRunInParallel() => ValidateOutputForClass(TestAssembly, "UnitTest1");
 
     [TestMethod]
-    public void OutputIsNotMixedWhenAsyncTestsRunInParallel()
-    {
-        ValidateOutputForClass(TestAssembly, "UnitTest2");
-    }
+    public void OutputIsNotMixedWhenAsyncTestsRunInParallel() => ValidateOutputForClass(TestAssembly, "UnitTest2");
 
     private void ValidateOutputForClass(string testAssembly, string className)
     {

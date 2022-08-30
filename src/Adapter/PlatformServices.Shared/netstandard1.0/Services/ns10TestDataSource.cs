@@ -20,10 +20,7 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </remarks>
 public class TestDataSource : ITestDataSource
 {
-    IEnumerable<object> ITestDataSource.GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
-    {
-        return null;
-    }
+    IEnumerable<object> ITestDataSource.GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext) => null;
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

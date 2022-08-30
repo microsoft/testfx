@@ -102,11 +102,9 @@ public partial class CLITestBase
         ValidatePassedTestsContain(passedTests);
     }
 
-    public void ValidatePassedTestsCount(int expectedPassedTestsCount)
-    {
+    public void ValidatePassedTestsCount(int expectedPassedTestsCount) =>
         // Make sure only expected number of tests passed and not more.
         Assert.AreEqual(expectedPassedTestsCount, _runEventsHandler.PassedTests.Count);
-    }
 
     /// <summary>
     /// Validates if the test results have the specified set of failed tests.
@@ -127,11 +125,9 @@ public partial class CLITestBase
     /// Validates the count of failed tests.
     /// </summary>
     /// <param name="expectedFailedTestsCount">Expected failed tests count.</param>
-    public void ValidateFailedTestsCount(int expectedFailedTestsCount)
-    {
+    public void ValidateFailedTestsCount(int expectedFailedTestsCount) =>
         // Make sure only expected number of tests failed and not more.
         Assert.AreEqual(expectedFailedTestsCount, _runEventsHandler.FailedTests.Count);
-    }
 
     /// <summary>
     /// Validates if the test results have the specified set of skipped tests.
@@ -230,12 +226,9 @@ public partial class CLITestBase
         }
     }
 
-    public void ValidateTestRunTime(int thresholdTime)
-    {
-        Assert.IsTrue(
+    public void ValidateTestRunTime(int thresholdTime) => Assert.IsTrue(
             _runEventsHandler.ElapsedTimeInRunningTests >= 0 && _runEventsHandler.ElapsedTimeInRunningTests < thresholdTime,
             $"Test Run was expected to not exceed {thresholdTime} but it took {_runEventsHandler.ElapsedTimeInRunningTests}");
-    }
 
     /// <summary>
     /// Gets the test method name from full name.

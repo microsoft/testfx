@@ -15,10 +15,7 @@ public class DiscoveryEventsHandler : ITestDiscoveryEventsHandler
     /// </summary>
     public IList<string> Tests { get; private set; }
 
-    public DiscoveryEventsHandler()
-    {
-        Tests = new List<string>();
-    }
+    public DiscoveryEventsHandler() => Tests = new List<string>();
 
     public void HandleDiscoveredTests(IEnumerable<TestCase> discoveredTestCases)
     {

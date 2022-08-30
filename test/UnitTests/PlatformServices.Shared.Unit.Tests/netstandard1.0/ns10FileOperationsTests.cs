@@ -26,10 +26,7 @@ public class FileOperationsTests
     private FileOperations _fileOperations;
 
     [TestInitialize]
-    public void TestInit()
-    {
-        _fileOperations = new FileOperations();
-    }
+    public void TestInit() => _fileOperations = new FileOperations();
 
     [TestMethod]
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()

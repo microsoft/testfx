@@ -26,22 +26,13 @@ public class TestSourceTests
     private TestSource _testSource;
 
     [TestInitialize]
-    public void TestInit()
-    {
-        _testSource = new TestSource();
-    }
+    public void TestInit() => _testSource = new TestSource();
 
     [TestMethod]
-    public void ValidSourceExtensionsShouldContainDllExtensions()
-    {
-        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".dll");
-    }
+    public void ValidSourceExtensionsShouldContainDllExtensions() => CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".dll");
 
     [TestMethod]
-    public void ValidSourceExtensionsShouldContainExeExtensions()
-    {
-        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".exe");
-    }
+    public void ValidSourceExtensionsShouldContainExeExtensions() => CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".exe");
 
     [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueIfSourceOrAssemblyNameIsNull()
@@ -52,10 +43,7 @@ public class TestSourceTests
     }
 
     [TestMethod]
-    public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames()
-    {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
-    }
+    public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames() => Assert.IsTrue(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

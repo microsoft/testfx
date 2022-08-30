@@ -23,10 +23,7 @@ public class UniversalFileOperationsTests
     /// The test initialization.
     /// </summary>
     [TestInitialize]
-    public void TestInit()
-    {
-        _fileOperations = new FileOperations();
-    }
+    public void TestInit() => _fileOperations = new FileOperations();
 
     /// <summary>
     /// The load assembly should throw exception if the file name has invalid characters.

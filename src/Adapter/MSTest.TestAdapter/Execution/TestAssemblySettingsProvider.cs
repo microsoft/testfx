@@ -18,10 +18,7 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
     {
     }
 
-    internal TestAssemblySettingsProvider(ReflectHelper reflectHelper)
-    {
-        _reflectHelper = reflectHelper;
-    }
+    internal TestAssemblySettingsProvider(ReflectHelper reflectHelper) => _reflectHelper = reflectHelper;
 
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
@@ -33,10 +30,7 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
 #if NET5_0_OR_GREATER
     [Obsolete]
 #endif
-    public override object InitializeLifetimeService()
-    {
-        return null;
-    }
+    public override object InitializeLifetimeService() => null;
 
     internal TestAssemblySettings GetSettings(string source)
     {

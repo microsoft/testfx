@@ -93,10 +93,7 @@ public class PrivateObject
     /// <param name="type">type of the object to create</param>
     /// <param name="args">Arguments to pass to the constructor</param>
     public PrivateObject(Type type, params object[] args)
-        : this(type, null, args)
-    {
-        Helper.CheckParameterNotNull(type, "type", string.Empty);
-    }
+        : this(type, null, args) => Helper.CheckParameterNotNull(type, "type", string.Empty);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PrivateObject"/> class that wraps the
@@ -173,10 +170,7 @@ public class PrivateObject
     /// </summary>
     public object Target
     {
-        get
-        {
-            return _target;
-        }
+        get => _target;
 
         set
         {
@@ -189,13 +183,7 @@ public class PrivateObject
     /// <summary>
     /// Gets the type of underlying object
     /// </summary>
-    public Type RealType
-    {
-        get
-        {
-            return _originalType;
-        }
-    }
+    public Type RealType => _originalType;
 
     private Dictionary<string, LinkedList<MethodInfo>> GenericMethodCache
     {
@@ -264,10 +252,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call</returns>
-    public object Invoke(string name, Type[] parameterTypes, object[] args)
-    {
-        return Invoke(name, parameterTypes, args, CultureInfo.InvariantCulture);
-    }
+    public object Invoke(string name, Type[] parameterTypes, object[] args) => Invoke(name, parameterTypes, args, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Invokes the specified method
@@ -277,10 +262,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
     /// <returns>Result of method call</returns>
-    public object Invoke(string name, Type[] parameterTypes, object[] args, Type[] typeArguments)
-    {
-        return Invoke(name, BindToEveryThing, parameterTypes, args, CultureInfo.InvariantCulture, typeArguments);
-    }
+    public object Invoke(string name, Type[] parameterTypes, object[] args, Type[] typeArguments) => Invoke(name, BindToEveryThing, parameterTypes, args, CultureInfo.InvariantCulture, typeArguments);
 
     /// <summary>
     /// Invokes the specified method
@@ -289,10 +271,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info</param>
     /// <returns>Result of method call</returns>
-    public object Invoke(string name, object[] args, CultureInfo culture)
-    {
-        return Invoke(name, null, args, culture);
-    }
+    public object Invoke(string name, object[] args, CultureInfo culture) => Invoke(name, null, args, culture);
 
     /// <summary>
     /// Invokes the specified method
@@ -302,10 +281,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info</param>
     /// <returns>Result of method call</returns>
-    public object Invoke(string name, Type[] parameterTypes, object[] args, CultureInfo culture)
-    {
-        return Invoke(name, BindToEveryThing, parameterTypes, args, culture);
-    }
+    public object Invoke(string name, Type[] parameterTypes, object[] args, CultureInfo culture) => Invoke(name, BindToEveryThing, parameterTypes, args, culture);
 
     /// <summary>
     /// Invokes the specified method
@@ -314,10 +290,7 @@ public class PrivateObject
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call</returns>
-    public object Invoke(string name, BindingFlags bindingFlags, params object[] args)
-    {
-        return Invoke(name, bindingFlags, null, args, CultureInfo.InvariantCulture);
-    }
+    public object Invoke(string name, BindingFlags bindingFlags, params object[] args) => Invoke(name, bindingFlags, null, args, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Invokes the specified method
@@ -327,10 +300,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call</returns>
-    public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args)
-    {
-        return Invoke(name, bindingFlags, parameterTypes, args, CultureInfo.InvariantCulture);
-    }
+    public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args) => Invoke(name, bindingFlags, parameterTypes, args, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Invokes the specified method
@@ -340,10 +310,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info</param>
     /// <returns>Result of method call</returns>
-    public object Invoke(string name, BindingFlags bindingFlags, object[] args, CultureInfo culture)
-    {
-        return Invoke(name, bindingFlags, null, args, culture);
-    }
+    public object Invoke(string name, BindingFlags bindingFlags, object[] args, CultureInfo culture) => Invoke(name, bindingFlags, null, args, culture);
 
     /// <summary>
     /// Invokes the specified method
@@ -354,10 +321,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info</param>
     /// <returns>Result of method call</returns>
-    public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args, CultureInfo culture)
-    {
-        return Invoke(name, bindingFlags, parameterTypes, args, culture, null);
-    }
+    public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args, CultureInfo culture) => Invoke(name, bindingFlags, parameterTypes, args, culture, null);
 
     /// <summary>
     /// Invokes the specified method
@@ -576,10 +540,7 @@ public class PrivateObject
     /// <param name="name">Name of the property</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
-    public object GetProperty(string name, params object[] args)
-    {
-        return GetProperty(name, null, args);
-    }
+    public object GetProperty(string name, params object[] args) => GetProperty(name, null, args);
 
     /// <summary>
     /// Gets the property
@@ -588,10 +549,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
-    public object GetProperty(string name, Type[] parameterTypes, object[] args)
-    {
-        return GetProperty(name, BindToEveryThing, parameterTypes, args);
-    }
+    public object GetProperty(string name, Type[] parameterTypes, object[] args) => GetProperty(name, BindToEveryThing, parameterTypes, args);
 
     /// <summary>
     /// Set the property
@@ -599,10 +557,7 @@ public class PrivateObject
     /// <param name="name">Name of the property</param>
     /// <param name="value">value to set</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetProperty(string name, object value, params object[] args)
-    {
-        SetProperty(name, null, value, args);
-    }
+    public void SetProperty(string name, object value, params object[] args) => SetProperty(name, null, value, args);
 
     /// <summary>
     /// Set the property
@@ -611,10 +566,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="value">value to set</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetProperty(string name, Type[] parameterTypes, object value, object[] args)
-    {
-        SetProperty(name, BindToEveryThing, value, parameterTypes, args);
-    }
+    public void SetProperty(string name, Type[] parameterTypes, object value, object[] args) => SetProperty(name, BindToEveryThing, value, parameterTypes, args);
 
     /// <summary>
     /// Gets the property
@@ -623,10 +575,7 @@ public class PrivateObject
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
-    public object GetProperty(string name, BindingFlags bindingFlags, params object[] args)
-    {
-        return GetProperty(name, bindingFlags, null, args);
-    }
+    public object GetProperty(string name, BindingFlags bindingFlags, params object[] args) => GetProperty(name, bindingFlags, null, args);
 
     /// <summary>
     /// Gets the property
@@ -663,10 +612,7 @@ public class PrivateObject
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="value">value to set</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetProperty(string name, BindingFlags bindingFlags, object value, params object[] args)
-    {
-        SetProperty(name, bindingFlags, value, null, args);
-    }
+    public void SetProperty(string name, BindingFlags bindingFlags, object value, params object[] args) => SetProperty(name, bindingFlags, value, null, args);
 
     /// <summary>
     /// Sets the property

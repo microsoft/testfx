@@ -112,18 +112,15 @@ public static class AssertionExtensions
         }
     }
 
-    private static string GetOutcomeAssertString(string testName, TestOutcome outcome)
+    private static string GetOutcomeAssertString(string testName, TestOutcome outcome) => outcome switch
     {
-        return outcome switch
-        {
-            TestOutcome.None => $"\"{testName}\" does not have TestOutcome.None outcome.",
-            TestOutcome.Passed => $"\"{testName}\" does not appear in passed tests list.",
-            TestOutcome.Failed => $"\"{testName}\" does not appear in failed tests list.",
-            TestOutcome.Skipped => $"\"{testName}\" does not appear in skipped tests list.",
-            TestOutcome.NotFound => $"\"{testName}\" does not appear in not found tests list.",
-            _ => string.Empty,
-        };
-    }
+        TestOutcome.None => $"\"{testName}\" does not have TestOutcome.None outcome.",
+        TestOutcome.Passed => $"\"{testName}\" does not appear in passed tests list.",
+        TestOutcome.Failed => $"\"{testName}\" does not appear in failed tests list.",
+        TestOutcome.Skipped => $"\"{testName}\" does not appear in skipped tests list.",
+        TestOutcome.NotFound => $"\"{testName}\" does not appear in not found tests list.",
+        _ => string.Empty,
+    };
 
     private static void AssertOutcomeCount(IEnumerable<TestResult> actual, TestOutcome expectedOutcome, int expectedCount)
     {
@@ -132,12 +129,6 @@ public static class AssertionExtensions
 
         AssertOutcomeCount(actualCount, expectedCount);
     }
-    private static void AssertOutcomeCount(int actualCount, int expectedCount)
-    {
-        Assert.AreEqual(expectedCount, actualCount, $"Test run expected to contain {expectedCount} tests, but ran {actualCount}.");
-    }
-    private static void AssertDiscoveryCount(int actualCount, int expectedCount)
-    {
-        Assert.AreEqual(expectedCount, actualCount, $"Test discovery expected to contain {expectedCount} tests, but ran {actualCount}.");
-    }
+    private static void AssertOutcomeCount(int actualCount, int expectedCount) => Assert.AreEqual(expectedCount, actualCount, $"Test run expected to contain {expectedCount} tests, but ran {actualCount}.");
+    private static void AssertDiscoveryCount(int actualCount, int expectedCount) => Assert.AreEqual(expectedCount, actualCount, $"Test discovery expected to contain {expectedCount} tests, but ran {actualCount}.");
 }

@@ -24,10 +24,7 @@ public class MSTestSettingsProvider : ISettingsProvider
         // if we have to read any thing from runsettings special for this platform service then we have to implement it.
     }
 
-    public IDictionary<string, object> GetProperties(string source)
-    {
-        return new Dictionary<string, object>();
-    }
+    public IDictionary<string, object> GetProperties(string source) => new Dictionary<string, object>();
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

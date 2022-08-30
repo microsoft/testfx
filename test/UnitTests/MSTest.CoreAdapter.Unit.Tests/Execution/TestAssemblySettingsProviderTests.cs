@@ -41,10 +41,7 @@ public class TestAssemblySettingsProviderTests
     }
 
     [TestCleanup]
-    public void Cleanup()
-    {
-        PlatformServiceProvider.Instance = null;
-    }
+    public void Cleanup() => PlatformServiceProvider.Instance = null;
 
     [TestMethod]
     public void GetSettingsShouldSetParallelWorkersToNegativeByDefault()

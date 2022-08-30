@@ -23,50 +23,26 @@ public class DesktopTestSourceTests
     private TestSource _testSource;
 
     [TestInitialize]
-    public void TestInit()
-    {
-        _testSource = new TestSource();
-    }
+    public void TestInit() => _testSource = new TestSource();
 
     [TestMethod]
-    public void ValidSourceExtensionsShouldContainDllExtensions()
-    {
-        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".dll");
-    }
+    public void ValidSourceExtensionsShouldContainDllExtensions() => CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".dll");
 
     [TestMethod]
-    public void ValidSourceExtensionsShouldContainExeExtensions()
-    {
-        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".exe");
-    }
+    public void ValidSourceExtensionsShouldContainExeExtensions() => CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".exe");
 
     [TestMethod]
-    public void ValidSourceExtensionsShouldContainAppxExtensions()
-    {
-        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".appx");
-    }
+    public void ValidSourceExtensionsShouldContainAppxExtensions() => CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".appx");
 
     [TestMethod]
-    public void IsAssemblyReferencedShouldReturnTrueIfAssemblyNameIsNull()
-    {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(null, "DummySource"));
-    }
+    public void IsAssemblyReferencedShouldReturnTrueIfAssemblyNameIsNull() => Assert.IsTrue(_testSource.IsAssemblyReferenced(null, "DummySource"));
 
     [TestMethod]
-    public void IsAssemblyReferencedShouldReturnTrueIfSourceIsNull()
-    {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(Assembly.GetExecutingAssembly().GetName(), null));
-    }
+    public void IsAssemblyReferencedShouldReturnTrueIfSourceIsNull() => Assert.IsTrue(_testSource.IsAssemblyReferenced(Assembly.GetExecutingAssembly().GetName(), null));
 
     [TestMethod]
-    public void IsAssemblyReferencedShouldReturnTrueIfAnAssemblyIsReferencedInSource()
-    {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location));
-    }
+    public void IsAssemblyReferencedShouldReturnTrueIfAnAssemblyIsReferencedInSource() => Assert.IsTrue(_testSource.IsAssemblyReferenced(typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location));
 
     [TestMethod]
-    public void IsAssemblyReferencedShouldReturnFalseIfAnAssemblyIsNotReferencedInSource()
-    {
-        Assert.IsFalse(_testSource.IsAssemblyReferenced(new AssemblyName("foobar"), Assembly.GetExecutingAssembly().Location));
-    }
+    public void IsAssemblyReferencedShouldReturnFalseIfAnAssemblyIsNotReferencedInSource() => Assert.IsFalse(_testSource.IsAssemblyReferenced(new AssemblyName("foobar"), Assembly.GetExecutingAssembly().Location));
 }

@@ -72,10 +72,7 @@ public class MSTestSettings
             return s_currentSettings;
         }
 
-        private set
-        {
-            s_currentSettings = value;
-        }
+        private set => s_currentSettings = value;
     }
 
     /// <summary>
@@ -90,10 +87,7 @@ public class MSTestSettings
             return s_runConfigurationSettings;
         }
 
-        private set
-        {
-            s_runConfigurationSettings = value;
-        }
+        private set => s_runConfigurationSettings = value;
     }
 
     /// <summary>
@@ -553,10 +547,7 @@ public class MSTestSettings
     }
 
     private static bool TryParseEnum<T>(string value, out T result)
-        where T : struct, Enum
-    {
-        return Enum.TryParse<T>(value, true, out result) && Enum.IsDefined(typeof(T), result);
-    }
+        where T : struct, Enum => Enum.TryParse<T>(value, true, out result) && Enum.IsDefined(typeof(T), result);
 
     private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings)
     {

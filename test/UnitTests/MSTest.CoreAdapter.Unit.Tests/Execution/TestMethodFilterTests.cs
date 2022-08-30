@@ -25,10 +25,7 @@ using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.
 [TestClass]
 public class TestMethodFilterTests
 {
-    public TestMethodFilterTests()
-    {
-        TestMethodFilter = new TestMethodFilter();
-    }
+    public TestMethodFilterTests() => TestMethodFilter = new TestMethodFilter();
 
     private TestMethodFilter TestMethodFilter { get; set; }
 
@@ -163,7 +160,7 @@ public class TestMethodFilterTests
     public void GetFilterExpressionForRunContextGetTestCaseFilterThrowingExceptionReturnsNullWithFilterHasErrorTrue()
     {
         TestableTestExecutionRecorder recorder = new();
-        TestableRunContext runContext = new(() => { throw new TestPlatformFormatException("DummyException"); });
+        TestableRunContext runContext = new(() => throw new TestPlatformFormatException("DummyException"));
         var filterExpression = TestMethodFilter.GetFilterExpression(runContext, recorder, out var filterHasError);
 
         Assert.IsNull(filterExpression);
@@ -179,7 +176,7 @@ public class TestMethodFilterTests
     public void GetFilterExpressionForDiscoveryContextWithGetTestCaseFilterThrowingExceptionReturnsNullWithFilterHasErrorTrue()
     {
         TestableTestExecutionRecorder recorder = new();
-        TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => { throw new TestPlatformFormatException("DummyException"); });
+        TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => throw new TestPlatformFormatException("DummyException"));
         var filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out var filterHasError);
 
         Assert.IsNull(filterExpression);
@@ -216,10 +213,7 @@ public class TestMethodFilterTests
     {
         private readonly Func<ITestCaseFilterExpression> _getFilter;
 
-        public TestableRunContext(Func<ITestCaseFilterExpression> getFilter)
-        {
-            _getFilter = getFilter;
-        }
+        public TestableRunContext(Func<ITestCaseFilterExpression> getFilter) => _getFilter = getFilter;
 
         public IRunSettings RunSettings { get; }
 
@@ -237,29 +231,20 @@ public class TestMethodFilterTests
 
         public ITestCaseFilterExpression GetTestCaseFilter(
             IEnumerable<string> supportedProperties,
-            Func<string, TestProperty> propertyProvider)
-        {
-            return _getFilter();
-        }
+            Func<string, TestProperty> propertyProvider) => _getFilter();
     }
 
     private class TestableDiscoveryContextWithGetTestCaseFilter : IDiscoveryContext
     {
         private readonly Func<ITestCaseFilterExpression> _getFilter;
 
-        public TestableDiscoveryContextWithGetTestCaseFilter(Func<ITestCaseFilterExpression> getFilter)
-        {
-            _getFilter = getFilter;
-        }
+        public TestableDiscoveryContextWithGetTestCaseFilter(Func<ITestCaseFilterExpression> getFilter) => _getFilter = getFilter;
 
         public IRunSettings RunSettings { get; }
 
         public ITestCaseFilterExpression GetTestCaseFilter(
             IEnumerable<string> supportedProperties,
-            Func<string, TestProperty> propertyProvider)
-        {
-            return _getFilter();
-        }
+            Func<string, TestProperty> propertyProvider) => _getFilter();
     }
 
     private class TestableDiscoveryContextWithoutGetTestCaseFilter : IDiscoveryContext
@@ -271,10 +256,7 @@ public class TestMethodFilterTests
     {
         public string TestCaseFilterValue { get; }
 
-        public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
-        {
-            throw new NotImplementedException();
-        }
+        public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider) => throw new NotImplementedException();
     }
 
     private class DummyTestClassAttribute : UTF.TestClassAttribute

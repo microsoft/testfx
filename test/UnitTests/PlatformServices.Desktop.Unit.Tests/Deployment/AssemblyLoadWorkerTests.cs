@@ -29,10 +29,7 @@ public class AssemblyLoadWorkerTests
         // Arrange.
         var v1AssemblyName = new AssemblyName("Microsoft.VisualStudio.QualityTools.UnitTestFramework");
         var testableAssembly = new TestableAssembly();
-        testableAssembly.GetReferencedAssembliesSetter = () =>
-            {
-                return new AssemblyName[] { v1AssemblyName };
-            };
+        testableAssembly.GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName };
 
         var mockAssemblyUtility = new Mock<IAssemblyUtility>();
         mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoadFrom(It.IsAny<string>())).Returns(testableAssembly);
@@ -57,16 +54,10 @@ public class AssemblyLoadWorkerTests
 
         var dependentAssemblyName = new AssemblyName("Common.TestFramework");
         var dependentAssembly = new TestableAssembly(dependentAssemblyName.Name);
-        dependentAssembly.GetReferencedAssembliesSetter = () =>
-        {
-            return new AssemblyName[] { v1AssemblyName };
-        };
+        dependentAssembly.GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName };
 
         var testableAssembly = new TestableAssembly();
-        testableAssembly.GetReferencedAssembliesSetter = () =>
-        {
-            return new AssemblyName[] { dependentAssemblyName };
-        };
+        testableAssembly.GetReferencedAssembliesSetter = () => new AssemblyName[] { dependentAssemblyName };
 
         var mockAssemblyUtility = new Mock<IAssemblyUtility>();
         mockAssemblyUtility.Setup(au => au.ReflectionOnlyLoadFrom(It.IsAny<string>()))
@@ -127,7 +118,7 @@ public class AssemblyLoadWorkerTests
                 Name = string.Concat(assemblyName, ".dll");
             }
 
-            FullNameSetter = () => { return assemblyName; };
+            FullNameSetter = () => assemblyName;
         }
 
         public Func<AssemblyName[]> GetReferencedAssembliesSetter { get; set; }
@@ -162,26 +153,11 @@ public class AssemblyLoadWorkerTests
             }
         }
 
-        public override bool GlobalAssemblyCache
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool GlobalAssemblyCache => false;
 
-        public override string Location
-        {
-            get
-            {
-                return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Name);
-            }
-        }
+        public override string Location => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Name);
 
-        public override Module[] GetModules(bool getResourceModules)
-        {
-            return new Module[] { };
-        }
+        public override Module[] GetModules(bool getResourceModules) => new Module[] { };
     }
 
     #endregion

@@ -98,7 +98,7 @@ public class ExceptionExtensionsTests
     public void ExceptionTryGetMessageShouldThrowIfExceptionMessageThrows()
     {
         var errorMessage = string.Format(Resource.UTF_FailedToGetExceptionMessage, "System.NotImplementedException");
-        var exception = new DummyException(() => { throw new NotImplementedException(); });
+        var exception = new DummyException(() => throw new NotImplementedException());
 
         exception.TryGetMessage();
     }
@@ -139,7 +139,7 @@ public class ExceptionExtensionsTests
     [ExpectedException(typeof(NotImplementedException))]
     public void TryGetStackTraceInformationShouldThrowIfStackTraceThrows()
     {
-        var exception = new DummyExceptionForStackTrace(() => { throw new NotImplementedException(); });
+        var exception = new DummyExceptionForStackTrace(() => throw new NotImplementedException());
 
         exception.TryGetStackTraceInformation();
     }
@@ -148,10 +148,7 @@ public class ExceptionExtensionsTests
     {
         private readonly Func<string> _getStackTrace;
 
-        public DummyExceptionForStackTrace(Func<string> getStackTrace)
-        {
-            _getStackTrace = getStackTrace;
-        }
+        public DummyExceptionForStackTrace(Func<string> getStackTrace) => _getStackTrace = getStackTrace;
 
         public override string StackTrace => _getStackTrace();
     }
@@ -160,10 +157,7 @@ public class ExceptionExtensionsTests
     {
         private readonly Func<string> _getMessage;
 
-        public DummyException(Func<string> message)
-        {
-            _getMessage = message;
-        }
+        public DummyException(Func<string> message) => _getMessage = message;
 
         public override string Message => _getMessage();
     }

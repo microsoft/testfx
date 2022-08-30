@@ -101,13 +101,7 @@ public class LogMessageListener : IDisposable
     /// <summary>
     /// Gets 'Trace' Output from the redirected stream
     /// </summary>
-    public string DebugTrace
-    {
-        get
-        {
-            return s_redirectedDebugTrace?.ToString();
-        }
-    }
+    public string DebugTrace => s_redirectedDebugTrace?.ToString();
 
     public string GetAndClearStandardOutput()
     {

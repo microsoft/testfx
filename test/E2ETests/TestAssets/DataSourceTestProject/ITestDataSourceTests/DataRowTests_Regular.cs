@@ -15,20 +15,14 @@ public class Regular_DataRowTests
     [DataRow(20)]
     [DataRow(30)]
     [DataRow(40)]
-    public void DataRow1(int i)
-    {
-        Assert.IsTrue(i != 0);
-    }
+    public void DataRow1(int i) => Assert.IsTrue(i != 0);
 
     [TestMethod]
     [DataRow(10, "String parameter", true, false)]
     [DataRow(20, "String parameter", true, false)]
     [DataRow(30, "String parameter", true, false)]
     [DataRow(40, "String parameter", true, false)]
-    public void DataRow2(int i, string s, bool b1, bool b2)
-    {
-        Assert.IsTrue(i != 200);
-    }
+    public void DataRow2(int i, string s, bool b1, bool b2) => Assert.IsTrue(i != 200);
 
     [TestCategory("DataRowOptionalInvalidArguments")]
     [TestMethod]
@@ -36,10 +30,7 @@ public class Regular_DataRowTests
     [DataRow()]
     [DataRow(2)]
     [DataRow(2, "DerivedRequiredArgument", "DerivedOptionalArgument", "DerivedExtraArgument")]
-    public void DataRowTestMethodFailsWithInvalidArguments(int i1, string requiredString, string s1 = null)
-    {
-        Assert.Fail();
-    }
+    public void DataRowTestMethodFailsWithInvalidArguments(int i1, string requiredString, string s1 = null) => Assert.Fail();
 
 
     [TestMethod]

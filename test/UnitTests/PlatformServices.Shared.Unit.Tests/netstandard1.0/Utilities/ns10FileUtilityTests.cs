@@ -119,10 +119,7 @@ public class FileUtilityTests
             return directories.ToArray();
         });
 
-        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
-        {
-            return allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray();
-        });
+        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) => allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
 
         // Act
         var files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", (directory) => directory.Contains("Results"), false);
@@ -160,10 +157,7 @@ public class FileUtilityTests
             return directories.ToArray();
         });
 
-        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
-        {
-            return allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray();
-        });
+        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) => allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
 
         // Act
         var files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", false);
@@ -184,16 +178,9 @@ public class FileUtilityTests
 
     private void SetupMockFileAPIs(string[] files)
     {
-        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns((string dp) =>
-        {
-            return
-                files.Where(f => f.Contains(dp) && f.LastIndexOf("\\") == (f.IndexOf(dp) + dp.Length) && !f.EndsWith("\\"))
-                    .ToArray();
-        });
-        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) =>
-        {
-            return
-                files.Where(f => f.Contains(dp) && f.LastIndexOf("\\") > (f.IndexOf(dp) + dp.Length))
+        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns((string dp) => files.Where(f => f.Contains(dp) && f.LastIndexOf("\\") == (f.IndexOf(dp) + dp.Length) && !f.EndsWith("\\"))
+                    .ToArray());
+        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) => files.Where(f => f.Contains(dp) && f.LastIndexOf("\\") > (f.IndexOf(dp) + dp.Length))
                     .Select(f =>
                     {
                         var val = f.Substring(
@@ -202,8 +189,7 @@ public class FileUtilityTests
                         return f.Substring(0, dp.Length + 1 + val.IndexOf("\\"));
                     })
                     .Distinct()
-                    .ToArray();
-        });
+                    .ToArray());
     }
 
     #endregion

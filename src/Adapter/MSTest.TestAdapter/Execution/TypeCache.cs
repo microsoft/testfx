@@ -64,10 +64,7 @@ internal class TypeCache : MarshalByRefObject
     /// Initializes a new instance of the <see cref="TypeCache"/> class.
     /// </summary>
     /// <param name="reflectionHelper"> An instance to the <see cref="ReflectHelper"/> object. </param>
-    internal TypeCache(ReflectHelper reflectionHelper)
-    {
-        _reflectionHelper = reflectionHelper;
-    }
+    internal TypeCache(ReflectHelper reflectionHelper) => _reflectionHelper = reflectionHelper;
 
     /// <summary>
     /// Gets Class Info cache which has cleanup methods to execute
@@ -134,10 +131,7 @@ internal class TypeCache : MarshalByRefObject
 #if NET5_0_OR_GREATER
     [Obsolete]
 #endif
-    public override object InitializeLifetimeService()
-    {
-        return null;
-    }
+    public override object InitializeLifetimeService() => null;
 
     #region ClassInfo creation and cache logic.
 

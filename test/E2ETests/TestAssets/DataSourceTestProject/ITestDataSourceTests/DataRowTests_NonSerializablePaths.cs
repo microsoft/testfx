@@ -14,8 +14,5 @@ public class DataRowTests_NonSerializablePaths
     [DataRow(typeof(string))]
     [DataRow(typeof(int))]
     [DataRow(typeof(DataRowTests_Enums))]
-    public void DataRowNonSerializable(Type type)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowNonSerializable(Type type) => Assert.IsTrue(true);
 }

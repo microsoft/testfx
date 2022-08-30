@@ -22,10 +22,7 @@ public class TestRunDirectoriesTests
     private readonly TestRunDirectories _testRunDirectories = new(@"C:\temp");
 
     [TestMethod]
-    public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory()
-    {
-        Assert.AreEqual(
+    public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory() => Assert.AreEqual(
             Path.Combine(@"C:\temp\In", Environment.MachineName),
             _testRunDirectories.InMachineNameDirectory);
-    }
 }

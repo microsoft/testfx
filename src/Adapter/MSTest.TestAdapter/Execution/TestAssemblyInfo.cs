@@ -41,10 +41,7 @@ public class TestAssemblyInfo
     /// </summary>
     public MethodInfo AssemblyInitializeMethod
     {
-        get
-        {
-            return _assemblyInitializeMethod;
-        }
+        get => _assemblyInitializeMethod;
 
         internal set
         {
@@ -63,10 +60,7 @@ public class TestAssemblyInfo
     /// </summary>
     public MethodInfo AssemblyCleanupMethod
     {
-        get
-        {
-            return _assemblyCleanupMethod;
-        }
+        get => _assemblyCleanupMethod;
 
         internal set
         {

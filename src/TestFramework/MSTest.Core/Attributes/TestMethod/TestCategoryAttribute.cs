@@ -32,8 +32,5 @@ public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
     /// <summary>
     /// Gets the test categories that has been applied to the test.
     /// </summary>
-    public override IList<string> TestCategories
-    {
-        get { return _testCategories; }
-    }
+    public override IList<string> TestCategories => _testCategories;
 }

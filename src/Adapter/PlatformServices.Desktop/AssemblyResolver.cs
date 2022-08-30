@@ -122,10 +122,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// </returns>
     [SecurityCritical]
     [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.Infrastructure)]
-    public override object InitializeLifetimeService()
-    {
-        return null;
-    }
+    public override object InitializeLifetimeService() => null;
 
     /// <summary>
     /// It will add a list of search directories path with property recursive/non-recursive in assembly resolver .
@@ -153,10 +150,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="sender"> The sender App Domain. </param>
     /// <param name="args"> The args. </param>
     /// <returns> The <see cref="Assembly"/>. </returns>
-    internal Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
-    {
-        return OnResolveInternal(sender, args, true);
-    }
+    internal Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args) => OnResolveInternal(sender, args, true);
 
     /// <summary>
     /// Assembly Resolve event handler for App Domain - called when CLR loader cannot resolve assembly.
@@ -164,10 +158,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="sender"> The sender App Domain. </param>
     /// <param name="args"> The args. </param>
     /// <returns> The <see cref="Assembly"/>.  </returns>
-    internal Assembly OnResolve(object sender, ResolveEventArgs args)
-    {
-        return OnResolveInternal(sender, args, false);
-    }
+    internal Assembly OnResolve(object sender, ResolveEventArgs args) => OnResolveInternal(sender, args, false);
 
     /// <summary>
     /// Adds the subdirectories of the provided path to the collection.
@@ -225,10 +216,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="path">The path to the directory.</param>
     /// <returns>True if the directory exists.</returns>
     /// <remarks>Only present for unit testing scenarios.</remarks>
-    protected virtual bool DoesDirectoryExist(string path)
-    {
-        return Directory.Exists(path);
-    }
+    protected virtual bool DoesDirectoryExist(string path) => Directory.Exists(path);
 
     /// <summary>
     /// Gets the directories from a path.
@@ -236,25 +224,13 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="path">The path to the directory.</param>
     /// <returns>A list of directories in path.</returns>
     /// <remarks>Only present for unit testing scenarios.</remarks>
-    protected virtual string[] GetDirectories(string path)
-    {
-        return Directory.GetDirectories(path);
-    }
+    protected virtual string[] GetDirectories(string path) => Directory.GetDirectories(path);
 
-    protected virtual bool DoesFileExist(string filePath)
-    {
-        return File.Exists(filePath);
-    }
+    protected virtual bool DoesFileExist(string filePath) => File.Exists(filePath);
 
-    protected virtual Assembly LoadAssemblyFrom(string path)
-    {
-        return Assembly.LoadFrom(path);
-    }
+    protected virtual Assembly LoadAssemblyFrom(string path) => Assembly.LoadFrom(path);
 
-    protected virtual Assembly ReflectionOnlyLoadAssemblyFrom(string path)
-    {
-        return Assembly.ReflectionOnlyLoadFrom(path);
-    }
+    protected virtual Assembly ReflectionOnlyLoadAssemblyFrom(string path) => Assembly.ReflectionOnlyLoadFrom(path);
 
     /// <summary>
     /// It will search for a particular assembly in the given list of directory.

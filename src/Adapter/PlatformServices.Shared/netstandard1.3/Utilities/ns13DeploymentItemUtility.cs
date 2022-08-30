@@ -226,12 +226,8 @@ internal class DeploymentItemUtility
     /// </summary>
     /// <param name="testCase"> The test Case. </param>
     /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>. </returns>
-    private KeyValuePair<string, string>[] GetDeploymentItems(TestCase testCase)
-    {
-        return
-            testCase.GetPropertyValue(PlatformServices.Constants.DeploymentItemsProperty) as
+    private KeyValuePair<string, string>[] GetDeploymentItems(TestCase testCase) => testCase.GetPropertyValue(PlatformServices.Constants.DeploymentItemsProperty) as
             KeyValuePair<string, string>[];
-    }
 
     private KeyValuePair<string, string>[] ToKeyValuePairs(IList<DeploymentItem> deploymentItemList)
     {

@@ -43,22 +43,13 @@ public class AssemblyEnumeratorWrapperTests
     }
 
     [TestCleanup]
-    public void Cleanup()
-    {
-        PlatformServiceProvider.Instance = null;
-    }
+    public void Cleanup() => PlatformServiceProvider.Instance = null;
 
     [TestMethod]
-    public void GetTestsShouldReturnNullIfAssemblyNameIsNull()
-    {
-        Assert.IsNull(_testableAssemblyEnumeratorWrapper.GetTests(null, null, out _warnings));
-    }
+    public void GetTestsShouldReturnNullIfAssemblyNameIsNull() => Assert.IsNull(_testableAssemblyEnumeratorWrapper.GetTests(null, null, out _warnings));
 
     [TestMethod]
-    public void GetTestsShouldReturnNullIfAssemblyNameIsEmpty()
-    {
-        Assert.IsNull(_testableAssemblyEnumeratorWrapper.GetTests(string.Empty, null, out _warnings));
-    }
+    public void GetTestsShouldReturnNullIfAssemblyNameIsEmpty() => Assert.IsNull(_testableAssemblyEnumeratorWrapper.GetTests(string.Empty, null, out _warnings));
 
     [TestMethod]
     public void GetTestsShouldReturnNullIfSourceFileDoesNotExistInContext()

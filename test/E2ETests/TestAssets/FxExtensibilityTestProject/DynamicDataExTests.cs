@@ -10,18 +10,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class DynamicDataExTests
 {
-    static IEnumerable<object[]> ReusableTestDataProperty
-    {
-        get
-        {
-            return new[] { new object[] { "string", 2, true } };
-        }
-    }
+    static IEnumerable<object[]> ReusableTestDataProperty => new[] { new object[] { "string", 2, true } };
 
-    static IEnumerable<object[]> ReusableTestDataMethod()
-    {
-        return new[] { new object[] { "string", 4, true } };
-    }
+    static IEnumerable<object[]> ReusableTestDataMethod() => new[] { new object[] { "string", 4, true } };
 
     // Property ReusableTestDataProperty can be used as data source for test data with data driven test case.
     [TestMethod]

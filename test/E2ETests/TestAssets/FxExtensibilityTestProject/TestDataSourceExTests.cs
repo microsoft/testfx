@@ -26,10 +26,7 @@ public class TestDataSourceExTests
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 public class CustomTestDataSourceAttribute : Attribute, ITestDataSource
 {
-    public IEnumerable<object[]> GetData(MethodInfo methodInfo)
-    {
-        return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
-    }
+    public IEnumerable<object[]> GetData(MethodInfo methodInfo) => new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
 
     public string GetDisplayName(MethodInfo methodInfo, object[] data)
     {

@@ -19,17 +19,14 @@ internal class TestMethodFilter
     /// </summary>
     private readonly Dictionary<string, TestProperty> _supportedProperties;
 
-    internal TestMethodFilter()
+    internal TestMethodFilter() => _supportedProperties = new Dictionary<string, TestProperty>(StringComparer.OrdinalIgnoreCase)
     {
-        _supportedProperties = new Dictionary<string, TestProperty>(StringComparer.OrdinalIgnoreCase)
-        {
-            [Constants.TestCategoryProperty.Label] = Constants.TestCategoryProperty,
-            [Constants.PriorityProperty.Label] = Constants.PriorityProperty,
-            [TestCaseProperties.FullyQualifiedName.Label] = TestCaseProperties.FullyQualifiedName,
-            [TestCaseProperties.DisplayName.Label] = TestCaseProperties.DisplayName,
-            [Constants.TestClassNameProperty.Label] = Constants.TestClassNameProperty
-        };
-    }
+        [Constants.TestCategoryProperty.Label] = Constants.TestCategoryProperty,
+        [Constants.PriorityProperty.Label] = Constants.PriorityProperty,
+        [TestCaseProperties.FullyQualifiedName.Label] = TestCaseProperties.FullyQualifiedName,
+        [TestCaseProperties.DisplayName.Label] = TestCaseProperties.DisplayName,
+        [Constants.TestClassNameProperty.Label] = Constants.TestClassNameProperty
+    };
 
     /// <summary>
     /// Returns ITestCaseFilterExpression for TestProperties supported by adapter.
@@ -99,10 +96,7 @@ internal class TestMethodFilter
     /// </summary>
     /// <param name="context">Run context</param>
     /// <returns>Filter expression.</returns>
-    private ITestCaseFilterExpression GetTestCaseFilterFromRunContext(IRunContext context)
-    {
-        return context.GetTestCaseFilter(_supportedProperties.Keys, PropertyProvider);
-    }
+    private ITestCaseFilterExpression GetTestCaseFilterFromRunContext(IRunContext context) => context.GetTestCaseFilter(_supportedProperties.Keys, PropertyProvider);
 
     /// <summary>
     /// Gets filter expression from discovery context.

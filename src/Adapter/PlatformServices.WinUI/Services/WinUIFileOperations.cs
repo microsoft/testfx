@@ -19,10 +19,7 @@ public class FileOperations : IFileOperations
 {
     private readonly bool _isPackaged;
 
-    public FileOperations()
-    {
-        _isPackaged = AppContainer.AppModel.IsPackagedProcess();
-    }
+    public FileOperations() => _isPackaged = AppContainer.AppModel.IsPackagedProcess();
 
     /// <summary>
     /// Loads an assembly.
@@ -48,10 +45,7 @@ public class FileOperations : IFileOperations
     /// </summary>
     /// <param name="assembly">The assembly.</param>
     /// <returns>Path to the .DLL of the assembly.</returns>
-    public string GetAssemblyPath(Assembly assembly)
-    {
-        return assembly.Location;
-    }
+    public string GetAssemblyPath(Assembly assembly) => assembly.Location;
 
     /// <summary>
     ///  Verifies if file exists in context.
@@ -72,10 +66,7 @@ public class FileOperations : IFileOperations
     /// <returns> A Navigation session instance for the current platform.
     /// <see cref="INavigationSession"/>.
     /// </returns>
-    public object CreateNavigationSession(string source)
-    {
-        return DiaSessionOperations.CreateNavigationSession(source);
-    }
+    public object CreateNavigationSession(string source) => DiaSessionOperations.CreateNavigationSession(source);
 
     /// <summary>
     /// Gets the navigation data for a navigation session.
@@ -85,19 +76,13 @@ public class FileOperations : IFileOperations
     /// <param name="methodName"> The method name. </param>
     /// <param name="minLineNumber"> The min line number. </param>
     /// <param name="fileName"> The file name. </param>
-    public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string fileName)
-    {
-        DiaSessionOperations.GetNavigationData(navigationSession, className, methodName, out minLineNumber, out fileName);
-    }
+    public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string fileName) => DiaSessionOperations.GetNavigationData(navigationSession, className, methodName, out minLineNumber, out fileName);
 
     /// <summary>
     /// Disposes the navigation session instance.
     /// </summary>
     /// <param name="navigationSession"> The navigation session. </param>
-    public void DisposeNavigationSession(object navigationSession)
-    {
-        DiaSessionOperations.DisposeNavigationSession(navigationSession);
-    }
+    public void DisposeNavigationSession(object navigationSession) => DiaSessionOperations.DisposeNavigationSession(navigationSession);
 
     /// <summary>
     /// Gets the full file path of an assembly file.

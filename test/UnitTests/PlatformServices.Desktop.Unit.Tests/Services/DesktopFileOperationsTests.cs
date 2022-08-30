@@ -23,16 +23,10 @@ public class DesktopFileOperationsTests
     private FileOperations _fileOperations;
 
     [TestInitialize]
-    public void TestInit()
-    {
-        _fileOperations = new FileOperations();
-    }
+    public void TestInit() => _fileOperations = new FileOperations();
 
     [TestMethod]
-    public void CreateNavigationSessionShouldReurnNullIfSourceIsNull()
-    {
-        Assert.IsNull(_fileOperations.CreateNavigationSession(null));
-    }
+    public void CreateNavigationSessionShouldReurnNullIfSourceIsNull() => Assert.IsNull(_fileOperations.CreateNavigationSession(null));
 
     [TestMethod]
     public void CreateNavigationSessionShouldReturnDiaSession()
@@ -93,29 +87,18 @@ public class DesktopFileOperationsTests
     }
 
     [TestMethod]
-    public void DisposeNavigationSessionShouldNotThrowOnNullNavigationSession()
-    {
+    public void DisposeNavigationSessionShouldNotThrowOnNullNavigationSession() =>
         // This should not throw.
         _fileOperations.DisposeNavigationSession(null);
-    }
 
     [TestMethod]
-    public void DoesFileExistReturnsFalseIfAssemblyNameIsNull()
-    {
-        Assert.IsFalse(_fileOperations.DoesFileExist(null));
-    }
+    public void DoesFileExistReturnsFalseIfAssemblyNameIsNull() => Assert.IsFalse(_fileOperations.DoesFileExist(null));
 
     [TestMethod]
-    public void DoesFileExistReturnsFalseIfFileDoesNotExist()
-    {
-        Assert.IsFalse(_fileOperations.DoesFileExist("C:\\temp1foobar.txt"));
-    }
+    public void DoesFileExistReturnsFalseIfFileDoesNotExist() => Assert.IsFalse(_fileOperations.DoesFileExist("C:\\temp1foobar.txt"));
 
     [TestMethod]
-    public void DoesFileExistReturnsTrueIfFileExists()
-    {
-        Assert.IsTrue(_fileOperations.DoesFileExist(Assembly.GetExecutingAssembly().Location));
-    }
+    public void DoesFileExistReturnsTrueIfFileExists() => Assert.IsTrue(_fileOperations.DoesFileExist(Assembly.GetExecutingAssembly().Location));
 
     [TestMethod]
     public void GetFullFilePathShouldReturnAssemblyFileNameOnException()

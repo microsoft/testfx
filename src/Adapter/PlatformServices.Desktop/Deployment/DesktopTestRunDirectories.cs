@@ -45,33 +45,15 @@ public class TestRunDirectories
     /// <summary>
     /// Gets the In directory
     /// </summary>
-    public string InDirectory
-    {
-        get
-        {
-            return Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
-        }
-    }
+    public string InDirectory => Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
 
     /// <summary>
     /// Gets the Out directory
     /// </summary>
-    public string OutDirectory
-    {
-        get
-        {
-            return Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
-        }
-    }
+    public string OutDirectory => Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
 
     /// <summary>
     /// Gets In\MachineName directory
     /// </summary>
-    public string InMachineNameDirectory
-    {
-        get
-        {
-            return Path.Combine(Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
-        }
-    }
+    public string InMachineNameDirectory => Path.Combine(Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
 }

@@ -21,71 +21,47 @@ public class UniversalTestSourceTests
     /// The test initialization.
     /// </summary>
     [TestInitialize]
-    public void TestInit()
-    {
-        _testSource = new TestSource();
-    }
+    public void TestInit() => _testSource = new TestSource();
 
     /// <summary>
     /// The valid source extensions should contain .dll as extension.
     /// </summary>
     [TestMethod]
-    public void ValidSourceExtensionsShouldContainDllExtensions()
-    {
-        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".dll");
-    }
+    public void ValidSourceExtensionsShouldContainDllExtensions() => CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".dll");
 
     /// <summary>
     /// The valid source extensions should contain .exe as extension.
     /// </summary>
     [TestMethod]
-    public void ValidSourceExtensionsShouldContainExeExtensions()
-    {
-        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".exe");
-    }
+    public void ValidSourceExtensionsShouldContainExeExtensions() => CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".exe");
 
     /// <summary>
     /// The valid source extensions should contain .appx as extension.
     /// </summary>
     [TestMethod]
-    public void ValidSourceExtensionsShouldContainAppxExtensions()
-    {
-        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".appx");
-    }
+    public void ValidSourceExtensionsShouldContainAppxExtensions() => CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".appx");
 
     /// <summary>
     /// The is assembly referenced should return true if assembly name is null.
     /// </summary>
     [TestMethod]
-    public void IsAssemblyReferencedShouldReturnTrueIfAssemblyNameIsNull()
-    {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(null, "DummySource"));
-    }
+    public void IsAssemblyReferencedShouldReturnTrueIfAssemblyNameIsNull() => Assert.IsTrue(_testSource.IsAssemblyReferenced(null, "DummySource"));
 
     /// <summary>
     /// The is assembly referenced should return true if source is null.
     /// </summary>
     [TestMethod]
-    public void IsAssemblyReferencedShouldReturnTrueIfSourceIsNull()
-    {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(Assembly.GetExecutingAssembly().GetName(), null));
-    }
+    public void IsAssemblyReferencedShouldReturnTrueIfSourceIsNull() => Assert.IsTrue(_testSource.IsAssemblyReferenced(Assembly.GetExecutingAssembly().GetName(), null));
 
     /// <summary>
     /// The is assembly referenced should return true if an assembly is referenced in source.
     /// </summary>
     [TestMethod]
-    public void IsAssemblyReferencedShouldReturnTrueIfAnAssemblyIsReferencedInSource()
-    {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(typeof(TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location));
-    }
+    public void IsAssemblyReferencedShouldReturnTrueIfAnAssemblyIsReferencedInSource() => Assert.IsTrue(_testSource.IsAssemblyReferenced(typeof(TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location));
 
     /// <summary>
     /// The is assembly referenced should return false if an assembly is not referenced in source.
     /// </summary>
     [TestMethod]
-    public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames()
-    {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
-    }
+    public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames() => Assert.IsTrue(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
 }

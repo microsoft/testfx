@@ -61,20 +61,11 @@ internal class TestDataConnectionSql : TestDataConnection
 
     #region Data Properties
 
-    public override DbConnection Connection
-    {
-        get { return _connection; }
-    }
+    public override DbConnection Connection => _connection;
 
-    protected DbCommandBuilder CommandBuilder
-    {
-        get { return _commandBuilder; }
-    }
+    protected DbCommandBuilder CommandBuilder => _commandBuilder;
 
-    protected DbProviderFactory Factory
-    {
-        get { return _factory; }
-    }
+    protected DbProviderFactory Factory => _factory;
 
     #endregion
 
@@ -138,10 +129,7 @@ internal class TestDataConnectionSql : TestDataConnection
             return _quotePrefix;
         }
 
-        set
-        {
-            _quotePrefix = value;
-        }
+        set => _quotePrefix = value;
     }
 
     public virtual string QuoteSuffix
@@ -156,10 +144,7 @@ internal class TestDataConnectionSql : TestDataConnection
             return _quoteSuffix;
         }
 
-        set
-        {
-            _quoteSuffix = value;
-        }
+        set => _quoteSuffix = value;
     }
 
     private char CatalogSeperatorChar
@@ -396,10 +381,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <param name="text">The string.</param>
     /// <param name="from">Index.</param>
     /// <returns>Location of the separator.</returns>
-    private int FindSeperators(string text, int from)
-    {
-        return text.IndexOfAny(new char[] { SchemaSeperatorChar, CatalogSeperatorChar }, from);
-    }
+    private int FindSeperators(string text, int from) => text.IndexOfAny(new char[] { SchemaSeperatorChar, CatalogSeperatorChar }, from);
 
     /// <summary>
     /// Given a string and a position in that string, assumed
@@ -482,10 +464,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// Can throw.
     /// </summary>
     /// <returns>The default database schema.</returns>
-    public virtual string GetDefaultSchema()
-    {
-        return null;
-    }
+    public virtual string GetDefaultSchema() => null;
 
 #pragma warning restore SA1202 // Elements must be ordered by access
 
@@ -723,24 +702,17 @@ internal class TestDataConnectionSql : TestDataConnection
     #region Helpers
 
 #pragma warning disable SA1202 // Elements must be ordered by access
-    public bool IsOpen()
-#pragma warning restore SA1202 // Elements must be ordered by access
-    {
-        return _connection != null && _connection.State == ConnectionState.Open;
-    }
+    public bool IsOpen() => _connection != null && _connection.State == ConnectionState.Open;
 
     /// <summary>
     /// Returns true when given provider (OLEDB or ODBC) is for MSSql.
     /// </summary>
     /// <param name="providerName">OLEDB or ODBC provider.</param>
     /// <returns>True if provider is for MSSql.</returns>
-    protected static bool IsMSSql(string providerName)
-    {
-        return (!string.IsNullOrEmpty(providerName) &&
+    protected static bool IsMSSql(string providerName) => (!string.IsNullOrEmpty(providerName) &&
             (providerName.StartsWith(KnownOleDbProviderNames.SqlOleDb, StringComparison.OrdinalIgnoreCase) ||
              providerName.StartsWith(KnownOleDbProviderNames.MSSqlNative, StringComparison.OrdinalIgnoreCase))) ||
              string.Equals(providerName, KnownOdbcDrivers.MSSql, StringComparison.OrdinalIgnoreCase);
-    }
 
     /// <summary>
     /// Classify a table schema as being hidden from the user
@@ -748,11 +720,9 @@ internal class TestDataConnectionSql : TestDataConnection
     /// </summary>
     /// <param name="tableSchema">A candidate table schema</param>
     /// <returns>True always.</returns>
-    protected virtual bool IsUserSchema(string tableSchema)
-    {
+    protected virtual bool IsUserSchema(string tableSchema) =>
         // Default is to allow all schemas
-        return true;
-    }
+        true;
 
     /// <summary>
     /// Returns default database schema. Returns null for error

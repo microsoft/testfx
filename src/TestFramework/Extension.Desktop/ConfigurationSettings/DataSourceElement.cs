@@ -29,8 +29,8 @@ public sealed class DataSourceElement : ConfigurationElement
     [ConfigurationProperty(ConfigurationNames.NameAttributeName, IsKey = true, IsRequired = true)]
     public string Name
     {
-        get { return (string)this[NameValue]; }
-        set { this[NameValue] = value; }
+        get => (string)this[NameValue];
+        set => this[NameValue] = value;
     }
 
     /// <summary>
@@ -39,8 +39,8 @@ public sealed class DataSourceElement : ConfigurationElement
     [ConfigurationProperty(ConfigurationNames.ConnectionStringAttributeName, IsRequired = true)]
     public string ConnectionString
     {
-        get { return (string)this[ConnectionStringValue]; }
-        set { this[ConnectionStringValue] = value; }
+        get => (string)this[ConnectionStringValue];
+        set => this[ConnectionStringValue] = value;
     }
 
     /// <summary>
@@ -49,8 +49,8 @@ public sealed class DataSourceElement : ConfigurationElement
     [ConfigurationProperty(ConfigurationNames.DataTableAttributeName, IsRequired = true)]
     public string DataTableName
     {
-        get { return (string)this[DataTableNameValue]; }
-        set { this[DataTableNameValue] = value; }
+        get => (string)this[DataTableNameValue];
+        set => this[DataTableNameValue] = value;
     }
 
     /// <summary>
@@ -59,17 +59,14 @@ public sealed class DataSourceElement : ConfigurationElement
     [ConfigurationProperty(ConfigurationNames.DataAccessMethodAttributeName, DefaultValue = "")]
     public string DataAccessMethod
     {
-        get { return (string)this[DataAccessMethodValue]; }
-        set { this[DataAccessMethodValue] = value; }
+        get => (string)this[DataAccessMethodValue];
+        set => this[DataAccessMethodValue] = value;
     }
 
     /// <summary>
     /// Gets the key name.
     /// </summary>
-    internal string Key
-    {
-        get { return Name; }
-    }
+    internal string Key => Name;
 
     /// <summary>
     /// Gets the configuration properties.

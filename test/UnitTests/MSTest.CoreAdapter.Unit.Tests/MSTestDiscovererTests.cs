@@ -53,10 +53,7 @@ public class MSTestDiscovererTests
     }
 
     [TestCleanup]
-    public void Cleanup()
-    {
-        PlatformServiceProvider.Instance = null;
-    }
+    public void Cleanup() => PlatformServiceProvider.Instance = null;
 
     [TestMethod]
     public void MSTestDiscovererHasMSTestAdapterAsExecutorUri()

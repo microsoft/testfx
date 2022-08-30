@@ -24,10 +24,7 @@ public class ExpectedExceptionBaseAttributeTests
     /// Test initialization function.
     /// </summary>
     [TestFrameworkV1.TestInitialize]
-    public void TestInitialize()
-    {
-        _sut = new TestableExpectedExceptionBaseAttributeClass();
-    }
+    public void TestInitialize() => _sut = new TestableExpectedExceptionBaseAttributeClass();
 
     /// <summary>
     /// RethrowIfAssertException function will throw AssertFailedException if we pass AssertFailedException as parameter in it.
@@ -88,19 +85,13 @@ public class TestableExpectedExceptionBaseAttributeClass : TestFrameworkV2.Expec
     {
     }
 
-    public string GetNoExceptionMessage()
-    {
-        return SpecifiedNoExceptionMessage;
-    }
+    public string GetNoExceptionMessage() => SpecifiedNoExceptionMessage;
 
     /// <summary>
     /// Re-throw the exception if it is an AssertFailedException or an AssertInconclusiveException
     /// </summary>
     /// <param name="exception">The exception to re-throw if it is an assertion exception</param>
-    public new void RethrowIfAssertException(Exception exception)
-    {
-        base.RethrowIfAssertException(exception);
-    }
+    public new void RethrowIfAssertException(Exception exception) => base.RethrowIfAssertException(exception);
 
     protected internal override void Verify(Exception exception)
     {

@@ -34,10 +34,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// <summary>
     /// Reset the settings to its default.
     /// </summary>
-    public static void Reset()
-    {
-        s_settings = null;
-    }
+    public static void Reset() => s_settings = null;
 
     /// <summary>
     /// Load the settings from the reader.
@@ -49,8 +46,5 @@ public class MSTestSettingsProvider : ISettingsProvider
         s_settings = MSTestAdapterSettings.ToSettings(reader);
     }
 
-    public IDictionary<string, object> GetProperties(string source)
-    {
-        return TestDeployment.GetDeploymentInformation(source);
-    }
+    public IDictionary<string, object> GetProperties(string source) => TestDeployment.GetDeploymentInformation(source);
 }

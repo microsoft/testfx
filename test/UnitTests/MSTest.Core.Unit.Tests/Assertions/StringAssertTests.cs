@@ -20,16 +20,10 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 public class StringAssertTests
 {
     [TestMethod]
-    public void ThatShouldReturnAnInstanceOfStringAssert()
-    {
-        Assert.IsNotNull(TestFrameworkV2.StringAssert.That);
-    }
+    public void ThatShouldReturnAnInstanceOfStringAssert() => Assert.IsNotNull(TestFrameworkV2.StringAssert.That);
 
     [TestMethod]
-    public void ThatShouldCacheStringAssertInstance()
-    {
-        Assert.AreEqual(TestFrameworkV2.StringAssert.That, TestFrameworkV2.StringAssert.That);
-    }
+    public void ThatShouldCacheStringAssertInstance() => Assert.AreEqual(TestFrameworkV2.StringAssert.That, TestFrameworkV2.StringAssert.That);
 
     [TestMethod]
     public void StringAssertContains()

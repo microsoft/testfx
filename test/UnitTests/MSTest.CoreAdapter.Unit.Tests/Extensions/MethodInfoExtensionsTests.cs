@@ -447,15 +447,9 @@ public class MethodInfoExtensionsTests
 
         public static Func<int, int, bool> DummyMethodBody { get; set; }
 
-        public bool DummyMethod(int x, int y)
-        {
-            return DummyMethodBody(x, y);
-        }
+        public bool DummyMethod(int x, int y) => DummyMethodBody(x, y);
 
-        public async Task DummyAsyncMethod(int x, int y)
-        {
-            await DummyAsyncMethodBody(x, y).ConfigureAwait(false);
-        }
+        public async Task DummyAsyncMethod(int x, int y) => await DummyAsyncMethodBody(x, y).ConfigureAwait(false);
 
         public void PublicMethodWithParameters(int x, int y)
         {
@@ -474,49 +468,25 @@ public class MethodInfoExtensionsTests
         {
         }
 
-        public static int PublicStaticMethodWithTCReturningInt(UTFExtension.TestContext tc)
-        {
-            return 0;
-        }
+        public static int PublicStaticMethodWithTCReturningInt(UTFExtension.TestContext tc) => 0;
 
         public static void PublicStaticMethodWithTC(UTFExtension.TestContext tc)
         {
         }
 
-        public static async Task PublicStaticAsyncTaskMethodWithTC(UTFExtension.TestContext tc)
-        {
-            await Task.FromResult(true).ConfigureAwait(false);
-        }
+        public static async Task PublicStaticAsyncTaskMethodWithTC(UTFExtension.TestContext tc) => await Task.FromResult(true).ConfigureAwait(false);
 
-        public static Task PublicStaticNonAsyncTaskMethodWithTC(UTFExtension.TestContext tc)
-        {
-            return Task.FromResult(true);
-        }
+        public static Task PublicStaticNonAsyncTaskMethodWithTC(UTFExtension.TestContext tc) => Task.FromResult(true);
 
-        public static async void PublicStaticAsyncVoidMethodWithTC(UTFExtension.TestContext tc)
-        {
-            await Task.FromResult(true).ConfigureAwait(false);
-        }
+        public static async void PublicStaticAsyncVoidMethodWithTC(UTFExtension.TestContext tc) => await Task.FromResult(true).ConfigureAwait(false);
 
-        public static int PublicStaticMethodReturningInt()
-        {
-            return 0;
-        }
+        public static int PublicStaticMethodReturningInt() => 0;
 
-        public static async Task PublicStaticAsyncTaskMethod()
-        {
-            await Task.FromResult(true).ConfigureAwait(false);
-        }
+        public static async Task PublicStaticAsyncTaskMethod() => await Task.FromResult(true).ConfigureAwait(false);
 
-        public static async void PublicStaticAsyncVoidMethod()
-        {
-            await Task.FromResult(true).ConfigureAwait(false);
-        }
+        public static async void PublicStaticAsyncVoidMethod() => await Task.FromResult(true).ConfigureAwait(false);
 
-        public static Task PublicStaticNonAsyncTaskMethod()
-        {
-            return Task.FromResult(true);
-        }
+        public static Task PublicStaticNonAsyncTaskMethod() => Task.FromResult(true);
 
         public void PublicMethod()
         {
@@ -532,25 +502,13 @@ public class MethodInfoExtensionsTests
         {
         }
 
-        public int PublicMethodReturningInt()
-        {
-            return 0;
-        }
+        public int PublicMethodReturningInt() => 0;
 
-        public async Task PublicAsyncTaskMethod()
-        {
-            await Task.FromResult(true).ConfigureAwait(false);
-        }
+        public async Task PublicAsyncTaskMethod() => await Task.FromResult(true).ConfigureAwait(false);
 
-        public async void PublicAsyncVoidMethod()
-        {
-            await Task.FromResult(true).ConfigureAwait(false);
-        }
+        public async void PublicAsyncVoidMethod() => await Task.FromResult(true).ConfigureAwait(false);
 
-        public Task PublicNonAsyncTaskMethod()
-        {
-            return Task.FromResult(true);
-        }
+        public Task PublicNonAsyncTaskMethod() => Task.FromResult(true);
 
         [UTF.Timeout(-11)]
         public void PublicMethodWithInvalidTimeout()

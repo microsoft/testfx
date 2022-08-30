@@ -15,14 +15,8 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 public class CollectionAssertTests
 {
     [TestMethod]
-    public void ThatShouldReturnAnInstanceOfCollectionAssert()
-    {
-        Assert.IsNotNull(TestFrameworkV2.CollectionAssert.That);
-    }
+    public void ThatShouldReturnAnInstanceOfCollectionAssert() => Assert.IsNotNull(TestFrameworkV2.CollectionAssert.That);
 
     [TestMethod]
-    public void ThatShouldCacheCollectionAssertInstance()
-    {
-        Assert.AreEqual(TestFrameworkV2.CollectionAssert.That, TestFrameworkV2.CollectionAssert.That);
-    }
+    public void ThatShouldCacheCollectionAssertInstance() => Assert.AreEqual(TestFrameworkV2.CollectionAssert.That, TestFrameworkV2.CollectionAssert.That);
 }

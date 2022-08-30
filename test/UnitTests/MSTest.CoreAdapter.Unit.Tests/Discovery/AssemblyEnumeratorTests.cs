@@ -48,10 +48,7 @@ public class AssemblyEnumeratorTests
     }
 
     [TestCleanup]
-    public void Cleanup()
-    {
-        PlatformServiceProvider.Instance = null;
-    }
+    public void Cleanup() => PlatformServiceProvider.Instance = null;
 
     #region  Constructor tests
 
@@ -163,13 +160,10 @@ public class AssemblyEnumeratorTests
     #region GetLoadExceptionDetails tests
 
     [TestMethodV1]
-    public void GetLoadExceptionDetailsShouldReturnExceptionMessageIfLoaderExceptionsIsNull()
-    {
-        Assert.AreEqual(
+    public void GetLoadExceptionDetailsShouldReturnExceptionMessageIfLoaderExceptionsIsNull() => Assert.AreEqual(
             "DummyMessage\r\n",
             _assemblyEnumerator.GetLoadExceptionDetails(
                 new ReflectionTypeLoadException(null, null, "DummyMessage")));
-    }
 
     [TestMethodV1]
     public void GetLoadExceptionDetailsShouldReturnLoaderExceptionMessage()
@@ -439,10 +433,7 @@ internal class TestableAssemblyEnumerator : AssemblyEnumerator
 
     internal Mock<TypeEnumerator> MockTypeEnumerator { get; set; }
 
-    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals)
-    {
-        return MockTypeEnumerator.Object;
-    }
+    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals) => MockTypeEnumerator.Object;
 }
 
 #endregion

@@ -307,7 +307,7 @@ public class ReflectionUtilityTests
             else if (attrib is TestCategoryV2)
             {
                 var a = attrib as TestCategoryV2;
-                attribValuePairs.Add("TestCategory : " + a.TestCategories.Aggregate((i, j) => { return i + "," + j; }));
+                attribValuePairs.Add("TestCategory : " + a.TestCategories.Aggregate((i, j) => i + "," + j));
             }
             else if (attrib is DurationAttribute)
             {
@@ -317,7 +317,7 @@ public class ReflectionUtilityTests
             else if (attrib is CategoryArrayAttribute)
             {
                 var a = attrib as CategoryArrayAttribute;
-                attribValuePairs.Add("CategoryAttribute : " + a.Value.Aggregate((i, j) => { return i + "," + j; }));
+                attribValuePairs.Add("CategoryAttribute : " + a.Value.Aggregate((i, j) => i + "," + j));
             }
         }
 

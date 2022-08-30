@@ -33,12 +33,9 @@ public class UnitTestElementTests
     #region Ctor tests
 
     [TestMethodV1]
-    public void UnitTestElementConstructorShouldThrowIfTestMethodIsNull()
-    {
-        ActionUtility.ActionShouldThrowExceptionOfType(
+    public void UnitTestElementConstructorShouldThrowIfTestMethodIsNull() => ActionUtility.ActionShouldThrowExceptionOfType(
             () => new UnitTestElement(null),
             typeof(ArgumentNullException));
-    }
 
     #endregion
 

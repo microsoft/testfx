@@ -21,10 +21,7 @@ public class XmlUtilitiesTests
     private TestableXmlUtilities _testableXmlUtilities;
 
     [TestInitialize]
-    public void TestInit()
-    {
-        _testableXmlUtilities = new TestableXmlUtilities();
-    }
+    public void TestInit() => _testableXmlUtilities = new TestableXmlUtilities();
 
     [TestMethod]
     public void AddAssemblyRedirectionShouldAddRedirectionToAnEmptyXml()

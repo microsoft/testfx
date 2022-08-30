@@ -78,10 +78,7 @@ public partial class CLITestBase
 
     private class InternalLogger : IMessageLogger
     {
-        public void SendMessage(TestMessageLevel testMessageLevel, string message)
-        {
-            Debug.WriteLine($"{testMessageLevel}: {message}");
-        }
+        public void SendMessage(TestMessageLevel testMessageLevel, string message) => Debug.WriteLine($"{testMessageLevel}: {message}");
     }
 
     private class InternalSink : ITestCaseDiscoverySink
@@ -110,19 +107,13 @@ public partial class CLITestBase
 
         public IRunSettings RunSettings => _runSettings;
 
-        public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
-        {
-            return _filter;
-        }
+        public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider) => _filter;
 
         private class InternalRunSettings : IRunSettings
         {
             private readonly string _runSettings;
 
-            public InternalRunSettings(string runSettings)
-            {
-                _runSettings = runSettings;
-            }
+            public InternalRunSettings(string runSettings) => _runSettings = runSettings;
 
             public string SettingsXml => _runSettings;
 
@@ -152,20 +143,14 @@ public partial class CLITestBase
             _activeTest = testCase;
         }
 
-        public void RecordResult(TestResult testResult)
-        {
-            _activeResults.Add(testResult);
-        }
+        public void RecordResult(TestResult testResult) => _activeResults.Add(testResult);
 
         public IEnumerable<TestResult> GetFlattenedTestResults() => _testResults.SelectMany(i => i.Value);
         public IEnumerable<KeyValuePair<TestCase, List<TestResult>>> GetTestResults() => _testResults;
 
         public void RecordAttachments(IList<AttachmentSet> attachmentSets) => throw new NotImplementedException();
 
-        public void SendMessage(TestMessageLevel testMessageLevel, string message)
-        {
-            _messageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
-        }
+        public void SendMessage(TestMessageLevel testMessageLevel, string message) => _messageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
 
         public int LaunchProcessWithDebuggerAttached(string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables) => throw new NotImplementedException();
     }

@@ -27,10 +27,7 @@ public class TestRunCancellationToken
     /// </summary>
     public bool Canceled
     {
-        get
-        {
-            return _canceled;
-        }
+        get => _canceled;
 
         private set
         {
@@ -45,10 +42,7 @@ public class TestRunCancellationToken
     /// <summary>
     /// Cancels the execution of a test run.
     /// </summary>
-    public void Cancel()
-    {
-        Canceled = true;
-    }
+    public void Cancel() => Canceled = true;
 
     /// <summary>
     /// Registers a callback method to be invoked when canceled.
@@ -66,8 +60,5 @@ public class TestRunCancellationToken
     /// <summary>
     /// Unregister the callback method.
     /// </summary>
-    public void Unregister()
-    {
-        _registeredCallback = null;
-    }
+    public void Unregister() => _registeredCallback = null;
 }

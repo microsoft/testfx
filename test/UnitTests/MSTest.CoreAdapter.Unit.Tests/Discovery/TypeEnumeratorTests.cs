@@ -52,10 +52,7 @@ public class TypeEnumeratorTests
     }
 
     [TestCleanup]
-    public void Cleanup()
-    {
-        PlatformServiceProvider.Instance = null;
-    }
+    public void Cleanup() => PlatformServiceProvider.Instance = null;
 
     #region Enumerate tests
 
@@ -590,15 +587,12 @@ public class TypeEnumeratorTests
             rh => rh.IsMethodDeclaredInSameAssemblyAsType(It.IsAny<MethodInfo>(), It.IsAny<Type>())).Returns(isMethodFromSameAssembly);
     }
 
-    private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName)
-    {
-        return new TypeEnumerator(
+    private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName) => new TypeEnumerator(
             type,
             assemblyName,
             _mockReflectHelper.Object,
             _mockTypeValidator.Object,
             _mockTestMethodValidator.Object);
-    }
 
     #endregion
 }

@@ -63,10 +63,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition)
-    {
-        IsTrue(condition, string.Empty, null);
-    }
+    public static void IsTrue([DoesNotReturnIf(false)] bool condition) => IsTrue(condition, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -78,10 +75,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition)
-    {
-        IsTrue(condition, string.Empty, null);
-    }
+    public static void IsTrue([DoesNotReturnIf(false)] bool? condition) => IsTrue(condition, string.Empty, null);
 #endif
 
     /// <summary>
@@ -99,10 +93,7 @@ public sealed class Assert
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool condition,
-        [CallerArgumentExpression("condition")] string message = null)
-    {
-        IsTrue(condition, message, null);
-    }
+        [CallerArgumentExpression("condition")] string message = null) => IsTrue(condition, message, null);
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -119,10 +110,7 @@ public sealed class Assert
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition,
-        [CallerArgumentExpression("condition")] string message = null)
-    {
-        IsTrue(condition, message, null);
-    }
+        [CallerArgumentExpression("condition")] string message = null) => IsTrue(condition, message, null);
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -187,10 +175,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition)
-    {
-        IsFalse(condition, string.Empty, null);
-    }
+    public static void IsFalse([DoesNotReturnIf(true)] bool condition) => IsFalse(condition, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -202,10 +187,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition)
-    {
-        IsFalse(condition, string.Empty, null);
-    }
+    public static void IsFalse([DoesNotReturnIf(true)] bool? condition) => IsFalse(condition, string.Empty, null);
 #endif
 
     /// <summary>
@@ -223,10 +205,7 @@ public sealed class Assert
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool condition,
-        [CallerArgumentExpression("condition")] string message = null)
-    {
-        IsFalse(condition, message, null);
-    }
+        [CallerArgumentExpression("condition")] string message = null) => IsFalse(condition, message, null);
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -243,10 +222,7 @@ public sealed class Assert
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition,
-        [CallerArgumentExpression("condition")] string message = null)
-    {
-        IsFalse(condition, message, null);
-    }
+        [CallerArgumentExpression("condition")] string message = null) => IsFalse(condition, message, null);
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -315,10 +291,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
-    public static void IsNull(object value)
-    {
-        IsNull(value, string.Empty, null);
-    }
+    public static void IsNull(object value) => IsNull(value, string.Empty, null);
 #endif
 
     /// <summary>
@@ -336,10 +309,7 @@ public sealed class Assert
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
     public static void IsNull(object value,
-        [CallerArgumentExpression("value")] string message = null)
-    {
-        IsNull(value, message, null);
-    }
+        [CallerArgumentExpression("value")] string message = null) => IsNull(value, message, null);
 
     /// <summary>
     /// Tests whether the specified object is null and throws an exception
@@ -378,10 +348,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    public static void IsNotNull([NotNull] object value)
-    {
-        IsNotNull(value, string.Empty, null);
-    }
+    public static void IsNotNull([NotNull] object value) => IsNotNull(value, string.Empty, null);
 #endif
 
     /// <summary>
@@ -399,10 +366,7 @@ public sealed class Assert
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
     public static void IsNotNull([NotNull] object value,
-        [CallerArgumentExpression("value")] string message = null)
-    {
-        IsNotNull(value, message, null);
-    }
+        [CallerArgumentExpression("value")] string message = null) => IsNotNull(value, message, null);
 
     /// <summary>
     /// Tests whether the specified object is non-null and throws an exception
@@ -449,10 +413,7 @@ public sealed class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame(object expected, object actual)
-    {
-        AreSame(expected, actual, string.Empty, null);
-    }
+    public static void AreSame(object expected, object actual) => AreSame(expected, actual, string.Empty, null);
 #endif
 
     /// <summary>
@@ -474,10 +435,7 @@ public sealed class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame(object expected, object actual, [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreSame(expected, actual, message, null);
-    }
+    public static void AreSame(object expected, object actual, [CallerArgumentExpression("actual")] string message = null) => AreSame(expected, actual, message, null);
 
     /// <summary>
     /// Tests whether the specified objects both refer to the same object and
@@ -539,10 +497,7 @@ public sealed class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame(object notExpected, object actual)
-    {
-        AreNotSame(notExpected, actual, string.Empty, null);
-    }
+    public static void AreNotSame(object notExpected, object actual) => AreNotSame(notExpected, actual, string.Empty, null);
 #endif
 
     /// <summary>
@@ -565,10 +520,7 @@ public sealed class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame(object notExpected, object actual, [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreNotSame(notExpected, actual, message, null);
-    }
+    public static void AreNotSame(object notExpected, object actual, [CallerArgumentExpression("actual")] string message = null) => AreNotSame(notExpected, actual, message, null);
 
     /// <summary>
     /// Tests whether the specified objects refer to different objects and
@@ -623,10 +575,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T expected, T actual)
-    {
-        AreEqual(expected, actual, string.Empty, null);
-    }
+    public static void AreEqual<T>(T expected, T actual) => AreEqual(expected, actual, string.Empty, null);
 #endif
 
     /// <summary>
@@ -653,10 +602,7 @@ public sealed class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual<T>(T expected, T actual,
-        [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreEqual(expected, actual, message, null);
-    }
+        [CallerArgumentExpression("actual")] string message = null) => AreEqual(expected, actual, message, null);
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -736,10 +682,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual<T>(T notExpected, T actual)
-    {
-        AreNotEqual(notExpected, actual, string.Empty, null);
-    }
+    public static void AreNotEqual<T>(T notExpected, T actual) => AreNotEqual(notExpected, actual, string.Empty, null);
 #endif
 
     /// <summary>
@@ -766,10 +709,7 @@ public sealed class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual<T>(T notExpected, T actual,
-        [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreNotEqual(notExpected, actual, message, null);
-    }
+        [CallerArgumentExpression("actual")] string message = null) => AreNotEqual(notExpected, actual, message, null);
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
@@ -829,10 +769,7 @@ public sealed class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(object expected, object actual)
-    {
-        AreEqual(expected, actual, string.Empty, null);
-    }
+    public static void AreEqual(object expected, object actual) => AreEqual(expected, actual, string.Empty, null);
 #endif
 
     /// <summary>
@@ -856,10 +793,7 @@ public sealed class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(object expected, object actual,
-        [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreEqual(expected, actual, message, null);
-    }
+        [CallerArgumentExpression("actual")] string message = null) => AreEqual(expected, actual, message, null);
 
     /// <summary>
     /// Tests whether the specified objects are equal and throws an exception
@@ -885,10 +819,7 @@ public sealed class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(object expected, object actual,
-        [CallerArgumentExpression("actual")] string message = null, params object[] parameters)
-    {
-        AreEqual<object>(expected, actual, message, parameters);
-    }
+        [CallerArgumentExpression("actual")] string message = null, params object[] parameters) => AreEqual<object>(expected, actual, message, parameters);
 
 #if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
@@ -906,10 +837,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(object notExpected, object actual)
-    {
-        AreNotEqual(notExpected, actual, string.Empty, null);
-    }
+    public static void AreNotEqual(object notExpected, object actual) => AreNotEqual(notExpected, actual, string.Empty, null);
 #endif
 
     /// <summary>
@@ -933,10 +861,7 @@ public sealed class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(object notExpected, object actual,
-        [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreNotEqual(notExpected, actual, message, null);
-    }
+        [CallerArgumentExpression("actual")] string message = null) => AreNotEqual(notExpected, actual, message, null);
 
     /// <summary>
     /// Tests whether the specified objects are unequal and throws an exception
@@ -962,10 +887,7 @@ public sealed class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(object notExpected, object actual,
-        [CallerArgumentExpression("actual")] string message = null, params object[] parameters)
-    {
-        AreNotEqual<object>(notExpected, actual, message, parameters);
-    }
+        [CallerArgumentExpression("actual")] string message = null, params object[] parameters) => AreNotEqual<object>(notExpected, actual, message, parameters);
 
 #if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
@@ -987,10 +909,7 @@ public sealed class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(float expected, float actual, float delta)
-    {
-        AreEqual(expected, actual, delta, string.Empty, null);
-    }
+    public static void AreEqual(float expected, float actual, float delta) => AreEqual(expected, actual, delta, string.Empty, null);
 #endif
 
     /// <summary>
@@ -1018,10 +937,7 @@ public sealed class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(float expected, float actual, float delta,
-        [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreEqual(expected, actual, delta, message, null);
-    }
+        [CallerArgumentExpression("actual")] string message = null) => AreEqual(expected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified floats are equal and throws an exception
@@ -1100,10 +1016,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(float notExpected, float actual, float delta)
-    {
-        AreNotEqual(notExpected, actual, delta, string.Empty, null);
-    }
+    public static void AreNotEqual(float notExpected, float actual, float delta) => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 #endif
 
     /// <summary>
@@ -1131,10 +1044,7 @@ public sealed class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(float notExpected, float actual, float delta,
-        [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreNotEqual(notExpected, actual, delta, message, null);
-    }
+        [CallerArgumentExpression("actual")] string message = null) => AreNotEqual(notExpected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified floats are unequal and throws an exception
@@ -1200,10 +1110,7 @@ public sealed class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(decimal expected, decimal actual, decimal delta)
-    {
-        AreEqual(expected, actual, delta, string.Empty, null);
-    }
+    public static void AreEqual(decimal expected, decimal actual, decimal delta) => AreEqual(expected, actual, delta, string.Empty, null);
 #endif
 
     /// <summary>
@@ -1231,10 +1138,7 @@ public sealed class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(decimal expected, decimal actual, decimal delta,
-        [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreEqual(expected, actual, delta, message, null);
-    }
+        [CallerArgumentExpression("actual")] string message = null) => AreEqual(expected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified decimals are equal and throws an exception
@@ -1300,10 +1204,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta)
-    {
-        AreNotEqual(notExpected, actual, delta, string.Empty, null);
-    }
+    public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta) => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 #endif
 
     /// <summary>
@@ -1331,10 +1232,7 @@ public sealed class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta,
-        [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreNotEqual(notExpected, actual, delta, message, null);
-    }
+        [CallerArgumentExpression("actual")] string message = null) => AreNotEqual(notExpected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified decimals are unequal and throws an exception
@@ -1399,10 +1297,7 @@ public sealed class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(long expected, long actual, long delta)
-    {
-        AreEqual(expected, actual, delta, string.Empty, null);
-    }
+    public static void AreEqual(long expected, long actual, long delta) => AreEqual(expected, actual, delta, string.Empty, null);
 
 #if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
@@ -1430,10 +1325,7 @@ public sealed class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(long expected, long actual, long delta,
-        [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreEqual(expected, actual, delta, message, null);
-    }
+        [CallerArgumentExpression("actual")] string message = null) => AreEqual(expected, actual, delta, message, null);
 #endif
 
     /// <summary>
@@ -1500,10 +1392,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(long notExpected, long actual, long delta)
-    {
-        AreNotEqual(notExpected, actual, delta, string.Empty, null);
-    }
+    public static void AreNotEqual(long notExpected, long actual, long delta) => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 #endif
 
     /// <summary>
@@ -1531,10 +1420,7 @@ public sealed class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(long notExpected, long actual, long delta,
-        [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreNotEqual(notExpected, actual, delta, message, null);
-    }
+        [CallerArgumentExpression("actual")] string message = null) => AreNotEqual(notExpected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified longs are unequal and throws an exception
@@ -1599,10 +1485,7 @@ public sealed class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(double expected, double actual, double delta)
-    {
-        AreEqual(expected, actual, delta, string.Empty, null);
-    }
+    public static void AreEqual(double expected, double actual, double delta) => AreEqual(expected, actual, delta, string.Empty, null);
 #endif
 
     /// <summary>
@@ -1628,10 +1511,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(double expected, double actual, double delta, [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreEqual(expected, actual, delta, message, null);
-    }
+    public static void AreEqual(double expected, double actual, double delta, [CallerArgumentExpression("actual")] string message = null) => AreEqual(expected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified doubles are equal and throws an exception
@@ -1708,10 +1588,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(double notExpected, double actual, double delta)
-    {
-        AreNotEqual(notExpected, actual, delta, string.Empty, null);
-    }
+    public static void AreNotEqual(double notExpected, double actual, double delta) => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 #endif
 
     /// <summary>
@@ -1738,10 +1615,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(double notExpected, double actual, double delta, [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreNotEqual(notExpected, actual, delta, message, null);
-    }
+    public static void AreNotEqual(double notExpected, double actual, double delta, [CallerArgumentExpression("actual")] string message = null) => AreNotEqual(notExpected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified doubles are unequal and throws an exception
@@ -1804,10 +1678,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string expected, string actual, bool ignoreCase)
-    {
-        Assert.AreEqual(expected, actual, ignoreCase, string.Empty, null);
-    }
+    public static void AreEqual(string expected, string actual, bool ignoreCase) => Assert.AreEqual(expected, actual, ignoreCase, string.Empty, null);
 #endif
 
     /// <summary>
@@ -1832,10 +1703,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string expected, string actual, bool ignoreCase, [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreEqual(expected, actual, ignoreCase, message, null);
-    }
+    public static void AreEqual(string expected, string actual, bool ignoreCase, [CallerArgumentExpression("actual")] string message = null) => AreEqual(expected, actual, ignoreCase, message, null);
 
     /// <summary>
     /// Tests whether the specified strings are equal and throws an exception
@@ -1862,10 +1730,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string expected, string actual, bool ignoreCase, [CallerArgumentExpression("actual")] string message = null, params object[] parameters)
-    {
-        AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
-    }
+    public static void AreEqual(string expected, string actual, bool ignoreCase, [CallerArgumentExpression("actual")] string message = null, params object[] parameters) => AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
 
 #if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
@@ -1888,10 +1753,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string expected, string actual, bool ignoreCase, CultureInfo culture)
-    {
-        AreEqual(expected, actual, ignoreCase, culture, string.Empty, null);
-    }
+    public static void AreEqual(string expected, string actual, bool ignoreCase, CultureInfo culture) => AreEqual(expected, actual, ignoreCase, culture, string.Empty, null);
 #endif
 
     /// <summary>
@@ -1919,10 +1781,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string expected, string actual, bool ignoreCase, CultureInfo culture, [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreEqual(expected, actual, ignoreCase, culture, message, null);
-    }
+    public static void AreEqual(string expected, string actual, bool ignoreCase, CultureInfo culture, [CallerArgumentExpression("actual")] string message = null) => AreEqual(expected, actual, ignoreCase, culture, message, null);
 
     /// <summary>
     /// Tests whether the specified strings are equal and throws an exception
@@ -2004,10 +1863,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string notExpected, string actual, bool ignoreCase)
-    {
-        AreNotEqual(notExpected, actual, ignoreCase, string.Empty, null);
-    }
+    public static void AreNotEqual(string notExpected, string actual, bool ignoreCase) => AreNotEqual(notExpected, actual, ignoreCase, string.Empty, null);
 #endif
 
     /// <summary>
@@ -2033,10 +1889,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreNotEqual(notExpected, actual, ignoreCase, message, null);
-    }
+    public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, [CallerArgumentExpression("actual")] string message = null) => AreNotEqual(notExpected, actual, ignoreCase, message, null);
 
     /// <summary>
     /// Tests whether the specified strings are unequal and throws an exception
@@ -2064,10 +1917,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, [CallerArgumentExpression("actual")] string message = null, params object[] parameters)
-    {
-        AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
-    }
+    public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, [CallerArgumentExpression("actual")] string message = null, params object[] parameters) => AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
 
 #if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
@@ -2091,10 +1941,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, CultureInfo culture)
-    {
-        AreNotEqual(notExpected, actual, ignoreCase, culture, string.Empty, null);
-    }
+    public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, CultureInfo culture) => AreNotEqual(notExpected, actual, ignoreCase, culture, string.Empty, null);
 #endif
 
     /// <summary>
@@ -2123,10 +1970,7 @@ public sealed class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, CultureInfo culture, [CallerArgumentExpression("actual")] string message = null)
-    {
-        AreNotEqual(notExpected, actual, ignoreCase, culture, message, null);
-    }
+    public static void AreNotEqual(string notExpected, string actual, bool ignoreCase, CultureInfo culture, [CallerArgumentExpression("actual")] string message = null) => AreNotEqual(notExpected, actual, ignoreCase, culture, message, null);
 
     /// <summary>
     /// Tests whether the specified strings are unequal and throws an exception
@@ -2194,10 +2038,7 @@ public sealed class Assert
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType(object value, Type expectedType)
-    {
-        IsInstanceOfType(value, expectedType, string.Empty, null);
-    }
+    public static void IsInstanceOfType(object value, Type expectedType) => IsInstanceOfType(value, expectedType, string.Empty, null);
 #endif
 
     /// <summary>
@@ -2221,10 +2062,7 @@ public sealed class Assert
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType(object value, Type expectedType, [CallerArgumentExpression("value")] string message = null)
-    {
-        IsInstanceOfType(value, expectedType, message, null);
-    }
+    public static void IsInstanceOfType(object value, Type expectedType, [CallerArgumentExpression("value")] string message = null) => IsInstanceOfType(value, expectedType, message, null);
 
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
@@ -2289,10 +2127,7 @@ public sealed class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object value, Type wrongType)
-    {
-        IsNotInstanceOfType(value, wrongType, string.Empty, null);
-    }
+    public static void IsNotInstanceOfType(object value, Type wrongType) => IsNotInstanceOfType(value, wrongType, string.Empty, null);
 #endif
 
     /// <summary>
@@ -2316,10 +2151,7 @@ public sealed class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object value, Type wrongType, [CallerArgumentExpression("value")] string message = null)
-    {
-        IsNotInstanceOfType(value, wrongType, message, null);
-    }
+    public static void IsNotInstanceOfType(object value, Type wrongType, [CallerArgumentExpression("value")] string message = null) => IsNotInstanceOfType(value, wrongType, message, null);
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong
@@ -2384,10 +2216,7 @@ public sealed class Assert
     /// Always thrown.
     /// </exception>
     [DoesNotReturn]
-    public static void Fail()
-    {
-        Fail(string.Empty, null);
-    }
+    public static void Fail() => Fail(string.Empty, null);
 
     /// <summary>
     /// Throws an AssertFailedException.
@@ -2400,10 +2229,7 @@ public sealed class Assert
     /// Always thrown.
     /// </exception>
     [DoesNotReturn]
-    public static void Fail(string message)
-    {
-        Fail(message, null);
-    }
+    public static void Fail(string message) => Fail(message, null);
 
     /// <summary>
     /// Throws an AssertFailedException.
@@ -2419,10 +2245,7 @@ public sealed class Assert
     /// Always thrown.
     /// </exception>
     [DoesNotReturn]
-    public static void Fail(string message, params object[] parameters)
-    {
-        ThrowAssertFailed("Assert.Fail", BuildUserMessage(message, parameters));
-    }
+    public static void Fail(string message, params object[] parameters) => ThrowAssertFailed("Assert.Fail", BuildUserMessage(message, parameters));
 
     #endregion
 
@@ -2434,10 +2257,7 @@ public sealed class Assert
     /// <exception cref="AssertInconclusiveException">
     /// Always thrown.
     /// </exception>
-    public static void Inconclusive()
-    {
-        Inconclusive(string.Empty, null);
-    }
+    public static void Inconclusive() => Inconclusive(string.Empty, null);
 
     /// <summary>
     /// Throws an AssertInconclusiveException.
@@ -2449,10 +2269,7 @@ public sealed class Assert
     /// <exception cref="AssertInconclusiveException">
     /// Always thrown.
     /// </exception>
-    public static void Inconclusive(string message)
-    {
-        Inconclusive(message, null);
-    }
+    public static void Inconclusive(string message) => Inconclusive(message, null);
 
     /// <summary>
     /// Throws an AssertInconclusiveException.
@@ -2515,10 +2332,7 @@ public sealed class Assert
     /// The exception that was thrown.
     /// </returns>
     public static T ThrowsException<T>(Action action)
-        where T : Exception
-    {
-        return ThrowsException<T>(action, string.Empty, null);
-    }
+        where T : Exception => ThrowsException<T>(action, string.Empty, null);
 #endif
 
     /// <summary>
@@ -2542,10 +2356,7 @@ public sealed class Assert
     /// The exception that was thrown.
     /// </returns>
     public static T ThrowsException<T>(Action action, [CallerArgumentExpression("action")] string message = null)
-        where T : Exception
-    {
-        return ThrowsException<T>(action, message, null);
-    }
+        where T : Exception => ThrowsException<T>(action, message, null);
 
 #if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
@@ -2565,10 +2376,7 @@ public sealed class Assert
     /// The exception that was thrown.
     /// </returns>
     public static T ThrowsException<T>(Func<object> action)
-        where T : Exception
-    {
-        return ThrowsException<T>(action, string.Empty, null);
-    }
+        where T : Exception => ThrowsException<T>(action, string.Empty, null);
 #endif
 
     /// <summary>
@@ -2592,10 +2400,7 @@ public sealed class Assert
     /// The exception that was thrown.
     /// </returns>
     public static T ThrowsException<T>(Func<object> action, [CallerArgumentExpression("action")] string message = null)
-        where T : Exception
-    {
-        return ThrowsException<T>(action, message, null);
-    }
+        where T : Exception => ThrowsException<T>(action, message, null);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -2621,10 +2426,7 @@ public sealed class Assert
     /// The exception that was thrown.
     /// </returns>
     public static T ThrowsException<T>(Func<object> action, [CallerArgumentExpression("action")] string message = null, params object[] parameters)
-        where T : Exception
-    {
-        return ThrowsException<T>(() => { action(); }, message, parameters);
-    }
+        where T : Exception => ThrowsException<T>(() => action(), message, parameters);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -2717,10 +2519,7 @@ public sealed class Assert
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
-        where T : Exception
-    {
-        return await ThrowsExceptionAsync<T>(action, string.Empty, null).ConfigureAwait(false);
-    }
+        where T : Exception => await ThrowsExceptionAsync<T>(action, string.Empty, null).ConfigureAwait(false);
 #endif
 
     /// <summary>
@@ -2740,10 +2539,7 @@ public sealed class Assert
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, [CallerArgumentExpression("action")] string message = null)
-        where T : Exception
-    {
-        return await ThrowsExceptionAsync<T>(action, message, null).ConfigureAwait(false);
-    }
+        where T : Exception => await ThrowsExceptionAsync<T>(action, message, null).ConfigureAwait(false);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -2849,10 +2645,7 @@ public sealed class Assert
     /// The assertion failure message
     /// </param>
     [DoesNotReturn]
-    internal static void ThrowAssertFailed(string assertionName, [CallerArgumentExpression("assertionName")] string message = null)
-    {
-        throw new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
-    }
+    internal static void ThrowAssertFailed(string assertionName, [CallerArgumentExpression("assertionName")] string message = null) => throw new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
@@ -2944,10 +2737,7 @@ public sealed class Assert
         }
     }
 
-    private static int CompareInternal(string expected, string actual, bool ignoreCase, CultureInfo culture)
-    {
-        return string.Compare(expected, actual, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-    }
+    private static int CompareInternal(string expected, string actual, bool ignoreCase, CultureInfo culture) => string.Compare(expected, actual, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
     #endregion
 }

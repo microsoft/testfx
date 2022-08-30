@@ -18,30 +18,21 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     /// </summary>
     /// <param name="format"> The format. </param>
     /// <param name="args"> The args. </param>
-    public void LogError(string format, params object[] args)
-    {
-        EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, format, args);
-    }
+    public void LogError(string format, params object[] args) => EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, format, args);
 
     /// <summary>
     /// Log a warning in a given format.
     /// </summary>
     /// <param name="format"> The format. </param>
     /// <param name="args"> The args. </param>
-    public void LogWarning(string format, params object[] args)
-    {
-        EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, format, args);
-    }
+    public void LogWarning(string format, params object[] args) => EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, format, args);
 
     /// <summary>
     /// Log an information message in a given format.
     /// </summary>
     /// <param name="format"> The format. </param>
     /// <param name="args"> The args. </param>
-    public void LogInfo(string format, params object[] args)
-    {
-        EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, format, args);
-    }
+    public void LogInfo(string format, params object[] args) => EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, format, args);
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

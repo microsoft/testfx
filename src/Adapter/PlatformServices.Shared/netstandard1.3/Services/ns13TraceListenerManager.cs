@@ -46,21 +46,16 @@ public class TraceListenerManager : ITraceListenerManager
     /// Adds the argument traceListener object to System.Diagnostics.TraceListenerCollection.
     /// </summary>
     /// <param name="traceListener">The trace listener instance.</param>
-    public void Add(ITraceListener traceListener)
-    {
+    public void Add(ITraceListener traceListener) =>
         // NOTE: Listeners will not get Debug events in dotnet core due to platform limitation.
         // Refer https://github.com/Microsoft/testfx/pull/218 for more details.
         Trace.Listeners.Add(traceListener as TextWriterTraceListener);
-    }
 
     /// <summary>
     /// Removes the argument traceListener object from System.Diagnostics.TraceListenerCollection.
     /// </summary>
     /// <param name="traceListener">The trace listener instance.</param>
-    public void Remove(ITraceListener traceListener)
-    {
-        Trace.Listeners.Remove(traceListener as TextWriterTraceListener);
-    }
+    public void Remove(ITraceListener traceListener) => Trace.Listeners.Remove(traceListener as TextWriterTraceListener);
 
     /// <summary>
     /// Wrapper over Dispose() of ITraceListener.

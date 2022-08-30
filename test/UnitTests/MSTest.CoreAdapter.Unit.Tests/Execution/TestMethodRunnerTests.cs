@@ -119,10 +119,7 @@ public class TestMethodRunnerTests
     }
 
     [TestCleanup]
-    public void Cleanup()
-    {
-        PlatformServiceProvider.Instance = null;
-    }
+    public void Cleanup() => PlatformServiceProvider.Instance = null;
 
     [TestMethodV1]
     public void ExecuteForAssemblyInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
@@ -145,7 +142,7 @@ public class TestMethodRunnerTests
             testContextProperty: testContextProperty,
             classAttribute: classAttribute,
             parent: tai);
-        var testMethodInfo = new TestableTestmethodInfo(_methodInfo, tci, _testMethodOptions, () => { throw new Exception("DummyException"); });
+        var testMethodInfo = new TestableTestmethodInfo(_methodInfo, tci, _testMethodOptions, () => throw new Exception("DummyException"));
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         // Act.
@@ -178,7 +175,7 @@ public class TestMethodRunnerTests
             BindingFlags.Static | BindingFlags.NonPublic)
         };
 
-        var testMethodInfo = new TestableTestmethodInfo(_methodInfo, tci, _testMethodOptions, () => { throw new Exception("DummyException"); });
+        var testMethodInfo = new TestableTestmethodInfo(_methodInfo, tci, _testMethodOptions, () => throw new Exception("DummyException"));
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         // Act.
@@ -192,7 +189,7 @@ public class TestMethodRunnerTests
     [TestMethodV1]
     public void ExecuteForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
     {
-        var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => { throw new Exception("DummyException"); });
+        var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => throw new Exception("DummyException"));
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         var results = testMethodRunner.Execute();
@@ -250,7 +247,7 @@ public class TestMethodRunnerTests
     [TestMethodV1]
     public void RunTestMethodForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
     {
-        var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => { throw new Exception("Dummy Exception"); });
+        var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => throw new Exception("Dummy Exception"));
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         var results = testMethodRunner.RunTestMethod();
@@ -506,44 +503,30 @@ public class TestMethodRunnerTests
 
     #region Test data
 
-    private static void InitMethodThrowingException(UTFExtension.TestContext tc)
-    {
-        throw new ArgumentException();
-    }
+    private static void InitMethodThrowingException(UTFExtension.TestContext tc) => throw new ArgumentException();
 
     public class TestableTestmethodInfo : TestMethodInfo
     {
         private readonly Func<UTF.TestResult> _invokeTest;
 
         internal TestableTestmethodInfo(MethodInfo testMethod, TestClassInfo parent, TestMethodOptions testMethodOptions, Func<UTF.TestResult> invoke)
-            : base(testMethod, parent, testMethodOptions)
-        {
-            _invokeTest = invoke;
-        }
+            : base(testMethod, parent, testMethodOptions) => _invokeTest = invoke;
 
-        public override UTF.TestResult Invoke(object[] arguments)
-        {
+        public override UTF.TestResult Invoke(object[] arguments) =>
             // Ignore args for now
-            return _invokeTest();
-        }
+            _invokeTest();
     }
 
     public class DummyTestClassBase
     {
         public static Action<DummyTestClassBase> BaseTestClassMethodBody { get; set; }
 
-        public void DummyBaseTestClassMethod()
-        {
-            BaseTestClassMethodBody(this);
-        }
+        public void DummyBaseTestClassMethod() => BaseTestClassMethodBody(this);
     }
 
     public class DummyTestClass : DummyTestClassBase
     {
-        public DummyTestClass()
-        {
-            TestConstructorMethodBody();
-        }
+        public DummyTestClass() => TestConstructorMethodBody();
 
         public static Action TestConstructorMethodBody { get; set; }
 
@@ -563,47 +546,24 @@ public class TestMethodRunnerTests
 
         public UTFExtension.TestContext TestContext
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get => throw new NotImplementedException();
 
-            set
-            {
-                TestContextSetterBody(value);
-            }
+            set => TestContextSetterBody(value);
         }
 
-        public static void DummyAssemblyInit(UTFExtension.TestContext tc)
-        {
-            AssemblyInitializeMethodBody(tc);
-        }
+        public static void DummyAssemblyInit(UTFExtension.TestContext tc) => AssemblyInitializeMethodBody(tc);
 
-        public static void DummyClassInit(UTFExtension.TestContext tc)
-        {
-            ClassInitializeMethodBody(tc);
-        }
+        public static void DummyClassInit(UTFExtension.TestContext tc) => ClassInitializeMethodBody(tc);
 
-        public void DummyTestInitializeMethod()
-        {
-            TestInitializeMethodBody(this);
-        }
+        public void DummyTestInitializeMethod() => TestInitializeMethodBody(this);
 
-        public void DummyTestCleanupMethod()
-        {
-            TestCleanupMethodBody(this);
-        }
+        public void DummyTestCleanupMethod() => TestCleanupMethodBody(this);
 
-        public void DummyTestMethod()
-        {
-            TestMethodBody(this);
-        }
+        public void DummyTestMethod() => TestMethodBody(this);
 
-        public Task DummyAsyncTestMethod()
-        {
+        public Task DummyAsyncTestMethod() =>
             // We use this method to validate async TestInitialize, TestCleanup, TestMethod
-            return DummyAsyncTestMethodBody();
-        }
+            DummyAsyncTestMethodBody();
     }
 
     public class DummyTestClassWithParameterizedCtor

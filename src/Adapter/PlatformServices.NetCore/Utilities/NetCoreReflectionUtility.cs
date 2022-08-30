@@ -12,10 +12,7 @@ using System.Reflection;
 /// </summary>
 internal class ReflectionUtility
 {
-    internal virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
-    {
-        return GetCustomAttributes(attributeProvider, type, true);
-    }
+    internal virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type) => GetCustomAttributes(attributeProvider, type, true);
 
     /// <summary>
     /// Gets all the custom attributes adorned on a member.
@@ -23,10 +20,7 @@ internal class ReflectionUtility
     /// <param name="memberInfo"> The member. </param>
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-    internal object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
-    {
-        return GetCustomAttributes(memberInfo, type: null, inherit: inherit);
-    }
+    internal object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit) => GetCustomAttributes(memberInfo, type: null, inherit: inherit);
 
     internal object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
     {

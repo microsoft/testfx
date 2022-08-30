@@ -73,10 +73,7 @@ internal class UnitTestRunner : MarshalByRefObject
 #if NET5_0_OR_GREATER
     [Obsolete]
 #endif
-    public override object InitializeLifetimeService()
-    {
-        return null;
-    }
+    public override object InitializeLifetimeService() => null;
 
     /// <summary>
     /// Initialized the class cleanup manager for the unit test runner. Note, this can run over process-isolation,
