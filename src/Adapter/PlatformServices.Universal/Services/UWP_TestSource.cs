@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System;
@@ -129,3 +130,4 @@ public class TestSource : ITestSource
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
+#endif

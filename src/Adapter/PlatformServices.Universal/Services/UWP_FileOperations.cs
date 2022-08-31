@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
-using global::System;
-using global::System.IO;
-using global::System.Reflection;
+using System;
+using System.IO;
+using System.Reflection;
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
@@ -17,13 +17,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 /// </summary>
 public class FileOperations : IFileOperations
 {
-    private readonly bool _isPackaged;
-
-    public FileOperations()
-    {
-        _isPackaged = AppModel.IsPackagedProcess();
-    }
-
     /// <summary>
     /// Loads an assembly.
     /// </summary>
@@ -34,11 +27,6 @@ public class FileOperations : IFileOperations
     /// <returns> The <see cref="Assembly"/>. </returns>
     public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly)
     {
-        if (!_isPackaged && Path.IsPathRooted(assemblyName))
-        {
-            return Assembly.LoadFrom(assemblyName);
-        }
-
         string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
         return Assembly.Load(new AssemblyName(fileNameWithoutExtension));
     }
@@ -50,7 +38,7 @@ public class FileOperations : IFileOperations
     /// <returns>Path to the .DLL of the assembly.</returns>
     public string GetAssemblyPath(Assembly assembly)
     {
-        return assembly.Location;
+        return null; // TODO: what are the options here?
     }
 
     /// <summary>
@@ -60,8 +48,21 @@ public class FileOperations : IFileOperations
     /// <returns> The <see cref="bool"/>. </returns>
     public bool DoesFileExist(string assemblyFileName)
     {
-        var path = GetFullFilePath(assemblyFileName);
-        return File.Exists(path);
+        var fileExists = false;
+
+        try
+        {
+            var fileNameWithoutPath = Path.GetFileName(assemblyFileName);
+            var searchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFileAsync(fileNameWithoutPath).AsTask();
+            searchTask.Wait();
+            fileExists = searchTask.Result != null;
+        }
+        catch (Exception)
+        {
+            // ignore
+        }
+
+        return fileExists;
     }
 
     /// <summary>
@@ -108,14 +109,9 @@ public class FileOperations : IFileOperations
     /// </returns>
     public string GetFullFilePath(string assemblyFileName)
     {
-        var packagePath = AppContainer.AppModel.GetCurrentPackagePath();
-        if (packagePath == null)
-        {
-            return assemblyFileName;
-        }
-
-        return Path.Combine(packagePath, assemblyFileName);
+        return assemblyFileName;
     }
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
+#endif
