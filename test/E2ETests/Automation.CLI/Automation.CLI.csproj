@@ -74,10 +74,10 @@
       <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNETTestSdkVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" Folder="netcoreapp3.1" />
       <FileToCopy Include="$(SourcePath)MSTest.TestAdapter\netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" KeepDuplicates="True" Folder="netcoreapp3.1" />
       <FileToCopy Include="$(SourcePath)MSTest.TestAdapter\netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.pdb" KeepDuplicates="True" Folder="netcoreapp3.1" />
-      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" Folder="netcoreapp3.1" />
-      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" Folder="netcoreapp3.1" />
-      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" KeepDuplicates="True" Folder="netcoreapp3.1" />
-      <FileToCopy Include="$(SourcePath)PlatformServices.NetCore\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" KeepDuplicates="True" Folder="netcoreapp3.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Universal\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" Folder="netcoreapp3.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Universal\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" Folder="netcoreapp3.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Universal\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" KeepDuplicates="True" Folder="netcoreapp3.1" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Universal\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" KeepDuplicates="True" Folder="netcoreapp3.1" />
     </ItemGroup>
 
     <Copy SourceFiles="@(FileToCopy)"

@@ -1,11 +1,11 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>uap10.0.16299;net6.0-windows10.0.18362.0</TargetFrameworks>
+    <TargetFrameworks>uap10.0.16299;net6.0-windows10.0.18362.0;netstandard2.0</TargetFrameworks>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
-   <PropertyGroup>
+  <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
@@ -26,7 +26,12 @@
     <UseSharedResources>true</UseSharedResources>
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
     <!-- Remove after ARCADE transition -->
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
+    <!-- / Remove after ARCADE transition -->
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <!-- Remove after ARCADE transition -->
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
     <!-- / Remove after ARCADE transition -->
@@ -52,7 +57,7 @@
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Private="True" />
   </ItemGroup>
   <!-- Project references specific to WinUI -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0-windows10.0.18362.0' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0-windows10.0.18362.0' OR '$(TargetFramework)' == 'netstandard2.0' ">
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
@@ -66,58 +71,54 @@
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Condition=" '$(TargetFramework)' == 'net6.0-windows10.0.18362.0' " Version="$(SystemDiagnosticsTextWriterTraceListenerVersion)" />
   </ItemGroup>
 
-  <!-- Items specific to WinUI -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0-windows10.0.18362.0' ">
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\Deployment\NetCoreTestRunDirectories.cs" Link="Deployment\NetCoreTestRunDirectories.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\Utilities\NetCoreAssemblyUtility.cs" Link="Utilities\NetCoreAssemblyUtility.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\Utilities\NetCoreDeploymentUtility.cs" Link="Utilities\NetCoreDeploymentUtility.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\Utilities\NetCoreReflectionUtility.cs" Link="Utilities\NetCoreReflectionUtility.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentUtilityBase.cs" Link="Utilities\ns13DeploymentUtilityBase.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs" Link="Utilities\ns13FileUtility.cs" />
+  <!-- Common Items -->
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Constants.cs" Link="Constants.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs" Link="MarshalByRefObject.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs" Link="ns10RecursiveDirectoryPath.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs" Link="SerializableAttribute.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs" Link="Services\ns10DiaSessionOperations.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10FileOperations.cs" Link="Services\ns10FileOperations.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs" Link="Services\ns10MSTestSettingsProvider.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs" Link="Services\ns10ReflectionOperations.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10SettingsProvider.cs" Link="Services\ns10SettingsProvider.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs" Link="Services\ns10TestContextImplementation.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextPropertyStrings.cs" Link="Services\ns10TestContextPropertyStrings.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs" Link="Services\ns10TestDataSource.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDeployment.cs" Link="Services\ns10TestDeployment.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestSource.cs" Link="Services\ns10TestSource.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestSourceHost.cs" Link="Services\ns10TestSourceHost.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" Link="Services\ns10ThreadOperations.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs" Link="Services\ns10TraceListener.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs" Link="Services\ns10TraceListenerManager.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceLogger.cs" Link="Services\ns10TraceLogger.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Utilities\ns10Validate.cs" Link="Utilities\ns10Validate.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Extensions\ns13ExceptionExtensions.cs" Link="Extensions\ns13ExceptionExtensions.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\ns13DeploymentItem.cs" Link="Deployment\ns13DeploymentItem.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13MSTestAdapterSettings.cs" Link="Services\ns13MSTestAdapterSettings.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TestDeployment.cs" Link="Services\ns13TestDeployment.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13ThreadSafeStringWriter.cs" Link="Services\ns13ThreadSafeStringWriter.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListener.cs" Link="Services\ns13TraceListener.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13TraceListenerManager.cs" Link="Services\ns13TraceListenerManager.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentItemUtility.cs" Link="Utilities\ns13DeploymentItemUtility.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs" Link="ns10RecursiveDirectoryPath.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10MSTestSettingsProvider.cs" Link="Services\ns10MSTestSettingsProvider.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextPropertyStrings.cs" Link="Services\ns10TestContextPropertyStrings.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Utilities\ns10Validate.cs" Link="Utilities\ns10Validate.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Extensions\ns13ExceptionExtensions.cs" Link="Extensions\ns13ExceptionExtensions.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13DeploymentUtilityBase.cs" Link="Utilities\ns13DeploymentUtilityBase.cs" />
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs" Link="Utilities\ns13FileUtility.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs" Condition=" '$(TargetFramework)' != 'uap10.0.16299' ">
       <Link>Resources\Resource.Designer.cs</Link>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.resx">
+    <EmbeddedResource Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.resx" Condition=" '$(TargetFramework)' != 'uap10.0.16299' ">
       <Link>Resources\Resource.resx</Link>
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
       <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</CustomToolNamespace>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <!-- Items specific to UWP -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'uap10.0.16299' ">
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs" Link="MarshalByRefObject.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs" Link="SerializableAttribute.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10SettingsProvider.cs" Link="Services\ns10SettingsProvider.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDeployment.cs" Link="Services\ns10TestDeployment.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestSourceHost.cs" Link="Services\ns10TestSourceHost.cs" />
-  </ItemGroup>
-
-  <!-- Common Items -->
-  <ItemGroup>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Constants.cs" Link="Constants.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10DiaSessionOperations.cs" Link="Services\ns10DiaSessionOperations.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ReflectionOperations.cs" Link="Services\ns10ReflectionOperations.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13ThreadSafeStringWriter.cs" Link="Services\ns13ThreadSafeStringWriter.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestContextImplementation.cs" Link="Services\ns10TestContextImplementation.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TestDataSource.cs" Link="Services\ns10TestDataSource.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10ThreadOperations.cs" Link="Services\ns10ThreadOperations.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListener.cs" Link="Services\ns10TraceListener.cs" />
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs" Link="Services\ns10TraceListenerManager.cs" />
   </ItemGroup>
 
 </Project>

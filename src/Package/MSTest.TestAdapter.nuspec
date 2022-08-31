@@ -42,7 +42,7 @@
   <files>
     <!-- netstandard2.0 -->
     <file src="Build\NetCore\MSTest.TestAdapter.props" target="build\netstandard2.0\" />
-    <file src="PlatformServices.NetCore\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard2.0\" />
+    <file src="PlatformServices.Universal\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard2.0\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard2.0\" target="build\netstandard2.0\" />
     <file src="MSTest.TestAdapter\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\netstandard2.0\" />
     <file src="PlatformServices.Interface\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" target="build\netstandard2.0\" />
@@ -60,7 +60,7 @@
     <!-- net6.0 -->
     <file src="Build\Net6\MSTest.TestAdapter.props" target="build\net6.0\MSTest.TestAdapter.props" />
     <file src="Build\Net6\MSTest.TestAdapter.targets" target="build\net6.0\MSTest.TestAdapter.targets" />
-    <file src="PlatformServices.NetCore\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net6.0\" />
+    <file src="PlatformServices.Universal\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net6.0\" />
     <file src="PlatformServices.Universal\net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net6.0\winui\" />
     <file src="Microsoft.TestPlatform.AdapterUtilities\netstandard2.0\" target="build\net6.0\" />
     <file src="MSTest.TestAdapter\net6.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\net6.0\" />

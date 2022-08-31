@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Aliases="FrameworkV2Extension" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Universal\PlatformServices.Universal.csproj" />
   </ItemGroup>
 
   <ItemGroup>

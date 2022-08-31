@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETSTANDARD || (NETCOREAPP && !WIN_UI)
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -59,3 +60,4 @@ public class AdapterTraceLogger : IAdapterTraceLogger
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
+#endif

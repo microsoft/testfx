@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK || WIN_UI || NETSTANDARD
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
@@ -22,3 +23,4 @@ internal static class TestContextPropertyStrings
     public static readonly string ManagedMethod = "ManagedMethod";
     public static readonly string TestName = "TestName";
 }
+#endif

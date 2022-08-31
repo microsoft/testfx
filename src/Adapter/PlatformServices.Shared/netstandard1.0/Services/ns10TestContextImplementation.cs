@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETCOREAPP || WINDOWS_UWP || WIN_UI || NETSTANDARD_PORTABLE
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System;
@@ -10,6 +11,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
@@ -343,3 +345,4 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
+#endif

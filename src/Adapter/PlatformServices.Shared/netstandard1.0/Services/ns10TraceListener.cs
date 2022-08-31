@@ -1,9 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETCOREAPP || WIN_UI || WINDOWS_UWP || NETSTANDARD_PORTABLE
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System.IO;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
@@ -52,3 +54,4 @@ public class TraceListenerWrapper : ITraceListener
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
+#endif
