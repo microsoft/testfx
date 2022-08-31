@@ -1,27 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
-    <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <IsPackable>false</IsPackable>
     <RootNamespace>MSTestAdapter.PlatformServices.NetCore.UnitTests</RootNamespace>
     <AssemblyName>MSTestAdapter.PlatformServices.NetCore.UnitTests</AssemblyName>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
-    <NoWarn>CS1685</NoWarn>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" Aliases="FrameworkV2Extension" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Aliases="FrameworkV2Extension" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.NetCore\PlatformServices.NetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
   </ItemGroup>
 

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using System.Configuration;
@@ -76,3 +77,4 @@ public sealed class DataSourceElement : ConfigurationElement
     /// </summary>
     protected override ConfigurationPropertyCollection Properties => SharedProperties;
 }
+#endif

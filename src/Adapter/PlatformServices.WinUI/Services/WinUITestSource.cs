@@ -9,6 +9,7 @@ using global::System.IO;
 using global::System.Linq;
 using global::System.Reflection;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
@@ -83,21 +84,18 @@ public class TestSource : ITestSource
 
             List<string> newSources = new();
 
-            var fileSearchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFilesAsync().AsTask();
-            fileSearchTask.Wait();
-            foreach (var filePath in fileSearchTask.Result)
+            var files = Directory.GetFiles(AppModel.GetCurrentPackagePath());
+            foreach (var filePath in files)
             {
-                var fileName = filePath.Name;
-                var isExtSupported =
-                    ExecutableExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
+                var isExtSupported = ExecutableExtensions.Any(ext => filePath.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
 
-                if (isExtSupported && !fileName.StartsWith(SystemAssembliesPrefix, StringComparison.OrdinalIgnoreCase)
-                        && !PlatformAssemblies.Contains(fileName.ToUpperInvariant())
-                        && !SystemAssemblies.Contains(fileName.ToUpperInvariant()))
+                if (isExtSupported && !filePath.StartsWith(SystemAssembliesPrefix, StringComparison.OrdinalIgnoreCase)
+                        && !PlatformAssemblies.Contains(filePath.ToUpperInvariant())
+                        && !SystemAssemblies.Contains(filePath.ToUpperInvariant()))
                 {
                     // WinUI Desktop uses .NET 6, which builds both a .dll and an .exe.
                     // The manifest will provide the .exe, but the tests are inside the .dll, so we replace the name here.
-                    newSources.Add(Path.Combine(appxSourceDirectory, Path.ChangeExtension(fileName, Constants.DllExtension)));
+                    newSources.Add(Path.Combine(appxSourceDirectory, Path.ChangeExtension(filePath, Constants.DllExtension)));
                 }
             }
 

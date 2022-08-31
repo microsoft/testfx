@@ -3,7 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using global::System;
+using System;
 
 /// <summary>
 /// Used to specify deployment item (file or directory) for per-test deployment.
@@ -16,13 +16,15 @@ using global::System;
 /// [DeploymentItem("file2.xml", "DataFiles")]
 /// [DeploymentItem("bin\Debug")]
 /// </example>
-/// <remarks>
-/// Putting this in here so that UWP discovery works. We still do not want users to be using DeploymentItem in the UWP world - Hence making it internal.
-/// We should separate out DeploymentItem logic in the adapter via a Framework extensibility point.
-/// Filed https://github.com/Microsoft/testfx/issues/100 to track this.
-/// </remarks>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
+#if WINDOWS_UWP || WIN_UI
+// Putting this in here so that UWP discovery works. We still do not want users to be using DeploymentItem in the UWP world - Hence making it internal.
+// We should separate out DeploymentItem logic in the adapter via a Framework extensibility point.
+// Filed https://github.com/Microsoft/testfx/issues/100 to track this.
 internal sealed class DeploymentItemAttribute : Attribute
+#else
+public sealed class DeploymentItemAttribute : Attribute
+#endif
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DeploymentItemAttribute"/> class.

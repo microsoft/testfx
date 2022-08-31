@@ -9,6 +9,7 @@
     <SupportedOSPlatformVersion>$(TargetPlatformMinVersion)</SupportedOSPlatformVersion>
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
     <UseSharedResources>true</UseSharedResources>
+    <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
   </PropertyGroup>
 
   <!-- Remove after ARCADE transition -->
@@ -26,7 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
@@ -61,7 +62,6 @@
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Services\ns10TraceListenerManager.cs" Link="Services\ns10TraceListenerManager.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Services\ns13ThreadSafeStringWriter.cs" Link="Services\ns13ThreadSafeStringWriter.cs" />
     <Compile Include="Friends.cs" />
-    <Compile Include="AppModel.cs" />
     <Compile Include="Services\WinUIAdapterTraceLogger.cs" />
     <Compile Include="Services\WinUIFileOperations.cs" />
     <Compile Include="Services\WinUITestSource.cs" />

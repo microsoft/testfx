@@ -45,31 +45,31 @@
   <files>
     <!-- netstandard2.0 -->
     <file src="MSTest.Core\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard2.0\" />
-    <file src="Extension.Core\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard2.0\" />
+    <file src="Extension\netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard2.0\" />
     <file src="MSTest.Core\netstandard2.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard2.0\" />
-    <file src="Extension.Core\netstandard2.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard2.0\" />
+    <file src="Extension\netstandard2.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard2.0\" />
 
     <!-- net462 -->
     <file src="MSTest.Core\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net462\" />
-    <file src="Extension.Desktop\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\net462\" />
+    <file src="Extension\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\net462\" />
     <file src="MSTest.Core\net462\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net462\" />
-    <file src="Extension.Desktop\net462\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net462\" />
+    <file src="Extension\net462\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net462\" />
 
     <!-- uap10.0 -->
-    <file src="Extension.UWP\uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\uap10.0\" />
-    <file src="Extension.UWP\uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\uap10.0\" />
-    <file src="Extension.UWP\uap10.0.16299\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\uap10.0\" />
-    <file src="Extension.UWP\uap10.0.16299\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\uap10.0\" />
+    <file src="Extension\uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\uap10.0\" />
+    <file src="Extension\uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\uap10.0\" />
+    <file src="Extension\uap10.0.16299\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\uap10.0\" />
+    <file src="Extension\uap10.0.16299\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\uap10.0\" />
 
     <!-- net6.0 -->
     <file src="Build\Net6\MSTest.TestFramework.targets" target="build\net6.0\" />
     <file src="MSTest.Core\net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net6.0\" />
     <file src="MSTest.Core\net6.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net6.0\" />
 
-    <file src="Extension.WinUI\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net6.0\winui\" />
-    <file src="Extension.WinUI\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net6.0\winui\" />
-    <file src="Extension.Core\net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net6.0\" />
-    <file src="Extension.Core\net6.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net6.0\" />
+    <file src="Extension\net*.0-windows*\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net6.0\winui\" />
+    <file src="Extension\net*.0-windows*\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net6.0\winui\" />
+    <file src="Extension\net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net6.0\" />
+    <file src="Extension\net6.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net6.0\" />
 
     <!-- Icon -->
     <file src="Icon.png" target="" />

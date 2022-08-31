@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum)</TargetFrameworks>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -28,7 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" />
   </ItemGroup>
 
   <ItemGroup>

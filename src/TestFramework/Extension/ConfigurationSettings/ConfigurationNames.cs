@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -43,3 +44,4 @@ internal static class ConfigurationNames
     /// </summary>
     internal const string DataTableAttributeName = "dataTableName";
 }
+#endif

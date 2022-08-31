@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if WIN_UI
 #nullable enable
 #pragma warning disable SA1310 // Field names must not contain underscore
 
@@ -122,3 +123,4 @@ internal static class AppModel
         public static extern int GetCurrentPackagePath(ref int pathLength, StringBuilder path);
     }
 }
+#endif

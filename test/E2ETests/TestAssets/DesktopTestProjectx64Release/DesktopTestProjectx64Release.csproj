@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Desktop\Extension.Desktop.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" />
   </ItemGroup>
 
   <ItemGroup>

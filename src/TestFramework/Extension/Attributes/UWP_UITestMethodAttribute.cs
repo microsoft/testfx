@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
 using System;
@@ -41,3 +42,4 @@ public class UITestMethodAttribute : TestMethodAttribute
         return new TestResult[] { result };
     }
 }
+#endif

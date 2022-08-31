@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension.Core\Extension.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" SetTargetFramework="TargetFramework=netstandard2.0" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
