@@ -41,7 +41,6 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Desktop\PlatformServices.Desktop.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Aliases="FrameworkV2Extension" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Aliases="FrameworkV2" />
     <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj" />

@@ -5,7 +5,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 
 extern alias FrameworkV1;
 extern alias FrameworkV2;
-extern alias FrameworkV2CoreExtension;
 
 using System;
 using System.Collections.Generic;
