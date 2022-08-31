@@ -27,7 +27,7 @@
       <HintPath>$(ArtifactsBinDir)MSTest.TestAdapter\$(TargetFramework)\System.Collections.Concurrent.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices">
-      <HintPath>$(ArtifactsBinDir)PlatformServices.Desktop\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
+      <HintPath>$(ArtifactsBinDir)PlatformServices.Universal\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface">
       <HintPath>$(ArtifactsBinDir)PlatformServices.Interface\$(TargetFramework)\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll</HintPath>

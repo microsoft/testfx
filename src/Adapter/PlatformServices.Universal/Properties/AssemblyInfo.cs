@@ -34,3 +34,8 @@ using System.Runtime.Versioning;
 // Can be removed after the issue is closed.
 [assembly: SupportedOSPlatform("windows10.0.17763.0")]
 #endif
+
+#if NETFRAMEWORK
+[assembly: TypeForwardedTo(typeof(SerializableAttribute))]
+[assembly: TypeForwardedTo(typeof(MarshalByRefObject))]
+#endif

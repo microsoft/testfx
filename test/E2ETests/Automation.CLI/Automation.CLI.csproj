@@ -60,8 +60,8 @@
 
     <ItemGroup>
       <FileToCopy Include="$(NuGetPackageRoot)\microsoft.testplatform.adapterutilities\$(MicrosoftNETTestSdkVersion)\lib\netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" KeepDuplicates="true" />
-      <FileToCopy Include="$(SourcePath)PlatformServices.Desktop\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" />
-      <FileToCopy Include="$(SourcePath)PlatformServices.Desktop\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Universal\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" KeepDuplicates="True" />
+      <FileToCopy Include="$(SourcePath)PlatformServices.Universal\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)PlatformServices.Interface\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)PlatformServices.Interface\net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" KeepDuplicates="True" />
       <FileToCopy Include="$(SourcePath)MSTest.Core\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" KeepDuplicates="True" />

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>uap10.0.16299;net6.0-windows10.0.18362.0;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>uap10.0.16299;net6.0-windows10.0.18362.0;netstandard2.0;$(NetFrameworkMinimum)</TargetFrameworks>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -56,8 +56,8 @@
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Private="True" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Private="True" />
   </ItemGroup>
-  <!-- Project references specific to WinUI -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0-windows10.0.18362.0' OR '$(TargetFramework)' == 'netstandard2.0' ">
+  <!-- Project references specific to WinUI, netstandard and netfx -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0-windows10.0.18362.0' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
@@ -73,7 +73,6 @@
 
   <!-- Common Items -->
   <ItemGroup>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\Constants.cs" Link="Constants.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\MarshalByRefObject.cs" Link="MarshalByRefObject.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\ns10RecursiveDirectoryPath.cs" Link="ns10RecursiveDirectoryPath.cs" />
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.0\SerializableAttribute.cs" Link="SerializableAttribute.cs" />
@@ -105,14 +104,14 @@
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs" Link="Utilities\ns13FileUtility.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs" Condition=" '$(TargetFramework)' != 'uap10.0.16299' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != 'uap10.0.16299' ">
+    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
       <Link>Resources\Resource.Designer.cs</Link>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.resx" Condition=" '$(TargetFramework)' != 'uap10.0.16299' ">
+    <EmbeddedResource Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.resx">
       <Link>Resources\Resource.resx</Link>
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
