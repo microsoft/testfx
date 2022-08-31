@@ -8,9 +8,7 @@ using System;
 /// <summary>
 /// AssertFailedException class. Used to indicate failure for a test case
 /// </summary>
-#if !NETSTANDARD1_4
 [Serializable]
-#endif
 public partial class AssertFailedException : UnitTestAssertException
 {
     /// <summary>

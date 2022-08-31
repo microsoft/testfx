@@ -8,9 +8,7 @@ using System;
 /// <summary>
 /// The assert inconclusive exception.
 /// </summary>
-#if !NETSTANDARD1_4
 [Serializable]
-#endif
 public partial class AssertInconclusiveException : UnitTestAssertException
 {
     /// <summary>
