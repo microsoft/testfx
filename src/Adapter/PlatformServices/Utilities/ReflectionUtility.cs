@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NETSTANDARD || WIN_UI
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
@@ -52,6 +52,7 @@ internal class ReflectionUtility
             return null;
         }
 
+#if NETFRAMEWORK
         bool shouldGetAllAttributes = type == null;
 
         if (!IsReflectionOnlyLoad(memberInfo))
@@ -136,8 +137,19 @@ internal class ReflectionUtility
             nonUniqueAttributes.AddRange(uniqueAttributes.Values);
             return nonUniqueAttributes.ToArray();
         }
+#else
+        if (type == null)
+        {
+            return memberInfo.GetCustomAttributes(inherit).ToArray();
+        }
+        else
+        {
+            return memberInfo.GetCustomAttributes(type, inherit).ToArray();
+        }
+#endif
     }
 
+#if NETFRAMEWORK
     internal object[] GetCustomAttributes(Assembly assembly, Type type)
     {
         if (assembly.ReflectionOnly)
@@ -307,6 +319,7 @@ internal class ReflectionUtility
 
         return false;
     }
+#endif
 }
 
 #endif
