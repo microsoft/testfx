@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETSTANDARD || WIN_UI
+#if NETFRAMEWORK || NETSTANDARD || WIN_UI
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
 using System;
@@ -23,6 +23,13 @@ public class TestRunDirectories
     /// The deployment in directory suffix.
     /// </summary>
     internal const string DeploymentInDirectorySuffix = "In";
+
+#if NETFRAMEWORK
+    /// <summary>
+    /// The deployment out directory suffix.
+    /// </summary>
+    internal const string DeploymentOutDirectorySuffix = "Out";
+#endif
 
     public TestRunDirectories(string rootDirectory)
     {
@@ -54,7 +61,11 @@ public class TestRunDirectories
     {
         get
         {
+#if NETFRAMEWORK
+            return Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
+#else
             return Directory.GetCurrentDirectory();
+#endif
         }
     }
 
