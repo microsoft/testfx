@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NETSTANDARD || WIN_UI
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
@@ -30,6 +30,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
 
     public override void AddDeploymentItemsBasedOnMsTestSetting(string testSource, IList<DeploymentItem> deploymentItems, List<string> warnings)
     {
+#if NETFRAMEWORK
         if (MSTestSettingsProvider.Settings.DeployTestSourceDependencies)
         {
             EqtTrace.Info("Adding the references and satellite assemblies to the deployment items list");
@@ -49,6 +50,9 @@ internal class DeploymentUtility : DeploymentUtilityBase
             EqtTrace.Info("Adding the test source directory to the deployment items list");
             DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(Path.GetDirectoryName(testSource)));
         }
+#else
+        // It should add items from bin\debug but since deployment items in netcore are run from bin\debug only, so no need to implement it
+#endif
     }
 
     /// <summary>
@@ -59,12 +63,38 @@ internal class DeploymentUtility : DeploymentUtilityBase
     public override string GetRootDeploymentDirectory(string baseDirectory)
     {
         string dateTimeSufix = DateTime.Now.ToString("yyyyMMddTHHmmss", DateTimeFormatInfo.InvariantInfo);
-        string directoryName = string.Format(CultureInfo.InvariantCulture, Resource.TestRunName, DeploymentFolderPrefix, Environment.UserName, dateTimeSufix);
+        string directoryName = string.Format(CultureInfo.InvariantCulture, Resource.TestRunName, DeploymentFolderPrefix,
+#if NETFRAMEWORK
+            Environment.UserName,
+#else
+            Environment.GetEnvironmentVariable("USERNAME") ?? Environment.GetEnvironmentVariable("USER"),
+#endif
+            dateTimeSufix);
         directoryName = FileUtility.ReplaceInvalidFileNameCharacters(directoryName);
 
         return FileUtility.GetNextIterationDirectoryName(baseDirectory, directoryName);
     }
 
+    protected override void AddDependenciesOfDeploymentItem(string deploymentItemFile, IList<string> filesToDeploy, IList<string> warnings)
+    {
+#if NETFRAMEWORK
+        var dependencies = new List<DeploymentItem>();
+
+        AddDependencies(deploymentItemFile, null, dependencies, warnings);
+
+        foreach (var dependencyItem in dependencies)
+        {
+            Debug.Assert(Path.IsPathRooted(dependencyItem.SourcePath), "Path of the dependency " + dependencyItem.SourcePath + " is not rooted.");
+
+            // Add dependencies to filesToDeploy.
+            filesToDeploy.Add(dependencyItem.SourcePath);
+        }
+#else
+        // Its implemented only in full framework project as dependent files are not fetched in netcore.
+#endif
+    }
+
+#if NETFRAMEWORK
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     protected void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings)
     {
@@ -95,21 +125,6 @@ internal class DeploymentUtility : DeploymentUtilityBase
                 string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentErrorFailedToDeployDependencies, testSource, e);
                 warnings.Add(warning);
             }
-        }
-    }
-
-    protected override void AddDependenciesOfDeploymentItem(string deploymentItemFile, IList<string> filesToDeploy, IList<string> warnings)
-    {
-        var dependencies = new List<DeploymentItem>();
-
-        AddDependencies(deploymentItemFile, null, dependencies, warnings);
-
-        foreach (var dependencyItem in dependencies)
-        {
-            Debug.Assert(Path.IsPathRooted(dependencyItem.SourcePath), "Path of the dependency " + dependencyItem.SourcePath + " is not rooted.");
-
-            // Add dependencies to filesToDeploy.
-            filesToDeploy.Add(dependencyItem.SourcePath);
         }
     }
 
@@ -247,6 +262,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
             }
         }
     }
+#endif
 }
 
 #endif
