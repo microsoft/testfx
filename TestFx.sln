@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Interface"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Portable", "src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj", "{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Universal", "src\Adapter\PlatformServices.Universal\PlatformServices.Universal.csproj", "{5D153CAA-80C2-4551-9549-6C406FCEEFB1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices", "src\Adapter\PlatformServices\PlatformServices.csproj", "{5D153CAA-80C2-4551-9549-6C406FCEEFB1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFramework", "TestFramework", "{E48AC786-E150-4F41-9A16-32F02E4493D8}"
 EndProject
