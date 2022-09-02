@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NETSTANDARD || WIN_UI
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
@@ -17,11 +17,17 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 /// <summary>
 /// Utility for assembly specific functionality.
 /// </summary>
-internal class AssemblyUtility : IAssemblyUtility
+internal class AssemblyUtility
+#if NETFRAMEWORK
+    : IAssemblyUtility
+#endif
 {
+#if NETFRAMEWORK
     private static Dictionary<string, object> s_cultures;
+#endif
     private readonly string[] _assemblyExtensions = new string[] { ".dll", ".exe" };
 
+#if NETFRAMEWORK
     /// <summary>
     /// Gets all supported culture names in Keys. The Values are always null.
     /// </summary>
@@ -61,6 +67,7 @@ internal class AssemblyUtility : IAssemblyUtility
     {
         return Assembly.ReflectionOnlyLoad(assemblyString);
     }
+#endif
 
     /// <summary>
     /// Whether file extension is an assembly file extension.
@@ -82,6 +89,7 @@ internal class AssemblyUtility : IAssemblyUtility
         return false;
     }
 
+#if NETFRAMEWORK
     /// <summary>
     /// Determines whether given file is managed assembly. Does not load the assembly. Does not check file extension.
     /// Performance: takes ~0.1 seconds on 2x CPU P4.
@@ -276,6 +284,7 @@ internal class AssemblyUtility : IAssemblyUtility
 
         return resolutionPaths;
     }
+#endif
 }
 
 #endif

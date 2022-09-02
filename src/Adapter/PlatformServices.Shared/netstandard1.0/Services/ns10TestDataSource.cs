@@ -1,11 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NETFRAMEWORK
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
+using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 
+#if NETFRAMEWORK
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -22,11 +31,129 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </remarks>
 public class TestDataSource : ITestDataSource
 {
+#if NETFRAMEWORK
+    public IEnumerable<object> GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
+#else
     IEnumerable<object> ITestDataSource.GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
+#endif
     {
+#if NETFRAMEWORK
+        // Figure out where (as well as the current directory) we could look for data files
+        // for unit tests this means looking at the location of the test itself
+        List<string> dataFolders = new()
+        {
+            Path.GetDirectoryName(new Uri(testMethodInfo.MethodInfo.Module.Assembly.CodeBase).LocalPath)
+        };
+
+        List<UTF.TestResult> dataRowResults = new();
+
+        // Connect to data source.
+        TestDataConnectionFactory factory = new();
+
+        string providerNameInvariant;
+        string connectionString;
+        string tableName;
+        UTF.DataAccessMethod dataAccessMethod;
+
+        try
+        {
+            GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+
+        try
+        {
+            using TestDataConnection connection = factory.Create(providerNameInvariant, connectionString, dataFolders);
+            DataTable table = connection.ReadTable(tableName, null);
+            DataRow[] rows = table.Select();
+            Debug.Assert(rows != null, "rows should not be null.");
+
+            // check for row length is 0
+            if (rows.Length == 0)
+            {
+                return null;
+            }
+
+            IEnumerable<int> permutation = GetPermutation(dataAccessMethod, rows.Length);
+
+            object[] rowsAfterPermutation = new object[rows.Length];
+            int index = 0;
+            foreach (int rowIndex in permutation)
+            {
+                rowsAfterPermutation[index++] = rows[rowIndex];
+            }
+
+            testContext.SetDataConnection(connection.Connection);
+            return rowsAfterPermutation;
+        }
+        catch (Exception ex)
+        {
+            string message = ExceptionExtensions.GetExceptionMessage(ex);
+            throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorDataConnectionFailed, ex.Message), ex);
+        }
+#else
         return null;
+#endif
     }
+
+#if NETFRAMEWORK
+    /// <summary>
+    /// Get permutations for data row access
+    /// </summary>
+    /// <param name="dataAccessMethod">The data access method.</param>
+    /// <param name="length">Number of permutations.</param>
+    /// <returns>Permutations.</returns>
+    private IEnumerable<int> GetPermutation(UTF.DataAccessMethod dataAccessMethod, int length)
+    {
+        switch (dataAccessMethod)
+        {
+            case UTF.DataAccessMethod.Sequential:
+                return new SequentialIntPermutation(length);
+
+            case UTF.DataAccessMethod.Random:
+                return new RandomIntPermutation(length);
+
+            default:
+                Debug.Fail("Unknown DataAccessMehtod: " + dataAccessMethod);
+                return new SequentialIntPermutation(length);
+        }
+    }
+
+    /// <summary>
+    /// Get connection property based on DataSourceAttribute. If its in config file then read it from config.
+    /// </summary>
+    /// <param name="dataSourceAttribute">The dataSourceAttribute.</param>
+    /// <param name="providerNameInvariant">The provider name.</param>
+    /// <param name="connectionString">The connection string.</param>
+    /// <param name="tableName">The table name.</param>
+    /// <param name="dataAccessMethod">The data access method.</param>
+    private void GetConnectionProperties(UTF.DataSourceAttribute dataSourceAttribute, out string providerNameInvariant, out string connectionString, out string tableName, out UTF.DataAccessMethod dataAccessMethod)
+    {
+        if (string.IsNullOrEmpty(dataSourceAttribute.DataSourceSettingName) == false)
+        {
+            UTF.DataSourceElement elem = UTF.TestConfiguration.ConfigurationSection.DataSources[dataSourceAttribute.DataSourceSettingName];
+            if (elem == null)
+            {
+                throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_DataSourceConfigurationSectionMissing, dataSourceAttribute.DataSourceSettingName));
+            }
+
+            providerNameInvariant = ConfigurationManager.ConnectionStrings[elem.ConnectionString].ProviderName;
+            connectionString = ConfigurationManager.ConnectionStrings[elem.ConnectionString].ConnectionString;
+            tableName = elem.DataTableName;
+            dataAccessMethod = (UTF.DataAccessMethod)Enum.Parse(typeof(UTF.DataAccessMethod), elem.DataAccessMethod);
+        }
+        else
+        {
+            providerNameInvariant = dataSourceAttribute.ProviderInvariantName;
+            connectionString = dataSourceAttribute.ConnectionString;
+            tableName = dataSourceAttribute.TableName;
+            dataAccessMethod = dataSourceAttribute.DataAccessMethod;
+        }
+    }
+#endif
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
-#endif

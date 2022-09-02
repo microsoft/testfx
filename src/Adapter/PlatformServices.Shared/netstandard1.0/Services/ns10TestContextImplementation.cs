@@ -1,15 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETCOREAPP || WINDOWS_UWP || WIN_UI || NETSTANDARD_PORTABLE
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -17,21 +20,26 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
 /// <summary>
 /// Internal implementation of TestContext exposed to the user.
-/// </summary>
-/// <remarks>
 /// The virtual string properties of the TestContext are retrieved from the property dictionary
 /// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName");
-/// </remarks>
+/// </summary>
 public class TestContextImplementation : UTF.TestContext, ITestContext
 {
+#if !NETFRAMEWORK
     private static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
     private static readonly string ManagedTypeLabel = nameof(ManagedType);
     private static readonly string ManagedMethodLabel = nameof(ManagedMethod);
     private static readonly string TestNameLabel = nameof(TestName);
+#endif
+
+#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+    /// <summary>
+    /// List of result files associated with the test
+    /// </summary>
+    private readonly IList<string> _testResultFiles;
+#endif
 
     /// <summary>
     /// Properties
@@ -44,40 +52,64 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     private UTF.UnitTestOutcome _outcome;
 
     /// <summary>
+    /// Writer on which the messages given by the user should be written
+    /// </summary>
+    private readonly ThreadSafeStringWriter _threadSafeStringWriter;
+
+    /// <summary>
+    /// Specifies whether the writer is disposed or not
+    /// </summary>
+    private bool _stringWriterDisposed = false;
+
+    /// <summary>
     /// Test Method
     /// </summary>
     private readonly ITestMethod _testMethod;
 
-    private readonly ThreadSafeStringWriter _threadSafeStringWriter;
-    private bool _stringWriterDisposed;
+#if NETFRAMEWORK
+    /// <summary>
+    /// DB connection for test context
+    /// </summary>
+    private DbConnection _dbConnection;
+
+    /// <summary>
+    /// Data row for TestContext
+    /// </summary>
+    private DataRow _dataRow;
+#endif
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestContextImplementation"/> class.
     /// </summary>
-    /// <param name="testMethod"> The test method. </param>
-    /// <param name="writer"> A writer for logging. </param>
-    /// <param name="properties"> The properties. </param>
-    public TestContextImplementation(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties)
+    /// <param name="testMethod">The test method.</param>
+    /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
+    /// <param name="properties">Properties/configuration passed in.</param>
+    public TestContextImplementation(ITestMethod testMethod, StringWriter stringWriter, IDictionary<string, object> properties)
     {
         Debug.Assert(testMethod != null, "TestMethod is not null");
         Debug.Assert(properties != null, "properties is not null");
 
+#if NETFRAMEWORK
+        Debug.Assert(stringWriter != null, "StringWriter is not null");
+#endif
+
+
         _testMethod = testMethod;
+
+        // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
+        _threadSafeStringWriter = (ThreadSafeStringWriter)stringWriter;
         _properties = new Dictionary<string, object>(properties);
-        _threadSafeStringWriter = (ThreadSafeStringWriter)writer;
         CancellationTokenSource = new CancellationTokenSource();
         InitializeProperties();
+
+#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+        _testResultFiles = new List<string>();
+#endif
     }
 
     #region TestContext impl
 
-    // Summary:
-    //     You can use this property in a TestCleanup method to determine the outcome
-    //     of a test that has run.
-    //
-    // Returns:
-    //     A Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome that states
-    //     the outcome of a test that has run.
+    /// <inheritdoc/>
     public override UTF.UnitTestOutcome CurrentTestOutcome
     {
         get
@@ -86,41 +118,27 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         }
     }
 
-    /// <summary>
-    /// Gets fully-qualified name of the class containing the test method currently being executed
-    /// </summary>
-    /// <remarks>
-    /// This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.
-    /// Those attributes have access to the test context, and provide messages that are included
-    /// in the test results. Users can benefit from messages that include the fully-qualified
-    /// class name in addition to the name of the test method currently being executed.
-    /// </remarks>
-    public override string FullyQualifiedTestClassName
+#if NETFRAMEWORK
+    /// <inheritdoc/>
+    public override DbConnection DataConnection
     {
         get
         {
-            return GetPropertyValue(FullyQualifiedTestClassNameLabel) as string;
+            return _dbConnection;
         }
     }
 
-    /// <summary>
-    /// Gets name of the test method currently being executed
-    /// </summary>
-    public override string TestName
+    /// <inheritdoc/>
+    public override DataRow DataRow
     {
         get
         {
-            return GetPropertyValue(TestNameLabel) as string;
+            return _dataRow;
         }
     }
+#endif
 
-    /// <summary>
-    /// Gets the test properties when overridden in a derived class.
-    /// </summary>
-    /// <returns>
-    /// An System.Collections.IDictionary object that contains key/value pairs that
-    ///  represent the test properties.
-    /// </returns>
+    /// <inheritdoc/>
     public override IDictionary Properties
     {
         get
@@ -128,6 +146,134 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
             return _properties as IDictionary;
         }
     }
+
+#if NETFRAMEWORK
+    /// <inheritdoc/>
+    public override string TestRunDirectory
+    {
+        get
+        {
+            return GetStringPropertyValue(TestContextPropertyStrings.TestRunDirectory);
+        }
+    }
+#endif
+
+#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+    /// <inheritdoc/>
+    public override string DeploymentDirectory
+    {
+        get
+        {
+            return GetStringPropertyValue(TestContextPropertyStrings.DeploymentDirectory);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override string ResultsDirectory
+    {
+        get
+        {
+            return GetStringPropertyValue(TestContextPropertyStrings.ResultsDirectory);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override string TestRunResultsDirectory
+    {
+        get
+        {
+            return GetStringPropertyValue(TestContextPropertyStrings.TestRunResultsDirectory);
+        }
+    }
+
+    /// <inheritdoc/>
+    [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", Justification = "TestResultsDirectory is what we need.")]
+    public override string TestResultsDirectory
+    {
+        get
+        {
+            // In MSTest, it is actually "In\697105f7-004f-42e8-bccf-eb024870d3e9\User1", but
+            // we are setting it to "In" only because MSTest does not create this directory.
+            return GetStringPropertyValue(TestContextPropertyStrings.TestResultsDirectory);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override string TestDir
+    {
+        get
+        {
+            return GetStringPropertyValue(TestContextPropertyStrings.TestDir);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override string TestDeploymentDir
+    {
+        get
+        {
+            return GetStringPropertyValue(TestContextPropertyStrings.TestDeploymentDir);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override string TestLogsDir
+    {
+        get
+        {
+            return GetStringPropertyValue(TestContextPropertyStrings.TestLogsDir);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override string FullyQualifiedTestClassName
+    {
+        get
+        {
+#if NETFRAMEWORK
+            return GetStringPropertyValue(TestContextPropertyStrings.FullyQualifiedTestClassName);
+#else
+
+            return GetPropertyValue(FullyQualifiedTestClassNameLabel) as string;
+#endif
+
+        }
+    }
+#if NETFRAMEWORK
+
+    /// <inheritdoc/>
+    public override string ManagedType
+    {
+        get
+        {
+            return GetStringPropertyValue(TestContextPropertyStrings.ManagedType);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override string ManagedMethod
+    {
+        get
+        {
+            return GetStringPropertyValue(TestContextPropertyStrings.ManagedMethod);
+        }
+    }
+#endif
+
+    /// <inheritdoc/>
+    public override string TestName
+    {
+        get
+        {
+#if NETFRAMEWORK
+            return GetStringPropertyValue(TestContextPropertyStrings.TestName);
+#else
+
+            return GetPropertyValue(TestNameLabel) as string;
+#endif
+        }
+    }
+#endif
 
     public UTF.TestContext Context
     {
@@ -137,56 +283,32 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         }
     }
 
-    /// <summary>
-    /// Adds a file name to the list in TestResult.ResultFileNames
-    /// </summary>
-    /// <param name="fileName">
-    /// The file Name.
-    /// </param>
+    /// <inheritdoc/>
     public override void AddResultFile(string fileName)
     {
-        // No-op function
-        // will be replaced at runtime time by PlatformServices Desktop/NetCore
-        // depending the target framework
-    }
-
-    /// <summary>
-    /// Set the unit-test outcome
-    /// </summary>
-    /// <param name="outcome">The test outcome.</param>
-    public void SetOutcome(UTF.UnitTestOutcome outcome)
-    {
-        _outcome = outcome;
-    }
-
-    /// <summary>
-    /// Returns whether property with parameter name is present or not
-    /// </summary>
-    /// <param name="propertyName">The property name.</param>
-    /// <param name="propertyValue">Property value.</param>
-    /// <returns>True if property with parameter name is present.</returns>
-    public bool TryGetPropertyValue(string propertyName, out object propertyValue)
-    {
-        if (_properties == null)
+#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+        if (string.IsNullOrEmpty(fileName))
         {
-            propertyValue = null;
-            return false;
+            throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
         }
 
-        return _properties.TryGetValue(propertyName, out propertyValue);
+        _testResultFiles.Add(Path.GetFullPath(fileName));
+#endif
     }
 
-    /// <summary>
-    /// Adds the parameter name/value pair to property bag
-    /// </summary>
-    /// <param name="propertyName">The property name.</param>
-    /// <param name="propertyValue">Property value.</param>
-    public void AddProperty(string propertyName, string propertyValue)
+#if NETFRAMEWORK
+    /// <inheritdoc/>
+    public override void BeginTimer(string timerName)
     {
-        _properties ??= new Dictionary<string, object>();
-
-        _properties.Add(propertyName, propertyValue);
+        throw new NotSupportedException();
     }
+
+    /// <inheritdoc/>
+    public override void EndTimer(string timerName)
+    {
+        throw new NotSupportedException();
+    }
+#endif
 
     /// <summary>
     /// When overridden in a derived class, used to write trace messages while the
@@ -283,12 +405,91 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     }
 
     /// <summary>
-    /// Returns null as this feature is not supported in ASP .net and UWP
+    /// Set the unit-test outcome
     /// </summary>
-    /// <returns>List of result files. Null presently.</returns>
+    /// <param name="outcome">The test outcome.</param>
+    public void SetOutcome(UTF.UnitTestOutcome outcome)
+    {
+#if NETFRAMEWORK
+        _outcome = ToUTF(outcome);
+#else
+        _outcome = outcome;
+#endif
+    }
+
+    /// <summary>
+    /// Set data row for particular run of TestMethod.
+    /// </summary>
+    /// <param name="dataRow">data row.</param>
+    public void SetDataRow(object dataRow)
+    {
+#if NETFRAMEWORK
+        _dataRow = dataRow as DataRow;
+#endif
+    }
+
+    /// <summary>
+    /// Set connection for TestContext
+    /// </summary>
+    /// <param name="dbConnection">db Connection.</param>
+    public void SetDataConnection(object dbConnection)
+    {
+#if NETFRAMEWORK
+        _dbConnection = dbConnection as DbConnection;
+#endif
+    }
+
+    /// <summary>
+    /// Returns whether property with parameter name is present or not
+    /// </summary>
+    /// <param name="propertyName">The property name.</param>
+    /// <param name="propertyValue">The property value.</param>
+    /// <returns>True if found.</returns>
+    public bool TryGetPropertyValue(string propertyName, out object propertyValue)
+    {
+        if (_properties == null)
+        {
+            propertyValue = null;
+            return false;
+        }
+
+        return _properties.TryGetValue(propertyName, out propertyValue);
+    }
+
+    /// <summary>
+    /// Adds the parameter name/value pair to property bag
+    /// </summary>
+    /// <param name="propertyName">The property name.</param>
+    /// <param name="propertyValue">The property value.</param>
+    public void AddProperty(string propertyName, string propertyValue)
+    {
+        _properties ??= new Dictionary<string, object>();
+
+        _properties.Add(propertyName, propertyValue);
+    }
+
+    /// <summary>
+    /// Result files attached
+    /// </summary>
+    /// <returns>Results files generated in run.</returns>
     public IList<string> GetResultFiles()
     {
+#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+        if (!_testResultFiles.Any())
+        {
+            return null;
+        }
+
+        List<string> results = _testResultFiles.ToList();
+
+        // clear the result files to handle data driven tests
+        _testResultFiles.Clear();
+
+        return results;
+#else
+        // Returns null as this feature is not supported in ASP .net and UWP
         return null;
+#endif
     }
 
     /// <summary>
@@ -308,18 +509,9 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         _threadSafeStringWriter.ToStringAndClear();
     }
 
-    public void SetDataRow(object dataRow)
-    {
-        // Do nothing.
-    }
-
-    public void SetDataConnection(object dbConnection)
-    {
-        // Do nothing.
-    }
-
     #endregion
 
+#if !NETFRAMEWORK
     /// <summary>
     /// Helper to safely fetch a property value.
     /// </summary>
@@ -331,18 +523,61 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 
         return propertyValue;
     }
+#endif
+
+#if NETFRAMEWORK
+    /// <summary>
+    /// Converts the parameter outcome to UTF outcome
+    /// </summary>
+    /// <param name="outcome">The UTF outcome.</param>
+    /// <returns>test outcome</returns>
+    private static UTF.UnitTestOutcome ToUTF(UTF.UnitTestOutcome outcome)
+    {
+        switch (outcome)
+        {
+            case UTF.UnitTestOutcome.Error:
+            case UTF.UnitTestOutcome.Failed:
+            case UTF.UnitTestOutcome.Inconclusive:
+            case UTF.UnitTestOutcome.Passed:
+            case UTF.UnitTestOutcome.Timeout:
+            case UTF.UnitTestOutcome.InProgress:
+                return outcome;
+
+            default:
+                Debug.Fail("Unknown outcome " + outcome);
+                return UTF.UnitTestOutcome.Unknown;
+        }
+    }
+#endif
+
+#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+    /// <summary>
+    /// Helper to safely fetch a property value.
+    /// </summary>
+    /// <param name="propertyName">Property Name</param>
+    /// <returns>Property value</returns>
+    private string GetStringPropertyValue(string propertyName)
+    {
+        _properties.TryGetValue(propertyName, out var propertyValue);
+        return propertyValue as string;
+    }
+#endif
 
     /// <summary>
     /// Helper to initialize the properties.
     /// </summary>
     private void InitializeProperties()
     {
+#if NETFRAMEWORK
+        _properties[TestContextPropertyStrings.FullyQualifiedTestClassName] = _testMethod.FullClassName;
+        _properties[TestContextPropertyStrings.ManagedType] = _testMethod.ManagedTypeName;
+        _properties[TestContextPropertyStrings.ManagedMethod] = _testMethod.ManagedMethodName;
+        _properties[TestContextPropertyStrings.TestName] = _testMethod.Name;
+#else
         _properties[FullyQualifiedTestClassNameLabel] = _testMethod.FullClassName;
         _properties[ManagedTypeLabel] = _testMethod.ManagedTypeName;
         _properties[ManagedMethodLabel] = _testMethod.ManagedMethodName;
         _properties[TestNameLabel] = _testMethod.Name;
+#endif
     }
 }
-
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
-#endif
