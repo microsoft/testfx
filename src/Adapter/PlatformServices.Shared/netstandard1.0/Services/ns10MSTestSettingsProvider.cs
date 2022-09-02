@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK || WIN_UI || NETSTANDARD
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System.Collections.Generic;
 using System.Xml;
+
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
 using ISettingsProvider = Interface.ISettingsProvider;
 
 /// <summary>
@@ -54,3 +57,4 @@ public class MSTestSettingsProvider : ISettingsProvider
         return TestDeployment.GetDeploymentInformation(source);
     }
 }
+#endif
