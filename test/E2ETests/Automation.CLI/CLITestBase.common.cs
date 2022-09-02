@@ -15,10 +15,30 @@ public partial class CLITestBase
     private const string TestAssetsFolder = "TestAssets";
     private const string ArtifactsFolder = "artifacts";
     private const string PackagesFolder = "packages";
+    private const string EngineeringFolder = "eng";
 
     // This value is automatically updated by "build.ps1" script.
-    private const string TestPlatformCLIPackage = @"Microsoft.TestPlatform\17.4.0-preview-20220901-01";
+    private const string TestPlatformCLIPackageName = "Microsoft.TestPlatform";
     private const string VstestConsoleRelativePath = @"tools\net462\Common7\IDE\Extensions\TestPlatform\vstest.console.exe";
+
+    protected XmlDocument ReadVersionProps()
+    {
+        var versionPropsFilePath = Path.Combine(Environment.CurrentDirectory, GetRelativeRepositoryRootPath(), EngineeringFolder, "Versions.props");
+        using var fileStream = File.OpenRead(versionPropsFilePath);
+        using var xmlTextReader = new XmlTextReader(fileStream) { Namespaces = false };
+        var versionPropsXml = new XmlDocument();
+        versionPropsXml.Load(xmlTextReader);
+
+        return versionPropsXml;
+    }
+
+    protected string GetTestPlatformVersion()
+    {
+        var versionPropsXml = ReadVersionProps();
+        var testSdkVersion = versionPropsXml.DocumentElement.SelectSingleNode($"PropertyGroup/MicrosoftNETTestSdkVersion");
+
+        return testSdkVersion.InnerText;
+    }
 
     /// <summary>
     /// Gets the relative path of repository root from start-up directory.
