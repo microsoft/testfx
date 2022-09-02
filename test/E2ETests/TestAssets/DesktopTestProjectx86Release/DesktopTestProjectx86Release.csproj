@@ -17,9 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(RepoRoot)test\E2ETests\TestAssets\DesktopTestProjectx86Debug\UnitTest1.cs">
-      <Link>UnitTest1.cs</Link>
-    </Compile>
+    <Compile Include="$(RepoRoot)test\E2ETests\TestAssets\DesktopTestProjectx86Debug\UnitTest1.cs" Link="UnitTest1.cs" />
   </ItemGroup>
 
 </Project>

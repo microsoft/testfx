@@ -52,33 +52,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10AssemblyAttributes.cs">
-      <Link>Services\ns10AssemblyAttributes.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs">
-      <Link>Services\ns10FileOperationsTests.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs">
-      <Link>Services\ns10DiaSessionOperationsTests.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs">
-      <Link>Services\ns10ReflectionOperationsTests.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10SettingsProviderTests.cs">
-      <Link>Services\ns10SettingsProviderTests.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestContextImplementationTests.cs">
-      <Link>Services\ns10TestContextImplementationTests.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs">
-      <Link>Services\ns10TestSourceHostTests.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceTests.cs">
-      <Link>Services\ns10TestSourceTests.cs</Link>
-    </Compile>
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs">
-      <Link>Services\ns10ThreadOperationsTests.cs</Link>
-    </Compile>
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10AssemblyAttributes.cs" Link="Services\ns10AssemblyAttributes.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs" Link="Services\ns10FileOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs" Link="Services\ns10DiaSessionOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs" Link="Services\ns10ReflectionOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10SettingsProviderTests.cs" Link="Services\ns10SettingsProviderTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestContextImplementationTests.cs" Link="Services\ns10TestContextImplementationTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs" Link="Services\ns10TestSourceHostTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceTests.cs" Link="Services\ns10TestSourceTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs" Link="Services\ns10ThreadOperationsTests.cs" />
   </ItemGroup>
 
 </Project>
