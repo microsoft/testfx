@@ -7,6 +7,7 @@ extern alias FrameworkV1;
 extern alias FrameworkV2;
 
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using MSTestAdapter.TestUtilities;
 
@@ -480,6 +481,16 @@ public class AssertTests
         var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(null, "string", "A Message"));
         Assert.IsNotNull(ex);
         StringAssert.Contains(ex.Message, "A Message");
+    }
+
+    [TestMethod]
+    public void AreEqualShouldIgnorCaseBasedOnTheCurrentCulture()
+    {
+        var Expected = "i";
+        var Actual = "I";
+        // In the tr-TR culture, "i" and "I" are not considered equal when doing a case-insensitive comparison.
+        CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
+        Assert.IsFalse(Expected.Equals(Actual, StringComparison.CurrentCultureIgnoreCase));
     }
 
     [TestMethod]
