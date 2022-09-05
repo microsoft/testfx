@@ -32,9 +32,9 @@ public class ThreadSafeStringWriterTests
     private bool _task2flag;
 
     [TestMethod]
-    public void ThreadSafeStringWriterWritesLinesFromDifferentsTasksSeparately()
+    public void ThreadSafeStringWriterWritesLinesFromDifferentTasksSeparately()
     {
-        // Suppress the flow of parent context here becuase this test method will run in
+        // Suppress the flow of parent context here because this test method will run in
         // a task already and we don't want the existing async context to interfere with this.
         using (ExecutionContext.SuppressFlow())
         {

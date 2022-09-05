@@ -38,7 +38,7 @@ public class AssertTests
     #region ThrowsException tests
 
     [TestMethod]
-    public void ThrowsExceptionWithLamdaExpressionsShouldThrowAssertionOnNoException()
+    public void ThrowsExceptionWithLambdaExpressionsShouldThrowAssertionOnNoException()
     {
         var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.ThrowsException<ArgumentException>(() => { }));
 
@@ -48,7 +48,7 @@ public class AssertTests
     }
 
     [TestMethod]
-    public void ThrowsExceptionWithLamdaExpressionsShouldThrowAssertionOnWrongException()
+    public void ThrowsExceptionWithLambdaExpressionsShouldThrowAssertionOnWrongException()
     {
         var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.ThrowsException<ArgumentException>(
              () =>
