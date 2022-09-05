@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>uap10.0.16299;net6.0-windows10.0.18362.0;netstandard2.0;$(NetFrameworkMinimum)</TargetFrameworks>
+    <TargetFrameworks>$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetFrameworkMinimum)</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -13,11 +13,11 @@
   </PropertyGroup>
 
   <!-- Properties specific to UWP -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'uap10.0.16299' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
     <DefineConstants>$(DefineConstants);NETFX_CORE;WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
   <!-- Properties specific to WinUI -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0-windows10.0.18362.0' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <SupportedOSPlatformVersion>$(TargetPlatformMinVersion)</SupportedOSPlatformVersion>
@@ -50,13 +50,13 @@
   </PropertyGroup>
 
   <!-- Project references specific to UWP -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'uap10.0.16299' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Private="True" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Private="True" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Private="True" />
   </ItemGroup>
   <!-- Project references specific to WinUI, netstandard and netfx -->
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0-windows10.0.18362.0' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
@@ -67,7 +67,7 @@
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Condition=" '$(TargetFramework)' == 'net6.0-windows10.0.18362.0' " Version="$(SystemDiagnosticsTextWriterTraceListenerVersion)" />
+    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Version="$(SystemDiagnosticsTextWriterTraceListenerVersion)" />
   </ItemGroup>
 
   <!-- Common Items -->
@@ -102,7 +102,7 @@
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Utilities\ns13FileUtility.cs" Link="Utilities\ns13FileUtility.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'uap10.0.16299' ">
+  <ItemGroup Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
     <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
       <Link>Resources\Resource.Designer.cs</Link>
       <AutoGen>True</AutoGen>

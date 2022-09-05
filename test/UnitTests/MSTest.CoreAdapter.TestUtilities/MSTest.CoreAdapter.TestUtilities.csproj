@@ -2,7 +2,7 @@
 <Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;uap10.0.16299</TargetFrameworks>
+    <TargetFrameworks>net462;$(UwpMinimum)</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>

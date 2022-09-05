@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>uap10.0.16299;net6.0-windows10.0.18362.0;netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
+    <TargetFrameworks>$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <!-- WinUI specific properties -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net6.0-windows10.0.18362.0' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
     <LocDocumentationSubPath>Extensions\WinUI</LocDocumentationSubPath>
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
@@ -25,7 +25,7 @@
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
   </PropertyGroup>
   <!-- UWP specific properties -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'uap10.0.16299' ">
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
     <DefineConstants>$(DefineConstants);NETFX_CORE;WINDOWS_UWP</DefineConstants>
     <LocDocumentationSubPath>Extensions\UWP</LocDocumentationSubPath>
   </PropertyGroup>
@@ -47,15 +47,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Condition=" '$(TargetFramework)' == 'uap10.0.16299' " Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Private="True" />
-    <ProjectReference Condition=" '$(TargetFramework)' != 'uap10.0.16299' " Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+    <ProjectReference Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Private="True" />
+    <ProjectReference Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Condition=" '$(TargetFramework)' == 'net6.0-windows10.0.18362.0' " Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWindowsAppSDKVersion)" />
+    <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWindowsAppSDKVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
@@ -63,7 +63,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Condition=" '$(TargetFramework)' == 'uap10.0.16299' " Update="Properties\Extension.UWP.rd.xml" />
+    <EmbeddedResource Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Update="Properties\Extension.UWP.rd.xml" />
   </ItemGroup>
 
 </Project>
