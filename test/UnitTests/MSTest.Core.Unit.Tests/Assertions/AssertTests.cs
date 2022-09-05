@@ -486,11 +486,45 @@ public class AssertTests
     [TestMethod]
     public void AreEqualShouldIgnorCaseBasedOnTheCurrentCulture()
     {
-        var Expected = "i";
-        var Actual = "I";
-        // In the tr-TR culture, "i" and "I" are not considered equal when doing a case-insensitive comparison.
-        CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
-        Assert.IsFalse(Expected.Equals(Actual, StringComparison.CurrentCultureIgnoreCase));
+        var expected = "i";
+        var actual = "I";
+        var turkishCulture = new CultureInfo("tr-TR");
+
+        CultureInfo currentCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = turkishCulture;
+            // In the tr-TR culture, "i" and "I" are not considered equal when doing a case-insensitive comparison.
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, true, turkishCulture));
+            Assert.IsNotNull(ex);
+        }
+        finally
+        {
+            // Reset the culture.
+            CultureInfo.CurrentCulture = currentCulture;
+        }
+    }
+
+    [TestMethod]
+    public void AreEqualShouldNotIgnorCaseBasedOnTheCurrentCulture()
+    {
+        var expected = "i";
+        var actual = "I";
+        var englishCulture = new CultureInfo("en-EN");
+
+        CultureInfo currentCulture = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = englishCulture;
+            // Won't ignore case.
+            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, false, englishCulture));
+            Assert.IsNotNull(ex);
+        }
+        finally
+        {
+            // Reset the culture.
+            CultureInfo.CurrentCulture = currentCulture;
+        }
     }
 
     [TestMethod]

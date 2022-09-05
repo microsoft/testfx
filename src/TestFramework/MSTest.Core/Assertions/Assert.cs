@@ -2946,8 +2946,7 @@ public sealed class Assert
 
     private static int CompareInternal(string expected, string actual, bool ignoreCase, CultureInfo culture)
     {
-        CultureInfo.CurrentCulture = culture;
-        return string.Compare(expected, actual, ignoreCase ? StringComparison.CurrentCultureIgnoreCase : StringComparison.Ordinal);
+        return string.Compare(expected, actual, ignoreCase ,culture);
     }
 
     #endregion
