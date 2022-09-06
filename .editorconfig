@@ -162,6 +162,9 @@ dotnet_diagnostic.IDE0028.severity = warning
 # IDE0017: Simplify object initialization
 dotnet_diagnostic.IDE0017.severity = warning
 
+# CA1829: Use Length/Count property instead of Count() when available
+dotnet_diagnostic.CA1829.severity = warning
+
 #### Naming styles ####
 
 # Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)
@@ -241,3 +244,4 @@ dotnet_naming_style.s_underscore_camel_case.required_prefix = s_
 dotnet_naming_style.s_underscore_camel_case.required_suffix =
 dotnet_naming_style.s_underscore_camel_case.word_separator =
 dotnet_naming_style.s_underscore_camel_case.capitalization = camel_case
+
