@@ -3,7 +3,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>

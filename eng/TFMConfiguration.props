@@ -17,6 +17,9 @@
     <NetCoreAppLatestStablePackageBaselineVersion>$(NetCoreAppLatestStableVersion).0</NetCoreAppLatestStablePackageBaselineVersion>
     <NetCoreAppLatestStable>net$(NetCoreAppLatestStableVersion)</NetCoreAppLatestStable>
 
+    <UwpMinimum>uap10.0.16299</UwpMinimum>
+    <WinUiMinimum>net6.0-windows10.0.18362.0</WinUiMinimum>
+
     <NetFrameworkMinimum>net462</NetFrameworkMinimum>
   </PropertyGroup>
 </Project>

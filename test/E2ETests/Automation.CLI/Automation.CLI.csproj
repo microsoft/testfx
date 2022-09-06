@@ -3,7 +3,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>net462</TargetFrameworks>
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>

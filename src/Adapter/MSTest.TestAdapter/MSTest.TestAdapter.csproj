@@ -3,7 +3,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -26,10 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!--<ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />-->
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj" />
-    <!--<ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" />-->
   </ItemGroup>
 
   <ItemGroup>
