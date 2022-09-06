@@ -12,8 +12,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
 /// <summary>
 /// This service is responsible for platform specific reflection operations.
 /// </summary>
@@ -77,5 +75,3 @@ public class ReflectionOperations : IReflectionOperations
 #endif
     }
 }
-
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

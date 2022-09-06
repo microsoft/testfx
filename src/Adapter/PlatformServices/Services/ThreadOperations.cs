@@ -10,8 +10,6 @@ using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
 /// <summary>
 /// This service is responsible for any Async operations specific to a platform.
 /// </summary>
@@ -144,4 +142,3 @@ public class ThreadOperations : IThreadOperations
     }
 #endif
 }
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

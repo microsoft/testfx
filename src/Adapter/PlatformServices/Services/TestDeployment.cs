@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK || WIN_UI || NETSTANDARD
+#if NETFRAMEWORK || NETSTANDARD || NETCOREAPP || WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System;
@@ -11,9 +11,13 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+#endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
@@ -23,14 +27,15 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 /// </summary>
 public class TestDeployment : ITestDeployment
 {
-    #region Service Utility Variables
+#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#region Service Utility Variables
 
     private readonly DeploymentItemUtility _deploymentItemUtility;
     private readonly DeploymentUtility _deploymentUtility;
     private readonly FileUtility _fileUtility;
     private MSTestAdapterSettings _adapterSettings;
 
-    #endregion
+#endregion
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestDeployment"/> class.
@@ -67,6 +72,7 @@ public class TestDeployment : ITestDeployment
         get;
         private set;
     }
+#endif
 
     /// <summary>
     /// The get deployment items.
@@ -77,14 +83,19 @@ public class TestDeployment : ITestDeployment
     /// <returns> A string of deployment items. </returns>
     public KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings)
     {
+#if WINDOWS_UWP || (NETCOREAPP && !WIN_UI) || NETSTANDARD_PORTABLE
+        return null;
+#else
         return _deploymentItemUtility.GetDeploymentItems(method, _deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
+#endif
     }
 
     /// <summary>
-    /// The cleanup.
+    /// Cleanup deployment item directories.
     /// </summary>
     public void Cleanup()
     {
+#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
         // Delete the deployment directory
         if (RunDirectories != null && _adapterSettings.DeleteDeploymentDirectoryAfterTestRunIsComplete)
         {
@@ -94,6 +105,7 @@ public class TestDeployment : ITestDeployment
 
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "Deleted deployment directory {0}", RunDirectories.RootDeploymentDirectory);
         }
+#endif
     }
 
     /// <summary>
@@ -102,7 +114,11 @@ public class TestDeployment : ITestDeployment
     /// <returns> The deployment output directory. </returns>
     public string GetDeploymentDirectory()
     {
+#if WINDOWS_UWP || (NETCOREAPP && !WIN_UI) || NETSTANDARD_PORTABLE
+        return null;
+#else
         return RunDirectories?.OutDirectory;
+#endif
     }
 
     /// <summary>
@@ -114,6 +130,9 @@ public class TestDeployment : ITestDeployment
     /// <returns> Return true if deployment is done. </returns>
     public bool Deploy(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
     {
+#if WINDOWS_UWP || (NETCOREAPP && !WIN_UI) || NETSTANDARD_PORTABLE
+        return false;
+#else
         Debug.Assert(tests != null, "tests");
 
         // Reset runDirectories before doing deployment, so that older values of runDirectories is not picked
@@ -161,8 +180,10 @@ public class TestDeployment : ITestDeployment
         }
 
         return true;
+#endif
     }
 
+#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
     internal static IDictionary<string, object> GetDeploymentInformation(string source)
     {
         var properties = new Dictionary<string, object>();
@@ -226,7 +247,6 @@ public class TestDeployment : ITestDeployment
 
         return true;
     }
+#endif
 }
-
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 #endif

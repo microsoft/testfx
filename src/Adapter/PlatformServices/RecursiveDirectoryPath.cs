@@ -22,7 +22,6 @@ using System.Security;
 /// </summary>
 [Serializable]
 [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1603:DocumentationMustContainValidXml", Justification = "Reviewed. Suppression is ok here.")]
-#pragma warning disable SA1649 // File name must match first type name
 public class RecursiveDirectoryPath : MarshalByRefObject
 {
     /// <summary>

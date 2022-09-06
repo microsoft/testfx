@@ -6,8 +6,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
 /// <summary>
 /// A service to log any trace messages from the adapter that would be shown in *.TpTrace files.
 /// </summary>
@@ -71,5 +69,3 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     }
 #endif
 }
-
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
