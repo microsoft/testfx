@@ -59,7 +59,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
             EqtTrace.Error(ex);
 
             warnings.Add(ex.Message);
-            return new string[0]; // Otherwise just return no dependencies.
+            return Array.Empty<string>(); // Otherwise just return no dependencies.
         }
 
         Debug.Assert(assembly != null, "assembly");
@@ -168,7 +168,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         }
 
         // Take care of .netmodule's.
-        var modules = new Module[0];
+        var modules = Array.Empty<Module>();
         try
         {
             EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Getting modules of {assembly.FullName}.");

@@ -25,7 +25,7 @@ public class DataRowAttributeTests
     {
         var dataRow = new DataRowAttribute();
 
-        CollectionAssert.AreEqual(new object[] { }, dataRow.Data);
+        CollectionAssert.AreEqual(System.Array.Empty<object>(), dataRow.Data);
     }
 
     [TestMethod]

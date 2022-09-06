@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 /// </summary>
 public sealed class StringAssert
 {
-    private static readonly object[] Empty = new object[0];
+    private static readonly object[] Empty = Array.Empty<object>();
 
     private static StringAssert s_that;
 

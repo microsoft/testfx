@@ -129,7 +129,7 @@ public class UnitTestElementTests
 
         Assert.IsNull(testCase.GetPropertyValue(Constants.TestCategoryProperty));
 
-        _unitTestElement.TestCategory = new string[] { };
+        _unitTestElement.TestCategory = Array.Empty<string>();
         testCase = _unitTestElement.ToTestCase();
 
         Assert.IsNull(testCase.GetPropertyValue(Constants.TestCategoryProperty));
@@ -195,7 +195,7 @@ public class UnitTestElementTests
 
         Assert.IsNull(testCase.GetPropertyValue(Constants.DeploymentItemsProperty));
 
-        _unitTestElement.DeploymentItems = new KeyValuePair<string, string>[] { };
+        _unitTestElement.DeploymentItems = Array.Empty<KeyValuePair<string, string>>();
         testCase = _unitTestElement.ToTestCase();
 
         Assert.IsNull(testCase.GetPropertyValue(Constants.DeploymentItemsProperty));
