@@ -3,8 +3,17 @@
   <Import Project="scripts\build\TestFx.props" />
   <Import Project="eng\TFMConfiguration.props" />
 
+  <!-- Language configuration -->
   <PropertyGroup>
-    <LangVersion>Latest</LangVersion>
+    <!-- default to allowing all language features -->
+    <LangVersion>preview</LangVersion>
+    <!-- enable strict mode for Roslyn compiler -->
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <!-- default to max warnlevel -->
+    <AnalysisLevel>preview</AnalysisLevel>
   </PropertyGroup>
+
 </Project>

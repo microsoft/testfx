@@ -57,9 +57,10 @@ public class TestDataSource : ITestDataSource
         {
             GetConnectionProperties(testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false)[0], out providerNameInvariant, out connectionString, out tableName, out dataAccessMethod);
         }
-        catch (Exception ex)
+        catch
         {
-            throw ex;
+            // REVIEW ME: @Haplois, was there any good reason to mess up stack trace?
+            throw;
         }
 
         try
