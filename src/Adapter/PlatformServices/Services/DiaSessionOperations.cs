@@ -6,8 +6,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using System;
 using System.Reflection;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
 internal static class DiaSessionOperations
 {
     private static MethodInfo s_methodGetNavigationData;
@@ -117,5 +115,3 @@ internal static class DiaSessionOperations
         return null;
     }
 }
-
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

@@ -1,17 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK || NETSTANDARD
+#if NETFRAMEWORK || NETSTANDARD || NETCOREAPP || WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
 /// <summary>
 /// Internal implementation of TraceListenerManager exposed to the user.
@@ -19,6 +16,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 /// </summary>
 public class TraceListenerManager : ITraceListenerManager
 {
+#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
     /// <summary>
     /// Original output stream
     /// </summary>
@@ -28,6 +26,7 @@ public class TraceListenerManager : ITraceListenerManager
     /// Original error stream
     /// </summary>
     private readonly TextWriter _origStdErr;
+#endif
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TraceListenerManager"/> class.
@@ -36,12 +35,14 @@ public class TraceListenerManager : ITraceListenerManager
     /// <param name="errorWriter">A writer instance to log error messages.</param>
     public TraceListenerManager(TextWriter outputWriter, TextWriter errorWriter)
     {
+#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
         _origStdOut = Console.Out;
         _origStdErr = Console.Error;
 
         // Update the output/error streams with redirected streams
         Console.SetOut(outputWriter);
         Console.SetError(errorWriter);
+#endif
     }
 
     /// <summary>
@@ -50,9 +51,11 @@ public class TraceListenerManager : ITraceListenerManager
     /// <param name="traceListener">The trace listener instance.</param>
     public void Add(ITraceListener traceListener)
     {
+#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
         // NOTE: Listeners will not get Debug events in dotnet core due to platform limitation.
         // Refer https://github.com/Microsoft/testfx/pull/218 for more details.
         Trace.Listeners.Add(traceListener as TextWriterTraceListener);
+#endif
     }
 
     /// <summary>
@@ -61,7 +64,9 @@ public class TraceListenerManager : ITraceListenerManager
     /// <param name="traceListener">The trace listener instance.</param>
     public void Remove(ITraceListener traceListener)
     {
+#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
         Trace.Listeners.Remove(traceListener as TextWriterTraceListener);
+#endif
     }
 
     /// <summary>
@@ -71,11 +76,20 @@ public class TraceListenerManager : ITraceListenerManager
     /// <param name="traceListener">The trace listener instance.</param>
     public void Dispose(ITraceListener traceListener)
     {
+#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
         traceListener.Dispose();
         Console.SetOut(_origStdOut);
         Console.SetError(_origStdErr);
+#endif
     }
-}
 
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
+#if NETCOREAPP || WIN_UI || WINDOWS_UWP || NETSTANDARD_PORTABLE
+    /// <summary>
+    /// Returning as this feature is not supported in ASP .net and UWP
+    /// </summary>
+    /// <param name="traceListener">The trace listener instance.</param>
+    public void Close(ITraceListener traceListener)
+        => Dispose(traceListener);
+#endif
+}
 #endif

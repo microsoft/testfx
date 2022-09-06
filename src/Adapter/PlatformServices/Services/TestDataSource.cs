@@ -19,8 +19,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
 /// <summary>
 /// The platform service that provides values from data source when data driven tests are run.
 /// </summary>
@@ -155,5 +153,3 @@ public class TestDataSource : ITestDataSource
     }
 #endif
 }
-
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

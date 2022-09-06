@@ -14,8 +14,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppCont
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
 /// <summary>
 /// The file operations.
 /// </summary>
@@ -215,6 +213,4 @@ public class FileOperations : IFileOperations
 #endif
 
 }
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
-
 #endif

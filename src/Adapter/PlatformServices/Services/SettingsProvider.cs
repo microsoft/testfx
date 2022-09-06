@@ -13,8 +13,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using ISettingsProvider = Interface.ISettingsProvider;
 #endif
 
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
-
 /// <summary>
 /// Class to read settings from the runsettings xml for the desktop.
 /// </summary>
@@ -71,5 +69,3 @@ public class MSTestSettingsProvider : ISettingsProvider
 #endif
     }
 }
-
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
