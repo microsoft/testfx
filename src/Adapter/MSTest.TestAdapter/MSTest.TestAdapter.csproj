@@ -25,7 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices\PlatformServices.csproj" />
   </ItemGroup>
 
   <ItemGroup>

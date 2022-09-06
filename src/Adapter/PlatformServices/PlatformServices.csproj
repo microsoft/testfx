@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetFrameworkMinimum)</TargetFrameworks>
+    <TargetFrameworks>$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetFrameworkMinimum);$(NetCoreAppCurrent)</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -49,17 +49,8 @@
     <UseVSHostingProcess Condition=" '$(Platform)' != 'AnyCPU' ">false</UseVSHostingProcess>
   </PropertyGroup>
 
-  <!-- Project references specific to UWP -->
-  <ItemGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Private="True" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Private="True" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Private="True" />
-  </ItemGroup>
-  <!-- Project references specific to WinUI, netstandard and netfx -->
-  <ItemGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
+  <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
