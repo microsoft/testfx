@@ -63,7 +63,7 @@ public class ExpectedExceptionBaseAttributeTests
     }
 
     [TestFrameworkV1.TestMethod]
-    public void VerifyEmptytMessageIsGettingSetInVariablenoExceptionMessage()
+    public void VerifyEmptyMessageIsGettingSetInVariablenoExceptionMessage()
     {
         _sut = new TestableExpectedExceptionBaseAttributeClass(null);
 

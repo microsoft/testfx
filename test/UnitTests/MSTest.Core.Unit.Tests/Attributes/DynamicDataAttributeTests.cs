@@ -33,7 +33,7 @@ public class DynamicDataAttributeTests
     }
 
     [TestFrameworkV1.TestMethod]
-    public void GetDataShoudThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()
+    public void GetDataShouldThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()
     {
         void action()
         {
