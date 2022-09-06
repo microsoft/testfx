@@ -150,6 +150,18 @@ dotnet_style_null_propagation = true
 # IDE0034: Simplify 'default' expression
 dotnet_diagnostic.IDE0034.severity = warning
 
+# IDE0090: Use 'new(...)'
+dotnet_diagnostic.IDE0090.severity = warning
+
+# IDE0150: Prefer 'null' check over type check
+dotnet_diagnostic.IDE0150.severity = warning
+
+# IDE0028: Simplify collection initialization
+dotnet_diagnostic.IDE0028.severity = warning
+
+# IDE0017: Simplify object initialization
+dotnet_diagnostic.IDE0017.severity = warning
+
 #### Naming styles ####
 
 # Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)
@@ -229,15 +241,3 @@ dotnet_naming_style.s_underscore_camel_case.required_prefix = s_
 dotnet_naming_style.s_underscore_camel_case.required_suffix =
 dotnet_naming_style.s_underscore_camel_case.word_separator =
 dotnet_naming_style.s_underscore_camel_case.capitalization = camel_case
-
-# IDE0090: Use 'new(...)'
-dotnet_diagnostic.IDE0090.severity = warning
-
-# IDE0150: Prefer 'null' check over type check
-dotnet_diagnostic.IDE0150.severity = warning
-
-# IDE0028: Simplify collection initialization
-dotnet_diagnostic.IDE0028.severity = warning
-
-# IDE0017: Simplify object initialization
-dotnet_diagnostic.IDE0017.severity = warning
