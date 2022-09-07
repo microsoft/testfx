@@ -39,7 +39,7 @@
     <LegacyMajorVersion>14</LegacyMajorVersion>
     <LegacyMinorVersion>0</LegacyMinorVersion>
     <MajorMinorPatch Condition=" '$(MajorMinorPatch)' == '' ">255.255.255</MajorMinorPatch>
-    <VersionSuffix Condition=" '$(VersionSuffix)' == '' ">dev</MajorMinorPatch>
+    <VersionSuffix Condition=" '$(VersionSuffix)' == '' ">dev</VersionSuffix>
     <GeneratedAssemblyInfoFile Condition="'$(GeneratedAssemblyInfoFile)' ==''">$(IntermediateOutputPath)$(MSBuildProjectName).AssemblyInfo.cs</GeneratedAssemblyInfoFile>
     <Company>Microsoft Corporation</Company>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
