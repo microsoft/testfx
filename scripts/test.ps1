@@ -88,28 +88,30 @@ function Invoke-Test {
 
     # Get test assemblies from these folders that match the pattern specified.
     foreach ($container in $testFolders) {
-        $testContainer = Get-ChildItem $container\* -Recurse -Include $env:TF_UNITTEST_FILES_PATTERN, $env:TF_COMPONENTTEST_FILES_PATTERN, $env:TF_E2ETEST_FILES_PATTERN, "DiscoveryAndExecutionTests.dll"
+        $folderTestDlls = Get-ChildItem $container\* -Recurse -Include $env:TF_UNITTEST_FILES_PATTERN, $env:TF_COMPONENTTEST_FILES_PATTERN, $env:TF_E2ETEST_FILES_PATTERN, "DiscoveryAndExecutionTests.dll"
 
-        $testContainerName = $testContainer.Name
-        $testContainerPath = $testContainer.FullName
-        $allContainers += , "$testContainerName"
+        foreach ($testContainer in $folderTestDlls) {
+            $testContainerName = $testContainer.Name
+            $testContainerPath = $testContainer.FullName
+            $allContainers += , "$testContainerName"
 
-        if ($TFT_All) {
-            if ($env:TF_NetCoreContainers -Contains $testContainerName) {
-                $netCoreTestContainers += , "$testContainerPath"
-            }
-            else {
-                $testContainers += , "$testContainerPath"
-            }
-        }
-        else {
-            if ($testContainerPath -match $TFT_Pattern) {
+            if ($TFT_All) {
                 if ($env:TF_NetCoreContainers -Contains $testContainerName) {
                     $netCoreTestContainers += , "$testContainerPath"
-
                 }
                 else {
                     $testContainers += , "$testContainerPath"
+                }
+            }
+            else {
+                if ($testContainerPath -match $TFT_Pattern) {
+                    if ($env:TF_NetCoreContainers -Contains $testContainerName) {
+                        $netCoreTestContainers += , "$testContainerPath"
+
+                    }
+                    else {
+                        $testContainers += , "$testContainerPath"
+                    }
                 }
             }
         }
