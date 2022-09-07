@@ -36,7 +36,7 @@ public class UnitTestElementTests
     public void UnitTestElementConstructorShouldThrowIfTestMethodIsNull()
     {
         ActionUtility.ActionShouldThrowExceptionOfType(
-            () => new UnitTestElement(null),
+            () => _ = new UnitTestElement(null),
             typeof(ArgumentNullException));
     }
 
