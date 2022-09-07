@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK || NETSTANDARD || WIN_UI
+#if !WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
+#if NETFRAMEWORK
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+#endif
 using System.Linq;
 using System.Reflection;
 

@@ -34,7 +34,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     private static readonly string TestNameLabel = nameof(TestName);
 #endif
 
-#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+#if !WINDOWS_UWP
     /// <summary>
     /// List of result files associated with the test
     /// </summary>
@@ -102,7 +102,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         CancellationTokenSource = new CancellationTokenSource();
         InitializeProperties();
 
-#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+#if !WINDOWS_UWP
         _testResultFiles = new List<string>();
 #endif
     }
@@ -147,7 +147,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         }
     }
 
-#if NETFRAMEWORK
+#if !WINDOWS_UWP && !WIN_UI && !PORTABLE
     /// <inheritdoc/>
     public override string TestRunDirectory
     {
@@ -156,9 +156,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
             return GetStringPropertyValue(TestContextPropertyStrings.TestRunDirectory);
         }
     }
-#endif
 
-#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
     /// <inheritdoc/>
     public override string DeploymentDirectory
     {
@@ -286,7 +284,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <inheritdoc/>
     public override void AddResultFile(string fileName)
     {
-#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+#if !WINDOWS_UWP && !WIN_UI && !PORTABLE
         if (string.IsNullOrEmpty(fileName))
         {
             throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
@@ -474,7 +472,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <returns>Results files generated in run.</returns>
     public IList<string> GetResultFiles()
     {
-#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+#if !WINDOWS_UWP && !WIN_UI
         if (!_testResultFiles.Any())
         {
             return null;
@@ -550,7 +548,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     }
 #endif
 
-#if (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+#if !WINDOWS_UWP
     /// <summary>
     /// Helper to safely fetch a property value.
     /// </summary>

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETSTANDARD || NETFRAMEWORK || NETCOREAPP || WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System.Diagnostics;
@@ -18,14 +17,14 @@ using Microsoft.VisualStudio.TestPlatform.Utilities;
 /// like Close(), Dispose() etc.
 /// </remarks>
 public class TraceListenerWrapper :
-#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !WIN_UI
     TextWriterTraceListener,
 #endif
     ITraceListener
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="TraceListenerWrapper"/> class
-#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !WIN_UI
     /// that derives from System.Diagnostics.TextWriterTraceListener
     /// class and initializes TextWriterTraceListener object using the specified writer as recipient of the tracing or debugging output
 #endif
@@ -33,13 +32,13 @@ public class TraceListenerWrapper :
     /// </summary>
     /// <param name="textWriter">Writer instance for tracing or debugging output.</param>
     public TraceListenerWrapper(TextWriter textWriter)
-#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !WIN_UI
         : base(textWriter)
 #endif
     {
     }
 
-#if NETCOREAPP || WIN_UI || WINDOWS_UWP || NETSTANDARD_PORTABLE
+#if WIN_UI || WINDOWS_UWP
     /// <summary>
     /// Returning as this feature is not supported in ASP .NET and UWP
     /// </summary>
@@ -54,16 +53,16 @@ public class TraceListenerWrapper :
         => Dispose();
 #endif
 
-    // Summary:
-    //     Gets the text writer of System.Diagnostics.TextWriterTraceListener.Writer
-    //     that receives the tracing or debugging output.
+    /// <summary>
+    /// Gets the text writer of System.Diagnostics.TextWriterTraceListener.Writer
+    /// that receives the tracing or debugging output.
+    /// </summary>
     public TextWriter GetWriter()
     {
-#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !WIN_UI
         return Writer;
 #else
         return null;
 #endif
     }
 }
-#endif

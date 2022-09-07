@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK || NETSTANDARD || NETCOREAPP || WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System;
@@ -16,7 +15,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 /// </summary>
 public class TraceListenerManager : ITraceListenerManager
 {
-#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !WIN_UI
     /// <summary>
     /// Original output stream
     /// </summary>
@@ -35,7 +34,7 @@ public class TraceListenerManager : ITraceListenerManager
     /// <param name="errorWriter">A writer instance to log error messages.</param>
     public TraceListenerManager(TextWriter outputWriter, TextWriter errorWriter)
     {
-#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !WIN_UI
         _origStdOut = Console.Out;
         _origStdErr = Console.Error;
 
@@ -51,7 +50,7 @@ public class TraceListenerManager : ITraceListenerManager
     /// <param name="traceListener">The trace listener instance.</param>
     public void Add(ITraceListener traceListener)
     {
-#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !WIN_UI
         // NOTE: Listeners will not get Debug events in dotnet core due to platform limitation.
         // Refer https://github.com/Microsoft/testfx/pull/218 for more details.
         Trace.Listeners.Add(traceListener as TextWriterTraceListener);
@@ -64,7 +63,7 @@ public class TraceListenerManager : ITraceListenerManager
     /// <param name="traceListener">The trace listener instance.</param>
     public void Remove(ITraceListener traceListener)
     {
-#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !WIN_UI
         Trace.Listeners.Remove(traceListener as TextWriterTraceListener);
 #endif
     }
@@ -76,14 +75,14 @@ public class TraceListenerManager : ITraceListenerManager
     /// <param name="traceListener">The trace listener instance.</param>
     public void Dispose(ITraceListener traceListener)
     {
-#if NETFRAMEWORK || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !WIN_UI
         traceListener.Dispose();
         Console.SetOut(_origStdOut);
         Console.SetError(_origStdErr);
 #endif
     }
 
-#if NETCOREAPP || WIN_UI || WINDOWS_UWP || NETSTANDARD_PORTABLE
+#if WIN_UI || WINDOWS_UWP
     /// <summary>
     /// Returning as this feature is not supported in ASP .net and UWP
     /// </summary>
@@ -92,4 +91,3 @@ public class TraceListenerManager : ITraceListenerManager
         => Dispose(traceListener);
 #endif
 }
-#endif

@@ -9,7 +9,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
-#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP
 using ISettingsProvider = Interface.ISettingsProvider;
 #endif
 
@@ -18,7 +18,7 @@ using ISettingsProvider = Interface.ISettingsProvider;
 /// </summary>
 public class MSTestSettingsProvider : ISettingsProvider
 {
-#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !PORTABLE
     /// <summary>
     /// Member variable for Adapter settings
     /// </summary>
@@ -52,17 +52,15 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// <param name="reader">Reader to load the settings from.</param>
     public void Load(XmlReader reader)
     {
-#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !PORTABLE
         ValidateArg.NotNull(reader, "reader");
         s_settings = MSTestAdapterSettings.ToSettings(reader);
-#else
-        // if we have to read any thing from runsettings special for this platform service then we have to implement it.
 #endif
     }
 
     public IDictionary<string, object> GetProperties(string source)
     {
-#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !PORTABLE
         return TestDeployment.GetDeploymentInformation(source);
 #else
         return new Dictionary<string, object>();

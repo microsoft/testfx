@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
 /// </summary>
 public class TestSourceHost : ITestSourceHost
 {
-#if WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !PORTABLE
     private readonly string _sourceFileName;
     private string _currentDirectory = null;
 #endif
@@ -47,11 +47,8 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     private readonly bool _isAppDomainCreationDisabled;
 
-    private readonly string _sourceFileName;
     private readonly IRunSettings _runSettings;
     private readonly IFrameworkHandle _frameworkHandle;
-
-    private string _currentDirectory = null;
     private readonly IAppDomain _appDomain;
 
     private string _targetFrameworkVersion;
@@ -68,7 +65,7 @@ public class TestSourceHost : ITestSourceHost
         : this(sourceFileName, runSettings, frameworkHandle, new AppDomainWrapper())
 #endif
     {
-#if WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !NETFRAMEWORK && !PORTABLE
         _sourceFileName = sourceFileName;
 
         // Set the environment context.
@@ -192,10 +189,6 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     public void Dispose()
     {
-#if WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
-        ResetContext();
-#endif
-
 #if NETFRAMEWORK
         if (_parentDomainAssemblyResolver != null)
         {
@@ -236,10 +229,12 @@ public class TestSourceHost : ITestSourceHost
         ResetContext();
 
         GC.SuppressFinalize(this);
+#elif !WINDOWS_UWP && !PORTABLE
+        ResetContext();
 #endif
     }
 
-#if WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE) || NETFRAMEWORK
+#if !WINDOWS_UWP && !PORTABLE
     /// <summary>
     /// Sets context required for running tests.
     /// </summary>

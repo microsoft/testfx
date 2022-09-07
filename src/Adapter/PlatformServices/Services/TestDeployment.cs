@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK || NETSTANDARD || NETCOREAPP || WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System;
@@ -11,11 +10,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !PORTABLE
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !PORTABLE
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -27,15 +26,15 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 /// </summary>
 public class TestDeployment : ITestDeployment
 {
-#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
-#region Service Utility Variables
+#if !WINDOWS_UWP && !PORTABLE
+    #region Service Utility Variables
 
     private readonly DeploymentItemUtility _deploymentItemUtility;
     private readonly DeploymentUtility _deploymentUtility;
     private readonly FileUtility _fileUtility;
     private MSTestAdapterSettings _adapterSettings;
 
-#endregion
+    #endregion
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestDeployment"/> class.
@@ -83,7 +82,7 @@ public class TestDeployment : ITestDeployment
     /// <returns> A string of deployment items. </returns>
     public KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings)
     {
-#if WINDOWS_UWP || (NETCOREAPP && !WIN_UI) || NETSTANDARD_PORTABLE
+#if WINDOWS_UWP || PORTABLE
         return null;
 #else
         return _deploymentItemUtility.GetDeploymentItems(method, _deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
@@ -95,7 +94,7 @@ public class TestDeployment : ITestDeployment
     /// </summary>
     public void Cleanup()
     {
-#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !PORTABLE
         // Delete the deployment directory
         if (RunDirectories != null && _adapterSettings.DeleteDeploymentDirectoryAfterTestRunIsComplete)
         {
@@ -114,7 +113,7 @@ public class TestDeployment : ITestDeployment
     /// <returns> The deployment output directory. </returns>
     public string GetDeploymentDirectory()
     {
-#if WINDOWS_UWP || (NETCOREAPP && !WIN_UI) || NETSTANDARD_PORTABLE
+#if WINDOWS_UWP || PORTABLE
         return null;
 #else
         return RunDirectories?.OutDirectory;
@@ -130,7 +129,7 @@ public class TestDeployment : ITestDeployment
     /// <returns> Return true if deployment is done. </returns>
     public bool Deploy(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
     {
-#if WINDOWS_UWP || (NETCOREAPP && !WIN_UI) || NETSTANDARD_PORTABLE
+#if WINDOWS_UWP || PORTABLE
         return false;
 #else
         Debug.Assert(tests != null, "tests");
@@ -159,7 +158,7 @@ public class TestDeployment : ITestDeployment
         }
 
         // Object model currently does not have support for SuspendCodeCoverage. We can remove this once support is added
-#if !NETSTANDARD2_0 && !NET5_0_OR_GREATER
+#if NETFRAMEWORK
         using (new SuspendCodeCoverage())
 #endif
         {
@@ -183,7 +182,7 @@ public class TestDeployment : ITestDeployment
 #endif
     }
 
-#if NETFRAMEWORK || WIN_UI || (NETSTANDARD && !NETSTANDARD_PORTABLE)
+#if !WINDOWS_UWP && !PORTABLE
     internal static IDictionary<string, object> GetDeploymentInformation(string source)
     {
         var properties = new Dictionary<string, object>();
@@ -197,30 +196,38 @@ public class TestDeployment : ITestDeployment
             applicationBaseDirectory = Path.GetDirectoryName(source);
         }
 
-        properties[TestContextPropertyStrings.TestRunDirectory] = RunDirectories != null
-                                                                      ? RunDirectories.RootDeploymentDirectory
-                                                                      : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.DeploymentDirectory] = RunDirectories != null
-                                                                         ? RunDirectories.OutDirectory
-                                                                         : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.ResultsDirectory] = RunDirectories != null
-                                                                      ? RunDirectories.InDirectory
-                                                                      : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.TestRunResultsDirectory] = RunDirectories != null
-                                                                             ? RunDirectories.InMachineNameDirectory
-                                                                             : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.TestResultsDirectory] = RunDirectories != null
-                                                                          ? RunDirectories.InDirectory
-                                                                          : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.TestDir] = RunDirectories != null
-                                                             ? RunDirectories.RootDeploymentDirectory
-                                                             : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.TestDeploymentDir] = RunDirectories != null
-                                                                       ? RunDirectories.OutDirectory
-                                                                       : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.TestLogsDir] = RunDirectories != null
-                                                                 ? RunDirectories.InMachineNameDirectory
-                                                                 : applicationBaseDirectory;
+        properties[TestContextPropertyStrings.TestRunDirectory] =
+            RunDirectories != null
+                ? RunDirectories.RootDeploymentDirectory
+                : applicationBaseDirectory;
+        properties[TestContextPropertyStrings.DeploymentDirectory] =
+            RunDirectories != null
+                ? RunDirectories.OutDirectory
+                : applicationBaseDirectory;
+        properties[TestContextPropertyStrings.ResultsDirectory] =
+            RunDirectories != null
+                ? RunDirectories.InDirectory
+                : applicationBaseDirectory;
+        properties[TestContextPropertyStrings.TestRunResultsDirectory] =
+            RunDirectories != null
+                ? RunDirectories.InMachineNameDirectory
+                : applicationBaseDirectory;
+        properties[TestContextPropertyStrings.TestResultsDirectory] =
+            RunDirectories != null
+                ? RunDirectories.InDirectory
+                : applicationBaseDirectory;
+        properties[TestContextPropertyStrings.TestDir] =
+            RunDirectories != null
+                ? RunDirectories.RootDeploymentDirectory
+                : applicationBaseDirectory;
+        properties[TestContextPropertyStrings.TestDeploymentDir] =
+            RunDirectories != null
+                ? RunDirectories.OutDirectory
+                : applicationBaseDirectory;
+        properties[TestContextPropertyStrings.TestLogsDir] =
+            RunDirectories != null
+                ? RunDirectories.InMachineNameDirectory
+                : applicationBaseDirectory;
 
         return properties;
     }
@@ -249,4 +256,3 @@ public class TestDeployment : ITestDeployment
     }
 #endif
 }
-#endif
