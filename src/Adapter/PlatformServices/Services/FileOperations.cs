@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETSTANDARD || NETCOREAPP || NETFRAMEWORK || WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System;
@@ -213,4 +212,3 @@ public class FileOperations : IFileOperations
 #endif
 
 }
-#endif

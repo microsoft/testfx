@@ -18,7 +18,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     /// <param name="args"> The args. </param>
     public void LogError(string format, params object[] args)
     {
-#if NETFRAMEWORK || NETSTANDARD || (NETCOREAPP && !WIN_UI)
+#if !WINDOWS_UWP && !WIN_UI
         if (EqtTrace.IsErrorEnabled)
         {
             EqtTrace.Error(PrependAdapterName(format), args);
@@ -35,7 +35,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     /// <param name="args"> The args. </param>
     public void LogWarning(string format, params object[] args)
     {
-#if NETFRAMEWORK || NETSTANDARD || (NETCOREAPP && !WIN_UI)
+#if !WINDOWS_UWP && !WIN_UI
         if (EqtTrace.IsWarningEnabled)
         {
             EqtTrace.Warning(PrependAdapterName(format), args);
@@ -52,7 +52,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     /// <param name="args"> The args. </param>
     public void LogInfo(string format, params object[] args)
     {
-#if NETFRAMEWORK || NETSTANDARD || (NETCOREAPP && !WIN_UI)
+#if !WINDOWS_UWP && !WIN_UI
         if (EqtTrace.IsInfoEnabled)
         {
             EqtTrace.Info(PrependAdapterName(format), args);
@@ -62,7 +62,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
 #endif
     }
 
-#if NETFRAMEWORK || NETSTANDARD || (NETCOREAPP && !WIN_UI)
+#if !WINDOWS_UWP && !WIN_UI
     private static string PrependAdapterName(string format)
     {
         return $"MSTest - {format}";
