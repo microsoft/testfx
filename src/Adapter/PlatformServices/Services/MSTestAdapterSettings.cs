@@ -129,19 +129,17 @@ public class MSTestAdapterSettings
 
     public static bool IsAppDomainCreationDisabled(string settingsXml)
     {
-        bool disableAppDomain = false;
-        if (!string.IsNullOrEmpty(settingsXml))
+        if (string.IsNullOrEmpty(settingsXml))
         {
-            StringReader stringReader = new(settingsXml);
-            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
-
-            if (reader.ReadToFollowing("DisableAppDomain"))
-            {
-                bool.TryParse(reader.ReadInnerXml(), out disableAppDomain);
-            }
+            return false;
         }
 
-        return disableAppDomain;
+        StringReader stringReader = new(settingsXml);
+        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+
+        return reader.ReadToFollowing("DisableAppDomain")
+            && bool.TryParse(reader.ReadInnerXml(), out var disableAppDomain)
+            && disableAppDomain;
     }
 
     /// <summary>

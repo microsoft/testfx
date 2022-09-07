@@ -24,7 +24,7 @@ public class ExpectedExceptionAttributeTests
     [TestFrameworkV1.TestMethod]
     public void ExpectedExceptionAttributeConstructerShouldThrowArgumentNullExceptionWhenExceptionTypeIsNull()
     {
-        static void a() => new TestFrameworkV2.ExpectedExceptionAttribute(null, "Dummy");
+        static void a() => _ = new TestFrameworkV2.ExpectedExceptionAttribute(null, "Dummy");
 
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
     }
@@ -35,7 +35,7 @@ public class ExpectedExceptionAttributeTests
     [TestFrameworkV1.TestMethod]
     public void ExpectedExceptionAttributeConstructerShouldThrowArgumentException()
     {
-        static void a() => new TestFrameworkV2.ExpectedExceptionAttribute(typeof(ExpectedExceptionAttributeTests), "Dummy");
+        static void a() => _ = new TestFrameworkV2.ExpectedExceptionAttribute(typeof(ExpectedExceptionAttributeTests), "Dummy");
 
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentException));
     }
