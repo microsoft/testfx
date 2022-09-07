@@ -34,7 +34,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 testfx platform is licensed under the [MIT license](https://github.com/Microsoft/testfx/blob/main/LICENSE)
 
 ### Issue Tracking
-Please see [issue tracking](https://github.com/Microsoft/testfx-docs/blob/main/issuetracking.md) for a description of the workflow we use to process issues.
+Please see  [issue tracking](https://github.com/Microsoft/testfx-docs/blob/main/issuetracking.md) for a description of the workflow we use to process issues.
 
 ### Roadmap
 For information on shipped and upcoming features/enhancements please refer to our [Releases](https://github.com/Microsoft/testfx-docs/blob/main/docs/releases.md) and [Quarterly Checkin reports](https://github.com/Microsoft/testfx-docs/tree/main/Quarterly%20Checkins).
