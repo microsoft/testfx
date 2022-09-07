@@ -11,7 +11,6 @@
   <PropertyGroup>
     <BranchName Condition=" '$(BranchName)' == '' ">BRANCHNAME</BranchName>
     <CommitHash Condition=" '$(CommitHash)' == '' ">COMMITHASH</CommitHash>
-    <CommitId>$(CommitHash.SubString(0, 8))</CommitId>
   </PropertyGroup>
 
   <Import Project="$(RepoRoot)eng\Versions.props" />
