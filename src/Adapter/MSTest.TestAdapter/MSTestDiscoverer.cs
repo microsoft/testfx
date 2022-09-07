@@ -15,7 +15,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 /// <summary>
 /// Contains the discovery logic for this adapter.
 /// </summary>
-[DefaultExecutorUri(TestAdapter.Constants.ExecutorUriString)]
+[DefaultExecutorUri(Constants.ExecutorUriString)]
 [FileExtension(".xap")]
 [FileExtension(".appx")]
 [FileExtension(".dll")]
@@ -72,7 +72,7 @@ public class MSTestDiscoverer : ITestDiscoverer
     /// <param name="sources">The test sources</param>
     /// <remarks>Sources cannot be null.</remarks>
     /// <returns>True if the source has a valid extension for the current platform.</returns>
-    internal bool AreValidSources(IEnumerable<string> sources)
+    internal static bool AreValidSources(IEnumerable<string> sources)
     {
         // ValidSourceExtensions is always expected to return a non-null list.
         return

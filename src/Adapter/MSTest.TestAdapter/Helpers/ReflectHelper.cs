@@ -367,7 +367,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
     /// <returns> The parallelization level if set. -1 otherwise. </returns>
-    internal ParallelizeAttribute GetParallelizeAttribute(Assembly assembly)
+    internal static ParallelizeAttribute GetParallelizeAttribute(Assembly assembly)
     {
         return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ParallelizeAttribute)).OfType<ParallelizeAttribute>().FirstOrDefault();
     }
@@ -389,7 +389,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="assembly">The test assembly.</param>
     /// <returns>True if test assembly should not run in parallel.</returns>
-    internal bool IsDoNotParallelizeSet(Assembly assembly)
+    internal static bool IsDoNotParallelizeSet(Assembly assembly)
     {
         return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute)).Any();
     }
@@ -399,7 +399,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
     /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
-    internal ClassCleanupExecutionAttribute GetClassCleanupAttribute(Assembly assembly)
+    internal static ClassCleanupExecutionAttribute GetClassCleanupAttribute(Assembly assembly)
     {
         return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute)).OfType<ClassCleanupExecutionAttribute>().FirstOrDefault();
     }
@@ -627,7 +627,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="type">The type to inspect.</param>
     /// <param name="inherit">Look at inheritance chain.</param>
     /// <returns>An instance of the attribute.</returns>
-    internal AttributeType GetDerivedAttribute<AttributeType>(Type type, bool inherit)
+    internal static AttributeType GetDerivedAttribute<AttributeType>(Type type, bool inherit)
         where AttributeType : Attribute
     {
         var attributes = GetCustomAttributes(type.GetTypeInfo(), inherit);
@@ -656,7 +656,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="ownerAttributeProvider">The member to inspect.</param>
     /// <returns>owner if attribute is applied to TestMethod, else null;</returns>
-    private string GetOwner(MemberInfo ownerAttributeProvider)
+    private static string GetOwner(MemberInfo ownerAttributeProvider)
     {
         var ownerAttribute = GetCustomAttributes(ownerAttributeProvider, typeof(OwnerAttribute), true).ToArray();
 
@@ -673,7 +673,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="propertyAttributeProvider">The member to inspect.</param>
     /// <returns>TestProperty attributes if defined. Empty otherwise.</returns>
-    private IEnumerable<Attribute> GetTestPropertyAttributes(MemberInfo propertyAttributeProvider)
+    private static IEnumerable<Attribute> GetTestPropertyAttributes(MemberInfo propertyAttributeProvider)
     {
         return GetCustomAttributes(propertyAttributeProvider, typeof(TestPropertyAttribute), true);
     }

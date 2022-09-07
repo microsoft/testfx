@@ -33,7 +33,7 @@ public class ReflectionUtilityTests
     {
         var asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
 
-        var attribs = _reflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
+        var attribs = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);

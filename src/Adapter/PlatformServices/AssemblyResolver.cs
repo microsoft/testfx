@@ -581,7 +581,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// </summary>
     /// <param name="assemblyName">The assembly being resolved.</param>
     /// <param name="loggerAction">The logger function.</param>
-    private void SafeLog(string assemblyName, Action loggerAction)
+    private static void SafeLog(string assemblyName, Action loggerAction)
     {
         // Logger assembly was in `Microsoft.VisualStudio.TestPlatform.ObjectModel` assembly in legacy versions and we need to omit it as well.
         if (!string.IsNullOrEmpty(assemblyName) && !assemblyName.StartsWith(LoggerAssemblyName) && !assemblyName.StartsWith(LoggerAssemblyNameLegacy))

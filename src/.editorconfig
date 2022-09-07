@@ -1,0 +1,13 @@
+###############################
+# Core EditorConfig Options   #
+###############################
+
+root = false
+
+[*.{cs,vb}]
+
+#### .NET Coding Conventions ####
+
+# CA1822: Mark members as static
+# Bump severity only for source as there are FPs for tests, see https://github.com/microsoft/testfx/issues/1225
+dotnet_diagnostic.CA1822.severity = warning

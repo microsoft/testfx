@@ -102,7 +102,7 @@ public static class VSInstallationUtilities
     {
         // Get the directory of the exe
         var exeDir = Path.GetDirectoryName(exeName);
-        if (!string.IsNullOrEmpty(exeDir))
+        if (!IsNullOrEmpty(exeDir))
         {
             return File.Exists(Path.Combine(exeDir, PortableVsTestManifestFilename));
         }

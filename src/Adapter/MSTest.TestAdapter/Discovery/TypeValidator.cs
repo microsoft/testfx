@@ -105,7 +105,7 @@ internal class TypeValidator
     /// </summary>
     /// <param name="type">The reflected type.</param>
     /// <returns>Returns true if type has a valid TestContext property definition.</returns>
-    internal bool HasCorrectTestContextSignature(Type type)
+    internal static bool HasCorrectTestContextSignature(Type type)
     {
         Debug.Assert(type != null, "HasCorrectTestContextSignature type is null");
 
@@ -144,7 +144,7 @@ internal class TypeValidator
         return true;
     }
 
-    internal bool TypeHasValidAccessibility(TypeInfo type, bool discoverInternals)
+    internal static bool TypeHasValidAccessibility(TypeInfo type, bool discoverInternals)
     {
         if (type.IsVisible)
         {

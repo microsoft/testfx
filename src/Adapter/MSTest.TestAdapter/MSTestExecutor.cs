@@ -15,7 +15,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 /// <summary>
 /// Contains the execution logic for this adapter.
 /// </summary>
-[ExtensionUri(TestAdapter.Constants.ExecutorUriString)]
+[ExtensionUri(Constants.ExecutorUriString)]
 public class MSTestExecutor : ITestExecutor
 {
     /// <summary>

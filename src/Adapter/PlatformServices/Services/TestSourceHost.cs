@@ -313,7 +313,7 @@ public class TestSourceHost : ITestSourceHost
         //    in IDE scenarios. If the app base is set to the test source location, discovery will not work because we drop the
         //    UWP platform service assembly at the test source location and since CLR starts looking for assemblies from the app base location,
         //    there would be a mismatch of platform service assemblies during discovery.
-        if (_targetFrameworkVersion.Contains(PlatformServices.Constants.DotNetFrameWorkStringPrefix))
+        if (_targetFrameworkVersion.Contains(Constants.DotNetFrameWorkStringPrefix))
         {
             return Path.GetDirectoryName(_sourceFileName) ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
         }
@@ -380,12 +380,12 @@ public class TestSourceHost : ITestSourceHost
         return AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
     }
 
-    private string GetConfigFileForTestSource(string sourceFileName)
+    private static string GetConfigFileForTestSource(string sourceFileName)
     {
         return new DeploymentUtility().GetConfigFile(sourceFileName);
     }
 
-    private void AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(AssemblyResolver assemblyResolver, string baseDirectory)
+    private static void AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(AssemblyResolver assemblyResolver, string baseDirectory)
     {
         // Check if user specified any adapter settings
         MSTestAdapterSettings adapterSettings = MSTestSettingsProvider.Settings;

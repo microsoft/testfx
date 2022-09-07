@@ -117,7 +117,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The file name of the assembly.</param>
     /// <param name="warningMessages">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Gets the types defined in the provided assembly.</returns>
-    internal Type[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string> warningMessages)
+    internal static Type[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string> warningMessages)
     {
         var types = new List<Type>();
         try
@@ -153,7 +153,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// </summary>
     /// <param name="ex">The exception.</param>
     /// <returns>Returns loader exceptions as a multi-line string.</returns>
-    internal string GetLoadExceptionDetails(ReflectionTypeLoadException ex)
+    internal static string GetLoadExceptionDetails(ReflectionTypeLoadException ex)
     {
         Debug.Assert(ex != null, "exception should not be null.");
 
@@ -271,7 +271,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                TryProcessTestDataSourceTests(test, testMethodInfo, tests);
     }
 
-    private bool TryProcessDataSource(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
+    private static bool TryProcessDataSource(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
     {
         var dataSourceAttributes = ReflectHelper.GetAttributes<UTF.DataSourceAttribute>(testMethodInfo.MethodInfo, false);
         if (dataSourceAttributes == null)
@@ -299,7 +299,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private bool ProcessDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
+    private static bool ProcessDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
     {
         var dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(testMethodInfo, testContext);
         if (dataRows == null || !dataRows.Any())
@@ -333,7 +333,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
+    private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
     {
         var methodInfo = testMethodInfo.MethodInfo;
         var testDataSources = ReflectHelper.GetAttributes<Attribute>(methodInfo, false)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
@@ -354,7 +354,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, UTF.ITestDataSource[] testDataSources, List<UnitTestElement> tests)
+    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, UTF.ITestDataSource[] testDataSources, List<UnitTestElement> tests)
     {
         foreach (var dataSource in testDataSources)
         {

@@ -63,7 +63,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     }
 
 #if NETFRAMEWORK || NETSTANDARD || (NETCOREAPP && !WIN_UI)
-    private string PrependAdapterName(string format)
+    private static string PrependAdapterName(string format)
     {
         return $"MSTest - {format}";
     }

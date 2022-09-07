@@ -38,14 +38,14 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
         return null;
     }
 
-    internal TestAssemblySettings GetSettings(string source)
+    internal static TestAssemblySettings GetSettings(string source)
     {
         var testAssemblySettings = new TestAssemblySettings();
 
         // Load the source.
         var testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
 
-        var parallelizeAttribute = _reflectHelper.GetParallelizeAttribute(testAssembly);
+        var parallelizeAttribute = ReflectHelper.GetParallelizeAttribute(testAssembly);
 
         if (parallelizeAttribute != null)
         {
@@ -58,9 +58,9 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
             }
         }
 
-        testAssemblySettings.CanParallelizeAssembly = !_reflectHelper.IsDoNotParallelizeSet(testAssembly);
+        testAssemblySettings.CanParallelizeAssembly = !ReflectHelper.IsDoNotParallelizeSet(testAssembly);
 
-        var classCleanupSequencingAttribute = _reflectHelper.GetClassCleanupAttribute(testAssembly);
+        var classCleanupSequencingAttribute = ReflectHelper.GetClassCleanupAttribute(testAssembly);
         if (classCleanupSequencingAttribute != null)
         {
             testAssemblySettings.ClassCleanupLifecycle = classCleanupSequencingAttribute.CleanupBehavior;

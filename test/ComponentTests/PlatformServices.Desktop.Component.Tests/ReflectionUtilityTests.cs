@@ -54,7 +54,7 @@ public class ReflectionUtilityTests
     {
         var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = _reflectionUtility.GetCustomAttributes(minfo, false);
+        var attribs = ReflectionUtility.GetCustomAttributes(minfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -68,7 +68,7 @@ public class ReflectionUtilityTests
     {
         var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = _reflectionUtility.GetCustomAttributes(minfo, false);
+        var attribs = ReflectionUtility.GetCustomAttributes(minfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -82,7 +82,7 @@ public class ReflectionUtilityTests
     {
         var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = _reflectionUtility.GetCustomAttributes(minfo, true);
+        var attribs = ReflectionUtility.GetCustomAttributes(minfo, true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(3, attribs.Length);
@@ -97,7 +97,7 @@ public class ReflectionUtilityTests
     {
         var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
 
-        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, false);
+        var attribs = ReflectionUtility.GetCustomAttributes(tinfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -111,7 +111,7 @@ public class ReflectionUtilityTests
     {
         var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, false);
+        var attribs = ReflectionUtility.GetCustomAttributes(tinfo, false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -125,7 +125,7 @@ public class ReflectionUtilityTests
     {
         var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = _reflectionUtility.GetCustomAttributes(minfo, true);
+        var attribs = ReflectionUtility.GetCustomAttributes(minfo, true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -139,7 +139,7 @@ public class ReflectionUtilityTests
     {
         var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), false);
+        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -153,7 +153,7 @@ public class ReflectionUtilityTests
     {
         var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), false);
+        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -168,7 +168,7 @@ public class ReflectionUtilityTests
         var minfo =
             _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), true);
+        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -182,7 +182,7 @@ public class ReflectionUtilityTests
     {
         var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
 
-        var attribs = _reflectionUtility.GetCustomAttributes(minfo, null, true);
+        var attribs = ReflectionUtility.GetCustomAttributes(minfo, null, true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(3, attribs.Length);
@@ -196,7 +196,7 @@ public class ReflectionUtilityTests
     {
         var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
 
-        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(TestPropertyV2), true);
+        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(TestPropertyV2), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -210,7 +210,7 @@ public class ReflectionUtilityTests
     {
         var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyTestMethod2");
 
-        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(CategoryArrayAttribute), true);
+        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(CategoryArrayAttribute), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -224,7 +224,7 @@ public class ReflectionUtilityTests
     {
         var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
 
-        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, typeof(TestCategoryV2), false);
+        var attribs = ReflectionUtility.GetCustomAttributes(tinfo, typeof(TestCategoryV2), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -238,7 +238,7 @@ public class ReflectionUtilityTests
     {
         var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = _reflectionUtility.GetCustomAttributes(tinfo, typeof(TestCategoryV2), false);
+        var attribs = ReflectionUtility.GetCustomAttributes(tinfo, typeof(TestCategoryV2), false);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(1, attribs.Length);
@@ -252,7 +252,7 @@ public class ReflectionUtilityTests
     {
         var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = _reflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), true);
+        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), true);
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);
@@ -266,7 +266,7 @@ public class ReflectionUtilityTests
     {
         var asm = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").Assembly;
 
-        var attribs = _reflectionUtility.GetCustomAttributes(asm, typeof(TestCategoryV2));
+        var attribs = ReflectionUtility.GetCustomAttributes(asm, typeof(TestCategoryV2));
 
         Assert.IsNotNull(attribs);
         Assert.AreEqual(2, attribs.Length);

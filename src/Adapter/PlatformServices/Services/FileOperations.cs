@@ -178,7 +178,7 @@ public class FileOperations : IFileOperations
 #if NETSTANDARD || (NETCOREAPP && !WIN_UI) || WINDOWS_UWP
         return assemblyFileName;
 #elif WIN_UI
-        var packagePath = AppContainer.AppModel.GetCurrentPackagePath();
+        var packagePath = AppModel.GetCurrentPackagePath();
         if (packagePath == null)
         {
             return assemblyFileName;

@@ -38,7 +38,7 @@ internal class FileUtility
     /// </summary>
     /// <param name="fileName"> The file Name. </param>
     /// <returns> The fileName devoid of any invalid characters. </returns>
-    public string ReplaceInvalidFileNameCharacters(string fileName)
+    public static string ReplaceInvalidFileNameCharacters(string fileName)
     {
         Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
 
@@ -231,7 +231,7 @@ internal class FileUtility
         return fileContents;
     }
 
-    public string TryConvertPathToRelative(string path, string rootDir)
+    public static string TryConvertPathToRelative(string path, string rootDir)
     {
         Debug.Assert(!string.IsNullOrEmpty(path), "path should not be null or empty.");
         Debug.Assert(!string.IsNullOrEmpty(rootDir), "rootDir should not be null or empty.");
@@ -296,7 +296,7 @@ internal class FileUtility
     /// <param name="path">path to symbols file.</param>
     /// <returns>Pdb file name or null if non-existent.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private string GetSymbolsFileName(string path)
+    private static string GetSymbolsFileName(string path)
     {
         if (string.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
         {

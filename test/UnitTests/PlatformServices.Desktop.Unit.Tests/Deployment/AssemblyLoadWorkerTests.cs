@@ -155,7 +155,7 @@ public class AssemblyLoadWorkerTests
                     return FullNameSetter.Invoke();
                 }
 
-                return Assembly.GetExecutingAssembly().FullName;
+                return GetExecutingAssembly().FullName;
             }
         }
 
@@ -171,7 +171,7 @@ public class AssemblyLoadWorkerTests
         {
             get
             {
-                return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Name);
+                return Path.Combine(Path.GetDirectoryName(GetExecutingAssembly().Location), Name);
             }
         }
 

@@ -98,7 +98,7 @@ public class AssemblyEnumeratorTests
         // Setup mocks
         mockAssembly.Setup(a => a.DefinedTypes).Returns(new List<TypeInfo>());
 
-        Assert.AreEqual(0, _assemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings).Length);
+        Assert.AreEqual(0, AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings).Length);
     }
 
     [TestMethodV1]
@@ -111,7 +111,7 @@ public class AssemblyEnumeratorTests
         // Setup mocks
         mockAssembly.Setup(a => a.DefinedTypes).Returns(expectedTypes);
 
-        var types = _assemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
+        var types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
         CollectionAssert.AreEqual(expectedTypes, types);
     }
 
@@ -123,7 +123,7 @@ public class AssemblyEnumeratorTests
         // Setup mocks
         mockAssembly.Setup(a => a.DefinedTypes).Throws(new ReflectionTypeLoadException(null, null));
 
-        _assemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
+        AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
     }
 
     [TestMethodV1]
@@ -135,7 +135,7 @@ public class AssemblyEnumeratorTests
         // Setup mocks
         mockAssembly.Setup(a => a.DefinedTypes).Throws(new ReflectionTypeLoadException(reflectedTypes, null));
 
-        var types = _assemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
+        var types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
 
         Assert.IsNotNull(types);
         CollectionAssert.AreEqual(reflectedTypes, types);
@@ -150,7 +150,7 @@ public class AssemblyEnumeratorTests
         // Setup mocks
         mockAssembly.Setup(a => a.DefinedTypes).Throws(new ReflectionTypeLoadException(null, exceptions));
 
-        var types = _assemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", _warnings);
+        var types = AssemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", _warnings);
 
         Assert.AreEqual(1, _warnings.Count);
         CollectionAssert.Contains(
@@ -169,7 +169,7 @@ public class AssemblyEnumeratorTests
     {
         Assert.AreEqual(
             "DummyMessage\r\n",
-            _assemblyEnumerator.GetLoadExceptionDetails(
+            AssemblyEnumerator.GetLoadExceptionDetails(
                 new ReflectionTypeLoadException(null, null, "DummyMessage")));
     }
 
@@ -187,7 +187,7 @@ public class AssemblyEnumeratorTests
                     loaderException.GetType(),
                     loaderException.Message),
                 "\r\n"),
-            _assemblyEnumerator.GetLoadExceptionDetails(exceptions));
+            AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
     }
 
     [TestMethodV1]
@@ -211,7 +211,7 @@ public class AssemblyEnumeratorTests
                 loaderException2.GetType(),
                 loaderException2.Message).AppendLine();
 
-        Assert.AreEqual(errorDetails.ToString(), _assemblyEnumerator.GetLoadExceptionDetails(exceptions));
+        Assert.AreEqual(errorDetails.ToString(), AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
     }
 
     [TestMethodV1]
@@ -228,7 +228,7 @@ public class AssemblyEnumeratorTests
                     loaderException.GetType(),
                     loaderException.Message),
                 "\r\n"),
-            _assemblyEnumerator.GetLoadExceptionDetails(exceptions));
+            AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
     }
 
     #endregion

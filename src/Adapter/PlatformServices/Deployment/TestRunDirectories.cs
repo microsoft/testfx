@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dep
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 /// <summary>
@@ -57,6 +58,7 @@ public class TestRunDirectories
     /// <summary>
     /// Gets the Out directory
     /// </summary>
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string OutDirectory
     {
         get

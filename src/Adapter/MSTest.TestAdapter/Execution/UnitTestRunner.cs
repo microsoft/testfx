@@ -119,7 +119,7 @@ internal class UnitTestRunner : MarshalByRefObject
             using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
             var properties = new Dictionary<string, object>(testContextProperties);
             var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
-            testContext.SetOutcome(TestTools.UnitTesting.UnitTestOutcome.InProgress);
+            testContext.SetOutcome(UTF.UnitTestOutcome.InProgress);
 
             // Get the testMethod
             var testMethodInfo = _typeCache.GetTestMethodInfo(
@@ -300,7 +300,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="assemblyInfoCache"> The assembly Info Cache. </param>
     /// <param name="warnings"> The warnings. </param>
-    private void RunAssemblyCleanup(IEnumerable<TestAssemblyInfo> assemblyInfoCache, IList<string> warnings)
+    private static void RunAssemblyCleanup(IEnumerable<TestAssemblyInfo> assemblyInfoCache, IList<string> warnings)
     {
         foreach (var assemblyInfo in assemblyInfoCache)
         {
@@ -319,7 +319,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="classInfoCache"> The class Info Cache. </param>
     /// <param name="warnings"> The warnings. </param>
-    private void RunClassCleanupMethods(IEnumerable<TestClassInfo> classInfoCache, IList<string> warnings)
+    private static void RunClassCleanupMethods(IEnumerable<TestClassInfo> classInfoCache, IList<string> warnings)
     {
         foreach (var classInfo in classInfoCache)
         {
