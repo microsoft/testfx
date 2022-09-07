@@ -208,7 +208,7 @@ internal static class StackTraceHelper
             return CreateStackTraceInformation(ex.InnerException, checkInnerExceptions, stackTraceString);
         }
 
-        var stackTrace = StackTraceHelper.TrimStackTrace(stackTraceString);
+        var stackTrace = TrimStackTrace(stackTraceString);
 
         if (!string.IsNullOrEmpty(stackTrace))
         {

@@ -96,7 +96,7 @@ internal class AssemblyUtility
     /// </summary>
     /// <param name="path"> The path to the assembly. </param>
     /// <returns> True if managed assembly. </returns>
-    internal bool IsAssembly(string path)
+    internal static bool IsAssembly(string path)
     {
         Debug.Assert(!string.IsNullOrEmpty(path), "path");
         try
@@ -263,7 +263,7 @@ internal class AssemblyUtility
     /// Gets the resolution paths for app domain creation.
     /// </summary>
     /// <returns> The <see cref="IList{T}"/> of resolution paths. </returns>
-    internal IList<string> GetResolutionPaths()
+    internal static IList<string> GetResolutionPaths()
     {
         // Use dictionary to ensure we get a list of unique paths, but keep a list as the
         // dictionary does not guarantee order.

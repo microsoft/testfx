@@ -37,14 +37,14 @@ public class FileUtilityTests
     public void ReplaceInvalidFileNameCharactersShouldReturnFileNameIfItHasNoInvalidChars()
     {
         var fileName = "galaxy";
-        Assert.AreEqual(fileName, _fileUtility.Object.ReplaceInvalidFileNameCharacters(fileName));
+        Assert.AreEqual(fileName, FileUtility.ReplaceInvalidFileNameCharacters(fileName));
     }
 
     [TestMethod]
     public void ReplaceInvalidFileNameCharactersShouldReplaceInvalidChars()
     {
         var fileName = "galaxy<>far:far?away";
-        Assert.AreEqual("galaxy__far_far_away", _fileUtility.Object.ReplaceInvalidFileNameCharacters(fileName));
+        Assert.AreEqual("galaxy__far_far_away", FileUtility.ReplaceInvalidFileNameCharacters(fileName));
     }
 
     #region AddFilesFromDirectory tests

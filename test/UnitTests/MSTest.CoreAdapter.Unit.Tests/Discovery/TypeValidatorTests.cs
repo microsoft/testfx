@@ -266,43 +266,43 @@ public class TypeValidatorTests
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnTrueForClassesWithNoTestContextProperty()
     {
-        Assert.IsTrue(_typeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)));
+        Assert.IsTrue(TypeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithNoSetters()
     {
-        Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
+        Assert.IsFalse(TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithPrivateSetter()
     {
-        Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
+        Assert.IsFalse(TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithStaticSetter()
     {
-        Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)));
+        Assert.IsFalse(TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithAbstractSetter()
     {
-        Assert.IsFalse(_typeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext)));
+        Assert.IsFalse(TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldNotThrowForAGenericClassWithRandomProperties()
     {
-        Assert.IsTrue(_typeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>)));
+        Assert.IsTrue(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>)));
     }
 
     [TestMethod]
     public void HasCorrectTestContextSignatureShouldReturnTrueForAGenericClassWithTestContext()
     {
-        Assert.IsTrue(_typeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>)));
+        Assert.IsTrue(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>)));
     }
 
     #endregion
@@ -336,7 +336,7 @@ public class TypeValidatorTests
 
         var discoverInternal = false;
         var actualDiscoveredTypes = allTypes
-            .Where(t => _typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
         actualDiscoveredTypes.Should().BeEquivalentTo(expectedDiscoveredTypes);
@@ -378,7 +378,7 @@ public class TypeValidatorTests
 
         var discoverInternal = false;
         var actualDiscoveredTypes = allTypes
-            .Where(t => !_typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => !TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
         actualDiscoveredTypes.Should().BeEquivalentTo(expectedNonDiscoveredTypes, o => o.WithTracing());
@@ -412,7 +412,7 @@ public class TypeValidatorTests
 
         var discoverInternal = true;
         var actualDiscoveredTypes = allTypes
-            .Where(t => _typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
         actualDiscoveredTypes.Should().BeEquivalentTo(expectedDiscoveredTypes);
@@ -441,7 +441,7 @@ public class TypeValidatorTests
 
         var discoverInternal = true;
         var actualDiscoveredTypes = allTypes
-            .Where(t => !_typeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
+            .Where(t => !TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
         actualDiscoveredTypes.Should().BeEquivalentTo(expectedNonDiscoveredTypes, o => o.WithTracing());

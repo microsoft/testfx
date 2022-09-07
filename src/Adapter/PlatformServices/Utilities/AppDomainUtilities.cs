@@ -78,7 +78,7 @@ internal static class AppDomainUtilities
             LoaderOptimization = LoaderOptimization.MultiDomainHost
         };
 
-        AppDomainUtilities.SetConfigurationFile(appDomainSetup, new DeploymentUtility().GetConfigFile(testSourcePath));
+        SetConfigurationFile(appDomainSetup, new DeploymentUtility().GetConfigFile(testSourcePath));
 
         if (File.Exists(testSourcePath))
         {
@@ -102,13 +102,13 @@ internal static class AppDomainUtilities
                     Path.GetDirectoryName(testSourcePath)
                 };
 
-                AppDomainUtilities.CreateInstance(
+                CreateInstance(
                     appDomain,
                     assemblyResolverType,
                     new object[] { resolutionPaths });
 
                 var assemblyLoadWorker =
-                    (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(
+                    (AssemblyLoadWorker)CreateInstance(
                     appDomain,
                     typeof(AssemblyLoadWorker),
                     null);

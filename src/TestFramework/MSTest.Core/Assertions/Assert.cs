@@ -1806,7 +1806,7 @@ public sealed class Assert
     /// </exception>
     public static void AreEqual(string expected, string actual, bool ignoreCase)
     {
-        Assert.AreEqual(expected, actual, ignoreCase, string.Empty, null);
+        AreEqual(expected, actual, ignoreCase, string.Empty, null);
     }
 #endif
 

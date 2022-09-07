@@ -90,7 +90,7 @@ internal abstract class DeploymentUtilityBase
     /// </summary>
     /// <param name="runContext">The run context.</param>
     /// <returns>The test results directory.</returns>
-    public string GetTestResultsDirectory(IRunContext runContext)
+    public static string GetTestResultsDirectory(IRunContext runContext)
     {
         var resultsDirectory = (!string.IsNullOrEmpty(runContext?.TestRunDirectory)) ?
             runContext.TestRunDirectory : null;
@@ -326,7 +326,7 @@ internal abstract class DeploymentUtilityBase
         return null;
     }
 
-    protected string GetFullPathToDeploymentItemSource(string deploymentItemSourcePath, string testSource)
+    protected static string GetFullPathToDeploymentItemSource(string deploymentItemSourcePath, string testSource)
     {
         if (Path.IsPathRooted(deploymentItemSourcePath))
         {
@@ -344,7 +344,7 @@ internal abstract class DeploymentUtilityBase
     /// <param name="warnings">Warnings.</param>
     /// <returns>True if valid.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    protected bool IsOutputDirectoryValid(DeploymentItem deploymentItem, string deploymentDirectory, IList<string> warnings)
+    protected static bool IsOutputDirectoryValid(DeploymentItem deploymentItem, string deploymentDirectory, IList<string> warnings)
     {
         Debug.Assert(deploymentItem != null, "deploymentItem should not be null.");
         Debug.Assert(!string.IsNullOrEmpty(deploymentDirectory), "deploymentDirectory should not be null or empty.");

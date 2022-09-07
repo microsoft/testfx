@@ -120,7 +120,7 @@ public sealed class CollectionAssert
 
         foreach (object current in collection)
         {
-            if (object.Equals(current, element))
+            if (Equals(current, element))
             {
                 return;
             }
@@ -200,7 +200,7 @@ public sealed class CollectionAssert
 
         foreach (object current in collection)
         {
-            if (object.Equals(current, element))
+            if (Equals(current, element))
             {
                 Assert.ThrowAssertFailed("CollectionAssert.DoesNotContain", Assert.BuildUserMessage(message, parameters));
             }
@@ -1477,7 +1477,7 @@ public sealed class CollectionAssert
 
         int IComparer.Compare(object x, object y)
         {
-            if (!object.Equals(x, y))
+            if (!Equals(x, y))
             {
                 return -1;
             }

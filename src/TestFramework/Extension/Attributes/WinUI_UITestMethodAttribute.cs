@@ -68,7 +68,7 @@ public class UITestMethodAttribute : TestMethodAttribute
 
         TestResult result = null;
 
-        var dispatcher = UITestMethodAttribute.GetDispatcherQueue(testMethod.MethodInfo.DeclaringType.Assembly);
+        var dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType.Assembly);
         if (dispatcher == null)
         {
             throw new InvalidOperationException(FrameworkMessages.AsyncUITestMethodWithNoDispatcherQueue);
@@ -89,7 +89,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             var taskCompletionSource = new TaskCompletionSource<object>();
 
-            if (!dispatcher.TryEnqueue(UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+            if (!dispatcher.TryEnqueue(DispatcherQueuePriority.Normal, () =>
                 {
                     try
                     {

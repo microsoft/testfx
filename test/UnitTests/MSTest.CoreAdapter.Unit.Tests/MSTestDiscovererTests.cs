@@ -223,9 +223,7 @@ public class MSTestDiscovererTests
     public void AreValidSourcesShouldThrowIfPlatformsValidSourceExtensionsIsNull()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);
-        MSTestDiscoverer discoverer = new();
-
-        void a() => discoverer.AreValidSources(new List<string> { "dummy" });
+        void a() => MSTestDiscoverer.AreValidSources(new List<string> { "dummy" });
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
     }
 
@@ -233,26 +231,20 @@ public class MSTestDiscovererTests
     public void AreValidSourcesShouldReturnFalseIfValidSourceExtensionsIsEmpty()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { });
-        MSTestDiscoverer discoverer = new();
-
-        Assert.IsFalse(discoverer.AreValidSources(new List<string> { "dummy.te" }));
+        Assert.IsFalse(MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
     }
 
     [TestMethod]
     public void AreValidSourcesShouldReturnTrueForValidSourceExtensions()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".te" });
-        MSTestDiscoverer discoverer = new();
-
-        Assert.IsTrue(discoverer.AreValidSources(new List<string> { "dummy.te" }));
+        Assert.IsTrue(MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
     }
 
     [TestMethod]
     public void AreValidSourcesShouldReturnFalseForInvalidSourceExtensions()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".nte", ".tep" });
-        MSTestDiscoverer discoverer = new();
-
-        Assert.IsFalse(discoverer.AreValidSources(new List<string> { "dummy.te" }));
+        Assert.IsFalse(MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
     }
 }

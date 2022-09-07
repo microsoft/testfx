@@ -176,7 +176,7 @@ public class TestSource : ITestSource
     /// </summary>
     /// <param name="sources">The list of sources.</param>
     /// <returns>True if there is an appx source.</returns>
-    private bool ContainsAppxSource(IEnumerable<string> sources)
+    private static bool ContainsAppxSource(IEnumerable<string> sources)
     {
         foreach (string source in sources)
         {
@@ -196,7 +196,7 @@ public class TestSource : ITestSource
     /// </summary>
     /// <param name="sources">The list of sources.</param>
     /// <returns>True if there is an appx source.</returns>
-    private string FindAppxSource(IEnumerable<string> sources)
+    private static string FindAppxSource(IEnumerable<string> sources)
     {
         foreach (string source in sources)
         {

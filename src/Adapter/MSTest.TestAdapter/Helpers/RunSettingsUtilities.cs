@@ -63,7 +63,7 @@ internal class RunSettingsUtilities
                 string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.InvalidSettingsXmlAttribute,
-                    TestPlatform.ObjectModel.Constants.RunConfigurationSettingsName,
+                    Constants.RunConfigurationSettingsName,
                     reader.Name));
         }
     }

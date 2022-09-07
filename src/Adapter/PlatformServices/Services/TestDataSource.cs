@@ -105,7 +105,7 @@ public class TestDataSource : ITestDataSource
     /// <param name="dataAccessMethod">The data access method.</param>
     /// <param name="length">Number of permutations.</param>
     /// <returns>Permutations.</returns>
-    private IEnumerable<int> GetPermutation(UTF.DataAccessMethod dataAccessMethod, int length)
+    private static IEnumerable<int> GetPermutation(UTF.DataAccessMethod dataAccessMethod, int length)
     {
         switch (dataAccessMethod)
         {
@@ -129,7 +129,7 @@ public class TestDataSource : ITestDataSource
     /// <param name="connectionString">The connection string.</param>
     /// <param name="tableName">The table name.</param>
     /// <param name="dataAccessMethod">The data access method.</param>
-    private void GetConnectionProperties(UTF.DataSourceAttribute dataSourceAttribute, out string providerNameInvariant, out string connectionString, out string tableName, out UTF.DataAccessMethod dataAccessMethod)
+    private static void GetConnectionProperties(UTF.DataSourceAttribute dataSourceAttribute, out string providerNameInvariant, out string connectionString, out string tableName, out UTF.DataAccessMethod dataAccessMethod)
     {
         if (string.IsNullOrEmpty(dataSourceAttribute.DataSourceSettingName) == false)
         {

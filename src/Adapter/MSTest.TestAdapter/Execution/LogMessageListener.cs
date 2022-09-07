@@ -4,6 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -101,6 +102,7 @@ public class LogMessageListener : IDisposable
     /// <summary>
     /// Gets 'Trace' Output from the redirected stream
     /// </summary>
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string DebugTrace
     {
         get
@@ -121,6 +123,7 @@ public class LogMessageListener : IDisposable
         return output;
     }
 
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string GetAndClearDebugTrace()
     {
         if (s_redirectedDebugTrace == null)

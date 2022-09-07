@@ -257,7 +257,7 @@ public class TestExecutionManager
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
         }
 
-        var sourceSettings = (sourceSettingsProvider != null) ? sourceSettingsProvider.GetSettings(source) : new TestAssemblySettings();
+        var sourceSettings = (sourceSettingsProvider != null) ? TestAssemblySettingsProvider.GetSettings(source) : new TestAssemblySettings();
         var parallelWorkers = sourceSettings.Workers;
         var parallelScope = sourceSettings.Scope;
         InitializeClassCleanupManager(source, testRunner, testsToRun, sourceSettings);
@@ -352,7 +352,7 @@ public class TestExecutionManager
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
     }
 
-    private void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, ICollection<TestCase> testsToRun, TestAssemblySettings sourceSettings)
+    private static void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, ICollection<TestCase> testsToRun, TestAssemblySettings sourceSettings)
     {
         try
         {
@@ -411,7 +411,7 @@ public class TestExecutionManager
     /// <param name="tcmProperties">Tcm properties.</param>
     /// <param name="sourceLevelParameters">Source level parameters.</param>
     /// <returns>Test context properties.</returns>
-    private IDictionary<string, object> GetTestContextProperties(IDictionary<TestProperty, object> tcmProperties, IDictionary<string, object> sourceLevelParameters)
+    private static IDictionary<string, object> GetTestContextProperties(IDictionary<TestProperty, object> tcmProperties, IDictionary<string, object> sourceLevelParameters)
     {
         var testContextProperties = new Dictionary<string, object>();
 
@@ -430,7 +430,7 @@ public class TestExecutionManager
         return testContextProperties;
     }
 
-    private void RunCleanup(
+    private static void RunCleanup(
         ITestExecutionRecorder testExecutionRecorder,
         UnitTestRunner testRunner)
     {
@@ -479,7 +479,7 @@ public class TestExecutionManager
     /// </summary>
     /// <param name="testExecutionRecorder">Handle to record test start/end/results/messages.</param>
     /// <param name="result">Result of the run operation.</param>
-    private void LogCleanupResult(ITestExecutionRecorder testExecutionRecorder, RunCleanupResult result)
+    private static void LogCleanupResult(ITestExecutionRecorder testExecutionRecorder, RunCleanupResult result)
     {
         Debug.Assert(testExecutionRecorder != null, "Logger should not be null");
 

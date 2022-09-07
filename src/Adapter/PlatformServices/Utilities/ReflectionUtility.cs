@@ -33,7 +33,7 @@ internal class ReflectionUtility
     /// <param name="memberInfo"> The member. </param>
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-    internal object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
+    internal static object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
     {
         return GetCustomAttributes(memberInfo, type: null, inherit: inherit);
     }
@@ -45,7 +45,7 @@ internal class ReflectionUtility
     /// <param name="type">Type of attribute to retrieve.</param>
     /// <param name="inherit">If inherited type of attribute.</param>
     /// <returns>All attributes of give type on member.</returns>
-    internal object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
+    internal static object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
     {
         if (memberInfo == null)
         {
@@ -150,7 +150,7 @@ internal class ReflectionUtility
     }
 
 #if NETFRAMEWORK
-    internal object[] GetCustomAttributes(Assembly assembly, Type type)
+    internal static object[] GetCustomAttributes(Assembly assembly, Type type)
     {
         if (assembly.ReflectionOnly)
         {
@@ -254,7 +254,7 @@ internal class ReflectionUtility
         return attribute as Attribute;
     }
 
-    private void AddNewAttributes(
+    private static void AddNewAttributes(
         IList<CustomAttributeData> customAttributes,
         bool shouldGetAllAttributes,
         Type type,
@@ -295,7 +295,7 @@ internal class ReflectionUtility
     /// </summary>
     /// <param name="memberInfo"> The member Info. </param>
     /// <returns> True if the member is loaded in a reflection only context. </returns>
-    private bool IsReflectionOnlyLoad(MemberInfo memberInfo)
+    private static bool IsReflectionOnlyLoad(MemberInfo memberInfo)
     {
         if (memberInfo != null)
         {
@@ -305,7 +305,7 @@ internal class ReflectionUtility
         return false;
     }
 
-    private bool IsTypeInheriting(Type type1, Type type2)
+    private static bool IsTypeInheriting(Type type1, Type type2)
     {
         while (type1 != null)
         {

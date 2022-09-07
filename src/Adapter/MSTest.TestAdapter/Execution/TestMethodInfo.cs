@@ -271,7 +271,7 @@ public class TestMethodInfo : ITestMethod
                         hasTestInitializePassed = true;
                         PlatformServiceProvider.Instance.ThreadOperations.ExecuteWithAbortSafety(
                             () => TestMethod.InvokeAsSynchronousTask(classInstance, arguments));
-                        result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed;
+                        result.Outcome = UTF.UnitTestOutcome.Passed;
                     }
                 }
             }
@@ -282,7 +282,7 @@ public class TestMethodInfo : ITestMethod
                 if (IsExpectedException(ex, result))
                 {
                     // Expected Exception was thrown, so Pass the test
-                    result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Passed;
+                    result.Outcome = UTF.UnitTestOutcome.Passed;
                 }
                 else                         // This block should not throw. If it needs to throw, then handling of
                     // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
@@ -291,15 +291,15 @@ public class TestMethodInfo : ITestMethod
                         TestClassName,
                         TestMethodName);
 
-                if (result.Outcome != TestTools.UnitTesting.UnitTestOutcome.Passed)
+                if (result.Outcome != UTF.UnitTestOutcome.Passed)
                 {
                     if (ex is UTF.AssertInconclusiveException || ex.InnerException is UTF.AssertInconclusiveException)
                     {
-                        result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Inconclusive;
+                        result.Outcome = UTF.UnitTestOutcome.Inconclusive;
                     }
                     else
                     {
-                        result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
+                        result.Outcome = UTF.UnitTestOutcome.Failed;
                     }
                 }
             }
@@ -313,7 +313,7 @@ public class TestMethodInfo : ITestMethod
                 result.TestFailureException = new TestFailedException(
                     ObjectModelUnitTestOutcome.Failed,
                     TestMethodOptions.ExpectedException.NoExceptionMessage);
-                result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
+                result.Outcome = UTF.UnitTestOutcome.Failed;
             }
         }
         catch (Exception exception)
@@ -392,7 +392,7 @@ public class TestMethodInfo : ITestMethod
         }
     }
 
-    private Exception GetRealException(Exception ex)
+    private static Exception GetRealException(Exception ex)
     {
         if (ex is TargetInvocationException)
         {
@@ -416,7 +416,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="className">The class name.</param>
     /// <param name="methodName">The method name.</param>
     /// <returns>Test framework exception with details.</returns>
-    private Exception HandleMethodException(Exception ex, string className, string methodName)
+    private static Exception HandleMethodException(Exception ex, string className, string methodName)
     {
         Debug.Assert(ex != null, "exception should not be null.");
 
@@ -429,7 +429,7 @@ public class TestMethodInfo : ITestMethod
 
         // Get the real exception thrown by the test method
         Exception realException = GetRealException(ex);
-        var outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
+        var outcome = UTF.UnitTestOutcome.Failed;
 
         if (realException.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var exceptionStackTraceInfo))
         {
@@ -653,7 +653,7 @@ public class TestMethodInfo : ITestMethod
                 TestClassName,
                 StackTraceHelper.GetExceptionMessage(ex.GetInnerExceptionOrDefault()));
 
-            result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
+            result.Outcome = UTF.UnitTestOutcome.Failed;
             result.TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, stackTraceInfo);
         }
 
@@ -707,7 +707,7 @@ public class TestMethodInfo : ITestMethod
                 TestClassName,
                 exceptionMessage);
 
-            result.Outcome = TestTools.UnitTesting.UnitTestOutcome.Failed;
+            result.Outcome = UTF.UnitTestOutcome.Failed;
             result.TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, stackTraceInfo);
         }
 
@@ -763,7 +763,7 @@ public class TestMethodInfo : ITestMethod
                 TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel();
             }
 
-            TestResult timeoutResult = new() { Outcome = TestTools.UnitTesting.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, errorMessage) };
+            TestResult timeoutResult = new() { Outcome = UTF.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, errorMessage) };
             return timeoutResult;
         }
     }

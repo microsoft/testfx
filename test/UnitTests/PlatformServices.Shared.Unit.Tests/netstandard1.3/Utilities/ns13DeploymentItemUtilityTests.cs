@@ -354,7 +354,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsNull()
     {
-        Assert.IsFalse(_deploymentItemUtility.IsValidDeploymentItem(null, _defaultDeploymentItemOutputDirectory, out var warning));
+        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem(null, _defaultDeploymentItemOutputDirectory, out var warning));
 
         StringAssert.Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty, warning);
     }
@@ -362,7 +362,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsEmpty()
     {
-        Assert.IsFalse(_deploymentItemUtility.IsValidDeploymentItem(string.Empty, _defaultDeploymentItemOutputDirectory, out var warning));
+        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem(string.Empty, _defaultDeploymentItemOutputDirectory, out var warning));
 
         StringAssert.Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty, warning);
     }
@@ -370,7 +370,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsNull()
     {
-        Assert.IsFalse(_deploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, null, out var warning));
+        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, null, out var warning));
 
         StringAssert.Contains(Resource.DeploymentItemOutputDirectoryCannotBeNull, warning);
     }
@@ -378,7 +378,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathHasInvalidCharacters()
     {
-        Assert.IsFalse(_deploymentItemUtility.IsValidDeploymentItem("C:<>", _defaultDeploymentItemOutputDirectory, out var warning));
+        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem("C:<>", _defaultDeploymentItemOutputDirectory, out var warning));
 
         StringAssert.Contains(
             string.Format(
@@ -391,7 +391,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfOutputDirectoryHasInvalidCharacters()
     {
-        Assert.IsFalse(_deploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "<>", out var warning));
+        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "<>", out var warning));
 
         StringAssert.Contains(
             string.Format(
@@ -404,7 +404,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsRooted()
     {
-        Assert.IsFalse(_deploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "C:\\temp", out var warning));
+        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "C:\\temp", out var warning));
 
         StringAssert.Contains(
            string.Format(
@@ -416,7 +416,7 @@ public class DeploymentItemUtilityTests
     [TestMethod]
     public void IsValidDeploymentItemShouldReturnTrueForAValidDeploymentItem()
     {
-        Assert.IsTrue(_deploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, _defaultDeploymentItemOutputDirectory, out var warning));
+        Assert.IsTrue(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, _defaultDeploymentItemOutputDirectory, out var warning));
 
         Assert.IsTrue(string.Empty.Equals(warning));
     }
@@ -430,7 +430,7 @@ public class DeploymentItemUtilityTests
         TestCase testCase = new("A.C.M", new System.Uri("executor://testExecutor"), "A");
         testCase.SetPropertyValue(DeploymentItemsProperty, null);
 
-        Assert.IsFalse(_deploymentItemUtility.HasDeploymentItems(testCase));
+        Assert.IsFalse(DeploymentItemUtility.HasDeploymentItems(testCase));
     }
 
     [TestMethod]
@@ -445,7 +445,7 @@ public class DeploymentItemUtilityTests
                 };
         testCase.SetPropertyValue(DeploymentItemsProperty, kvpArray);
 
-        Assert.IsTrue(_deploymentItemUtility.HasDeploymentItems(testCase));
+        Assert.IsTrue(DeploymentItemUtility.HasDeploymentItems(testCase));
     }
 
     #endregion

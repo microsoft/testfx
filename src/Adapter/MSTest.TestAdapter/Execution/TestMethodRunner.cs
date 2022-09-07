@@ -405,7 +405,7 @@ internal class TestMethodRunner
     /// </summary>
     /// <param name="results">Results.</param>
     /// <returns>Aggregate outcome.</returns>
-    private UTF.UnitTestOutcome GetAggregateOutcome(List<UTF.TestResult> results)
+    private static UTF.UnitTestOutcome GetAggregateOutcome(List<UTF.TestResult> results)
     {
         // In case results are not present, set outcome as unknown.
         if (!results.Any())
@@ -430,7 +430,7 @@ internal class TestMethodRunner
     /// <param name="results">Results.</param>
     /// <param name="executionId">Current execution id.</param>
     /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
-    private List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results, Guid executionId)
+    private static List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results, Guid executionId)
     {
         // Return results in case there are no results.
         if (!results.Any())

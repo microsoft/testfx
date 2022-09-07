@@ -123,7 +123,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     /// </summary>
     /// <param name="assembly">Assembly from which target framework has to find</param>
     /// <returns>String representation of the target dot net framework e.g. .NETFramework,Version=v4.0 </returns>
-    private string GetTargetFrameworkStringFromAssembly(Assembly assembly)
+    private static string GetTargetFrameworkStringFromAssembly(Assembly assembly)
     {
         string dotNetVersion = string.Empty;
         foreach (CustomAttributeData data in CustomAttributeData.GetCustomAttributes(assembly))

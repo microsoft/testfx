@@ -286,8 +286,8 @@ public class MSTestSettings
     /// </summary>
     internal static void Reset()
     {
-        MSTestSettings.CurrentSettings = null;
-        MSTestSettings.RunConfigurationSettings = null;
+        CurrentSettings = null;
+        RunConfigurationSettings = null;
     }
 
     /// <summary>

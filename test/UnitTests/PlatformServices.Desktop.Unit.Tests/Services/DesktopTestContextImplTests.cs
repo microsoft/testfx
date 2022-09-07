@@ -278,7 +278,7 @@ public class DesktopTestContextImplTests
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, stringWriter, _properties);
         _testContextImplementation.Write("2 Testing write \n\r");
         _testContextImplementation.Write("3 Testing write\n\r");
-        StringAssert.Equals(stringWriter.ToString(), "2 Testing write 3 Testing write");
+        Equals(stringWriter.ToString(), "2 Testing write 3 Testing write");
     }
 
     [TestMethod]

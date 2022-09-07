@@ -689,8 +689,8 @@ public class TestExecutionManagerTests
         var testCase3 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod3");
         var testCase4 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod4");
 
-        testCase3.SetPropertyValue(MSTest.TestAdapter.Constants.DoNotParallelizeProperty, true);
-        testCase4.SetPropertyValue(MSTest.TestAdapter.Constants.DoNotParallelizeProperty, true);
+        testCase3.SetPropertyValue(TestAdapterConstants.DoNotParallelizeProperty, true);
+        testCase4.SetPropertyValue(TestAdapterConstants.DoNotParallelizeProperty, true);
 
         TestCase[] tests = new[] { testCase1, testCase2, testCase3, testCase4 };
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
@@ -783,7 +783,7 @@ public class TestExecutionManagerTests
         var testCase4 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod4");
 
         ////testCase3.SetPropertyValue(MSTest.TestAdapter.Constants.DoNotParallelizeProperty, true);
-        testCase4.SetPropertyValue(MSTest.TestAdapter.Constants.DoNotParallelizeProperty, true);
+        testCase4.SetPropertyValue(TestAdapterConstants.DoNotParallelizeProperty, true);
 
         TestCase[] tests = new[] { testCase1, testCase2, testCase3, testCase4 };
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
@@ -971,7 +971,7 @@ public class TestExecutionManagerTests
         public void TestMethod1()
         {
             // Ensures stability.. for the thread to be not used for another test method
-            System.Threading.Thread.Sleep(2000);
+            Thread.Sleep(2000);
             ThreadIds.Add(Environment.CurrentManagedThreadId);
         }
 
@@ -979,7 +979,7 @@ public class TestExecutionManagerTests
         public void TestMethod2()
         {
             // Ensures stability.. for the thread to be not used for another test method
-            System.Threading.Thread.Sleep(2000);
+            Thread.Sleep(2000);
             ThreadIds.Add(Environment.CurrentManagedThreadId);
         }
     }
@@ -998,7 +998,7 @@ public class TestExecutionManagerTests
         public void TestMethod1()
         {
             // Ensures stability.. for the thread to be not used for another test method
-            System.Threading.Thread.Sleep(2000);
+            Thread.Sleep(2000);
             ThreadIds.Add(Environment.CurrentManagedThreadId);
         }
 
@@ -1006,7 +1006,7 @@ public class TestExecutionManagerTests
         public void TestMethod2()
         {
             // Ensures stability.. for the thread to be not used for another test method
-            System.Threading.Thread.Sleep(2000);
+            Thread.Sleep(2000);
             ThreadIds.Add(Environment.CurrentManagedThreadId);
         }
     }

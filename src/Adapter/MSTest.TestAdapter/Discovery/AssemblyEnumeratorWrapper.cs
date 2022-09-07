@@ -101,7 +101,7 @@ internal class AssemblyEnumeratorWrapper
         }
     }
 
-    private ICollection<UnitTestElement> GetTestsInIsolation(string fullFilePath, IRunSettings runSettings, out ICollection<string> warnings)
+    private static ICollection<UnitTestElement> GetTestsInIsolation(string fullFilePath, IRunSettings runSettings, out ICollection<string> warnings)
     {
         using var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null);
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain

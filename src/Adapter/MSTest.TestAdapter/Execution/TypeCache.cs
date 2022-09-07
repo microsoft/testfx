@@ -181,7 +181,7 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="assemblyName"> The assembly Name. </param>
     /// <returns> The <see cref="Type"/>. </returns>
     /// <exception cref="TypeInspectionException"> Thrown when there is a type load exception from the assembly. </exception>
-    private Type LoadType(string typeName, string assemblyName)
+    private static Type LoadType(string typeName, string assemblyName)
     {
         try
         {
@@ -237,7 +237,7 @@ internal class TypeCache : MarshalByRefObject
 
         var assemblyInfo = GetAssemblyInfo(classType);
 
-        var classInfo = new TestClassInfo(classType, constructor, testContextProperty, _reflectionHelper.GetDerivedAttribute<TestClassAttribute>(classType, false), assemblyInfo);
+        var classInfo = new TestClassInfo(classType, constructor, testContextProperty, ReflectHelper.GetDerivedAttribute<TestClassAttribute>(classType, false), assemblyInfo);
 
         var testInitializeAttributeType = typeof(TestInitializeAttribute);
         var testCleanupAttributeType = typeof(TestCleanupAttribute);
@@ -292,7 +292,7 @@ internal class TypeCache : MarshalByRefObject
     /// </summary>
     /// <param name="classType"> The class Type. </param>
     /// <returns> The <see cref="PropertyInfo"/> for TestContext property. Null if not defined. </returns>
-    private PropertyInfo ResolveTestContext(Type classType)
+    private static PropertyInfo ResolveTestContext(Type classType)
     {
         try
         {
@@ -339,7 +339,7 @@ internal class TypeCache : MarshalByRefObject
 
             assemblyInfo = new TestAssemblyInfo(assembly);
 
-            var types = new AssemblyEnumerator().GetTypes(assembly, assembly.FullName, null);
+            var types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName, null);
 
             foreach (var t in types)
             {
@@ -439,7 +439,7 @@ internal class TypeCache : MarshalByRefObject
     /// </summary>
     /// <param name="classInfo"> The Class Info. </param>
     /// <param name="initAndCleanupMethods"> An array with the Initialize and Cleanup Methods Info. </param>
-    private void UpdateInfoWithInitializeAndCleanupMethods(
+    private static void UpdateInfoWithInitializeAndCleanupMethods(
         TestClassInfo classInfo,
         ref MethodInfo[] initAndCleanupMethods)
     {
@@ -659,7 +659,7 @@ internal class TypeCache : MarshalByRefObject
         return testMethodInfo;
     }
 
-    private MethodInfo GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
+    private static MethodInfo GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
         MethodInfo testMethodInfo = null;
         var methodBase = ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName, testMethod.ManagedMethodName);
@@ -681,7 +681,7 @@ internal class TypeCache : MarshalByRefObject
         return testMethodInfo;
     }
 
-    private MethodInfo GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
+    private static MethodInfo GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
         MethodInfo testMethodInfo;
 
@@ -744,7 +744,7 @@ internal class TypeCache : MarshalByRefObject
     /// </summary>
     /// <param name="testMethodInfo"> The test Method Info. </param>
     /// <param name="testContext"> The test Context. </param>
-    private void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
+    private static void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
         Debug.Assert(testMethodInfo != null, "testMethodInfo is Null");
         Debug.Assert(testMethodInfo.TestMethod != null, "testMethodInfo.TestMethod is Null");
@@ -769,7 +769,7 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="propertyName"> The property name. </param>
     /// <param name="propertyValue"> The property value. </param>
     /// <returns> True if its a valid Test Property. </returns>
-    private bool ValidateAndAssignTestProperty(
+    private static bool ValidateAndAssignTestProperty(
         TestMethodInfo testMethodInfo,
         ITestContext testContext,
         string propertyName,

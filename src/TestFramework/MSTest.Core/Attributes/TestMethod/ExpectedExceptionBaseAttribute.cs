@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 /// <summary>
@@ -101,6 +102,7 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     /// Rethrow the exception if it is an AssertFailedException or an AssertInconclusiveException
     /// </summary>
     /// <param name="exception">The exception to rethrow if it is an assertion exception</param>
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API.")]
     protected void RethrowIfAssertException(Exception exception)
     {
         if (exception is AssertFailedException)
