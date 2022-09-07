@@ -138,7 +138,7 @@ public class AssemblyLoadWorkerTests
                 return GetReferencedAssembliesSetter.Invoke();
             }
 
-            return new AssemblyName[] { };
+            return Array.Empty<AssemblyName>();
         }
 
         public string Name
@@ -177,7 +177,7 @@ public class AssemblyLoadWorkerTests
 
         public override Module[] GetModules(bool getResourceModules)
         {
-            return new Module[] { };
+            return Array.Empty<Module>();
         }
     }
 

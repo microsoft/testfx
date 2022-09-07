@@ -37,12 +37,12 @@ public class ThreadOperationsTests
         int actionThreadID = 0;
         void action()
         {
-            actionThreadID = Thread.CurrentThread.ManagedThreadId;
+            actionThreadID = Environment.CurrentManagedThreadId;
         }
 
         CancellationTokenSource tokenSource = new();
         Assert.IsTrue(_asyncOperations.Execute(action, 1000, tokenSource.Token));
-        Assert.AreNotEqual(Thread.CurrentThread.ManagedThreadId, actionThreadID);
+        Assert.AreNotEqual(Environment.CurrentManagedThreadId, actionThreadID);
     }
 
     [TestMethod]

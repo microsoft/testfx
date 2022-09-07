@@ -33,11 +33,11 @@ public class DesktopThreadOperationsTests
         var cancellationTokenSource = new CancellationTokenSource();
         void action()
         {
-            actionThreadID = Thread.CurrentThread.ManagedThreadId;
+            actionThreadID = Environment.CurrentManagedThreadId;
         }
 
         Assert.IsTrue(_asyncOperations.Execute(action, 1000, cancellationTokenSource.Token));
-        Assert.AreNotEqual(Thread.CurrentThread.ManagedThreadId, actionThreadID);
+        Assert.AreNotEqual(Environment.CurrentManagedThreadId, actionThreadID);
     }
 
     [TestMethod]

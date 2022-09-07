@@ -40,6 +40,7 @@ internal static class DictionaryHelper
         var overwrites = new List<TKey>();
         foreach (var k in overwrite.Keys)
         {
+#pragma warning disable CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method | False-positive
             if (destination.ContainsKey(k))
             {
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: The {0} already contains key {1}. Overwriting it with value from {2}.", sourceFriendlyName, k, overwriteFriendlyName);
@@ -51,6 +52,7 @@ internal static class DictionaryHelper
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: The {0} does not contain key {1}. Adding it from {2}.", sourceFriendlyName, k, overwriteFriendlyName);
                 destination.Add(k, overwrite[k]);
             }
+#pragma warning restore CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
         }
 
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: Merging done: Resulting dictionary has keys {0}, overwrites {1}.", string.Join(", ", destination.Keys), string.Join(", ", overwrites));

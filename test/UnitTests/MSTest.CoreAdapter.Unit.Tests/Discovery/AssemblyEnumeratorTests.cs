@@ -405,13 +405,13 @@ public class AssemblyEnumeratorTests
             .Setup(a => a.GetCustomAttributes(
                 typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalsAttribute),
                 true))
-            .Returns(new Attribute[0]);
+            .Returns(Array.Empty<Attribute>());
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
                 typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceDiscoveryAttribute),
                 true))
-            .Returns(new Attribute[0]);
+            .Returns(Array.Empty<Attribute>());
 
         return mockAssembly;
     }

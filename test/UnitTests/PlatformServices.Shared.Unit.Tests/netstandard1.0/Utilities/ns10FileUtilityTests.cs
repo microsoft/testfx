@@ -55,7 +55,7 @@ public class FileUtilityTests
         var topLevelFiles = new string[] { "tick.txt", "tock.tick.txt" };
 
         _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns(topLevelFiles);
-        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns(new string[] { });
+        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns(Array.Empty<string>());
 
         var files = _fileUtility.Object.AddFilesFromDirectory("C:\\randomclock", false);
 

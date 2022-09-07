@@ -370,10 +370,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
 
                 // if we have a duplicate test name don't expand the test, bail out.
-                if (discoveredTests.ContainsKey(discoveredTest.DisplayName))
+                if (discoveredTests.TryGetValue(discoveredTest.DisplayName, out var firstTestSeen))
                 {
-                    var firstSeen = discoveredIndex[discoveredTest.DisplayName];
-                    var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstSeen, index, discoveredTest.DisplayName);
+                    var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstTestSeen, index, discoveredTest.DisplayName);
                     warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumarator: {warning}");
 
@@ -388,7 +387,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
                 catch (SerializationException)
                 {
-                    var firstSeen = discoveredIndex[discoveredTest.DisplayName];
+                    var firstIndexSeen = discoveredIndex[discoveredTest.DisplayName];
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
                     warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumarator: {warning}");

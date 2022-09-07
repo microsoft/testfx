@@ -770,6 +770,6 @@ public class TestMethodInfo : ITestMethod
 
     private static class EmptyHolder<T>
     {
-        internal static readonly T[] Array = new T[0];
+        internal static readonly T[] Array = System.Array.Empty<T>();
     }
 }

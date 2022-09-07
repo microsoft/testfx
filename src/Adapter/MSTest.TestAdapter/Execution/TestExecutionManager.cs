@@ -225,7 +225,7 @@ public class TestExecutionManager
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
         // Default test set is filtered tests based on user provided filter criteria
-        ICollection<TestCase> testsToRun = new TestCase[0];
+        ICollection<TestCase> testsToRun = Array.Empty<TestCase>();
         var filterExpression = TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
         if (filterHasError)
         {

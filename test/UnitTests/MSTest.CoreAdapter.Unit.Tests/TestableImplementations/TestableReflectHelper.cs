@@ -45,9 +45,9 @@ internal class TestableReflectHelper : ReflectHelper
     {
         var hashcode = MemberTypes.All.GetHashCode() + type.FullName.GetHashCode();
 
-        if (_customAttributes.ContainsKey(hashcode))
+        if (_customAttributes.TryGetValue(hashcode, out Attribute[] value))
         {
-            return _customAttributes[hashcode];
+            return value;
         }
         else
         {
@@ -59,9 +59,9 @@ internal class TestableReflectHelper : ReflectHelper
     {
         var hashcode = memberInfo.MemberType.GetHashCode() + type.FullName.GetHashCode();
 
-        if (_customAttributes.ContainsKey(hashcode))
+        if (_customAttributes.TryGetValue(hashcode, out Attribute[] value))
         {
-            return _customAttributes[hashcode];
+            return value;
         }
         else
         {

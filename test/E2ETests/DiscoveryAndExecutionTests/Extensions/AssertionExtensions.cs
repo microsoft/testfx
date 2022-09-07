@@ -100,7 +100,7 @@ public static class AssertionExtensions
     {
         if (matchCount)
         {
-            var expectedCount = expectedTests.Count();
+            var expectedCount = expectedTests.Length;
             AssertOutcomeCount(outcomedTests, expectedOutcome, expectedCount);
         }
 

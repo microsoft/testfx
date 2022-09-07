@@ -1398,7 +1398,7 @@ public class TestMethodInfoTests
             _testMethodOptions);
 
         object[] arguments = new object[] { 1 };
-        object[] expectedArguments = new object[] { 1, new string[] { } };
+        object[] expectedArguments = new object[] { 1, Array.Empty<string>() };
         var resolvedArguments = method.ResolveArguments(arguments);
 
         Assert.AreEqual(2, resolvedArguments.Length);

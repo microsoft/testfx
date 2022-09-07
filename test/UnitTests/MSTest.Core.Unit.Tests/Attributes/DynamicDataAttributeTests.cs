@@ -310,7 +310,7 @@ public class DummyTestClass
     {
         get
         {
-            return new object[][] { };
+            return Array.Empty<object[]>();
         }
     }
 

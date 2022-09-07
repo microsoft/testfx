@@ -20,7 +20,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// </summary>
     public DataRowAttribute()
     {
-        Data = new object[0];
+        Data = Array.Empty<object>();
     }
 
     /// <summary>

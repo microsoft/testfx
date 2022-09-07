@@ -170,7 +170,7 @@ public class DesktopTestDeploymentTests
         var mockAssemblyUtility = new Mock<AssemblyUtility>();
         mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
-            .Returns(new string[] { });
+            .Returns(System.Array.Empty<string>());
         mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });

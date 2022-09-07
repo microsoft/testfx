@@ -75,7 +75,7 @@ public class DeploymentUtilityTests
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
         _mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
-            .Returns(new string[] { });
+            .Returns(Array.Empty<string>());
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });
@@ -99,7 +99,7 @@ public class DeploymentUtilityTests
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
         _mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
-            .Returns(new string[] { });
+            .Returns(Array.Empty<string>());
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });
@@ -183,7 +183,7 @@ public class DeploymentUtilityTests
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
         _mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
-            .Returns(new string[] { });
+            .Returns(Array.Empty<string>());
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(assemblyFullPath))
             .Returns(new List<string> { satelliteFullPath });
@@ -223,7 +223,7 @@ public class DeploymentUtilityTests
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
         _mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
-            .Returns(new string[] { });
+            .Returns(Array.Empty<string>());
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });
@@ -274,7 +274,7 @@ public class DeploymentUtilityTests
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
         _mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
-            .Returns(new string[] { });
+            .Returns(Array.Empty<string>());
         _mockFileUtility.Setup(
             fu => fu.AddFilesFromDirectory(DefaultDeploymentItemPath, It.IsAny<bool>())).Returns(directoryContentFiles);
         _mockFileUtility.Setup(
@@ -314,7 +314,7 @@ public class DeploymentUtilityTests
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
         _mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
-            .Returns(new string[] { });
+            .Returns(Array.Empty<string>());
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns(new List<string> { });

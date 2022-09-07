@@ -972,7 +972,7 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             System.Threading.Thread.Sleep(2000);
-            ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadIds.Add(Environment.CurrentManagedThreadId);
         }
 
         [UTF.TestMethod]
@@ -980,7 +980,7 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             System.Threading.Thread.Sleep(2000);
-            ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadIds.Add(Environment.CurrentManagedThreadId);
         }
     }
 
@@ -999,7 +999,7 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             System.Threading.Thread.Sleep(2000);
-            ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadIds.Add(Environment.CurrentManagedThreadId);
         }
 
         [UTF.TestMethod]
@@ -1007,7 +1007,7 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             System.Threading.Thread.Sleep(2000);
-            ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadIds.Add(Environment.CurrentManagedThreadId);
         }
     }
 
@@ -1026,7 +1026,7 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             Thread.Sleep(2000);
-            ThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ThreadIds.Add(Environment.CurrentManagedThreadId);
         }
     }
 
@@ -1058,7 +1058,7 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             Thread.Sleep(2000);
-            ParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ParallelizableTestsThreadIds.Add(Environment.CurrentManagedThreadId);
             ThreadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
             LastParallelizableTestRun = DateTime.Now;
@@ -1069,7 +1069,7 @@ public class TestExecutionManagerTests
         {
             // Ensures stability.. for the thread to be not used for another test method
             Thread.Sleep(2000);
-            ParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            ParallelizableTestsThreadIds.Add(Environment.CurrentManagedThreadId);
             ThreadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
 
             LastParallelizableTestRun = DateTime.Now;
@@ -1084,7 +1084,7 @@ public class TestExecutionManagerTests
                 FirstUnParallelizableTestRun = DateTime.Now;
             }
 
-            UnParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            UnParallelizableTestsThreadIds.Add(Environment.CurrentManagedThreadId);
             ThreadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
         }
 
@@ -1097,7 +1097,7 @@ public class TestExecutionManagerTests
                 FirstUnParallelizableTestRun = DateTime.Now;
             }
 
-            UnParallelizableTestsThreadIds.Add(Thread.CurrentThread.ManagedThreadId);
+            UnParallelizableTestsThreadIds.Add(Environment.CurrentManagedThreadId);
             ThreadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
         }
     }
