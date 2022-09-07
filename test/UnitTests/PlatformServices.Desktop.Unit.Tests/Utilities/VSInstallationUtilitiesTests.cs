@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET462
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests;
 
 extern alias FrameworkV1;
@@ -9,8 +10,10 @@ extern alias FrameworkV2;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+
 using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
 using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
@@ -40,3 +43,4 @@ public class VSInstallationUtilitiesTests
         Assert.IsFalse(paths.Contains(Constants.PublicAssemblies) || paths.Contains(Constants.PrivateAssemblies));
     }
 }
+#endif

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET462
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities;
 
 extern alias FrameworkV1;
@@ -10,14 +11,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
 using Moq;
+
 using MSTestAdapter.PlatformServices.Tests.Utilities;
+
 using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
 using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
@@ -62,7 +67,7 @@ public class DeploymentUtilityTests
         _mocktestExecutionRecorder = new Mock<ITestExecutionRecorder>();
     }
 
-    #region Deploy tests
+#region Deploy tests
 
     [TestMethod]
     public void DeployShouldReturnFalseWhenNoDeploymentItemsOnTestCase()
@@ -410,9 +415,9 @@ public class DeploymentUtilityTests
             Times.Never);
     }
 
-    #endregion
+#endregion
 
-    #region private methods
+#region private methods
 
     private TestCase GetTestCaseAndTestRunDirectories(string deploymentItemPath, string defaultDeploymentItemOutputDirectoryout, out TestRunDirectories testRunDirectories)
     {
@@ -431,5 +436,6 @@ public class DeploymentUtilityTests
         return testCase;
     }
 
-    #endregion
+#endregion
 }
+#endif

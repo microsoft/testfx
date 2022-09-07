@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET462
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services;
 
 extern alias FrameworkV1;
@@ -9,10 +10,13 @@ extern alias FrameworkV2Extension;
 
 using System.Collections.Generic;
 using System.Data;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+
 using Moq;
+
 using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 using DesktopTestFrameworkV2 = FrameworkV2Extension::Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
@@ -101,5 +105,7 @@ public class DesktopTestDataSourceTests
         }
     }
 
-    #endregion
+#endregion
 }
+
+#endif

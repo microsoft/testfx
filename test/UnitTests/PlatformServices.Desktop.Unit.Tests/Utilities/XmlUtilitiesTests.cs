@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET462
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities;
 
 extern alias FrameworkV1;
@@ -8,6 +9,7 @@ extern alias FrameworkV1;
 using System.IO;
 using System.Reflection;
 using System.Xml;
+
 using static AppDomainUtilitiesTests;
 
 using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
@@ -144,3 +146,4 @@ public class XmlUtilitiesTests
         CollectionAssert.AreEqual(expectedConfigBytes, configBytes);
     }
 }
+#endif
