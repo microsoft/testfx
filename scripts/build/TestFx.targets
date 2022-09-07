@@ -35,20 +35,21 @@
   <!-- Generate AssemblyInfo.cs -->
   <PropertyGroup>
     <TFBuildNumber Condition=" '$(TFBuildNumber)' == '' ">0.1</TFBuildNumber>
-    <MajorVersion>14.0</MajorVersion>
+    <LegacyMajorVersion>14</LegacyMajorVersion>
+    <LegacyMinorVersion>0</LegacyMinorVersion>
     <GeneratedAssemblyInfoFile Condition="'$(GeneratedAssemblyInfoFile)' ==''">$(IntermediateOutputPath)$(MSBuildProjectName).AssemblyInfo.cs</GeneratedAssemblyInfoFile>
     <Company>Microsoft Corporation</Company>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
-    <AssemblyVersion>$(MajorVersion).0.0</AssemblyVersion>
-    <BuildVersion Condition=" '$(BuildVersion)' == '' ">$(MajorVersion).$(TFBuildNumber)</BuildVersion>
+    <AssemblyVersion>$(LegacyMajorVersion).$(LegacyMinorVersion).0.0</AssemblyVersion>
+    <BuildVersion Condition=" '$(BuildVersion)' == '' ">$(LegacyMajorVersion).$(LegacyMinorVersion).$(TFBuildNumber)</BuildVersion>
     <FileVersion Condition=" '$(FileVersion)' == '' ">$(BuildVersion)</FileVersion>
-    <InformationalVersion>$(BuildVersion)+$(CommitId)</InformationalVersion>
+    <InformationalVersion>$(MajorMinorPatch)-$(VersionSuffix).Branch.$(BranchName).Sha.$(CommitHash)</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Not including branch name assemblies for now. -->
-    <!-- <AssemblyMetadata Include="Branch" Value="$(BranchName)" /> -->
+    <AssemblyMetadata Include="Branch" Value="$(BranchName)" />
     <AssemblyMetadata Include="Commit" Value="$(CommitHash)" />
+    <AssemblyMetadata Include="RepositoryUrl" Value="https://github.com/microsoft/testfx" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(GenerateAssemblyInfo)' == 'false' ">

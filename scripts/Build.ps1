@@ -236,6 +236,8 @@ function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExten
                 "-p:BuildVersion=$TFB_BuildVersion",
                 "-p:BranchName=`"$TPB_BRANCH`"",
                 "-p:CommitHash=$TPB_COMMIT",
+                "-p:MajorMinorPatch=$TFB_FrameworkVersion",
+                "-p:VersionSuffix=$TFB_VersionSuffix",
                 "-restore:$restore",
                 "`"$solutionPath`"",
                 "-bl:`"$binLog`"",
