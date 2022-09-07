@@ -34,9 +34,12 @@
   -->
   <!-- Generate AssemblyInfo.cs -->
   <PropertyGroup>
+    <!-- We want to define defaults for some variables to ensure that they can still be used when building from VS -->
     <TFBuildNumber Condition=" '$(TFBuildNumber)' == '' ">0.1</TFBuildNumber>
     <LegacyMajorVersion>14</LegacyMajorVersion>
     <LegacyMinorVersion>0</LegacyMinorVersion>
+    <MajorMinorPatch Condition=" '$(MajorMinorPatch)' == '' ">255.255.255</MajorMinorPatch>
+    <VersionSuffix Condition=" '$(VersionSuffix)' == '' ">dev</MajorMinorPatch>
     <GeneratedAssemblyInfoFile Condition="'$(GeneratedAssemblyInfoFile)' ==''">$(IntermediateOutputPath)$(MSBuildProjectName).AssemblyInfo.cs</GeneratedAssemblyInfoFile>
     <Company>Microsoft Corporation</Company>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
