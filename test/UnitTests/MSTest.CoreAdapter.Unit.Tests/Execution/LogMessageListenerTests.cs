@@ -92,21 +92,4 @@ public class LogMessageListenerTests
     }
 
     #endregion
-
-    [TestMethod]
-    public void LogMessageListenerShouldCaptureLogMessagesInAllListeningScopes()
-    {
-        using var logMessageListener1 = new LogMessageListener(false);
-        using (var logMessageListener2 = new LogMessageListener(false))
-        {
-            UTF.Logging.Logger.LogMessage("sample log {0}", 123);
-
-            Assert.AreEqual("sample log 123" + Environment.NewLine, logMessageListener2.StandardOutput);
-        }
-
-        UTF.Logging.Logger.LogMessage("sample log {0}", 124);
-
-        var expectedMessage = string.Format("sample log 123{0}sample log 124{0}", Environment.NewLine);
-        Assert.AreEqual(expectedMessage, logMessageListener1.StandardOutput);
-    }
 }

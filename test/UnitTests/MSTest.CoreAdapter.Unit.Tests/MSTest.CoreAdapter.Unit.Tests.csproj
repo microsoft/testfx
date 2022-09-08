@@ -2,7 +2,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462</TargetFrameworks>
+    <NetStandardNetFrameworkHolder>net48</NetStandardNetFrameworkHolder>
+    <TargetFrameworks>$(NetStandardNetFrameworkHolder)</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -36,8 +37,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj" Private="true" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" Private="true" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices\PlatformServices.csproj" Private="true" SetTargetFramework="TargetFramework=netstandard2.0" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" Private="true" SetTargetFramework="TargetFramework=netstandard2.0"  />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Private="true" Aliases="FrameworkV2" />
     <!--
       This project targets net462 but we want to test using the netstandard content so let's force its resolution.

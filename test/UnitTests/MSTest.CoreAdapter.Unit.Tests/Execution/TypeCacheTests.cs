@@ -70,7 +70,7 @@ public class TypeCacheTests
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
         void a() => _typeCache.GetTestMethodInfo(
             null,
-            new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+            new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
             false);
 
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
@@ -93,7 +93,7 @@ public class TypeCacheTests
         Assert.IsNull(
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false));
     }
 
@@ -105,7 +105,7 @@ public class TypeCacheTests
         Assert.IsNull(
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false));
     }
 
@@ -120,7 +120,7 @@ public class TypeCacheTests
         void action() =>
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var exception = ActionUtility.PerformActionAndReturnException(action);
@@ -139,7 +139,7 @@ public class TypeCacheTests
         void action() =>
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var exception = ActionUtility.PerformActionAndReturnException(action);
@@ -158,7 +158,7 @@ public class TypeCacheTests
         void action() =>
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var exception = ActionUtility.PerformActionAndReturnException(action);
@@ -177,7 +177,7 @@ public class TypeCacheTests
         void action() =>
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var exception = ActionUtility.PerformActionAndReturnException(action);
@@ -199,7 +199,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                                     testMethod,
-                                    new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                                    new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                                     false);
 
         Assert.IsNotNull(testMethodInfo);
@@ -218,7 +218,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                                 testMethod,
-                                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                                 false);
 
         Assert.IsNotNull(testMethodInfo);
@@ -239,7 +239,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
@@ -260,7 +260,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
@@ -280,7 +280,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
@@ -301,7 +301,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
@@ -324,7 +324,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
@@ -347,7 +347,7 @@ public class TypeCacheTests
         void a() =>
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var exception = ActionUtility.PerformActionAndReturnException(a);
@@ -379,7 +379,7 @@ public class TypeCacheTests
         void a() =>
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var exception = ActionUtility.PerformActionAndReturnException(a);
@@ -408,12 +408,12 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         _mockReflectHelper.Verify(rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true), Times.Once);
@@ -436,7 +436,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
@@ -458,7 +458,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
@@ -472,7 +472,7 @@ public class TypeCacheTests
         var type = typeof(DummyDerivedTestClassWithInitializeMethods);
         var baseType = typeof(DummyTestClassWithInitializeMethods);
 
-        var testMethod = new TestMethod("TestMehtod", type.FullName, "A", false);
+        var testMethod = new TestMethod("TestMethod", type.FullName, "A", false);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
@@ -488,7 +488,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
             testMethod,
-            new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+            new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
             false);
 
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
@@ -511,7 +511,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
@@ -524,7 +524,7 @@ public class TypeCacheTests
         var type = typeof(DummyDerivedTestClassWithCleanupMethods);
 
         var baseType = typeof(DummyTestClassWithCleanupMethods);
-        var testMethod = new TestMethod("TestMehtod", type.FullName, "A", false);
+        var testMethod = new TestMethod("TestMethod", type.FullName, "A", false);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
@@ -536,7 +536,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
             testMethod,
-            new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+            new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
             false);
 
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
@@ -561,7 +561,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
@@ -600,7 +600,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
@@ -659,7 +659,7 @@ public class TypeCacheTests
         var testMethod = new TestMethod("TestMethod", type.FullName, "A", isAsync: false);
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var classInfo = _typeCache.ClassInfoCache.FirstOrDefault();
@@ -693,7 +693,7 @@ public class TypeCacheTests
         void a() =>
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var exception = ActionUtility.PerformActionAndReturnException(a);
@@ -725,7 +725,7 @@ public class TypeCacheTests
         void a() =>
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var exception = ActionUtility.PerformActionAndReturnException(a);
@@ -756,7 +756,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
@@ -777,7 +777,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
@@ -799,7 +799,7 @@ public class TypeCacheTests
         void a() =>
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var exception = ActionUtility.PerformActionAndReturnException(a);
@@ -822,7 +822,7 @@ public class TypeCacheTests
     {
         var type = typeof(DummyDerivedTestClassWithInitializeMethods);
         var baseType = typeof(DummyTestClassWithInitializeMethods);
-        var testMethod = new TestMethod("TestMehtod", type.FullName, "A", isAsync: false);
+        var testMethod = new TestMethod("TestMethod", type.FullName, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
@@ -832,7 +832,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
@@ -844,7 +844,7 @@ public class TypeCacheTests
     {
         var type = typeof(DummyDerivedTestClassWithCleanupMethods);
         var baseType = typeof(DummyTestClassWithCleanupMethods);
-        var testMethod = new TestMethod("TestMehtod", type.FullName, "A", isAsync: false);
+        var testMethod = new TestMethod("TestMethod", type.FullName, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true)).Returns(true);
@@ -854,7 +854,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
@@ -873,12 +873,12 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         _testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()), Times.Once);
@@ -899,7 +899,7 @@ public class TypeCacheTests
         void a() =>
             _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var exception = ActionUtility.PerformActionAndReturnException(a);
@@ -924,7 +924,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
@@ -945,7 +945,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
@@ -966,7 +966,7 @@ public class TypeCacheTests
 
         void a() => _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var exception = ActionUtility.PerformActionAndReturnException(a);
@@ -1001,7 +1001,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(4000, testMethodInfo.TestMethodOptions.Timeout);
@@ -1028,7 +1028,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(10, testMethodInfo.TestMethodOptions.Timeout);
@@ -1052,7 +1052,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
@@ -1067,7 +1067,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
@@ -1085,7 +1085,7 @@ public class TypeCacheTests
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
-            null,
+            new ThreadSafeStringWriter(null, "test"),
             new Dictionary<string, object>());
 
         _typeCache.GetTestMethodInfo(testMethod, testContext, false);
@@ -1103,7 +1103,7 @@ public class TypeCacheTests
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
-             null,
+            new ThreadSafeStringWriter(null, "test"),
             new Dictionary<string, object>());
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, false);
@@ -1125,7 +1125,7 @@ public class TypeCacheTests
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
-            null,
+            new ThreadSafeStringWriter(null, "test"),
             new Dictionary<string, object>());
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, false);
@@ -1146,7 +1146,7 @@ public class TypeCacheTests
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
-            null,
+            new ThreadSafeStringWriter(null, "test"),
             new Dictionary<string, object>());
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, false);
@@ -1167,7 +1167,7 @@ public class TypeCacheTests
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
         var testContext = new TestContextImplementation(
             testMethod,
-            null,
+            new ThreadSafeStringWriter(null, "test"),
             new Dictionary<string, object>());
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, false);
@@ -1188,7 +1188,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
@@ -1206,7 +1206,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
@@ -1228,7 +1228,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         // The two MethodInfo instances will have different ReflectedType properties,
@@ -1269,7 +1269,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var cleanupMethods = _typeCache.ClassInfoListWithExecutableCleanupMethods;
@@ -1293,7 +1293,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var cleanupMethods = _typeCache.ClassInfoListWithExecutableCleanupMethods;
@@ -1331,7 +1331,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var cleanupMethods = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
@@ -1341,7 +1341,7 @@ public class TypeCacheTests
     }
 
     [TestMethodV1]
-    public void AssemblyInfoListWithExecutableCleanupMethodsShouldReturnAssemblyInfosWithExecutableCleanupMethods()
+    public void AssemblyInfoListWithExecutableCleanupMethodsShouldReturnAssemblyInfoWithExecutableCleanupMethods()
     {
         var type = typeof(DummyTestClassWithCleanupMethods);
         var methodInfo = type.GetMethod("TestCleanup");
@@ -1355,7 +1355,7 @@ public class TypeCacheTests
 
         _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         var cleanupMethods = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
@@ -1383,7 +1383,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         Assert.AreEqual(expectedException, testMethodInfo.TestMethodOptions.ExpectedException);
@@ -1401,7 +1401,7 @@ public class TypeCacheTests
 
         var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
         UTF.ExpectedExceptionAttribute expectedException = new(typeof(DivideByZeroException));
@@ -1423,7 +1423,7 @@ public class TypeCacheTests
         {
             var testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
-                new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
+                new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
         }
         catch (Exception ex)
@@ -1644,7 +1644,7 @@ public class TypeCacheTests
         {
         }
 
-        public void TestMehtod()
+        public void TestMethod()
         {
         }
     }
@@ -1656,7 +1656,7 @@ public class TypeCacheTests
         {
         }
 
-        public void TestMehtod()
+        public void TestMethod()
         {
         }
     }
