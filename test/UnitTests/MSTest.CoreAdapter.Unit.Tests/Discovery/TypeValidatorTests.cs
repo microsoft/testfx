@@ -3,9 +3,22 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
+extern alias FrameworkV2CoreExtension;
+#if NETCOREAPP
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
 extern alias FrameworkV1;
 extern alias FrameworkV2;
-extern alias FrameworkV2CoreExtension;
+
+using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 using System;
 using System.Collections.Generic;
@@ -16,12 +29,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Moq;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -366,7 +373,7 @@ public class TypeValidatorTests
             nameof(PrivateClassNames.ProtectedNestedClassInPublicClass),
             nameof(PrivateClassNames.PrivateProtectedNestedClassInPublicClass),
             nameof(PrivateClassNames.PrivateClassNestedInPublicClass), // from PublicClass2
-            nameof(PrivateClassNames.ProtectedInteralClassNestedInInternalClass),
+            nameof(PrivateClassNames.ProtectedInternalClassNestedInInternalClass),
             nameof(PrivateClassNames.ProtectedClassNestedInInternalClass),
             nameof(PrivateClassNames.PrivateProtectedClassNestedInInternalClass),
             nameof(PrivateClassNames.PrivateClassNestedInInternalClass),
@@ -429,7 +436,7 @@ public class TypeValidatorTests
             nameof(PrivateClassNames.ProtectedNestedClassInPublicClass),
             nameof(PrivateClassNames.PrivateProtectedNestedClassInPublicClass),
             nameof(PrivateClassNames.PrivateClassNestedInPublicClass), // from PublicClass2
-            nameof(PrivateClassNames.ProtectedInteralClassNestedInInternalClass),
+            nameof(PrivateClassNames.ProtectedInternalClassNestedInInternalClass),
             nameof(PrivateClassNames.ProtectedClassNestedInInternalClass),
             nameof(PrivateClassNames.PrivateProtectedClassNestedInInternalClass),
             nameof(PrivateClassNames.PrivateClassNestedInInternalClass),
@@ -627,7 +634,7 @@ internal class InternalClass
     {
     }
 
-    protected internal class ProtectedInteralClassNestedInInternalClass
+    protected internal class ProtectedInternalClassNestedInInternalClass
     {
     }
 
@@ -679,7 +686,7 @@ internal class PrivateClassNames
 
     public string PrivateClassNestedInPublicClass { get; }
 
-    public string ProtectedInteralClassNestedInInternalClass { get; }
+    public string ProtectedInternalClassNestedInInternalClass { get; }
 
     public string ProtectedClassNestedInInternalClass { get; }
 

@@ -3,9 +3,23 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
+extern alias FrameworkV2CoreExtension;
+#if NETCOREAPP
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestMethodV1 = Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+#else
 extern alias FrameworkV1;
 extern alias FrameworkV2;
-extern alias FrameworkV2CoreExtension;
+
+using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 using System;
 using System.Collections.Generic;
@@ -25,13 +39,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplem
 
 using Moq;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
+using UnitTestOutcome = MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
 /// <summary>
 /// The test method info tests.
@@ -112,7 +121,7 @@ public class TestMethodInfoTests
         Assert.AreEqual(30, _testMethodInfo.Arguments[2]);
     }
 
-    #region TestMethod invoke scenarios
+#region TestMethod invoke scenarios
 
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldWaitForAsyncTestMethodsToComplete()
@@ -232,9 +241,9 @@ public class TestMethodInfoTests
         StringAssert.Contains(result.TestContextMessages, "SeaShore");
     }
 
-    #endregion
+#endregion
 
-    #region TestClass constructor setup
+#region TestClass constructor setup
 
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldCreateNewInstanceOfTestClassOnEveryCall()
@@ -334,9 +343,9 @@ public class TestMethodInfoTests
         CollectionAssert.Contains(result.ResultFiles.ToList(), "C:\\temp.txt");
     }
 
-    #endregion
+#endregion
 
-    #region TestClass.TestContext property setup
+#region TestClass.TestContext property setup
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldNotThrowIfTestContextIsNotPresent()
     {
@@ -413,9 +422,9 @@ public class TestMethodInfoTests
             "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows>b__");
     }
 
-    #endregion
+#endregion
 
-    #region TestInitialize method setup
+#region TestInitialize method setup
 
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldCallTestInitialize()
@@ -583,9 +592,9 @@ public class TestMethodInfoTests
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult>b__");
     }
 
-    #endregion
+#endregion
 
-    #region TestCleanup method setup
+#region TestCleanup method setup
 
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldCallTestCleanup()
@@ -1192,9 +1201,9 @@ public class TestMethodInfoTests
         Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, result.Outcome);
     }
 
-    #endregion
+#endregion
 
-    #region TestMethod invoke setup order
+#region TestMethod invoke setup order
 
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldInitializeClassInstanceTestInitializeAndTestCleanupInOrder()
@@ -1223,9 +1232,9 @@ public class TestMethodInfoTests
         Assert.AreEqual(UTF.UnitTestOutcome.Passed, result.Outcome);
     }
 
-    #endregion
+#endregion
 
-    #region TestMethod timeout scenarios
+#region TestMethod timeout scenarios
 
     [TestMethodV1]
     public void TestMethodInfoInvokeShouldReturnTestFailureOnTimeout()
@@ -1313,7 +1322,7 @@ public class TestMethodInfoTests
         });
     }
 
-    #endregion
+#endregion
 
     [TestMethodV1]
     public void ResolveArgumentsShouldReturnProvidedArgumentsWhenTooFewParameters()
@@ -1427,7 +1436,7 @@ public class TestMethodInfoTests
         CollectionAssert.AreEqual((string[])expectedArguments[1], (string[])resolvedArguments[1]);
     }
 
-    #region helper methods
+#region helper methods
 
     private void RunWithTestablePlatformService(TestablePlatformServiceProvider testablePlatformServiceProvider, Action action)
     {
@@ -1452,9 +1461,9 @@ public class TestMethodInfoTests
         }
     }
 
-    #endregion
+#endregion
 
-    #region Test data
+#region Test data
     public class DummyTestClassBase
     {
         public static Action<DummyTestClassBase> BaseTestClassMethodBody { get; set; }
@@ -1582,7 +1591,7 @@ public class TestMethodInfoTests
         }
     }
 
-    #region Dummy implementation
+#region Dummy implementation
 
     /// <summary>
     ///  Custom Expected exception attribute which overrides the Verify method.
@@ -1642,6 +1651,6 @@ public class TestMethodInfoTests
         }
     }
 
-    #endregion
+#endregion
 }
 #endregion

@@ -3,8 +3,23 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
+#if NETCOREAPP
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using TestMethodV1 = Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using FrameworkV2NS = Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
 extern alias FrameworkV1;
 extern alias FrameworkV2;
+
+using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using FrameworkV2NS = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 using System;
 using System.Collections.Generic;
@@ -22,13 +37,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 using Moq;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
 [TestClass]
 public class AssemblyEnumeratorTests
@@ -53,7 +61,7 @@ public class AssemblyEnumeratorTests
         PlatformServiceProvider.Instance = null;
     }
 
-    #region  Constructor tests
+#region  Constructor tests
 
     [TestMethodV1]
     public void ConstructorShouldPopulateSettings()
@@ -86,9 +94,9 @@ public class AssemblyEnumeratorTests
         Assert.AreEqual("DummyPath\\TestSettings1.testsettings", MSTestSettings.CurrentSettings.TestSettingsFile);
     }
 
-    #endregion
+#endregion
 
-    #region GetTypes tests
+#region GetTypes tests
 
     [TestMethodV1]
     public void GetTypesShouldReturnEmptyArrayWhenNoDeclaredTypes()
@@ -160,9 +168,9 @@ public class AssemblyEnumeratorTests
         _testablePlatformServiceProvider.MockTraceLogger.Verify(tl => tl.LogWarning("{0}", exceptions[0]), Times.Once);
     }
 
-    #endregion
+#endregion
 
-    #region GetLoadExceptionDetails tests
+#region GetLoadExceptionDetails tests
 
     [TestMethodV1]
     public void GetLoadExceptionDetailsShouldReturnExceptionMessageIfLoaderExceptionsIsNull()
@@ -231,9 +239,9 @@ public class AssemblyEnumeratorTests
             AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
     }
 
-    #endregion
+#endregion
 
-    #region EnumerateAssembly tests
+#region EnumerateAssembly tests
 
     [TestMethodV1]
     public void EnumerateAssemblyShouldReturnEmptyListWhenNoDeclaredTypes()
@@ -403,20 +411,20 @@ public class AssemblyEnumeratorTests
         // actual return value is irrelevant for these tests.
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
-                typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalsAttribute),
+                typeof(FrameworkV2NS.DiscoverInternalsAttribute),
                 true))
             .Returns(Array.Empty<Attribute>());
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
-                typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceDiscoveryAttribute),
+                typeof(FrameworkV2NS.TestDataSourceDiscoveryAttribute),
                 true))
             .Returns(Array.Empty<Attribute>());
 
         return mockAssembly;
     }
 
-    #endregion
+#endregion
 }
 
 #region Testable Implementations

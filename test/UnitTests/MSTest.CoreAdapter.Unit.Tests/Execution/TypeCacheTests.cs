@@ -3,9 +3,24 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
+extern alias FrameworkV2CoreExtension;
+#if NETCOREAPP
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestMethodV1 = Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+#else
 extern alias FrameworkV1;
 extern alias FrameworkV2;
-extern alias FrameworkV2CoreExtension;
+
+using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 using System;
 using System.Collections.Generic;
@@ -25,13 +40,6 @@ using Moq;
 
 using static TestMethodInfoTests;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
@@ -62,7 +70,7 @@ public class TypeCacheTests
         MSTestSettings.Reset();
     }
 
-    #region GetTestMethodInfo tests
+#region GetTestMethodInfo tests
 
     [TestMethodV1]
     public void GetTestMethodInfoShouldThrowIfTestMethodIsNull()
@@ -225,7 +233,7 @@ public class TypeCacheTests
         Assert.IsNull(testMethodInfo.Parent.TestContextProperty);
     }
 
-    #region Assembly Info Creation tests.
+#region Assembly Info Creation tests.
 
     [TestMethodV1]
     public void GetTestMethodInfoShouldAddAssemblyInfoToTheCache()
@@ -420,9 +428,9 @@ public class TypeCacheTests
         Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
     }
 
-    #endregion
+#endregion
 
-    #region ClassInfo Creation tests.
+#region ClassInfo Creation tests.
 
     [TestMethodV1]
     public void GetTestMethodInfoShouldAddClassInfoToTheCache()
@@ -885,9 +893,9 @@ public class TypeCacheTests
         Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
     }
 
-    #endregion
+#endregion
 
-    #region Method resolution tests
+#region Method resolution tests
 
     [TestMethodV1]
     public void GetTestMethodInfoShouldThrowIfTestMethodHasIncorrectSignatureOrCannotBeFound()
@@ -1239,11 +1247,11 @@ public class TypeCacheTests
         Assert.IsNotNull(testMethodInfo.TestMethodOptions.Executor);
     }
 
-    #endregion
+#endregion
 
-    #endregion
+#endregion
 
-    #region ClassInfoListWithExecutableCleanupMethods tests
+#region ClassInfoListWithExecutableCleanupMethods tests
 
     [TestMethodV1]
     public void ClassInfoListWithExecutableCleanupMethodsShouldReturnEmptyListWhenClassInfoCacheIsEmpty()
@@ -1303,9 +1311,9 @@ public class TypeCacheTests
         Assert.AreEqual(type.GetMethod("AssemblyCleanup"), cleanupMethods.ToArray()[0].ClassCleanupMethod);
     }
 
-    #endregion
+#endregion
 
-    #region AssemblyInfoListWithExecutableCleanupMethods tests
+#region AssemblyInfoListWithExecutableCleanupMethods tests
 
     [TestMethodV1]
     public void AssemblyInfoListWithExecutableCleanupMethodsShouldReturnEmptyListWhenAssemblyInfoCacheIsEmpty()
@@ -1365,9 +1373,9 @@ public class TypeCacheTests
         Assert.AreEqual(type.GetMethod("AssemblyCleanup"), cleanupMethods.ToArray()[0].AssemblyCleanupMethod);
     }
 
-    #endregion
+#endregion
 
-    #region ResolveExpectedExceptionHelper tests
+#region ResolveExpectedExceptionHelper tests
 
     [TestMethodV1]
     public void ResolveExpectedExceptionHelperShouldReturnExpectedExceptionAttributeIfPresent()
@@ -1434,7 +1442,7 @@ public class TypeCacheTests
         }
     }
 
-    #endregion
+#endregion
 
     private void SetupMocks()
     {
@@ -1442,7 +1450,7 @@ public class TypeCacheTests
             .Returns(Assembly.GetExecutingAssembly());
     }
 
-    #region dummy implementations
+#region dummy implementations
 
     [DummyTestClass]
     internal class DummyTestClassWithTestMethods
@@ -1751,5 +1759,5 @@ public class TypeCacheTests
     {
     }
 
-    #endregion
+#endregion
 }

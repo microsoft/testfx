@@ -42,6 +42,11 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(IsNetCoreApp)' == 'true' ">
+    <!--
+      For .NETCORE we cannot use MSTest v1 for testing so we currently rely on current built version.
+      This is far from ideal as this means we could introduce a regression without even noticing.
+      The best solution would be to build a new simple testing framework used only for testing.
+    -->
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
   </ItemGroup>
 

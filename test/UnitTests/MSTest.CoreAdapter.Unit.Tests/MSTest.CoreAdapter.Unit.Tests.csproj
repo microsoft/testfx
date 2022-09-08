@@ -3,7 +3,8 @@
 
   <PropertyGroup>
     <NetStandardNetFrameworkHolder>net48</NetStandardNetFrameworkHolder>
-    <TargetFrameworks>net462;$(NetStandardNetFrameworkHolder)</TargetFrameworks>
+    <TargetFrameworks>net462;$(NetStandardNetFrameworkHolder);netcoreapp3.1</TargetFrameworks>
+    <IsNetCoreApp Condition=" '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == '$(WinUiMinimum)' ">true</IsNetCoreApp>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -18,7 +19,7 @@
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(IsNetCoreApp)' != 'true' ">
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Aliases="FrameworkV1" Private="True">
       <HintPath>$(MSBuildExtensionsPath)\..\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
     </Reference>
@@ -36,15 +37,28 @@
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Aliases="FrameworkV2CoreExtension" />
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(IsNetCoreApp)' == 'true' ">
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+    <!--
+      For .NETCORE we cannot use MSTest v1 for testing so we currently rely on current built version.
+      This is far from ideal as this means we could introduce a regression without even noticing.
+      The best solution would be to build a new simple testing framework used only for testing.
+    -->
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Aliases="FrameworkV2" />
-    <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Condition=" '$(IsNetCoreApp)' != 'true' " Aliases="FrameworkV2" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
     <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\ActionUtility.cs" Link="ActionUtility.cs" />
   </ItemGroup>
 
 </Project>

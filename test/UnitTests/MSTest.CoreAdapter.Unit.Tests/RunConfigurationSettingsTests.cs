@@ -3,7 +3,17 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
+#if NETCOREAPP
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
 extern alias FrameworkV1;
+
+using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
+using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+#endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -11,12 +21,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
 [TestClass]
 public class RunConfigurationSettingsTests
@@ -124,7 +128,7 @@ public class RunConfigurationSettingsTests
     [TestMethod]
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()
     {
-        string runSettingxml =
+        string runSettingsXml =
         @"<RunSettings>
                  <FooUnit>   
                   <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
@@ -132,7 +136,7 @@ public class RunConfigurationSettingsTests
                </RunSettings>";
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
@@ -145,7 +149,7 @@ public class RunConfigurationSettingsTests
     [TestMethod]
     public void PopulateSettingsShouldInitializeSettingsFromRunConfigurationSection()
     {
-        string runSettingxml =
+        string runSettingsXml =
         @"<RunSettings>
                      <RunConfiguration>
                        <ResultsDirectory>.\TestResults</ResultsDirectory>
@@ -154,7 +158,7 @@ public class RunConfigurationSettingsTests
               </RunSettings>";
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
