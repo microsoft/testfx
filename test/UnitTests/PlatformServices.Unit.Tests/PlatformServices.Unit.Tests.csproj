@@ -1,0 +1,82 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <NetStandardNetFrameworkHolder>net48</NetStandardNetFrameworkHolder>
+    <TargetFrameworks>net462;$(NetStandardNetFrameworkHolder);netcoreapp3.1</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RootNamespace>MSTestAdapter.PlatformServices.UnitTests</RootNamespace>
+    <AssemblyName>MSTestAdapter.PlatformServices.UnitTests</AssemblyName>
+  </PropertyGroup>
+
+  <!-- Keep the property DebugType, otherwise DesktopFileOperationsTests.DisposeNavigationSessionShouldDisposeNavigationSessionInstance fails -->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Aliases="FrameworkV1">
+      <HintPath>$(MSBuildExtensionsPath)\..\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Aliases="FrameworkV2" Condition=" '$(TargetFramework)' != 'netcoreapp3.1' " />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices\PlatformServices.csproj" Condition=" '$(TargetFramework)' != '$(NetStandardNetFrameworkHolder)' " />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Aliases="FrameworkV2Extension" Condition=" '$(TargetFramework)' != '$(NetStandardNetFrameworkHolder)' " />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(NetStandardNetFrameworkHolder)' ">
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices\PlatformServices.csproj" SetTargetFramework="TargetFramework=netstandard2.0" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Aliases="FrameworkV2Extension" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
+    <PackageReference Include="Moq" Version="$(MoqVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10FileOperationsTests.cs" Link="Services\ns10FileOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10DiaSessionOperationsTests.cs" Link="Services\ns10DiaSessionOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceHostTests.cs" Link="Services\ns10TestSourceHostTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\ActionUtility.cs" Link="ActionUtility.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10AssemblyAttributes.cs" Link="Services\ns10AssemblyAttributes.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ReflectionOperationsTests.cs" Link="Services\ns10ReflectionOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestContextImplementationTests.cs" Link="Services\ns10TestContextImplementationTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10TestSourceTests.cs" Link="Services\ns10TestSourceTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\ns10ThreadOperationsTests.cs" Link="Services\ns10ThreadOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10DeploymentItemTests.cs" Link="Deployment\ns10DeploymentItemTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Deployment\ns10TestRunDirectoriesTests.cs" Link="Deployment\ns10TestRunDirectoriesTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Extensions\ns10ExceptionExtensionsTests.cs" Link="Extensions\ns10ExceptionExtensionsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Services\ns10MSTestAdapterSettingsTests.cs" Link="Services\ns10MSTestAdapterSettingsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Utilities\ns10DeploymentUtilityTests.cs" Link="Utilities\ns10DeploymentUtilityTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.0\Utilities\ns10FileUtilityTests.cs" Link="Utilities\ns10FileUtilityTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerManagerTests.cs" Link="Services\ns13TraceListenerManagerTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13TraceListenerTests.cs" Link="Services\ns13TraceListenerTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13MSTestSettingsProviderTests.cs" Link="Services\ns13MSTestSettingsProviderTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Services\ns13TestDeploymentTests.cs" Link="Services\ns13TestDeploymentTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13DeploymentItemUtilityTests.cs" Link="Utilities\ns13DeploymentItemUtilityTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\Utilities\ns13ReflectionUtilityTests.cs" Link="Utilities\ns13ReflectionUtilityTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Shared.Unit.Tests\netstandard1.3\ns13ThreadSafeStringWriterTests.cs" Link="Services\ns13ThreadSafeStringWriterTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="DataTestSourceFile.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+</Project>

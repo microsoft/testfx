@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Desktop.UnitTests;
+#if NET462
+namespace MSTestAdapter.PlatformServices.UnitTests;
 
 extern alias FrameworkV1;
 extern alias FrameworkV2;
@@ -278,3 +279,4 @@ public class TestableAssemblyResolver : AssemblyResolver
         return ReflectionOnlyLoadAssemblyFromSetter(path);
     }
 }
+#endif

@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services;
+#if NET462
+namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 extern alias FrameworkV1;
 extern alias FrameworkV2;
@@ -10,6 +11,7 @@ extern alias FrameworkV2Extension;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -17,6 +19,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 using Moq;
+
 using MSTestAdapter.PlatformServices.Tests.Utilities;
 
 using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -49,7 +52,7 @@ public class DesktopTestDeploymentTests
         MSTestSettingsProvider.Reset();
     }
 
-    #region Deploy tests
+#region Deploy tests
 
     [TestMethod]
     public void DeployShouldDeployFilesInASourceAndReturnTrue()
@@ -125,9 +128,9 @@ public class DesktopTestDeploymentTests
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(testRunDirectories.RootDeploymentDirectory), Times.Once);
     }
 
-    #endregion
+#endregion
 
-    #region private methods
+#region private methods
 
     private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
     {
@@ -184,5 +187,7 @@ public class DesktopTestDeploymentTests
             new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, _mockFileUtility.Object),
             _mockFileUtility.Object);
     }
-    #endregion
+#endregion
 }
+
+#endif

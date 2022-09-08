@@ -1,7 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Deployment;
+#if NET462
+namespace MSTestAdapter.PlatformServices.UnitTests.Deployment;
 
 extern alias FrameworkV1;
 
@@ -108,7 +109,7 @@ public class AssemblyLoadWorkerTests
         CollectionAssert.Contains(dependentAssemblies, utfassembly);
     }
 
-    #region Testable Implementations
+#region Testable Implementations
 
     private class TestableAssembly : Assembly
     {
@@ -181,5 +182,6 @@ public class AssemblyLoadWorkerTests
         }
     }
 
-    #endregion
+#endregion
 }
+#endif
