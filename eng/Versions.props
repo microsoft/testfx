@@ -17,7 +17,7 @@
       'microsoft.dotnet.arcade.sdk' otherwise only the arcade version gets restored
       -->
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
-    <!-- keep in sync with test\UnitTests\PlatformServices.Desktop.Unit.Tests\Utilities\XmlUtilitiesTests.cs -->
+    <!-- keep in sync with test\UnitTests\PlatformServices.Unit.Tests\Utilities\XmlUtilitiesTests.cs -->
     <MsTestInternalTestFxLocalizedDocumentationVersion>1.0.0-build-20170420-1</MsTestInternalTestFxLocalizedDocumentationVersion>
     <FmDevXlfToolVersion>0.1.3</FmDevXlfToolVersion>
     <VisualStudioQualityToolsUnitTestFrameworkVersion>16.9.0-preview-4267359</VisualStudioQualityToolsUnitTestFrameworkVersion>

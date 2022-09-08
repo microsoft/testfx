@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities;
+namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 extern alias FrameworkV1;
 
@@ -42,7 +42,7 @@ public class XmlUtilitiesTests
 
         // Assert.
         var expectedXml =
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?><configuration><runtime><assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\"><dependentAssembly><assemblyIdentity name=\"MSTestAdapter.PlatformServices.Desktop.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly></assemblyBinding></runtime></configuration>";
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?><configuration><runtime><assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\"><dependentAssembly><assemblyIdentity name=\"MSTestAdapter.PlatformServices.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly></assemblyBinding></runtime></configuration>";
         var doc = new XmlDocument();
         doc.LoadXml(expectedXml);
         byte[] expectedConfigBytes = null;
@@ -72,7 +72,7 @@ public class XmlUtilitiesTests
 
         // Assert.
         var expectedXml =
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?><configuration><runtime><assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\"><dependentAssembly><assemblyIdentity name=\"MSTestAdapter.PlatformServices.Desktop.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly></assemblyBinding></runtime></configuration>";
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?><configuration><runtime><assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\"><dependentAssembly><assemblyIdentity name=\"MSTestAdapter.PlatformServices.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly></assemblyBinding></runtime></configuration>";
         var doc = new XmlDocument();
         doc.LoadXml(expectedXml);
         byte[] expectedConfigBytes = null;
@@ -104,7 +104,7 @@ public class XmlUtilitiesTests
 
         // Assert.
         var expectedXml =
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?><configuration><runtime><assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\"><dependentAssembly><assemblyIdentity name=\"MSTestAdapter.PlatformServices.Desktop.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly></assemblyBinding></runtime></configuration>";
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?><configuration><runtime><assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\"><dependentAssembly><assemblyIdentity name=\"MSTestAdapter.PlatformServices.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly></assemblyBinding></runtime></configuration>";
         var doc = new XmlDocument();
         doc.LoadXml(expectedXml);
         byte[] expectedConfigBytes = null;
@@ -132,7 +132,7 @@ public class XmlUtilitiesTests
 
         // Assert.
         var expectedXml =
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?><configuration><runtime><assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\"><dependentAssembly><assemblyIdentity name=\"Random.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly><dependentAssembly><assemblyIdentity name=\"MSTestAdapter.PlatformServices.Desktop.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly></assemblyBinding></runtime></configuration>";
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?><configuration><runtime><assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\"><dependentAssembly><assemblyIdentity name=\"Random.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly><dependentAssembly><assemblyIdentity name=\"MSTestAdapter.PlatformServices.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly></assemblyBinding></runtime></configuration>";
         var doc = new XmlDocument();
         doc.LoadXml(expectedXml);
         byte[] expectedConfigBytes = null;

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services;
+namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 #if NETCOREAPP
 using Microsoft.VisualStudio.TestTools.UnitTesting;

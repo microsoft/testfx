@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services;
+namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 extern alias FrameworkV1;
 
@@ -11,7 +11,7 @@ using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
-using MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities;
+using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;

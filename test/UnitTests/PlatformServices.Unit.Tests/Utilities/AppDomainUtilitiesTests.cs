@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities;
+namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 extern alias FrameworkV1;
 

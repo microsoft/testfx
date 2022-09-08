@@ -105,7 +105,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Automation.CLI", "test\E2ET
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.CoreAdapter.Unit.Tests", "test\UnitTests\MSTest.CoreAdapter.Unit.Tests\MSTest.CoreAdapter.Unit.Tests.csproj", "{1CEB5743-70BF-475E-91BC-0AEBD63835B7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Desktop.Unit.Tests", "test\UnitTests\PlatformServices.Desktop.Unit.Tests\PlatformServices.Desktop.Unit.Tests.csproj", "{599833DC-EC5A-40CA-B5CF-DEF719548EEF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Unit.Tests", "test\UnitTests\PlatformServices.Unit.Tests\PlatformServices.Unit.Tests.csproj", "{599833DC-EC5A-40CA-B5CF-DEF719548EEF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Universal.Unit.Tests", "test\UnitTests\PlatformServices.Universal.Unit.Tests\PlatformServices.Universal.Unit.Tests.csproj", "{FA7C719F-A400-45AF-8091-7C23435617A8}"
 	ProjectSection(ProjectDependencies) = postProject

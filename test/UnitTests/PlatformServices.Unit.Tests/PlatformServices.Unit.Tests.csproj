@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <RootNamespace>MSTestAdapter.PlatformServices.Desktop.UnitTests</RootNamespace>
-    <AssemblyName>MSTestAdapter.PlatformServices.Desktop.UnitTests</AssemblyName>
+    <RootNamespace>MSTestAdapter.PlatformServices.UnitTests</RootNamespace>
+    <AssemblyName>MSTestAdapter.PlatformServices.UnitTests</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

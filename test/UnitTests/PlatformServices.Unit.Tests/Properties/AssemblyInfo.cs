@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 #if NET462
-using MSTestAdapter.PlatformServices.Desktop.UnitTests.Utilities;
+using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 // Custom attributes for tests.
 [assembly: ReflectionUtilityTests.DummyAAttribute("a1")]
