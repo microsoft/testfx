@@ -25,6 +25,7 @@ using TestUtilities;
 [TestClass]
 public class TraceListenerManagerTests
 {
+#if !WIN_UI
     [TestMethod]
     public void AddShouldAddTraceListenerToListOfTraceListeners()
     {
@@ -74,6 +75,7 @@ public class TraceListenerManagerTests
         void shouldThrowException() => writer.WriteLine("Try to write something");
         ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
     }
+#endif
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

@@ -64,12 +64,14 @@ public class FileOperationsTests
         _fileOperations.LoadAssembly(filePath, false);
     }
 
+#if !WIN_UI
     [TestMethod]
     public void DoesFileExistReturnsTrueForAllFiles()
     {
         Assert.IsTrue(_fileOperations.DoesFileExist(null));
         Assert.IsTrue(_fileOperations.DoesFileExist("foobar"));
     }
+#endif
 
     [TestMethod]
     public void GetFullFilePathShouldReturnAssemblyFileName()
