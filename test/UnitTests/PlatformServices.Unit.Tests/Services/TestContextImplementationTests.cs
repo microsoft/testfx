@@ -171,6 +171,7 @@ public class TestContextImplementationTests
             new KeyValuePair<string, object>("SomeNewProperty", "SomeValue"));
     }
 
+#if !WIN_UI
     [TestMethod]
     public void AddResultFileShouldThrowIfFileNameIsNull()
     {
@@ -220,6 +221,7 @@ public class TestContextImplementationTests
         CollectionAssert.Contains(resultsFiles.ToList(), "C:\\files\\file1.txt");
         CollectionAssert.Contains(resultsFiles.ToList(), "C:\\files\\files2.html");
     }
+#endif
 
     [TestMethod]
     public void WriteShouldWriteToStringWriter()
@@ -432,11 +434,25 @@ public class TestContextImplementationTests
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        var resultFile = _testContextImplementation.GetResultFiles();
+        var resultFiles = _testContextImplementation.GetResultFiles();
 
-        Assert.IsNull(resultFile, "No added result files");
+        Assert.IsNull(resultFiles, "No added result files");
     }
 
+#if WIN_UI
+    [TestMethod]
+    public void GetResultFilesShouldAlwaysReturnNull()
+    {
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
+
+        _testContextImplementation.AddResultFile("C:\\files\\myfile.txt");
+        _testContextImplementation.AddResultFile("C:\\files\\myfile2.txt");
+
+        var resultFiles = _testContextImplementation.GetResultFiles();
+
+        Assert.IsNull(resultFiles, "No added result files");
+    }
+#else
     [TestMethod]
     public void GetResultFilesShouldReturnListOfAddedResultFiles()
     {
@@ -451,6 +467,7 @@ public class TestContextImplementationTests
         CollectionAssert.Contains(resultFiles.ToList(), "C:\\files\\myfile.txt");
         CollectionAssert.Contains(resultFiles.ToList(), "C:\\files\\myfile2.txt");
     }
+#endif
 #endif
 }
 #endif

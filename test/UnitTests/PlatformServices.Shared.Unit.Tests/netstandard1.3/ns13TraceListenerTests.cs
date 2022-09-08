@@ -24,8 +24,9 @@ using TestUtilities;
 [TestClass]
 public class TraceListenerTests
 {
+#if !WIN_UI
     [TestMethod]
-    public void GetWriterShouldReturnInitialisedWriter()
+    public void GetWriterShouldReturnInitializedWriter()
     {
         StringWriter writer = new(new StringBuilder("DummyTrace"));
         var traceListener = new TraceListenerWrapper(writer);
@@ -44,6 +45,7 @@ public class TraceListenerTests
         void shouldThrowException() => writer.WriteLine("Try to write something");
         ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
     }
+#endif
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
