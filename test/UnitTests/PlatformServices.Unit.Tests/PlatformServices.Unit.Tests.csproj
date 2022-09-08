@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <NetStandardNetFrameworkHolder>net48</NetStandardNetFrameworkHolder>
-    <TargetFrameworks>net462;$(NetStandardNetFrameworkHolder);netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net462;$(NetStandardNetFrameworkHolder);netcoreapp3.1;net6.0</TargetFrameworks>
+    <IsNetCoreApp Condition=" '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == '$(WinUiMinimum)' ">true</IsNetCoreApp>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -18,14 +19,14 @@
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
+  <ItemGroup Condition=" '$(IsNetCoreApp)' != 'true' ">
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Aliases="FrameworkV1">
       <HintPath>$(MSBuildExtensionsPath)\..\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
     </Reference>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Aliases="FrameworkV2" Condition=" '$(TargetFramework)' != 'netcoreapp3.1' " />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Aliases="FrameworkV2" Condition=" '$(IsNetCoreApp)' != 'true' " />
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices\PlatformServices.csproj" Condition=" '$(TargetFramework)' != '$(NetStandardNetFrameworkHolder)' " />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Aliases="FrameworkV2Extension" Condition=" '$(TargetFramework)' != '$(NetStandardNetFrameworkHolder)' " />
   </ItemGroup>
@@ -35,7 +36,7 @@
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Aliases="FrameworkV2Extension" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+  <ItemGroup Condition=" '$(IsNetCoreApp)' == 'true' ">
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
   </ItemGroup>
 
