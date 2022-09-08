@@ -10,9 +10,12 @@
     <AssemblyName>MSTestAdapter.PlatformServices.UnitTests</AssemblyName>
   </PropertyGroup>
 
+  <!-- Keep the property DebugType, otherwise DesktopFileOperationsTests.DisposeNavigationSessionShouldDisposeNavigationSessionInstance fails -->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <!-- Keep this property, otherwise DesktopFileOperationsTests.DisposeNavigationSessionShouldDisposeNavigationSessionInstance fails -->
     <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
