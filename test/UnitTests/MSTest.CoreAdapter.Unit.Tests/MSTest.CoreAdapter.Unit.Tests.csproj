@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <NetStandardNetFrameworkHolder>net48</NetStandardNetFrameworkHolder>
-    <TargetFrameworks>$(NetStandardNetFrameworkHolder)</TargetFrameworks>
+    <TargetFrameworks>net462;$(NetStandardNetFrameworkHolder)</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -24,15 +24,20 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(NetStandardNetFrameworkHolder)' ">
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices\PlatformServices.csproj" SetTargetFramework="TargetFramework=netstandard2.0" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" SetTargetFramework="TargetFramework=netstandard2.0"  />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" SetTargetFramework="TargetFramework=netstandard2.0" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Aliases="FrameworkV2CoreExtension" SetTargetFramework="TargetFramework=netstandard2.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' != '$(NetStandardNetFrameworkHolder)' ">
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices\PlatformServices.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Aliases="FrameworkV2CoreExtension" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Aliases="FrameworkV2" />
-    <!--
-      This project targets net462 but we want to test using the netstandard content so let's force its resolution.
-      Resolving using net462 causes lots of tests to fail with MissingMethodException complaining that DataRow property doesn't exist.
-      -->
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Aliases="FrameworkV2CoreExtension"  SetTargetFramework="TargetFramework=netstandard2.0" />
     <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj" />
   </ItemGroup>
 

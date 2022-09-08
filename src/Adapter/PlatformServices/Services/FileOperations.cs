@@ -36,17 +36,17 @@ public class FileOperations : IFileOperations
     /// <exception cref="NotImplementedException"> This is currently not implemented. </exception>
     public Assembly LoadAssembly(string assemblyName, bool isReflectionOnly)
     {
+#if NETSTANDARD || NETCOREAPP || WINDOWS_UWP
 #if WIN_UI
         if (!_isPackaged && Path.IsPathRooted(assemblyName))
         {
             return Assembly.LoadFrom(assemblyName);
         }
+
 #endif
-#if NETSTANDARD || NETCOREAPP || WINDOWS_UWP
         var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
         return Assembly.Load(new AssemblyName(fileNameWithoutExtension));
 #elif NETFRAMEWORK
-
         if (isReflectionOnly)
         {
             return Assembly.ReflectionOnlyLoadFrom(assemblyName);

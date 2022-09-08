@@ -105,6 +105,7 @@ public class TestExecutionManagerTests
         Assert.AreEqual(0, _frameworkHandle.TestCaseEndList.Count);
     }
 
+#if !NET462
     [TestMethodV1]
     public void RunTestsForTestWithFilterShouldSendResultsForFilteredTests()
     {
@@ -137,6 +138,42 @@ public class TestExecutionManagerTests
         Assert.AreEqual("IgnoredTest", _frameworkHandle.TestCaseStartList[0]);
         Assert.AreEqual("IgnoredTest:Skipped", _frameworkHandle.TestCaseEndList[0]);
         Assert.AreEqual("IgnoredTest  Skipped", _frameworkHandle.ResultsList[0]);
+    }
+
+    [TestMethodV1]
+    public void RunTestsForTestShouldRunTestsWithSpecifiedNumberOfWorkers()
+    {
+        var testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
+        var testCase2 = GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod1");
+        var testCase3 = GetTestCase(typeof(DummyTestClassForParallelize3), "TestMethod1");
+
+        TestCase[] tests = new[] { testCase1, testCase2, testCase3 };
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                     @"<RunSettings> 
+                                              <MSTest>
+                                                 <Parallelize>
+                                                   <Workers>3</Workers>
+                                                 </Parallelize>
+                                              </MSTest>
+                                            </RunSettings>");
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext);
+            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+
+            var allThreadIds = new HashSet<int>(DummyTestClassForParallelize.ThreadIds);
+            allThreadIds.UnionWith(DummyTestClassForParallelize2.ThreadIds);
+            allThreadIds.UnionWith(DummyTestClassForParallelize3.ThreadIds);
+
+            Assert.AreEqual(3, allThreadIds.Count);
+        }
+        finally
+        {
+            DummyTestClassForParallelize.Cleanup();
+            DummyTestClassForParallelize2.Cleanup();
+            DummyTestClassForParallelize3.Cleanup();
+        }
     }
 
     [TestMethodV1]
@@ -194,6 +231,20 @@ public class TestExecutionManagerTests
     }
 
     [TestMethodV1]
+    public void RunTestsForTestShouldPassInTcmPropertiesAsPropertiesToTheTest()
+    {
+        var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
+        var propertiesValue = new object[] { 32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 1401, 54, "sample configuration name", 345 };
+        SetTestCaseProperties(testCase, propertiesValue);
+
+        TestCase[] tests = new[] { testCase };
+
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+
+        VerifyTcmProperties(DummyTestClass.TestContextProperties, testCase);
+    }
+
+    [TestMethodV1]
     public void RunTestsShouldLogResultCleanupWarningsAsErrorsWhenTreatClassCleanupWarningsAsErrorsIsTrue()
     {
         // Arrange
@@ -218,6 +269,27 @@ public class TestExecutionManagerTests
     }
 
     [TestMethodV1]
+    public void RunTestsForTestShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
+    {
+        var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
+
+        TestCase[] tests = new[] { testCase };
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                     @"<RunSettings> 
+                                            <TestRunParameters>
+                                              <Parameter name=""webAppUrl"" value=""http://localhost"" />
+                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
+                                              </TestRunParameters>
+                                            </RunSettings>");
+
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+
+        CollectionAssert.Contains(
+            DummyTestClass.TestContextProperties.ToList(),
+            new KeyValuePair<string, object>("webAppUrl", "http://localhost"));
+    }
+
+    [TestMethodV1]
     public void RunTestsShouldLogResultOutput()
     {
         var testCase = GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
@@ -230,6 +302,39 @@ public class TestExecutionManagerTests
         StringAssert.StartsWith(_frameworkHandle.MessageList[0], "Warning");
         Assert.IsTrue(_frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
     }
+
+    [TestMethodV1]
+    public void RunTestsShouldClearSessionParametersAcrossRuns()
+    {
+        var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
+
+        TestCase[] tests = new[] { testCase };
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                     @"<RunSettings> 
+                                            <TestRunParameters>
+                                              <Parameter name=""webAppUrl"" value=""http://localhost"" />
+                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
+                                              </TestRunParameters>
+                                            </RunSettings>");
+
+        // Trigger First Run
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+
+        // Update runsettings to have different values for similar keys
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                         @"<RunSettings> 
+                                            <TestRunParameters>
+                                              <Parameter name=""webAppUrl"" value=""http://updatedLocalHost"" />
+                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
+                                              </TestRunParameters>
+                                            </RunSettings>");
+
+        // Trigger another Run
+        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+
+        Assert.AreEqual("http://updatedLocalHost", DummyTestClass.TestContextProperties["webAppUrl"]);
+    }
+#endif
 
     [TestMethodV1]
     public void RunTestsForTestShouldDeployBeforeExecution()
@@ -305,41 +410,6 @@ public class TestExecutionManagerTests
     }
 
     [TestMethodV1]
-    public void RunTestsForTestShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
-    {
-        var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
-
-        TestCase[] tests = new[] { testCase };
-        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings> 
-                                            <TestRunParameters>
-                                              <Parameter name=""webAppUrl"" value=""http://localhost"" />
-                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
-                                              </TestRunParameters>
-                                            </RunSettings>");
-
-        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
-
-        CollectionAssert.Contains(
-            DummyTestClass.TestContextProperties.ToList(),
-            new KeyValuePair<string, object>("webAppUrl", "http://localhost"));
-    }
-
-    [TestMethodV1]
-    public void RunTestsForTestShouldPassInTcmPropertiesAsPropertiesToTheTest()
-    {
-        var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
-        var propertiesValue = new object[] { 32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 1401, 54, "sample configuration name", 345 };
-        SetTestCaseProperties(testCase, propertiesValue);
-
-        TestCase[] tests = new[] { testCase };
-
-        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
-
-        VerifyTcmProperties(DummyTestClass.TestContextProperties, testCase);
-    }
-
-    [TestMethodV1]
     public void RunTestsForTestShouldPassInDeploymentInformationAsPropertiesToTheTest()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -351,38 +421,6 @@ public class TestExecutionManagerTests
         TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         testablePlatformService.MockSettingsProvider.Verify(sp => sp.GetProperties(It.IsAny<string>()), Times.Once);
-    }
-
-    [TestMethodV1]
-    public void RunTestsShouldClearSessionParametersAcrossRuns()
-    {
-        var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
-
-        TestCase[] tests = new[] { testCase };
-        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings> 
-                                            <TestRunParameters>
-                                              <Parameter name=""webAppUrl"" value=""http://localhost"" />
-                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
-                                              </TestRunParameters>
-                                            </RunSettings>");
-
-        // Trigger First Run
-        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
-
-        // Update runsettings to have different values for similar keys
-        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                         @"<RunSettings> 
-                                            <TestRunParameters>
-                                              <Parameter name=""webAppUrl"" value=""http://updatedLocalHost"" />
-                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
-                                              </TestRunParameters>
-                                            </RunSettings>");
-
-        // Trigger another Run
-        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
-
-        Assert.AreEqual("http://updatedLocalHost", DummyTestClass.TestContextProperties["webAppUrl"]);
     }
 
     #endregion
@@ -437,6 +475,7 @@ public class TestExecutionManagerTests
         Assert.IsNotNull(DummyTestClass.TestContextProperties);
     }
 
+#if !NET462
     [TestMethodV1]
     public void RunTestsForMultipleSourcesShouldRunEachTestJustOnce()
     {
@@ -453,6 +492,7 @@ public class TestExecutionManagerTests
         testableTestExecutionmanager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
         Assert.AreEqual(4, testsCount);
     }
+#endif
 
     #endregion
 
@@ -473,6 +513,7 @@ public class TestExecutionManagerTests
 
     #region Parallel tests
 
+#if !NET462
     [TestMethodV1]
     public void RunTestsForTestShouldRunTestsInParallelWhenEnabledInRunsettings()
     {
@@ -541,18 +582,23 @@ public class TestExecutionManagerTests
     }
 
     [TestMethodV1]
-    public void RunTestsForTestShouldRunTestsWithSpecifiedNumberOfWorkers()
+    public void RunTestsForTestShouldRunNonParallelizableTestsSeparately()
     {
-        var testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
-        var testCase2 = GetTestCase(typeof(DummyTestClassForParallelize2), "TestMethod1");
-        var testCase3 = GetTestCase(typeof(DummyTestClassForParallelize3), "TestMethod1");
+        var testCase1 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");
+        var testCase2 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod2");
+        var testCase3 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod3");
+        var testCase4 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod4");
 
-        TestCase[] tests = new[] { testCase1, testCase2, testCase3 };
+        testCase3.SetPropertyValue(TestAdapterConstants.DoNotParallelizeProperty, true);
+        testCase4.SetPropertyValue(TestAdapterConstants.DoNotParallelizeProperty, true);
+
+        TestCase[] tests = new[] { testCase1, testCase2, testCase3, testCase4 };
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
                                      @"<RunSettings> 
                                               <MSTest>
                                                  <Parallelize>
-                                                   <Workers>3</Workers>
+                                                   <Workers>2</Workers>
+                                                   <Scope>MethodLevel</Scope>
                                                  </Parallelize>
                                               </MSTest>
                                             </RunSettings>");
@@ -562,19 +608,70 @@ public class TestExecutionManagerTests
             MSTestSettings.PopulateSettings(_runContext);
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-            var allThreadIds = new HashSet<int>(DummyTestClassForParallelize.ThreadIds);
-            allThreadIds.UnionWith(DummyTestClassForParallelize2.ThreadIds);
-            allThreadIds.UnionWith(DummyTestClassForParallelize3.ThreadIds);
+            Assert.AreEqual(2, DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count);
+            Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.UnParallelizableTestsThreadIds.Count);
+            Assert.IsTrue(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun.TimeOfDay.TotalMilliseconds <= DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun.TimeOfDay.TotalMilliseconds);
+        }
+        finally
+        {
+            DummyTestClassWithDoNotParallelizeMethods.Cleanup();
+        }
+    }
 
-            Assert.AreEqual(3, allThreadIds.Count);
+    [TestMethodV1]
+    public void RunTestsForTestShouldPreferParallelSettingsFromRunSettingsOverAssemblyLevelAttributes()
+    {
+        var testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
+        var testCase2 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
+
+        TestCase[] tests = new[] { testCase1, testCase2 };
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+                                     @"<RunSettings> 
+                                              <MSTest>
+                                                 <Parallelize>
+                                                   <Workers>2</Workers>
+                                                   <Scope>MethodLevel</Scope>
+                                                 </Parallelize>
+                                              </MSTest>
+                                            </RunSettings>");
+
+        try
+        {
+            MSTestSettings.PopulateSettings(_runContext);
+            var testablePlatformService = SetupTestablePlatformService();
+            testablePlatformService.SetupMockReflectionOperations();
+
+            var originalReflectionOperation = new ReflectionOperations();
+
+            testablePlatformService.MockReflectionOperations.Setup(
+                ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
+                Returns((Assembly asm, Type type) =>
+                {
+                    if (type.FullName.Equals(typeof(UTF.ParallelizeAttribute).FullName))
+                    {
+                        return new object[] { new UTF.ParallelizeAttribute { Workers = 1 } };
+                    }
+
+                    return originalReflectionOperation.GetCustomAttributes(asm, type);
+                });
+
+            testablePlatformService.MockReflectionOperations.Setup(
+                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
+                Returns((MemberInfo memberInfo, bool inherit) =>
+                {
+                    return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
+                });
+
+            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
+
+            Assert.AreEqual(2, DummyTestClassForParallelize.ThreadIds.Count);
         }
         finally
         {
             DummyTestClassForParallelize.Cleanup();
-            DummyTestClassForParallelize2.Cleanup();
-            DummyTestClassForParallelize3.Cleanup();
         }
     }
+#endif
 
     [TestMethodV1]
     public void RunTestsForTestShouldNotRunTestsInParallelWhenDisabledFromRunsettings()
@@ -674,97 +771,6 @@ public class TestExecutionManagerTests
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             Assert.AreEqual(1, DummyTestClassForParallelize.ThreadIds.Count);
-        }
-        finally
-        {
-            DummyTestClassForParallelize.Cleanup();
-        }
-    }
-
-    [TestMethodV1]
-    public void RunTestsForTestShouldRunNonParallelizableTestsSeparately()
-    {
-        var testCase1 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");
-        var testCase2 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod2");
-        var testCase3 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod3");
-        var testCase4 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod4");
-
-        testCase3.SetPropertyValue(TestAdapterConstants.DoNotParallelizeProperty, true);
-        testCase4.SetPropertyValue(TestAdapterConstants.DoNotParallelizeProperty, true);
-
-        TestCase[] tests = new[] { testCase1, testCase2, testCase3, testCase4 };
-        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings> 
-                                              <MSTest>
-                                                 <Parallelize>
-                                                   <Workers>2</Workers>
-                                                   <Scope>MethodLevel</Scope>
-                                                 </Parallelize>
-                                              </MSTest>
-                                            </RunSettings>");
-
-        try
-        {
-            MSTestSettings.PopulateSettings(_runContext);
-            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
-
-            Assert.AreEqual(2, DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count);
-            Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.UnParallelizableTestsThreadIds.Count);
-            Assert.IsTrue(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun.TimeOfDay.TotalMilliseconds <= DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun.TimeOfDay.TotalMilliseconds);
-        }
-        finally
-        {
-            DummyTestClassWithDoNotParallelizeMethods.Cleanup();
-        }
-    }
-
-    [TestMethodV1]
-    public void RunTestsForTestShouldPreferParallelSettingsFromRunSettingsOverAssemblyLevelAttributes()
-    {
-        var testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
-        var testCase2 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
-
-        TestCase[] tests = new[] { testCase1, testCase2 };
-        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings> 
-                                              <MSTest>
-                                                 <Parallelize>
-                                                   <Workers>2</Workers>
-                                                   <Scope>MethodLevel</Scope>
-                                                 </Parallelize>
-                                              </MSTest>
-                                            </RunSettings>");
-
-        try
-        {
-            MSTestSettings.PopulateSettings(_runContext);
-            var testablePlatformService = SetupTestablePlatformService();
-            testablePlatformService.SetupMockReflectionOperations();
-
-            var originalReflectionOperation = new ReflectionOperations();
-
-            testablePlatformService.MockReflectionOperations.Setup(
-                ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
-                Returns((Assembly asm, Type type) =>
-                {
-                    if (type.FullName.Equals(typeof(UTF.ParallelizeAttribute).FullName))
-                    {
-                        return new object[] { new UTF.ParallelizeAttribute { Workers = 1 } };
-                    }
-
-                    return originalReflectionOperation.GetCustomAttributes(asm, type);
-                });
-
-            testablePlatformService.MockReflectionOperations.Setup(
-                ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>())).
-                Returns((MemberInfo memberInfo, bool inherit) =>
-                {
-                    return originalReflectionOperation.GetCustomAttributes(memberInfo, inherit);
-                });
-
-            TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
-
-            Assert.AreEqual(2, DummyTestClassForParallelize.ThreadIds.Count);
         }
         finally
         {
