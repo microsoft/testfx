@@ -1,11 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
+#if !NET48
 namespace MSTestAdapter.PlatformServices.Desktop.UnitTests.Services;
 
+#if NETCOREAPP
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
 extern alias FrameworkV1;
 extern alias FrameworkV2;
+
+using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
+using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
+using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
+using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
+using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using UnitTestOutcome = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
+#endif
 
 using System;
 using System.Collections.Generic;
@@ -20,17 +32,10 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Moq;
 
 using MSTestAdapter.TestUtilities;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UnitTestOutcome = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
+using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
 
 [TestClass]
-public class DesktopTestContextImplTests
+public class TestContextImplementationTests
 {
     private Mock<ITestMethod> _testMethod;
 
@@ -191,7 +196,7 @@ public class DesktopTestContextImplTests
     }
 
     [TestMethod]
-    public void AddResultFileShouldAddFiletoResultsFiles()
+    public void AddResultFileShouldAddFileToResultsFiles()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
@@ -203,17 +208,17 @@ public class DesktopTestContextImplTests
     }
 
     [TestMethod]
-    public void AddResultFileShouldAddMultipleFilestoResultsFiles()
+    public void AddResultFileShouldAddMultipleFilesToResultsFiles()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        _testContextImplementation.AddResultFile("C:\\temp.txt");
-        _testContextImplementation.AddResultFile("C:\\temp2.txt");
+        _testContextImplementation.AddResultFile("C:\\files\\file1.txt");
+        _testContextImplementation.AddResultFile("C:\\files\\files2.html");
 
         var resultsFiles = _testContextImplementation.GetResultFiles();
 
-        CollectionAssert.Contains(resultsFiles.ToList(), "C:\\temp.txt");
-        CollectionAssert.Contains(resultsFiles.ToList(), "C:\\temp2.txt");
+        CollectionAssert.Contains(resultsFiles.ToList(), "C:\\files\\file1.txt");
+        CollectionAssert.Contains(resultsFiles.ToList(), "C:\\files\\files2.html");
     }
 
     [TestMethod]
@@ -384,6 +389,7 @@ public class DesktopTestContextImplTests
         Assert.AreEqual(string.Empty, stringWriter.ToString());
     }
 
+#if NETFRAMEWORK
     [TestMethod]
     public void SetDataRowShouldSetDataRowObjectForCurrentRun()
     {
@@ -418,5 +424,33 @@ public class DesktopTestContextImplTests
 
         Assert.AreEqual("Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5", _testContextImplementation.DataConnection.ConnectionString);
     }
+#endif
+
+#if NETCOREAPP
+    [TestMethod]
+    public void GetResultFilesShouldReturnNullIfNoAddedResultFiles()
+    {
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
+
+        var resultFile = _testContextImplementation.GetResultFiles();
+
+        Assert.IsNull(resultFile, "No added result files");
+    }
+
+    [TestMethod]
+    public void GetResultFilesShouldReturnListOfAddedResultFiles()
+    {
+        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
+
+        _testContextImplementation.AddResultFile("C:\\files\\myfile.txt");
+        _testContextImplementation.AddResultFile("C:\\files\\myfile2.txt");
+
+        var resultFiles = _testContextImplementation.GetResultFiles();
+
+        Assert.IsTrue(resultFiles.Count > 0, "GetResultFiles returned added elements");
+        CollectionAssert.Contains(resultFiles.ToList(), "C:\\files\\myfile.txt");
+        CollectionAssert.Contains(resultFiles.ToList(), "C:\\files\\myfile2.txt");
+    }
+#endif
 }
 #endif
