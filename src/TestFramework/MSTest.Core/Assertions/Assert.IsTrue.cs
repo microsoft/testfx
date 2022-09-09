@@ -21,7 +21,6 @@ using System.Threading.Tasks;
 /// </summary>
 public sealed partial class Assert
 {
-
 #if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
