@@ -42,16 +42,6 @@ public sealed partial class Assert
     {
         IsInstanceOfType(value, expectedType, string.Empty, null);
     }
-
-    /// <summary>
-    /// Tests whether the specified object is an instance of the generic
-    /// type and throws an exception if the generictype is not in the
-    /// inheritance hierarchy of the object.
-    /// </summary>
-    public static void IsInstanceOfType<T>(object value)
-    {
-        IsInstanceOfType(value, typeof(T), string.Empty, null);
-    }
 #endif
 
     /// <summary>
@@ -78,16 +68,6 @@ public sealed partial class Assert
     public static void IsInstanceOfType(object value, Type expectedType, [CallerArgumentExpression("value")] string message = null)
     {
         IsInstanceOfType(value, expectedType, message, null);
-    }
-
-    /// <summary>
-    /// Tests whether the specified object is an instance of the generic
-    /// type and throws an exception if the generictype is not in the
-    /// inheritance hierarchy of the object.
-    /// </summary>
-    public static void IsInstanceOfType<T>(object value, [CallerArgumentExpression("value")] string message = null)
-    {
-        IsInstanceOfType(value, typeof(T), message, null);
     }
 
     /// <summary>
@@ -134,17 +114,6 @@ public sealed partial class Assert
                 value.GetType().ToString());
             ThrowAssertFailed("Assert.IsInstanceOfType", finalMessage);
         }
-    }
-
-    /// <summary>
-    /// Tests whether the specified object is an instance of the generic
-    /// type and throws an exception if the generictype is not in the
-    /// inheritance hierarchy of the object.
-    /// </summary>
-    public static void IsInstanceOfType<T>(object value, [CallerArgumentExpression("value")] string message = null, params object[] parameters)
-    {
-        IsInstanceOfType(value, typeof(T), message, parameters);
-
     }
 
 #if HIDE_MESSAGELESS_IMPLEMENTATION
