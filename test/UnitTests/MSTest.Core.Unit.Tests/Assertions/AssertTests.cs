@@ -500,10 +500,10 @@ public class AssertTests
     {
         var expected = "i";
         var actual = "I";
-        var turkishCulture = new CultureInfo("en-EN");
+        var englishCulture = new CultureInfo("en-EN");
 
         // Will ignore case and won't make exeption.
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, true, turkishCulture));
+        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, true, englishCulture));
         Assert.IsNull(ex);
     }
 
