@@ -484,54 +484,51 @@ public class AssertTests
     }
 
     [TestMethod]
-    public void AreEqualShouldIgnorCaseBasedOnTheCurrentCulture()
+    public void AreEqualWithTurkishCultureAndIgnoreCaseReturnsFalse()
     {
         var expected = "i";
         var actual = "I";
         var turkishCulture = new CultureInfo("tr-TR");
 
-        CultureInfo currentCulture = CultureInfo.CurrentCulture;
-        try
-        {
-            CultureInfo.CurrentCulture = turkishCulture;
-            // In the tr-TR culture, "i" and "I" are not considered equal when doing a case-insensitive comparison.
-            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, true, turkishCulture));
-            Assert.IsNotNull(ex);
-        }
-        finally
-        {
-            // Reset the culture.
-            CultureInfo.CurrentCulture = currentCulture;
-        }
+        // In the tr-TR culture, "i" and "I" are not considered equal when doing a case-insensitive comparison.
+        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, true, turkishCulture));
+        Assert.IsNotNull(ex);
     }
 
     [TestMethod]
-    public void AreEqualShouldNotIgnorCaseBasedOnTheCurrentCulture()
+    public void AreEqualWithEnglishCultureAndIgnoreCaseReturnsTrue()
+    {
+        var expected = "i";
+        var actual = "I";
+        var turkishCulture = new CultureInfo("en-EN");
+
+        // Will ignore case and won't make exeption.
+        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, true, turkishCulture));
+        Assert.IsNull(ex);
+    }
+
+    [TestMethod]
+    public void AreEqualWithEnglishCultureAndDoesNotIgnoreCaseReturnsFalse()
     {
         var expected = "i";
         var actual = "I";
         var englishCulture = new CultureInfo("en-EN");
 
-        CultureInfo currentCulture = CultureInfo.CurrentCulture;
-        try
-        {
-            CultureInfo.CurrentCulture = englishCulture;
-            // Won't ignore case.
-            var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, false, englishCulture));
-            Assert.IsNotNull(ex);
-        }
-        finally
-        {
-            // Reset the culture.
-            CultureInfo.CurrentCulture = currentCulture;
-        }
+        // Won't ignore case.
+        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, false, englishCulture));
+        Assert.IsNotNull(ex);
     }
 
     [TestMethod]
-    public void AreEqualShouldFailWhenNotEqualString()
+    public void AreEqualWithTurkishCultureAndDoesNotIgnoreCaseReturnsFalse()
     {
-        static void action() => TestFrameworkV2.Assert.AreEqual("A", "a");
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        var expected = "i";
+        var actual = "I";
+        var englishCulture = new CultureInfo("tr-TR");
+
+        // Won't ignore case.
+        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, false, englishCulture));
+        Assert.IsNotNull(ex);
     }
 
     [TestMethod]
