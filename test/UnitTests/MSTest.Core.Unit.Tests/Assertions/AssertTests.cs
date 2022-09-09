@@ -484,7 +484,7 @@ public class AssertTests
     }
 
     [TestMethod]
-    public void AreEqualWithTurkishCultureAndIgnoreCaseReturnsFalse()
+    public void AreEqual_WithTurkishCultureAndIgnoreCase_Throws()
     {
         var expected = "i";
         var actual = "I";
@@ -496,7 +496,7 @@ public class AssertTests
     }
 
     [TestMethod]
-    public void AreEqualWithEnglishCultureAndIgnoreCaseReturnsTrue()
+    public void AreEqual_WithEnglishCultureAndIgnoreCase_DoesNotThrow()
     {
         var expected = "i";
         var actual = "I";
@@ -508,7 +508,7 @@ public class AssertTests
     }
 
     [TestMethod]
-    public void AreEqualWithEnglishCultureAndDoesNotIgnoreCaseReturnsFalse()
+    public void AreEqual_WithEnglishCultureAndDoesNotIgnoreCase_Throws()
     {
         var expected = "i";
         var actual = "I";
@@ -520,11 +520,11 @@ public class AssertTests
     }
 
     [TestMethod]
-    public void AreEqualWithTurkishCultureAndDoesNotIgnoreCaseReturnsFalse()
+    public void AreEqual_WithTurkishCultureAndDoesNotIgnoreCase_Throws()
     {
         var expected = "i";
         var actual = "I";
-        var englishCulture = new CultureInfo("tr-TR");
+        var turkishCulture = new CultureInfo("tr-TR");
 
         // Won't ignore case.
         var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, false, englishCulture));
