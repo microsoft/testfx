@@ -527,7 +527,7 @@ public class AssertTests
         var turkishCulture = new CultureInfo("tr-TR");
 
         // Won't ignore case.
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, false, englishCulture));
+        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.AreEqual(expected, actual, false, turkishCulture));
         Assert.IsNotNull(ex);
     }
 
