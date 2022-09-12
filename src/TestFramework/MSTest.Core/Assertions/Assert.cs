@@ -19,8 +19,6 @@ public sealed partial class Assert
 {
     private static Assert s_that;
 
-    #region Singleton constructor
-
     private Assert()
     {
     }
@@ -43,10 +41,6 @@ public sealed partial class Assert
             return s_that;
         }
     }
-
-    #endregion
-
-    #region Helpers
 
     /// <summary>
     /// Replaces null characters ('\0') with "\\0".
@@ -179,8 +173,6 @@ public sealed partial class Assert
     {
         return string.Compare(expected, actual, ignoreCase, culture);
     }
-
-    #endregion
 
     #region EqualsAssertion
     /// <summary>

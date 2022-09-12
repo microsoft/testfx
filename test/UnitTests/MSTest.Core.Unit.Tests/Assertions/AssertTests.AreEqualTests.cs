@@ -19,8 +19,6 @@ using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Tes
 
 public partial class AssertTests
 {
-    #region AreNotEqual tests.
-
     [TestMethod]
     public void AreNotEqualShouldFailWhenNotEqualType()
     {
@@ -160,9 +158,7 @@ public partial class AssertTests
         static void action() => TestFrameworkV2.Assert.AreNotEqual(100E-2, 200E-2, 100E-2);
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
     }
-    #endregion
 
-    #region AreEqual tests.
     [TestMethod]
     public void AreEqualShouldFailWhenNotEqualType()
     {
@@ -343,6 +339,4 @@ public partial class AssertTests
         static void action() => TestFrameworkV2.Assert.AreEqual(100E-2, 200E-2, 50E-2);
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
     }
-
-    #endregion
 }
