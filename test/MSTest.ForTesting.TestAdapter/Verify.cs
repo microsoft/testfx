@@ -26,6 +26,25 @@ public static class Verify
         [CallerLineNumber] int lineNumber = default)
         => IsTrue(!condition, expression, caller, filePath, lineNumber);
 
+    public static Exception ThrowsException(Action action,
+        [CallerArgumentExpression(nameof(action))] string? expression = default,
+        [CallerMemberName] string? caller = default,
+        [CallerFilePath] string? filePath = default,
+        [CallerLineNumber] int lineNumber = default)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            return ex;
+        }
+
+        Throw(expression, caller, filePath, lineNumber);
+        return null;
+    }
+
     [DoesNotReturn]
     private static void Throw(string? expression, string? caller, string? filePath, int lineNumber)
         => throw new Exception($"Condition expression failed: {expression ?? "<expression>"} at line {lineNumber} of {caller ?? "<caller>"} in file {filePath ?? "<file-path>"}.");
