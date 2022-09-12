@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace MSTest.TestHarness.Framework;
+
 public static class Verify
 {
     public static void IsTrue(bool condition,

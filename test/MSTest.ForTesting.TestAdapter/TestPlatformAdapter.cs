@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace MSTest.ForTesting.TestAdapter;
+
 [DefaultExecutorUri(Constants.ExecutorUri)]
 [ExtensionUri(Constants.ExecutorUri)]
 internal sealed class TestPlatformAdapter : ITestDiscoverer, ITestExecutor

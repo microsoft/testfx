@@ -3,6 +3,7 @@
 
 #if !NET5_0 && !NET6_0
 namespace System.Runtime.CompilerServices;
+
 /// <summary>
 /// Allows capturing of the expressions passed to a method.
 /// </summary>
