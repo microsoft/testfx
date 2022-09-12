@@ -3,22 +3,17 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class TestResultExtensionsTests
+using TestFramework.ForTestingMSTest;
+
+using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class TestResultExtensionsTests : TestContainer
 {
-    [TestMethod]
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithFailureOutcome()
     {
         var results = new[] { new UTF.TestResult() { TestFailureException = new Exception() } };
@@ -27,7 +22,6 @@ public class TestResultExtensionsTests
         Assert.AreEqual(AdapterTestOutcome.Failed, convertedResults[0].Outcome);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithInconclusiveOutcome()
     {
         var results = new[] { new UTF.TestResult() { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive } };
@@ -36,7 +30,6 @@ public class TestResultExtensionsTests
         Assert.AreEqual(AdapterTestOutcome.Inconclusive, convertedResults[0].Outcome);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetLoggingDataForConvertedUnitTestResults()
     {
         var timespan = default(TimeSpan);
@@ -58,7 +51,6 @@ public class TestResultExtensionsTests
         Assert.AreEqual(1, convertedResults[0].DatarowIndex);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetStandardOut()
     {
         var results = new[]
@@ -73,7 +65,6 @@ public class TestResultExtensionsTests
         Assert.AreEqual("logOutput", convertedResults[0].StandardOut);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetStandardError()
     {
         var results = new[]
@@ -89,7 +80,6 @@ public class TestResultExtensionsTests
         Assert.AreEqual("logError", convertedResults[0].StandardError);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetDebugTrace()
     {
         var results = new[]
@@ -105,7 +95,6 @@ public class TestResultExtensionsTests
         Assert.AreEqual("debugTrace", convertedResults[0].DebugTrace);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetTestContextMessages()
     {
         var results = new[]
@@ -121,7 +110,6 @@ public class TestResultExtensionsTests
         Assert.AreEqual("Context", convertedResults[0].TestContextMessages);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetDuration()
     {
         var timespan = default(TimeSpan);
@@ -138,7 +126,6 @@ public class TestResultExtensionsTests
         Assert.AreEqual(timespan, convertedResults[0].Duration);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetDisplayName()
     {
         var results = new[]
@@ -154,7 +141,6 @@ public class TestResultExtensionsTests
         Assert.AreEqual("displayName", convertedResults[0].DisplayName);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetDataRowIndex()
     {
         var results = new[]
@@ -170,7 +156,6 @@ public class TestResultExtensionsTests
         Assert.AreEqual(1, convertedResults[0].DatarowIndex);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetParentInfo()
     {
         var executionId = Guid.NewGuid();
@@ -194,7 +179,6 @@ public class TestResultExtensionsTests
         Assert.AreEqual(innerResultsCount, convertedResults[0].InnerResultsCount);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsShouldHaveResultsFileProvidedToTestResult()
     {
         var results = new[] { new UTF.TestResult() { ResultFiles = new List<string>() { "DummyFile.txt" } } };

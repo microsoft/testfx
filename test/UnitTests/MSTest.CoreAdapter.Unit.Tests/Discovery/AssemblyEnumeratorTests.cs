@@ -3,9 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -23,15 +20,9 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplem
 
 using Moq;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class AssemblyEnumeratorTests
+public class AssemblyEnumeratorTests : TestContainer
 {
     private AssemblyEnumerator _assemblyEnumerator;
     private ICollection<string> _warnings;
@@ -55,7 +46,6 @@ public class AssemblyEnumeratorTests
 
     #region  Constructor tests
 
-    [TestMethodV1]
     public void ConstructorShouldPopulateSettings()
     {
         string runSettingsXml =
@@ -82,7 +72,7 @@ public class AssemblyEnumeratorTests
             RunSettingsXml = runSettingsXml
         };
 
-        Assert.IsTrue(MSTestSettings.CurrentSettings.ForcedLegacyMode);
+        Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
         Assert.AreEqual("DummyPath\\TestSettings1.testsettings", MSTestSettings.CurrentSettings.TestSettingsFile);
     }
 
@@ -90,7 +80,6 @@ public class AssemblyEnumeratorTests
 
     #region GetTypes tests
 
-    [TestMethodV1]
     public void GetTypesShouldReturnEmptyArrayWhenNoDeclaredTypes()
     {
         Mock<TestableAssembly> mockAssembly = new();
@@ -101,7 +90,6 @@ public class AssemblyEnumeratorTests
         Assert.AreEqual(0, AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings).Length);
     }
 
-    [TestMethodV1]
     public void GetTypesShouldReturnSetOfDefinedTypes()
     {
         Mock<TestableAssembly> mockAssembly = new();
@@ -115,7 +103,6 @@ public class AssemblyEnumeratorTests
         CollectionAssert.AreEqual(expectedTypes, types);
     }
 
-    [TestMethodV1]
     public void GetTypesShouldHandleReflectionTypeLoadException()
     {
         Mock<TestableAssembly> mockAssembly = new();
@@ -126,7 +113,6 @@ public class AssemblyEnumeratorTests
         AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
     }
 
-    [TestMethodV1]
     public void GetTypesShouldReturnReflectionTypeLoadExceptionTypesOnException()
     {
         Mock<TestableAssembly> mockAssembly = new();
@@ -137,11 +123,10 @@ public class AssemblyEnumeratorTests
 
         var types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
 
-        Assert.IsNotNull(types);
+        Verify(types is not null);
         CollectionAssert.AreEqual(reflectedTypes, types);
     }
 
-    [TestMethodV1]
     public void GetTypesShouldLogWarningsWhenReflectionFailsWithLoaderExceptions()
     {
         Mock<TestableAssembly> mockAssembly = new();
@@ -164,7 +149,6 @@ public class AssemblyEnumeratorTests
 
     #region GetLoadExceptionDetails tests
 
-    [TestMethodV1]
     public void GetLoadExceptionDetailsShouldReturnExceptionMessageIfLoaderExceptionsIsNull()
     {
         Assert.AreEqual(
@@ -173,7 +157,6 @@ public class AssemblyEnumeratorTests
                 new ReflectionTypeLoadException(null, null, "DummyMessage")));
     }
 
-    [TestMethodV1]
     public void GetLoadExceptionDetailsShouldReturnLoaderExceptionMessage()
     {
         var loaderException = new AccessViolationException("DummyLoaderExceptionMessage2");
@@ -190,7 +173,6 @@ public class AssemblyEnumeratorTests
             AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
     }
 
-    [TestMethodV1]
     public void GetLoadExceptionDetailsShouldReturnLoaderExceptionMessagesForMoreThanOneException()
     {
         var loaderException1 = new ArgumentNullException("DummyLoaderExceptionMessage1", (Exception)null);
@@ -214,7 +196,6 @@ public class AssemblyEnumeratorTests
         Assert.AreEqual(errorDetails.ToString(), AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
     }
 
-    [TestMethodV1]
     public void GetLoadExceptionDetailsShouldLogUniqueExceptionsOnly()
     {
         var loaderException = new AccessViolationException("DummyLoaderExceptionMessage2");
@@ -235,7 +216,6 @@ public class AssemblyEnumeratorTests
 
     #region EnumerateAssembly tests
 
-    [TestMethodV1]
     public void EnumerateAssemblyShouldReturnEmptyListWhenNoDeclaredTypes()
     {
         var mockAssembly = CreateMockTestableAssembly();
@@ -248,7 +228,6 @@ public class AssemblyEnumeratorTests
         Assert.AreEqual(0, _assemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings).Count);
     }
 
-    [TestMethodV1]
     public void EnumerateAssemblyShouldReturnEmptyListWhenNoTestElementsInAType()
     {
         var mockAssembly = CreateMockTestableAssembly();
@@ -265,7 +244,6 @@ public class AssemblyEnumeratorTests
         Assert.AreEqual(0, _assemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings).Count);
     }
 
-    [TestMethodV1]
     public void EnumerateAssemblyShouldReturnTestElementsForAType()
     {
         var mockAssembly = CreateMockTestableAssembly();
@@ -285,7 +263,6 @@ public class AssemblyEnumeratorTests
         CollectionAssert.AreEqual(new Collection<UnitTestElement> { unitTestElement }, testElements.ToList());
     }
 
-    [TestMethodV1]
     public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForAType()
     {
         var mockAssembly = CreateMockTestableAssembly();
@@ -306,7 +283,6 @@ public class AssemblyEnumeratorTests
         CollectionAssert.AreEqual(expectedTestElements, testElements.ToList());
     }
 
-    [TestMethodV1]
     public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForMoreThanOneType()
     {
         var mockAssembly = CreateMockTestableAssembly();
@@ -329,7 +305,6 @@ public class AssemblyEnumeratorTests
         CollectionAssert.AreEqual(expectedTestElements, testElements.ToList());
     }
 
-    [TestMethodV1]
     public void EnumerateAssemblyShouldNotLogWarningsIfNonePresent()
     {
         var mockAssembly = CreateMockTestableAssembly();
@@ -347,7 +322,6 @@ public class AssemblyEnumeratorTests
         Assert.AreEqual(0, _warnings.Count);
     }
 
-    [TestMethodV1]
     public void EnumerateAssemblyShouldLogWarningsIfPresent()
     {
         var mockAssembly = CreateMockTestableAssembly();
@@ -369,7 +343,6 @@ public class AssemblyEnumeratorTests
         CollectionAssert.AreEqual(warningsFromTypeEnumerator.ToList(), _warnings.ToList());
     }
 
-    [TestMethodV1]
     public void EnumerateAssemblyShouldHandleExceptionsWhileEnumeratingAType()
     {
         var mockAssembly = CreateMockTestableAssembly();
@@ -403,13 +376,13 @@ public class AssemblyEnumeratorTests
         // actual return value is irrelevant for these tests.
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
-                typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalsAttribute),
+                typeof(Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalsAttribute),
                 true))
             .Returns(Array.Empty<Attribute>());
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
-                typeof(FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceDiscoveryAttribute),
+                typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceDiscoveryAttribute),
                 true))
             .Returns(Array.Empty<Attribute>());
 

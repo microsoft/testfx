@@ -3,30 +3,23 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Text;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using ExpectedException = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using TestFramework.ForTestingMSTest;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Tests for <see cref="ExceptionExtensions"/> class.
 /// </summary>
-[TestClass]
-public class ExceptionExtensionsTests
+public class ExceptionExtensionsTests : TestContainer
 {
     #region GetInnerExceptionOrDefault scenarios
 
-    [TestMethod]
     public void ExceptionGetInnerExceptionOrDefaultReturnsInnerExceptionIfAvailable()
     {
         var innerException = new NotImplementedException("notImplementedException");
@@ -37,7 +30,6 @@ public class ExceptionExtensionsTests
         Assert.AreSame(innerException, exception);
     }
 
-    [TestMethod]
     public void ExceptionGetInnerExceptionOrDefaultShouldNotThrowForNullException()
     {
         static void action() => ((Exception)null).GetInnerExceptionOrDefault();
@@ -45,15 +37,13 @@ public class ExceptionExtensionsTests
         action();
     }
 
-    [TestMethod]
     public void ExceptionGetInnerExceptionOrDefaultShouldReturnNullForNullException()
     {
         var exception = ((Exception)null).GetInnerExceptionOrDefault();
 
-        Assert.IsNull(exception);
+        Verify(exception is null);
     }
 
-    [TestMethod]
     public void ExceptionGetInnerExceptionOrDefaultShouldReturnExceptionIfInnerExceptionIsNull()
     {
         var exceptionWithNoInnerException = new InvalidOperationException("invalidOperationException", innerException: null);
@@ -67,7 +57,6 @@ public class ExceptionExtensionsTests
 
     #region TryGetExceptionMessage scenarios
 
-    [TestMethod]
     public void ExceptionTryGetMessageGetsTheExceptionMessage()
     {
         var exception = new Exception("dummyMessage");
@@ -75,7 +64,6 @@ public class ExceptionExtensionsTests
         Assert.AreEqual<string>("dummyMessage", exception.TryGetMessage());
     }
 
-    [TestMethod]
     public void ExceptionTryGetMessageReturnsEmptyStringIfExceptionMessageIsNull()
     {
         var exception = new DummyException(() => null);
@@ -83,7 +71,6 @@ public class ExceptionExtensionsTests
         Assert.AreEqual(string.Empty, exception.TryGetMessage());
     }
 
-    [TestMethod]
     public void ExceptionTryGetMessageReturnsErrorMessageIfExceptionIsNull()
     {
         var errorMessage = string.Format(Resource.UTF_FailedToGetExceptionMessage, "null");
@@ -93,7 +80,6 @@ public class ExceptionExtensionsTests
         Assert.AreEqual(errorMessage, exception.TryGetMessage());
     }
 
-    [TestMethod]
     [ExpectedException(typeof(NotImplementedException))]
     public void ExceptionTryGetMessageShouldThrowIfExceptionMessageThrows()
     {
@@ -107,23 +93,20 @@ public class ExceptionExtensionsTests
 
     #region TryGetStackTraceInformation scenarios
 
-    [TestMethod]
     public void TryGetStackTraceInformationReturnsNullIfExceptionIsNull()
     {
         var exception = (Exception)null;
 
-        Assert.IsNull(exception.TryGetStackTraceInformation());
+        Verify(exception.TryGetStackTraceInformation() is null);
     }
 
-    [TestMethod]
     public void TryGetStackTraceInformationReturnsNullIfExceptionStackTraceIsNullOrEmpty()
     {
         var exception = new DummyExceptionForStackTrace(() => null);
 
-        Assert.IsNull(exception.TryGetStackTraceInformation());
+        Verify(exception.TryGetStackTraceInformation() is null);
     }
 
-    [TestMethod]
     public void TryGetStackTraceInformationReturnsStackTraceForAnException()
     {
         var exception = new DummyExceptionForStackTrace(() => "    at A()\r\n    at B()");
@@ -131,11 +114,10 @@ public class ExceptionExtensionsTests
         var stackTraceInformation = exception.TryGetStackTraceInformation();
 
         StringAssert.StartsWith(stackTraceInformation.ErrorStackTrace, "    at A()");
-        Assert.IsNull(stackTraceInformation.ErrorFilePath);
+        Verify(stackTraceInformation.ErrorFilePath is null);
         Assert.AreEqual(0, stackTraceInformation.ErrorLineNumber);
     }
 
-    [TestMethod]
     [ExpectedException(typeof(NotImplementedException))]
     public void TryGetStackTraceInformationShouldThrowIfStackTraceThrows()
     {
@@ -172,25 +154,22 @@ public class ExceptionExtensionsTests
 
     #region IsUnitTestAssertException scenarios
 
-    [TestMethod]
     public void IsUnitTestAssertExceptionReturnsTrueIfExceptionIsAssertException()
     {
         var exception = new UTF.AssertInconclusiveException();
         UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
 
-        Assert.IsTrue(exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo));
+        Verify(exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo));
     }
 
-    [TestMethod]
     public void IsUnitTestAssertExceptionReturnsFalseIfExceptionIsNotAssertException()
     {
         var exception = new NotImplementedException();
         UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
 
-        Assert.IsFalse(exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo));
+        Verify(!exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo));
     }
 
-    [TestMethod]
     public void IsUnitTestAssertExceptionSetsOutcomeAsInconclusiveIfAssertInconclusiveException()
     {
         var exception = new UTF.AssertInconclusiveException("Dummy Message", new NotImplementedException("notImplementedException"));
@@ -202,7 +181,6 @@ public class ExceptionExtensionsTests
         Assert.AreEqual("Dummy Message", exceptionMessage);
     }
 
-    [TestMethod]
     public void IsUnitTestAssertExceptionSetsOutcomeAsFailedIfAssertFailedException()
     {
         var exception = new UTF.AssertFailedException("Dummy Message", new NotImplementedException("notImplementedException"));

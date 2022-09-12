@@ -3,10 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-extern alias FrameworkV2CoreExtension;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,21 +19,15 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Moq;
 using MSTest.TestAdapter;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using Ignore = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestAdapterConstants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
-using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class TestExecutionManagerTests
+using TestFramework.ForTestingMSTest;
+
+using TestAdapterConstants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
+using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class TestExecutionManagerTests : TestContainer
 {
     private TestableRunContextTestExecutionTests _runContext;
 
@@ -87,7 +77,6 @@ public class TestExecutionManagerTests
 
     #region RunTests on a list of tests
 
-    [TestMethodV1]
     public void RunTestsForTestWithFilterErrorShouldSendZeroResults()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -105,7 +94,6 @@ public class TestExecutionManagerTests
         Assert.AreEqual(0, _frameworkHandle.TestCaseEndList.Count);
     }
 
-    [TestMethodV1]
     public void RunTestsForTestWithFilterShouldSendResultsForFilteredTests()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -126,7 +114,6 @@ public class TestExecutionManagerTests
         CollectionAssert.AreEqual(expectedResultList, _frameworkHandle.ResultsList);
     }
 
-    [TestMethodV1]
     public void RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "IgnoredTest", ignore: true);
@@ -139,7 +126,6 @@ public class TestExecutionManagerTests
         Assert.AreEqual("IgnoredTest  Skipped", _frameworkHandle.ResultsList[0]);
     }
 
-    [TestMethodV1]
     public void RunTestsForASingleTestShouldSendSingleResult()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -157,7 +143,6 @@ public class TestExecutionManagerTests
         CollectionAssert.AreEqual(expectedResultList, _frameworkHandle.ResultsList);
     }
 
-    [TestMethodV1]
     public void RunTestsForMultipleTestShouldSendMultipleResults()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -176,7 +161,6 @@ public class TestExecutionManagerTests
         StringAssert.Contains(_frameworkHandle.ResultsList[1], expectedResultList[1]);
     }
 
-    [TestMethodV1]
     public void RunTestsForCancellationTokencanceledSetToTrueShouldSendZeroResults()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -193,7 +177,6 @@ public class TestExecutionManagerTests
         Assert.AreEqual(0, _frameworkHandle.TestCaseEndList.Count);
     }
 
-    [TestMethodV1]
     public void RunTestsShouldLogResultCleanupWarningsAsErrorsWhenTreatClassCleanupWarningsAsErrorsIsTrue()
     {
         // Arrange
@@ -214,10 +197,9 @@ public class TestExecutionManagerTests
         CollectionAssert.Contains(_frameworkHandle.TestCaseEndList, "TestMethod:Passed");
         Assert.AreEqual(1, _frameworkHandle.MessageList.Count);
         StringAssert.StartsWith(_frameworkHandle.MessageList[0], "Error");
-        Assert.IsTrue(_frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
+        Verify(_frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
     }
 
-    [TestMethodV1]
     public void RunTestsShouldLogResultOutput()
     {
         var testCase = GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
@@ -228,10 +210,9 @@ public class TestExecutionManagerTests
         // Warnings should get logged.
         Assert.AreEqual(1, _frameworkHandle.MessageList.Count);
         StringAssert.StartsWith(_frameworkHandle.MessageList[0], "Warning");
-        Assert.IsTrue(_frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
+        Verify(_frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldDeployBeforeExecution()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -252,7 +233,6 @@ public class TestExecutionManagerTests
         Assert.AreEqual("LoadAssembly", _callers[1], "Deploy should be called before execution.");
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldCleanupAfterExecution()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -269,7 +249,6 @@ public class TestExecutionManagerTests
         Assert.AreEqual("Cleanup", _callers.LastOrDefault(), "Cleanup should be called after execution.");
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldNotCleanupOnTestFailure()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -282,7 +261,6 @@ public class TestExecutionManagerTests
         testablePlatformService.MockTestDeployment.Verify(td => td.Cleanup(), Times.Never);
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldLoadSourceFromDeploymentDirectoryIfDeployed()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -304,7 +282,6 @@ public class TestExecutionManagerTests
             Times.AtLeastOnce);
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -325,7 +302,6 @@ public class TestExecutionManagerTests
             new KeyValuePair<string, object>("webAppUrl", "http://localhost"));
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldPassInTcmPropertiesAsPropertiesToTheTest()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -339,7 +315,6 @@ public class TestExecutionManagerTests
         VerifyTcmProperties(DummyTestClass.TestContextProperties, testCase);
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldPassInDeploymentInformationAsPropertiesToTheTest()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -353,7 +328,6 @@ public class TestExecutionManagerTests
         testablePlatformService.MockSettingsProvider.Verify(sp => sp.GetProperties(It.IsAny<string>()), Times.Once);
     }
 
-    [TestMethodV1]
     public void RunTestsShouldClearSessionParametersAcrossRuns()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -391,7 +365,7 @@ public class TestExecutionManagerTests
 
     // TODO: This tests needs to be mocked.
     [Ignore]
-    [TestMethodV1]
+
     public void RunTestsForSourceShouldRunTestsInASource()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
@@ -405,7 +379,7 @@ public class TestExecutionManagerTests
 
     // TODO: This tests needs to be mocked.
     [Ignore]
-    [TestMethodV1]
+
     public void RunTestsForSourceShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
@@ -426,7 +400,7 @@ public class TestExecutionManagerTests
     }
 
     // Todo: This tests needs to be mocked.
-    [TestMethodV1]
+
     [Ignore]
     public void RunTestsForSourceShouldPassInDeploymentInformationAsPropertiesToTheTest()
     {
@@ -434,10 +408,9 @@ public class TestExecutionManagerTests
 
         TestExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
 
-        Assert.IsNotNull(DummyTestClass.TestContextProperties);
+        Verify(DummyTestClass.TestContextProperties is not null);
     }
 
-    [TestMethodV1]
     public void RunTestsForMultipleSourcesShouldRunEachTestJustOnce()
     {
         int testsCount = 0;
@@ -458,7 +431,6 @@ public class TestExecutionManagerTests
 
     #region SendTestResults tests
 
-    [TestMethodV1]
     public void SendTestResultsShouldFillInDataRowIndexIfTestIsDataDriven()
     {
         var testCase = new TestCase("DummyTest", new System.Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
@@ -473,7 +445,6 @@ public class TestExecutionManagerTests
 
     #region Parallel tests
 
-    [TestMethodV1]
     public void RunTestsForTestShouldRunTestsInParallelWhenEnabledInRunsettings()
     {
         var testCase11 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -510,7 +481,6 @@ public class TestExecutionManagerTests
         }
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldRunTestsByMethodLevelWhenSpecified()
     {
         var testCase11 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -540,7 +510,6 @@ public class TestExecutionManagerTests
         }
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldRunTestsWithSpecifiedNumberOfWorkers()
     {
         var testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -576,7 +545,6 @@ public class TestExecutionManagerTests
         }
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldNotRunTestsInParallelWhenDisabledFromRunsettings()
     {
         var testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -627,7 +595,6 @@ public class TestExecutionManagerTests
         }
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldNotRunTestsInParallelWhenDisabledFromSource()
     {
         var testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -681,7 +648,6 @@ public class TestExecutionManagerTests
         }
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldRunNonParallelizableTestsSeparately()
     {
         var testCase1 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");
@@ -710,7 +676,7 @@ public class TestExecutionManagerTests
 
             Assert.AreEqual(2, DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count);
             Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.UnParallelizableTestsThreadIds.Count);
-            Assert.IsTrue(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun.TimeOfDay.TotalMilliseconds <= DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun.TimeOfDay.TotalMilliseconds);
+            Verify(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun.TimeOfDay.TotalMilliseconds <= DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun.TimeOfDay.TotalMilliseconds);
         }
         finally
         {
@@ -718,7 +684,6 @@ public class TestExecutionManagerTests
         }
     }
 
-    [TestMethodV1]
     public void RunTestsForTestShouldPreferParallelSettingsFromRunSettingsOverAssemblyLevelAttributes()
     {
         var testCase1 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod1");
@@ -773,7 +738,7 @@ public class TestExecutionManagerTests
     }
 
     // This is tracked by https://github.com/Microsoft/testfx/issues/320.
-    [TestMethodV1]
+
     [Ignore]
     public void RunTestsForTestShouldRunTestsInTheParentDomainsApartmentState()
     {

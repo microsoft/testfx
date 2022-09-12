@@ -3,22 +3,16 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
 
-extern alias FrameworkV1;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using global::MSTestAdapter.TestUtilities;
 using MSTest.TestAdapter;
 using MSTest.TestAdapter.ObjectModel;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
-[TestClass]
-public class UnitTestElementTests
+using TestFramework.ForTestingMSTest;
+
+public class UnitTestElementTests : TestContainer
 {
     private TestMethod _testMethod;
     private UnitTestElement _unitTestElement;
@@ -32,7 +26,6 @@ public class UnitTestElementTests
 
     #region Ctor tests
 
-    [TestMethodV1]
     public void UnitTestElementConstructorShouldThrowIfTestMethodIsNull()
     {
         ActionUtility.ActionShouldThrowExceptionOfType(
@@ -44,7 +37,6 @@ public class UnitTestElementTests
 
     #region ToTestCase tests
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetFullyQualifiedName()
     {
         var testCase = _unitTestElement.ToTestCase();
@@ -52,7 +44,6 @@ public class UnitTestElementTests
         Assert.AreEqual("C.M", testCase.FullyQualifiedName);
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetExecutorUri()
     {
         var testCase = _unitTestElement.ToTestCase();
@@ -60,7 +51,6 @@ public class UnitTestElementTests
         Assert.AreEqual(Constants.ExecutorUri, testCase.ExecutorUri);
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetAssemblyName()
     {
         var testCase = _unitTestElement.ToTestCase();
@@ -68,7 +58,6 @@ public class UnitTestElementTests
         Assert.AreEqual("A", testCase.Source);
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetDisplayName()
     {
         var testCase = _unitTestElement.ToTestCase();
@@ -76,7 +65,6 @@ public class UnitTestElementTests
         Assert.AreEqual("M", testCase.DisplayName);
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetDisplayNameIfPresent()
     {
         _unitTestElement.DisplayName = "Display Name";
@@ -85,7 +73,6 @@ public class UnitTestElementTests
         Assert.AreEqual("Display Name", testCase.DisplayName);
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetTestClassNameProperty()
     {
         var testCase = _unitTestElement.ToTestCase();
@@ -93,13 +80,12 @@ public class UnitTestElementTests
         Assert.AreEqual("C", testCase.GetPropertyValue(Constants.TestClassNameProperty));
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetDeclaringClassNameIfPresent()
     {
         _testMethod.DeclaringClassFullName = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.IsNull(testCase.GetPropertyValue(Constants.DeclaringClassNameProperty));
+        Verify(testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) is null);
 
         _testMethod.DeclaringClassFullName = "DC";
         testCase = _unitTestElement.ToTestCase();
@@ -107,7 +93,6 @@ public class UnitTestElementTests
         Assert.AreEqual("DC", testCase.GetPropertyValue(Constants.DeclaringClassNameProperty));
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetIsAsyncProperty()
     {
         _unitTestElement.IsAsync = true;
@@ -121,18 +106,17 @@ public class UnitTestElementTests
         Assert.AreEqual(false, testCase.GetPropertyValue(Constants.AsyncTestProperty));
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetTestCategoryIfPresent()
     {
         _unitTestElement.TestCategory = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.IsNull(testCase.GetPropertyValue(Constants.TestCategoryProperty));
+        Verify(testCase.GetPropertyValue(Constants.TestCategoryProperty) is null);
 
         _unitTestElement.TestCategory = Array.Empty<string>();
         testCase = _unitTestElement.ToTestCase();
 
-        Assert.IsNull(testCase.GetPropertyValue(Constants.TestCategoryProperty));
+        Verify(testCase.GetPropertyValue(Constants.TestCategoryProperty) is null);
 
         _unitTestElement.TestCategory = new string[] { "TC" };
         testCase = _unitTestElement.ToTestCase();
@@ -140,7 +124,6 @@ public class UnitTestElementTests
         CollectionAssert.AreEqual(new string[] { "TC" }, testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[]);
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetPriorityIfPresent()
     {
         _unitTestElement.Priority = null;
@@ -154,7 +137,6 @@ public class UnitTestElementTests
         Assert.AreEqual(1, testCase.GetPropertyValue(Constants.PriorityProperty));
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetTraitsIfPresent()
     {
         _unitTestElement.Traits = null;
@@ -171,7 +153,6 @@ public class UnitTestElementTests
         Assert.AreEqual("value", testCase.Traits.ToArray()[0].Value);
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetPropertiesIfPresent()
     {
         _unitTestElement.CssIteration = "12";
@@ -187,18 +168,17 @@ public class UnitTestElementTests
         CollectionAssert.AreEqual(new string[] { "2312", "22332" }, testCase.GetPropertyValue(Constants.WorkItemIdsProperty) as string[]);
     }
 
-    [TestMethodV1]
     public void ToTestCaseShouldSetDeploymentItemPropertyIfPresent()
     {
         _unitTestElement.DeploymentItems = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.IsNull(testCase.GetPropertyValue(Constants.DeploymentItemsProperty));
+        Verify(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) is null);
 
         _unitTestElement.DeploymentItems = Array.Empty<KeyValuePair<string, string>>();
         testCase = _unitTestElement.ToTestCase();
 
-        Assert.IsNull(testCase.GetPropertyValue(Constants.DeploymentItemsProperty));
+        Verify(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) is null);
 
         _unitTestElement.DeploymentItems = new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("s", "d") };
         testCase = _unitTestElement.ToTestCase();

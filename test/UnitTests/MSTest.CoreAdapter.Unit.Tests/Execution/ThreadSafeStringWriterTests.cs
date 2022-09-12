@@ -3,8 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
-extern alias FrameworkV1;
-
 using System;
 using System.Diagnostics;
 using System.Globalization;
@@ -12,16 +10,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
-[TestClass]
-public class ThreadSafeStringWriterTests
+using TestFramework.ForTestingMSTest;
+
+public class ThreadSafeStringWriterTests : TestContainer
 {
     private bool _task2flag;
 
-    [TestMethod]
     public void ThreadSafeStringWriterWriteLineHasContentFromMultipleThreads()
     {
         using (ExecutionContext.SuppressFlow())
@@ -77,7 +72,7 @@ public class ThreadSafeStringWriterTests
             lines.Should().HaveCountGreaterThan(0);
             foreach (var line in lines)
             {
-                Assert.IsTrue(line.Equals("content1") || line.Equals("content2"));
+                Verify(line.Equals("content1") || line.Equals("content2"));
             }
         }
     }

@@ -3,9 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -16,16 +13,12 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Moq;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class AssemblyEnumeratorWrapperTests
+using TestFramework.ForTestingMSTest;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class AssemblyEnumeratorWrapperTests : TestContainer
 {
     private AssemblyEnumeratorWrapper _testableAssemblyEnumeratorWrapper;
     private ICollection<string> _warnings;
@@ -47,19 +40,16 @@ public class AssemblyEnumeratorWrapperTests
         PlatformServiceProvider.Instance = null;
     }
 
-    [TestMethod]
     public void GetTestsShouldReturnNullIfAssemblyNameIsNull()
     {
-        Assert.IsNull(_testableAssemblyEnumeratorWrapper.GetTests(null, null, out _warnings));
+        Verify(_testableAssemblyEnumeratorWrapper.GetTests(null, null, out _warnings) is null);
     }
 
-    [TestMethod]
     public void GetTestsShouldReturnNullIfAssemblyNameIsEmpty()
     {
-        Assert.IsNull(_testableAssemblyEnumeratorWrapper.GetTests(string.Empty, null, out _warnings));
+        Verify(_testableAssemblyEnumeratorWrapper.GetTests(string.Empty, null, out _warnings) is null);
     }
 
-    [TestMethod]
     public void GetTestsShouldReturnNullIfSourceFileDoesNotExistInContext()
     {
         var assemblyName = "DummyAssembly.dll";
@@ -70,10 +60,10 @@ public class AssemblyEnumeratorWrapperTests
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
             .Returns(false);
 
-        Assert.IsNull(_testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings));
+        Verify(_testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings) is null);
 
         // Also validate that we give a warning when this happens.
-        Assert.IsNotNull(_warnings);
+        Verify(_warnings is not null);
         var innerMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.TestAssembly_FileDoesNotExist,
@@ -86,7 +76,6 @@ public class AssemblyEnumeratorWrapperTests
         CollectionAssert.Contains(_warnings.ToList(), message);
     }
 
-    [TestMethod]
     public void GetTestsShouldReturnNullIfSourceDoesNotReferenceUnitTestFrameworkAssembly()
     {
         var assemblyName = "DummyAssembly.dll";
@@ -94,10 +83,9 @@ public class AssemblyEnumeratorWrapperTests
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: false);
 
-        Assert.IsNull(_testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings));
+        Verify(_testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings) is null);
     }
 
-    [TestMethod]
     public void GetTestsShouldReturnTestElements()
     {
         var assemblyName = Assembly.GetExecutingAssembly().FullName;
@@ -107,13 +95,12 @@ public class AssemblyEnumeratorWrapperTests
 
         var tests = _testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings);
 
-        Assert.IsNotNull(tests);
+        Verify(tests is not null);
 
         // Validate if the current test is enumerated in this list.
-        Assert.IsTrue(tests.Any(t => t.TestMethod.Name == "ValidTestMethod"));
+        Verify(tests.Any(t => t.TestMethod.Name == "ValidTestMethod"));
     }
 
-    [TestMethod]
     public void GetTestsShouldCreateAnIsolatedInstanceOfAssemblyEnumerator()
     {
         var assemblyName = Assembly.GetExecutingAssembly().FullName;
@@ -128,7 +115,6 @@ public class AssemblyEnumeratorWrapperTests
 
     #region Exception handling tests.
 
-    [TestMethod]
     public void GetTestsShouldReturnNullIfSourceFileCannotBeLoaded()
     {
         var assemblyName = "DummyAssembly.dll";
@@ -142,10 +128,9 @@ public class AssemblyEnumeratorWrapperTests
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(assemblyName))
             .Returns(true);
 
-        Assert.IsNull(_testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings));
+        Verify(_testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings) is null);
     }
 
-    [TestMethod]
     public void GetTestsShouldReturnNullIfSourceFileLoadThrowsABadImageFormatException()
     {
         var assemblyName = "DummyAssembly.dll";
@@ -159,10 +144,9 @@ public class AssemblyEnumeratorWrapperTests
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName, It.IsAny<bool>()))
             .Throws(new BadImageFormatException());
 
-        Assert.IsNull(_testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings));
+        Verify(_testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings) is null);
     }
 
-    [TestMethod]
     public void GetTestsShouldReturnNullIfThereIsAReflectionTypeLoadException()
     {
         var assemblyName = "DummyAssembly.dll";
@@ -176,7 +160,7 @@ public class AssemblyEnumeratorWrapperTests
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly(assemblyName, It.IsAny<bool>()))
             .Throws(new ReflectionTypeLoadException(null, null));
 
-        Assert.IsNull(_testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings));
+        Verify(_testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings) is null);
     }
 
     #endregion

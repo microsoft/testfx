@@ -3,8 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
 
-extern alias FrameworkV1;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,17 +12,14 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
+
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
-[TestClass]
-public class UnitTestResultTests
+public class UnitTestResultTests : TestContainer
 {
-    [TestMethod]
-    public void UnitTestResultConstrutorWithOutcomeAndErrorMessageShouldSetRequiredFields()
+
+    public void UnitTestResultConstructorWithOutcomeAndErrorMessageShouldSetRequiredFields()
     {
         UnitTestResult result = new(UnitTestOutcome.Error, "DummyMessage");
 
@@ -32,8 +27,7 @@ public class UnitTestResultTests
         Assert.AreEqual("DummyMessage", result.ErrorMessage);
     }
 
-    [TestMethod]
-    public void UnitTestResultConstrutorWithTestFailedExceptionShouldSetRequiredFields()
+    public void UnitTestResultConstructorWithTestFailedExceptionShouldSetRequiredFields()
     {
         var stackTrace = new StackTraceInformation("trace", "filePath", 2, 3);
         TestFailedException ex = new(UnitTestOutcome.Error, "DummyMessage", stackTrace);
@@ -48,7 +42,6 @@ public class UnitTestResultTests
         Assert.AreEqual(3, result.ErrorColumnNumber);
     }
 
-    [TestMethod]
     public void ToTestResultShouldReturnConvertedTestResultWithFieldsSet()
     {
         var stackTrace = new StackTraceInformation("DummyStackTrace", "filePath", 2, 3);
@@ -87,7 +80,6 @@ public class UnitTestResultTests
         Assert.AreEqual(0, testResult.Messages.Count);
     }
 
-    [TestMethod]
     public void ToTestResultForUniTestResultWithStandardOutShouldReturnTestResultWithStdOutMessage()
     {
         UnitTestResult result = new()
@@ -105,10 +97,9 @@ public class UnitTestResultTests
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
-        Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
+        Verify(testresult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
     }
 
-    [TestMethod]
     public void ToTestResultForUniTestResultWithStandardErrorShouldReturnTestResultWithStdErrorMessage()
     {
         UnitTestResult result = new()
@@ -126,10 +117,9 @@ public class UnitTestResultTests
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
-        Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("DummyError") && m.Category.Equals("StdErrMsgs")));
+        Verify(testresult.Messages.All(m => m.Text.Contains("DummyError") && m.Category.Equals("StdErrMsgs")));
     }
 
-    [TestMethod]
     public void ToTestResultForUniTestResultWithDebugTraceShouldReturnTestResultWithDebugTraceStdOutMessage()
     {
         UnitTestResult result = new()
@@ -147,10 +137,9 @@ public class UnitTestResultTests
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
-        Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("\n\nDebug Trace:\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
+        Verify(testresult.Messages.All(m => m.Text.Contains("\n\nDebug Trace:\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
     }
 
-    [TestMethod]
     public void ToTestResultForUniTestResultWithTestContextMessagesShouldReturnTestResultWithTestContextStdOutMessage()
     {
         UnitTestResult result = new()
@@ -168,10 +157,9 @@ public class UnitTestResultTests
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
-        Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("\n\nTestContext Messages:\nKeepMovingForward") && m.Category.Equals("StdOutMsgs")));
+        Verify(testresult.Messages.All(m => m.Text.Contains("\n\nTestContext Messages:\nKeepMovingForward") && m.Category.Equals("StdOutMsgs")));
     }
 
-    [TestMethod]
     public void ToTestResultForUniTestResultWithResultFilesShouldReturnTestResultWithResultFilesAttachment()
     {
         UnitTestResult result = new()
@@ -194,7 +182,6 @@ public class UnitTestResultTests
         Assert.AreEqual("dummy://DummyFile.txt", testresult.Attachments[0].Attachments[0].Description);
     }
 
-    [TestMethod]
     public void ToTestResultForUniTestResultWithNoResultFilesShouldReturnTestResultWithNoResultFilesAttachment()
     {
         UnitTestResult result = new()
@@ -216,7 +203,6 @@ public class UnitTestResultTests
         Assert.AreEqual(0, testresult.Attachments.Count);
     }
 
-    [TestMethod]
     public void ToTestResultForUniTestResultWithParentInfoShouldReturnTestResultWithParentInfo()
     {
         var executionId = Guid.NewGuid();
@@ -246,7 +232,6 @@ public class UnitTestResultTests
         Assert.AreEqual(innerResultsCount, testresult.GetPropertyValue(MSTest.TestAdapter.Constants.InnerResultsCountProperty));
     }
 
-    [TestMethod]
     public void UniTestHelperToTestOutcomeForUnitTestOutcomePassedShouldReturnTestOutcomePassed()
     {
         string runSettingxml =
@@ -261,7 +246,6 @@ public class UnitTestResultTests
         Assert.AreEqual(TestOutcome.Passed, resultOutcome);
     }
 
-    [TestMethod]
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeFailedShouldReturnTestOutcomeFailed()
     {
         string runSettingxml =
@@ -276,7 +260,6 @@ public class UnitTestResultTests
         Assert.AreEqual(TestOutcome.Failed, resultOutcome);
     }
 
-    [TestMethod]
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeErrorShouldReturnTestOutcomeFailed()
     {
         string runSettingxml =
@@ -291,7 +274,6 @@ public class UnitTestResultTests
         Assert.AreEqual(TestOutcome.Failed, resultOutcome);
     }
 
-    [TestMethod]
     public void UnitTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutComeNoneWhenSpecifiedInAdapterSettings()
     {
         string runSettingxml =
@@ -307,7 +289,6 @@ public class UnitTestResultTests
         Assert.AreEqual(TestOutcome.None, resultOutcome);
     }
 
-    [TestMethod]
     public void UnitTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailedByDefault()
     {
         string runSettingxml =
@@ -322,7 +303,6 @@ public class UnitTestResultTests
         Assert.AreEqual(TestOutcome.Failed, resultOutcome);
     }
 
-    [TestMethod]
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeTimeoutShouldReturnTestOutcomeFailed()
     {
         string runSettingxml =
@@ -337,7 +317,6 @@ public class UnitTestResultTests
         Assert.AreEqual(TestOutcome.Failed, resultOutcome);
     }
 
-    [TestMethod]
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeIgnoredShouldReturnTestOutcomeSkipped()
     {
         string runSettingxml =
@@ -352,7 +331,6 @@ public class UnitTestResultTests
         Assert.AreEqual(TestOutcome.Skipped, resultOutcome);
     }
 
-    [TestMethod]
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeSkipped()
     {
         string runSettingxml =
@@ -367,7 +345,6 @@ public class UnitTestResultTests
         Assert.AreEqual(TestOutcome.Skipped, resultOutcome);
     }
 
-    [TestMethod]
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeFailedWhenSpecifiedSo()
     {
         string runSettingxml =
@@ -383,7 +360,6 @@ public class UnitTestResultTests
         Assert.AreEqual(TestOutcome.Failed, resultOutcome);
     }
 
-    [TestMethod]
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotFoundShouldReturnTestOutcomeNotFound()
     {
         string runSettingxml =
@@ -398,7 +374,6 @@ public class UnitTestResultTests
         Assert.AreEqual(TestOutcome.NotFound, resultOutcome);
     }
 
-    [TestMethod]
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInProgressShouldReturnTestOutcomeNone()
     {
         string runSettingxml =
@@ -413,7 +388,6 @@ public class UnitTestResultTests
         Assert.AreEqual(TestOutcome.None, resultOutcome);
     }
 
-    [TestMethod]
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailedWhenSpecifiedSo()
     {
         string runSettingxml =

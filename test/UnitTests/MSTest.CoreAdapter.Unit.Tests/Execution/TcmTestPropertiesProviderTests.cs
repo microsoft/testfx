@@ -3,21 +3,16 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestAdapterConstants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class TcmTestPropertiesProviderTests
+using TestAdapterConstants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
+
+public class TcmTestPropertiesProviderTests : TestContainer
 {
     private readonly TestProperty[] _tcmKnownProperties = new TestProperty[]
     {
@@ -38,14 +33,12 @@ public class TcmTestPropertiesProviderTests
         TestAdapterConstants.TestPointIdProperty
     };
 
-    [TestMethod]
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIsNull()
     {
         var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(null);
         Assert.AreEqual(0, tcmProperties.Count);
     }
 
-    [TestMethod]
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIdIsZero()
     {
         var testCase = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
@@ -62,7 +55,6 @@ public class TcmTestPropertiesProviderTests
         Assert.AreEqual(0, tcmProperties.Count);
     }
 
-    [TestMethod]
     public void GetTcmPropertiesShouldGetAllPropertiesFromTestCase()
     {
         var testCase = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
@@ -80,7 +72,6 @@ public class TcmTestPropertiesProviderTests
         VerifyTcmProperties(tcmProperties, testCase);
     }
 
-    [TestMethod]
     public void GetTcmPropertiesShouldCopyMultiplePropertiesCorrectlyFromTestCase()
     {
         // Verify 1st call.
@@ -110,7 +101,6 @@ public class TcmTestPropertiesProviderTests
         VerifyTcmProperties(tcmProperties2, testCase2);
     }
 
-    [TestMethod]
     public void GetTcmPropertiesShouldHandleDuplicateTestsProperlyFromTestCase()
     {
         // Verify 1st call.

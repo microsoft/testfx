@@ -3,9 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,18 +13,13 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Moq;
 
 using TestableImplementations;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class DictionaryHelperTests
+using TestFramework.ForTestingMSTest;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class DictionaryHelperTests : TestContainer
 {
-    [TestMethod]
     public void ConcatenatingDictionariesReturnsEmptyDictionaryWhenBothSidesAreNullOrEmpty()
     {
         Dictionary<string, string> source = null;
@@ -40,7 +32,6 @@ public class DictionaryHelperTests
         actual.Should().BeEquivalentTo(expected);
     }
 
-    [TestMethod]
     public void ConcatenatingDictionariesReturnsSourceSideWhenOverwriteIsNullOrEmpty()
     {
         var source = new Dictionary<string, string>
@@ -56,7 +47,6 @@ public class DictionaryHelperTests
         actual.Should().BeEquivalentTo(source);
     }
 
-    [TestMethod]
     public void ConcatenatingDictionariesReturnsOverwriteSideWhenSourceIsNullOrEmpty()
     {
         Dictionary<string, string> source = null;
@@ -72,7 +62,6 @@ public class DictionaryHelperTests
         actual.Should().BeEquivalentTo(overwrite);
     }
 
-    [TestMethod]
     public void ConcatenatingDictionariesShouldMergeThemAndTakeDuplicateKeysFromOverwrite()
     {
         var source = new Dictionary<string, string>

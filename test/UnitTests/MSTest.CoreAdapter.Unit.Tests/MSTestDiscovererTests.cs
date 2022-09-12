@@ -3,8 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
-extern alias FrameworkV1;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,14 +18,9 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class MSTestDiscovererTests
+public class MSTestDiscovererTests : TestContainer
 {
     private TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
@@ -58,68 +51,59 @@ public class MSTestDiscovererTests
         PlatformServiceProvider.Instance = null;
     }
 
-    [TestMethod]
     public void MSTestDiscovererHasMSTestAdapterAsExecutorUri()
     {
         DefaultExecutorUriAttribute attribute = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(DefaultExecutorUriAttribute)).Cast<DefaultExecutorUriAttribute>().First();
-        Assert.IsNotNull(attribute);
+        Verify(attribute is not null);
         Assert.AreEqual("executor://MSTestAdapter/v2", attribute.ExecutorUri);
     }
 
-    [TestMethod]
     public void MSTestDiscovererHasXapAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
-        Assert.IsNotNull(attributes);
+        Verify(attributes is not null);
         Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".xap"));
     }
 
-    [TestMethod]
     public void MSTestDiscovererHasAppxAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
-        Assert.IsNotNull(attributes);
+        Verify(attributes is not null);
         Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".appx"));
     }
 
-    [TestMethod]
     public void MSTestDiscovererHasDllAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
-        Assert.IsNotNull(attributes);
+        Verify(attributes is not null);
         Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".dll"));
     }
 
-    [TestMethod]
     public void MSTestDiscovererHasExeAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
-        Assert.IsNotNull(attributes);
+        Verify(attributes is not null);
         Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".exe"));
     }
 
-    [TestMethod]
     public void DiscoverTestsShouldThrowIfSourcesIsNull()
     {
         void a() => _discoverer.DiscoverTests(null, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
     }
 
-    [TestMethod]
     public void DiscoverTestsShouldThrowIfDiscoverySinkIsNull()
     {
         void a() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
     }
 
-    [TestMethod]
     public void DiscoverTestsShouldThrowIfLoggerIsNull()
     {
         void a() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, null, _mockTestCaseDiscoverySink.Object);
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
     }
 
-    [TestMethod]
     public void DiscoverTestsShouldThrowIfSourcesAreNotValid()
     {
         // Setup Mocks.
@@ -130,7 +114,6 @@ public class MSTestDiscovererTests
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(NotSupportedException));
     }
 
-    [TestMethod]
     public void DiscoverTestsShouldNotThrowIfdiscoveryContextIsNull()
     {
         var source = Assembly.GetExecutingAssembly().Location;
@@ -146,7 +129,6 @@ public class MSTestDiscovererTests
         _discoverer.DiscoverTests(new List<string> { source }, null, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
     }
 
-    [TestMethod]
     public void DiscoverTestsShouldDiscoverTests()
     {
         var source = Assembly.GetExecutingAssembly().Location;
@@ -174,7 +156,6 @@ public class MSTestDiscovererTests
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.AtLeastOnce);
     }
 
-    [TestMethod]
     public void DiscoveryShouldNotHappenIfTestSettingsIsGiven()
     {
         string runSettingxml =
@@ -196,7 +177,6 @@ public class MSTestDiscovererTests
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
     }
 
-    [TestMethod]
     public void DiscoveryShouldReportAndBailOutOnSettingsException()
     {
         string runSettingxml =
@@ -219,7 +199,6 @@ public class MSTestDiscovererTests
         _mockMessageLogger.Verify(fh => fh.SendMessage(TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
     }
 
-    [TestMethod]
     public void AreValidSourcesShouldThrowIfPlatformsValidSourceExtensionsIsNull()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);
@@ -227,24 +206,21 @@ public class MSTestDiscovererTests
         ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
     }
 
-    [TestMethod]
     public void AreValidSourcesShouldReturnFalseIfValidSourceExtensionsIsEmpty()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { });
-        Assert.IsFalse(MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
+        Verify(!MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
     }
 
-    [TestMethod]
     public void AreValidSourcesShouldReturnTrueForValidSourceExtensions()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".te" });
-        Assert.IsTrue(MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
+        Verify(MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
     }
 
-    [TestMethod]
     public void AreValidSourcesShouldReturnFalseForInvalidSourceExtensions()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".nte", ".tep" });
-        Assert.IsFalse(MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
+        Verify(!MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
     }
 }

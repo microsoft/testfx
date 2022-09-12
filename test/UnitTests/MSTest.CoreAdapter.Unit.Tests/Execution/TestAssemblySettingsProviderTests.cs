@@ -3,9 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -13,15 +10,12 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Moq;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class TestAssemblySettingsProviderTests
+using TestFramework.ForTestingMSTest;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class TestAssemblySettingsProviderTests : TestContainer
 {
     private TestablePlatformServiceProvider _testablePlatformServiceProvider;
     private Mock<ReflectHelper> _mockReflectHelper;
@@ -45,7 +39,6 @@ public class TestAssemblySettingsProviderTests
         PlatformServiceProvider.Instance = null;
     }
 
-    [TestMethod]
     public void GetSettingsShouldSetParallelWorkersToNegativeByDefault()
     {
         // Arrange.
@@ -61,7 +54,6 @@ public class TestAssemblySettingsProviderTests
         Assert.AreEqual(-1, settings.Workers);
     }
 
-    [TestMethod]
     public void GetSettingsShouldSetParallelWorkers()
     {
         // Arrange.
@@ -81,7 +73,6 @@ public class TestAssemblySettingsProviderTests
         Assert.AreEqual(10, settings.Workers);
     }
 
-    [TestMethod]
     public void GetSettingsShouldSetParallelWorkersToProcessorCountIfZero()
     {
         // Arrange.
@@ -101,7 +92,6 @@ public class TestAssemblySettingsProviderTests
         Assert.AreEqual(Environment.ProcessorCount, settings.Workers);
     }
 
-    [TestMethod]
     public void GetSettingsShouldSetParallelScopeToClassLevelByDefault()
     {
         // Arrange.
@@ -117,7 +107,6 @@ public class TestAssemblySettingsProviderTests
         Assert.AreEqual(UTF.ExecutionScope.ClassLevel, settings.Scope);
     }
 
-    [TestMethod]
     public void GetSettingsShouldSetParallelScope()
     {
         // Arrange.
@@ -137,7 +126,6 @@ public class TestAssemblySettingsProviderTests
         Assert.AreEqual(UTF.ExecutionScope.MethodLevel, settings.Scope);
     }
 
-    [TestMethod]
     public void GetSettingsShouldSetCanParallelizeAssemblyToTrueByDefault()
     {
         // Arrange.
@@ -150,10 +138,9 @@ public class TestAssemblySettingsProviderTests
         var settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Assert.IsTrue(settings.CanParallelizeAssembly);
+        Verify(settings.CanParallelizeAssembly);
     }
 
-    [TestMethod]
     public void GetSettingsShouldSetCanParallelizeAssemblyToFalseIfDoNotParallelizeIsSet()
     {
         // Arrange.
@@ -170,6 +157,6 @@ public class TestAssemblySettingsProviderTests
         var settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Assert.IsFalse(settings.CanParallelizeAssembly);
+        Verify(!settings.CanParallelizeAssembly);
     }
 }
