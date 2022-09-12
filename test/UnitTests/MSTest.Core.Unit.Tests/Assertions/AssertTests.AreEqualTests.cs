@@ -158,6 +158,7 @@ public partial class AssertTests
         static void action() => TestFrameworkV2.Assert.AreNotEqual(100E-2, 200E-2, 100E-2);
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
     }
+
     [TestMethod]
     public void AreEqualShouldFailWhenNotEqualType()
     {
