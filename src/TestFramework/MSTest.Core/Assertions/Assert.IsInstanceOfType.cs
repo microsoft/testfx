@@ -168,6 +168,16 @@ public sealed partial class Assert
     {
         IsNotInstanceOfType(value, wrongType, string.Empty, null);
     }
+
+    /// <summary>
+    /// Tests whether the specified object is not an instance of the wrong generic
+    /// type and throws an exception if the specified type is in the
+    /// inheritance hierarchy of the object.
+    /// /// </summary>
+    public static void IsNotInstanceOfType<T>(object value)
+    {
+        IsNotInstanceOfType(value, typeof(T), string.Empty, null);
+    }
 #endif
 
     /// <summary>
@@ -194,6 +204,16 @@ public sealed partial class Assert
     public static void IsNotInstanceOfType(object value, Type wrongType, [CallerArgumentExpression("value")] string message = null)
     {
         IsNotInstanceOfType(value, wrongType, message, null);
+    }
+
+    /// <summary>
+    /// Tests whether the specified object is not an instance of the wrong generic
+    /// type and throws an exception if the specified type is in the
+    /// inheritance hierarchy of the object.
+    /// /// </summary>
+    public static void IsNotInstanceOfType<T>(object value, [CallerArgumentExpression("value")] string message = null)
+    {
+        IsNotInstanceOfType(value, typeof(T), message, null);
     }
 
     /// <summary>
@@ -246,5 +266,14 @@ public sealed partial class Assert
                 value.GetType().ToString());
             ThrowAssertFailed("Assert.IsNotInstanceOfType", finalMessage);
         }
+    }
+    /// <summary>
+    /// Tests whether the specified object is not an instance of the wrong generic
+    /// type and throws an exception if the specified type is in the
+    /// inheritance hierarchy of the object.
+    /// /// </summary>
+    public static void IsNotInstanceOfType<T>(object value, [CallerArgumentExpression("value")] string message = null, params object[] parameters)
+    {
+        IsNotInstanceOfType(value, typeof(T), message, parameters);
     }
 }
