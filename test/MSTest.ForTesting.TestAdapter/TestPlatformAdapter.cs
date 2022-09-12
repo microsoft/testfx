@@ -156,7 +156,7 @@ internal sealed class TestPlatformAdapter : ITestDiscoverer, ITestExecutor
 
                 var testContainerPublicMethods = testContainerType.DeclaredMethods.Where(memberInfo =>
                     memberInfo.IsPublic
-                    && memberInfo.ReturnType is null
+                    && memberInfo.ReturnType == typeof(void)
                     && memberInfo.GetParameters().Length == 0);
 
                 // TODO: Fail if no public method?
