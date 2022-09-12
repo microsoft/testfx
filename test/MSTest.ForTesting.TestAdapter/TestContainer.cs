@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace MSTest.ForTesting.TestAdapter;
 
@@ -12,7 +14,7 @@ namespace MSTest.ForTesting.TestAdapter;
 /// </summary>
 public abstract class TestContainer : IDisposable
 {
-    private bool _isDisposed;
+    protected bool IsDisposed { get; private set; }
 
     /// <summary>
     /// Constructor is used to provide some initialization before each test.
@@ -28,7 +30,7 @@ public abstract class TestContainer : IDisposable
     /// <param name="disposing"></param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_isDisposed)
+        if (!IsDisposed)
         {
             if (disposing)
             {
@@ -37,7 +39,7 @@ public abstract class TestContainer : IDisposable
 
             // Free unmanaged resources (unmanaged objects) and override finalizer
             // Set large fields to null
-            _isDisposed = true;
+            IsDisposed = true;
         }
     }
 
@@ -47,4 +49,39 @@ public abstract class TestContainer : IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Not static to avoid CA1822 warning on test methods")]
+    protected void Verify(bool condition,
+        [CallerArgumentExpression(nameof(condition))] string? expression = default,
+        [CallerMemberName] string? caller = default,
+        [CallerFilePath] string? filePath = default,
+        [CallerLineNumber] int lineNumber = default)
+    {
+        if (!condition)
+            Throw(expression, caller, filePath, lineNumber);
+    }
+
+    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Not static to avoid CA1822 warning on test methods")]
+    protected Exception VerifyThrows(Action action,
+        [CallerArgumentExpression(nameof(action))] string? expression = default,
+        [CallerMemberName] string? caller = default,
+        [CallerFilePath] string? filePath = default,
+        [CallerLineNumber] int lineNumber = default)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            return ex;
+        }
+
+        Throw(expression, caller, filePath, lineNumber);
+        return null;
+    }
+
+    [DoesNotReturn]
+    private static void Throw(string? expression, string? caller, string? filePath, int lineNumber)
+        => throw new Exception($"Expression failed: {expression ?? "<expression>"} at line {lineNumber} of method {caller ?? "<caller>"} in file {filePath ?? "<file-path>"}.");
 }
