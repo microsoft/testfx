@@ -3,6 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <!-- Assembly name must end with TestAdapter to be picked up by Test Platform -->
+    <AssemblyName>TestFramework.ForTestingMSTest.TestAdapter</AssemblyName>
+    <RootNamespace>TestFramework.ForTestingMSTest</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

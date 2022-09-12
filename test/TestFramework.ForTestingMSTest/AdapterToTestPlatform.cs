@@ -13,11 +13,11 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
-namespace MSTest.ForTesting.TestAdapter;
+namespace TestFramework.ForTestingMSTest;
 
 [DefaultExecutorUri(Constants.ExecutorUri)]
 [ExtensionUri(Constants.ExecutorUri)]
-internal sealed class TestPlatformAdapter : ITestDiscoverer, ITestExecutor
+internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
 {
     private CancellationTokenSource? _testRunCancellationTokenSource;
 

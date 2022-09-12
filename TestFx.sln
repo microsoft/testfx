@@ -201,7 +201,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiscoverInternalsProject", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OutputTestProject", "test\E2ETests\TestAssets\OutputTestProject\OutputTestProject.csproj", "{66608D86-416A-49AF-A937-C47F7E4586AE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.ForTesting.TestAdapter", "test\MSTest.ForTesting.TestAdapter\MSTest.ForTesting.TestAdapter.csproj", "{0685FBC3-C3A9-43A9-B15C-15BAA39705FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFramework.ForTestingMSTest", "test\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj", "{0685FBC3-C3A9-43A9-B15C-15BAA39705FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

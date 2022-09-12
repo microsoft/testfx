@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace MSTest.ForTesting.TestAdapter;
+namespace TestFramework.ForTestingMSTest;
 
 /// <summary>
 /// Inherit from this class to be recognized as a test class.
