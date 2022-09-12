@@ -1,0 +1,339 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
+#define HIDE_MESSAGELESS_IMPLEMENTATION
+#endif
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+
+/// <summary>
+/// A collection of helper classes to test various conditions within
+/// unit tests. If the condition being tested is not met, an exception
+/// is thrown.
+/// </summary>
+public sealed partial class Assert
+{
+#if HIDE_MESSAGELESS_IMPLEMENTATION
+    /// <summary>
+    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
+    /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <typeparam name="T">
+    /// Type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static T ThrowsException<T>(Action action)
+        where T : Exception
+    {
+        return ThrowsException<T>(action, string.Empty, null);
+    }
+#endif
+
+    /// <summary>
+    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
+    /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="action"/>
+    /// does not throws exception of type <typeparamref name="T"/>.
+    /// </param>
+    /// <typeparam name="T">
+    /// Type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static T ThrowsException<T>(Action action, [CallerArgumentExpression("action")] string message = null)
+        where T : Exception
+    {
+        return ThrowsException<T>(action, message, null);
+    }
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
+    /// <summary>
+    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
+    /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <typeparam name="T">
+    /// Type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static T ThrowsException<T>(Func<object> action)
+        where T : Exception
+    {
+        return ThrowsException<T>(action, string.Empty, null);
+    }
+#endif
+
+    /// <summary>
+    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
+    /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="action"/>
+    /// does not throws exception of type <typeparamref name="T"/>.
+    /// </param>
+    /// <typeparam name="T">
+    /// Type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static T ThrowsException<T>(Func<object> action, [CallerArgumentExpression("action")] string message = null)
+        where T : Exception
+    {
+        return ThrowsException<T>(action, message, null);
+    }
+
+    /// <summary>
+    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
+    /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="action"/>
+    /// does not throws exception of type <typeparamref name="T"/>.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <typeparam name="T">
+    /// Type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throw exception of type <typeparamref name="T"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    public static T ThrowsException<T>(Func<object> action, [CallerArgumentExpression("action")] string message = null, params object[] parameters)
+        where T : Exception
+    {
+        return ThrowsException<T>(() => { action(); }, message, parameters);
+    }
+
+    /// <summary>
+    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
+    /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="action"/>
+    /// does not throws exception of type <typeparamref name="T"/>.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <typeparam name="T">
+    /// Type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
+    /// </exception>
+    /// <returns>
+    /// The exception that was thrown.
+    /// </returns>
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and format appropriately.")]
+    public static T ThrowsException<T>(Action action, [CallerArgumentExpression("action")] string message = null, params object[] parameters)
+        where T : Exception
+    {
+        if (action == null)
+        {
+            throw new ArgumentNullException(nameof(action));
+        }
+
+        if (message == null)
+        {
+            throw new ArgumentNullException(nameof(message));
+        }
+
+        string userMessage, finalMessage;
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            if (!typeof(T).Equals(ex.GetType()))
+            {
+                userMessage = BuildUserMessage(message, parameters);
+                finalMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.WrongExceptionThrown,
+                    userMessage,
+                    typeof(T).Name,
+                ex.GetType().Name,
+                ex.Message,
+                ex.StackTrace);
+                ThrowAssertFailed("Assert.ThrowsException", finalMessage);
+            }
+
+            return (T)ex;
+        }
+
+        userMessage = BuildUserMessage(message, parameters);
+        finalMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.NoExceptionThrown,
+            userMessage,
+            typeof(T).Name);
+        ThrowAssertFailed("Assert.ThrowsException", finalMessage);
+
+        // This will not hit, but need it for compiler.
+        return null;
+    }
+
+#if HIDE_MESSAGELESS_IMPLEMENTATION
+    /// <summary>
+    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
+    /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="action">
+    /// Delegate to code to be tested and which is expected to throw exception.
+    /// </param>
+    /// <typeparam name="T">
+    /// Type of exception expected to be thrown.
+    /// </typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
+    /// </exception>
+    /// <returns>
+    /// The <see cref="Task"/> executing the delegate.
+    /// </returns>
+    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
+        where T : Exception
+    {
+        return await ThrowsExceptionAsync<T>(action, string.Empty, null).ConfigureAwait(false);
+    }
+#endif
+
+    /// <summary>
+    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
+    /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="action">Delegate to code to be tested and which is expected to throw exception.</param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="action"/>
+    /// does not throws exception of type <typeparamref name="T"/>.
+    /// </param>
+    /// <typeparam name="T">Type of exception expected to be thrown.</typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
+    /// </exception>
+    /// <returns>
+    /// The <see cref="Task"/> executing the delegate.
+    /// </returns>
+    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, [CallerArgumentExpression("action")] string message = null)
+        where T : Exception
+    {
+        return await ThrowsExceptionAsync<T>(action, message, null).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
+    /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
+    /// </summary>
+    /// <param name="action">Delegate to code to be tested and which is expected to throw exception.</param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="action"/>
+    /// does not throws exception of type <typeparamref name="T"/>.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <typeparam name="T">Type of exception expected to be thrown.</typeparam>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="action"/> does not throws exception of type <typeparamref name="T"/>.
+    /// </exception>
+    /// <returns>
+    /// The <see cref="Task"/> executing the delegate.
+    /// </returns>
+    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, [CallerArgumentExpression("action")] string message = null, params object[] parameters)
+        where T : Exception
+    {
+        if (action == null)
+        {
+            throw new ArgumentNullException(nameof(action));
+        }
+
+        if (message == null)
+        {
+            throw new ArgumentNullException(nameof(message));
+        }
+
+        string userMessage, finalMessage;
+        try
+        {
+            await action().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            if (!typeof(T).Equals(ex.GetType()))
+            {
+                userMessage = BuildUserMessage(message, parameters);
+                finalMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.WrongExceptionThrown,
+                    userMessage,
+                    typeof(T).Name,
+                ex.GetType().Name,
+                ex.Message,
+                ex.StackTrace);
+                ThrowAssertFailed("Assert.ThrowsException", finalMessage);
+            }
+
+            return (T)ex;
+        }
+
+        userMessage = BuildUserMessage(message, parameters);
+        finalMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.NoExceptionThrown,
+            userMessage,
+            typeof(T).Name);
+        ThrowAssertFailed("Assert.ThrowsException", finalMessage);
+
+        // This will not hit, but need it for compiler.
+        return null;
+    }
+}
