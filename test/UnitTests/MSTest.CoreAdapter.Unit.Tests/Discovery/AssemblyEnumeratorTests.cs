@@ -39,7 +39,11 @@ public class AssemblyEnumeratorTests : TestContainer
 
     protected override void Dispose(bool disposing)
     {
-        PlatformServiceProvider.Instance = null;
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            PlatformServiceProvider.Instance = null;
+        }
     }
 
     #region  Constructor tests

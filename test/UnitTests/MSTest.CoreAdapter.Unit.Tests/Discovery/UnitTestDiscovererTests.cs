@@ -50,10 +50,14 @@ public class UnitTestDiscovererTests : TestContainer
 
     protected override void Dispose(bool disposing)
     {
-        _test = null;
-        _testElements = null;
-        PlatformServiceProvider.Instance = null;
-        MSTestSettings.Reset();
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            _test = null;
+            _testElements = null;
+            PlatformServiceProvider.Instance = null;
+            MSTestSettings.Reset();
+        }
     }
 
     public void DiscoverTestsShouldDiscoverForAllSources()

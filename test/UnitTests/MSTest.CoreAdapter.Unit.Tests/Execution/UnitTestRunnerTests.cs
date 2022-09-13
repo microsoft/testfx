@@ -47,6 +47,7 @@ public class UnitTestRunnerTests : TestContainer
 
     protected override void Dispose(bool disposing)
     {
+
         PlatformServiceProvider.Instance = null;
     }
 

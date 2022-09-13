@@ -69,8 +69,12 @@ public class TestExecutionManagerTests : TestContainer
 
     protected override void Dispose(bool disposing)
     {
-        PlatformServiceProvider.Instance = null;
-        MSTestSettings.Reset();
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            PlatformServiceProvider.Instance = null;
+            MSTestSettings.Reset();
+        }
     }
 
     #region RunTests on a list of tests

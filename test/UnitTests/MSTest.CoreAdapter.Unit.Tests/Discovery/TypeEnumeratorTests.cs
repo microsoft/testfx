@@ -45,7 +45,11 @@ public class TypeEnumeratorTests : TestContainer
 
     protected override void Dispose(bool disposing)
     {
-        PlatformServiceProvider.Instance = null;
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            PlatformServiceProvider.Instance = null;
+        }
     }
 
     #region Enumerate tests

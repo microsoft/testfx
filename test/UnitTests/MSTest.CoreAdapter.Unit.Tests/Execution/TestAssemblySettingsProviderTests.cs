@@ -34,7 +34,11 @@ public class TestAssemblySettingsProviderTests : TestContainer
 
     protected override void Dispose(bool disposing)
     {
-        PlatformServiceProvider.Instance = null;
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            PlatformServiceProvider.Instance = null;
+        }
     }
 
     public void GetSettingsShouldSetParallelWorkersToNegativeByDefault()
