@@ -29,31 +29,31 @@ public class TestMethodFilterTests : TestContainer
     public void PropertyProviderForFullyQualifiedNamePropertyReturnFullyQualifiedNameTestProperty()
     {
         TestProperty property = TestMethodFilter.PropertyProvider("FullyQualifiedName");
-        Assert.AreEqual("FullyQualifiedName", property.Label);
+        Verify("FullyQualifiedName" == property.Label);
     }
 
     public void PropertyProviderForClassNamePropertyReturnClassNameTestProperty()
     {
         TestProperty property = TestMethodFilter.PropertyProvider("ClassName");
-        Assert.AreEqual("ClassName", property.Label);
+        Verify("ClassName" == property.Label);
     }
 
     public void PropertyProviderForNamePropertyReturnNameTestProperty()
     {
         TestProperty property = TestMethodFilter.PropertyProvider("Name");
-        Assert.AreEqual("Name", property.Label);
+        Verify("Name" == property.Label);
     }
 
     public void PropertyProviderForTestCategoryPropertyReturnTestCategoryTestProperty()
     {
         TestProperty property = TestMethodFilter.PropertyProvider("TestCategory");
-        Assert.AreEqual("TestCategory", property.Label);
+        Verify("TestCategory" == property.Label);
     }
 
     public void PropertyProviderForPriorityPropertyReturnPriorityTestProperty()
     {
         TestProperty property = TestMethodFilter.PropertyProvider("Priority");
-        Assert.AreEqual("Priority", property.Label);
+        Verify("Priority" == property.Label);
     }
 
     public void PropertyProviderValueForInvalidTestCaseReturnsNull()
@@ -90,7 +90,7 @@ public class TestMethodFilterTests : TestContainer
         TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 
         var result = TestMethodFilter.PropertyValueProvider(testCase, "FullyQualifiedName");
-        Assert.AreEqual(fullName, result);
+        Verify(fullName == result as string);
     }
 
     public void GetFilterExpressionForNullRunContextReturnsNull()
@@ -109,7 +109,7 @@ public class TestMethodFilterTests : TestContainer
         TestableRunContext runContext = new(() => dummyFilterExpression);
         var filterExpression = TestMethodFilter.GetFilterExpression(runContext, recorder, out var filterHasError);
 
-        Assert.AreEqual(dummyFilterExpression, filterExpression);
+        Verify(dummyFilterExpression == filterExpression);
         Verify(!filterHasError);
     }
 
@@ -124,7 +124,7 @@ public class TestMethodFilterTests : TestContainer
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => dummyFilterExpression);
         var filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out var filterHasError);
 
-        Assert.AreEqual(dummyFilterExpression, filterExpression);
+        Verify(dummyFilterExpression == filterExpression);
         Verify(!filterHasError);
     }
 
@@ -150,8 +150,8 @@ public class TestMethodFilterTests : TestContainer
 
         Verify(filterExpression is null);
         Verify(filterHasError);
-        Assert.AreEqual("DummyException", recorder.Message);
-        Assert.AreEqual(TestMessageLevel.Error, recorder.TestMessageLevel);
+        Verify("DummyException" == recorder.Message);
+        Verify(TestMessageLevel.Error == recorder.TestMessageLevel);
     }
 
     /// <summary>
@@ -166,8 +166,8 @@ public class TestMethodFilterTests : TestContainer
 
         Verify(filterExpression is null);
         Verify(filterHasError);
-        Assert.AreEqual("DummyException", recorder.Message);
-        Assert.AreEqual(TestMessageLevel.Error, recorder.TestMessageLevel);
+        Verify("DummyException" == recorder.Message);
+        Verify(TestMessageLevel.Error == recorder.TestMessageLevel);
     }
 
     [DummyTestClass]

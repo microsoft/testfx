@@ -23,8 +23,8 @@ public class UnitTestResultTests : TestContainer
     {
         UnitTestResult result = new(UnitTestOutcome.Error, "DummyMessage");
 
-        Assert.AreEqual(UnitTestOutcome.Error, result.Outcome);
-        Assert.AreEqual("DummyMessage", result.ErrorMessage);
+        Verify(UnitTestOutcome.Error == result.Outcome);
+        Verify("DummyMessage" == result.ErrorMessage);
     }
 
     public void UnitTestResultConstructorWithTestFailedExceptionShouldSetRequiredFields()
@@ -34,12 +34,12 @@ public class UnitTestResultTests : TestContainer
 
         UnitTestResult result = new(ex);
 
-        Assert.AreEqual(UnitTestOutcome.Error, result.Outcome);
-        Assert.AreEqual("DummyMessage", result.ErrorMessage);
-        Assert.AreEqual("trace", result.ErrorStackTrace);
-        Assert.AreEqual("filePath", result.ErrorFilePath);
-        Assert.AreEqual(2, result.ErrorLineNumber);
-        Assert.AreEqual(3, result.ErrorColumnNumber);
+        Verify(UnitTestOutcome.Error == result.Outcome);
+        Verify("DummyMessage" == result.ErrorMessage);
+        Verify("trace" == result.ErrorStackTrace);
+        Verify("filePath" == result.ErrorFilePath);
+        Verify(2 == result.ErrorLineNumber);
+        Verify(3 == result.ErrorColumnNumber);
     }
 
     public void ToTestResultShouldReturnConvertedTestResultWithFieldsSet()
@@ -69,15 +69,15 @@ public class UnitTestResultTests : TestContainer
         var testResult = result.ToTestResult(testCase, startTime, endTime, adapterSettings);
 
         // Validate
-        Assert.AreEqual(testCase, testResult.TestCase);
-        Assert.AreEqual("DummyDisplayName", testResult.DisplayName);
-        Assert.AreEqual(dummyTimeSpan, testResult.Duration);
-        Assert.AreEqual(TestOutcome.Failed, testResult.Outcome);
-        Assert.AreEqual("DummyMessage", testResult.ErrorMessage);
-        Assert.AreEqual("DummyStackTrace", testResult.ErrorStackTrace);
-        Assert.AreEqual(startTime, testResult.StartTime);
-        Assert.AreEqual(endTime, testResult.EndTime);
-        Assert.AreEqual(0, testResult.Messages.Count);
+        Verify(testCase == testResult.TestCase);
+        Verify("DummyDisplayName" == testResult.DisplayName);
+        Verify(dummyTimeSpan == testResult.Duration);
+        Verify(TestOutcome.Failed == testResult.Outcome);
+        Verify("DummyMessage" == testResult.ErrorMessage);
+        Verify("DummyStackTrace" == testResult.ErrorStackTrace);
+        Verify(startTime == testResult.StartTime);
+        Verify(endTime == testResult.EndTime);
+        Verify(0 == testResult.Messages.Count);
     }
 
     public void ToTestResultForUniTestResultWithStandardOutShouldReturnTestResultWithStdOutMessage()
@@ -178,8 +178,8 @@ public class UnitTestResultTests : TestContainer
 
         var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
 
-        Assert.AreEqual(1, testresult.Attachments.Count);
-        Assert.AreEqual("dummy://DummyFile.txt", testresult.Attachments[0].Attachments[0].Description);
+        Verify(1 == testresult.Attachments.Count);
+        Verify("dummy://DummyFile.txt" == testresult.Attachments[0].Attachments[0].Description);
     }
 
     public void ToTestResultForUniTestResultWithNoResultFilesShouldReturnTestResultWithNoResultFilesAttachment()
@@ -200,7 +200,7 @@ public class UnitTestResultTests : TestContainer
 
         var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
 
-        Assert.AreEqual(0, testresult.Attachments.Count);
+        Verify(0 == testresult.Attachments.Count);
     }
 
     public void ToTestResultForUniTestResultWithParentInfoShouldReturnTestResultWithParentInfo()
@@ -227,9 +227,9 @@ public class UnitTestResultTests : TestContainer
 
         var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
 
-        Assert.AreEqual(executionId, testresult.GetPropertyValue(MSTest.TestAdapter.Constants.ExecutionIdProperty));
-        Assert.AreEqual(parentExecId, testresult.GetPropertyValue(MSTest.TestAdapter.Constants.ParentExecIdProperty));
-        Assert.AreEqual(innerResultsCount, testresult.GetPropertyValue(MSTest.TestAdapter.Constants.InnerResultsCountProperty));
+        Verify(executionId.Equals(testresult.GetPropertyValue(MSTest.TestAdapter.Constants.ExecutionIdProperty)));
+        Verify(parentExecId.Equals(testresult.GetPropertyValue(MSTest.TestAdapter.Constants.ParentExecIdProperty)));
+        Verify(innerResultsCount.Equals(testresult.GetPropertyValue(MSTest.TestAdapter.Constants.InnerResultsCountProperty)));
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomePassedShouldReturnTestOutcomePassed()
@@ -243,7 +243,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Passed, adapterSettings);
-        Assert.AreEqual(TestOutcome.Passed, resultOutcome);
+        Verify(TestOutcome.Passed == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeFailedShouldReturnTestOutcomeFailed()
@@ -257,7 +257,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Failed, adapterSettings);
-        Assert.AreEqual(TestOutcome.Failed, resultOutcome);
+        Verify(TestOutcome.Failed == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeErrorShouldReturnTestOutcomeFailed()
@@ -271,7 +271,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Error, adapterSettings);
-        Assert.AreEqual(TestOutcome.Failed, resultOutcome);
+        Verify(TestOutcome.Failed == resultOutcome);
     }
 
     public void UnitTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutComeNoneWhenSpecifiedInAdapterSettings()
@@ -286,7 +286,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, adapterSettings);
-        Assert.AreEqual(TestOutcome.None, resultOutcome);
+        Verify(TestOutcome.None == resultOutcome);
     }
 
     public void UnitTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailedByDefault()
@@ -300,7 +300,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, adapterSettings);
-        Assert.AreEqual(TestOutcome.Failed, resultOutcome);
+        Verify(TestOutcome.Failed == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeTimeoutShouldReturnTestOutcomeFailed()
@@ -314,7 +314,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Timeout, adapterSettings);
-        Assert.AreEqual(TestOutcome.Failed, resultOutcome);
+        Verify(TestOutcome.Failed == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeIgnoredShouldReturnTestOutcomeSkipped()
@@ -328,7 +328,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Ignored, adapterSettings);
-        Assert.AreEqual(TestOutcome.Skipped, resultOutcome);
+        Verify(TestOutcome.Skipped == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeSkipped()
@@ -342,7 +342,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Inconclusive, adapterSettings);
-        Assert.AreEqual(TestOutcome.Skipped, resultOutcome);
+        Verify(TestOutcome.Skipped == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeFailedWhenSpecifiedSo()
@@ -357,7 +357,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Inconclusive, adapterSettings);
-        Assert.AreEqual(TestOutcome.Failed, resultOutcome);
+        Verify(TestOutcome.Failed == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotFoundShouldReturnTestOutcomeNotFound()
@@ -371,7 +371,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotFound, adapterSettings);
-        Assert.AreEqual(TestOutcome.NotFound, resultOutcome);
+        Verify(TestOutcome.NotFound == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInProgressShouldReturnTestOutcomeNone()
@@ -385,7 +385,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.InProgress, adapterSettings);
-        Assert.AreEqual(TestOutcome.None, resultOutcome);
+        Verify(TestOutcome.None == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailedWhenSpecifiedSo()
@@ -399,6 +399,6 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, adapterSettings);
-        Assert.AreEqual(TestOutcome.Failed, resultOutcome);
+        Verify(TestOutcome.Failed == resultOutcome);
     }
 }

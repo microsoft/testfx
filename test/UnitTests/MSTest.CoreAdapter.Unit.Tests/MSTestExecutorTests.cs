@@ -22,8 +22,7 @@ public class MSTestExecutorTests : TestContainer
     private Mock<IFrameworkHandle> _mockFrameworkHandle;
     private MSTestExecutor _mstestExecutor;
 
-    [TestInitialize]
-    public void TestInit()
+    public MSTestExecutorTests()
     {
         _mockRunContext = new Mock<IRunContext>();
         _mockRunSettings = new Mock<IRunSettings>();
@@ -39,7 +38,7 @@ public class MSTestExecutorTests : TestContainer
             testExecutor.GetType().GetCustomAttributes(typeof(ExtensionUriAttribute), false).Single() as
             ExtensionUriAttribute;
 
-        Assert.AreEqual<string>(MSTest.TestAdapter.Constants.ExecutorUriString, extensionUriString.ExtensionUri);
+        Verify(MSTest.TestAdapter.Constants.ExecutorUriString == extensionUriString.ExtensionUri);
     }
 
     public void RunTestsShouldNotExecuteTestsIfTestSettingsIsGiven()

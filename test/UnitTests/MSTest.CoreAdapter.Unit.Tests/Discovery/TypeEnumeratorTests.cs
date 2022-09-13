@@ -32,8 +32,7 @@ public class TypeEnumeratorTests : TestContainer
 
     private TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    [TestInitialize]
-    public void TestInit()
+    public TypeEnumeratorTests()
     {
         _mockReflectHelper = new Mock<ReflectHelper>();
         _mockTypeValidator = new Mock<TypeValidator>(MockBehavior.Default, _mockReflectHelper.Object);
@@ -44,8 +43,7 @@ public class TypeEnumeratorTests : TestContainer
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
         PlatformServiceProvider.Instance = null;
     }
@@ -66,7 +64,7 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Assert.AreEqual(0, tests.Count);
+        Verify(0 == tests.Count);
     }
 
     #endregion
@@ -177,12 +175,12 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Assert.AreEqual(
-            1,
+        Verify(
+            1 ==
             tests.Count(t => t.TestMethod.Name == "BaseTestMethod"),
             "DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.");
-        Assert.AreEqual(
-            1,
+        Verify(
+            1 ==
             tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"),
             "DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.");
         Verify(!
@@ -198,20 +196,20 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Assert.AreEqual(
-            1,
+        Verify(
+            1 ==
             tests.Count(t => t.TestMethod.Name == "BaseTestMethod"),
             "DummyOverridingTestClass inherits BaseTestMethod so it should be discovered.");
-        Assert.AreEqual(
-            1,
+        Verify(
+            1 ==
             tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"),
             "DummyOverridingTestClass overrides DerivedTestMethod directly so it should always be discovered.");
-        Assert.AreEqual(
-            typeof(DummyHidingTestClass).FullName,
+        Verify(
+            typeof(DummyHidingTestClass).FullName ==
             tests.Single(t => t.TestMethod.Name == "BaseTestMethod").TestMethod.DeclaringClassFullName,
             "DummyOverridingTestClass inherits BaseTestMethod from DummyHidingTestClass specifically.");
-        Assert.IsNull(
-            tests.Single(t => t.TestMethod.Name == "DerivedTestMethod").TestMethod.DeclaringClassFullName,
+        Verify(
+            tests.Single(t => t.TestMethod.Name == "DerivedTestMethod").TestMethod.DeclaringClassFullName is null,
             "DummyOverridingTestClass overrides DerivedTestMethod so is the declaring class.");
     }
 
@@ -223,12 +221,12 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Assert.AreEqual(
-            1,
+        Verify(
+            1 ==
             tests.Count(t => t.TestMethod.Name == "BaseTestMethod"),
             "DummySecondHidingTestClass hides BaseTestMethod so it should be discovered.");
-        Assert.AreEqual(
-            1,
+        Verify(
+            1 ==
             tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"),
             "DummySecondHidingTestClass hides DerivedTestMethod so it should be discovered.");
         Verify(!
@@ -254,9 +252,9 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType"), true, _warnings);
 
         Verify(testElement is not null);
-        Assert.AreEqual("MethodWithVoidReturnType", testElement.TestMethod.Name);
-        Assert.AreEqual(typeof(DummyTestClass).FullName, testElement.TestMethod.FullClassName);
-        Assert.AreEqual("DummyAssemblyName", testElement.TestMethod.AssemblyName);
+        Verify("MethodWithVoidReturnType" == testElement.TestMethod.Name);
+        Verify(typeof(DummyTestClass).FullName == testElement.TestMethod.FullClassName);
+        Verify("DummyAssemblyName" == testElement.TestMethod.AssemblyName);
         Verify(!testElement.TestMethod.IsAsync);
     }
 
@@ -273,7 +271,7 @@ public class TypeEnumeratorTests : TestContainer
                 .StateMachineType.FullName;
 
         Verify(testElement is not null);
-        Assert.AreEqual(expectedAsyncTaskName, testElement.AsyncTypeName);
+        Verify(expectedAsyncTaskName == testElement.AsyncTypeName);
     }
 
     public void GetTestFromMethodShouldSetIgnoredPropertyToFalseIfNotSetOnTestClassAndTestMethod()
@@ -307,7 +305,7 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        CollectionAssert.AreEqual(testCategories, testElement.TestCategory);
+        Verify(testCategories == testElement.TestCategory);
     }
 
     public void GetTestFromMethodShouldSetDoNotParallelize()
@@ -338,7 +336,7 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        CollectionAssert.AreEqual(testProperties, testElement.Traits);
+        Verify(testProperties.Equals(testElement.Traits));
     }
 
     public void GetTestFromMethodShouldFillTraitsWithTestOwnerPropertyIfPresent()
@@ -357,7 +355,7 @@ public class TypeEnumeratorTests : TestContainer
 
         Verify(testElement is not null);
         testProperties.Add(ownerTrait);
-        CollectionAssert.AreEqual(testProperties, testElement.Traits);
+        Verify(testProperties.Equals(testElement.Traits));
     }
 
     public void GetTestFromMethodShouldFillTraitsWithTestPriorityPropertyIfPresent()
@@ -377,7 +375,7 @@ public class TypeEnumeratorTests : TestContainer
 
         Verify(testElement is not null);
         testProperties.Add(priorityTrait);
-        CollectionAssert.AreEqual(testProperties, testElement.Traits);
+        Verify(testProperties.Equals(testElement.Traits));
     }
 
     public void GetTestFromMethodShouldSetPriority()
@@ -392,7 +390,7 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        Assert.AreEqual(1, testElement.Priority);
+        Verify(1 == testElement.Priority);
     }
 
     public void GetTestFromMethodShouldSetDescription()
@@ -404,7 +402,7 @@ public class TypeEnumeratorTests : TestContainer
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Assert.AreEqual("Dummy description", testElement.Description);
+        Verify("Dummy description" == testElement.Description);
     }
 
     public void GetTestFromMethodShouldSetWorkItemIds()
@@ -416,7 +414,7 @@ public class TypeEnumeratorTests : TestContainer
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        CollectionAssert.AreEqual(new string[] { "123", "345" }, testElement.WorkItemIds);
+        Verify(new string[] { "123", "345" }.Equals(testElement.WorkItemIds));
     }
 
     public void GetTestFromMethodShouldSetWorkItemIdsToNullIfNotAny()
@@ -440,7 +438,7 @@ public class TypeEnumeratorTests : TestContainer
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Assert.AreEqual("234", testElement.CssIteration);
+        Verify("234" == testElement.CssIteration);
     }
 
     public void GetTestFromMethodShouldSetCssProjectStructure()
@@ -452,7 +450,7 @@ public class TypeEnumeratorTests : TestContainer
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Assert.AreEqual("ProjectStructure123", testElement.CssProjectStructure);
+        Verify("ProjectStructure123" == testElement.CssProjectStructure);
     }
 
     public void GetTestFromMethodShouldSetDeploymentItemsToNullIfNotPresent()
@@ -487,7 +485,7 @@ public class TypeEnumeratorTests : TestContainer
 
         Verify(testElement is not null);
         Verify(testElement.DeploymentItems is not null);
-        CollectionAssert.AreEqual(deploymentItems, testElement.DeploymentItems.ToArray());
+        Verify(deploymentItems.Equals(testElement.DeploymentItems.ToArray()));
     }
 
     public void GetTestFromMethodShouldSetDeclaringAssemblyName()
@@ -505,7 +503,7 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, isMethodFromSameAssemly, _warnings);
 
         Verify(testElement is not null);
-        Assert.AreEqual(otherAssemblyName, testElement.TestMethod.DeclaringAssemblyName);
+        Verify(otherAssemblyName == testElement.TestMethod.DeclaringAssemblyName);
     }
 
     public void GetTestFromMethodShouldSetDisplayNameToTestMethodNameIfDisplayNameIsNotPresent()
@@ -521,7 +519,7 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        Assert.AreEqual("MethodWithVoidReturnType", testElement.DisplayName);
+        Verify("MethodWithVoidReturnType" == testElement.DisplayName);
     }
 
     public void GetTestFromMethodShouldSetDisplayNameFromAttribute()
@@ -537,7 +535,7 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        Assert.AreEqual("Test method display name.", testElement.DisplayName);
+        Verify("Test method display name." == testElement.DisplayName);
     }
 
     #endregion

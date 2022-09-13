@@ -28,8 +28,7 @@ public class AssemblyEnumeratorTests : TestContainer
     private ICollection<string> _warnings;
     private TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    [TestInitialize]
-    public void TestInit()
+    public AssemblyEnumeratorTests()
     {
         _assemblyEnumerator = new AssemblyEnumerator();
         _warnings = new List<string>();
@@ -38,8 +37,7 @@ public class AssemblyEnumeratorTests : TestContainer
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
         PlatformServiceProvider.Instance = null;
     }
@@ -73,7 +71,7 @@ public class AssemblyEnumeratorTests : TestContainer
         };
 
         Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
-        Assert.AreEqual("DummyPath\\TestSettings1.testsettings", MSTestSettings.CurrentSettings.TestSettingsFile);
+        Verify("DummyPath\\TestSettings1.testsettings" == MSTestSettings.CurrentSettings.TestSettingsFile);
     }
 
     #endregion
@@ -87,7 +85,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.DefinedTypes).Returns(new List<TypeInfo>());
 
-        Assert.AreEqual(0, AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings).Length);
+        Verify(0 == AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings).Length);
     }
 
     public void GetTypesShouldReturnSetOfDefinedTypes()
@@ -100,7 +98,7 @@ public class AssemblyEnumeratorTests : TestContainer
         mockAssembly.Setup(a => a.DefinedTypes).Returns(expectedTypes);
 
         var types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
-        CollectionAssert.AreEqual(expectedTypes, types);
+        Verify(expectedTypes.Equals(types));
     }
 
     public void GetTypesShouldHandleReflectionTypeLoadException()
@@ -124,7 +122,7 @@ public class AssemblyEnumeratorTests : TestContainer
         var types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
 
         Verify(types is not null);
-        CollectionAssert.AreEqual(reflectedTypes, types);
+        Verify(reflectedTypes.Equals(types));
     }
 
     public void GetTypesShouldLogWarningsWhenReflectionFailsWithLoaderExceptions()
@@ -137,10 +135,10 @@ public class AssemblyEnumeratorTests : TestContainer
 
         var types = AssemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", _warnings);
 
-        Assert.AreEqual(1, _warnings.Count);
-        CollectionAssert.Contains(
-            _warnings.ToList(),
-            string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, "DummyAssembly", "System.Exception: DummyLoaderException\r\n"));
+        Verify(1 == _warnings.Count);
+        Verify(
+            _warnings.ToList().Contains(
+            string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, "DummyAssembly", "System.Exception: DummyLoaderException\r\n")));
 
         _testablePlatformServiceProvider.MockTraceLogger.Verify(tl => tl.LogWarning("{0}", exceptions[0]), Times.Once);
     }
@@ -151,8 +149,8 @@ public class AssemblyEnumeratorTests : TestContainer
 
     public void GetLoadExceptionDetailsShouldReturnExceptionMessageIfLoaderExceptionsIsNull()
     {
-        Assert.AreEqual(
-            "DummyMessage\r\n",
+        Verify(
+            "DummyMessage\r\n" ==
             AssemblyEnumerator.GetLoadExceptionDetails(
                 new ReflectionTypeLoadException(null, null, "DummyMessage")));
     }
@@ -162,14 +160,14 @@ public class AssemblyEnumeratorTests : TestContainer
         var loaderException = new AccessViolationException("DummyLoaderExceptionMessage2");
         var exceptions = new ReflectionTypeLoadException(null, new Exception[] { loaderException });
 
-        Assert.AreEqual(
+        Verify(
             string.Concat(
                 string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.EnumeratorLoadTypeErrorFormat,
                     loaderException.GetType(),
                     loaderException.Message),
-                "\r\n"),
+                "\r\n") ==
             AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
     }
 
@@ -193,7 +191,7 @@ public class AssemblyEnumeratorTests : TestContainer
                 loaderException2.GetType(),
                 loaderException2.Message).AppendLine();
 
-        Assert.AreEqual(errorDetails.ToString(), AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
+        Verify(errorDetails.ToString() == AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
     }
 
     public void GetLoadExceptionDetailsShouldLogUniqueExceptionsOnly()
@@ -201,14 +199,14 @@ public class AssemblyEnumeratorTests : TestContainer
         var loaderException = new AccessViolationException("DummyLoaderExceptionMessage2");
         var exceptions = new ReflectionTypeLoadException(null, new Exception[] { loaderException, loaderException });
 
-        Assert.AreEqual(
+        Verify(
             string.Concat(
                 string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.EnumeratorLoadTypeErrorFormat,
                     loaderException.GetType(),
                     loaderException.Message),
-                "\r\n"),
+                "\r\n") ==
             AssemblyEnumerator.GetLoadExceptionDetails(exceptions));
     }
 
@@ -225,7 +223,7 @@ public class AssemblyEnumeratorTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
 
-        Assert.AreEqual(0, _assemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings).Count);
+        Verify(0 == _assemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings).Count);
     }
 
     public void EnumerateAssemblyShouldReturnEmptyListWhenNoTestElementsInAType()
@@ -241,7 +239,7 @@ public class AssemblyEnumeratorTests : TestContainer
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out _warnings))
             .Returns((ICollection<UnitTestElement>)null);
 
-        Assert.AreEqual(0, _assemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings).Count);
+        Verify(0 == _assemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings).Count);
     }
 
     public void EnumerateAssemblyShouldReturnTestElementsForAType()
@@ -260,7 +258,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
         var testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
 
-        CollectionAssert.AreEqual(new Collection<UnitTestElement> { unitTestElement }, testElements.ToList());
+        Verify(new Collection<UnitTestElement> { unitTestElement }.Equals(testElements.ToList()));
     }
 
     public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForAType()
@@ -280,7 +278,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
         var testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
 
-        CollectionAssert.AreEqual(expectedTestElements, testElements.ToList());
+        Verify(expectedTestElements.Equals(testElements.ToList()));
     }
 
     public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForMoreThanOneType()
@@ -302,7 +300,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
         expectedTestElements.Add(unitTestElement);
         expectedTestElements.Add(unitTestElement);
-        CollectionAssert.AreEqual(expectedTestElements, testElements.ToList());
+        Verify(expectedTestElements.Equals(testElements.ToList()));
     }
 
     public void EnumerateAssemblyShouldNotLogWarningsIfNonePresent()
@@ -319,7 +317,7 @@ public class AssemblyEnumeratorTests : TestContainer
         testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out warningsFromTypeEnumerator));
 
         testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
-        Assert.AreEqual(0, _warnings.Count);
+        Verify(0 == _warnings.Count);
     }
 
     public void EnumerateAssemblyShouldLogWarningsIfPresent()
@@ -340,7 +338,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
         testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
 
-        CollectionAssert.AreEqual(warningsFromTypeEnumerator.ToList(), _warnings.ToList());
+        Verify(warningsFromTypeEnumerator.ToList().Equals(_warnings.ToList()));
     }
 
     public void EnumerateAssemblyShouldHandleExceptionsWhileEnumeratingAType()
@@ -358,14 +356,14 @@ public class AssemblyEnumeratorTests : TestContainer
 
         testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
 
-        CollectionAssert.Contains(
-            _warnings.ToList(),
+        Verify(
+            _warnings.ToList().Contains(
             string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.CouldNotInspectTypeDuringDiscovery,
                 typeof(InternalTestClass),
                 "DummyAssembly",
-                exception.Message));
+                exception.Message)));
     }
 
     private static Mock<TestableAssembly> CreateMockTestableAssembly()

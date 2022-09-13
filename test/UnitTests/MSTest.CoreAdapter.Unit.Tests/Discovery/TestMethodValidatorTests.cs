@@ -26,8 +26,7 @@ public class TestMethodValidatorTests : TestContainer
     private Mock<MethodInfo> _mockMethodInfo;
     private Type _type;
 
-    [TestInitialize]
-    public void TestInit()
+    public TestMethodValidatorTests()
     {
         _mockReflectHelper = new Mock<ReflectHelper>();
         _testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object);
@@ -63,8 +62,8 @@ public class TestMethodValidatorTests : TestContainer
 
         _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings);
 
-        Assert.AreEqual(1, _warnings.Count);
-        CollectionAssert.Contains(_warnings, string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, "DummyTestClass", "DummyTestMethod"));
+        Verify(1 == _warnings.Count);
+        Verify(_warnings.Contains(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, "DummyTestClass", "DummyTestMethod")));
     }
 
     public void IsValidTestMethodShouldReturnFalseForNonPublicMethods()

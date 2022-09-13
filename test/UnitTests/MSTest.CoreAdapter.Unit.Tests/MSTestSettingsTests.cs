@@ -24,8 +24,7 @@ public class MSTestSettingsTests : TestContainer
     private Mock<IRunSettings> _mockRunSettings;
     private Mock<IMessageLogger> _mockMessageLogger;
 
-    [TestInitialize]
-    public void TestInit()
+    public MSTestSettingsTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _mockDiscoveryContext = new Mock<IDiscoveryContext>();
@@ -34,8 +33,7 @@ public class MSTestSettingsTests : TestContainer
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
         PlatformServiceProvider.Instance = null;
     }
@@ -215,7 +213,7 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Assert.AreEqual(4000, adapterSettings.TestTimeout);
+        Verify(4000 == adapterSettings.TestTimeout);
     }
 
     public void TestTimeoutShouldBeSetToZeroIfNotSpecifiedInRunSettings()
@@ -228,7 +226,7 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Assert.AreEqual(0, adapterSettings.TestTimeout);
+        Verify(0 == adapterSettings.TestTimeout);
     }
 
     public void TreatClassCleanupWarningsAsErrorsShouldBeFalseByDefault()
@@ -286,8 +284,8 @@ public class MSTestSettingsTests : TestContainer
         var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
-        Assert.AreEqual(typeof(AdapterSettingsException).FullName, exception.GetType().FullName);
-        StringAssert.Contains(exception.Message, "Invalid value 'GoneFishing' specified for 'Workers'. The value should be a non-negative integer.");
+        Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
+        Verify(exception.Message.Contains("Invalid value 'GoneFishing' specified for 'Workers'. The value should be a non-negative integer."));
     }
 
     public void GetSettingsShouldThrowIfParallelizationWorkersIsNegative()
@@ -304,8 +302,8 @@ public class MSTestSettingsTests : TestContainer
         var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
-        Assert.AreEqual(typeof(AdapterSettingsException).FullName, exception.GetType().FullName);
-        StringAssert.Contains(exception.Message, "Invalid value '-1' specified for 'Workers'. The value should be a non-negative integer.");
+        Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
+        Verify(exception.Message.Contains("Invalid value '-1' specified for 'Workers'. The value should be a non-negative integer."));
     }
 
     public void ParallelizationWorkersShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -321,7 +319,7 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Assert.AreEqual(2, adapterSettings.ParallelizationWorkers);
+        Verify(2 == adapterSettings.ParallelizationWorkers);
     }
 
     public void ParallelizationWorkersShouldBeSetToProcessorCountWhenSetToZero()
@@ -337,7 +335,7 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Assert.AreEqual(Environment.ProcessorCount, adapterSettings.ParallelizationWorkers);
+        Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
     }
 
     public void ParallelizationSettingsShouldBeSetToDefaultsWhenNotSet()
@@ -352,8 +350,8 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Assert.AreEqual(Environment.ProcessorCount, adapterSettings.ParallelizationWorkers);
-        Assert.AreEqual(UTF.ExecutionScope.ClassLevel, adapterSettings.ParallelizationScope);
+        Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
+        Verify(UTF.ExecutionScope.ClassLevel == adapterSettings.ParallelizationScope);
     }
 
     public void ParallelizationSettingsShouldBeSetToDefaultsOnAnEmptyParalleizeSetting()
@@ -367,8 +365,8 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Assert.AreEqual(Environment.ProcessorCount, adapterSettings.ParallelizationWorkers);
-        Assert.AreEqual(UTF.ExecutionScope.ClassLevel, adapterSettings.ParallelizationScope);
+        Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
+        Verify(UTF.ExecutionScope.ClassLevel == adapterSettings.ParallelizationScope);
     }
 
     public void ParallelizationSettingsShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -385,8 +383,8 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Assert.AreEqual(127, adapterSettings.ParallelizationWorkers);
-        Assert.AreEqual(UTF.ExecutionScope.MethodLevel, adapterSettings.ParallelizationScope);
+        Verify(127 == adapterSettings.ParallelizationWorkers);
+        Verify(UTF.ExecutionScope.MethodLevel == adapterSettings.ParallelizationScope);
     }
 
     public void GetSettingsShouldThrowIfParallelizationScopeIsNotValid()
@@ -403,8 +401,8 @@ public class MSTestSettingsTests : TestContainer
         var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
-        Assert.AreEqual(typeof(AdapterSettingsException).FullName, exception.GetType().FullName);
-        StringAssert.Contains(exception.Message, "Invalid value 'JustParallelizeWillYou' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel.");
+        Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
+        Verify(exception.Message.Contains("Invalid value 'JustParallelizeWillYou' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."));
     }
 
     public void ParallelizationScopeShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -420,7 +418,7 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Assert.AreEqual(UTF.ExecutionScope.MethodLevel, adapterSettings.ParallelizationScope);
+        Verify(UTF.ExecutionScope.MethodLevel == adapterSettings.ParallelizationScope);
     }
 
     public void GetSettingsShouldThrowWhenParallelizeHasInvalidElements()
@@ -437,8 +435,8 @@ public class MSTestSettingsTests : TestContainer
         var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
-        Assert.AreEqual(typeof(AdapterSettingsException).FullName, exception.GetType().FullName);
-        StringAssert.Contains(exception.Message, "Invalid settings 'Parallelize'. Unexpected XmlElement: 'Hola'.");
+        Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
+        Verify(exception.Message.Contains("Invalid settings 'Parallelize'. Unexpected XmlElement: 'Hola'."));
     }
 
     public void GetSettingsShouldBeAbleToReadAfterParallelizationSettings()
@@ -473,8 +471,8 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.TestSettingsFile is not null);
-        Assert.AreEqual(127, adapterSettings.ParallelizationWorkers);
-        Assert.AreEqual(UTF.ExecutionScope.MethodLevel, adapterSettings.ParallelizationScope);
+        Verify(127 == adapterSettings.ParallelizationWorkers);
+        Verify(UTF.ExecutionScope.MethodLevel == adapterSettings.ParallelizationScope);
     }
 
     public void GetSettingsShouldBeAbleToReadAfterParallelizationSettingsOnEmptyParallelizationNode()
@@ -572,7 +570,7 @@ public class MSTestSettingsTests : TestContainer
             });
 
         MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
-        Assert.AreEqual(expectedrunSettingxml, observedxml);
+        Verify(expectedrunSettingxml == observedxml);
     }
 
     public void GetSettingsShouldBeAbleToReadSettingsAfterThePlatformServiceReadsItsSettings()
@@ -624,7 +622,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(dummyPlatformSpecificSetting);
         Verify(adapterSettings.MapInconclusiveToFailed);
         Verify(adapterSettings.MapNotRunnableToFailed);
-        Assert.AreEqual("DummyPath\\\\TestSettings1.testsettings", adapterSettings.TestSettingsFile);
+        Verify("DummyPath\\\\TestSettings1.testsettings" == adapterSettings.TestSettingsFile);
     }
 
     public void GetSettingsShouldBeAbleToReadSettingsIfThePlatformServiceDoesNotUnderstandASetting()
@@ -681,7 +679,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(adapterSettings.MapNotRunnableToFailed);
         Verify(adapterSettings.ForcedLegacyMode);
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
-        Assert.AreEqual("DummyPath\\\\TestSettings1.testsettings", adapterSettings.TestSettingsFile);
+        Verify("DummyPath\\\\TestSettings1.testsettings" == adapterSettings.TestSettingsFile);
     }
 
     public void GetSettingsShouldOnlyReadTheAdapterSection()
@@ -823,7 +821,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(adapterSettings is not null);
         Verify(!string.IsNullOrEmpty(adapterSettings.TestSettingsFile));
 
-        Assert.AreEqual(adapterSettings, adapterSettings2);
+        Verify(adapterSettings == adapterSettings2);
     }
 
     #endregion

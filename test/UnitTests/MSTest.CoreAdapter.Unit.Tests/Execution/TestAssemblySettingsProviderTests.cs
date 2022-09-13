@@ -21,8 +21,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
     private Mock<ReflectHelper> _mockReflectHelper;
     private TestAssemblySettingsProvider _testAssemblySettingProvider;
 
-    [TestInitialize]
-    public void TestInit()
+    public TestAssemblySettingsProviderTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _testablePlatformServiceProvider.SetupMockReflectionOperations();
@@ -33,8 +32,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         _testAssemblySettingProvider = new TestAssemblySettingsProvider(_mockReflectHelper.Object);
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
         PlatformServiceProvider.Instance = null;
     }
@@ -51,7 +49,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         var settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Assert.AreEqual(-1, settings.Workers);
+        Verify(-1 == settings.Workers);
     }
 
     public void GetSettingsShouldSetParallelWorkers()
@@ -70,7 +68,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         var settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Assert.AreEqual(10, settings.Workers);
+        Verify(10 == settings.Workers);
     }
 
     public void GetSettingsShouldSetParallelWorkersToProcessorCountIfZero()
@@ -89,7 +87,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         var settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Assert.AreEqual(Environment.ProcessorCount, settings.Workers);
+        Verify(Environment.ProcessorCount == settings.Workers);
     }
 
     public void GetSettingsShouldSetParallelScopeToClassLevelByDefault()
@@ -104,7 +102,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         var settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Assert.AreEqual(UTF.ExecutionScope.ClassLevel, settings.Scope);
+        Verify(UTF.ExecutionScope.ClassLevel == settings.Scope);
     }
 
     public void GetSettingsShouldSetParallelScope()
@@ -123,7 +121,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         var settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Assert.AreEqual(UTF.ExecutionScope.MethodLevel, settings.Scope);
+        Verify(UTF.ExecutionScope.MethodLevel == settings.Scope);
     }
 
     public void GetSettingsShouldSetCanParallelizeAssemblyToTrueByDefault()

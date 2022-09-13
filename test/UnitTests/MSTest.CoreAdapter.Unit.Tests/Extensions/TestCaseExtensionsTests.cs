@@ -30,11 +30,11 @@ public class TestCaseExtensionsTests : TestContainer
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
         Verify(resultUnitTestElement.IsAsync);
-        Assert.AreEqual(2, resultUnitTestElement.Priority);
-        Assert.AreEqual(testCategories, resultUnitTestElement.TestCategory);
-        Assert.AreEqual("DummyDisplayName", resultUnitTestElement.DisplayName);
-        Assert.AreEqual("DummyMethod", resultUnitTestElement.TestMethod.Name);
-        Assert.AreEqual("DummyClassName", resultUnitTestElement.TestMethod.FullClassName);
+        Verify(2 == resultUnitTestElement.Priority);
+        Verify(testCategories == resultUnitTestElement.TestCategory);
+        Verify("DummyDisplayName" == resultUnitTestElement.DisplayName);
+        Verify("DummyMethod" == resultUnitTestElement.TestMethod.Name);
+        Verify("DummyClassName" == resultUnitTestElement.TestMethod.FullClassName);
         Verify(resultUnitTestElement.TestMethod.IsAsync);
         Verify(resultUnitTestElement.TestMethod.DeclaringClassFullName is null);
     }
@@ -48,7 +48,7 @@ public class TestCaseExtensionsTests : TestContainer
 
         // These are set for testCase by default by ObjectModel.
         Verify(!resultUnitTestElement.IsAsync);
-        Assert.AreEqual(0, resultUnitTestElement.Priority);
+        Verify(0 == resultUnitTestElement.Priority);
         Verify(resultUnitTestElement.TestCategory is null);
     }
 
@@ -60,7 +60,7 @@ public class TestCaseExtensionsTests : TestContainer
 
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
-        Assert.AreEqual("DummyClassName", resultUnitTestElement.TestMethod.FullClassName);
-        Assert.AreEqual("DummyDeclaringClassName", resultUnitTestElement.TestMethod.DeclaringClassFullName);
+        Verify("DummyClassName" == resultUnitTestElement.TestMethod.FullClassName);
+        Verify("DummyDeclaringClassName" == resultUnitTestElement.TestMethod.DeclaringClassFullName);
     }
 }

@@ -19,8 +19,7 @@ public class RunConfigurationSettingsTests : TestContainer
     private Mock<IRunSettings> _mockRunSettings;
     private Mock<IMessageLogger> _mockMessageLogger;
 
-    [TestInitialize]
-    public void TestInit()
+    public RunConfigurationSettingsTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _mockDiscoveryContext = new Mock<IDiscoveryContext>();
@@ -29,8 +28,7 @@ public class RunConfigurationSettingsTests : TestContainer
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
         PlatformServiceProvider.Instance = null;
     }

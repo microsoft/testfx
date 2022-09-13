@@ -36,7 +36,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIsNull()
     {
         var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(null);
-        Assert.AreEqual(0, tcmProperties.Count);
+        Verify(0 == tcmProperties.Count);
     }
 
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIdIsZero()
@@ -52,7 +52,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
         SetTestCaseProperties(testCase, propertiesValue);
 
         var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
-        Assert.AreEqual(0, tcmProperties.Count);
+        Verify(0 == tcmProperties.Count);
     }
 
     public void GetTcmPropertiesShouldGetAllPropertiesFromTestCase()
@@ -160,7 +160,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
     {
         foreach (var property in _tcmKnownProperties)
         {
-            Assert.AreEqual(testCase.GetPropertyValue(property), tcmProperties[property]);
+            Verify(testCase.GetPropertyValue(property) == tcmProperties[property]);
         }
     }
 }

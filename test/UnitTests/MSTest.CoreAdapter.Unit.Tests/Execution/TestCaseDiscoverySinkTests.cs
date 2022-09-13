@@ -14,8 +14,7 @@ public class TestCaseDiscoverySinkTests : TestContainer
 {
     private TestCaseDiscoverySink _testCaseDiscoverySink;
 
-    [TestInitialize]
-    public void TestInit()
+    public TestCaseDiscoverySinkTests()
     {
         _testCaseDiscoverySink = new TestCaseDiscoverySink();
     }
@@ -23,7 +22,7 @@ public class TestCaseDiscoverySinkTests : TestContainer
     public void TestCaseDiscoverySinkConstructorShouldInitializeTests()
     {
         Verify(_testCaseDiscoverySink.Tests is not null);
-        Assert.AreEqual(0, _testCaseDiscoverySink.Tests.Count);
+        Verify(0 == _testCaseDiscoverySink.Tests.Count);
     }
 
     public void SendTestCaseShouldNotAddTestIfTestCaseIsNull()
@@ -31,7 +30,7 @@ public class TestCaseDiscoverySinkTests : TestContainer
         _testCaseDiscoverySink.SendTestCase(null);
 
         Verify(_testCaseDiscoverySink.Tests is not null);
-        Assert.AreEqual(0, _testCaseDiscoverySink.Tests.Count);
+        Verify(0 == _testCaseDiscoverySink.Tests.Count);
     }
 
     public void SendTestCaseShouldAddTheTestCaseToTests()
@@ -40,7 +39,7 @@ public class TestCaseDiscoverySinkTests : TestContainer
         _testCaseDiscoverySink.SendTestCase(tc);
 
         Verify(_testCaseDiscoverySink.Tests is not null);
-        Assert.AreEqual(1, _testCaseDiscoverySink.Tests.Count);
-        Assert.AreEqual(tc, _testCaseDiscoverySink.Tests.ToArray()[0]);
+        Verify(1 == _testCaseDiscoverySink.Tests.Count);
+        Verify(tc == _testCaseDiscoverySink.Tests.ToArray()[0]);
     }
 }

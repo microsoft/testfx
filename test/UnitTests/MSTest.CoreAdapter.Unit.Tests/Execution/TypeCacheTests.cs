@@ -34,8 +34,7 @@ public class TypeCacheTests : TestContainer
 
     private TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    [TestInitialize]
-    public void TestInit()
+    public TypeCacheTests()
     {
         _mockReflectHelper = new Mock<ReflectHelper>();
         _typeCache = new TypeCache(_mockReflectHelper.Object);
@@ -46,8 +45,7 @@ public class TypeCacheTests : TestContainer
         SetupMocks();
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
         PlatformServiceProvider.Instance = null;
         MSTestSettings.Reset();
@@ -78,22 +76,22 @@ public class TypeCacheTests : TestContainer
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
 
-        Assert.IsNull(
+        Verify(
             _typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
-                false));
+                false) is null);
     }
 
     public void GetTestMethodInfoShouldReturnNullIfLoadingTypeThrowsTypeLoadException()
     {
         var testMethod = new TestMethod("M", "System.TypedReference[]", "A", isAsync: false);
 
-        Assert.IsNull(
+        Verify(
             _typeCache.GetTestMethodInfo(
                 testMethod,
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
-                false));
+                false) is null);
     }
 
     public void GetTestMethodInfoShouldThrowIfLoadingTypeThrowsException()
@@ -113,7 +111,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
-        StringAssert.StartsWith(exception.Message, "Unable to get type C. Error: System.Exception: Load failure");
+        Verify(exception.Message.StartsWith("Unable to get type C. Error: System.Exception: Load failure"));
     }
 
     public void GetTestMethodInfoShouldThrowIfTypeDoesNotHaveADefaultConstructor()
@@ -131,7 +129,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
-        StringAssert.StartsWith(exception.Message, "Unable to get default constructor for class " + className);
+        Verify(exception.Message.StartsWith("Unable to get default constructor for class " + className));
     }
 
     public void GetTestMethodInfoShouldThrowIfTestContextHasATypeMismatch()
@@ -149,7 +147,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
-        StringAssert.StartsWith(exception.Message, string.Format("The {0}.TestContext has incorrect type.", className));
+        Verify(exception.Message.StartsWith(string.Format("The {0}.TestContext has incorrect type.", className)));
     }
 
     public void GetTestMethodInfoShouldThrowIfTestContextHasMultipleAmbiguousTestContextProperties()
@@ -167,7 +165,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
-        StringAssert.StartsWith(exception.Message, string.Format("Unable to find property {0}.TestContext. Error:{1}.", className, "Ambiguous match found."));
+        Verify(exception.Message.StartsWith(string.Format("Unable to find property {0}.TestContext. Error:{1}.", className, "Ambiguous match found.")));
     }
 
     public void GetTestMethodInfoShouldSetTestContextIfPresent()
@@ -222,7 +220,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
+        Verify(1 ==_typeCache.AssemblyInfoCache.Count());
     }
 
     public void GetTestMethodInfoShouldNotThrowIfWeFailToDiscoverTypeFromAnAssembly()
@@ -242,7 +240,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
+        Verify(1 == _typeCache.AssemblyInfoCache.Count());
     }
 
     public void GetTestMethodInfoShouldCacheAssemblyInitializeAttribute()
@@ -261,8 +259,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
-        Assert.AreEqual(type.GetMethod("AssemblyInit"), _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyInitializeMethod);
+        Verify(1 == _typeCache.AssemblyInfoCache.Count());
+        Verify(type.GetMethod("AssemblyInit") == _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyInitializeMethod);
     }
 
     public void GetTestMethodInfoShouldCacheAssemblyCleanupAttribute()
@@ -281,8 +279,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
-        Assert.AreEqual(type.GetMethod("AssemblyCleanup"), _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyCleanupMethod);
+        Verify(1 == _typeCache.AssemblyInfoCache.Count());
+        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyCleanupMethod);
     }
 
     public void GetTestMethodInfoShouldCacheAssemblyInitAndCleanupAttribute()
@@ -303,9 +301,9 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
-        Assert.AreEqual(type.GetMethod("AssemblyCleanup"), _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyCleanupMethod);
-        Assert.AreEqual(type.GetMethod("AssemblyInit"), _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyInitializeMethod);
+        Verify(1 == _typeCache.AssemblyInfoCache.Count());
+        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyCleanupMethod);
+        Verify(type.GetMethod("AssemblyInit") == _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyInitializeMethod);
     }
 
     public void GetTestMethodInfoShouldThrowIfAssemblyInitHasIncorrectSignature()
@@ -336,7 +334,7 @@ public class TypeCacheTests : TestContainer
                 methodInfo.DeclaringType.FullName,
                 methodInfo.Name);
 
-        Assert.AreEqual(expectedMessage, exception.Message);
+        Verify(expectedMessage == exception.Message);
     }
 
     public void GetTestMethodInfoShouldThrowIfAssemblyCleanupHasIncorrectSignature()
@@ -367,7 +365,7 @@ public class TypeCacheTests : TestContainer
                 methodInfo.DeclaringType.FullName,
                 methodInfo.Name);
 
-        Assert.AreEqual(expectedMessage, exception.Message);
+        Verify(expectedMessage == exception.Message);
     }
 
     public void GetTestMethodInfoShouldCacheAssemblyInfoInstanceAndReuseTheCache()
@@ -390,7 +388,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         _mockReflectHelper.Verify(rh => rh.IsAttributeDefined(type, typeof(UTF.TestClassAttribute), true), Times.Once);
-        Assert.AreEqual(1, _typeCache.AssemblyInfoCache.Count());
+        Verify(1 == _typeCache.AssemblyInfoCache.Count());
     }
 
     #endregion
@@ -411,7 +409,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
+        Verify(1 == _typeCache.ClassInfoCache.Count());
         Verify(_typeCache.ClassInfoCache.ToArray()[0].TestInitializeMethod is null);
         Verify(_typeCache.ClassInfoCache.ToArray()[0].TestCleanupMethod is null);
     }
@@ -432,9 +430,9 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
-        Assert.AreEqual(0, _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Count);
-        Assert.AreEqual(type.GetMethod("AssemblyInit"), _typeCache.ClassInfoCache.First().ClassInitializeMethod);
+        Verify(1 == _typeCache.ClassInfoCache.Count());
+        Verify(0 == _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Count);
+        Verify(type.GetMethod("AssemblyInit") == _typeCache.ClassInfoCache.First().ClassInitializeMethod);
     }
 
     public void GetTestMethodInfoShouldCacheBaseClassInitializeAttributes()
@@ -461,10 +459,10 @@ public class TypeCacheTests : TestContainer
             new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
             false);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
-        Verify(_typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item2, "No base class cleanup" is null);
-        Assert.AreEqual(baseType.GetMethod("AssemblyInit"), _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item1);
+        Verify(1 == _typeCache.ClassInfoCache.Count());
+        Verify(1 == _typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
+        Verify(_typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item2 is null, "No base class cleanup");
+        Verify(baseType.GetMethod("AssemblyInit") == _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item1);
     }
 
     public void GetTestMethodInfoShouldCacheClassCleanupAttribute()
@@ -483,8 +481,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
-        Assert.AreEqual(type.GetMethod("AssemblyCleanup"), _typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
+        Verify(1 == _typeCache.ClassInfoCache.Count());
+        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
     }
 
     public void GetTestMethodInfoShouldCacheBaseClassCleanupAttributes()
@@ -507,10 +505,10 @@ public class TypeCacheTests : TestContainer
             new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
             false);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Count);
-        Verify(_typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item1, "No base class init" is null);
-        Assert.AreEqual(baseType.GetMethod("AssemblyCleanup"), _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item2);
+        Verify(1 == _typeCache.ClassInfoCache.Count());
+        Verify(1 == _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Count);
+        Verify(_typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item1 is null, "No base class init");
+        Verify(baseType.GetMethod("AssemblyCleanup") == _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item2);
     }
 
     public void GetTestMethodInfoShouldCacheClassInitAndCleanupAttribute()
@@ -531,9 +529,9 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
-        Assert.AreEqual(type.GetMethod("AssemblyInit"), _typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
-        Assert.AreEqual(type.GetMethod("AssemblyCleanup"), _typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
+        Verify(1 == _typeCache.ClassInfoCache.Count());
+        Verify(type.GetMethod("AssemblyInit") == _typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
+        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
     }
 
     public void GetTestMethodInfoShouldCacheBaseClassInitAndCleanupAttributes()
@@ -569,13 +567,13 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
-        Assert.AreEqual(type.GetMethod("AssemblyInit"), _typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
-        Assert.AreEqual(type.GetMethod("AssemblyCleanup"), _typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
+        Verify(1 == _typeCache.ClassInfoCache.Count());
+        Verify(type.GetMethod("AssemblyInit") == _typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
+        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
-        Assert.AreEqual(baseInitializeMethod, _typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Peek().Item1);
-        Assert.AreEqual(baseCleanupMethod, _typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Peek().Item2);
+        Verify(1 == _typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count);
+        Verify(baseInitializeMethod == _typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Peek().Item1);
+        Verify(baseCleanupMethod == _typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Peek().Item2);
     }
 
     public void GetTestMethodInfoShouldCacheParentAndGrandparentClassInitAndCleanupAttributes()
@@ -628,19 +626,19 @@ public class TypeCacheTests : TestContainer
                 false);
 
         var classInfo = _typeCache.ClassInfoCache.FirstOrDefault();
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
+        Verify(1 == _typeCache.ClassInfoCache.Count());
         Verify(classInfo.ClassInitializeMethod is null);
         Verify(classInfo.ClassCleanupMethod is null);
 
-        Assert.AreEqual(2, classInfo.BaseClassInitAndCleanupMethods.Count);
+        Verify(2 == classInfo.BaseClassInitAndCleanupMethods.Count);
 
         var parentInitAndCleanup = classInfo.BaseClassInitAndCleanupMethods.Dequeue();
-        Assert.AreEqual(parentInitMethod, parentInitAndCleanup.Item1);
-        Assert.AreEqual(parentCleanupMethod, parentInitAndCleanup.Item2);
+        Verify(parentInitMethod == parentInitAndCleanup.Item1);
+        Verify(parentCleanupMethod == parentInitAndCleanup.Item2);
 
         var grandparentInitAndCleanup = classInfo.BaseClassInitAndCleanupMethods.Dequeue();
-        Assert.AreEqual(grandparentInitMethod, grandparentInitAndCleanup.Item1);
-        Assert.AreEqual(grandparentCleanupMethod, grandparentInitAndCleanup.Item2);
+        Verify(grandparentInitMethod == grandparentInitAndCleanup.Item1);
+        Verify(grandparentCleanupMethod == grandparentInitAndCleanup.Item2);
     }
 
     public void GetTestMethodInfoShouldThrowIfClassInitHasIncorrectSignature()
@@ -671,7 +669,7 @@ public class TypeCacheTests : TestContainer
                 methodInfo.DeclaringType.FullName,
                 methodInfo.Name);
 
-        Assert.AreEqual(expectedMessage, exception.Message);
+        Verify(expectedMessage == exception.Message);
     }
 
     public void GetTestMethodInfoShouldThrowIfClassCleanupHasIncorrectSignature()
@@ -702,7 +700,7 @@ public class TypeCacheTests : TestContainer
                 methodInfo.DeclaringType.FullName,
                 methodInfo.Name);
 
-        Assert.AreEqual(expectedMessage, exception.Message);
+        Verify(expectedMessage == exception.Message);
     }
 
     public void GetTestMethodInfoShouldCacheTestInitializeAttribute()
@@ -721,8 +719,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
-        Assert.AreEqual(type.GetMethod("TestInit"), _typeCache.ClassInfoCache.ToArray()[0].TestInitializeMethod);
+        Verify(1 == _typeCache.ClassInfoCache.Count());
+        Verify(type.GetMethod("TestInit") == _typeCache.ClassInfoCache.ToArray()[0].TestInitializeMethod);
     }
 
     public void GetTestMethodInfoShouldCacheTestCleanupAttribute()
@@ -741,8 +739,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
-        Assert.AreEqual(type.GetMethod("TestCleanup"), _typeCache.ClassInfoCache.ToArray()[0].TestCleanupMethod);
+        Verify(1 == _typeCache.ClassInfoCache.Count());
+        Verify(type.GetMethod("TestCleanup") == _typeCache.ClassInfoCache.ToArray()[0].TestCleanupMethod);
     }
 
     public void GetTestMethodInfoShouldThrowIfTestInitOrCleanupHasIncorrectSignature()
@@ -774,7 +772,7 @@ public class TypeCacheTests : TestContainer
                 methodInfo.DeclaringType.FullName,
                 methodInfo.Name);
 
-        Assert.AreEqual(expectedMessage, exception.Message);
+        Verify(expectedMessage == exception.Message);
     }
 
     public void GetTestMethodInfoShouldCacheTestInitializeAttributeDefinedInBaseClass()
@@ -794,8 +792,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
-        Assert.AreEqual(baseType.GetMethod("TestInit"), _typeCache.ClassInfoCache.ToArray()[0].BaseTestInitializeMethodsQueue.Peek());
+        Verify(1 == _typeCache.ClassInfoCache.Count());
+        Verify(baseType.GetMethod("TestInit") == _typeCache.ClassInfoCache.ToArray()[0].BaseTestInitializeMethodsQueue.Peek());
     }
 
     public void GetTestMethodInfoShouldCacheTestCleanupAttributeDefinedInBaseClass()
@@ -815,8 +813,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
-        Assert.AreEqual(baseType.GetMethod("TestCleanup"), _typeCache.ClassInfoCache.ToArray()[0].BaseTestCleanupMethodsQueue.Peek());
+        Verify(1 == _typeCache.ClassInfoCache.Count());
+        Verify(baseType.GetMethod("TestCleanup") == _typeCache.ClassInfoCache.ToArray()[0].BaseTestCleanupMethodsQueue.Peek());
     }
 
     public void GetTestMethodInfoShouldCacheClassInfoInstanceAndReuseFromCache()
@@ -839,7 +837,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         _testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()), Times.Once);
-        Assert.AreEqual(1, _typeCache.ClassInfoCache.Count());
+        Verify(1 == _typeCache.ClassInfoCache.Count());
     }
 
     #endregion
@@ -868,7 +866,7 @@ public class TypeCacheTests : TestContainer
             testMethod.FullClassName,
             testMethod.Name);
 
-        Assert.AreEqual(expectedMessage, exception.Message);
+        Verify(expectedMessage == exception.Message);
     }
 
     public void GetTestMethodInfoShouldReturnTestMethodInfo()
@@ -882,9 +880,9 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
-        Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
-        Assert.AreEqual(_typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
+        Verify(methodInfo == testMethodInfo.TestMethod);
+        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
 
@@ -902,9 +900,9 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
-        Assert.AreEqual(10, testMethodInfo.TestMethodOptions.Timeout);
-        Assert.AreEqual(_typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
+        Verify(methodInfo == testMethodInfo.TestMethod);
+        Verify(10 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
 
@@ -933,7 +931,7 @@ public class TypeCacheTests : TestContainer
                 testMethod.FullClassName,
                 testMethod.Name);
 
-        Assert.AreEqual(expectedMessage, exception.Message);
+        Verify(expectedMessage == exception.Message);
     }
 
     public void GetTestMethodInfoWhenTimeoutAttributeNotSetShouldReturnTestMethodInfoWithGlobalTimeout()
@@ -956,7 +954,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(4000, testMethodInfo.TestMethodOptions.Timeout);
+        Verify(4000 == testMethodInfo.TestMethodOptions.Timeout);
     }
 
     public void GetTestMethodInfoWhenTimeoutAttributeSetShouldReturnTimeoutBasedOnAtrributeEvenIfGlobalTimeoutSet()
@@ -982,7 +980,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(10, testMethodInfo.TestMethodOptions.Timeout);
+        Verify(10 == testMethodInfo.TestMethodOptions.Timeout);
     }
 
     public void GetTestMethodInfoForInvalidGLobalTimeoutShouldReturnTestMethodInfoWithTimeoutZero()
@@ -1005,7 +1003,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
+        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
     }
 
     public void GetTestMethodInfoShouldReturnTestMethodInfoForMethodsAdornedWithADerivedTestMethodAttribute()
@@ -1019,9 +1017,9 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
-        Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
-        Assert.AreEqual(_typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
+        Verify(methodInfo == testMethodInfo.TestMethod);
+        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
         Verify(testMethodInfo.TestMethodOptions.Executor is DerivedTestMethodAttribute is not null);
     }
@@ -1040,7 +1038,7 @@ public class TypeCacheTests : TestContainer
         var customProperty = ((IDictionary<string, object>)testContext.Properties).FirstOrDefault(p => p.Key.Equals("WhoAmI"));
 
         Verify(customProperty is not null);
-        Assert.AreEqual("Me", customProperty.Value);
+        Verify("Me" == customProperty.Value as string);
     }
 
     public void GetTestMethodInfoShouldReportWarningIfCustomPropertyHasSameNameAsPredefinedProperties()
@@ -1061,7 +1059,7 @@ public class TypeCacheTests : TestContainer
             methodInfo.DeclaringType.FullName,
             methodInfo.Name,
             "Owner");
-        Assert.AreEqual(expectedMessage, testMethodInfo.NotRunnableReason);
+        Verify(expectedMessage == testMethodInfo.NotRunnableReason);
     }
 
     public void GetTestMethodInfoShouldReportWarningIfCustomPropertyNameIsEmpty()
@@ -1081,7 +1079,7 @@ public class TypeCacheTests : TestContainer
             "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
             methodInfo.DeclaringType.FullName,
             methodInfo.Name);
-        Assert.AreEqual(expectedMessage, testMethodInfo.NotRunnableReason);
+        Verify(expectedMessage == testMethodInfo.NotRunnableReason);
     }
 
     public void GetTestMethodInfoShouldReportWarningIfCustomPropertyNameIsNull()
@@ -1101,7 +1099,7 @@ public class TypeCacheTests : TestContainer
             "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
             methodInfo.DeclaringType.FullName,
             methodInfo.Name);
-        Assert.AreEqual(expectedMessage, testMethodInfo.NotRunnableReason);
+        Verify(expectedMessage == testMethodInfo.NotRunnableReason);
     }
 
     public void GetTestMethodInfoShouldNotAddDuplicateTestPropertiesToTestContext()
@@ -1120,7 +1118,7 @@ public class TypeCacheTests : TestContainer
 
         // Verify that the first value gets set.
         Verify(((IDictionary<string, object>)testContext.Properties).TryGetValue("WhoAmI", out var value));
-        Assert.AreEqual("Me", value);
+        Verify("Me" == value as string);
     }
 
     public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedTestClasses()
@@ -1134,9 +1132,9 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
-        Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
-        Assert.AreEqual(_typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
+        Verify(methodInfo == testMethodInfo.TestMethod);
+        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
 
@@ -1151,9 +1149,9 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(methodInfo, testMethodInfo.TestMethod);
-        Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
-        Assert.AreEqual(_typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
+        Verify(methodInfo == testMethodInfo.TestMethod);
+        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
 
@@ -1174,9 +1172,9 @@ public class TypeCacheTests : TestContainer
 
         // The two MethodInfo instances will have different ReflectedType properties,
         // so cannot be compared directly. Use MethodHandle to verify it's the same.
-        Assert.AreEqual(methodInfo.MethodHandle, testMethodInfo.TestMethod.MethodHandle);
-        Assert.AreEqual(0, testMethodInfo.TestMethodOptions.Timeout);
-        Assert.AreEqual(_typeCache.ClassInfoCache.ToArray()[0], testMethodInfo.Parent);
+        Verify(methodInfo.MethodHandle == testMethodInfo.TestMethod.MethodHandle);
+        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
 
@@ -1191,7 +1189,7 @@ public class TypeCacheTests : TestContainer
         var cleanupMethods = _typeCache.ClassInfoListWithExecutableCleanupMethods;
 
         Verify(cleanupMethods is not null);
-        Assert.AreEqual(0, cleanupMethods.Count());
+        Verify(0 == cleanupMethods.Count());
     }
 
     public void ClassInfoListWithExecutableCleanupMethodsShouldReturnEmptyListWhenClassInfoCacheDoesNotHaveTestCleanupMethods()
@@ -1214,7 +1212,7 @@ public class TypeCacheTests : TestContainer
         var cleanupMethods = _typeCache.ClassInfoListWithExecutableCleanupMethods;
 
         Verify(cleanupMethods is not null);
-        Assert.AreEqual(0, cleanupMethods.Count());
+        Verify(0 == cleanupMethods.Count());
     }
 
     public void ClassInfoListWithExecutableCleanupMethodsShouldReturnClassInfosWithExecutableCleanupMethods()
@@ -1237,8 +1235,8 @@ public class TypeCacheTests : TestContainer
         var cleanupMethods = _typeCache.ClassInfoListWithExecutableCleanupMethods;
 
         Verify(cleanupMethods is not null);
-        Assert.AreEqual(1, cleanupMethods.Count());
-        Assert.AreEqual(type.GetMethod("AssemblyCleanup"), cleanupMethods.ToArray()[0].ClassCleanupMethod);
+        Verify(1 == cleanupMethods.Count());
+        Verify(type.GetMethod("AssemblyCleanup") == cleanupMethods.ToArray()[0].ClassCleanupMethod);
     }
 
     #endregion
@@ -1250,7 +1248,7 @@ public class TypeCacheTests : TestContainer
         var cleanupMethods = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
 
         Verify(cleanupMethods is not null);
-        Assert.AreEqual(0, cleanupMethods.Count());
+        Verify(0 == cleanupMethods.Count());
     }
 
     public void AssemblyInfoListWithExecutableCleanupMethodsShouldReturnEmptyListWhenAssemblyInfoCacheDoesNotHaveTestCleanupMethods()
@@ -1273,7 +1271,7 @@ public class TypeCacheTests : TestContainer
         var cleanupMethods = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
 
         Verify(cleanupMethods is not null);
-        Assert.AreEqual(0, cleanupMethods.Count());
+        Verify(0 == cleanupMethods.Count());
     }
 
     public void AssemblyInfoListWithExecutableCleanupMethodsShouldReturnAssemblyInfosWithExecutableCleanupMethods()
@@ -1296,8 +1294,8 @@ public class TypeCacheTests : TestContainer
         var cleanupMethods = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
 
         Verify(cleanupMethods is not null);
-        Assert.AreEqual(1, cleanupMethods.Count());
-        Assert.AreEqual(type.GetMethod("AssemblyCleanup"), cleanupMethods.ToArray()[0].AssemblyCleanupMethod);
+        Verify(1 == cleanupMethods.Count());
+        Verify(type.GetMethod("AssemblyCleanup") == cleanupMethods.ToArray()[0].AssemblyCleanupMethod);
     }
 
     #endregion
@@ -1320,7 +1318,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        Assert.AreEqual(expectedException, testMethodInfo.TestMethodOptions.ExpectedException);
+        Verify(expectedException == testMethodInfo.TestMethodOptions.ExpectedException);
     }
 
     public void ResolveExpectedExceptionHelperShouldReturnNullIfExpectedExceptionAttributeIsNotPresent()
@@ -1362,7 +1360,7 @@ public class TypeCacheTests : TestContainer
         {
             var message = "The test method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TypeCacheTests+DummyTestClassWithTestMethods.TestMethodWithMultipleExpectedException "
                 + "has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.";
-            Assert.AreEqual(ex.Message, message);
+            Verify(ex.Message == message);
         }
     }
 

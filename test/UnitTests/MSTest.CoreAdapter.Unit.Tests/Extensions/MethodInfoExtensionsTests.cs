@@ -310,7 +310,7 @@ public class MethodInfoExtensionsTests : TestContainer
     public void GetAsyncTypeNameShouldReturnStateMachineTypeNameForAsyncMethods()
     {
         var methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncVoidMethod");
-        StringAssert.StartsWith(methodInfo.GetAsyncTypeName(), "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass+<PublicAsyncVoidMethod>");
+        Verify(methodInfo.GetAsyncTypeName().StartsWith("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass+<PublicAsyncVoidMethod>"));
     }
 
     #endregion
@@ -323,8 +323,8 @@ public class MethodInfoExtensionsTests : TestContainer
         DummyTestClass2.DummyAsyncMethodBody = (x, y) => Task.Run(
             () =>
             {
-                Assert.AreEqual(10, x);
-                Assert.AreEqual(20, y);
+                Verify(10 == x);
+                Verify(20 == y);
                 testMethodCalled = true;
             });
 
@@ -341,8 +341,8 @@ public class MethodInfoExtensionsTests : TestContainer
         var testMethodCalled = false;
         DummyTestClass2.DummyMethodBody = (x, y) =>
         {
-            Assert.AreEqual(10, x);
-            Assert.AreEqual(20, y);
+            Verify(10 == x);
+            Verify(20 == y);
             testMethodCalled = true;
             return true;
         };
@@ -368,8 +368,8 @@ public class MethodInfoExtensionsTests : TestContainer
         }
         catch (TestFailedException ex)
         {
-            Assert.AreEqual(ex.Outcome, UnitTestOutcome.Error);
-            Assert.AreEqual(ex.TryGetMessage(), Resource.UTA_TestMethodExpectedParameters);
+            Verify(ex.Outcome == UnitTestOutcome.Error);
+            Verify(ex.TryGetMessage() == Resource.UTA_TestMethodExpectedParameters);
         }
     }
 

@@ -17,8 +17,7 @@ public class UnitTestElementTests : TestContainer
     private TestMethod _testMethod;
     private UnitTestElement _unitTestElement;
 
-    [TestInitialize]
-    public void TestInit()
+    public UnitTestElementTests()
     {
         _testMethod = new TestMethod("M", "C", "A", true);
         _unitTestElement = new UnitTestElement(_testMethod);
@@ -41,28 +40,28 @@ public class UnitTestElementTests : TestContainer
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual("C.M", testCase.FullyQualifiedName);
+        Verify("C.M" == testCase.FullyQualifiedName);
     }
 
     public void ToTestCaseShouldSetExecutorUri()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual(Constants.ExecutorUri, testCase.ExecutorUri);
+        Verify(Constants.ExecutorUri == testCase.ExecutorUri);
     }
 
     public void ToTestCaseShouldSetAssemblyName()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual("A", testCase.Source);
+        Verify("A" == testCase.Source);
     }
 
     public void ToTestCaseShouldSetDisplayName()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual("M", testCase.DisplayName);
+        Verify("M" == testCase.DisplayName);
     }
 
     public void ToTestCaseShouldSetDisplayNameIfPresent()
@@ -70,14 +69,14 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.DisplayName = "Display Name";
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual("Display Name", testCase.DisplayName);
+        Verify("Display Name" == testCase.DisplayName);
     }
 
     public void ToTestCaseShouldSetTestClassNameProperty()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual("C", testCase.GetPropertyValue(Constants.TestClassNameProperty));
+        Verify("C" == testCase.GetPropertyValue(Constants.TestClassNameProperty) as string);
     }
 
     public void ToTestCaseShouldSetDeclaringClassNameIfPresent()
@@ -90,7 +89,7 @@ public class UnitTestElementTests : TestContainer
         _testMethod.DeclaringClassFullName = "DC";
         testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual("DC", testCase.GetPropertyValue(Constants.DeclaringClassNameProperty));
+        Verify("DC" == testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) as string);
     }
 
     public void ToTestCaseShouldSetIsAsyncProperty()
@@ -98,12 +97,12 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.IsAsync = true;
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual(true, testCase.GetPropertyValue(Constants.AsyncTestProperty));
+        Verify(true == (bool)testCase.GetPropertyValue(Constants.AsyncTestProperty));
 
         _unitTestElement.IsAsync = false;
         testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual(false, testCase.GetPropertyValue(Constants.AsyncTestProperty));
+        Verify(false == (bool)testCase.GetPropertyValue(Constants.AsyncTestProperty));
     }
 
     public void ToTestCaseShouldSetTestCategoryIfPresent()
@@ -121,7 +120,7 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.TestCategory = new string[] { "TC" };
         testCase = _unitTestElement.ToTestCase();
 
-        CollectionAssert.AreEqual(new string[] { "TC" }, testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[]);
+        Verify(new string[] { "TC" } == (testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[]));
     }
 
     public void ToTestCaseShouldSetPriorityIfPresent()
@@ -129,12 +128,12 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.Priority = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual(0, testCase.GetPropertyValue(Constants.PriorityProperty));
+        Verify(0 == (int)testCase.GetPropertyValue(Constants.PriorityProperty));
 
         _unitTestElement.Priority = 1;
         testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual(1, testCase.GetPropertyValue(Constants.PriorityProperty));
+        Verify(1 == (int)testCase.GetPropertyValue(Constants.PriorityProperty));
     }
 
     public void ToTestCaseShouldSetTraitsIfPresent()
@@ -142,15 +141,15 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.Traits = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual(0, testCase.Traits.Count());
+        Verify(0 == testCase.Traits.Count());
 
         var trait = new TestPlatform.ObjectModel.Trait("trait", "value");
         _unitTestElement.Traits = new TestPlatform.ObjectModel.Trait[] { trait };
         testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual(1, testCase.Traits.Count());
-        Assert.AreEqual("trait", testCase.Traits.ToArray()[0].Name);
-        Assert.AreEqual("value", testCase.Traits.ToArray()[0].Value);
+        Verify(1 == testCase.Traits.Count());
+        Verify("trait" == testCase.Traits.ToArray()[0].Name);
+        Verify("value" == testCase.Traits.ToArray()[0].Value);
     }
 
     public void ToTestCaseShouldSetPropertiesIfPresent()
@@ -162,10 +161,10 @@ public class UnitTestElementTests : TestContainer
 
         var testCase = _unitTestElement.ToTestCase();
 
-        Assert.AreEqual("12", testCase.GetPropertyValue(Constants.CssIterationProperty));
-        Assert.AreEqual("ProjectStructure", testCase.GetPropertyValue(Constants.CssProjectStructureProperty));
-        Assert.AreEqual("I am a dummy test", testCase.GetPropertyValue(Constants.DescriptionProperty));
-        CollectionAssert.AreEqual(new string[] { "2312", "22332" }, testCase.GetPropertyValue(Constants.WorkItemIdsProperty) as string[]);
+        Verify("12" == testCase.GetPropertyValue(Constants.CssIterationProperty) as string);
+        Verify("ProjectStructure" == testCase.GetPropertyValue(Constants.CssProjectStructureProperty) as string);
+        Verify("I am a dummy test" == testCase.GetPropertyValue(Constants.DescriptionProperty) as string);
+        Verify(new string[] { "2312", "22332" } == testCase.GetPropertyValue(Constants.WorkItemIdsProperty) as string[]);
     }
 
     public void ToTestCaseShouldSetDeploymentItemPropertyIfPresent()
@@ -183,7 +182,7 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.DeploymentItems = new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("s", "d") };
         testCase = _unitTestElement.ToTestCase();
 
-        CollectionAssert.AreEqual(_unitTestElement.DeploymentItems, testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as KeyValuePair<string, string>[]);
+        Verify(_unitTestElement.DeploymentItems == testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as KeyValuePair<string, string>[]);
     }
 
     #endregion

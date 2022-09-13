@@ -27,7 +27,7 @@ public class ExceptionExtensionsTests : TestContainer
 
         var exception = exceptionWithInnerException.GetInnerExceptionOrDefault();
 
-        Assert.AreSame(innerException, exception);
+        Verify(innerException.Equals(exception));
     }
 
     public void ExceptionGetInnerExceptionOrDefaultShouldNotThrowForNullException()
@@ -50,7 +50,7 @@ public class ExceptionExtensionsTests : TestContainer
 
         var exception = exceptionWithNoInnerException.GetInnerExceptionOrDefault();
 
-        Assert.AreSame(exceptionWithNoInnerException, exception);
+        Verify(exceptionWithNoInnerException.Equals(exception));
     }
 
     #endregion
@@ -61,14 +61,14 @@ public class ExceptionExtensionsTests : TestContainer
     {
         var exception = new Exception("dummyMessage");
 
-        Assert.AreEqual<string>("dummyMessage", exception.TryGetMessage());
+        Verify("dummyMessage" == exception.TryGetMessage());
     }
 
     public void ExceptionTryGetMessageReturnsEmptyStringIfExceptionMessageIsNull()
     {
         var exception = new DummyException(() => null);
 
-        Assert.AreEqual(string.Empty, exception.TryGetMessage());
+        Verify(string.Empty == exception.TryGetMessage());
     }
 
     public void ExceptionTryGetMessageReturnsErrorMessageIfExceptionIsNull()
@@ -77,7 +77,7 @@ public class ExceptionExtensionsTests : TestContainer
 
         var exception = (Exception)null;
 
-        Assert.AreEqual(errorMessage, exception.TryGetMessage());
+        Verify(errorMessage == exception.TryGetMessage());
     }
 
     [ExpectedException(typeof(NotImplementedException))]
@@ -113,9 +113,9 @@ public class ExceptionExtensionsTests : TestContainer
 
         var stackTraceInformation = exception.TryGetStackTraceInformation();
 
-        StringAssert.StartsWith(stackTraceInformation.ErrorStackTrace, "    at A()");
+        Verify(stackTraceInformation.ErrorStackTrace.StartsWith("    at A()"));
         Verify(stackTraceInformation.ErrorFilePath is null);
-        Assert.AreEqual(0, stackTraceInformation.ErrorLineNumber);
+        Verify(0 == stackTraceInformation.ErrorLineNumber);
     }
 
     [ExpectedException(typeof(NotImplementedException))]
@@ -177,8 +177,8 @@ public class ExceptionExtensionsTests : TestContainer
 
         exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo);
 
-        Assert.AreEqual(UTF.UnitTestOutcome.Inconclusive, outcome);
-        Assert.AreEqual("Dummy Message", exceptionMessage);
+        Verify(UTF.UnitTestOutcome.Inconclusive == outcome);
+        Verify("Dummy Message" == exceptionMessage);
     }
 
     public void IsUnitTestAssertExceptionSetsOutcomeAsFailedIfAssertFailedException()
@@ -188,8 +188,8 @@ public class ExceptionExtensionsTests : TestContainer
 
         exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo);
 
-        Assert.AreEqual(UTF.UnitTestOutcome.Failed, outcome);
-        Assert.AreEqual("Dummy Message", exceptionMessage);
+        Verify(UTF.UnitTestOutcome.Failed == outcome);
+        Verify("Dummy Message" == exceptionMessage);
     }
     #endregion
 }

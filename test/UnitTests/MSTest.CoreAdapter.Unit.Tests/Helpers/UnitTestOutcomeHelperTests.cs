@@ -14,8 +14,7 @@ public class UnitTestOutcomeHelperTests : TestContainer
 {
     private MSTestSettings _adapterSettings;
 
-    [TestInitialize]
-    public void TestInit()
+    public UnitTestOutcomeHelperTests()
     {
         string runSettingxml =
         @"<RunSettings>
@@ -29,54 +28,54 @@ public class UnitTestOutcomeHelperTests : TestContainer
     public void UniTestHelperToTestOutcomeForUnitTestOutcomePassedShouldReturnTestOutcomePassed()
     {
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Passed, _adapterSettings);
-        Assert.AreEqual(TestOutcome.Passed, resultOutcome);
+        Verify(TestOutcome.Passed == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeFailedShouldReturnTestOutcomeFailed()
     {
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Failed, _adapterSettings);
-        Assert.AreEqual(TestOutcome.Failed, resultOutcome);
+        Verify(TestOutcome.Failed == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeErrorShouldReturnTestOutcomeFailed()
     {
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Error, _adapterSettings);
-        Assert.AreEqual(TestOutcome.Failed, resultOutcome);
+        Verify(TestOutcome.Failed == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailed()
     {
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, _adapterSettings);
-        Assert.AreEqual(TestOutcome.Failed, resultOutcome);
+        Verify(TestOutcome.Failed == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeTimeoutShouldReturnTestOutcomeFailed()
     {
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Timeout, _adapterSettings);
-        Assert.AreEqual(TestOutcome.Failed, resultOutcome);
+        Verify(TestOutcome.Failed == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeIgnoredShouldReturnTestOutcomeSkipped()
     {
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Ignored, _adapterSettings);
-        Assert.AreEqual(TestOutcome.Skipped, resultOutcome);
+        Verify(TestOutcome.Skipped == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeSkipped()
     {
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.Inconclusive, _adapterSettings);
-        Assert.AreEqual(TestOutcome.Skipped, resultOutcome);
+        Verify(TestOutcome.Skipped == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotFoundShouldReturnTestOutcomeNotFound()
     {
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotFound, _adapterSettings);
-        Assert.AreEqual(TestOutcome.NotFound, resultOutcome);
+        Verify(TestOutcome.NotFound == resultOutcome);
     }
 
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInProgressShouldReturnTestOutcomeNone()
     {
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.InProgress, _adapterSettings);
-        Assert.AreEqual(TestOutcome.None, resultOutcome);
+        Verify(TestOutcome.None == resultOutcome);
     }
 }

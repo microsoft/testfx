@@ -31,8 +31,7 @@ public class UnitTestDiscovererTests : TestContainer
     private UnitTestElement _test;
     private List<UnitTestElement> _testElements;
 
-    [TestInitialize]
-    public void TestInit()
+    public UnitTestDiscovererTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _unitTestDiscoverer = new UnitTestDiscoverer();
@@ -49,8 +48,7 @@ public class UnitTestDiscovererTests : TestContainer
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
         _test = null;
         _testElements = null;

@@ -58,8 +58,7 @@ public class TestExecutionManagerTests : TestContainer
         TestAdapterConstants.TestPointIdProperty
     };
 
-    [TestInitialize]
-    public void TestInit()
+    public TestExecutionManagerTests()
     {
         _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => true));
         _frameworkHandle = new TestableFrameworkHandle();
@@ -68,8 +67,7 @@ public class TestExecutionManagerTests : TestContainer
         TestExecutionManager = new TestExecutionManager();
     }
 
-    [TestCleanup]
-    public void TestCleanup()
+    protected override void Dispose(bool disposing)
     {
         PlatformServiceProvider.Instance = null;
         MSTestSettings.Reset();
@@ -89,9 +87,9 @@ public class TestExecutionManagerTests : TestContainer
         TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
         // No Results
-        Assert.AreEqual(0, _frameworkHandle.TestCaseStartList.Count);
-        Assert.AreEqual(0, _frameworkHandle.ResultsList.Count);
-        Assert.AreEqual(0, _frameworkHandle.TestCaseEndList.Count);
+        Verify(0 == _frameworkHandle.TestCaseStartList.Count);
+        Verify(0 == _frameworkHandle.ResultsList.Count);
+        Verify(0 == _frameworkHandle.TestCaseEndList.Count);
     }
 
     public void RunTestsForTestWithFilterShouldSendResultsForFilteredTests()
@@ -109,9 +107,9 @@ public class TestExecutionManagerTests : TestContainer
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
         List<string> expectedResultList = new() { "PassingTest  Passed" };
 
-        CollectionAssert.AreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
-        CollectionAssert.AreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
-        CollectionAssert.AreEqual(expectedResultList, _frameworkHandle.ResultsList);
+        Verify(expectedTestCaseStartList == _frameworkHandle.TestCaseStartList);
+        Verify(expectedTestCaseEndList == _frameworkHandle.TestCaseEndList);
+        Verify(expectedResultList == _frameworkHandle.ResultsList);
     }
 
     public void RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
@@ -121,9 +119,9 @@ public class TestExecutionManagerTests : TestContainer
 
         TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
-        Assert.AreEqual("IgnoredTest", _frameworkHandle.TestCaseStartList[0]);
-        Assert.AreEqual("IgnoredTest:Skipped", _frameworkHandle.TestCaseEndList[0]);
-        Assert.AreEqual("IgnoredTest  Skipped", _frameworkHandle.ResultsList[0]);
+        Verify("IgnoredTest" == _frameworkHandle.TestCaseStartList[0]);
+        Verify("IgnoredTest:Skipped" == _frameworkHandle.TestCaseEndList[0]);
+        Verify("IgnoredTest  Skipped" == _frameworkHandle.ResultsList[0]);
     }
 
     public void RunTestsForASingleTestShouldSendSingleResult()
@@ -138,9 +136,9 @@ public class TestExecutionManagerTests : TestContainer
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
         List<string> expectedResultList = new() { "PassingTest  Passed" };
 
-        CollectionAssert.AreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
-        CollectionAssert.AreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
-        CollectionAssert.AreEqual(expectedResultList, _frameworkHandle.ResultsList);
+        Verify(expectedTestCaseStartList == _frameworkHandle.TestCaseStartList);
+        Verify(expectedTestCaseEndList == _frameworkHandle.TestCaseEndList);
+        Verify(expectedResultList == _frameworkHandle.ResultsList);
     }
 
     public void RunTestsForMultipleTestShouldSendMultipleResults()
@@ -155,10 +153,10 @@ public class TestExecutionManagerTests : TestContainer
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed", "FailingTest:Failed" };
         List<string> expectedResultList = new() { "PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail failed." };
 
-        CollectionAssert.AreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
-        CollectionAssert.AreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
-        Assert.AreEqual(expectedResultList[0], _frameworkHandle.ResultsList[0]);
-        StringAssert.Contains(_frameworkHandle.ResultsList[1], expectedResultList[1]);
+        Verify(expectedTestCaseStartList == _frameworkHandle.TestCaseStartList);
+        Verify(expectedTestCaseEndList == _frameworkHandle.TestCaseEndList);
+        Verify(expectedResultList[0] == _frameworkHandle.ResultsList[0]);
+        Verify(_frameworkHandle.ResultsList[1].Contains(expectedResultList[1]));
     }
 
     public void RunTestsForCancellationTokencanceledSetToTrueShouldSendZeroResults()
@@ -172,9 +170,9 @@ public class TestExecutionManagerTests : TestContainer
         TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
         // No Results
-        Assert.AreEqual(0, _frameworkHandle.TestCaseStartList.Count);
-        Assert.AreEqual(0, _frameworkHandle.ResultsList.Count);
-        Assert.AreEqual(0, _frameworkHandle.TestCaseEndList.Count);
+        Verify(0 == _frameworkHandle.TestCaseStartList.Count);
+        Verify(0 == _frameworkHandle.ResultsList.Count);
+        Verify(0 == _frameworkHandle.TestCaseEndList.Count);
     }
 
     public void RunTestsShouldLogResultCleanupWarningsAsErrorsWhenTreatClassCleanupWarningsAsErrorsIsTrue()
@@ -194,9 +192,9 @@ public class TestExecutionManagerTests : TestContainer
         TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         // Assert
-        CollectionAssert.Contains(_frameworkHandle.TestCaseEndList, "TestMethod:Passed");
-        Assert.AreEqual(1, _frameworkHandle.MessageList.Count);
-        StringAssert.StartsWith(_frameworkHandle.MessageList[0], "Error");
+        Verify(_frameworkHandle.TestCaseEndList.Contains("TestMethod:Passed"));
+        Verify(1 == _frameworkHandle.MessageList.Count);
+        Verify(_frameworkHandle.MessageList[0].StartsWith("Error"));
         Verify(_frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
     }
 
@@ -208,8 +206,8 @@ public class TestExecutionManagerTests : TestContainer
         TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         // Warnings should get logged.
-        Assert.AreEqual(1, _frameworkHandle.MessageList.Count);
-        StringAssert.StartsWith(_frameworkHandle.MessageList[0], "Warning");
+        Verify(1 == _frameworkHandle.MessageList.Count);
+        Verify(_frameworkHandle.MessageList[0].StartsWith("Warning"));
         Verify(_frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
     }
 
@@ -229,8 +227,8 @@ public class TestExecutionManagerTests : TestContainer
             _frameworkHandle,
             new TestRunCancellationToken());
 
-        Assert.AreEqual("Deploy", _callers[0], "Deploy should be called before execution.");
-        Assert.AreEqual("LoadAssembly", _callers[1], "Deploy should be called before execution.");
+        Verify("Deploy" == _callers[0], "Deploy should be called before execution.");
+        Verify("LoadAssembly" == _callers[1], "Deploy should be called before execution.");
     }
 
     public void RunTestsForTestShouldCleanupAfterExecution()
@@ -245,8 +243,8 @@ public class TestExecutionManagerTests : TestContainer
 
         TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-        Assert.AreEqual("LoadAssembly", _callers[0], "Cleanup should be called after execution.");
-        Assert.AreEqual("Cleanup", _callers.LastOrDefault(), "Cleanup should be called after execution.");
+        Verify("LoadAssembly" == _callers[0], "Cleanup should be called after execution.");
+        Verify("Cleanup" == _callers.LastOrDefault(), "Cleanup should be called after execution.");
     }
 
     public void RunTestsForTestShouldNotCleanupOnTestFailure()
@@ -297,9 +295,8 @@ public class TestExecutionManagerTests : TestContainer
 
         TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-        CollectionAssert.Contains(
-            DummyTestClass.TestContextProperties.ToList(),
-            new KeyValuePair<string, object>("webAppUrl", "http://localhost"));
+        Verify(DummyTestClass.TestContextProperties.ToList().Contains(
+            new KeyValuePair<string, object>("webAppUrl", "http://localhost")));
     }
 
     public void RunTestsForTestShouldPassInTcmPropertiesAsPropertiesToTheTest()
@@ -356,7 +353,7 @@ public class TestExecutionManagerTests : TestContainer
         // Trigger another Run
         TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-        Assert.AreEqual("http://updatedLocalHost", DummyTestClass.TestContextProperties["webAppUrl"]);
+        Verify("http://updatedLocalHost" == DummyTestClass.TestContextProperties["webAppUrl"] as string);
     }
 
     #endregion
@@ -364,23 +361,21 @@ public class TestExecutionManagerTests : TestContainer
     #region Run Tests on Sources
 
     // TODO: This tests needs to be mocked.
-    [Ignore]
 
-    public void RunTestsForSourceShouldRunTestsInASource()
+    private void RunTestsForSourceShouldRunTestsInASource()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
         TestExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
 
-        CollectionAssert.Contains(_frameworkHandle.TestCaseStartList, "PassingTest");
-        CollectionAssert.Contains(_frameworkHandle.TestCaseEndList, "PassingTest:Passed");
-        CollectionAssert.Contains(_frameworkHandle.ResultsList, "PassingTest  Passed");
+        Verify(_frameworkHandle.TestCaseStartList.Contains("PassingTest"));
+        Verify(_frameworkHandle.TestCaseEndList.Contains("PassingTest:Passed"));
+        Verify(_frameworkHandle.ResultsList.Contains("PassingTest  Passed"));
     }
 
     // TODO: This tests needs to be mocked.
-    [Ignore]
 
-    public void RunTestsForSourceShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
+    private void RunTestsForSourceShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
@@ -394,15 +389,14 @@ public class TestExecutionManagerTests : TestContainer
 
         TestExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
 
-        CollectionAssert.Contains(
-            DummyTestClass.TestContextProperties.ToList(),
-            new KeyValuePair<string, object>("webAppUrl", "http://localhost"));
+        Verify(
+            DummyTestClass.TestContextProperties.ToList().Contains(
+            new KeyValuePair<string, object>("webAppUrl", "http://localhost")));
     }
 
     // Todo: This tests needs to be mocked.
 
-    [Ignore]
-    public void RunTestsForSourceShouldPassInDeploymentInformationAsPropertiesToTheTest()
+    private void RunTestsForSourceShouldPassInDeploymentInformationAsPropertiesToTheTest()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
@@ -424,7 +418,7 @@ public class TestExecutionManagerTests : TestContainer
         };
 
         testableTestExecutionmanager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
-        Assert.AreEqual(4, testsCount);
+        Verify(4 == testsCount);
     }
 
     #endregion
@@ -437,8 +431,8 @@ public class TestExecutionManagerTests : TestContainer
         UnitTestResult unitTestResult1 = new() { DatarowIndex = 0, DisplayName = "DummyTest" };
         UnitTestResult unitTestResult2 = new() { DatarowIndex = 1, DisplayName = "DummyTest" };
         TestExecutionManager.SendTestResults(testCase, new UnitTestResult[] { unitTestResult1, unitTestResult2 }, default, default, _frameworkHandle);
-        Assert.AreEqual("DummyTest (Data Row 0)", _frameworkHandle.TestDisplayNameList[0]);
-        Assert.AreEqual("DummyTest (Data Row 1)", _frameworkHandle.TestDisplayNameList[1]);
+        Verify("DummyTest (Data Row 0)" == _frameworkHandle.TestDisplayNameList[0]);
+        Verify("DummyTest (Data Row 1)" == _frameworkHandle.TestDisplayNameList[1]);
     }
 
     #endregion
@@ -467,12 +461,12 @@ public class TestExecutionManagerTests : TestContainer
             MSTestSettings.PopulateSettings(_runContext);
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-            Assert.AreEqual(1, DummyTestClassForParallelize.ThreadIds.Count);
-            Assert.AreEqual(1, DummyTestClassForParallelize2.ThreadIds.Count);
+            Verify(1 == DummyTestClassForParallelize.ThreadIds.Count);
+            Verify(1 == DummyTestClassForParallelize2.ThreadIds.Count);
 
             var allThreadIds = new HashSet<int>(DummyTestClassForParallelize.ThreadIds);
             allThreadIds.UnionWith(DummyTestClassForParallelize2.ThreadIds);
-            Assert.AreEqual(2, allThreadIds.Count);
+            Verify(2 == allThreadIds.Count);
         }
         finally
         {
@@ -502,7 +496,7 @@ public class TestExecutionManagerTests : TestContainer
             MSTestSettings.PopulateSettings(_runContext);
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-            Assert.AreEqual(2, DummyTestClassForParallelize.ThreadIds.Count);
+            Verify(2 == DummyTestClassForParallelize.ThreadIds.Count);
         }
         finally
         {
@@ -535,7 +529,7 @@ public class TestExecutionManagerTests : TestContainer
             allThreadIds.UnionWith(DummyTestClassForParallelize2.ThreadIds);
             allThreadIds.UnionWith(DummyTestClassForParallelize3.ThreadIds);
 
-            Assert.AreEqual(3, allThreadIds.Count);
+            Verify(3 == allThreadIds.Count);
         }
         finally
         {
@@ -587,7 +581,7 @@ public class TestExecutionManagerTests : TestContainer
 
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-            Assert.AreEqual(1, DummyTestClassForParallelize.ThreadIds.Count);
+            Verify(1 == DummyTestClassForParallelize.ThreadIds.Count);
         }
         finally
         {
@@ -640,7 +634,7 @@ public class TestExecutionManagerTests : TestContainer
 
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-            Assert.AreEqual(1, DummyTestClassForParallelize.ThreadIds.Count);
+            Verify(1 == DummyTestClassForParallelize.ThreadIds.Count);
         }
         finally
         {
@@ -674,8 +668,8 @@ public class TestExecutionManagerTests : TestContainer
             MSTestSettings.PopulateSettings(_runContext);
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-            Assert.AreEqual(2, DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count);
-            Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.UnParallelizableTestsThreadIds.Count);
+            Verify(2 == DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count);
+            Verify(1 == DummyTestClassWithDoNotParallelizeMethods.UnParallelizableTestsThreadIds.Count);
             Verify(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun.TimeOfDay.TotalMilliseconds <= DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun.TimeOfDay.TotalMilliseconds);
         }
         finally
@@ -729,7 +723,7 @@ public class TestExecutionManagerTests : TestContainer
 
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-            Assert.AreEqual(2, DummyTestClassForParallelize.ThreadIds.Count);
+            Verify(2 == DummyTestClassForParallelize.ThreadIds.Count);
         }
         finally
         {
@@ -739,8 +733,7 @@ public class TestExecutionManagerTests : TestContainer
 
     // This is tracked by https://github.com/Microsoft/testfx/issues/320.
 
-    [Ignore]
-    public void RunTestsForTestShouldRunTestsInTheParentDomainsApartmentState()
+    private void RunTestsForTestShouldRunTestsInTheParentDomainsApartmentState()
     {
         var testCase1 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");
         var testCase2 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod2");
@@ -766,8 +759,8 @@ public class TestExecutionManagerTests : TestContainer
             MSTestSettings.PopulateSettings(_runContext);
             TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-            Assert.AreEqual(1, DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.Count);
-            Assert.AreEqual(Thread.CurrentThread.GetApartmentState(), DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.ToArray()[0]);
+            Verify(1 == DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.Count);
+            Verify(Thread.CurrentThread.GetApartmentState() == DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.ToArray()[0]);
         }
         finally
         {
@@ -834,7 +827,7 @@ public class TestExecutionManagerTests : TestContainer
     {
         foreach (var property in _tcmKnownProperties)
         {
-            Assert.AreEqual(testCase.GetPropertyValue(property), tcmProperties[property.Id]);
+            Verify(testCase.GetPropertyValue(property) == tcmProperties[property.Id]);
         }
     }
 

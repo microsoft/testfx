@@ -24,8 +24,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
     private ICollection<string> _warnings;
     private TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    [TestInitialize]
-    public void TestInit()
+    public AssemblyEnumeratorWrapperTests()
     {
         _testableAssemblyEnumeratorWrapper = new AssemblyEnumeratorWrapper();
         _warnings = new List<string>();
@@ -34,8 +33,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
         PlatformServiceProvider.Instance = null;
     }
@@ -73,7 +71,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
             Resource.TestAssembly_AssemblyDiscoveryFailure,
             assemblyName,
             innerMessage);
-        CollectionAssert.Contains(_warnings.ToList(), message);
+        Verify(_warnings.ToList().Contains(message));
     }
 
     public void GetTestsShouldReturnNullIfSourceDoesNotReferenceUnitTestFrameworkAssembly()

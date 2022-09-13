@@ -22,8 +22,8 @@ public class UnitTestResultTest : TestContainer
     {
         UnitTestResult result = new(UnitTestOutcome.Error, "DummyMessage");
 
-        Assert.AreEqual(UnitTestOutcome.Error, result.Outcome);
-        Assert.AreEqual("DummyMessage", result.ErrorMessage);
+        Verify(UnitTestOutcome.Error == result.Outcome);
+        Verify("DummyMessage" == result.ErrorMessage);
     }
 
     public void UnitTestResultConstrutorWithTestFailedExceptionShouldSetRequiredFields()
@@ -33,12 +33,12 @@ public class UnitTestResultTest : TestContainer
 
         UnitTestResult result = new(ex);
 
-        Assert.AreEqual(UnitTestOutcome.Error, result.Outcome);
-        Assert.AreEqual("DummyMessage", result.ErrorMessage);
-        Assert.AreEqual("trace", result.ErrorStackTrace);
-        Assert.AreEqual("filePath", result.ErrorFilePath);
-        Assert.AreEqual(2, result.ErrorLineNumber);
-        Assert.AreEqual(3, result.ErrorColumnNumber);
+        Verify(UnitTestOutcome.Error == result.Outcome);
+        Verify("DummyMessage" == result.ErrorMessage);
+        Verify("trace" == result.ErrorStackTrace);
+        Verify("filePath" == result.ErrorFilePath);
+        Verify(2 == result.ErrorLineNumber);
+        Verify(3 == result.ErrorColumnNumber);
     }
 
     public void ToTestResultShouldReturnConvertedTestResultWithFieldsSet()
@@ -68,15 +68,15 @@ public class UnitTestResultTest : TestContainer
         var testResult = result.ToTestResult(testCase, startTime, endTime, adapterSettings);
 
         // Validate
-        Assert.AreEqual(testCase, testResult.TestCase);
-        Assert.AreEqual("DummyDisplayName", testResult.DisplayName);
-        Assert.AreEqual(dummyTimeSpan, testResult.Duration);
-        Assert.AreEqual(TestOutcome.Failed, testResult.Outcome);
-        Assert.AreEqual("DummyMessage", testResult.ErrorMessage);
-        Assert.AreEqual("DummyStackTrace", testResult.ErrorStackTrace);
-        Assert.AreEqual(startTime, testResult.StartTime);
-        Assert.AreEqual(endTime, testResult.EndTime);
-        Assert.AreEqual(0, testResult.Messages.Count);
+        Verify(testCase == testResult.TestCase);
+        Verify("DummyDisplayName" == testResult.DisplayName);
+        Verify(dummyTimeSpan == testResult.Duration);
+        Verify(TestOutcome.Failed == testResult.Outcome);
+        Verify("DummyMessage" == testResult.ErrorMessage);
+        Verify("DummyStackTrace" == testResult.ErrorStackTrace);
+        Verify(startTime == testResult.StartTime);
+        Verify(endTime == testResult.EndTime);
+        Verify(0 == testResult.Messages.Count);
     }
 
     public void ToTestResultForUniTestResultWithStandardOutShouldReturnTestResultWithStdOutMessage()

@@ -17,7 +17,7 @@ public class TestContextExtensionsTests : TestContainer
 
         mockTestContext.Setup(tc => tc.GetDiagnosticMessages()).Returns("foo");
 
-        Assert.AreEqual("foo", mockTestContext.Object.GetAndClearDiagnosticMessages());
+        Verify("foo" == mockTestContext.Object.GetAndClearDiagnosticMessages());
     }
 
     public void GetAndClearDiagnosticMessagesShouldClearContextMessages()
@@ -31,6 +31,6 @@ public class TestContextExtensionsTests : TestContainer
         mockTestContext.Object.GetAndClearDiagnosticMessages();
         message = "bar";
 
-        Assert.AreEqual("bar", mockTestContext.Object.GetAndClearDiagnosticMessages());
+        Verify("bar" == mockTestContext.Object.GetAndClearDiagnosticMessages());
     }
 }

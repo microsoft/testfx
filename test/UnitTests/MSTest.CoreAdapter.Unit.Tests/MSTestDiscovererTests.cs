@@ -30,8 +30,7 @@ public class MSTestDiscovererTests : TestContainer
     private Mock<IRunSettings> _mockRunSettings;
     private MSTestDiscoverer _discoverer;
 
-    [TestInitialize]
-    public void TestInit()
+    public MSTestDiscovererTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
 
@@ -45,8 +44,7 @@ public class MSTestDiscovererTests : TestContainer
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
         PlatformServiceProvider.Instance = null;
     }
@@ -55,35 +53,35 @@ public class MSTestDiscovererTests : TestContainer
     {
         DefaultExecutorUriAttribute attribute = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(DefaultExecutorUriAttribute)).Cast<DefaultExecutorUriAttribute>().First();
         Verify(attribute is not null);
-        Assert.AreEqual("executor://MSTestAdapter/v2", attribute.ExecutorUri);
+        Verify("executor://MSTestAdapter/v2" == attribute.ExecutorUri);
     }
 
     public void MSTestDiscovererHasXapAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
         Verify(attributes is not null);
-        Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".xap"));
+        Verify(1 == attributes.Count(attribute => attribute.FileExtension == ".xap"));
     }
 
     public void MSTestDiscovererHasAppxAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
         Verify(attributes is not null);
-        Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".appx"));
+        Verify(1 == attributes.Count(attribute => attribute.FileExtension == ".appx"));
     }
 
     public void MSTestDiscovererHasDllAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
         Verify(attributes is not null);
-        Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".dll"));
+        Verify(1 == attributes.Count(attribute => attribute.FileExtension == ".dll"));
     }
 
     public void MSTestDiscovererHasExeAsFileExtension()
     {
         IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
         Verify(attributes is not null);
-        Assert.AreEqual(1, attributes.Count(attribute => attribute.FileExtension == ".exe"));
+        Verify(1 == attributes.Count(attribute => attribute.FileExtension == ".exe"));
     }
 
     public void DiscoverTestsShouldThrowIfSourcesIsNull()

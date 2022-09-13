@@ -16,7 +16,7 @@ public class RunSettingsUtilitiesTests : TestContainer
     {
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(null);
         Verify(trp is not null);
-        Assert.AreEqual(0, trp.Count);
+        Verify(0 == trp.Count);
     }
 
     public void GetTestRunParametersReturnsEmptyDictionaryWhenNoTestRunParameters()
@@ -33,7 +33,7 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
-        Assert.AreEqual(0, trp.Count);
+        Verify(0 == trp.Count);
     }
 
     public void GetTestRunParametersReturnsEmptyDictionaryForEmptyTestRunParametersNode()
@@ -52,7 +52,7 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
-        Assert.AreEqual(0, trp.Count);
+        Verify(0 == trp.Count);
     }
 
     public void GetTestRunParametersReturns1EntryOn1TestRunParameter()
@@ -72,11 +72,11 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
-        Assert.AreEqual(1, trp.Count);
+        Verify(1 == trp.Count);
 
         // Verify Parameter Values.
         Verify(trp.ContainsKey("webAppUrl"));
-        Assert.AreEqual("http://localhost", trp["webAppUrl"]);
+        Verify("http://localhost" == trp["webAppUrl"] as string);
     }
 
     public void GetTestRunParametersReturns3EntryOn3TestRunParameter()
@@ -98,15 +98,15 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
-        Assert.AreEqual(3, trp.Count);
+        Verify(3 == trp.Count);
 
         // Verify Parameter Values.
         Verify(trp.ContainsKey("webAppUrl"));
-        Assert.AreEqual("http://localhost", trp["webAppUrl"]);
+        Verify("http://localhost" == trp["webAppUrl"] as string);
         Verify(trp.ContainsKey("webAppUserName"));
-        Assert.AreEqual("Admin", trp["webAppUserName"]);
+        Verify("Admin" == trp["webAppUserName"] as string);
         Verify(trp.ContainsKey("webAppPassword"));
-        Assert.AreEqual("Password", trp["webAppPassword"]);
+        Verify("Password" == trp["webAppPassword"] as string);
     }
 
     public void GetTestRunParametersThrowsWhenTRPNodeHasAttributes()
@@ -163,6 +163,6 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
-        Assert.AreEqual(0, trp.Count);
+        Verify(0 == trp.Count);
     }
 }

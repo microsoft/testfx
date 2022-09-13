@@ -23,8 +23,7 @@ public class ReflectHelperTests : TestContainer
     private Mock<MethodInfo> _method;
     private TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    [TestInitialize]
-    public void IntializeTests()
+    public ReflectHelperTests()
     {
         _reflectHelper = new TestableReflectHelper();
         _method = new Mock<MethodInfo>();
@@ -35,8 +34,7 @@ public class ReflectHelperTests : TestContainer
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void TestCleanup()
+    protected override void Dispose(bool disposing)
     {
         PlatformServiceProvider.Instance = null;
     }
@@ -52,7 +50,7 @@ public class ReflectHelperTests : TestContainer
         string[] expected = new[] { "ClassLevel" };
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
 
-        CollectionAssert.AreEqual(expected, actual);
+        Verify(expected == actual);
     }
 
     /// <summary>
@@ -69,7 +67,7 @@ public class ReflectHelperTests : TestContainer
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
         string[] expected = new[] { "MethodLevel", "ClassLevel", "AsmLevel1", "AsmLevel2", "AsmLevel3" };
 
-        CollectionAssert.AreEqual(expected, actual);
+        Verify(expected == actual);
     }
 
     /// <summary>
@@ -88,7 +86,7 @@ public class ReflectHelperTests : TestContainer
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
         string[] expected = new[] { "MethodLevel1", "MethodLevel2", "ClassLevel1", "ClassLevel2", "AsmLevel1", "AsmLevel2" };
 
-        CollectionAssert.AreEqual(expected, actual);
+        Verify(expected == actual);
     }
 
     /// <summary>
@@ -103,7 +101,7 @@ public class ReflectHelperTests : TestContainer
 
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
 
-        CollectionAssert.AreEqual(expected, actual);
+        Verify(expected == actual);
     }
 
     /// <summary>
@@ -117,7 +115,7 @@ public class ReflectHelperTests : TestContainer
         string[] expected = new[] { "ClassLevel", "ClassLevel1" };
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
 
-        CollectionAssert.AreEqual(expected, actual);
+        Verify(expected == actual);
     }
 
     /// <summary>
@@ -130,7 +128,7 @@ public class ReflectHelperTests : TestContainer
 
         string[] expected = new[] { "AsmLevel", "AsmLevel1" };
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
-        CollectionAssert.AreEqual(expected, actual);
+        Verify(expected == actual);
     }
 
     /// <summary>
@@ -144,7 +142,7 @@ public class ReflectHelperTests : TestContainer
         string[] expected = new[] { "MethodLevel" };
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
 
-        CollectionAssert.AreEqual(expected, actual);
+        Verify(expected == actual);
     }
 
     public void IsAttributeDefinedShouldReturnTrueIfSpecifiedAttributeIsDefinedOnAMember()
