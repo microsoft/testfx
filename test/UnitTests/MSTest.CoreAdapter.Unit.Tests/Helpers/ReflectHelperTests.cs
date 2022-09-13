@@ -36,7 +36,11 @@ public class ReflectHelperTests : TestContainer
 
     protected override void Dispose(bool disposing)
     {
-        PlatformServiceProvider.Instance = null;
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            PlatformServiceProvider.Instance = null;
+        }
     }
 
     /// <summary>

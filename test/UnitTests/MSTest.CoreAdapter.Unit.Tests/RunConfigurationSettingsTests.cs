@@ -38,7 +38,8 @@ public class RunConfigurationSettingsTests : TestContainer
             {
                 base.Dispose(disposing);
             }
-
+        }
+    }
     #region Property validation.
 
     public void CollectSourceInformationIsByDefaultTrueWhenNotSpecified()
