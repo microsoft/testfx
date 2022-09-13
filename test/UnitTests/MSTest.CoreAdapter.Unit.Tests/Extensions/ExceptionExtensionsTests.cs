@@ -80,13 +80,13 @@ public class ExceptionExtensionsTests : TestContainer
         Verify(errorMessage == exception.TryGetMessage());
     }
 
-    [ExpectedException(typeof(NotImplementedException))]
     public void ExceptionTryGetMessageShouldThrowIfExceptionMessageThrows()
     {
         var errorMessage = string.Format(Resource.UTF_FailedToGetExceptionMessage, "System.NotImplementedException");
         var exception = new DummyException(() => { throw new NotImplementedException(); });
 
-        exception.TryGetMessage();
+        var ex = VerifyThrows(() => exception.TryGetMessage());
+        Verify(ex is NotImplementedException);
     }
 
     #endregion
@@ -118,12 +118,12 @@ public class ExceptionExtensionsTests : TestContainer
         Verify(0 == stackTraceInformation.ErrorLineNumber);
     }
 
-    [ExpectedException(typeof(NotImplementedException))]
     public void TryGetStackTraceInformationShouldThrowIfStackTraceThrows()
     {
         var exception = new DummyExceptionForStackTrace(() => { throw new NotImplementedException(); });
 
-        exception.TryGetStackTraceInformation();
+        var ex = VerifyThrows(() => exception.TryGetStackTraceInformation());
+        Verify(ex is NotImplementedException);
     }
 
     public class DummyExceptionForStackTrace : Exception

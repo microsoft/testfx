@@ -1021,7 +1021,7 @@ public class TypeCacheTests : TestContainer
         Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
         Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
-        Verify(testMethodInfo.TestMethodOptions.Executor is DerivedTestMethodAttribute is not null);
+        Verify(testMethodInfo.TestMethodOptions.Executor is DerivedTestMethodAttribute);
     }
 
     public void GetTestMethodInfoShouldSetTestContextWithCustomProperty()
@@ -1037,7 +1037,7 @@ public class TypeCacheTests : TestContainer
         _typeCache.GetTestMethodInfo(testMethod, testContext, false);
         var customProperty = ((IDictionary<string, object>)testContext.Properties).FirstOrDefault(p => p.Key.Equals("WhoAmI"));
 
-        Verify(customProperty is not null);
+        Verify((object)customProperty is not null);
         Verify("Me" == customProperty.Value as string);
     }
 

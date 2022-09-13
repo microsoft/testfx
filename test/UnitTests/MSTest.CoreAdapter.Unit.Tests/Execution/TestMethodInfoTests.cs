@@ -784,7 +784,7 @@ public class TestMethodInfoTests : TestContainer
     public void TestMethodInfoInvokeShouldSetMoreImportantOutcomeIfTestCleanupIsInconclusiveButTestMethodFails()
     {
         DummyTestClass.TestCleanupMethodBody = classInstance => { throw new UTF.AssertInconclusiveException(); };
-        DummyTestClass.TestMethodBody = classInstance => { Assert.Fail(); };
+        DummyTestClass.TestMethodBody = classInstance => { Fail(); };
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
         var result = _testMethodInfo.Invoke(null);

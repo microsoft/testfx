@@ -404,8 +404,8 @@ public class MethodInfoExtensionsTests : TestContainer
 
         public void PublicMethodWithParameters(int x, int y)
         {
-            Verify(x is not null);
-            Verify(y is not null);
+            Verify((object)x is not null);
+            Verify((object)y is not null);
         }
     }
 
