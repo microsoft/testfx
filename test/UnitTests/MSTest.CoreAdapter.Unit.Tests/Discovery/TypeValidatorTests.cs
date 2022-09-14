@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using FluentAssertions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -277,8 +276,12 @@ public class TypeValidatorTests : TestContainer
         // list of our test types, to avoid bugs caused by typos.
         var allTypes = GetAllTestTypes().Select(t => t.Name).ToArray();
         var privateTypes = typeof(PrivateClassNames).GetProperties().Select(n => n.Name).ToArray();
-        var privateType = privateTypes.Should().BeSubsetOf(allTypes);
         Verify(privateTypes.Length >= 1);
+
+        foreach (var type in privateTypes)
+        {
+            Verify(allTypes.Contains(type));
+        }
     }
 
     public void TypeHasValidAccessibilityShouldReturnTrueForAllPublicTypesIncludingNestedPublicTypes()
