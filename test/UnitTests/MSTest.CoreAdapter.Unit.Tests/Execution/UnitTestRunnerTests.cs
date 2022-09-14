@@ -11,7 +11,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml;
-using global::MSTestAdapter.TestUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -90,14 +89,16 @@ public class UnitTestRunnerTests : TestContainer
     public void RunSingleTestShouldThrowIfTestMethodIsNull()
     {
         void a() => _unitTestRunner.RunSingleTest(null, null);
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
+        var ex = VerifyThrows(a);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void RunSingleTestShouldThrowIfTestRunParamtersIsNull()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
         void a() => _unitTestRunner.RunSingleTest(testMethod, null);
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
+        var ex = VerifyThrows(a);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()

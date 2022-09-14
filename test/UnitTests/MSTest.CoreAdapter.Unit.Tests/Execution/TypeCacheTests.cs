@@ -8,8 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using global::MSTestAdapter.TestUtilities;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -21,6 +19,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+using static System.Collections.Specialized.BitVector32;
 using static TestMethodInfoTests;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -65,7 +64,8 @@ public class TypeCacheTests : TestContainer
             new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
             false);
 
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
+        var ex = VerifyThrows(a);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetTestMethodInfoShouldThrowIfTestContextIsNull()
@@ -73,7 +73,8 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
         void a() => _typeCache.GetTestMethodInfo(testMethod, null, false);
 
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
+        var ex = VerifyThrows(a);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetTestMethodInfoShouldReturnNullIfClassInfoForTheMethodIsNull()
@@ -111,7 +112,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        var exception = ActionUtility.PerformActionAndReturnException(action);
+        var exception = VerifyThrows(action);
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
@@ -129,7 +130,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        var exception = ActionUtility.PerformActionAndReturnException(action);
+        var exception = VerifyThrows(action);
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
@@ -147,7 +148,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        var exception = ActionUtility.PerformActionAndReturnException(action);
+        var exception = VerifyThrows(action);
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
@@ -165,7 +166,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        var exception = ActionUtility.PerformActionAndReturnException(action);
+        var exception = VerifyThrows(action);
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
@@ -327,7 +328,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        var exception = ActionUtility.PerformActionAndReturnException(a);
+        var exception = VerifyThrows(a);
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
 
@@ -358,7 +359,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        var exception = ActionUtility.PerformActionAndReturnException(a);
+        var exception = VerifyThrows(a);
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
 
@@ -662,7 +663,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        var exception = ActionUtility.PerformActionAndReturnException(a);
+        var exception = VerifyThrows(a);
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
 
@@ -693,7 +694,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        var exception = ActionUtility.PerformActionAndReturnException(a);
+        var exception = VerifyThrows(a);
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
 
@@ -764,7 +765,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        var exception = ActionUtility.PerformActionAndReturnException(a);
+        var exception = VerifyThrows(a);
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
@@ -860,7 +861,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        var exception = ActionUtility.PerformActionAndReturnException(a);
+        var exception = VerifyThrows(a);
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
@@ -924,7 +925,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, null, new Dictionary<string, object>()),
                 false);
 
-        var exception = ActionUtility.PerformActionAndReturnException(a);
+        var exception = VerifyThrows(a);
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);

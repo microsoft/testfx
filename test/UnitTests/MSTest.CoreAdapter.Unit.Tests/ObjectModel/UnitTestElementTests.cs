@@ -6,7 +6,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectMode
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using global::MSTestAdapter.TestUtilities;
 using MSTest.TestAdapter;
 using MSTest.TestAdapter.ObjectModel;
 
@@ -27,9 +26,8 @@ public class UnitTestElementTests : TestContainer
 
     public void UnitTestElementConstructorShouldThrowIfTestMethodIsNull()
     {
-        ActionUtility.ActionShouldThrowExceptionOfType(
-            () => _ = new UnitTestElement(null),
-            typeof(ArgumentNullException));
+        var ex = VerifyThrows(() => _ = new UnitTestElement(null));
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     #endregion

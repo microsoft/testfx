@@ -5,7 +5,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 using System;
 using System.Xml;
-using global::MSTestAdapter.TestUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -285,7 +284,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        var exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
@@ -303,7 +302,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        var exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
@@ -402,7 +401,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        var exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
@@ -436,7 +435,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        var exception = ActionUtility.PerformActionAndReturnException(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        var exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);

@@ -3,8 +3,8 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers;
 
+using System;
 using System.Collections.Generic;
-using global::MSTestAdapter.TestUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -124,7 +124,8 @@ public class RunSettingsUtilitiesTests : TestContainer
                      </TestRunParameters>
                 </RunSettings>";
 
-        ActionUtility.ActionShouldThrowExceptionOfType(() => RunSettingsUtilities.GetTestRunParameters(settingsXml), typeof(SettingsException));
+        var ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
+        Verify(ex.GetType() == typeof(SettingsException));
     }
 
     public void GetTestRunParametersThrowsWhenTRPNodeHasNonParameterTypeChildNodes()
@@ -143,7 +144,8 @@ public class RunSettingsUtilitiesTests : TestContainer
                      </TestRunParameters>
                 </RunSettings>";
 
-        ActionUtility.ActionShouldThrowExceptionOfType(() => RunSettingsUtilities.GetTestRunParameters(settingsXml), typeof(SettingsException));
+        var ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
+        Verify(ex.GetType() == typeof(SettingsException));
     }
 
     public void GetTestRunParametersIgnoresMalformedKeyValues()
