@@ -340,7 +340,7 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        Verify(testProperties.Equals(testElement.Traits));
+        VerifyCollectionsAreEqual(testProperties, testElement.Traits);
     }
 
     public void GetTestFromMethodShouldFillTraitsWithTestOwnerPropertyIfPresent()
@@ -359,7 +359,7 @@ public class TypeEnumeratorTests : TestContainer
 
         Verify(testElement is not null);
         testProperties.Add(ownerTrait);
-        Verify(testProperties.Equals(testElement.Traits));
+        VerifyCollectionsAreEqual(testProperties, testElement.Traits);
     }
 
     public void GetTestFromMethodShouldFillTraitsWithTestPriorityPropertyIfPresent()
@@ -379,7 +379,7 @@ public class TypeEnumeratorTests : TestContainer
 
         Verify(testElement is not null);
         testProperties.Add(priorityTrait);
-        Verify(testProperties.Equals(testElement.Traits));
+        VerifyCollectionsAreEqual(testProperties, testElement.Traits);
     }
 
     public void GetTestFromMethodShouldSetPriority()
@@ -418,7 +418,7 @@ public class TypeEnumeratorTests : TestContainer
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify(new string[] { "123", "345" }.Equals(testElement.WorkItemIds));
+        VerifyCollectionsAreEqual(new string[] { "123", "345" }, testElement.WorkItemIds);
     }
 
     public void GetTestFromMethodShouldSetWorkItemIdsToNullIfNotAny()
@@ -489,7 +489,7 @@ public class TypeEnumeratorTests : TestContainer
 
         Verify(testElement is not null);
         Verify(testElement.DeploymentItems is not null);
-        Verify(deploymentItems.Equals(testElement.DeploymentItems.ToArray()));
+        VerifyCollectionsAreEqual(deploymentItems, testElement.DeploymentItems.ToArray());
     }
 
     public void GetTestFromMethodShouldSetDeclaringAssemblyName()

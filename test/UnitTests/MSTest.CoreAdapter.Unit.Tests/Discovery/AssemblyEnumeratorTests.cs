@@ -102,7 +102,7 @@ public class AssemblyEnumeratorTests : TestContainer
         mockAssembly.Setup(a => a.DefinedTypes).Returns(expectedTypes);
 
         var types = AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings);
-        Verify(expectedTypes.Equals(types));
+        VerifyCollectionsAreEqual(expectedTypes.ToArray(), types);
     }
 
     public void GetTypesShouldHandleReflectionTypeLoadException()
@@ -262,7 +262,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
         var testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
 
-        Verify(new Collection<UnitTestElement> { unitTestElement }.Equals(testElements.ToList()));
+        VerifyCollectionsAreEqual(new Collection<UnitTestElement> { unitTestElement }, testElements.ToList());
     }
 
     public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForAType()
@@ -282,7 +282,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
         var testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
 
-        Verify(expectedTestElements.Equals(testElements.ToList()));
+        VerifyCollectionsAreEqual(expectedTestElements, testElements.ToList());
     }
 
     public void EnumerateAssemblyShouldReturnMoreThanOneTestElementForMoreThanOneType()
@@ -304,7 +304,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
         expectedTestElements.Add(unitTestElement);
         expectedTestElements.Add(unitTestElement);
-        Verify(expectedTestElements.Equals(testElements.ToList()));
+        VerifyCollectionsAreEqual(expectedTestElements, testElements.ToList());
     }
 
     public void EnumerateAssemblyShouldNotLogWarningsIfNonePresent()
@@ -342,7 +342,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
         testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
 
-        Verify(warningsFromTypeEnumerator.ToList().Equals(_warnings.ToList()));
+        VerifyCollectionsAreEqual(warningsFromTypeEnumerator.ToList(), _warnings.ToList());
     }
 
     public void EnumerateAssemblyShouldHandleExceptionsWhileEnumeratingAType()

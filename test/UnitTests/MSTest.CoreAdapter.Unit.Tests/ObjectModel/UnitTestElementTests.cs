@@ -120,7 +120,7 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.TestCategory = new string[] { "TC" };
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(new string[] { "TC" } == (testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[]));
+        VerifyCollectionsAreEqual(new string[] { "TC" }, (testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[]));
     }
 
     public void ToTestCaseShouldSetPriorityIfPresent()
@@ -164,7 +164,7 @@ public class UnitTestElementTests : TestContainer
         Verify("12" == testCase.GetPropertyValue(Constants.CssIterationProperty) as string);
         Verify("ProjectStructure" == testCase.GetPropertyValue(Constants.CssProjectStructureProperty) as string);
         Verify("I am a dummy test" == testCase.GetPropertyValue(Constants.DescriptionProperty) as string);
-        Verify(new string[] { "2312", "22332" } == testCase.GetPropertyValue(Constants.WorkItemIdsProperty) as string[]);
+        VerifyCollectionsAreEqual(new string[] { "2312", "22332" }, testCase.GetPropertyValue(Constants.WorkItemIdsProperty) as string[]);
     }
 
     public void ToTestCaseShouldSetDeploymentItemPropertyIfPresent()

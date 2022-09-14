@@ -111,9 +111,9 @@ public class TestExecutionManagerTests : TestContainer
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
         List<string> expectedResultList = new() { "PassingTest  Passed" };
 
-        Verify(expectedTestCaseStartList == _frameworkHandle.TestCaseStartList);
-        Verify(expectedTestCaseEndList == _frameworkHandle.TestCaseEndList);
-        Verify(expectedResultList == _frameworkHandle.ResultsList);
+        VerifyCollectionsAreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
+        VerifyCollectionsAreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
+        VerifyCollectionsAreEqual(expectedResultList, _frameworkHandle.ResultsList);
     }
 
     public void RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
@@ -140,9 +140,9 @@ public class TestExecutionManagerTests : TestContainer
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
         List<string> expectedResultList = new() { "PassingTest  Passed" };
 
-        Verify(expectedTestCaseStartList == _frameworkHandle.TestCaseStartList);
-        Verify(expectedTestCaseEndList == _frameworkHandle.TestCaseEndList);
-        Verify(expectedResultList == _frameworkHandle.ResultsList);
+        VerifyCollectionsAreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
+        VerifyCollectionsAreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
+        VerifyCollectionsAreEqual(expectedResultList, _frameworkHandle.ResultsList);
     }
 
     public void RunTestsForMultipleTestShouldSendMultipleResults()
@@ -157,8 +157,8 @@ public class TestExecutionManagerTests : TestContainer
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed", "FailingTest:Failed" };
         List<string> expectedResultList = new() { "PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail failed." };
 
-        Verify(expectedTestCaseStartList == _frameworkHandle.TestCaseStartList);
-        Verify(expectedTestCaseEndList == _frameworkHandle.TestCaseEndList);
+        VerifyCollectionsAreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
+        VerifyCollectionsAreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
         Verify(expectedResultList[0] == _frameworkHandle.ResultsList[0]);
         Verify(_frameworkHandle.ResultsList[1].Contains(expectedResultList[1]));
     }
@@ -831,7 +831,7 @@ public class TestExecutionManagerTests : TestContainer
     {
         foreach (var property in _tcmKnownProperties)
         {
-            Verify(testCase.GetPropertyValue(property) == tcmProperties[property.Id]);
+            Verify(testCase.GetPropertyValue(property).Equals(tcmProperties[property.Id]));
         }
     }
 

@@ -160,7 +160,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
     {
         foreach (var property in _tcmKnownProperties)
         {
-            Verify(testCase.GetPropertyValue(property) == tcmProperties[property]);
+            Verify(testCase.GetPropertyValue(property).Equals(tcmProperties[property]));
         }
     }
 }
