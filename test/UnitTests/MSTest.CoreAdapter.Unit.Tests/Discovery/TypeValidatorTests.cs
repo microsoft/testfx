@@ -277,8 +277,8 @@ public class TypeValidatorTests : TestContainer
         // list of our test types, to avoid bugs caused by typos.
         var allTypes = GetAllTestTypes().Select(t => t.Name).ToArray();
         var privateTypes = typeof(PrivateClassNames).GetProperties().Select(n => n.Name).ToArray();
-        privateTypes.Should().HaveCountGreaterOrEqualTo(1);
         var privateType = privateTypes.Should().BeSubsetOf(allTypes);
+        Verify(privateTypes.Length >= 1);
     }
 
     public void TypeHasValidAccessibilityShouldReturnTrueForAllPublicTypesIncludingNestedPublicTypes()

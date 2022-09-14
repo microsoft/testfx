@@ -8,7 +8,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
+using System.Xml;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
@@ -65,11 +66,11 @@ public class ThreadSafeStringWriterTests : TestContainer
             task1.GetAwaiter().GetResult();
 
             var content = stringWriter.ToString();
-            content.Should().NotBeNullOrWhiteSpace();
+            Verify(!string.IsNullOrEmpty(content));
 
             // Validate that only whole lines are written, not a mix of random chars
             var lines = content.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            lines.Should().HaveCountGreaterThan(0);
+            Verify(lines.Length > 0);
             foreach (var line in lines)
             {
                 Verify(line.Equals("content1") || line.Equals("content2"));
