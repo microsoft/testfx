@@ -163,9 +163,9 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Verify(
-            tests.All(t => t.TestMethod.Name != "BaseTestMethod"),
-            "DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should not be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = false.");
+        // DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly.
+        // BestTestMethod from DummyRemoteBaseTestClass should not be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = false.
+        Verify(tests.All(t => t.TestMethod.Name != "BaseTestMethod"));
     }
 
     public void GetTestsShouldNotReturnHiddenTestMethods()
@@ -298,7 +298,7 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        Verify(testCategories == testElement.TestCategory);
+        Verify(testCategories.SequenceEqual(testElement.TestCategory));
     }
 
     public void GetTestFromMethodShouldSetDoNotParallelize()
@@ -478,7 +478,7 @@ public class TypeEnumeratorTests : TestContainer
 
         Verify(testElement is not null);
         Verify(testElement.DeploymentItems is not null);
-        Verify(deploymentItems.SequenceEqual(testElement.DeploymentItems.ToArray()));
+        Verify(deploymentItems.SequenceEqual(testElement.DeploymentItems));
     }
 
     public void GetTestFromMethodShouldSetDeclaringAssemblyName()

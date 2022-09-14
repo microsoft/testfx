@@ -247,7 +247,6 @@ public class UnitTestDiscovererTests : TestContainer
     /// <summary>
     /// Send test cases should send filtered test cases only.
     /// </summary>
-
     public void SendTestCasesShouldSendFilteredTestCasesIfValidFilterExpression()
     {
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => new TestableTestCaseFilterExpression((p) => (p.DisplayName == "M1")));

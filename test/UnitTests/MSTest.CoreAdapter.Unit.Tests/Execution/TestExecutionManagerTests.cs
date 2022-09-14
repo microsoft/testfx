@@ -364,7 +364,7 @@ public class TestExecutionManagerTests : TestContainer
 
     #region Run Tests on Sources
 
-    //TODO: This is currently ignored and that's why we marked it as private.
+    // TODO: This is currently ignored and that's why we marked it as private.
     private void RunTestsForSourceShouldRunTestsInASource()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };

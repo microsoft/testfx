@@ -118,7 +118,7 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.TestCategory = new string[] { "TC" };
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(new string[] { "TC" }.SequenceEqual((testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[])));
+        Verify(new string[] { "TC" }.SequenceEqual((string[])testCase.GetPropertyValue(Constants.TestCategoryProperty)));
     }
 
     public void ToTestCaseShouldSetPriorityIfPresent()
@@ -162,7 +162,7 @@ public class UnitTestElementTests : TestContainer
         Verify("12" == testCase.GetPropertyValue(Constants.CssIterationProperty) as string);
         Verify("ProjectStructure" == testCase.GetPropertyValue(Constants.CssProjectStructureProperty) as string);
         Verify("I am a dummy test" == testCase.GetPropertyValue(Constants.DescriptionProperty) as string);
-        Verify(new string[] { "2312", "22332" }.SequenceEqual(testCase.GetPropertyValue(Constants.WorkItemIdsProperty) as string[]));
+        Verify(new string[] { "2312", "22332" }.SequenceEqual((string[])testCase.GetPropertyValue(Constants.WorkItemIdsProperty)));
     }
 
     public void ToTestCaseShouldSetDeploymentItemPropertyIfPresent()
@@ -180,7 +180,7 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.DeploymentItems = new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("s", "d") };
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(_unitTestElement.DeploymentItems == testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as KeyValuePair<string, string>[]);
+        Verify(_unitTestElement.DeploymentItems.SequenceEqual(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as KeyValuePair<string, string>[]));
     }
 
     #endregion
