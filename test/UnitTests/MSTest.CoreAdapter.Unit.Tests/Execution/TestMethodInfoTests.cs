@@ -432,7 +432,7 @@ public class TestMethodInfoTests : TestContainer
                                         "classTestInitializeCalled"
                                     };
         Verify(UTF.UnitTestOutcome.Passed == result.Outcome);
-        VerifyCollectionsAreEqual(expectedCallOrder, callOrder);
+        Verify(expectedCallOrder.SequenceEqual(callOrder));
     }
 
     public void TestMethodInfoInvokeShouldNotThrowIfTestInitializeIsNull()
@@ -611,7 +611,7 @@ public class TestMethodInfoTests : TestContainer
                                         "baseTestCleanupCalled2"
                                     };
         Verify(UTF.UnitTestOutcome.Passed == result.Outcome);
-        VerifyCollectionsAreEqual(expectedCallOrder, callOrder);
+        Verify(expectedCallOrder.SequenceEqual(callOrder));
     }
 
     public void TestMethodInfoInvokeShouldCallTestCleanupForBaseTestClassesAlways()
@@ -637,7 +637,7 @@ public class TestMethodInfoTests : TestContainer
                                     };
 
         Verify(UTF.UnitTestOutcome.Passed == result.Outcome);
-        VerifyCollectionsAreEqual(expectedCallOrder, callOrder);
+        Verify(expectedCallOrder.SequenceEqual(callOrder));
     }
 
     public void TestMethodInfoInvokeWhenTestCleanupThrowsReturnsExpectedResult()
@@ -1148,7 +1148,7 @@ public class TestMethodInfoTests : TestContainer
                                         "testMethod",
                                         "testCleanup"
                                     };
-        VerifyCollectionsAreEqual(expectedCallOrder, callOrder);
+        Verify(expectedCallOrder.SequenceEqual(callOrder));
         Verify(UTF.UnitTestOutcome.Passed == result.Outcome);
     }
 
@@ -1254,7 +1254,7 @@ public class TestMethodInfoTests : TestContainer
         var resolvedArguments = method.ResolveArguments(arguments);
 
         Verify(1 == resolvedArguments.Length);
-        VerifyCollectionsAreEqual(expectedArguments, resolvedArguments);
+        Verify(expectedArguments.SequenceEqual(resolvedArguments));
     }
 
     public void ResolveArgumentsShouldReturnProvidedArgumentsWhenTooManyParameters()
@@ -1271,7 +1271,7 @@ public class TestMethodInfoTests : TestContainer
         var resolvedArguments = method.ResolveArguments(arguments);
 
         Verify(3 == resolvedArguments.Length);
-        VerifyCollectionsAreEqual(expectedArguments, resolvedArguments);
+        Verify(expectedArguments.SequenceEqual(resolvedArguments));
     }
 
     public void ResolveArgumentsShouldReturnAdditionalOptionalParametersWithNoneProvided()
@@ -1288,7 +1288,7 @@ public class TestMethodInfoTests : TestContainer
         var resolvedArguments = method.ResolveArguments(arguments);
 
         Verify(3 == resolvedArguments.Length);
-        VerifyCollectionsAreEqual(expectedArguments, resolvedArguments);
+        Verify(expectedArguments.SequenceEqual(resolvedArguments));
     }
 
     public void ResolveArgumentsShouldReturnAdditionalOptionalParametersWithSomeProvided()
@@ -1305,7 +1305,7 @@ public class TestMethodInfoTests : TestContainer
         var resolvedArguments = method.ResolveArguments(arguments);
 
         Verify(3 == resolvedArguments.Length);
-        VerifyCollectionsAreEqual(expectedArguments, resolvedArguments);
+        Verify(expectedArguments.SequenceEqual(resolvedArguments));
     }
 
     public void ResolveArgumentsShouldReturnEmptyParamsWithNoneProvided()
@@ -1324,7 +1324,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(2 == resolvedArguments.Length);
         Verify(expectedArguments[0].Equals(resolvedArguments[0]));
         Verify(resolvedArguments[1].GetType() == typeof(string[]));
-        VerifyCollectionsAreEqual((string[])expectedArguments[1], (string[])resolvedArguments[1]);
+        Verify(((string[])expectedArguments[1]).SequenceEqual((string[])resolvedArguments[1]));
     }
 
     public void ResolveArgumentsShouldReturnPopulatedParamsWithAllProvided()
@@ -1343,7 +1343,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(2 == resolvedArguments.Length);
         Verify(expectedArguments[0].Equals(resolvedArguments[0]));
         Verify(resolvedArguments[1].GetType() == typeof(string[]));
-        VerifyCollectionsAreEqual((string[])expectedArguments[1], (string[])resolvedArguments[1]);
+        Verify(((string[])expectedArguments[1]).SequenceEqual((string[])resolvedArguments[1]));
     }
 
     #region helper methods

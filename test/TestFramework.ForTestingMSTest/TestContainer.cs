@@ -91,26 +91,6 @@ public abstract class TestContainer : IDisposable
         Throw("", caller, filePath, lineNumber);
     }
 
-    public static void VerifyCollectionsAreEqual<T>(ICollection<T> collection1,
-            ICollection<T> collection2,
-            [CallerArgumentExpression(nameof(collection1))] string? expression1 = default,
-            [CallerArgumentExpression(nameof(collection2))] string? expression2 = default,
-            [CallerMemberName] string? caller = default,
-            [CallerFilePath] string? filePath = default,
-            [CallerLineNumber] int lineNumber = default)
-    {
-        if (collection1.Count != collection2.Count)
-            Throw($"collections equality for {expression1} and {expression2}", caller, filePath, lineNumber);
-
-        foreach (var (item1, item2) in collection1.Zip(collection2, (item1, item2) => (item1, item2)))
-        {
-            if (item1 is null && item2 is null)
-                continue;
-
-            Verify(item1?.Equals(item2) == true, $"collections equality for {expression1} and {expression2} when assessing {item1} == {item2}", caller, filePath, lineNumber);
-        }
-    }
-
     [DoesNotReturn]
     private static void Throw(string? expression, string? caller, string? filePath, int lineNumber)
         => throw new Exception($"Expression failed: {expression ?? "<expression>"} at line {lineNumber} of method {caller ?? "<caller>"} in file {filePath ?? "<file-path>"}.");

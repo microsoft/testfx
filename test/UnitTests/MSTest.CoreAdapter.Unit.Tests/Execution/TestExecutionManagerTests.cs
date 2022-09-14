@@ -111,9 +111,9 @@ public class TestExecutionManagerTests : TestContainer
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
         List<string> expectedResultList = new() { "PassingTest  Passed" };
 
-        VerifyCollectionsAreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
-        VerifyCollectionsAreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
-        VerifyCollectionsAreEqual(expectedResultList, _frameworkHandle.ResultsList);
+        Verify(expectedTestCaseStartList.SequenceEqual(_frameworkHandle.TestCaseStartList));
+        Verify(expectedTestCaseEndList.SequenceEqual(_frameworkHandle.TestCaseEndList));
+        Verify(expectedResultList.SequenceEqual(_frameworkHandle.ResultsList));
     }
 
     public void RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
@@ -140,9 +140,9 @@ public class TestExecutionManagerTests : TestContainer
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
         List<string> expectedResultList = new() { "PassingTest  Passed" };
 
-        VerifyCollectionsAreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
-        VerifyCollectionsAreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
-        VerifyCollectionsAreEqual(expectedResultList, _frameworkHandle.ResultsList);
+        Verify(expectedTestCaseStartList.SequenceEqual(_frameworkHandle.TestCaseStartList));
+        Verify(expectedTestCaseEndList.SequenceEqual(_frameworkHandle.TestCaseEndList));
+        Verify(expectedResultList.SequenceEqual(_frameworkHandle.ResultsList));
     }
 
     public void RunTestsForMultipleTestShouldSendMultipleResults()
@@ -157,8 +157,8 @@ public class TestExecutionManagerTests : TestContainer
         List<string> expectedTestCaseEndList = new() { "PassingTest:Passed", "FailingTest:Failed" };
         List<string> expectedResultList = new() { "PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail failed." };
 
-        VerifyCollectionsAreEqual(expectedTestCaseStartList, _frameworkHandle.TestCaseStartList);
-        VerifyCollectionsAreEqual(expectedTestCaseEndList, _frameworkHandle.TestCaseEndList);
+        Verify(expectedTestCaseStartList.SequenceEqual(_frameworkHandle.TestCaseStartList));
+        Verify(expectedTestCaseEndList.SequenceEqual(_frameworkHandle.TestCaseEndList));
         Verify(expectedResultList[0] == _frameworkHandle.ResultsList[0]);
         Verify(_frameworkHandle.ResultsList[1].Contains(expectedResultList[1]));
     }
