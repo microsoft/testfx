@@ -56,7 +56,6 @@ public class LogMessageListenerTests : TestContainer
     }
 
     #region Dispose Tests
-
     public void DisposeShouldNotRemoveTraceListenerIfDebugTracesIsNotEnabled()
     {
         using var logMessageListener = new LogMessageListener(false);

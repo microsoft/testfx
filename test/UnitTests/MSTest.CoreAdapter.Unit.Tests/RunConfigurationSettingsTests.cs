@@ -34,10 +34,6 @@ public class RunConfigurationSettingsTests : TestContainer
         {
             base.Dispose(disposing);
             PlatformServiceProvider.Instance = null;
-            if (!IsDisposed)
-            {
-                base.Dispose(disposing);
-            }
         }
     }
     #region Property validation.

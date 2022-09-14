@@ -267,7 +267,6 @@ public class UnitTestDiscovererTests : TestContainer
     /// <summary>
     /// Send test cases should send all test cases if filter expression is null.
     /// </summary>
-
     public void SendTestCasesShouldSendAllTestCasesIfNullFilterExpression()
     {
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => null);
@@ -287,7 +286,6 @@ public class UnitTestDiscovererTests : TestContainer
     /// <summary>
     /// Send test cases should send all test cases if GetTestCaseFilter method is not present in DiscoveryContext.
     /// </summary>
-
     public void SendTestCasesShouldSendAllTestCasesIfGetTestCaseFilterNotPresent()
     {
         TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new();
@@ -307,7 +305,6 @@ public class UnitTestDiscovererTests : TestContainer
     /// <summary>
     /// Send test cases should not send any test cases if filter parsing error.
     /// </summary>
-
     public void SendTestCasesShouldNotSendAnyTestCasesIfFilterError()
     {
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => { throw new TestPlatformFormatException("DummyException"); });

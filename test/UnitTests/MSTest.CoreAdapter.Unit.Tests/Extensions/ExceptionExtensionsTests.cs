@@ -27,7 +27,7 @@ public class ExceptionExtensionsTests : TestContainer
 
         var exception = exceptionWithInnerException.GetInnerExceptionOrDefault();
 
-        Verify(innerException.Equals(exception));
+        Verify(ReferenceEquals(innerException, exception));
     }
 
     public void ExceptionGetInnerExceptionOrDefaultShouldNotThrowForNullException()
@@ -50,7 +50,7 @@ public class ExceptionExtensionsTests : TestContainer
 
         var exception = exceptionWithNoInnerException.GetInnerExceptionOrDefault();
 
-        Verify(exceptionWithNoInnerException.Equals(exception));
+        Verify(ReferenceEquals(exceptionWithNoInnerException, exception));
     }
 
     #endregion

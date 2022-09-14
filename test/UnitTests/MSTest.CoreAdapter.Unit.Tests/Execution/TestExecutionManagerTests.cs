@@ -357,15 +357,14 @@ public class TestExecutionManagerTests : TestContainer
         // Trigger another Run
         TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-        Verify("http://updatedLocalHost" == DummyTestClass.TestContextProperties["webAppUrl"] as string);
+        Verify("http://updatedLocalHost".Equals(DummyTestClass.TestContextProperties["webAppUrl"]));
     }
 
     #endregion
 
     #region Run Tests on Sources
 
-    // TODO: This tests needs to be mocked.
-
+    //TODO: This is currently ignored and that's why we marked it as private.
     private void RunTestsForSourceShouldRunTestsInASource()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
@@ -377,8 +376,7 @@ public class TestExecutionManagerTests : TestContainer
         Verify(_frameworkHandle.ResultsList.Contains("PassingTest  Passed"));
     }
 
-    // TODO: This tests needs to be mocked.
-
+    // TODO: This is currently ignored and that's why we marked it as private.
     private void RunTestsForSourceShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
@@ -398,8 +396,7 @@ public class TestExecutionManagerTests : TestContainer
             new KeyValuePair<string, object>("webAppUrl", "http://localhost")));
     }
 
-    // Todo: This tests needs to be mocked.
-
+    // TODO: This is currently ignored and that's why we marked it as private.
     private void RunTestsForSourceShouldPassInDeploymentInformationAsPropertiesToTheTest()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
@@ -736,7 +733,7 @@ public class TestExecutionManagerTests : TestContainer
     }
 
     // This is tracked by https://github.com/Microsoft/testfx/issues/320.
-
+    // TODO: This is currently ignored and that's why we marked it as private.
     private void RunTestsForTestShouldRunTestsInTheParentDomainsApartmentState()
     {
         var testCase1 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");

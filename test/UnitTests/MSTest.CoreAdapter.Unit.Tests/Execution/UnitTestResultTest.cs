@@ -17,7 +17,6 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class UnitTestResultTest : TestContainer
 {
-
     public void UnitTestResultConstrutorWithOutcomeAndErrorMessageShouldSetRequiredFields()
     {
         UnitTestResult result = new(UnitTestOutcome.Error, "DummyMessage");

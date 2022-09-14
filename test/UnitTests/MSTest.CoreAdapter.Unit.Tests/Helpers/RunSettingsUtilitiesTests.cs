@@ -76,7 +76,7 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         // Verify Parameter Values.
         Verify(trp.ContainsKey("webAppUrl"));
-        Verify("http://localhost" == trp["webAppUrl"] as string);
+        Verify("http://localhost".Equals(trp["webAppUrl"]));
     }
 
     public void GetTestRunParametersReturns3EntryOn3TestRunParameter()
@@ -102,11 +102,11 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         // Verify Parameter Values.
         Verify(trp.ContainsKey("webAppUrl"));
-        Verify("http://localhost" == trp["webAppUrl"] as string);
+        Verify("http://localhost".Equals(trp["webAppUrl"]));
         Verify(trp.ContainsKey("webAppUserName"));
-        Verify("Admin" == trp["webAppUserName"] as string);
+        Verify("Admin".Equals(trp["webAppUserName"]));
         Verify(trp.ContainsKey("webAppPassword"));
-        Verify("Password" == trp["webAppPassword"] as string);
+        Verify("Password".Equals(trp["webAppPassword"]));
     }
 
     public void GetTestRunParametersThrowsWhenTRPNodeHasAttributes()

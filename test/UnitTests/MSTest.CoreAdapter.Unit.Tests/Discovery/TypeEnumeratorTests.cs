@@ -83,9 +83,8 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Verify(
-            tests.Any(t => t.TestMethod.Name == "BaseTestMethod"),
-            "DummyBaseTestClass declares BaseTestMethod directly so it should always be discovered.");
+        // DummyBaseTestClass declares BaseTestMethod directly so it should always be discovered.
+        Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
     }
 
     public void GetTestsShouldReturnBaseTestMethodsInSameAssembly()
@@ -96,9 +95,8 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Verify(
-            tests.Any(t => t.TestMethod.Name == "BaseTestMethod"),
-            "DummyDerivedTestClass inherits DummyBaseTestClass from same assembly. BestTestMethod from DummyBaseTestClass should be discovered.");
+        // DummyDerivedTestClass inherits DummyBaseTestClass from same assembly. BestTestMethod from DummyBaseTestClass should be discovered.
+        Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
     }
 
     public void GetTestsShouldReturnBaseTestMethodsFromAnotherAssemblyByDefault()
@@ -110,9 +108,8 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Verify(
-            tests.Any(t => t.TestMethod.Name == "BaseTestMethod"),
-            "DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should be discovered by default.");
+        // DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should be discovered by default.
+        Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
     }
 
     public void GetTestsShouldReturnBaseTestMethodsFromAnotherAssemblyByConfiguration()
@@ -138,9 +135,9 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Verify(
-            tests.Any(t => t.TestMethod.Name == "BaseTestMethod"),
-            "DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = truem.");
+        // DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly.
+        // BestTestMethod from DummyRemoteBaseTestClass should be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = truem.
+        Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
     }
 
     public void GetTestsShouldNotReturnBaseTestMethodsFromAnotherAssemblyByConfiguration()
@@ -179,17 +176,15 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Verify(
-            1 ==
-            tests.Count(t => t.TestMethod.Name == "BaseTestMethod"),
-            "DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.");
-        Verify(
-            1 ==
-            tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"),
-            "DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.");
-        Verify(!
-            tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyBaseTestClass).FullName),
-            "DummyHidingTestClass hides BaseTestMethod so declaring class should not be the base class");
+
+        // DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.
+        Verify(1 == tests.Count(t => t.TestMethod.Name == "BaseTestMethod"));
+
+        // DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.
+        Verify(1 == tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"));
+
+        // DummyHidingTestClass hides BaseTestMethod so declaring class should not be the base class
+        Verify(!tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyBaseTestClass).FullName));
     }
 
     public void GetTestsShouldReturnOverriddenTestMethods()
@@ -200,21 +195,18 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Verify(
-            1 ==
-            tests.Count(t => t.TestMethod.Name == "BaseTestMethod"),
-            "DummyOverridingTestClass inherits BaseTestMethod so it should be discovered.");
-        Verify(
-            1 ==
-            tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"),
-            "DummyOverridingTestClass overrides DerivedTestMethod directly so it should always be discovered.");
-        Verify(
-            typeof(DummyHidingTestClass).FullName ==
-            tests.Single(t => t.TestMethod.Name == "BaseTestMethod").TestMethod.DeclaringClassFullName,
-            "DummyOverridingTestClass inherits BaseTestMethod from DummyHidingTestClass specifically.");
-        Verify(
-            tests.Single(t => t.TestMethod.Name == "DerivedTestMethod").TestMethod.DeclaringClassFullName is null,
-            "DummyOverridingTestClass overrides DerivedTestMethod so is the declaring class.");
+        // DummyOverridingTestClass inherits BaseTestMethod so it should be discovered.
+        Verify(1 == tests.Count(t => t.TestMethod.Name == "BaseTestMethod"));
+
+        // DummyOverridingTestClass overrides DerivedTestMethod directly so it should always be discovered.
+        Verify(1 == tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"));
+
+        // DummyOverridingTestClass inherits BaseTestMethod from DummyHidingTestClass specifically.
+        Verify(typeof(DummyHidingTestClass).FullName
+            == tests.Single(t => t.TestMethod.Name == "BaseTestMethod").TestMethod.DeclaringClassFullName);
+
+        // DummyOverridingTestClass overrides DerivedTestMethod so is the declaring class.
+        Verify(tests.Single(t => t.TestMethod.Name == "DerivedTestMethod").TestMethod.DeclaringClassFullName is null);
     }
 
     public void GetTestsShouldNotReturnHiddenTestMethodsFromAnyLevel()
@@ -225,23 +217,20 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Verify(
-            1 ==
-            tests.Count(t => t.TestMethod.Name == "BaseTestMethod"),
-            "DummySecondHidingTestClass hides BaseTestMethod so it should be discovered.");
-        Verify(
-            1 ==
-            tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"),
-            "DummySecondHidingTestClass hides DerivedTestMethod so it should be discovered.");
-        Verify(!
-            tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyBaseTestClass).FullName),
-            "DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class");
-        Verify(!
-            tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyHidingTestClass).FullName),
-            "DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class");
-        Verify(!
-            tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyOverridingTestClass).FullName),
-            "DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class");
+        // DummySecondHidingTestClass hides BaseTestMethod so it should be discovered.
+        Verify(1 == tests.Count(t => t.TestMethod.Name == "BaseTestMethod"));
+
+        // DummySecondHidingTestClass hides DerivedTestMethod so it should be discovered.
+        Verify(1 == tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"));
+
+        // DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class.
+        Verify(!tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyBaseTestClass).FullName));
+
+        // DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class.
+        Verify(!tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyHidingTestClass).FullName));
+
+        // DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class.
+        Verify(!tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyOverridingTestClass).FullName));
     }
 
     #endregion
@@ -516,7 +505,7 @@ public class TypeEnumeratorTests : TestContainer
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         var methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.MethodWithVoidReturnType));
 
-        // Setup mocks to behave like we have  attribute on the method
+        // Setup mocks to behave like we have [TestMethod] attribute on the method
         _mockReflectHelper.Setup(
             rh => rh.GetCustomAttribute(It.IsAny<MemberInfo>(), It.IsAny<Type>())).Returns(new TestMethodV2());
 

@@ -46,7 +46,6 @@ public class ReflectHelperTests : TestContainer
     /// <summary>
     /// Testing test category attribute adorned at class level
     /// </summary>
-
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtClassLevel()
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel") }, MemberTypes.TypeInfo);
@@ -60,7 +59,6 @@ public class ReflectHelperTests : TestContainer
     /// <summary>
     /// Testing test category attributes adorned at class, assembly and method level are getting collected.
     /// </summary>
-
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtAllLevels()
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel1"), new UTF.TestCategoryAttribute("AsmLevel2") }, MemberTypes.All);
@@ -77,7 +75,6 @@ public class ReflectHelperTests : TestContainer
     /// <summary>
     /// Testing test category attributes adorned at class, assembly and method level are getting collected.
     /// </summary>
-
     public void GetTestCategoryAttributeShouldConcatCustomAttributeOfSameType()
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel1") }, MemberTypes.All);
@@ -96,7 +93,6 @@ public class ReflectHelperTests : TestContainer
     /// <summary>
     /// Testing test category attributes adorned at assembly level
     /// </summary>
-
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtAssemblyLevel()
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel") }, MemberTypes.All);
@@ -111,7 +107,6 @@ public class ReflectHelperTests : TestContainer
     /// <summary>
     /// Testing multiple test category attribute adorned at class level
     /// </summary>
-
     public void GetTestCategoryAttributeShouldIncludeMultipleTestCategoriesAtClassLevel()
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel"), new UTF.TestCategoryAttribute("ClassLevel1") }, MemberTypes.TypeInfo);
@@ -125,7 +120,6 @@ public class ReflectHelperTests : TestContainer
     /// <summary>
     /// Testing multiple test category attributes adorned at assembly level
     /// </summary>
-
     public void GetTestCategoryAttributeShouldIncludeMultipleTestCategoriesAtAssemblyLevel()
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel"), new UTF.TestCategoryAttribute("AsmLevel1") }, MemberTypes.All);
@@ -138,7 +132,6 @@ public class ReflectHelperTests : TestContainer
     /// <summary>
     /// Testing test category attributes adorned at method level - regression
     /// </summary>
-
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtMethodLevel()
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel") }, MemberTypes.Method);

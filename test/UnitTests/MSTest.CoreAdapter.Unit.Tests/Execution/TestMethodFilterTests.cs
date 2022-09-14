@@ -90,7 +90,7 @@ public class TestMethodFilterTests : TestContainer
         TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 
         var result = TestMethodFilter.PropertyValueProvider(testCase, "FullyQualifiedName");
-        Verify(fullName == result as string);
+        Verify(fullName.Equals(result));
     }
 
     public void GetFilterExpressionForNullRunContextReturnsNull()
@@ -116,7 +116,6 @@ public class TestMethodFilterTests : TestContainer
     /// <summary>
     /// GetFilterExpression should return valid test case filter expression if DiscoveryContext has GetTestCaseFilter.
     /// </summary>
-
     public void GetFilterExpressionForDiscoveryContextWithGetTestCaseFilterReturnsValidTestCaseFilterExpression()
     {
         TestableTestExecutionRecorder recorder = new();
@@ -131,7 +130,6 @@ public class TestMethodFilterTests : TestContainer
     /// <summary>
     /// GetFilterExpression should return null test case filter expression in case DiscoveryContext doesn't have GetTestCaseFilter.
     /// </summary>
-
     public void GetFilterExpressionForDiscoveryContextWithoutGetTestCaseFilterReturnsNullTestCaseFilterExpression()
     {
         TestableTestExecutionRecorder recorder = new();
@@ -157,7 +155,6 @@ public class TestMethodFilterTests : TestContainer
     /// <summary>
     /// GetFilterExpression should return null filter expression and filterHasError as true in case GetTestCaseFilter throws exception.
     /// </summary>
-
     public void GetFilterExpressionForDiscoveryContextWithGetTestCaseFilterThrowingExceptionReturnsNullWithFilterHasErrorTrue()
     {
         TestableTestExecutionRecorder recorder = new();

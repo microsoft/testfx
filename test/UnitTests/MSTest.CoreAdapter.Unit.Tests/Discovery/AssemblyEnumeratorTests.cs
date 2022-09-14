@@ -140,8 +140,7 @@ public class AssemblyEnumeratorTests : TestContainer
         var types = AssemblyEnumerator.GetTypes(mockAssembly.Object, "DummyAssembly", _warnings);
 
         Verify(1 == _warnings.Count);
-        Verify(
-            _warnings.ToList().Contains(
+        Verify(_warnings.ToList().Contains(
             string.Format(CultureInfo.CurrentCulture, Resource.TypeLoadFailed, "DummyAssembly", "System.Exception: DummyLoaderException\r\n")));
 
         _testablePlatformServiceProvider.MockTraceLogger.Verify(tl => tl.LogWarning("{0}", exceptions[0]), Times.Once);
@@ -360,8 +359,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
         testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
 
-        Verify(
-            _warnings.ToList().Contains(
+        Verify(_warnings.ToList().Contains(
             string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.CouldNotInspectTypeDuringDiscovery,
