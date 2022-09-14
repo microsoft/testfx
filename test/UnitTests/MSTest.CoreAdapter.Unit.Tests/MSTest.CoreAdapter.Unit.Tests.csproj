@@ -41,14 +41,12 @@
       Resolving using net462 causes lots of tests to fail with MissingMethodException complaining that DataRow property doesn't exist.
       -->
     <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Private="true" SetTargetFramework="TargetFramework=netstandard2.0" />
-    <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj" Private="true" />
     <ProjectReference Include="$(RepoRoot)test\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
-    <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
   </ItemGroup>
 
 </Project>
