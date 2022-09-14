@@ -299,7 +299,9 @@ public class TypeValidatorTests : TestContainer
             .Where(t => TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
-        actualDiscoveredTypes.Should().BeEquivalentTo(expectedDiscoveredTypes);
+        Array.Sort(actualDiscoveredTypes);
+        Array.Sort(expectedDiscoveredTypes);
+        Verify(actualDiscoveredTypes.SequenceEqual(expectedDiscoveredTypes));
     }
 
     public void TypeHasValidAccessibilityShouldReturnFalseForAllTypesThatAreNotPublicOrOneOfTheirDeclaringTypesIsNotPublic()
@@ -340,7 +342,9 @@ public class TypeValidatorTests : TestContainer
             .Where(t => !TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
-        actualDiscoveredTypes.Should().BeEquivalentTo(expectedNonDiscoveredTypes, o => o.WithTracing());
+        Array.Sort(actualDiscoveredTypes);
+        Array.Sort(expectedNonDiscoveredTypes);
+        Verify(actualDiscoveredTypes.SequenceEqual(expectedNonDiscoveredTypes));
     }
 
     public void TypeHasValidAccessibilityShouldReturnTrueForAllPublicAndInternalTypesIncludingNestedTypesWhenDiscoverInternalIsEnabled()
@@ -373,7 +377,9 @@ public class TypeValidatorTests : TestContainer
             .Where(t => TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
-        actualDiscoveredTypes.Should().BeEquivalentTo(expectedDiscoveredTypes);
+        Array.Sort(actualDiscoveredTypes);
+        Array.Sort(expectedDiscoveredTypes);
+        Verify(actualDiscoveredTypes.SequenceEqual(expectedDiscoveredTypes));
     }
 
     public void TypeHasValidAccessibilityShouldReturnFalseForAllTypesThatAreNotPublicOrInternalOrOneOfTheirDeclaringTypesIsNotPublicOrInternalWhenDiscoverInternalIsEnabled()
@@ -401,7 +407,9 @@ public class TypeValidatorTests : TestContainer
             .Where(t => !TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
-        actualDiscoveredTypes.Should().BeEquivalentTo(expectedNonDiscoveredTypes, o => o.WithTracing());
+        Array.Sort(actualDiscoveredTypes);
+        Array.Sort(expectedNonDiscoveredTypes);
+        Verify(actualDiscoveredTypes.SequenceEqual(expectedNonDiscoveredTypes));
     }
 
     private static Type[] GetAllTestTypes()
