@@ -1,17 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
-#define HIDE_MESSAGELESS_IMPLEMENTATION
-#endif
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 /// <summary>
@@ -21,7 +15,6 @@ using System.Threading.Tasks;
 /// </summary>
 public sealed partial class Assert
 {
-#if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
     /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
@@ -43,7 +36,6 @@ public sealed partial class Assert
     {
         return ThrowsException<T>(action, string.Empty, null);
     }
-#endif
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -65,13 +57,12 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static T ThrowsException<T>(Action action, [CallerArgumentExpression("action")] string message = null)
+    public static T ThrowsException<T>(Action action, string message)
         where T : Exception
     {
         return ThrowsException<T>(action, message, null);
     }
 
-#if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
     /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
@@ -93,7 +84,6 @@ public sealed partial class Assert
     {
         return ThrowsException<T>(action, string.Empty, null);
     }
-#endif
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -115,7 +105,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static T ThrowsException<T>(Func<object> action, [CallerArgumentExpression("action")] string message = null)
+    public static T ThrowsException<T>(Func<object> action, string message)
         where T : Exception
     {
         return ThrowsException<T>(action, message, null);
@@ -144,7 +134,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static T ThrowsException<T>(Func<object> action, [CallerArgumentExpression("action")] string message = null, params object[] parameters)
+    public static T ThrowsException<T>(Func<object> action, string message, params object[] parameters)
         where T : Exception
     {
         return ThrowsException<T>(() => { action(); }, message, parameters);
@@ -174,7 +164,7 @@ public sealed partial class Assert
     /// The exception that was thrown.
     /// </returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and format appropriately.")]
-    public static T ThrowsException<T>(Action action, [CallerArgumentExpression("action")] string message = null, params object[] parameters)
+    public static T ThrowsException<T>(Action action, string message, params object[] parameters)
         where T : Exception
     {
         if (action == null)
@@ -223,7 +213,6 @@ public sealed partial class Assert
         return null;
     }
 
-#if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
     /// and throws <c>AssertFailedException</c> if code does not throws exception or throws exception of type other than <typeparamref name="T"/>.
@@ -245,7 +234,6 @@ public sealed partial class Assert
     {
         return await ThrowsExceptionAsync<T>(action, string.Empty, null).ConfigureAwait(false);
     }
-#endif
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -263,7 +251,7 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
-    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, [CallerArgumentExpression("action")] string message = null)
+    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
         where T : Exception
     {
         return await ThrowsExceptionAsync<T>(action, message, null).ConfigureAwait(false);
@@ -288,7 +276,7 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
-    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, [CallerArgumentExpression("action")] string message = null, params object[] parameters)
+    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message, params object[] parameters)
         where T : Exception
     {
         if (action == null)

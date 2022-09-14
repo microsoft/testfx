@@ -1,18 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
-#define HIDE_MESSAGELESS_IMPLEMENTATION
-#endif
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 /// <summary>
 /// A collection of helper classes to test various conditions within
@@ -21,7 +12,6 @@ using System.Threading.Tasks;
 /// </summary>
 public sealed partial class Assert
 {
-#if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the specified object is null and throws an exception
     /// if it is not.
@@ -36,7 +26,6 @@ public sealed partial class Assert
     {
         IsNull(value, string.Empty, null);
     }
-#endif
 
     /// <summary>
     /// Tests whether the specified object is null and throws an exception
@@ -52,8 +41,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
-    public static void IsNull(object value,
-        [CallerArgumentExpression("value")] string message = null)
+    public static void IsNull(object value, string message)
     {
         IsNull(value, message, null);
     }
@@ -75,8 +63,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
-    public static void IsNull(object value,
-        [CallerArgumentExpression("value")] string message = null, params object[] parameters)
+    public static void IsNull(object value, string message, params object[] parameters)
     {
         if (value != null)
         {
@@ -84,7 +71,6 @@ public sealed partial class Assert
         }
     }
 
-#if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the specified object is non-null and throws an exception
     /// if it is null.
@@ -99,7 +85,6 @@ public sealed partial class Assert
     {
         IsNotNull(value, string.Empty, null);
     }
-#endif
 
     /// <summary>
     /// Tests whether the specified object is non-null and throws an exception
@@ -115,8 +100,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    public static void IsNotNull([NotNull] object value,
-        [CallerArgumentExpression("value")] string message = null)
+    public static void IsNotNull([NotNull] object value, string message)
     {
         IsNotNull(value, message, null);
     }
@@ -138,8 +122,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    public static void IsNotNull([NotNull] object value,
-        [CallerArgumentExpression("value")] string message = null, params object[] parameters)
+    public static void IsNotNull([NotNull] object value, string message, params object[] parameters)
     {
         if (value == null)
         {

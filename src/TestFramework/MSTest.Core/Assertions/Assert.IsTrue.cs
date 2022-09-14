@@ -1,18 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
-#define HIDE_MESSAGELESS_IMPLEMENTATION
-#endif
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 /// <summary>
 /// A collection of helper classes to test various conditions within
@@ -21,7 +12,6 @@ using System.Threading.Tasks;
 /// </summary>
 public sealed partial class Assert
 {
-#if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
     /// if the condition is false.
@@ -51,7 +41,6 @@ public sealed partial class Assert
     {
         IsTrue(condition, string.Empty, null);
     }
-#endif
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -67,8 +56,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition,
-        [CallerArgumentExpression("condition")] string message = null)
+    public static void IsTrue([DoesNotReturnIf(false)] bool condition, string message)
     {
         IsTrue(condition, message, null);
     }
@@ -87,8 +75,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition,
-        [CallerArgumentExpression("condition")] string message = null)
+    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string message)
     {
         IsTrue(condition, message, null);
     }
@@ -110,8 +97,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition,
-        [CallerArgumentExpression("condition")] string message = null, params object[] parameters)
+    public static void IsTrue([DoesNotReturnIf(false)] bool condition, string message, params object[] parameters)
     {
         if (!condition)
         {
@@ -136,8 +122,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition,
-        [CallerArgumentExpression("condition")] string message = null, params object[] parameters)
+    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string message, params object[] parameters)
     {
         if (condition is false or null)
         {
@@ -145,7 +130,6 @@ public sealed partial class Assert
         }
     }
 
-#if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
     /// if the condition is true.
@@ -175,7 +159,6 @@ public sealed partial class Assert
     {
         IsFalse(condition, string.Empty, null);
     }
-#endif
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -191,8 +174,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition,
-        [CallerArgumentExpression("condition")] string message = null)
+    public static void IsFalse([DoesNotReturnIf(true)] bool condition, string message)
     {
         IsFalse(condition, message, null);
     }
@@ -211,8 +193,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition,
-        [CallerArgumentExpression("condition")] string message = null)
+    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string message)
     {
         IsFalse(condition, message, null);
     }
@@ -234,8 +215,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition,
-        [CallerArgumentExpression("condition")] string message = null, params object[] parameters)
+    public static void IsFalse([DoesNotReturnIf(true)] bool condition, string message, params object[] parameters)
     {
         if (condition)
         {
@@ -260,8 +240,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition,
-        [CallerArgumentExpression("condition")] string message = null, params object[] parameters)
+    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string message, params object[] parameters)
     {
         if (condition is true or null)
         {

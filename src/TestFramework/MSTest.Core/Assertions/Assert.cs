@@ -3,12 +3,8 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 /// <summary>
 /// A collection of helper classes to test various conditions within
@@ -74,7 +70,7 @@ public sealed partial class Assert
     /// The assertion failure message
     /// </param>
     [DoesNotReturn]
-    internal static void ThrowAssertFailed(string assertionName, [CallerArgumentExpression("assertionName")] string message = null)
+    internal static void ThrowAssertFailed(string assertionName, string message)
     {
         throw new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
     }
@@ -126,7 +122,7 @@ public sealed partial class Assert
     /// <param name="parameters">
     /// The parameters.
     /// </param>
-    internal static void CheckParameterNotNull([NotNull] object param, string assertionName, string parameterName, [CallerArgumentExpression("assertionName")] string message = null, params object[] parameters)
+    internal static void CheckParameterNotNull([NotNull] object param, string assertionName, string parameterName, string message, params object[] parameters)
     {
         if (param == null)
         {
@@ -189,6 +185,6 @@ public sealed partial class Assert
     {
         Fail(FrameworkMessages.DoNotUseAssertEquals);
         return false;
-    } 
+    }
     #endregion
 }
