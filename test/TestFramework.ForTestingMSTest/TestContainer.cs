@@ -2,14 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
-
-using static System.Collections.Specialized.BitVector32;
 
 namespace TestFramework.ForTestingMSTest;
 
@@ -20,6 +14,8 @@ namespace TestFramework.ForTestingMSTest;
 /// </summary>
 public abstract class TestContainer : IDisposable
 {
+    internal static readonly string IsVerifyException = nameof(IsVerifyException);
+
     protected bool IsDisposed { get; private set; }
 
     /// <summary>
@@ -84,6 +80,7 @@ public abstract class TestContainer : IDisposable
         Throw(expression, caller, filePath, lineNumber);
         return null;
     }
+
     public static void Fail([CallerMemberName] string? caller = default,
         [CallerFilePath] string? filePath = default,
         [CallerLineNumber] int lineNumber = default)
@@ -93,5 +90,9 @@ public abstract class TestContainer : IDisposable
 
     [DoesNotReturn]
     private static void Throw(string? expression, string? caller, string? filePath, int lineNumber)
-        => throw new Exception($"Expression failed: {expression ?? "<expression>"} at line {lineNumber} of method {caller ?? "<caller>"} in file {filePath ?? "<file-path>"}.");
+    {
+        var verifyException = new Exception($"Verification failed for {expression ?? "<expression>"} at line {lineNumber} of method '{caller ?? "<caller>"}' in file '{filePath ?? "<file-path>"}'.");
+        verifyException.Data.Add(IsVerifyException, true);
+        throw verifyException;
+    }
 }
