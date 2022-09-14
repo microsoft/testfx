@@ -3,9 +3,6 @@
 
 namespace PlatformServices.Desktop.ComponentTests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System.IO;
 using System.Reflection;
 using System.Xml;
@@ -17,17 +14,13 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 using Moq;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class DesktopTestSourceHostTests
+public class DesktopTestSourceHostTests : TestContainer
 {
     private TestSourceHost _testSourceHost;
 
-    [TestMethod]
-    public void ParentDomainShouldHonourSearchDirectoriesSpecifiedInRunsettings()
+    public void ParentDomainShouldHonorSearchDirectoriesSpecifiedInRunsettings()
     {
         string runSettingxml =
         @"<RunSettings>
@@ -52,7 +45,6 @@ public class DesktopTestSourceHostTests
         Assembly.Load("TestProjectForAssemblyResolution");
     }
 
-    [TestMethod]
     public void ChildDomainResolutionPathsShouldHaveSearchDirectoriesSpecifiedInRunsettings()
     {
         string runSettingxml =
@@ -82,7 +74,6 @@ public class DesktopTestSourceHostTests
         AppDomainUtilities.CreateInstance(_testSourceHost.AppDomain, type, null);
     }
 
-    [TestMethod]
     public void DisposeShouldUnloadChildAppDomain()
     {
         var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
@@ -90,11 +81,11 @@ public class DesktopTestSourceHostTests
         _testSourceHost.SetupHost();
 
         // Check that child appdomain was indeed created
-        Assert.IsNotNull(_testSourceHost.AppDomain);
+        Verify(_testSourceHost.AppDomain is not null);
         _testSourceHost.Dispose();
 
         // Check that child-appdomain is now unloaded.
-        Assert.IsNull(_testSourceHost.AppDomain);
+        Verify(_testSourceHost.AppDomain is null);
     }
 
     private static string GetTestAssemblyPath(string assemblyName)
@@ -105,7 +96,7 @@ public class DesktopTestSourceHostTests
         return Path.Combine(testAssetPath, assemblyName);
     }
 
-    private Mock<IRunSettings> GetMockedIRunSettings(string runSettingxml)
+    private static Mock<IRunSettings> GetMockedIRunSettings(string runSettingxml)
     {
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
