@@ -3,21 +3,17 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
-extern alias FrameworkV1;
-
 using System;
 using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
-[TestClass]
-public class TestCaseExtensionsTests
+using TestFramework.ForTestingMSTest;
+
+using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
+
+public class TestCaseExtensionsTests : TestContainer
 {
-    [TestMethod]
     public void ToUnitTestElementShouldReturnUnitTestElementWithFieldsSet()
     {
         TestCase testCase = new("DummyClassName.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName)
@@ -33,17 +29,16 @@ public class TestCaseExtensionsTests
 
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
-        Assert.IsTrue(resultUnitTestElement.IsAsync);
-        Assert.AreEqual(2, resultUnitTestElement.Priority);
-        Assert.AreEqual(testCategories, resultUnitTestElement.TestCategory);
-        Assert.AreEqual("DummyDisplayName", resultUnitTestElement.DisplayName);
-        Assert.AreEqual("DummyMethod", resultUnitTestElement.TestMethod.Name);
-        Assert.AreEqual("DummyClassName", resultUnitTestElement.TestMethod.FullClassName);
-        Assert.IsTrue(resultUnitTestElement.TestMethod.IsAsync);
-        Assert.IsNull(resultUnitTestElement.TestMethod.DeclaringClassFullName);
+        Verify(resultUnitTestElement.IsAsync);
+        Verify(2 == resultUnitTestElement.Priority);
+        Verify(testCategories == resultUnitTestElement.TestCategory);
+        Verify("DummyDisplayName" == resultUnitTestElement.DisplayName);
+        Verify("DummyMethod" == resultUnitTestElement.TestMethod.Name);
+        Verify("DummyClassName" == resultUnitTestElement.TestMethod.FullClassName);
+        Verify(resultUnitTestElement.TestMethod.IsAsync);
+        Verify(resultUnitTestElement.TestMethod.DeclaringClassFullName is null);
     }
 
-    [TestMethod]
     public void ToUnitTestElementForTestCaseWithNoPropertiesShouldReturnUnitTestElementWithDefaultFields()
     {
         TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
@@ -52,12 +47,11 @@ public class TestCaseExtensionsTests
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
         // These are set for testCase by default by ObjectModel.
-        Assert.IsFalse(resultUnitTestElement.IsAsync);
-        Assert.AreEqual(0, resultUnitTestElement.Priority);
-        Assert.IsNull(resultUnitTestElement.TestCategory);
+        Verify(!resultUnitTestElement.IsAsync);
+        Verify(0 == resultUnitTestElement.Priority);
+        Verify(resultUnitTestElement.TestCategory is null);
     }
 
-    [TestMethod]
     public void ToUnitTestElementShouldAddDeclaringClassNameToTestElementWhenAvailable()
     {
         TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName);
@@ -66,7 +60,7 @@ public class TestCaseExtensionsTests
 
         var resultUnitTestElement = testCase.ToUnitTestElement(testCase.Source);
 
-        Assert.AreEqual("DummyClassName", resultUnitTestElement.TestMethod.FullClassName);
-        Assert.AreEqual("DummyDeclaringClassName", resultUnitTestElement.TestMethod.DeclaringClassFullName);
+        Verify("DummyClassName" == resultUnitTestElement.TestMethod.FullClassName);
+        Verify("DummyDeclaringClassName" == resultUnitTestElement.TestMethod.DeclaringClassFullName);
     }
 }

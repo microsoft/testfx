@@ -3,8 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
-extern alias FrameworkV1;
-
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,73 +10,64 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Moq;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
-[TestClass]
-public class PlatformServiceProviderTests
+using TestFramework.ForTestingMSTest;
+
+public class PlatformServiceProviderTests : TestContainer
 {
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
-        PlatformServiceProvider.Instance = null;
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            PlatformServiceProvider.Instance = null;
+        }
     }
 
-    [TestMethod]
     public void ProviderServiceInstanceShouldReturnAnObjectOfItselfByDefault()
     {
-        Assert.IsInstanceOfType(PlatformServiceProvider.Instance, typeof(PlatformServiceProvider));
+        Verify(PlatformServiceProvider.Instance.GetType() == typeof(PlatformServiceProvider));
     }
 
-    [TestMethod]
     public void ProviderServiceInstanceShouldReturnTheInstanceSet()
     {
         // If this test fails most other tests would too since this
         // defines our mocking for the Service provider.
         PlatformServiceProvider.Instance = new TestablePlatformServiceProvider();
-        Assert.IsInstanceOfType(PlatformServiceProvider.Instance, typeof(TestablePlatformServiceProvider));
+        Verify(PlatformServiceProvider.Instance.GetType() == typeof(TestablePlatformServiceProvider));
     }
 
-    [TestMethod]
     public void TestSourceShouldReturnANonNullInstance()
     {
-        Assert.IsNotNull(PlatformServiceProvider.Instance);
+        Verify(PlatformServiceProvider.Instance is not null);
     }
 
-    [TestMethod]
     public void TestSourceShouldReturnAValidTestSource()
     {
-        Assert.IsInstanceOfType(PlatformServiceProvider.Instance.TestSource, typeof(TestSource));
+        Verify(PlatformServiceProvider.Instance.TestSource.GetType() == typeof(TestSource));
     }
 
-    [TestMethod]
     public void TestSourceShouldBeCached()
     {
         var testSourceInstance = PlatformServiceProvider.Instance.TestSource;
 
-        Assert.IsNotNull(testSourceInstance);
-        Assert.AreEqual(testSourceInstance, PlatformServiceProvider.Instance.TestSource);
+        Verify(testSourceInstance is not null);
+        Verify(testSourceInstance == PlatformServiceProvider.Instance.TestSource);
     }
 
-    [TestMethod]
     public void ReflectionOperationsShouldReturnAValidInstance()
     {
-        Assert.IsInstanceOfType(PlatformServiceProvider.Instance.ReflectionOperations, typeof(ReflectionOperations));
+        Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations));
     }
 
-    [TestMethod]
     public void ReflectionOperationsShouldBeCached()
     {
         var reflectionOperationsInstance = PlatformServiceProvider.Instance.ReflectionOperations;
 
-        Assert.IsNotNull(reflectionOperationsInstance);
-        Assert.AreEqual(reflectionOperationsInstance, PlatformServiceProvider.Instance.ReflectionOperations);
+        Verify(reflectionOperationsInstance is not null);
+        Verify(reflectionOperationsInstance == PlatformServiceProvider.Instance.ReflectionOperations);
     }
 
-    [TestMethod]
     public void GetTestContextShouldReturnAValidTestContext()
     {
         // Arrange.
@@ -92,9 +81,9 @@ public class PlatformServiceProviderTests
         var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, writer, properties);
 
         // Assert.
-        Assert.AreEqual("A.C.M", testContext.Context.FullyQualifiedTestClassName);
-        Assert.AreEqual("M", testContext.Context.TestName);
-        Assert.IsTrue(testContext.Context.Properties.Contains(properties.ToArray()[0].Key));
-        Assert.IsTrue(((IDictionary<string, object>)testContext.Context.Properties).Contains(properties.ToArray()[0]));
+        Verify("A.C.M" == testContext.Context.FullyQualifiedTestClassName);
+        Verify("M" == testContext.Context.TestName);
+        Verify(testContext.Context.Properties.Contains(properties.ToArray()[0].Key));
+        Verify(((IDictionary<string, object>)testContext.Context.Properties).Contains(properties.ToArray()[0]));
     }
 }

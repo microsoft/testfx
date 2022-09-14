@@ -3,31 +3,23 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Moq;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class TestContextExtensionsTests
+public class TestContextExtensionsTests : TestContainer
 {
-    [TestMethod]
     public void GetAndClearDiagnosticMessagesShouldReturnTestContextMessages()
     {
         Mock<ITestContext> mockTestContext = new();
 
         mockTestContext.Setup(tc => tc.GetDiagnosticMessages()).Returns("foo");
 
-        Assert.AreEqual("foo", mockTestContext.Object.GetAndClearDiagnosticMessages());
+        Verify("foo" == mockTestContext.Object.GetAndClearDiagnosticMessages());
     }
 
-    [TestMethod]
     public void GetAndClearDiagnosticMessagesShouldClearContextMessages()
     {
         Mock<ITestContext> mockTestContext = new();
@@ -39,6 +31,6 @@ public class TestContextExtensionsTests
         mockTestContext.Object.GetAndClearDiagnosticMessages();
         message = "bar";
 
-        Assert.AreEqual("bar", mockTestContext.Object.GetAndClearDiagnosticMessages());
+        Verify("bar" == mockTestContext.Object.GetAndClearDiagnosticMessages());
     }
 }

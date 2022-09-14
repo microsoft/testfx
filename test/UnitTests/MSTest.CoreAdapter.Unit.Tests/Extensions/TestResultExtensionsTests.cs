@@ -3,40 +3,33 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class TestResultExtensionsTests
+using TestFramework.ForTestingMSTest;
+
+using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class TestResultExtensionsTests : TestContainer
 {
-    [TestMethod]
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithFailureOutcome()
     {
         var results = new[] { new UTF.TestResult() { TestFailureException = new Exception() } };
         var convertedResults = results.ToUnitTestResults();
 
-        Assert.AreEqual(AdapterTestOutcome.Failed, convertedResults[0].Outcome);
+        Verify(AdapterTestOutcome.Failed == convertedResults[0].Outcome);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithInconclusiveOutcome()
     {
         var results = new[] { new UTF.TestResult() { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive } };
         var convertedResults = results.ToUnitTestResults();
 
-        Assert.AreEqual(AdapterTestOutcome.Inconclusive, convertedResults[0].Outcome);
+        Verify(AdapterTestOutcome.Inconclusive == convertedResults[0].Outcome);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetLoggingDataForConvertedUnitTestResults()
     {
         var timespan = default(TimeSpan);
@@ -50,15 +43,14 @@ public class TestResultExtensionsTests
         };
         var convertedResults = results.ToUnitTestResults();
 
-        Assert.AreEqual("logOutput", convertedResults[0].StandardOut);
-        Assert.AreEqual("logError", convertedResults[0].StandardError);
-        Assert.AreEqual("displayName", convertedResults[0].DisplayName);
-        Assert.AreEqual("debugTrace", convertedResults[0].DebugTrace);
-        Assert.AreEqual(timespan, convertedResults[0].Duration);
-        Assert.AreEqual(1, convertedResults[0].DatarowIndex);
+        Verify("logOutput" == convertedResults[0].StandardOut);
+        Verify("logError" == convertedResults[0].StandardError);
+        Verify("displayName" == convertedResults[0].DisplayName);
+        Verify("debugTrace" == convertedResults[0].DebugTrace);
+        Verify(timespan == convertedResults[0].Duration);
+        Verify(1 == convertedResults[0].DatarowIndex);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetStandardOut()
     {
         var results = new[]
@@ -70,10 +62,9 @@ public class TestResultExtensionsTests
         };
         var convertedResults = results.ToUnitTestResults();
 
-        Assert.AreEqual("logOutput", convertedResults[0].StandardOut);
+        Verify("logOutput" == convertedResults[0].StandardOut);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetStandardError()
     {
         var results = new[]
@@ -86,10 +77,9 @@ public class TestResultExtensionsTests
 
         var convertedResults = results.ToUnitTestResults();
 
-        Assert.AreEqual("logError", convertedResults[0].StandardError);
+        Verify("logError" == convertedResults[0].StandardError);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetDebugTrace()
     {
         var results = new[]
@@ -102,10 +92,9 @@ public class TestResultExtensionsTests
 
         var convertedResults = results.ToUnitTestResults();
 
-        Assert.AreEqual("debugTrace", convertedResults[0].DebugTrace);
+        Verify("debugTrace" == convertedResults[0].DebugTrace);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetTestContextMessages()
     {
         var results = new[]
@@ -118,10 +107,9 @@ public class TestResultExtensionsTests
 
         var convertedResults = results.ToUnitTestResults();
 
-        Assert.AreEqual("Context", convertedResults[0].TestContextMessages);
+        Verify("Context" == convertedResults[0].TestContextMessages);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetDuration()
     {
         var timespan = default(TimeSpan);
@@ -135,10 +123,9 @@ public class TestResultExtensionsTests
 
         var convertedResults = results.ToUnitTestResults();
 
-        Assert.AreEqual(timespan, convertedResults[0].Duration);
+        Verify(timespan == convertedResults[0].Duration);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetDisplayName()
     {
         var results = new[]
@@ -151,10 +138,9 @@ public class TestResultExtensionsTests
 
         var convertedResults = results.ToUnitTestResults();
 
-        Assert.AreEqual("displayName", convertedResults[0].DisplayName);
+        Verify("displayName" == convertedResults[0].DisplayName);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetDataRowIndex()
     {
         var results = new[]
@@ -167,10 +153,9 @@ public class TestResultExtensionsTests
 
         var convertedResults = results.ToUnitTestResults();
 
-        Assert.AreEqual(1, convertedResults[0].DatarowIndex);
+        Verify(1 == convertedResults[0].DatarowIndex);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsForTestResultShouldSetParentInfo()
     {
         var executionId = Guid.NewGuid();
@@ -189,16 +174,15 @@ public class TestResultExtensionsTests
 
         var convertedResults = results.ToUnitTestResults();
 
-        Assert.AreEqual(executionId, convertedResults[0].ExecutionId);
-        Assert.AreEqual(parentExecId, convertedResults[0].ParentExecId);
-        Assert.AreEqual(innerResultsCount, convertedResults[0].InnerResultsCount);
+        Verify(executionId == convertedResults[0].ExecutionId);
+        Verify(parentExecId == convertedResults[0].ParentExecId);
+        Verify(innerResultsCount == convertedResults[0].InnerResultsCount);
     }
 
-    [TestMethod]
     public void ToUnitTestResultsShouldHaveResultsFileProvidedToTestResult()
     {
         var results = new[] { new UTF.TestResult() { ResultFiles = new List<string>() { "DummyFile.txt" } } };
         var convertedResults = results.ToUnitTestResults();
-        Assert.AreEqual("DummyFile.txt", convertedResults[0].ResultFiles[0]);
+        Verify("DummyFile.txt" == convertedResults[0].ResultFiles[0]);
     }
 }

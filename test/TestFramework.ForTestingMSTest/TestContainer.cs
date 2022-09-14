@@ -14,6 +14,8 @@ namespace TestFramework.ForTestingMSTest;
 /// </summary>
 public abstract class TestContainer : IDisposable
 {
+    internal static readonly string IsVerifyException = nameof(IsVerifyException);
+
     protected bool IsDisposed { get; private set; }
 
     /// <summary>
@@ -50,8 +52,7 @@ public abstract class TestContainer : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Not static to avoid CA1822 warning on test methods")]
-    protected void Verify(bool condition,
+    public static void Verify(bool condition,
         [CallerArgumentExpression(nameof(condition))] string? expression = default,
         [CallerMemberName] string? caller = default,
         [CallerFilePath] string? filePath = default,
@@ -61,8 +62,7 @@ public abstract class TestContainer : IDisposable
             Throw(expression, caller, filePath, lineNumber);
     }
 
-    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Not static to avoid CA1822 warning on test methods")]
-    protected Exception VerifyThrows(Action action,
+    public static Exception VerifyThrows(Action action,
         [CallerArgumentExpression(nameof(action))] string? expression = default,
         [CallerMemberName] string? caller = default,
         [CallerFilePath] string? filePath = default,
@@ -81,7 +81,18 @@ public abstract class TestContainer : IDisposable
         return null;
     }
 
+    public static void Fail([CallerMemberName] string? caller = default,
+        [CallerFilePath] string? filePath = default,
+        [CallerLineNumber] int lineNumber = default)
+    {
+        Throw("", caller, filePath, lineNumber);
+    }
+
     [DoesNotReturn]
     private static void Throw(string? expression, string? caller, string? filePath, int lineNumber)
-        => throw new Exception($"Expression failed: {expression ?? "<expression>"} at line {lineNumber} of method {caller ?? "<caller>"} in file {filePath ?? "<file-path>"}.");
+    {
+        var verifyException = new Exception($"Verification failed for {expression ?? "<expression>"} at line {lineNumber} of method '{caller ?? "<caller>"}' in file '{filePath ?? "<file-path>"}'.");
+        verifyException.Data.Add(IsVerifyException, true);
+        throw verifyException;
+    }
 }

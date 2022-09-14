@@ -3,10 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-extern alias FrameworkV2CoreExtension;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,19 +22,13 @@ using MSTest.TestAdapter;
 
 using TestableImplementations;
 
-using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
-using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class TestMethodRunnerTests
+using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class TestMethodRunnerTests : TestContainer
 {
     private readonly TestMethodRunner _globalTestMethodRunner;
 
@@ -108,23 +98,22 @@ public class TestMethodRunnerTests
         DummyTestClass.TestInitializeMethodBody = value => { };
         DummyTestClass.TestMethodBody = instance => { };
         DummyTestClass.TestCleanupMethodBody = value => { };
-    }
 
-    [TestInitialize]
-    public void TestInit()
-    {
+        // TestInitialize
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _testablePlatformServiceProvider.SetupMockReflectionOperations();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
-        PlatformServiceProvider.Instance = null;
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            PlatformServiceProvider.Instance = null;
+        }
     }
 
-    [TestMethodV1]
     public void ExecuteForAssemblyInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
     {
         // Arrange.
@@ -152,11 +141,10 @@ public class TestMethodRunnerTests
         var results = testMethodRunner.Execute();
 
         // Assert.
-        Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
-        StringAssert.Contains(results[0].ErrorMessage, "System.ArgumentException: Value does not fall within the expected range.. Aborting test execution.");
+        Verify(AdapterTestOutcome.Failed == results[0].Outcome);
+        Verify(results[0].ErrorMessage.Contains("System.ArgumentException: Value does not fall within the expected range.. Aborting test execution."));
     }
 
-    [TestMethodV1]
     public void ExecuteForClassInitializeThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
     {
         // Arrange.
@@ -185,32 +173,29 @@ public class TestMethodRunnerTests
         var results = testMethodRunner.Execute();
 
         // Assert.
-        Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
-        StringAssert.Contains(results[0].ErrorMessage, "System.ArgumentException: Value does not fall within the expected range.");
+        Verify(AdapterTestOutcome.Failed == results[0].Outcome);
+        Verify(results[0].ErrorMessage.Contains("System.ArgumentException: Value does not fall within the expected range."));
     }
 
-    [TestMethodV1]
     public void ExecuteForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => { throw new Exception("DummyException"); });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         var results = testMethodRunner.Execute();
-        Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
-        StringAssert.Contains(results[0].ErrorMessage, "Exception thrown while executing test");
+        Verify(AdapterTestOutcome.Failed == results[0].Outcome);
+        Verify(results[0].ErrorMessage.Contains("Exception thrown while executing test"));
     }
 
-    [TestMethodV1]
     public void ExecuteForPassingTestShouldReturnUnitTestResultWithPassedOutcome()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         var results = testMethodRunner.Execute();
-        Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
+        Verify(AdapterTestOutcome.Passed == results[0].Outcome);
     }
 
-    [TestMethodV1]
     public void ExecuteShouldNotFillInDebugAndTraceLogsIfDebugTraceDisabled()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
@@ -220,10 +205,9 @@ public class TestMethodRunnerTests
         _testablePlatformServiceProvider.MockTraceListener.Setup(tl => tl.GetWriter()).Returns(writer);
 
         var results = testMethodRunner.Execute();
-        Assert.AreEqual(results[0].DebugTrace, string.Empty);
+        Verify(results[0].DebugTrace == string.Empty);
     }
 
-    [TestMethodV1]
     public void ExecuteShouldNotFillInDebugAndTraceLogsFromRunningTestMethod()
     {
         StringWriter writer = new(new StringBuilder());
@@ -244,21 +228,19 @@ public class TestMethodRunnerTests
 
         var results = testMethodRunner.Execute();
 
-        Assert.AreEqual(string.Empty, results[0].DebugTrace);
+        Verify(string.Empty == results[0].DebugTrace);
     }
 
-    [TestMethodV1]
     public void RunTestMethodForTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => { throw new Exception("Dummy Exception"); });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         var results = testMethodRunner.RunTestMethod();
-        Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
-        StringAssert.Contains(results[0].ErrorMessage, "Exception thrown while executing test");
+        Verify(AdapterTestOutcome.Failed == results[0].Outcome);
+        Verify(results[0].ErrorMessage.Contains("Exception thrown while executing test"));
     }
 
-    [TestMethodV1]
     public void RunTestMethodForMultipleResultsReturnMultipleResults()
     {
         var testMethodAttributeMock = new Mock<UTF.TestMethodAttribute>();
@@ -280,33 +262,30 @@ public class TestMethodRunnerTests
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         var results = testMethodRunner.Execute();
-        Assert.AreEqual(2, results.Length);
+        Verify(2 == results.Length);
 
-        Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
-        Assert.AreEqual(AdapterTestOutcome.Failed, results[1].Outcome);
+        Verify(AdapterTestOutcome.Passed == results[0].Outcome);
+        Verify(AdapterTestOutcome.Failed == results[1].Outcome);
     }
 
-    [TestMethodV1]
     public void RunTestMethodForPassingTestThrowingExceptionShouldReturnUnitTestResultWithPassedOutcome()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         var results = testMethodRunner.Execute();
-        Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
+        Verify(AdapterTestOutcome.Passed == results[0].Outcome);
     }
 
-    [TestMethodV1]
     public void RunTestMethodForFailingTestThrowingExceptionShouldReturnUnitTestResultWithFailedOutcome()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         var results = testMethodRunner.Execute();
-        Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
+        Verify(AdapterTestOutcome.Failed == results[0].Outcome);
     }
 
-    [TestMethodV1]
     public void RunTestMethodShouldGiveTestResultAsPassedWhenTestMethodPasses()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
@@ -315,10 +294,9 @@ public class TestMethodRunnerTests
         var results = testMethodRunner.RunTestMethod();
 
         // Since data is not provided, tests run normally giving passed as outcome.
-        Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
+        Verify(AdapterTestOutcome.Passed == results[0].Outcome);
     }
 
-    [TestMethodV1]
     public void RunTestMethodShouldGiveTestResultAsFailedWhenTestMethodFails()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
@@ -327,10 +305,9 @@ public class TestMethodRunnerTests
         var results = testMethodRunner.RunTestMethod();
 
         // Since data is not provided, tests run normally giving passed as outcome.
-        Assert.AreEqual(AdapterTestOutcome.Failed, results[0].Outcome);
+        Verify(AdapterTestOutcome.Failed == results[0].Outcome);
     }
 
-    [TestMethodV1]
     public void RunTestMethodShouldRunDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
@@ -349,12 +326,11 @@ public class TestMethodRunnerTests
         var results = testMethodRunner.RunTestMethod();
 
         // check for outcome
-        Assert.AreEqual(AdapterTestOutcome.Passed, results[0].Outcome);
-        Assert.AreEqual(AdapterTestOutcome.Passed, results[1].Outcome);
-        Assert.AreEqual(AdapterTestOutcome.Passed, results[2].Outcome);
+        Verify(AdapterTestOutcome.Passed == results[0].Outcome);
+        Verify(AdapterTestOutcome.Passed == results[1].Outcome);
+        Verify(AdapterTestOutcome.Passed == results[2].Outcome);
     }
 
-    [TestMethodV1]
     public void RunTestMethodShouldRunDataDrivenTestsWhenDataIsProvidedUsingDataRowAttribute()
     {
         UTF.TestResult testResult = new()
@@ -377,10 +353,9 @@ public class TestMethodRunnerTests
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
 
         var results = testMethodRunner.RunTestMethod();
-        Assert.AreEqual(AdapterTestOutcome.Inconclusive, results[0].Outcome);
+        Verify(AdapterTestOutcome.Inconclusive == results[0].Outcome);
     }
 
-    [TestMethodV1]
     public void RunTestMethodShouldSetDataRowIndexForDataDrivenTestsWhenDataIsProvidedUsingDataSourceAttribute()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult());
@@ -397,12 +372,11 @@ public class TestMethodRunnerTests
         var results = testMethodRunner.RunTestMethod();
 
         // check for datarowIndex
-        Assert.AreEqual(0, results[0].DatarowIndex);
-        Assert.AreEqual(1, results[1].DatarowIndex);
-        Assert.AreEqual(2, results[2].DatarowIndex);
+        Verify(0 == results[0].DatarowIndex);
+        Verify(1 == results[1].DatarowIndex);
+        Verify(2 == results[2].DatarowIndex);
     }
 
-    [TestMethodV1]
     public void RunTestMethodShoudlRunOnlyDataSourceTestsWhenBothDataSourceAndDataRowAreProvided()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult());
@@ -424,12 +398,11 @@ public class TestMethodRunnerTests
         var results = testMethodRunner.RunTestMethod();
 
         // check for datarowIndex as only DataSource Tests are Run
-        Assert.AreEqual(0, results[0].DatarowIndex);
-        Assert.AreEqual(1, results[1].DatarowIndex);
-        Assert.AreEqual(2, results[2].DatarowIndex);
+        Verify(0 == results[0].DatarowIndex);
+        Verify(1 == results[1].DatarowIndex);
+        Verify(2 == results[2].DatarowIndex);
     }
 
-    [TestMethodV1]
     public void RunTestMethodShouldFillInDisplayNameWithDataRowDisplayNameIfProvidedForDataDrivenTests()
     {
         UTF.TestResult testResult = new();
@@ -450,11 +423,10 @@ public class TestMethodRunnerTests
 
         var results = testMethodRunner.RunTestMethod();
 
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual("DataRowTestDisplayName", results[0].DisplayName);
+        Verify(1 == results.Length);
+        Verify("DataRowTestDisplayName" == results[0].DisplayName);
     }
 
-    [TestMethodV1]
     public void RunTestMethodShouldFillInDisplayNameWithDataRowArgumentsIfNoDisplayNameIsProvidedForDataDrivenTests()
     {
         UTF.TestResult testResult = new();
@@ -474,11 +446,10 @@ public class TestMethodRunnerTests
 
         var results = testMethodRunner.RunTestMethod();
 
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual("DummyTestMethod (2,DummyString)", results[0].DisplayName);
+        Verify(1 == results.Length);
+        Verify("DummyTestMethod (2,DummyString)" == results[0].DisplayName);
     }
 
-    [TestMethodV1]
     public void RunTestMethodShouldSetResultFilesIfPresentForDataDrivenTests()
     {
         UTF.TestResult testResult = new()
@@ -500,8 +471,8 @@ public class TestMethodRunnerTests
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
 
         var results = testMethodRunner.RunTestMethod();
-        CollectionAssert.Contains(results[0].ResultFiles.ToList(), "C:\\temp.txt");
-        CollectionAssert.Contains(results[1].ResultFiles.ToList(), "C:\\temp.txt");
+        Verify(results[0].ResultFiles.ToList().Contains("C:\\temp.txt"));
+        Verify(results[1].ResultFiles.ToList().Contains("C:\\temp.txt"));
     }
 
     #region Test data

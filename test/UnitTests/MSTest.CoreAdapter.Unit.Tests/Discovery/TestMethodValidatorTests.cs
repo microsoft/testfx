@@ -3,9 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,15 +12,12 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Moq;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class TestMethodValidatorTests
+using TestFramework.ForTestingMSTest;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class TestMethodValidatorTests : TestContainer
 {
     private TestMethodValidator _testMethodValidator;
     private Mock<ReflectHelper> _mockReflectHelper;
@@ -32,8 +26,7 @@ public class TestMethodValidatorTests
     private Mock<MethodInfo> _mockMethodInfo;
     private Type _type;
 
-    [TestInitialize]
-    public void TestInit()
+    public TestMethodValidatorTests()
     {
         _mockReflectHelper = new Mock<ReflectHelper>();
         _testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object);
@@ -43,15 +36,13 @@ public class TestMethodValidatorTests
         _type = typeof(TestMethodValidatorTests);
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReturnFalseForMethodsWithoutATestMethodAttributeOrItsDerivedAttributes()
     {
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined(It.IsAny<MemberInfo>(), typeof(UTF.TestMethodAttribute), false)).Returns(false);
-        Assert.IsFalse(_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
+        Verify(!_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReturnFalseForGenericTestMethodDefinitions()
     {
         SetupTestMethod();
@@ -59,10 +50,9 @@ public class TestMethodValidatorTests
         _mockMethodInfo.Setup(mi => mi.DeclaringType.FullName).Returns("DummyTestClass");
         _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
 
-        Assert.IsFalse(_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
+        Verify(!_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReportWarningsForGenericTestMethodDefinitions()
     {
         SetupTestMethod();
@@ -72,11 +62,10 @@ public class TestMethodValidatorTests
 
         _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings);
 
-        Assert.AreEqual(1, _warnings.Count);
-        CollectionAssert.Contains(_warnings, string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, "DummyTestClass", "DummyTestMethod"));
+        Verify(1 == _warnings.Count);
+        Verify(_warnings.Contains(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, "DummyTestClass", "DummyTestMethod")));
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReturnFalseForNonPublicMethods()
     {
         SetupTestMethod();
@@ -84,10 +73,9 @@ public class TestMethodValidatorTests
             "InternalTestMethod",
             BindingFlags.Instance | BindingFlags.NonPublic);
 
-        Assert.IsFalse(_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
+        Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReturnFalseForAbstractMethods()
     {
         SetupTestMethod();
@@ -95,10 +83,9 @@ public class TestMethodValidatorTests
             "AbstractTestMethod",
             BindingFlags.Instance | BindingFlags.Public);
 
-        Assert.IsFalse(_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
+        Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReturnFalseForStaticMethods()
     {
         SetupTestMethod();
@@ -106,19 +93,17 @@ public class TestMethodValidatorTests
             "StaticTestMethod",
             BindingFlags.Static | BindingFlags.Public);
 
-        Assert.IsFalse(_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
+        Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReturnFalseForGenericTestMethods()
     {
         SetupTestMethod();
         Action action = () => new DummyTestClassWithGenericMethods().GenericMethod<int>();
 
-        Assert.IsFalse(_testMethodValidator.IsValidTestMethod(action.Method, typeof(DummyTestClassWithGenericMethods), _warnings));
+        Verify(!_testMethodValidator.IsValidTestMethod(action.Method, typeof(DummyTestClassWithGenericMethods), _warnings));
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReturnFalseForAsyncMethodsWithNonTaskReturnType()
     {
         SetupTestMethod();
@@ -126,10 +111,9 @@ public class TestMethodValidatorTests
             "AsyncMethodWithVoidReturnType",
             BindingFlags.Instance | BindingFlags.Public);
 
-        Assert.IsFalse(_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
+        Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReturnFalseForMethodsWithNonVoidReturnType()
     {
         SetupTestMethod();
@@ -137,10 +121,9 @@ public class TestMethodValidatorTests
             "MethodWithIntReturnType",
             BindingFlags.Instance | BindingFlags.Public);
 
-        Assert.IsFalse(_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
+        Verify(!_testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReturnTrueForAsyncMethodsWithTaskReturnType()
     {
         SetupTestMethod();
@@ -148,10 +131,9 @@ public class TestMethodValidatorTests
             "AsyncMethodWithTaskReturnType",
             BindingFlags.Instance | BindingFlags.Public);
 
-        Assert.IsTrue(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
+        Verify(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReturnTrueForNonAsyncMethodsWithTaskReturnType()
     {
         SetupTestMethod();
@@ -159,10 +141,9 @@ public class TestMethodValidatorTests
             "MethodWithTaskReturnType",
             BindingFlags.Instance | BindingFlags.Public);
 
-        Assert.IsTrue(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
+        Verify(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
     }
 
-    [TestMethod]
     public void IsValidTestMethodShouldReturnTrueForMethodsWithVoidReturnType()
     {
         SetupTestMethod();
@@ -170,12 +151,11 @@ public class TestMethodValidatorTests
             "MethodWithVoidReturnType",
             BindingFlags.Instance | BindingFlags.Public);
 
-        Assert.IsTrue(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
+        Verify(_testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings));
     }
 
     #region Discovery of internals enabled
 
-    [TestMethod]
     public void WhenDiscoveryOfInternalsIsEnabledIsValidTestMethodShouldReturnTrueForInternalMethods()
     {
         SetupTestMethod();
@@ -185,10 +165,9 @@ public class TestMethodValidatorTests
 
         var testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, true);
 
-        Assert.IsTrue(testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
+        Verify(testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
 
-    [TestMethod]
     public void WhenDiscoveryOfInternalsIsEnabledIsValidTestMethodShouldReturnFalseForPrivateMethods()
     {
         SetupTestMethod();
@@ -198,7 +177,7 @@ public class TestMethodValidatorTests
 
         var testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object, true);
 
-        Assert.IsFalse(testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
+        Verify(!testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings));
     }
 
     #endregion

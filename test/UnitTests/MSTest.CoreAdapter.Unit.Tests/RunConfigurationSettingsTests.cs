@@ -3,8 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
-extern alias FrameworkV1;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -12,22 +10,16 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class RunConfigurationSettingsTests
+public class RunConfigurationSettingsTests : TestContainer
 {
     private TestablePlatformServiceProvider _testablePlatformServiceProvider;
     private Mock<IDiscoveryContext> _mockDiscoveryContext;
     private Mock<IRunSettings> _mockRunSettings;
     private Mock<IMessageLogger> _mockMessageLogger;
 
-    [TestInitialize]
-    public void TestInit()
+    public RunConfigurationSettingsTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _mockDiscoveryContext = new Mock<IDiscoveryContext>();
@@ -36,15 +28,16 @@ public class RunConfigurationSettingsTests
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
-        PlatformServiceProvider.Instance = null;
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            PlatformServiceProvider.Instance = null;
+        }
     }
-
     #region Property validation.
 
-    [TestMethod]
     public void CollectSourceInformationIsByDefaultTrueWhenNotSpecified()
     {
         string runSettingxml =
@@ -54,10 +47,9 @@ public class RunConfigurationSettingsTests
                   </RunSettings>";
 
         RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
-        Assert.IsTrue(configurationSettings.CollectSourceInformation);
+        Verify(configurationSettings.CollectSourceInformation);
     }
 
-    [TestMethod]
     public void CollectSourceInformationShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
@@ -70,58 +62,53 @@ public class RunConfigurationSettingsTests
                 </RunSettings>";
 
         RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
-        Assert.IsFalse(configurationSettings.CollectSourceInformation);
+        Verify(!configurationSettings.CollectSourceInformation);
     }
 
     #endregion
 
     #region ConfigurationSettings tests
 
-    [TestMethod]
     public void ConfigurationSettingsShouldReturnDefaultSettingsIfNotSet()
     {
         MSTestSettings.Reset();
         var settings = MSTestSettings.RunConfigurationSettings;
 
-        Assert.IsNotNull(settings);
+        Verify(settings is not null);
 
         // Validating the default value of a random setting.
-        Assert.IsTrue(settings.CollectSourceInformation);
+        Verify(settings.CollectSourceInformation);
     }
 
     #endregion
 
     #region PopulateSettings tests.
 
-    [TestMethod]
     public void PopulateSettingsShouldInitializeDefaultConfigurationSettingsWhenDiscoveryContextIsNull()
     {
         MSTestSettings.PopulateSettings((IDiscoveryContext)null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Assert.IsTrue(settings.CollectSourceInformation);
+        Verify(settings.CollectSourceInformation);
     }
 
-    [TestMethod]
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
     {
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Assert.IsTrue(settings.CollectSourceInformation);
+        Verify(settings.CollectSourceInformation);
     }
 
-    [TestMethod]
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
         _mockDiscoveryContext.Setup(md => md.RunSettings.SettingsXml).Returns(string.Empty);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Assert.IsTrue(settings.CollectSourceInformation);
+        Verify(settings.CollectSourceInformation);
     }
 
-    [TestMethod]
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()
     {
         string runSettingxml =
@@ -136,13 +123,12 @@ public class RunConfigurationSettingsTests
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Assert.IsNotNull(settings);
+        Verify(settings is not null);
 
         // Validating the default value of a random setting.
-        Assert.IsTrue(settings.CollectSourceInformation);
+        Verify(settings.CollectSourceInformation);
     }
 
-    [TestMethod]
     public void PopulateSettingsShouldInitializeSettingsFromRunConfigurationSection()
     {
         string runSettingxml =
@@ -158,10 +144,10 @@ public class RunConfigurationSettingsTests
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
-        Assert.IsNotNull(settings);
+        Verify(settings is not null);
 
         // Validating the default value of a random setting.
-        Assert.IsFalse(settings.CollectSourceInformation);
+        Verify(!settings.CollectSourceInformation);
     }
 
     #endregion

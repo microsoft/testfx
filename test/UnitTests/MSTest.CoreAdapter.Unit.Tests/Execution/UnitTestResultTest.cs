@@ -3,35 +3,28 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class UnitTestResultTest
+using TestFramework.ForTestingMSTest;
+
+using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class UnitTestResultTest : TestContainer
 {
-    [TestMethod]
     public void UnitTestResultConstrutorWithOutcomeAndErrorMessageShouldSetRequiredFields()
     {
         UnitTestResult result = new(UnitTestOutcome.Error, "DummyMessage");
 
-        Assert.AreEqual(UnitTestOutcome.Error, result.Outcome);
-        Assert.AreEqual("DummyMessage", result.ErrorMessage);
+        Verify(UnitTestOutcome.Error == result.Outcome);
+        Verify("DummyMessage" == result.ErrorMessage);
     }
 
-    [TestMethod]
     public void UnitTestResultConstrutorWithTestFailedExceptionShouldSetRequiredFields()
     {
         var stackTrace = new StackTraceInformation("trace", "filePath", 2, 3);
@@ -39,15 +32,14 @@ public class UnitTestResultTest
 
         UnitTestResult result = new(ex);
 
-        Assert.AreEqual(UnitTestOutcome.Error, result.Outcome);
-        Assert.AreEqual("DummyMessage", result.ErrorMessage);
-        Assert.AreEqual("trace", result.ErrorStackTrace);
-        Assert.AreEqual("filePath", result.ErrorFilePath);
-        Assert.AreEqual(2, result.ErrorLineNumber);
-        Assert.AreEqual(3, result.ErrorColumnNumber);
+        Verify(UnitTestOutcome.Error == result.Outcome);
+        Verify("DummyMessage" == result.ErrorMessage);
+        Verify("trace" == result.ErrorStackTrace);
+        Verify("filePath" == result.ErrorFilePath);
+        Verify(2 == result.ErrorLineNumber);
+        Verify(3 == result.ErrorColumnNumber);
     }
 
-    [TestMethod]
     public void ToTestResultShouldReturnConvertedTestResultWithFieldsSet()
     {
         var stackTrace = new StackTraceInformation("DummyStackTrace", "filePath", 2, 3);
@@ -75,18 +67,17 @@ public class UnitTestResultTest
         var testResult = result.ToTestResult(testCase, startTime, endTime, adapterSettings);
 
         // Validate
-        Assert.AreEqual(testCase, testResult.TestCase);
-        Assert.AreEqual("DummyDisplayName", testResult.DisplayName);
-        Assert.AreEqual(dummyTimeSpan, testResult.Duration);
-        Assert.AreEqual(TestOutcome.Failed, testResult.Outcome);
-        Assert.AreEqual("DummyMessage", testResult.ErrorMessage);
-        Assert.AreEqual("DummyStackTrace", testResult.ErrorStackTrace);
-        Assert.AreEqual(startTime, testResult.StartTime);
-        Assert.AreEqual(endTime, testResult.EndTime);
-        Assert.AreEqual(0, testResult.Messages.Count);
+        Verify(testCase == testResult.TestCase);
+        Verify("DummyDisplayName" == testResult.DisplayName);
+        Verify(dummyTimeSpan == testResult.Duration);
+        Verify(TestOutcome.Failed == testResult.Outcome);
+        Verify("DummyMessage" == testResult.ErrorMessage);
+        Verify("DummyStackTrace" == testResult.ErrorStackTrace);
+        Verify(startTime == testResult.StartTime);
+        Verify(endTime == testResult.EndTime);
+        Verify(0 == testResult.Messages.Count);
     }
 
-    [TestMethod]
     public void ToTestResultForUniTestResultWithStandardOutShouldReturnTestResultWithStdOutMessage()
     {
         UnitTestResult result = new()
@@ -103,10 +94,9 @@ public class UnitTestResultTest
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
-        Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
+        Verify(testresult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
     }
 
-    [TestMethod]
     public void ToTestResultForUniTestResultWithDebugTraceShouldReturnTestResultWithDebugTraceStdOutMessage()
     {
         UnitTestResult result = new()
@@ -122,6 +112,6 @@ public class UnitTestResultTest
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
         var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
-        Assert.IsTrue(testresult.Messages.All(m => m.Text.Contains("\n\nDebug Trace:\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
+        Verify(testresult.Messages.All(m => m.Text.Contains("\n\nDebug Trace:\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
     }
 }

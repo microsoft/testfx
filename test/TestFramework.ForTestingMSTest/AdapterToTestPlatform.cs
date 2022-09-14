@@ -221,10 +221,11 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
         }
         catch (Exception ex)
         {
-            LogMessage(logger, TestMessageLevel.Error, $"Error during test setup: {ex}");
+            var realException = ex.InnerException?.Data.Contains(TestContainer.IsVerifyException) == true ? ex.InnerException : ex;
+            LogMessage(logger, TestMessageLevel.Error, $"Error during test setup: {realException}");
             testResult.Outcome = TestOutcome.Failed;
-            testResult.ErrorMessage = $"Error during test setup: {ex.Message}";
-            testResult.ErrorStackTrace = ex.StackTrace;
+            testResult.ErrorMessage = $"Error during test setup: {realException.Message}";
+            testResult.ErrorStackTrace = realException.StackTrace;
             testCaseInstance = null;
 
             return false;
@@ -243,10 +244,11 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
         }
         catch (Exception ex)
         {
+            var realException = ex.InnerException?.Data.Contains(TestContainer.IsVerifyException) == true ? ex.InnerException : ex;
+            LogMessage(logger, TestMessageLevel.Error, $"Error during test: {realException}");
             testResult.Outcome = TestOutcome.Failed;
-            testResult.ErrorMessage = $"Error during test: {ex.Message}";
-            testResult.ErrorStackTrace = ex.StackTrace;
-            LogMessage(logger, TestMessageLevel.Error, $"Error during test: {ex}");
+            testResult.ErrorMessage = $"Error during test: {realException.Message}";
+            testResult.ErrorStackTrace = realException.StackTrace;
 
             return false;
         }
@@ -268,11 +270,12 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
         }
         catch (Exception ex)
         {
+            var realException = ex.InnerException?.Data.Contains(TestContainer.IsVerifyException) == true ? ex.InnerException : ex;
+            LogMessage(logger, TestMessageLevel.Error, $"Error during test teardown: {realException}");
             testResult.Outcome = TestOutcome.Failed;
             // TODO: It's possible there is already some error message + stack trace. We should merge instead of override.
-            testResult.ErrorMessage = $"Error during test teardown: {ex.Message}";
-            testResult.ErrorStackTrace = ex.StackTrace;
-            LogMessage(logger, TestMessageLevel.Error, $"Error during test teardown: {ex}");
+            testResult.ErrorMessage = $"Error during test teardown: {realException.Message}";
+            testResult.ErrorStackTrace = realException.StackTrace;
 
             return false;
         }
