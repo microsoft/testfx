@@ -67,7 +67,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
         var assemblyResolution = "ComponentTests\\TestProjectForAssemblyResolution.dll";
         var asm = Assembly.LoadFrom(assemblyResolution);
-        var type = asm.GetType("PlatformServices.Desktop.ComponentTests.TestProjectForAssemblyResolution");
+        var type = asm.GetType("PlatformServices.Desktop.ComponentTests.SerializableTypeThatShouldBeLoaded");
 
         // Creating instance of TestProjectForAssemblyResolution should not throw.
         // It is present in  <Directory path = ".\ComponentTests" />  specified in runsettings
