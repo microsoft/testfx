@@ -17,9 +17,9 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class TestAssemblySettingsProviderTests : TestContainer
 {
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
-    private Mock<ReflectHelper> _mockReflectHelper;
-    private TestAssemblySettingsProvider _testAssemblySettingProvider;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly Mock<ReflectHelper> _mockReflectHelper;
+    private readonly TestAssemblySettingsProvider _testAssemblySettingProvider;
 
     public TestAssemblySettingsProviderTests()
     {

@@ -12,7 +12,7 @@ using TestFramework.ForTestingMSTest;
 
 public class TestCaseDiscoverySinkTests : TestContainer
 {
-    private TestCaseDiscoverySink _testCaseDiscoverySink;
+    private readonly TestCaseDiscoverySink _testCaseDiscoverySink;
 
     public TestCaseDiscoverySinkTests()
     {

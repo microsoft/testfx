@@ -19,12 +19,12 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class TestMethodValidatorTests : TestContainer
 {
-    private TestMethodValidator _testMethodValidator;
-    private Mock<ReflectHelper> _mockReflectHelper;
-    private List<string> _warnings;
+    private readonly TestMethodValidator _testMethodValidator;
+    private readonly Mock<ReflectHelper> _mockReflectHelper;
+    private readonly List<string> _warnings;
 
-    private Mock<MethodInfo> _mockMethodInfo;
-    private Type _type;
+    private readonly Mock<MethodInfo> _mockMethodInfo;
+    private readonly Type _type;
 
     public TestMethodValidatorTests()
     {

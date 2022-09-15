@@ -4,15 +4,10 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 using System;
-using System.Linq;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
-using TestableImplementations;
-
 using TestFramework.ForTestingMSTest;
-
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class DataSerializationHelperTests : TestContainer
 {

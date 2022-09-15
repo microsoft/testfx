@@ -48,7 +48,7 @@ public class TestMethodRunnerTests : TestContainer
 
     private readonly Mock<ReflectHelper> _mockReflectHelper;
 
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     public TestMethodRunnerTests()
     {

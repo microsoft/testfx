@@ -4,11 +4,12 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+
 using Moq;
 
 using TestFramework.ForTestingMSTest;

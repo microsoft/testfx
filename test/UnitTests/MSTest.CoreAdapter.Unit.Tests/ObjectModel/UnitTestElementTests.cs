@@ -13,8 +13,8 @@ using TestFramework.ForTestingMSTest;
 
 public class UnitTestElementTests : TestContainer
 {
-    private TestMethod _testMethod;
-    private UnitTestElement _unitTestElement;
+    private readonly TestMethod _testMethod;
+    private readonly UnitTestElement _unitTestElement;
 
     public UnitTestElementTests()
     {
