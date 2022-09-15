@@ -34,13 +34,13 @@ public partial class AssertTests
     }
 
     [TestMethod]
-    public void IsInstanceOfType_OnSameInstance_Passes()
+    public void IsInstanceOfType_OnSameInstance_DoesNotThrow()
     {
         TestFrameworkV2.Assert.IsInstanceOfType(5, typeof(int));
     }
 
     [TestMethod]
-    public void IsInstanceOfType_OnHigherInstance_Passes()
+    public void IsInstanceOfType_OnHigherInstance_DoesNotThrow()
     {
         TestFrameworkV2.Assert.IsInstanceOfType(5, typeof(object));
     }
@@ -59,13 +59,13 @@ public partial class AssertTests
     }
 
     [TestMethod]
-    public void IsNotInstanceOfType_OnWrongInstance_Passes()
+    public void IsNotInstanceOfType_OnWrongInstance_DoesNotThrow()
     {
         TestFrameworkV2.Assert.IsNotInstanceOfType(5L, typeof(int));
     }
 
     [TestMethod]
-    public void IsNotInstanceOfType_OnSubInstance_Passes()
+    public void IsNotInstanceOfType_OnSubInstance_DoesNotThrow()
     {
         TestFrameworkV2.Assert.IsNotInstanceOfType(new object(), typeof(int));
     }
@@ -78,13 +78,13 @@ public partial class AssertTests
     }
 
     [TestMethod]
-    public void IsInstanceOfType_OnSameInstanceUsingGenericType_Passes()
+    public void IsInstanceOfType_OnSameInstanceUsingGenericType_DoesNotThrow()
     {
         TestFrameworkV2.Assert.IsInstanceOfType<int>(5);
     }
 
     [TestMethod]
-    public void IsInstanceOfType_OnHigherInstanceUsingGenericType_Passes()
+    public void IsInstanceOfType_OnHigherInstanceUsingGenericType_DoesNotThrow()
     {
         TestFrameworkV2.Assert.IsInstanceOfType<object>(5);
     }
@@ -96,13 +96,13 @@ public partial class AssertTests
     }
 
     [TestMethod]
-    public void IsNotInstanceOfType_OnWrongInstanceUsingGenericType_Passes()
+    public void IsNotInstanceOfType_OnWrongInstanceUsingGenericType_DoesNotThrow()
     {
         TestFrameworkV2.Assert.IsNotInstanceOfType<int>(5L);
     }
 
     [TestMethod]
-    public void IsNotInstanceOfType_OnSubInstanceUsingGenericType_Passes()
+    public void IsNotInstanceOfType_OnSubInstanceUsingGenericType_DoesNotThrow()
     {
         TestFrameworkV2.Assert.IsNotInstanceOfType<int>(new object());
     }
