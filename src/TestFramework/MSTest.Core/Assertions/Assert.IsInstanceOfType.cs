@@ -44,7 +44,6 @@ public sealed partial class Assert
     {
         IsInstanceOfType(value, typeof(T), string.Empty, null);
     }
-#endif
 
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
