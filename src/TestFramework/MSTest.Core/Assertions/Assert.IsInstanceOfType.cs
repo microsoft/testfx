@@ -261,7 +261,7 @@ public sealed partial class Assert
     /// type and throws an exception if the specified type is in the
     /// inheritance hierarchy of the object.
     /// </summary>
-    public static void IsNotInstanceOfType<T>(object value,string message, params object[] parameters)
+    public static void IsNotInstanceOfType<T>(object value, string message, params object[] parameters)
     {
         IsNotInstanceOfType(value, typeof(T), message, parameters);
     }
