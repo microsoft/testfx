@@ -20,9 +20,9 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class AssemblyEnumeratorWrapperTests : TestContainer
 {
-    private AssemblyEnumeratorWrapper _testableAssemblyEnumeratorWrapper;
+    private readonly AssemblyEnumeratorWrapper _testableAssemblyEnumeratorWrapper;
     private ICollection<string> _warnings;
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     public AssemblyEnumeratorWrapperTests()
     {

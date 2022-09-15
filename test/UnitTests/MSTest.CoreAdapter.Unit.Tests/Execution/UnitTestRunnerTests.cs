@@ -5,12 +5,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Xml;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -30,9 +28,9 @@ public class UnitTestRunnerTests : TestContainer
 {
     private UnitTestRunner _unitTestRunner;
 
-    private Dictionary<string, object> _testRunParameters;
+    private readonly Dictionary<string, object> _testRunParameters;
 
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     public UnitTestRunnerTests()
     {

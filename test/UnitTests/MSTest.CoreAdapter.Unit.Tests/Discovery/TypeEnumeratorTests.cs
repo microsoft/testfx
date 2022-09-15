@@ -23,14 +23,14 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class TypeEnumeratorTests : TestContainer
 {
-    private Mock<ReflectHelper> _mockReflectHelper;
+    private readonly Mock<ReflectHelper> _mockReflectHelper;
 
-    private Mock<TestMethodValidator> _mockTestMethodValidator;
-    private Mock<TypeValidator> _mockTypeValidator;
+    private readonly Mock<TestMethodValidator> _mockTestMethodValidator;
+    private readonly Mock<TypeValidator> _mockTypeValidator;
 
     private ICollection<string> _warnings;
 
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     public TypeEnumeratorTests()
     {

@@ -20,14 +20,14 @@ using TestFramework.ForTestingMSTest;
 public class UnitTestDiscovererTests : TestContainer
 {
     private const string Source = "DummyAssembly.dll";
-    private UnitTestDiscoverer _unitTestDiscoverer;
+    private readonly UnitTestDiscoverer _unitTestDiscoverer;
 
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    private Mock<IMessageLogger> _mockMessageLogger;
-    private Mock<ITestCaseDiscoverySink> _mockTestCaseDiscoverySink;
-    private Mock<IRunSettings> _mockRunSettings;
-    private Mock<IDiscoveryContext> _mockDiscoveryContext;
+    private readonly Mock<IMessageLogger> _mockMessageLogger;
+    private readonly Mock<ITestCaseDiscoverySink> _mockTestCaseDiscoverySink;
+    private readonly Mock<IRunSettings> _mockRunSettings;
+    private readonly Mock<IDiscoveryContext> _mockDiscoveryContext;
     private UnitTestElement _test;
     private List<UnitTestElement> _testElements;
 

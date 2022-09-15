@@ -31,9 +31,9 @@ public class TestExecutionManagerTests : TestContainer
 {
     private TestableRunContextTestExecutionTests _runContext;
 
-    private TestableFrameworkHandle _frameworkHandle;
+    private readonly TestableFrameworkHandle _frameworkHandle;
 
-    private TestRunCancellationToken _cancellationToken;
+    private readonly TestRunCancellationToken _cancellationToken;
 
     private List<string> _callers;
 

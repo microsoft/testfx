@@ -19,7 +19,6 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-using static System.Collections.Specialized.BitVector32;
 using static TestMethodInfoTests;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -27,11 +26,11 @@ using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class TypeCacheTests : TestContainer
 {
-    private TypeCache _typeCache;
+    private readonly TypeCache _typeCache;
 
-    private Mock<ReflectHelper> _mockReflectHelper;
+    private readonly Mock<ReflectHelper> _mockReflectHelper;
 
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     public TypeCacheTests()
     {

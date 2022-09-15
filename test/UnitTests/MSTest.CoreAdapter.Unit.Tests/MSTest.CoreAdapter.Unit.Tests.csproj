@@ -3,44 +3,27 @@
 
   <PropertyGroup>
     <TargetFrameworks>net462</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests</AssemblyName>
-    <NoWarn>1685</NoWarn>
-    <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>$(DefineConstants);DEBUG;CODE_ANALYSIS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj" Private="true" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" Private="true" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Private="true" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
     <!--
       This project targets net462 but we want to test using the netstandard content so let's force its resolution.
       Resolving using net462 causes lots of tests to fail with MissingMethodException complaining that DataRow property doesn't exist.
       -->
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Private="true" SetTargetFramework="TargetFramework=netstandard2.0" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" SetTargetFramework="TargetFramework=netstandard2.0" />
     <ProjectReference Include="$(RepoRoot)test\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
   </ItemGroup>
 

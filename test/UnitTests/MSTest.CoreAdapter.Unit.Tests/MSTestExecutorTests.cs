@@ -17,10 +17,10 @@ using TestPlatform.ObjectModel.Adapter;
 
 public class MSTestExecutorTests : TestContainer
 {
-    private Mock<IRunContext> _mockRunContext;
-    private Mock<IRunSettings> _mockRunSettings;
-    private Mock<IFrameworkHandle> _mockFrameworkHandle;
-    private MSTestExecutor _mstestExecutor;
+    private readonly Mock<IRunContext> _mockRunContext;
+    private readonly Mock<IRunSettings> _mockRunSettings;
+    private readonly Mock<IFrameworkHandle> _mockFrameworkHandle;
+    private readonly MSTestExecutor _mstestExecutor;
 
     public MSTestExecutorTests()
     {

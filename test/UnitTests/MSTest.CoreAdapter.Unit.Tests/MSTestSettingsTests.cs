@@ -18,10 +18,10 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class MSTestSettingsTests : TestContainer
 {
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
-    private Mock<IDiscoveryContext> _mockDiscoveryContext;
-    private Mock<IRunSettings> _mockRunSettings;
-    private Mock<IMessageLogger> _mockMessageLogger;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly Mock<IDiscoveryContext> _mockDiscoveryContext;
+    private readonly Mock<IRunSettings> _mockRunSettings;
+    private readonly Mock<IMessageLogger> _mockMessageLogger;
 
     public MSTestSettingsTests()
     {

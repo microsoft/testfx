@@ -4,12 +4,12 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 using System;
-using System.IO;
-using System.Text;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+
 using Moq;
 
 using TestFramework.ForTestingMSTest;
@@ -18,7 +18,7 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class LogMessageListenerTests : TestContainer
 {
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     public LogMessageListenerTests()
     {

@@ -21,9 +21,9 @@ public class TypeValidatorTests : TestContainer
 {
     #region private variables
 
-    private TypeValidator _typeValidator;
-    private Mock<ReflectHelper> _mockReflectHelper;
-    private List<string> _warnings;
+    private readonly TypeValidator _typeValidator;
+    private readonly Mock<ReflectHelper> _mockReflectHelper;
+    private readonly List<string> _warnings;
 
     #endregion
 

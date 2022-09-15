@@ -24,9 +24,9 @@ using TestFramework.ForTestingMSTest;
 
 public class AssemblyEnumeratorTests : TestContainer
 {
-    private AssemblyEnumerator _assemblyEnumerator;
+    private readonly AssemblyEnumerator _assemblyEnumerator;
     private ICollection<string> _warnings;
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     public AssemblyEnumeratorTests()
     {

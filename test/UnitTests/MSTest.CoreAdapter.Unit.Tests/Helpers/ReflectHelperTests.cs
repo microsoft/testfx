@@ -19,9 +19,9 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class ReflectHelperTests : TestContainer
 {
-    private TestableReflectHelper _reflectHelper;
-    private Mock<MethodInfo> _method;
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly TestableReflectHelper _reflectHelper;
+    private readonly Mock<MethodInfo> _method;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     public ReflectHelperTests()
     {

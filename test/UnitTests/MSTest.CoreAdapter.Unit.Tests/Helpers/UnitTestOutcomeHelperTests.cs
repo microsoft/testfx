@@ -12,7 +12,7 @@ using TestFramework.ForTestingMSTest;
 
 public class UnitTestOutcomeHelperTests : TestContainer
 {
-    private MSTestSettings _adapterSettings;
+    private readonly MSTestSettings _adapterSettings;
 
     public UnitTestOutcomeHelperTests()
     {

@@ -4,10 +4,9 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
 using System;
-using System.Text;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 

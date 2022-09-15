@@ -10,7 +10,6 @@ using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -22,13 +21,13 @@ using TestFramework.ForTestingMSTest;
 
 public class MSTestDiscovererTests : TestContainer
 {
-    private TestablePlatformServiceProvider _testablePlatformServiceProvider;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    private Mock<IMessageLogger> _mockMessageLogger;
-    private Mock<ITestCaseDiscoverySink> _mockTestCaseDiscoverySink;
-    private Mock<IDiscoveryContext> _mockDiscoveryContext;
-    private Mock<IRunSettings> _mockRunSettings;
-    private MSTestDiscoverer _discoverer;
+    private readonly Mock<IMessageLogger> _mockMessageLogger;
+    private readonly Mock<ITestCaseDiscoverySink> _mockTestCaseDiscoverySink;
+    private readonly Mock<IDiscoveryContext> _mockDiscoveryContext;
+    private readonly Mock<IRunSettings> _mockRunSettings;
+    private readonly MSTestDiscoverer _discoverer;
 
     public MSTestDiscovererTests()
     {
