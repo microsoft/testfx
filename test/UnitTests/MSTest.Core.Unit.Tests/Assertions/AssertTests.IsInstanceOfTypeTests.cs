@@ -46,9 +46,9 @@ public partial class AssertTests
     }
 
     [TestMethod]
-    public void IsNotInstanceOfType_WhenValueIsNull_Fails()
+    public void IsNotInstanceOfType_WhenValueIsNull_DoesNotThrow()
     {
-        Action action = () => TestFrameworkV2.Assert.IsNotInstanceOfType(null, typeof(AssertTests));
+        TestFrameworkV2.Assert.IsNotInstanceOfType(null, typeof(object));
     }
 
     [TestMethod]
@@ -71,28 +71,28 @@ public partial class AssertTests
     }
 
     [TestMethod]
-    public void IsInstanceOfType_WhenValueIsNullUsingGenericType_Fails()
+    public void IsInstanceOfTypeUsingGenericType_WhenValueIsNull_Fails()
     {
         static void action() => TestFrameworkV2.Assert.IsInstanceOfType<AssertTests>(null);
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
     }
 
     [TestMethod]
-    public void IsInstanceOfType_OnSameInstanceUsingGenericType_DoesNotThrow()
+    public void IsInstanceOfTypeUsingGenericType_OnSameInstance_DoesNotThrow()
     {
         TestFrameworkV2.Assert.IsInstanceOfType<int>(5);
     }
 
     [TestMethod]
-    public void IsInstanceOfType_OnHigherInstanceUsingGenericType_DoesNotThrow()
+    public void IsInstanceOfTypeUsingGenericType_OnHigherInstance_DoesNotThrow()
     {
         TestFrameworkV2.Assert.IsInstanceOfType<object>(5);
     }
 
     [TestMethod]
-    public void IsNotInstanceOfType_WhenValueIsNullUsingGenericType_Fails()
+    public void IsNotInstanceOfTypeUsingGenericType_WhenValueIsNull_DoesNotThrow()
     {
-        Action action = () => TestFrameworkV2.Assert.IsNotInstanceOfType<AssertTests>(null);
+        TestFrameworkV2.Assert.IsNotInstanceOfType<object>(null);
     }
 
     [TestMethod]
@@ -102,7 +102,7 @@ public partial class AssertTests
     }
 
     [TestMethod]
-    public void IsNotInstanceOfType_OnSubInstanceUsingGenericType_DoesNotThrow()
+    public void IsNotInstanceOfTypeUsingGenericType_OnSubInstance_DoesNotThrow()
     {
         TestFrameworkV2.Assert.IsNotInstanceOfType<int>(new object());
     }

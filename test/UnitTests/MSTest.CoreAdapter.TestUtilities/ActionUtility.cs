@@ -32,7 +32,8 @@ public class ActionUtility
         }
         catch (Exception ex)
         {
-            TestFramework.Assert.AreEqual(type, ex.GetType());
+            var t = ex.GetType();
+            TestFramework.Assert.AreEqual(type, t);
         }
     }
 
