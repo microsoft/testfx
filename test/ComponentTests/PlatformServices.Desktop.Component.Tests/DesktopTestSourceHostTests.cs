@@ -40,9 +40,9 @@ public class DesktopTestSourceHostTests : TestContainer
         _testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingxml).Object, null);
         _testSourceHost.SetupHost();
 
-        // Loading TestProjectForAssemblyResolution.dll should not throw.
+        // Loading SampleProjectForAssemblyResolution.dll should not throw.
         // It is present in  <Directory path = ".\ComponentTests" />  specified in runsettings
-        Assembly.Load("TestProjectForAssemblyResolution");
+        Assembly.Load("SampleProjectForAssemblyResolution");
     }
 
     public void ChildDomainResolutionPathsShouldHaveSearchDirectoriesSpecifiedInRunsettings()
@@ -65,11 +65,11 @@ public class DesktopTestSourceHostTests : TestContainer
         _testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingxml).Object, null);
         _testSourceHost.SetupHost();
 
-        var assemblyResolution = "ComponentTests\\TestProjectForAssemblyResolution.dll";
+        var assemblyResolution = "ComponentTests\\SampleProjectForAssemblyResolution.dll";
         var asm = Assembly.LoadFrom(assemblyResolution);
-        var type = asm.GetType("PlatformServices.Desktop.ComponentTests.SerializableTypeThatShouldBeLoaded");
+        var type = asm.GetType("SampleProjectForAssemblyResolution.SerializableTypeThatShouldBeLoaded");
 
-        // Creating instance of TestProjectForAssemblyResolution should not throw.
+        // Creating instance of SampleProjectForAssemblyResolution should not throw.
         // It is present in  <Directory path = ".\ComponentTests" />  specified in runsettings
         AppDomainUtilities.CreateInstance(_testSourceHost.AppDomain, type, null);
     }
