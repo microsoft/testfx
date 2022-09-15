@@ -36,6 +36,16 @@ public sealed partial class Assert
     }
 
     /// <summary>
+    /// Tests whether the specified object is an instance of the generic
+    /// type and throws an exception if the generictype is not in the
+    /// inheritance hierarchy of the object.
+    /// </summary>
+    public static void IsInstanceOfType<T>(object value)
+    {
+        IsInstanceOfType(value, typeof(T), string.Empty, null);
+    }
+
+    /// <summary>
     /// Tests whether the specified object is an instance of the expected
     /// type and throws an exception if the expected type is not in the
     /// inheritance hierarchy of the object.
@@ -59,6 +69,16 @@ public sealed partial class Assert
     public static void IsInstanceOfType(object value, Type expectedType, string message)
     {
         IsInstanceOfType(value, expectedType, message, null);
+    }
+
+    /// <summary>
+    /// Tests whether the specified object is an instance of the generic
+    /// type and throws an exception if the generictype is not in the
+    /// inheritance hierarchy of the object.
+    /// </summary>
+    public static void IsInstanceOfType<T>(object value, string message)
+    {
+        IsInstanceOfType(value, typeof(T), message, null);
     }
 
     /// <summary>
@@ -108,6 +128,16 @@ public sealed partial class Assert
     }
 
     /// <summary>
+    /// Tests whether the specified object is an instance of the generic
+    /// type and throws an exception if the generictype is not in the
+    /// inheritance hierarchy of the object.
+    /// </summary>
+    public static void IsInstanceOfType<T>(object value, string message, params object[] parameters)
+    {
+        IsInstanceOfType(value, typeof(T), message, parameters);
+    }
+
+    /// <summary>
     /// Tests whether the specified object is not an instance of the wrong
     /// type and throws an exception if the specified type is in the
     /// inheritance hierarchy of the object.
@@ -126,6 +156,16 @@ public sealed partial class Assert
     public static void IsNotInstanceOfType(object value, Type wrongType)
     {
         IsNotInstanceOfType(value, wrongType, string.Empty, null);
+    }
+
+    /// <summary>
+    /// Tests whether the specified object is not an instance of the wrong generic
+    /// type and throws an exception if the specified type is in the
+    /// inheritance hierarchy of the object.
+    /// </summary>
+    public static void IsNotInstanceOfType<T>(object value)
+    {
+        IsNotInstanceOfType(value, typeof(T), string.Empty, null);
     }
 
     /// <summary>
@@ -152,6 +192,16 @@ public sealed partial class Assert
     public static void IsNotInstanceOfType(object value, Type wrongType, string message)
     {
         IsNotInstanceOfType(value, wrongType, message, null);
+    }
+
+    /// <summary>
+    /// Tests whether the specified object is not an instance of the wrong generic
+    /// type and throws an exception if the specified type is in the
+    /// inheritance hierarchy of the object.
+    /// </summary>
+    public static void IsNotInstanceOfType<T>(object value, string message)
+    {
+        IsNotInstanceOfType(value, typeof(T), message, null);
     }
 
     /// <summary>
@@ -204,5 +254,15 @@ public sealed partial class Assert
                 value.GetType().ToString());
             ThrowAssertFailed("Assert.IsNotInstanceOfType", finalMessage);
         }
+    }
+
+    /// <summary>
+    /// Tests whether the specified object is not an instance of the wrong generic
+    /// type and throws an exception if the specified type is in the
+    /// inheritance hierarchy of the object.
+    /// </summary>
+    public static void IsNotInstanceOfType<T>(object value, string message, params object[] parameters)
+    {
+        IsNotInstanceOfType(value, typeof(T), message, parameters);
     }
 }
