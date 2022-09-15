@@ -30,28 +30,23 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Aliases="FrameworkV1" Private="True">
-      <HintPath>$(MSBuildExtensionsPath)\..\Common7\IDE\PublicAssemblies\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj" Private="true" />
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" Private="true" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Private="true" Aliases="FrameworkV2" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" Private="true" />
     <!--
       This project targets net462 but we want to test using the netstandard content so let's force its resolution.
       Resolving using net462 causes lots of tests to fail with MissingMethodException complaining that DataRow property doesn't exist.
       -->
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Private="true" Aliases="FrameworkV2CoreExtension"  SetTargetFramework="TargetFramework=netstandard2.0" />
-    <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTest.CoreAdapter.TestUtilities\MSTest.CoreAdapter.TestUtilities.csproj" Private="true" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\Extension\Extension.csproj" Private="true" SetTargetFramework="TargetFramework=netstandard2.0" />
+    <ProjectReference Include="$(RepoRoot)test\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
-    <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
   </ItemGroup>
 
 </Project>

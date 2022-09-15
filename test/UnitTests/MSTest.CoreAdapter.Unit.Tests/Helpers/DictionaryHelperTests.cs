@@ -3,31 +3,23 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using FluentAssertions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Moq;
 
 using TestableImplementations;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class DictionaryHelperTests
+using TestFramework.ForTestingMSTest;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class DictionaryHelperTests : TestContainer
 {
-    [TestMethod]
     public void ConcatenatingDictionariesReturnsEmptyDictionaryWhenBothSidesAreNullOrEmpty()
     {
         Dictionary<string, string> source = null;
@@ -37,42 +29,45 @@ public class DictionaryHelperTests
         var actual = source.ConcatWithOverwrites(overwrite, nameof(source), nameof(overwrite));
         var expected = new Dictionary<string, string>();
 
-        actual.Should().BeEquivalentTo(expected);
+        actual.ToList().Sort();
+        expected.ToList().Sort();
+        Verify(actual.SequenceEqual(expected));
     }
 
-    [TestMethod]
     public void ConcatenatingDictionariesReturnsSourceSideWhenOverwriteIsNullOrEmpty()
     {
         var source = new Dictionary<string, string>
         {
-            ["aaa"] = "source",
             ["bbb"] = "source",
+            ["aaa"] = "source",
         };
 
         Dictionary<string, string> overwrite = null;
 
         var actual = source.ConcatWithOverwrites(overwrite, nameof(source), nameof(overwrite));
 
-        actual.Should().BeEquivalentTo(source);
+        var sortedActual = from entry in actual orderby entry.Key ascending select entry;
+        var sortedSource = from entry in source orderby entry.Key ascending select entry;
+        Verify(sortedActual.SequenceEqual(sortedSource));
     }
 
-    [TestMethod]
     public void ConcatenatingDictionariesReturnsOverwriteSideWhenSourceIsNullOrEmpty()
     {
         Dictionary<string, string> source = null;
 
         var overwrite = new Dictionary<string, string>
         {
-            ["bbb"] = "overwrite",
             ["ccc"] = "overwrite",
+            ["bbb"] = "overwrite",
         };
 
         var actual = source.ConcatWithOverwrites(overwrite, nameof(source), nameof(overwrite));
 
-        actual.Should().BeEquivalentTo(overwrite);
+        var sortedActual = from entry in actual orderby entry.Key ascending select entry;
+        var sortedOverwrite = from entry in overwrite orderby entry.Key ascending select entry;
+        Verify(sortedActual.SequenceEqual(sortedOverwrite));
     }
 
-    [TestMethod]
     public void ConcatenatingDictionariesShouldMergeThemAndTakeDuplicateKeysFromOverwrite()
     {
         var source = new Dictionary<string, string>
@@ -93,13 +88,16 @@ public class DictionaryHelperTests
             // this is only present in source, take it
             ["aaa"] = "source",
 
+            // this is present only in overwrite, take it from overwrite
+            ["ccc"] = "overwrite",
+
             // this is present in source and overwrite, take it from overwrite
             ["bbb"] = "overwrite",
 
-            // this is present only in overwrite, take it from overwrite
-            ["ccc"] = "overwrite",
         };
 
-        actual.Should().BeEquivalentTo(expected);
+        var sortedActual = from entry in actual orderby entry.Key ascending select entry;
+        var sortedExpected = from entry in expected orderby entry.Key ascending select entry;
+        Verify(sortedActual.SequenceEqual(sortedExpected));
     }
 }

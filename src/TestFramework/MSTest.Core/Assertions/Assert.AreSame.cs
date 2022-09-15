@@ -1,18 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
-#define HIDE_MESSAGELESS_IMPLEMENTATION
-#endif
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 /// <summary>
 /// A collection of helper classes to test various conditions within
@@ -21,7 +13,6 @@ using System.Threading.Tasks;
 /// </summary>
 public sealed partial class Assert
 {
-#if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the specified objects both refer to the same object and
     /// throws an exception if the two inputs do not refer to the same object.
@@ -40,7 +31,6 @@ public sealed partial class Assert
     {
         AreSame(expected, actual, string.Empty, null);
     }
-#endif
 
     /// <summary>
     /// Tests whether the specified objects both refer to the same object and
@@ -61,7 +51,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame(object expected, object actual, [CallerArgumentExpression("actual")] string message = null)
+    public static void AreSame(object expected, object actual, string message)
     {
         AreSame(expected, actual, message, null);
     }
@@ -88,7 +78,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame(object expected, object actual, [CallerArgumentExpression("actual")] string message = null, params object[] parameters)
+    public static void AreSame(object expected, object actual, string message, params object[] parameters)
     {
         if (!ReferenceEquals(expected, actual))
         {
@@ -110,7 +100,6 @@ public sealed partial class Assert
         }
     }
 
-#if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the specified objects refer to different objects and
     /// throws an exception if the two inputs refer to the same object.
@@ -130,7 +119,6 @@ public sealed partial class Assert
     {
         AreNotSame(notExpected, actual, string.Empty, null);
     }
-#endif
 
     /// <summary>
     /// Tests whether the specified objects refer to different objects and
@@ -152,7 +140,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame(object notExpected, object actual, [CallerArgumentExpression("actual")] string message = null)
+    public static void AreNotSame(object notExpected, object actual, string message)
     {
         AreNotSame(notExpected, actual, message, null);
     }
@@ -180,7 +168,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame(object notExpected, object actual, [CallerArgumentExpression("actual")] string message = null, params object[] parameters)
+    public static void AreNotSame(object notExpected, object actual, string message, params object[] parameters)
     {
         if (ReferenceEquals(notExpected, actual))
         {

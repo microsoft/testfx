@@ -3,10 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-extern alias FrameworkV2CoreExtension;
-
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -18,13 +14,10 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Moq;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
-[TestClass]
-public class UnitTestDiscovererTests
+using TestFramework.ForTestingMSTest;
+
+public class UnitTestDiscovererTests : TestContainer
 {
     private const string Source = "DummyAssembly.dll";
     private UnitTestDiscoverer _unitTestDiscoverer;
@@ -38,8 +31,7 @@ public class UnitTestDiscovererTests
     private UnitTestElement _test;
     private List<UnitTestElement> _testElements;
 
-    [TestInitialize]
-    public void TestInit()
+    public UnitTestDiscovererTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _unitTestDiscoverer = new UnitTestDiscoverer();
@@ -56,16 +48,18 @@ public class UnitTestDiscovererTests
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
-        _test = null;
-        _testElements = null;
-        PlatformServiceProvider.Instance = null;
-        MSTestSettings.Reset();
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            _test = null;
+            _testElements = null;
+            PlatformServiceProvider.Instance = null;
+            MSTestSettings.Reset();
+        }
     }
 
-    [TestMethodV1]
     public void DiscoverTestsShouldDiscoverForAllSources()
     {
         var sources = new string[] { "DummyAssembly1.dll", "DummyAssembly2.dll" };
@@ -85,7 +79,6 @@ public class UnitTestDiscovererTests
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Exactly(2));
     }
 
-    [TestMethodV1]
     public void DiscoverTestsInSourceShouldSendBackAllWarnings()
     {
         // Setup mocks.
@@ -100,7 +93,6 @@ public class UnitTestDiscovererTests
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Once);
     }
 
-    [TestMethodV1]
     public void DiscoverTestsInSourceShouldSendBackTestCasesDiscovered()
     {
         // Setup mocks.
@@ -124,7 +116,6 @@ public class UnitTestDiscovererTests
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.AtLeastOnce);
     }
 
-    [TestMethodV1]
     public void SendTestCasesShouldNotSendAnyTestCasesIfThereAreNoTestElements()
     {
         // Setup mocks.
@@ -138,7 +129,6 @@ public class UnitTestDiscovererTests
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);
     }
 
-    [TestMethodV1]
     public void SendTestCasesShouldSendAllTestCaseData()
     {
         // Setup mocks.
@@ -156,7 +146,6 @@ public class UnitTestDiscovererTests
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.FullyQualifiedName == "C.M2")), Times.Once);
     }
 
-    [TestMethodV1]
     public void SendTestCasesShouldSendTestCasesWithoutNavigationDataWhenCollectSourceInformationIsFalse()
     {
         string settingsXml =
@@ -184,7 +173,6 @@ public class UnitTestDiscovererTests
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.CodeFilePath == null)), Times.Once);
     }
 
-    [TestMethodV1]
     public void SendTestCasesShouldSendTestCasesWithNavigationData()
     {
         // Setup mocks.
@@ -200,7 +188,6 @@ public class UnitTestDiscovererTests
         VerifyNavigationDataIsPresent();
     }
 
-    [TestMethodV1]
     public void SendTestCasesShouldSendTestCasesWithNavigationDataWhenDeclaredClassFullNameIsNonNull()
     {
         // Setup mocks.
@@ -218,7 +205,6 @@ public class UnitTestDiscovererTests
         VerifyNavigationDataIsPresent();
     }
 
-    [TestMethodV1]
     public void SendTestCasesShouldUseNaigationSessionForDeclaredAssemblyName()
     {
         // Setup mocks.
@@ -241,7 +227,6 @@ public class UnitTestDiscovererTests
         _testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.CreateNavigationSession("DummyAssembly2.dll"), Times.Once);
     }
 
-    [TestMethodV1]
     public void SendTestCasesShouldSendTestCasesWithNavigationDataForAsyncMethods()
     {
         // Setup mocks.
@@ -262,7 +247,6 @@ public class UnitTestDiscovererTests
     /// <summary>
     /// Send test cases should send filtered test cases only.
     /// </summary>
-    [TestMethodV1]
     public void SendTestCasesShouldSendFilteredTestCasesIfValidFilterExpression()
     {
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => new TestableTestCaseFilterExpression((p) => (p.DisplayName == "M1")));
@@ -282,7 +266,6 @@ public class UnitTestDiscovererTests
     /// <summary>
     /// Send test cases should send all test cases if filter expression is null.
     /// </summary>
-    [TestMethodV1]
     public void SendTestCasesShouldSendAllTestCasesIfNullFilterExpression()
     {
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => null);
@@ -302,7 +285,6 @@ public class UnitTestDiscovererTests
     /// <summary>
     /// Send test cases should send all test cases if GetTestCaseFilter method is not present in DiscoveryContext.
     /// </summary>
-    [TestMethodV1]
     public void SendTestCasesShouldSendAllTestCasesIfGetTestCaseFilterNotPresent()
     {
         TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new();
@@ -322,7 +304,6 @@ public class UnitTestDiscovererTests
     /// <summary>
     /// Send test cases should not send any test cases if filter parsing error.
     /// </summary>
-    [TestMethodV1]
     public void SendTestCasesShouldNotSendAnyTestCasesIfFilterError()
     {
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => { throw new TestPlatformFormatException("DummyException"); });

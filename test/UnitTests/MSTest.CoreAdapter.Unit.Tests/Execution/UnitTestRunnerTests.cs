@@ -3,10 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-extern alias FrameworkV2CoreExtension;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,26 +11,22 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml;
-using global::MSTestAdapter.TestUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethodV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
-using UTFExtension = FrameworkV2CoreExtension::Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class UnitTestRunnerTests
+using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class UnitTestRunnerTests : TestContainer
 {
     private UnitTestRunner _unitTestRunner;
 
@@ -42,8 +34,7 @@ public class UnitTestRunnerTests
 
     private TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    [TestInitialize]
-    public void TestInit()
+    public UnitTestRunnerTests()
     {
         _testRunParameters = new Dictionary<string, object>();
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
@@ -53,15 +44,17 @@ public class UnitTestRunnerTests
         _unitTestRunner = new UnitTestRunner(GetSettingsWithDebugTrace(false));
     }
 
-    [TestCleanup]
-    public void Cleanup()
+    protected override void Dispose(bool disposing)
     {
-        PlatformServiceProvider.Instance = null;
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            PlatformServiceProvider.Instance = null;
+        }
     }
 
     #region Constructor tests
 
-    [TestMethodV1]
     public void ConstructorShouldPopulateSettings()
     {
         string runSettingxml =
@@ -85,30 +78,29 @@ public class UnitTestRunnerTests
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
         var assemblyEnumerator = new UnitTestRunner(adapterSettings);
 
-        Assert.IsTrue(MSTestSettings.CurrentSettings.ForcedLegacyMode);
-        Assert.AreEqual("DummyPath\\TestSettings1.testsettings", MSTestSettings.CurrentSettings.TestSettingsFile);
+        Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
+        Verify("DummyPath\\TestSettings1.testsettings" == MSTestSettings.CurrentSettings.TestSettingsFile);
     }
 
     #endregion
 
     #region RunSingleTest tests
 
-    [TestMethodV1]
     public void RunSingleTestShouldThrowIfTestMethodIsNull()
     {
         void a() => _unitTestRunner.RunSingleTest(null, null);
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
+        var ex = VerifyThrows(a);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
-    [TestMethodV1]
     public void RunSingleTestShouldThrowIfTestRunParamtersIsNull()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
         void a() => _unitTestRunner.RunSingleTest(testMethod, null);
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentNullException));
+        var ex = VerifyThrows(a);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
-    [TestMethodV1]
     public void RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
@@ -118,13 +110,12 @@ public class UnitTestRunnerTests
 
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
-        Assert.IsNotNull(results);
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual(UnitTestOutcome.NotFound, results[0].Outcome);
-        Assert.AreEqual("Test method M was not found.", results[0].ErrorMessage);
+        Verify(results is not null);
+        Verify(1 == results.Length);
+        Verify(UnitTestOutcome.NotFound == results[0].Outcome);
+        Verify("Test method M was not found." == results[0].ErrorMessage);
     }
 
-    [TestMethodV1]
     public void RunSingleTestShouldReturnTestResultIndicatingNotRunnableTestIfTestMethodCannotBeRun()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
@@ -141,13 +132,12 @@ public class UnitTestRunnerTests
             methodInfo.DeclaringType.FullName,
             methodInfo.Name);
 
-        Assert.IsNotNull(results);
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual(UnitTestOutcome.NotRunnable, results[0].Outcome);
-        Assert.AreEqual(expectedMessage, results[0].ErrorMessage);
+        Verify(results is not null);
+        Verify(1 == results.Length);
+        Verify(UnitTestOutcome.NotRunnable == results[0].Outcome);
+        Verify(expectedMessage == results[0].ErrorMessage);
     }
 
-    [TestMethodV1]
     public void ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassAndHasMessage()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassWithMessage);
@@ -159,13 +149,12 @@ public class UnitTestRunnerTests
 
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
-        Assert.IsNotNull(results);
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
-        Assert.AreEqual("IgnoreTestClassMessage", results[0].ErrorMessage);
+        Verify(results is not null);
+        Verify(1 == results.Length);
+        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
+        Verify("IgnoreTestClassMessage" == results[0].ErrorMessage);
     }
 
-    [TestMethodV1]
     public void ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassButHasNoMessage()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClass);
@@ -177,13 +166,12 @@ public class UnitTestRunnerTests
 
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
-        Assert.IsNotNull(results);
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
-        Assert.AreEqual(string.Empty, results[0].ErrorMessage);
+        Verify(results is not null);
+        Verify(1 == results.Length);
+        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
+        Verify(string.Empty == results[0].ErrorMessage);
     }
 
-    [TestMethodV1]
     public void ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodAndHasMessage()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreTestWithMessage);
@@ -195,13 +183,12 @@ public class UnitTestRunnerTests
 
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
-        Assert.IsNotNull(results);
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
-        Assert.AreEqual("IgnoreTestMessage", results[0].ErrorMessage);
+        Verify(results is not null);
+        Verify(1 == results.Length);
+        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
+        Verify("IgnoreTestMessage" == results[0].ErrorMessage);
     }
 
-    [TestMethodV1]
     public void ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodButHasNoMessage()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreTest);
@@ -213,13 +200,12 @@ public class UnitTestRunnerTests
 
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
-        Assert.IsNotNull(results);
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
-        Assert.AreEqual(string.Empty, results[0].ErrorMessage);
+        Verify(results is not null);
+        Verify(1 == results.Length);
+        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
+        Verify(string.Empty == results[0].ErrorMessage);
     }
 
-    [TestMethodV1]
     public void ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethod()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassAndIgnoreTestWithMessage);
@@ -231,13 +217,12 @@ public class UnitTestRunnerTests
 
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
-        Assert.IsNotNull(results);
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
-        Assert.AreEqual("IgnoreTestClassMessage", results[0].ErrorMessage);
+        Verify(results is not null);
+        Verify(1 == results.Length);
+        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
+        Verify("IgnoreTestClassMessage" == results[0].ErrorMessage);
     }
 
-    [TestMethodV1]
     public void ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethodButClassHasNoMessage()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassWithNoMessageAndIgnoreTestWithMessage);
@@ -249,13 +234,12 @@ public class UnitTestRunnerTests
 
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
-        Assert.IsNotNull(results);
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual(UnitTestOutcome.Ignored, results[0].Outcome);
-        Assert.AreEqual("IgnoreTestMessage", results[0].ErrorMessage);
+        Verify(results is not null);
+        Verify(1 == results.Length);
+        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
+        Verify("IgnoreTestMessage" == results[0].ErrorMessage);
     }
 
-    [TestMethodV1]
     public void RunSingleTestShouldReturnTestResultIndicatingFailureIfThereIsAnyTypeInspectionExceptionWhenInspectingTestMethod()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
@@ -271,13 +255,12 @@ public class UnitTestRunnerTests
             testMethod.FullClassName,
             testMethod.Name);
 
-        Assert.IsNotNull(results);
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual(UnitTestOutcome.Failed, results[0].Outcome);
-        Assert.AreEqual(expectedMessage, results[0].ErrorMessage);
+        Verify(results is not null);
+        Verify(1 == results.Length);
+        Verify(UnitTestOutcome.Failed == results[0].Outcome);
+        Verify(expectedMessage == results[0].ErrorMessage);
     }
 
-    [TestMethodV1]
     public void RunSingleTestShouldReturnTestResultsForAPassingTestMethod()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
@@ -289,13 +272,12 @@ public class UnitTestRunnerTests
 
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
-        Assert.IsNotNull(results);
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual(UnitTestOutcome.Passed, results[0].Outcome);
-        Assert.IsNull(results[0].ErrorMessage);
+        Verify(results is not null);
+        Verify(1 == results.Length);
+        Verify(UnitTestOutcome.Passed == results[0].Outcome);
+        Verify(results[0].ErrorMessage is null);
     }
 
-    [TestMethodV1]
     public void RunSingleTestShouldSetTestsAsInProgressInTestContext()
     {
         var type = typeof(DummyTestClass);
@@ -308,12 +290,11 @@ public class UnitTestRunnerTests
         // Asserting in the test method execution flow itself.
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
-        Assert.IsNotNull(results);
-        Assert.AreEqual(1, results.Length);
-        Assert.AreEqual(UnitTestOutcome.Passed, results[0].Outcome);
+        Verify(results is not null);
+        Verify(1 == results.Length);
+        Verify(UnitTestOutcome.Passed == results[0].Outcome);
     }
 
-    [TestMethodV1]
     public void RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
     {
         var mockReflectHelper = new Mock<ReflectHelper>();
@@ -338,20 +319,18 @@ public class UnitTestRunnerTests
 
         _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
-        Assert.AreEqual(1, validator);
+        Verify(1 == validator);
     }
 
     #endregion
 
     #region RunCleanup Tests
 
-    [TestMethodV1]
     public void RunCleanupShouldReturnNullOnNoCleanUpMethods()
     {
-        Assert.IsNull(_unitTestRunner.RunCleanup());
+        Verify(_unitTestRunner.RunCleanup() is null);
     }
 
-    [TestMethodV1]
     public void RunCleanupShouldReturnCleanupResultsForAssemblyAndClassCleanupMethods()
     {
         var type = typeof(DummyTestClassWithCleanupMethods);
@@ -380,10 +359,10 @@ public class UnitTestRunnerTests
 
         var cleanupresult = _unitTestRunner.RunCleanup();
 
-        Assert.AreEqual(1, assemblyCleanupCount);
-        Assert.AreEqual(1, classCleanupCount);
-        Assert.AreEqual(2, cleanupresult.Warnings.Count);
-        Assert.IsTrue(cleanupresult.Warnings.All(w => w.Contains("NotImplemented")));
+        Verify(1 == assemblyCleanupCount);
+        Verify(1 == classCleanupCount);
+        Verify(2 == cleanupresult.Warnings.Count);
+        Verify(cleanupresult.Warnings.All(w => w.Contains("NotImplemented")));
     }
 
     #endregion

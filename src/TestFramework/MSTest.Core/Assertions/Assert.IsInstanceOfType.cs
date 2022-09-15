@@ -1,18 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NETCOREAPP3_0_OR_GREATER && !NET6_0_OR_GREATER
-#define HIDE_MESSAGELESS_IMPLEMENTATION
-#endif
-
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 /// <summary>
 /// A collection of helper classes to test various conditions within
@@ -21,7 +14,6 @@ using System.Threading.Tasks;
 /// </summary>
 public sealed partial class Assert
 {
-#if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
     /// type and throws an exception if the expected type is not in the
@@ -75,7 +67,7 @@ public sealed partial class Assert
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType(object value, Type expectedType, [CallerArgumentExpression("value")] string message = null)
+    public static void IsInstanceOfType(object value, Type expectedType, string message)
     {
         IsInstanceOfType(value, expectedType, message, null);
     }
@@ -85,7 +77,7 @@ public sealed partial class Assert
     /// type and throws an exception if the generictype is not in the
     /// inheritance hierarchy of the object.
     /// </summary>
-    public static void IsInstanceOfType<T>(object value, [CallerArgumentExpression("value")] string message = null)
+    public static void IsInstanceOfType<T>(object value, string message)
     {
         IsInstanceOfType(value, typeof(T), message, null);
     }
@@ -114,7 +106,7 @@ public sealed partial class Assert
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType(object value, Type expectedType, [CallerArgumentExpression("value")] string message = null, params object[] parameters)
+    public static void IsInstanceOfType(object value, Type expectedType, string message, params object[] parameters)
     {
         if (expectedType == null || value == null)
         {
@@ -141,12 +133,11 @@ public sealed partial class Assert
     /// type and throws an exception if the generictype is not in the
     /// inheritance hierarchy of the object.
     /// </summary>
-    public static void IsInstanceOfType<T>(object value, [CallerArgumentExpression("value")] string message = null, params object[] parameters)
+    public static void IsInstanceOfType<T>(object value, string message, params object[] parameters)
     {
         IsInstanceOfType(value, typeof(T), message, parameters);
     }
 
-#if HIDE_MESSAGELESS_IMPLEMENTATION
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong
     /// type and throws an exception if the specified type is in the
@@ -177,7 +168,6 @@ public sealed partial class Assert
     {
         IsNotInstanceOfType(value, typeof(T), string.Empty, null);
     }
-#endif
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong
@@ -200,7 +190,7 @@ public sealed partial class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object value, Type wrongType, [CallerArgumentExpression("value")] string message = null)
+    public static void IsNotInstanceOfType(object value, Type wrongType, string message)
     {
         IsNotInstanceOfType(value, wrongType, message, null);
     }
@@ -210,7 +200,7 @@ public sealed partial class Assert
     /// type and throws an exception if the specified type is in the
     /// inheritance hierarchy of the object.
     /// </summary>
-    public static void IsNotInstanceOfType<T>(object value, [CallerArgumentExpression("value")] string message = null)
+    public static void IsNotInstanceOfType<T>(object value, string message)
     {
         IsNotInstanceOfType(value, typeof(T), message, null);
     }
@@ -239,7 +229,7 @@ public sealed partial class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object value, Type wrongType, [CallerArgumentExpression("value")] string message = null, params object[] parameters)
+    public static void IsNotInstanceOfType(object value, Type wrongType, string message, params object[] parameters)
     {
         if (wrongType == null)
         {
@@ -272,7 +262,7 @@ public sealed partial class Assert
     /// type and throws an exception if the specified type is in the
     /// inheritance hierarchy of the object.
     /// </summary>
-    public static void IsNotInstanceOfType<T>(object value, [CallerArgumentExpression("value")] string message = null, params object[] parameters)
+    public static void IsNotInstanceOfType<T>(object value,string message, params object[] parameters)
     {
         IsNotInstanceOfType(value, typeof(T), message, parameters);
     }

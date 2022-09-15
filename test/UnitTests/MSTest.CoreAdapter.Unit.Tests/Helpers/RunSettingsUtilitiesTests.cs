@@ -3,31 +3,22 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
+using System;
 using System.Collections.Generic;
-using global::MSTestAdapter.TestUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
-[TestClass]
-public class RunSettingsUtilitiesTests
+using TestFramework.ForTestingMSTest;
+
+public class RunSettingsUtilitiesTests : TestContainer
 {
-    [TestMethod]
     public void GetTestRunParametersReturnsEmptyDictionaryOnNullRunSettings()
     {
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(null);
-        Assert.IsNotNull(trp);
-        Assert.AreEqual(0, trp.Count);
+        Verify(trp is not null);
+        Verify(0 == trp.Count);
     }
 
-    [TestMethod]
     public void GetTestRunParametersReturnsEmptyDictionaryWhenNoTestRunParameters()
     {
         string settingsXml =
@@ -41,11 +32,10 @@ public class RunSettingsUtilitiesTests
                 </RunSettings>";
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Assert.IsNotNull(trp);
-        Assert.AreEqual(0, trp.Count);
+        Verify(trp is not null);
+        Verify(0 == trp.Count);
     }
 
-    [TestMethod]
     public void GetTestRunParametersReturnsEmptyDictionaryForEmptyTestRunParametersNode()
     {
         string settingsXml =
@@ -61,11 +51,10 @@ public class RunSettingsUtilitiesTests
                 </RunSettings>";
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Assert.IsNotNull(trp);
-        Assert.AreEqual(0, trp.Count);
+        Verify(trp is not null);
+        Verify(0 == trp.Count);
     }
 
-    [TestMethod]
     public void GetTestRunParametersReturns1EntryOn1TestRunParameter()
     {
         string settingsXml =
@@ -82,15 +71,14 @@ public class RunSettingsUtilitiesTests
                 </RunSettings>";
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Assert.IsNotNull(trp);
-        Assert.AreEqual(1, trp.Count);
+        Verify(trp is not null);
+        Verify(1 == trp.Count);
 
         // Verify Parameter Values.
-        Assert.IsTrue(trp.ContainsKey("webAppUrl"));
-        Assert.AreEqual("http://localhost", trp["webAppUrl"]);
+        Verify(trp.ContainsKey("webAppUrl"));
+        Verify("http://localhost".Equals(trp["webAppUrl"]));
     }
 
-    [TestMethod]
     public void GetTestRunParametersReturns3EntryOn3TestRunParameter()
     {
         string settingsXml =
@@ -109,19 +97,18 @@ public class RunSettingsUtilitiesTests
                 </RunSettings>";
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Assert.IsNotNull(trp);
-        Assert.AreEqual(3, trp.Count);
+        Verify(trp is not null);
+        Verify(3 == trp.Count);
 
         // Verify Parameter Values.
-        Assert.IsTrue(trp.ContainsKey("webAppUrl"));
-        Assert.AreEqual("http://localhost", trp["webAppUrl"]);
-        Assert.IsTrue(trp.ContainsKey("webAppUserName"));
-        Assert.AreEqual("Admin", trp["webAppUserName"]);
-        Assert.IsTrue(trp.ContainsKey("webAppPassword"));
-        Assert.AreEqual("Password", trp["webAppPassword"]);
+        Verify(trp.ContainsKey("webAppUrl"));
+        Verify("http://localhost".Equals(trp["webAppUrl"]));
+        Verify(trp.ContainsKey("webAppUserName"));
+        Verify("Admin".Equals(trp["webAppUserName"]));
+        Verify(trp.ContainsKey("webAppPassword"));
+        Verify("Password".Equals(trp["webAppPassword"]));
     }
 
-    [TestMethod]
     public void GetTestRunParametersThrowsWhenTRPNodeHasAttributes()
     {
         string settingsXml =
@@ -137,10 +124,10 @@ public class RunSettingsUtilitiesTests
                      </TestRunParameters>
                 </RunSettings>";
 
-        ActionUtility.ActionShouldThrowExceptionOfType(() => RunSettingsUtilities.GetTestRunParameters(settingsXml), typeof(SettingsException));
+        var ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
+        Verify(ex.GetType() == typeof(SettingsException));
     }
 
-    [TestMethod]
     public void GetTestRunParametersThrowsWhenTRPNodeHasNonParameterTypeChildNodes()
     {
         string settingsXml =
@@ -157,10 +144,10 @@ public class RunSettingsUtilitiesTests
                      </TestRunParameters>
                 </RunSettings>";
 
-        ActionUtility.ActionShouldThrowExceptionOfType(() => RunSettingsUtilities.GetTestRunParameters(settingsXml), typeof(SettingsException));
+        var ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
+        Verify(ex.GetType() == typeof(SettingsException));
     }
 
-    [TestMethod]
     public void GetTestRunParametersIgnoresMalformedKeyValues()
     {
         string settingsXml =
@@ -177,7 +164,7 @@ public class RunSettingsUtilitiesTests
                 </RunSettings>";
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Assert.IsNotNull(trp);
-        Assert.AreEqual(0, trp.Count);
+        Verify(trp is not null);
+        Verify(0 == trp.Count);
     }
 }

@@ -3,9 +3,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.IO;
 using System.Text;
@@ -14,48 +11,44 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Moq;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UTF = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class LogMessageListenerTests
+using TestFramework.ForTestingMSTest;
+
+using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class LogMessageListenerTests : TestContainer
 {
     private TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    [TestInitialize]
-    public void TestInit()
+    public LogMessageListenerTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
-    [TestCleanup]
-    public void Testcleanup()
+    protected override void Dispose(bool disposing)
     {
-        PlatformServiceProvider.Instance = null;
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            PlatformServiceProvider.Instance = null;
+        }
     }
 
-    [TestMethod]
     public void LogMessageListenerShouldCaptureTestFrameworkLogMessages()
     {
         using var logMessageListener = new LogMessageListener(false);
         UTF.Logging.Logger.LogMessage("sample log {0}", 123);
 
-        Assert.AreEqual("sample log 123" + Environment.NewLine, logMessageListener.StandardOutput);
+        Verify("sample log 123" + Environment.NewLine == logMessageListener.StandardOutput);
     }
 
-    [TestMethod]
     public void NoTraceListenerOperationShouldBePerformedIfDebugTraceIsNotEnabled()
     {
         using var logMessageListener = new LogMessageListener(false);
         _testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Add(It.IsAny<ITraceListener>()), Times.Never);
     }
 
-    [TestMethod]
     public void AddTraceListenerOperationShouldBePerformedIfDebugTraceIsEnabled()
     {
         using var logMessageListener = new LogMessageListener(true);
@@ -63,7 +56,6 @@ public class LogMessageListenerTests
     }
 
     #region Dispose Tests
-    [TestMethod]
     public void DisposeShouldNotRemoveTraceListenerIfDebugTracesIsNotEnabled()
     {
         using var logMessageListener = new LogMessageListener(false);
@@ -71,7 +63,6 @@ public class LogMessageListenerTests
         _testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Remove(It.IsAny<ITraceListener>()), Times.Never);
     }
 
-    [TestMethod]
     public void DisposeShouldRemoveTraceListenerIfDebugTracesIsEnabled()
     {
         using (var logMessageListener = new LogMessageListener(true))
@@ -83,7 +74,6 @@ public class LogMessageListenerTests
         _testablePlatformServiceProvider.MockTraceListenerManager.Verify(mtlm => mtlm.Remove(It.IsAny<ITraceListener>()), Times.Exactly(1));
     }
 
-    [TestMethod]
     public void DisposeShouldDisposeTraceListener()
     {
         using var logMessageListener = new LogMessageListener(true);
@@ -93,7 +83,6 @@ public class LogMessageListenerTests
 
     #endregion
 
-    [TestMethod]
     public void LogMessageListenerShouldCaptureLogMessagesInAllListeningScopes()
     {
         using var logMessageListener1 = new LogMessageListener(false);
@@ -101,12 +90,12 @@ public class LogMessageListenerTests
         {
             UTF.Logging.Logger.LogMessage("sample log {0}", 123);
 
-            Assert.AreEqual("sample log 123" + Environment.NewLine, logMessageListener2.StandardOutput);
+            Verify("sample log 123" + Environment.NewLine == logMessageListener2.StandardOutput);
         }
 
         UTF.Logging.Logger.LogMessage("sample log {0}", 124);
 
         var expectedMessage = string.Format("sample log 123{0}sample log 124{0}", Environment.NewLine);
-        Assert.AreEqual(expectedMessage, logMessageListener1.StandardOutput);
+        Verify(expectedMessage == logMessageListener1.StandardOutput);
     }
 }

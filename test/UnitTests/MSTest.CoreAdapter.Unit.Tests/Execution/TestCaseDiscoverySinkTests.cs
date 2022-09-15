@@ -3,52 +3,43 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
-extern alias FrameworkV1;
-
 using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
-[TestClass]
-public class TestCaseDiscoverySinkTests
+using TestFramework.ForTestingMSTest;
+
+public class TestCaseDiscoverySinkTests : TestContainer
 {
     private TestCaseDiscoverySink _testCaseDiscoverySink;
 
-    [TestInitialize]
-    public void TestInit()
+    public TestCaseDiscoverySinkTests()
     {
         _testCaseDiscoverySink = new TestCaseDiscoverySink();
     }
 
-    [TestMethod]
     public void TestCaseDiscoverySinkConstructorShouldInitializeTests()
     {
-        Assert.IsNotNull(_testCaseDiscoverySink.Tests);
-        Assert.AreEqual(0, _testCaseDiscoverySink.Tests.Count);
+        Verify(_testCaseDiscoverySink.Tests is not null);
+        Verify(0 == _testCaseDiscoverySink.Tests.Count);
     }
 
-    [TestMethod]
     public void SendTestCaseShouldNotAddTestIfTestCaseIsNull()
     {
         _testCaseDiscoverySink.SendTestCase(null);
 
-        Assert.IsNotNull(_testCaseDiscoverySink.Tests);
-        Assert.AreEqual(0, _testCaseDiscoverySink.Tests.Count);
+        Verify(_testCaseDiscoverySink.Tests is not null);
+        Verify(0 == _testCaseDiscoverySink.Tests.Count);
     }
 
-    [TestMethod]
     public void SendTestCaseShouldAddTheTestCaseToTests()
     {
         TestCase tc = new("T", new Uri("executor://TestExecutorUri"), "A");
         _testCaseDiscoverySink.SendTestCase(tc);
 
-        Assert.IsNotNull(_testCaseDiscoverySink.Tests);
-        Assert.AreEqual(1, _testCaseDiscoverySink.Tests.Count);
-        Assert.AreEqual(tc, _testCaseDiscoverySink.Tests.ToArray()[0]);
+        Verify(_testCaseDiscoverySink.Tests is not null);
+        Verify(1 == _testCaseDiscoverySink.Tests.Count);
+        Verify(tc == _testCaseDiscoverySink.Tests.ToArray()[0]);
     }
 }

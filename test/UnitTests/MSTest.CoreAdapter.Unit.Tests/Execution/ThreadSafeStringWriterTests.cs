@@ -3,25 +3,21 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
-extern alias FrameworkV1;
-
 using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using System.Xml;
 
-[TestClass]
-public class ThreadSafeStringWriterTests
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
+using TestFramework.ForTestingMSTest;
+
+public class ThreadSafeStringWriterTests : TestContainer
 {
     private bool _task2flag;
 
-    [TestMethod]
     public void ThreadSafeStringWriterWriteLineHasContentFromMultipleThreads()
     {
         using (ExecutionContext.SuppressFlow())
@@ -70,14 +66,14 @@ public class ThreadSafeStringWriterTests
             task1.GetAwaiter().GetResult();
 
             var content = stringWriter.ToString();
-            content.Should().NotBeNullOrWhiteSpace();
+            Verify(!string.IsNullOrEmpty(content));
 
             // Validate that only whole lines are written, not a mix of random chars
             var lines = content.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            lines.Should().HaveCountGreaterThan(0);
+            Verify(lines.Length > 0);
             foreach (var line in lines)
             {
-                Assert.IsTrue(line.Equals("content1") || line.Equals("content2"));
+                Verify(line.Equals("content1") || line.Equals("content2"));
             }
         }
     }
