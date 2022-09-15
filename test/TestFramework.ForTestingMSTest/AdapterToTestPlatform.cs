@@ -221,7 +221,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
         }
         catch (Exception ex)
         {
-            var realException = ex.InnerException?.Data.Contains(TestContainer.IsVerifyException) == true ? ex.InnerException : ex;
+            var realException = ex.InnerException ?? ex;
             LogMessage(logger, TestMessageLevel.Error, $"Error during test setup: {realException}");
             testResult.Outcome = TestOutcome.Failed;
             testResult.ErrorMessage = $"Error during test setup: {realException.Message}";
@@ -244,7 +244,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
         }
         catch (Exception ex)
         {
-            var realException = ex.InnerException?.Data.Contains(TestContainer.IsVerifyException) == true ? ex.InnerException : ex;
+            var realException = ex.InnerException ?? ex;
             LogMessage(logger, TestMessageLevel.Error, $"Error during test: {realException}");
             testResult.Outcome = TestOutcome.Failed;
             testResult.ErrorMessage = $"Error during test: {realException.Message}";
@@ -270,7 +270,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
         }
         catch (Exception ex)
         {
-            var realException = ex.InnerException?.Data.Contains(TestContainer.IsVerifyException) == true ? ex.InnerException : ex;
+            var realException = ex.InnerException ?? ex;
             LogMessage(logger, TestMessageLevel.Error, $"Error during test teardown: {realException}");
             testResult.Outcome = TestOutcome.Failed;
             // TODO: It's possible there is already some error message + stack trace. We should merge instead of override.
