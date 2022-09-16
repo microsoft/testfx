@@ -8,12 +8,12 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml;
-
+using global::TestFramework.ForTestingMSTest;
 using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-public partial class CLITestBase
+public partial class CLITestBase : TestContainer
 {
     private static VsTestConsoleWrapper s_vsTestConsoleWrapper;
     private DiscoveryEventsHandler _discoveryEventsHandler;

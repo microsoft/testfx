@@ -4,14 +4,11 @@
 namespace MSTestAdapter.Smoke.E2ETests;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
 public class DataRowTests : CLITestBase
 {
     private const string TestAssembly = "DataRowTestProject.dll";
 
-    [TestMethod]
     public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerviedClassHasDataRows_SimpleDataRows()
     {
         InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowSimple");
@@ -29,7 +26,6 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(5);
     }
 
-    [TestMethod]
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
         InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
@@ -42,7 +38,6 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(2);
     }
 
-    [TestMethod]
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
     {
         InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowSomeOptional");
@@ -56,7 +51,6 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(3);
     }
 
-    [TestMethod]
     public void DataRowsExecuteWithAllOptionalParameters()
     {
         InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowAllOptional");
@@ -71,7 +65,6 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(4);
     }
 
-    [TestMethod]
     public void DataRowsExecuteWithParamsArrayParameter()
     {
         InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowParamsArgument");
@@ -86,7 +79,6 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(4);
     }
 
-    [TestMethod]
     public void DataRowsFailWhenInvalidArgumentsProvided()
     {
         InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowOptionalInvalidArguments");

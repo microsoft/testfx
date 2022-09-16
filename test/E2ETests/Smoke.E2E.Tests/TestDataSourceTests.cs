@@ -4,17 +4,14 @@
 namespace MSTestAdapter.Smoke.E2ETests;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
 public class TestDataSourceTests : CLITestBase
 {
     private const string TestAssembly = "DataSourceTestProject.dll";
 
+    // Made it private because it Was Ignored.
     // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR
-    [Ignore]
-    [TestMethod]
-    public void ExecuteCsvTestDataSourceTests()
+    private void ExecuteCsvTestDataSourceTests()
     {
         // Arrange & Act
         InvokeVsTestForExecution(
@@ -32,7 +29,6 @@ public class TestDataSourceTests : CLITestBase
             "CsvTestMethod (Data Row 3)");
     }
 
-    [TestMethod]
     public void ExecuteDynamicDataTests()
     {
         // Arrange & Act
@@ -47,7 +43,6 @@ public class TestDataSourceTests : CLITestBase
         ValidateFailedTestsCount(0);
     }
 
-    [TestMethod]
     public void ExecuteDataRowTests_Enums()
     {
         // Arrange & Act
@@ -120,7 +115,6 @@ public class TestDataSourceTests : CLITestBase
         ValidateFailedTestsCount(0);
     }
 
-    [TestMethod]
     public void ExecuteDataRowTests_NonSerializablePaths()
     {
         // Arrange & Act
@@ -137,7 +131,6 @@ public class TestDataSourceTests : CLITestBase
         ValidateFailedTestsCount(0);
     }
 
-    [TestMethod]
     public void ExecuteRegular_DataRowTests()
     {
         // Arrange & Act

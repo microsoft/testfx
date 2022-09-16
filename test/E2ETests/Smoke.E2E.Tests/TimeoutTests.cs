@@ -6,9 +6,7 @@ namespace MSTestAdapter.Smoke.E2ETests;
 using System.IO;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
 public class TimeoutTests : CLITestBase
 {
     private const string TimeoutTestAssembly = "TimeoutTestProject.dll";
@@ -18,13 +16,11 @@ public class TimeoutTests : CLITestBase
     private const string TimeoutFileToValidateNetCore = "netcoreapp3.1\\TimeoutTestOutputNetCore.txt";
     private const string TimeoutFileToValidate = "TimeoutTestOutput.txt";
 
-    [TestMethod]
     public void ValidateTimeoutTests()
     {
         Validate(TimeoutTestAssembly, TimeoutFileToValidate);
     }
 
-    [TestMethod]
     public void ValidateTimeoutTestsNetCore()
     {
         Validate(TimeoutTestAssemblyNetCore, TimeoutFileToValidateNetCore);
@@ -43,8 +39,8 @@ public class TimeoutTests : CLITestBase
             false,
             "TimeoutTestProject.TerminateLongRunningTasksUsingTokenTestClass.TerminateLongRunningTasksUsingToken",
             "TimeoutTestProject.SelfTerminatingTestClass.SelfTerminatingTestMethod");
-
-        Assert.IsTrue(File.Exists(GetAssetFullPath(fileToValidate)), "Unable to locate the TimeoutTestOutput.txt file");
+        // Unable to locate the TimeoutTestOutput.txt file.
+        Verify(File.Exists(GetAssetFullPath(fileToValidate)));
     }
 
     // TODO @haplois | @evangelink: We should add netcoreapp2.1 tests here.
