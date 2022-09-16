@@ -17,7 +17,7 @@ public partial class AssertTests
     {
         var ex = VerifyThrows(() => Assert.Inconclusive("{"));
 
-        Verify(ex != null);
+        Verify(ex is not null);
         Verify(typeof(AssertInconclusiveException) == ex.GetType());
         Verify(ex.Message.Contains("Assert.Inconclusive failed. {"));
     }
@@ -27,7 +27,7 @@ public partial class AssertTests
     {
         var ex = VerifyThrows(() => Assert.Inconclusive("{", "arg"));
 
-        Verify(ex != null);
+        Verify(ex is not null);
         Verify(typeof(FormatException) == ex.GetType());
     }
 }
