@@ -57,28 +57,25 @@ public class StringAssertTests : TestContainer
         Verify(ex.Message.Contains("StringAssert.DoesNotMatch failed"));
     }
 
-    public void StringAssertContainsIgnoreCase()
+    public void StringAssertContainsIgnoreCase_DoesNotThrow()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string inString = "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.";
-        var ex = VerifyThrows(() => StringAssert.Contains(actual, inString, StringComparison.OrdinalIgnoreCase));
-        Verify(ex is null);
+        StringAssert.Contains(actual, inString, StringComparison.OrdinalIgnoreCase);
     }
 
-    public void StringAssertStartsWithIgnoreCase()
+    public void StringAssertStartsWithIgnoreCase_DoesNotThrow()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string inString = "THE QUICK";
-        var ex = VerifyThrows(() => StringAssert.StartsWith(actual, inString, StringComparison.OrdinalIgnoreCase));
-        Verify(ex is null);
+        StringAssert.StartsWith(actual, inString, StringComparison.OrdinalIgnoreCase);
     }
 
-    public void StringAssertEndsWithIgnoreCase()
+    public void StringAssertEndsWithIgnoreCase_DoesNotThrow()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string inString = "LAZY DOG.";
-        var ex = VerifyThrows(() => StringAssert.EndsWith(actual, inString, StringComparison.OrdinalIgnoreCase));
-        Verify(ex is null);
+        StringAssert.EndsWith(actual, inString, StringComparison.OrdinalIgnoreCase);
     }
 
     // See https://github.com/dotnet/sdk/issues/25373

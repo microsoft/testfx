@@ -4,6 +4,8 @@
 namespace UnitTestFramework.Tests;
 
 using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using global::TestFramework.ForTestingMSTest;
 
 /// <summary>
@@ -16,8 +18,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
     /// <summary>
     /// Test initialization function.
     /// </summary>
-    [TestFrameworkV1.TestInitialize]
-    public void TestInitialize()
+    public ExpectedExceptionBaseAttributeTests()
     {
         _sut = new TestableExpectedExceptionBaseAttributeClass();
     }
@@ -27,9 +28,10 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
     /// </summary>
     public void RethrowIfAssertExceptionThrowsExceptionOnAssertFailure()
     {
-        void a() => _sut.RethrowIfAssertException(new TestFrameworkV2.AssertFailedException());
+        void a() => _sut.RethrowIfAssertException(new AssertFailedException());
 
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(TestFrameworkV2.AssertFailedException));
+        var ex = VerifyThrows(a);
+        Verify(ex.GetType() == typeof(AssertFailedException));
     }
 
     /// <summary>
@@ -37,9 +39,10 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
     /// </summary>
     public void RethrowIfAssertExceptionThrowsExceptionOnAssertInconclusive()
     {
-        void a() => _sut.RethrowIfAssertException(new TestFrameworkV2.AssertInconclusiveException());
+        void a() => _sut.RethrowIfAssertException(new AssertInconclusiveException());
 
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(TestFrameworkV2.AssertInconclusiveException));
+        var ex = VerifyThrows(a);
+        Verify(ex.GetType() == typeof(AssertInconclusiveException));
     }
 
     public void VerifyCorrectMessageIsGettingSetInVariablenoExceptionMessage()
@@ -49,7 +52,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
 
         string result = _sut.GetNoExceptionMessage();
 
-        TestFrameworkV1.Assert.AreEqual(expected, result);
+        Verify(expected == result);
     }
 
     public void VerifyEmptyMessageIsGettingSetInVariablenoExceptionMessage()
@@ -58,14 +61,14 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
 
         string result = _sut.GetNoExceptionMessage();
 
-        TestFrameworkV1.Assert.IsTrue(string.IsNullOrEmpty(result));
+        Verify(string.IsNullOrEmpty(result));
     }
 }
 
 /// <summary>
 /// Dummy class derived from Exception
 /// </summary>
-public class TestableExpectedExceptionBaseAttributeClass : TestFrameworkV2.ExpectedExceptionBaseAttribute
+public class TestableExpectedExceptionBaseAttributeClass : ExpectedExceptionBaseAttribute
 {
     public TestableExpectedExceptionBaseAttributeClass()
         : base()

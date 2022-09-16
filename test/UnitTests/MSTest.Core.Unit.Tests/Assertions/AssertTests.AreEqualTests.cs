@@ -177,8 +177,7 @@ public partial class AssertTests : TestContainer
         var englishCulture = new CultureInfo("en-EN");
 
         // Will ignore case and won't make exeption.
-        var ex = VerifyThrows(() => Assert.AreEqual(expected, actual, true, englishCulture));
-        Verify(ex is null);
+        Assert.AreEqual(expected, actual, true, englishCulture);
     }
 
     public void AreEqual_WithEnglishCultureAndDoesNotIgnoreCase_Throws()

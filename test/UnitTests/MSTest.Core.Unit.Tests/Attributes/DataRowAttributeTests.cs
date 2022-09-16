@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
 
 using System.Linq;
 using System.Reflection;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using global::TestFramework.ForTestingMSTest;
 
@@ -17,42 +18,42 @@ public class DataRowAttributeTests : TestContainer
     {
         var dataRow = new DataRowAttribute();
 
-        CollectionAssert.AreEqual(System.Array.Empty<object>(), dataRow.Data);
+        Verify(System.Array.Empty<object>().SequenceEqual(dataRow.Data));
     }
 
     public void ConstructorShouldSetDataPassed()
     {
         var dataRow = new DataRowAttribute("mercury");
 
-        CollectionAssert.AreEqual(new object[] { "mercury" }, dataRow.Data);
+        Verify(new object[] { "mercury" }.SequenceEqual(dataRow.Data));
     }
 
     public void ConstructorShouldSetMultipleDataValuesPassed()
     {
         var dataRow = new DataRowAttribute("mercury", "venus", "earth");
 
-        CollectionAssert.AreEqual(new object[] { "mercury", "venus", "earth" }, dataRow.Data);
+        Verify(new object[] { "mercury", "venus", "earth" }.SequenceEqual(dataRow.Data));
     }
 
     public void ConstructorShouldSetANullDataValuePassedInParams()
     {
         var dataRow = new DataRowAttribute("neptune", null);
 
-        CollectionAssert.AreEqual(new object[] { "neptune", null }, dataRow.Data);
+        Verify(new object[] { "neptune", null }.SequenceEqual(dataRow.Data));
     }
 
     public void ConstructorShouldSetANullDataValuePassedInAsADataArg()
     {
         var dataRow = new DataRowAttribute(null, "logos");
 
-        CollectionAssert.AreEqual(new object[] { null, "logos" }, dataRow.Data);
+        Verify(new object[] { null, "logos" }.SequenceEqual(dataRow.Data));
     }
 
     public void GetDataShouldReturnDataPassed()
     {
         var dataRow = new DataRowAttribute("mercury");
 
-        CollectionAssert.AreEqual(new object[] { "mercury" }, dataRow.GetData(null).FirstOrDefault());
+        Verify(new object[] { "mercury" }.SequenceEqual(dataRow.GetData(null).FirstOrDefault()));
     }
 
     public void GetDisplayNameShouldReturnAppropriateName()
@@ -67,13 +68,13 @@ public class DataRowAttributeTests : TestContainer
         var data2 = new string[] { "First", null, "Second" };
 
         var displayName = dataRowAttribute.GetDisplayName(_testMethodInfo, data);
-        Assert.AreEqual("DataRowTestMethod (First,Second,)", displayName);
+        Verify("DataRowTestMethod (First,Second,)" == displayName);
 
         displayName = dataRowAttribute.GetDisplayName(_testMethodInfo, data1);
-        Assert.AreEqual("DataRowTestMethod (,First,Second)", displayName);
+        Verify("DataRowTestMethod (,First,Second)" == displayName);
 
         displayName = dataRowAttribute.GetDisplayName(_testMethodInfo, data2);
-        Assert.AreEqual("DataRowTestMethod (First,,Second)", displayName);
+        Verify("DataRowTestMethod (First,,Second)" == displayName);
     }
 
     public void GetDisplayNameShouldReturnSpecifiedDisplayName()
@@ -89,6 +90,6 @@ public class DataRowAttributeTests : TestContainer
         var data = new string[] { "First", "Second", null };
 
         var displayName = dataRowAttribute.GetDisplayName(_testMethodInfo, data);
-        Assert.AreEqual("DataRowTestWithDisplayName", displayName);
+        Verify("DataRowTestWithDisplayName" == displayName);
     }
 }

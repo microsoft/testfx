@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using global::TestFramework.ForTestingMSTest;
 
@@ -16,8 +17,7 @@ public class DynamicDataAttributeTests : TestContainer
     private DynamicDataAttribute _dynamicDataAttribute;
     private MethodInfo _testMethodInfo;
 
-    [TestFrameworkV1.TestInitialize]
-    public void TestInit()
+    public DynamicDataAttributeTests()
     {
         _dummyTestClass = new DummyTestClass();
         _testMethodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
@@ -32,7 +32,8 @@ public class DynamicDataAttributeTests : TestContainer
             _dynamicDataAttribute.GetData(_testMethodInfo);
         }
 
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        var ex = VerifyThrows(action);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetDataShouldReadDataFromProperty()
@@ -40,8 +41,8 @@ public class DynamicDataAttributeTests : TestContainer
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
         var data = _dynamicDataAttribute.GetData(methodInfo);
-        Assert.IsNotNull(data);
-        Assert.IsTrue(data.ToList().Count == 2);
+        Verify(data is not null);
+        Verify(data.ToList().Count == 2);
     }
 
     public void GetDataShouldReadDataFromPropertyInDifferntClass()
@@ -49,8 +50,8 @@ public class DynamicDataAttributeTests : TestContainer
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty2", typeof(DummyTestClass2));
         var data = _dynamicDataAttribute.GetData(methodInfo);
-        Assert.IsNotNull(data);
-        Assert.IsTrue(data.ToList().Count == 2);
+        Verify(data is not null);
+        Verify(data.ToList().Count == 2);
     }
 
     public void GetDataShouldReadDataFromMethod()
@@ -58,8 +59,8 @@ public class DynamicDataAttributeTests : TestContainer
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod", DynamicDataSourceType.Method);
         var data = _dynamicDataAttribute.GetData(methodInfo);
-        Assert.IsNotNull(data);
-        Assert.IsTrue(data.ToList().Count == 2);
+        Verify(data is not null);
+        Verify(data.ToList().Count == 2);
     }
 
     public void GetDataShouldReadDataFromMethodInDifferentClass()
@@ -67,8 +68,8 @@ public class DynamicDataAttributeTests : TestContainer
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataMethod2", typeof(DummyTestClass2), DynamicDataSourceType.Method);
         var data = _dynamicDataAttribute.GetData(methodInfo);
-        Assert.IsNotNull(data);
-        Assert.IsTrue(data.ToList().Count == 2);
+        Verify(data is not null);
+        Verify(data.ToList().Count == 2);
     }
 
     public void GetDataShouldThrowExceptionIfPropertyReturnsNull()
@@ -80,7 +81,8 @@ public class DynamicDataAttributeTests : TestContainer
             _dynamicDataAttribute.GetData(methodInfo);
         }
 
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        var ex = VerifyThrows(action);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetDataShouldThrowExceptionIfPropertyReturnsEmpty()
@@ -92,7 +94,8 @@ public class DynamicDataAttributeTests : TestContainer
             _dynamicDataAttribute.GetData(methodInfo);
         }
 
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentException));
+        var ex = VerifyThrows(action);
+        Verify(ex.GetType() == typeof(ArgumentException));
     }
 
     public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType()
@@ -104,7 +107,8 @@ public class DynamicDataAttributeTests : TestContainer
             _dynamicDataAttribute.GetData(methodInfo);
         }
 
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        var ex = VerifyThrows(action);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetDisplayNameShouldReturnDisplayName()
@@ -112,7 +116,7 @@ public class DynamicDataAttributeTests : TestContainer
         var data = new object[] { 1, 2, 3 };
 
         var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Assert.AreEqual("TestMethod1 (1,2,3)", displayName);
+        Verify("TestMethod1 (1,2,3)".SequenceEqual(displayName));
     }
 
     public void GetDisplayNameShouldReturnDisplayNameWithDynamicDataDisplayName()
@@ -121,7 +125,7 @@ public class DynamicDataAttributeTests : TestContainer
 
         _dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName";
         var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Assert.AreEqual("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters", displayName);
+        Verify("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters" == displayName);
     }
 
     public void GetDisplayNameShouldReturnDisplayNameWithDynamicDataDisplayNameInDifferentClass()
@@ -131,7 +135,7 @@ public class DynamicDataAttributeTests : TestContainer
         _dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName2";
         _dynamicDataAttribute.DynamicDataDisplayNameDeclaringType = typeof(DummyTestClass2);
         var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Assert.AreEqual("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters", displayName);
+        Verify("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters" == displayName);
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodMissingParameters()
@@ -144,7 +148,8 @@ public class DynamicDataAttributeTests : TestContainer
             var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        var ex = VerifyThrows(action);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidReturnType()
@@ -157,7 +162,8 @@ public class DynamicDataAttributeTests : TestContainer
             var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        var ex = VerifyThrows(action);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidFirstParameterType()
@@ -170,7 +176,8 @@ public class DynamicDataAttributeTests : TestContainer
             var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        var ex = VerifyThrows(action);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidSecondParameterType()
@@ -183,7 +190,8 @@ public class DynamicDataAttributeTests : TestContainer
             var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        var ex = VerifyThrows(action);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodNonStatic()
@@ -196,7 +204,8 @@ public class DynamicDataAttributeTests : TestContainer
             var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        var ex = VerifyThrows(action);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodPrivate()
@@ -209,7 +218,8 @@ public class DynamicDataAttributeTests : TestContainer
             var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        var ex = VerifyThrows(action);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetDisplayNameShouldThrowExceptionWithMissingDynamicDataDisplayNameMethod()
@@ -222,13 +232,14 @@ public class DynamicDataAttributeTests : TestContainer
             var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
+        var ex = VerifyThrows(action);
+        Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void GetDisplayNameShouldReturnEmptyStringIfDataIsNull()
     {
         var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, null);
-        Assert.IsNull(displayName);
+        Verify(displayName is null);
     }
 
     public void GetDisplayNameShouldThrowIfDataHasNullValues()
@@ -238,13 +249,13 @@ public class DynamicDataAttributeTests : TestContainer
         var data2 = new string[] { "value1", null, "value2" };
 
         var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
-        Assert.AreEqual("TestMethod1 (value1,value2,)", displayName);
+        Verify("TestMethod1 (value1,value2,)" == displayName);
 
         displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data1);
-        Assert.AreEqual("TestMethod1 (,value1,value2)", displayName);
+        Verify("TestMethod1 (,value1,value2)" == displayName);
 
         displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data2);
-        Assert.AreEqual("TestMethod1 (value1,,value2)", displayName);
+        Verify("TestMethod1 (value1,,value2)" == displayName);
     }
 }
 

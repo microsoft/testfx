@@ -156,8 +156,9 @@ public partial class AssertTests
             Task t = Assert.ThrowsExceptionAsync<ArgumentException>(async () => { await Task.FromResult(true).ConfigureAwait(false); }, null, null);
             t.Wait();
         }
-        var ex = VerifyThrows(a);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        var t = VerifyThrows(a).GetType();
+        var t2 = typeof(ArgumentNullException);
+        Verify(t == typeof(ArgumentNullException));
     }
 
     public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowAssertionOnNoException()
