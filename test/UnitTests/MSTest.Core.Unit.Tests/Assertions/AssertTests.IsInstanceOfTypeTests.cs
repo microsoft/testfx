@@ -46,7 +46,6 @@ public partial class AssertTests
         static void action() => Assert.IsNotInstanceOfType(5, null);
         var ex = VerifyThrows(action);
         Verify(ex.GetType() == typeof(AssertFailedException));
-
     }
 
     public void InstanceNotOfTypeShouldPassOnWrongInstance()
