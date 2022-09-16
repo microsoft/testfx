@@ -3,17 +3,18 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using global::TestFramework.ForTestingMSTest;
 
 public class CollectionAssertTests : TestContainer
 {
     public void ThatShouldReturnAnInstanceOfCollectionAssert()
     {
-        Assert.IsNotNull(TestFrameworkV2.CollectionAssert.That);
+        Verify(CollectionAssert.That is not null);
     }
 
     public void ThatShouldCacheCollectionAssertInstance()
     {
-        Assert.AreEqual(TestFrameworkV2.CollectionAssert.That, TestFrameworkV2.CollectionAssert.That);
+        Verify(CollectionAssert.That == CollectionAssert.That);
     }
 }

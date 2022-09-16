@@ -5,6 +5,7 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions
 
 using System;
 using System.Text.RegularExpressions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using global::TestFramework.ForTestingMSTest;
 
@@ -12,95 +13,95 @@ public class StringAssertTests : TestContainer
 {
     public void ThatShouldReturnAnInstanceOfStringAssert()
     {
-        Assert.IsNotNull(TestFrameworkV2.StringAssert.That);
+        Verify(StringAssert.That is not null);
     }
 
     public void ThatShouldCacheStringAssertInstance()
     {
-        Assert.AreEqual(TestFrameworkV2.StringAssert.That, TestFrameworkV2.StringAssert.That);
+        Verify(StringAssert.That == StringAssert.That);
     }
 
     public void StringAssertContains()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.Contains(actual, notInString));
-        Assert.IsNotNull(ex);
-        TestFrameworkV1.StringAssert.Contains(ex.Message, "StringAssert.Contains failed");
+        var ex = VerifyThrows(() => StringAssert.Contains(actual, notInString));
+        Verify(ex is not null);
+        Verify(ex.Message.Contains("StringAssert.Contains failed"));
     }
 
     public void StringAssertStartsWith()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.StartsWith(actual, notInString));
-        Assert.IsNotNull(ex);
-        TestFrameworkV1.StringAssert.Contains(ex.Message, "StringAssert.StartsWith failed");
+        var ex = VerifyThrows(() => StringAssert.StartsWith(actual, notInString));
+        Verify(ex is not null);
+        Verify(ex.Message.Contains("StringAssert.StartsWith failed"));
     }
 
     public void StringAssertEndsWith()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.EndsWith(actual, notInString));
-        Assert.IsNotNull(ex);
-        TestFrameworkV1.StringAssert.Contains(ex.Message, "StringAssert.EndsWith failed");
+        var ex = VerifyThrows(() => StringAssert.EndsWith(actual, notInString));
+        Verify(ex is not null);
+        Verify(ex.Message.Contains("StringAssert.EndsWith failed"));
     }
 
     public void StringAssertDoesNotMatch()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         Regex doesMatch = new("quick brown fox");
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.DoesNotMatch(actual, doesMatch));
-        Assert.IsNotNull(ex);
-        TestFrameworkV1.StringAssert.Contains(ex.Message, "StringAssert.DoesNotMatch failed");
+        var ex = VerifyThrows(() => StringAssert.DoesNotMatch(actual, doesMatch));
+        Verify(ex is not null);
+        Verify(ex.Message.Contains("StringAssert.DoesNotMatch failed"));
     }
 
     public void StringAssertContainsIgnoreCase()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string inString = "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.";
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.Contains(actual, inString, StringComparison.OrdinalIgnoreCase));
-        Assert.IsNull(ex);
+        var ex = VerifyThrows(() => StringAssert.Contains(actual, inString, StringComparison.OrdinalIgnoreCase));
+        Verify(ex is null);
     }
 
     public void StringAssertStartsWithIgnoreCase()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string inString = "THE QUICK";
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.StartsWith(actual, inString, StringComparison.OrdinalIgnoreCase));
-        Assert.IsNull(ex);
+        var ex = VerifyThrows(() => StringAssert.StartsWith(actual, inString, StringComparison.OrdinalIgnoreCase));
+        Verify(ex is null);
     }
 
     public void StringAssertEndsWithIgnoreCase()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string inString = "LAZY DOG.";
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.EndsWith(actual, inString, StringComparison.OrdinalIgnoreCase));
-        Assert.IsNull(ex);
+        var ex = VerifyThrows(() => StringAssert.EndsWith(actual, inString, StringComparison.OrdinalIgnoreCase));
+        Verify(ex is null);
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
     public void StringAssertContainsDoesNotThrowFormatException()
     {
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.Contains(":-{", "x"));
-        Assert.IsNotNull(ex);
-        TestFrameworkV1.StringAssert.Contains(ex.Message, "StringAssert.Contains failed");
+        var ex = VerifyThrows(() => StringAssert.Contains(":-{", "x"));
+        Verify(ex is not null);
+        Verify(ex.Message.Contains("StringAssert.Contains failed"));
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
     public void StringAssertContainsDoesNotThrowFormatExceptionWithArguments()
     {
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.Contains("{", "x", "message {0}", "arg"));
-        Assert.IsNotNull(ex);
-        TestFrameworkV1.StringAssert.Contains(ex.Message, "StringAssert.Contains failed");
+        var ex = VerifyThrows(() => StringAssert.Contains("{", "x", "message {0}", "arg"));
+        Verify(ex is not null);
+        Verify(ex.Message.Contains("StringAssert.Contains failed"));
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
     public void StringAssertContainsFailsIfMessageIsInvalidStringFormatComposite()
     {
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.StringAssert.Contains("a", "b", "message {{0}", "arg"));
-        Assert.IsNotNull(ex);
-        Assert.AreEqual(typeof(FormatException), ex.GetType());
+        var ex = VerifyThrows(() => StringAssert.Contains("a", "b", "message {{0}", "arg"));
+        Verify(ex is not null);
+        Verify(typeof(FormatException) == ex.GetType());
     }
 }

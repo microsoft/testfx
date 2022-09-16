@@ -15,17 +15,17 @@ public partial class AssertTests
     public void IsFalseNullableBooleansShouldFailWithNull()
     {
         bool? nullBool = null;
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.IsFalse(nullBool));
-        Assert.IsNotNull(ex);
-        StringAssert.Contains(ex.Message, "Assert.IsFalse failed");
+        var ex = VerifyThrows(() => Assert.IsFalse(nullBool));
+        Verify(ex != null);
+        Verify(ex.Message.Contains("Assert.IsFalse failed"));
     }
 
     public void IsTrueNullableBooleansShouldFailWithNull()
     {
         bool? nullBool = null;
 
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.IsTrue(nullBool));
-        Assert.IsNotNull(ex);
-        StringAssert.Contains(ex.Message, "Assert.IsTrue failed");
+        var ex = VerifyThrows(() => Assert.IsTrue(nullBool));
+        Verify(ex != null);
+        Verify(ex.Message.Contains("Assert.IsTrue failed"));
     }
 }

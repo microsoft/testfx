@@ -15,7 +15,7 @@ public partial class AssertTests
     #region That tests
     public void ThatShouldReturnAnInstanceOfAssert()
     {
-        Verify(Assert.That != null);
+        Verify(Assert.That is not null);
     }
 
     public void ThatShouldCacheAssertInstance()
@@ -44,7 +44,7 @@ public partial class AssertTests
     {
         var ex = VerifyThrows(() => Assert.BuildUserMessage("{", "arg"));
 
-        Verify(ex != null);
+        Verify(ex is not null);
         Verify(typeof(FormatException) == ex.GetType());
     }
 
