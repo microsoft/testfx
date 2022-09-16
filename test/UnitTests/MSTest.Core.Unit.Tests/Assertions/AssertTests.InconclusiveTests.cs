@@ -3,38 +3,31 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
-using MSTestAdapter.TestUtilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using global::TestFramework.ForTestingMSTest;
 
 public partial class AssertTests
 {
-    [TestMethod] // See https://github.com/dotnet/sdk/issues/25373
+    // See https://github.com/dotnet/sdk/issues/25373
     public void InconclusiveDoesNotThrowWhenMessageContainsInvalidStringFormatCompositeAndNoArgumentsPassed()
     {
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.Inconclusive("{"));
+        var ex = VerifyThrows(() => Assert.Inconclusive("{"));
 
-        Assert.IsNotNull(ex);
-        Assert.AreEqual(typeof(TestFrameworkV2.AssertInconclusiveException), ex.GetType());
-        StringAssert.Contains(ex.Message, "Assert.Inconclusive failed. {");
+        Verify(ex != null);
+        Verify(typeof(AssertInconclusiveException) == ex.GetType());
+        Verify(ex.Message.Contains("Assert.Inconclusive failed. {"));
     }
 
-    [TestMethod] // See https://github.com/dotnet/sdk/issues/25373
+    // See https://github.com/dotnet/sdk/issues/25373
     public void InconclusiveThrowsWhenMessageContainsInvalidStringFormatComposite()
     {
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.Inconclusive("{", "arg"));
+        var ex = VerifyThrows(() => Assert.Inconclusive("{", "arg"));
 
-        Assert.IsNotNull(ex);
-        Assert.AreEqual(typeof(FormatException), ex.GetType());
+        Verify(ex != null);
+        Verify(typeof(FormatException) == ex.GetType());
     }
 }

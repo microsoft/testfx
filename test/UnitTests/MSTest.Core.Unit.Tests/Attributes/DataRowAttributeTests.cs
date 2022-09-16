@@ -3,24 +3,16 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System.Linq;
 using System.Reflection;
-using Assert = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using DataRowAttribute = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute;
-using TestClass = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 
-[TestClass]
-public class DataRowAttributeTests
+using global::TestFramework.ForTestingMSTest;
+
+public class DataRowAttributeTests : TestContainer
 {
     private DummyTestClass _dummyTestClass;
     private MethodInfo _testMethodInfo;
 
-    [TestMethod]
     public void DefaultConstructorSetsEmptyArrayPassed()
     {
         var dataRow = new DataRowAttribute();
@@ -28,7 +20,6 @@ public class DataRowAttributeTests
         CollectionAssert.AreEqual(System.Array.Empty<object>(), dataRow.Data);
     }
 
-    [TestMethod]
     public void ConstructorShouldSetDataPassed()
     {
         var dataRow = new DataRowAttribute("mercury");
@@ -36,7 +27,6 @@ public class DataRowAttributeTests
         CollectionAssert.AreEqual(new object[] { "mercury" }, dataRow.Data);
     }
 
-    [TestMethod]
     public void ConstructorShouldSetMultipleDataValuesPassed()
     {
         var dataRow = new DataRowAttribute("mercury", "venus", "earth");
@@ -44,7 +34,6 @@ public class DataRowAttributeTests
         CollectionAssert.AreEqual(new object[] { "mercury", "venus", "earth" }, dataRow.Data);
     }
 
-    [TestMethod]
     public void ConstructorShouldSetANullDataValuePassedInParams()
     {
         var dataRow = new DataRowAttribute("neptune", null);
@@ -52,7 +41,6 @@ public class DataRowAttributeTests
         CollectionAssert.AreEqual(new object[] { "neptune", null }, dataRow.Data);
     }
 
-    [TestMethod]
     public void ConstructorShouldSetANullDataValuePassedInAsADataArg()
     {
         var dataRow = new DataRowAttribute(null, "logos");
@@ -60,7 +48,6 @@ public class DataRowAttributeTests
         CollectionAssert.AreEqual(new object[] { null, "logos" }, dataRow.Data);
     }
 
-    [TestMethod]
     public void GetDataShouldReturnDataPassed()
     {
         var dataRow = new DataRowAttribute("mercury");
@@ -68,7 +55,6 @@ public class DataRowAttributeTests
         CollectionAssert.AreEqual(new object[] { "mercury" }, dataRow.GetData(null).FirstOrDefault());
     }
 
-    [TestMethod]
     public void GetDisplayNameShouldReturnAppropriateName()
     {
         var dataRowAttribute = new DataRowAttribute(null);
@@ -90,7 +76,6 @@ public class DataRowAttributeTests
         Assert.AreEqual("DataRowTestMethod (First,,Second)", displayName);
     }
 
-    [TestMethod]
     public void GetDisplayNameShouldReturnSpecifiedDisplayName()
     {
         var dataRowAttribute = new DataRowAttribute(null)

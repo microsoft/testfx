@@ -3,23 +3,15 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
-using MSTestAdapter.TestUtilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using global::TestFramework.ForTestingMSTest;
 
 public partial class AssertTests
 {
-    [TestMethod]
     public void IsFalseNullableBooleansShouldFailWithNull()
     {
         bool? nullBool = null;
@@ -28,7 +20,6 @@ public partial class AssertTests
         StringAssert.Contains(ex.Message, "Assert.IsFalse failed");
     }
 
-    [TestMethod]
     public void IsTrueNullableBooleansShouldFailWithNull()
     {
         bool? nullBool = null;

@@ -3,24 +3,17 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
-using MSTestAdapter.TestUtilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using global::TestFramework.ForTestingMSTest;
 
 public partial class AssertTests
 {
     #region ThrowAssertFailed tests
-    [TestMethod] // See https://github.com/dotnet/sdk/issues/25373
+    // See https://github.com/dotnet/sdk/issues/25373
     public void ThrowAssertFailedDoesNotThrowIfMessageContainsInvalidStringFormatComposite()
     {
         var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.ThrowAssertFailed("name", "{"));
@@ -32,8 +25,6 @@ public partial class AssertTests
     #endregion
 
     #region ThrowsException tests
-
-    [TestMethod]
     public void ThrowsExceptionWithLambdaExpressionsShouldThrowAssertionOnNoException()
     {
         var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.ThrowsException<ArgumentException>(() => { }));
@@ -43,7 +34,6 @@ public partial class AssertTests
         StringAssert.Contains(ex.Message, "Assert.ThrowsException failed. No exception thrown. ArgumentException exception was expected.");
     }
 
-    [TestMethod]
     public void ThrowsExceptionWithLambdaExpressionsShouldThrowAssertionOnWrongException()
     {
         var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.ThrowsException<ArgumentException>(
@@ -56,12 +46,9 @@ public partial class AssertTests
         Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), ex.GetType());
         StringAssert.Contains(ex.Message, "Assert.ThrowsException failed. Threw exception FormatException, but exception ArgumentException was expected.");
     }
-
     #endregion
 
     #region ThrowsExceptionAsync tests.
-
-    [TestMethod]
     public async Task ThrowsExceptionAsyncShouldNotThrowAssertionOnRightException()
     {
         Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
@@ -75,7 +62,6 @@ public partial class AssertTests
         await t.ConfigureAwait(false);
     }
 
-    [TestMethod]
     public void ThrowsExceptionAsyncShouldThrowAssertionOnNoException()
     {
         Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
@@ -94,7 +80,6 @@ public partial class AssertTests
         StringAssert.Contains(innerException.Message, "Assert.ThrowsException failed. No exception thrown. ArgumentException exception was expected.");
     }
 
-    [TestMethod]
     public void ThrowsExceptionAsyncShouldThrowAssertionOnWrongException()
     {
         Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
@@ -114,7 +99,6 @@ public partial class AssertTests
         StringAssert.Contains(innerException.Message, "Assert.ThrowsException failed. Threw exception FormatException, but exception ArgumentException was expected.");
     }
 
-    [TestMethod]
     public void ThrowsExceptionAsyncWithMessageShouldThrowAssertionOnNoException()
     {
         Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
@@ -134,7 +118,6 @@ public partial class AssertTests
         StringAssert.Contains(innerException.Message, "Assert.ThrowsException failed. No exception thrown. ArgumentException exception was expected. The world is not on fire.");
     }
 
-    [TestMethod]
     public void ThrowsExceptionAsyncWithMessageShouldThrowAssertionOnWrongException()
     {
         Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
@@ -155,7 +138,6 @@ public partial class AssertTests
         StringAssert.Contains(innerException.Message, "Assert.ThrowsException failed. Threw exception FormatException, but exception ArgumentException was expected. Happily ever after.");
     }
 
-    [TestMethod]
     public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowOnNullAction()
     {
         static void a()
@@ -166,7 +148,6 @@ public partial class AssertTests
         ActionUtility.ActionShouldThrowInnerExceptionOfType(a, typeof(ArgumentNullException));
     }
 
-    [TestMethod]
     public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowOnNullMessage()
     {
         static void a()
@@ -177,7 +158,6 @@ public partial class AssertTests
         ActionUtility.ActionShouldThrowInnerExceptionOfType(a, typeof(ArgumentNullException));
     }
 
-    [TestMethod]
     public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowAssertionOnNoException()
     {
         Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
@@ -200,7 +180,6 @@ public partial class AssertTests
         StringAssert.Contains(innerException.Message, "Assert.ThrowsException failed. No exception thrown. ArgumentException exception was expected. The world is not on fire ta.da-123.");
     }
 
-    [TestMethod]
     public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowAssertionOnWrongException()
     {
         Task t = TestFrameworkV2.Assert.ThrowsExceptionAsync<ArgumentException>(
@@ -222,6 +201,5 @@ public partial class AssertTests
         Assert.AreEqual(typeof(TestFrameworkV2.AssertFailedException), innerException.GetType());
         StringAssert.Contains(innerException.Message, "Assert.ThrowsException failed. Threw exception FormatException, but exception ArgumentException was expected. Happily ever after. The End.");
     }
-
     #endregion
 }

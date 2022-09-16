@@ -3,25 +3,17 @@
 
 namespace UnitTestFramework.Tests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
-using MSTestAdapter.TestUtilities;
-
-using TestFrameworkV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
+using global::TestFramework.ForTestingMSTest;
 
 /// <summary>
 /// Tests for class ExpectedExceptionAttribute
 /// </summary>
-[TestFrameworkV1.TestClass]
-public class ExpectedExceptionAttributeTests
+public class ExpectedExceptionAttributeTests : TestContainer
 {
     /// <summary>
     /// ExpectedExceptionAttribute constructor should throw ArgumentNullException when parameter exceptionType = null
     /// </summary>
-    [TestFrameworkV1.TestMethod]
     public void ExpectedExceptionAttributeConstructerShouldThrowArgumentNullExceptionWhenExceptionTypeIsNull()
     {
         static void a() => _ = new TestFrameworkV2.ExpectedExceptionAttribute(null, "Dummy");
@@ -32,7 +24,6 @@ public class ExpectedExceptionAttributeTests
     /// <summary>
     /// ExpectedExceptionAttribute constructor should throw ArgumentNullException when parameter exceptionType = typeof(AnyClassNotDerivedFromExceptionClass)
     /// </summary>
-    [TestFrameworkV1.TestMethod]
     public void ExpectedExceptionAttributeConstructerShouldThrowArgumentException()
     {
         static void a() => _ = new TestFrameworkV2.ExpectedExceptionAttribute(typeof(ExpectedExceptionAttributeTests), "Dummy");
@@ -43,13 +34,11 @@ public class ExpectedExceptionAttributeTests
     /// <summary>
     /// ExpectedExceptionAttribute constructor should not throw exception when parameter exceptionType = typeof(AnyClassDerivedFromExceptionClass)
     /// </summary>
-    [TestFrameworkV1.TestMethod]
     public void ExpectedExceptionAttributeConstructerShouldNotThrowAnyException()
     {
         TestFrameworkV2.ExpectedExceptionAttribute sut = new(typeof(DummyTestClassDerivedFromException), "Dummy");
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetExceptionMsgShouldReturnExceptionMessage()
     {
         Exception ex = new("Dummy Exception");
@@ -58,7 +47,6 @@ public class ExpectedExceptionAttributeTests
         TestFrameworkV2.Assert.AreEqual(expectedMessage, actualMessage);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetExceptionMsgShouldReturnInnerExceptionMessageAsWellIfPresent()
     {
         Exception innerException = new DivideByZeroException();
@@ -68,7 +56,6 @@ public class ExpectedExceptionAttributeTests
         TestFrameworkV2.Assert.AreEqual(expectedMessage, actualMessage);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetExceptionMsgShouldReturnInnerExceptionMessageRecursivelyIfPresent()
     {
         Exception recursiveInnerException = new IndexOutOfRangeException("ThirdLevelException");

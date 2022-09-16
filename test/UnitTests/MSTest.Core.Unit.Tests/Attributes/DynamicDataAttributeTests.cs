@@ -3,22 +3,14 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
+using global::TestFramework.ForTestingMSTest;
 
-using MSTestAdapter.TestUtilities;
-
-using TestFrameworkV1 = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting;
-
-[TestFrameworkV1.TestClassAttribute]
-public class DynamicDataAttributeTests
+public class DynamicDataAttributeTests : TestContainer
 {
     private DummyTestClass _dummyTestClass;
     private DynamicDataAttribute _dynamicDataAttribute;
@@ -32,7 +24,6 @@ public class DynamicDataAttributeTests
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty");
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDataShouldThrowExceptionIfInvalidPropertyNameIsSpecifiedOrPropertyDoesNotExist()
     {
         void action()
@@ -44,7 +35,6 @@ public class DynamicDataAttributeTests
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDataShouldReadDataFromProperty()
     {
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
@@ -54,7 +44,6 @@ public class DynamicDataAttributeTests
         Assert.IsTrue(data.ToList().Count == 2);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDataShouldReadDataFromPropertyInDifferntClass()
     {
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
@@ -64,7 +53,6 @@ public class DynamicDataAttributeTests
         Assert.IsTrue(data.ToList().Count == 2);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDataShouldReadDataFromMethod()
     {
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
@@ -74,7 +62,6 @@ public class DynamicDataAttributeTests
         Assert.IsTrue(data.ToList().Count == 2);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDataShouldReadDataFromMethodInDifferentClass()
     {
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod2");
@@ -84,7 +71,6 @@ public class DynamicDataAttributeTests
         Assert.IsTrue(data.ToList().Count == 2);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDataShouldThrowExceptionIfPropertyReturnsNull()
     {
         void action()
@@ -97,7 +83,6 @@ public class DynamicDataAttributeTests
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDataShouldThrowExceptionIfPropertyReturnsEmpty()
     {
         void action()
@@ -110,7 +95,6 @@ public class DynamicDataAttributeTests
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentException));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType()
     {
         void action()
@@ -123,7 +107,6 @@ public class DynamicDataAttributeTests
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldReturnDisplayName()
     {
         var data = new object[] { 1, 2, 3 };
@@ -132,7 +115,6 @@ public class DynamicDataAttributeTests
         Assert.AreEqual("TestMethod1 (1,2,3)", displayName);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldReturnDisplayNameWithDynamicDataDisplayName()
     {
         var data = new object[] { 1, 2, 3 };
@@ -142,7 +124,6 @@ public class DynamicDataAttributeTests
         Assert.AreEqual("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters", displayName);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldReturnDisplayNameWithDynamicDataDisplayNameInDifferentClass()
     {
         var data = new object[] { 1, 2, 3 };
@@ -153,7 +134,6 @@ public class DynamicDataAttributeTests
         Assert.AreEqual("DynamicDataTestWithDisplayName TestMethod1 with 3 parameters", displayName);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodMissingParameters()
     {
         void action()
@@ -167,7 +147,6 @@ public class DynamicDataAttributeTests
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidReturnType()
     {
         void action()
@@ -181,7 +160,6 @@ public class DynamicDataAttributeTests
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidFirstParameterType()
     {
         void action()
@@ -195,7 +173,6 @@ public class DynamicDataAttributeTests
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidSecondParameterType()
     {
         void action()
@@ -209,7 +186,6 @@ public class DynamicDataAttributeTests
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodNonStatic()
     {
         void action()
@@ -223,7 +199,6 @@ public class DynamicDataAttributeTests
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodPrivate()
     {
         void action()
@@ -237,7 +212,6 @@ public class DynamicDataAttributeTests
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldThrowExceptionWithMissingDynamicDataDisplayNameMethod()
     {
         void action()
@@ -251,14 +225,12 @@ public class DynamicDataAttributeTests
         ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(ArgumentNullException));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldReturnEmptyStringIfDataIsNull()
     {
         var displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, null);
         Assert.IsNull(displayName);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GetDisplayNameShouldThrowIfDataHasNullValues()
     {
         var data = new string[] { "value1", "value2", null };
@@ -427,7 +399,6 @@ public class DummyTestClass
     /// <summary>
     /// The test method 1.
     /// </summary>
-    [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
     [DynamicData("ReusableTestDataProperty")]
     public void TestMethod1()
     {
@@ -436,7 +407,6 @@ public class DummyTestClass
     /// <summary>
     /// The test method 2.
     /// </summary>
-    [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
     [DynamicData("ReusableTestDataMethod")]
     public void TestMethod2()
     {
@@ -445,7 +415,6 @@ public class DummyTestClass
     /// <summary>
     /// The test method 3.
     /// </summary>
-    [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
     [DynamicData("WrongDataTypeProperty")]
     public void TestMethod3()
     {
@@ -454,7 +423,6 @@ public class DummyTestClass
     /// <summary>
     /// The test method 4.
     /// </summary>
-    [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
     [DynamicData("NullProperty")]
     public void TestMethod4()
     {
@@ -463,7 +431,6 @@ public class DummyTestClass
     /// <summary>
     /// The test method 5.
     /// </summary>
-    [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
     [DynamicData("EmptyProperty")]
     public void TestMethod5()
     {
@@ -472,7 +439,6 @@ public class DummyTestClass
     /// <summary>
     /// DataRow test method 1.
     /// </summary>
-    [FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute]
     [DataRow("First", "Second", null)]
     [DataRow(null, "First", "Second")]
     [DataRow("First", null, "Second")]
