@@ -95,7 +95,7 @@ public class DynamicDataAttributeTests : TestContainer
         }
 
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(ArgumentException));
+        Verify(ex is ArgumentException);
     }
 
     public void GetDataShouldThrowExceptionIfPropertyDoesNotReturnCorrectType()

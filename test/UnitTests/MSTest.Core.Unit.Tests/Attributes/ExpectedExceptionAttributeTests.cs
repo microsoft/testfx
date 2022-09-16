@@ -32,7 +32,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
         static void a() => _ = new ExpectedExceptionAttribute(typeof(ExpectedExceptionAttributeTests), "Dummy");
 
         var ex = VerifyThrows(a);
-        Verify(ex.GetType() == typeof(ArgumentException));
+        Verify(ex is ArgumentException);
     }
 
     /// <summary>

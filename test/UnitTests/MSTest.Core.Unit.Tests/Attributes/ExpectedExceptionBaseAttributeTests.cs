@@ -42,7 +42,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
         void a() => _sut.RethrowIfAssertException(new AssertInconclusiveException());
 
         var ex = VerifyThrows(a);
-        Verify(ex.GetType() == typeof(AssertInconclusiveException));
+        Verify(ex is AssertInconclusiveException);
     }
 
     public void VerifyCorrectMessageIsGettingSetInVariablenoExceptionMessage()
