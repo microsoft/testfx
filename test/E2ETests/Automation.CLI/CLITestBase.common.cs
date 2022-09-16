@@ -7,9 +7,11 @@ using System;
 using System.IO;
 using System.Xml;
 
+using global::TestFramework.ForTestingMSTest;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-public partial class CLITestBase
+public partial class CLITestBase : TestContainer
 {
     private const string E2ETestsRelativePath = @"..\..\..\..\";
     private const string TestAssetsFolder = "TestAssets";

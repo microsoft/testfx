@@ -4,14 +4,11 @@
 namespace MSTestAdapter.Smoke.E2ETests;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
 public class TestProjectFSharpTests : CLITestBase
 {
     private const string TestAssembly = "FSharpTestProject.dll";
 
-    [TestMethod]
     public void ExecuteCustomTestExtensibilityTests()
     {
         InvokeVsTestForExecution(new string[] { TestAssembly });

@@ -49,6 +49,7 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" PrivateAssets="all" />
+    <ProjectReference Include="$(RepoRoot)test\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
   </ItemGroup>
 
   <Target Name="CopyMSBuildScriptsFiles" DependsOnTargets="CoreCompile" AfterTargets="CoreCompile">
@@ -79,13 +80,9 @@
       <FileToCopy Include="$(SourcePath)PlatformServices\netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.pdb" KeepDuplicates="True" Folder="netcoreapp3.1" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(FileToCopy)"
-          DestinationFiles="$(DestinationPath)\%(FileToCopy.Folder)\%(Filename)%(Extension)"
-          SkipUnchangedFiles="True" OverwriteReadOnlyFiles="True" Retries="3" RetryDelayMilliseconds="500"
-          UseHardlinksIfPossible="False" UseSymboliclinksIfPossible="False" ErrorIfLinkFails="False"
-          Condition="@(FileToCopy->Count()) > 0">
+    <Copy SourceFiles="@(FileToCopy)" DestinationFiles="$(DestinationPath)\%(FileToCopy.Folder)\%(Filename)%(Extension)" SkipUnchangedFiles="True" OverwriteReadOnlyFiles="True" Retries="3" RetryDelayMilliseconds="500" UseHardlinksIfPossible="False" UseSymboliclinksIfPossible="False" ErrorIfLinkFails="False" Condition="@(FileToCopy-&gt;Count()) &gt; 0">
 
-      <Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
+      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
     </Copy>
   </Target>
 </Project>

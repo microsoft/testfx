@@ -4,9 +4,7 @@
 namespace MSTestAdapter.Smoke.E2ETests;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
 public class DeploymentTests : CLITestBase
 {
     private const string TestAssemblyDependency = "DesktopDeployment\\Never\\DeploymentTestProject.dll";
@@ -20,7 +18,6 @@ public class DeploymentTests : CLITestBase
                 </MSTestV2>
             </RunSettings>";
 
-    [TestMethod]
     public void ValidateTestSourceDependencyDeployment()
     {
         InvokeVsTestForExecution(new string[] { TestAssemblyDependency });
@@ -28,7 +25,6 @@ public class DeploymentTests : CLITestBase
         ValidateFailedTestsContain(TestAssemblyMSBuild, true, "DeploymentTestProject.DeploymentTestProject.PassIfFilePresent");
     }
 
-    [TestMethod]
     public void ValidateTestSourceLocationDeployment()
     {
         InvokeVsTestForExecution(new string[] { TestAssemblyMSBuild }, RunSetting);
@@ -36,7 +32,6 @@ public class DeploymentTests : CLITestBase
         ValidateFailedTestsContain(TestAssemblyMSBuild, true, "DeploymentTestProject.DeploymentTestProject.FailIfFilePresent");
     }
 
-    [TestMethod]
     public void ValidateTestSourceLocationDeploymentNetCore3_1()
     {
         InvokeVsTestForExecution(new string[] { TestAssemblyNetCore31 }, null);

@@ -4,14 +4,13 @@
 namespace MSTestAdapter.Smoke.E2ETests;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using global::TestFramework.ForTestingMSTest;
 
-[TestClass]
+
 public class AssertExtensibilityTests : CLITestBase
 {
     private const string TestAssembly = "FxExtensibilityTestProject.dll";
 
-    [TestMethod]
     public void ExecuteAssertExtensibilityTests()
     {
         InvokeVsTestForExecution(new string[] { TestAssembly });
