@@ -25,7 +25,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
     public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger,
         ITestCaseDiscoverySink discoverySink)
     {
-        //if (Environment.GetEnvironmentVariable("MSTEST_TEST_DEBUG_DISCOVERTESTS") == "1")
+        if (Environment.GetEnvironmentVariable("MSTEST_TEST_DEBUG_DISCOVERTESTS") == "1")
         {
             if (!Debugger.IsAttached) Debugger.Launch();
         }
