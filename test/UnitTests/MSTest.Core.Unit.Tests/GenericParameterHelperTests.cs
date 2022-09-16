@@ -59,7 +59,7 @@ public class GenericParameterHelperTests : TestContainer
         void a() => _sut.CompareTo(objectToCompare);
 
         var ex = VerifyThrows(a);
-        Verify(ex.GetType() == typeof(NotSupportedException));
+        Verify(ex is NotSupportedException);
     }
 
     public void GenericParameterHelperShouldImplementIEnumerator()
