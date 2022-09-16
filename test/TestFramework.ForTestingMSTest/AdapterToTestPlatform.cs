@@ -25,7 +25,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
     public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger,
         ITestCaseDiscoverySink discoverySink)
     {
-        if (Environment.GetEnvironmentVariable("MSTEST_TEST_DEBUG_DISCOVERTESTS") == "1")
+        //if (Environment.GetEnvironmentVariable("MSTEST_TEST_DEBUG_DISCOVERTESTS") == "1")
         {
             if (!Debugger.IsAttached) Debugger.Launch();
         }
@@ -128,6 +128,19 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
         }
     }
 
+    // Looking up base types.
+    private static bool IsAnyBaseClassInheritingTestContainer(Type typeInfo)
+    {
+        while(typeInfo != null)
+        {
+            if(typeInfo == typeof(TestContainer))
+                return true;
+            typeInfo = typeInfo.BaseType;
+        }
+
+        return false;
+    }
+
     private static IEnumerable<TestCase> DiscoverTests(IEnumerable<string>? assemblies, IMessageLogger? logger)
     {
         if (assemblies is null || !assemblies.Any())
@@ -144,8 +157,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
 
             var assembly = Assembly.LoadFrom(assemblyName);
             var assemblyTestContainerTypes = assembly.DefinedTypes.Where(typeInfo =>
-                // TODO: Improve by looking up base types.
-                typeInfo.BaseType == typeof(TestContainer));
+                IsAnyBaseClassInheritingTestContainer(typeInfo));
 
             // TODO: Fail if no container?
 
