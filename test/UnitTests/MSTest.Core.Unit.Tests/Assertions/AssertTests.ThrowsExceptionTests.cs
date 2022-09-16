@@ -146,7 +146,13 @@ public partial class AssertTests
             t.Wait();
         }
         var ex = VerifyThrows(a);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+
+        Verify(ex is not null);
+
+        var innerException = ex.InnerException;
+
+        Verify(innerException is not null);
+        Verify(typeof(ArgumentNullException) == innerException.GetType());
     }
 
     public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowOnNullMessage()
@@ -156,9 +162,14 @@ public partial class AssertTests
             Task t = Assert.ThrowsExceptionAsync<ArgumentException>(async () => { await Task.FromResult(true).ConfigureAwait(false); }, null, null);
             t.Wait();
         }
-        var t = VerifyThrows(a).GetType();
-        var t2 = typeof(ArgumentNullException);
-        Verify(t == typeof(ArgumentNullException));
+        var ex = VerifyThrows(a);
+
+        Verify(ex is not null);
+
+        var innerException = ex.InnerException;
+
+        Verify(innerException is not null);
+        Verify(typeof(ArgumentNullException) == innerException.GetType());
     }
 
     public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowAssertionOnNoException()
