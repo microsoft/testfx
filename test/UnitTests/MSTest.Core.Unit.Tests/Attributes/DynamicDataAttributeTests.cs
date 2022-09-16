@@ -33,7 +33,7 @@ public class DynamicDataAttributeTests : TestContainer
         }
 
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        Verify(ex is ArgumentNullException);
     }
 
     public void GetDataShouldReadDataFromProperty()
@@ -82,7 +82,7 @@ public class DynamicDataAttributeTests : TestContainer
         }
 
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        Verify(ex is ArgumentNullException);
     }
 
     public void GetDataShouldThrowExceptionIfPropertyReturnsEmpty()
@@ -108,7 +108,7 @@ public class DynamicDataAttributeTests : TestContainer
         }
 
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        Verify(ex is ArgumentNullException);
     }
 
     public void GetDisplayNameShouldReturnDisplayName()
@@ -149,7 +149,7 @@ public class DynamicDataAttributeTests : TestContainer
         }
 
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        Verify(ex is ArgumentNullException);
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidReturnType()
@@ -163,7 +163,7 @@ public class DynamicDataAttributeTests : TestContainer
         }
 
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        Verify(ex is ArgumentNullException);
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidFirstParameterType()
@@ -177,7 +177,7 @@ public class DynamicDataAttributeTests : TestContainer
         }
 
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        Verify(ex is ArgumentNullException);
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodInvalidSecondParameterType()
@@ -191,7 +191,7 @@ public class DynamicDataAttributeTests : TestContainer
         }
 
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        Verify(ex is ArgumentNullException);
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodNonStatic()
@@ -205,7 +205,7 @@ public class DynamicDataAttributeTests : TestContainer
         }
 
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        Verify(ex is ArgumentNullException);
     }
 
     public void GetDisplayNameShouldThrowExceptionWithDynamicDataDisplayNameMethodPrivate()
@@ -219,7 +219,7 @@ public class DynamicDataAttributeTests : TestContainer
         }
 
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        Verify(ex is ArgumentNullException);
     }
 
     public void GetDisplayNameShouldThrowExceptionWithMissingDynamicDataDisplayNameMethod()
@@ -233,7 +233,7 @@ public class DynamicDataAttributeTests : TestContainer
         }
 
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        Verify(ex is ArgumentNullException);
     }
 
     public void GetDisplayNameShouldReturnEmptyStringIfDataIsNull()

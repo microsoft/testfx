@@ -16,14 +16,14 @@ public partial class AssertTests
     {
         static void action() => Assert.IsInstanceOfType(null, typeof(AssertTests));
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void InstanceOfTypeShouldFailWhenTypeIsNull()
     {
         static void action() => Assert.IsInstanceOfType(5, null);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void InstanceOfTypeShouldPassOnSameInstance()
@@ -45,7 +45,7 @@ public partial class AssertTests
     {
         static void action() => Assert.IsNotInstanceOfType(5, null);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void InstanceNotOfTypeShouldPassOnWrongInstance()
@@ -63,7 +63,7 @@ public partial class AssertTests
     {
         static void action() => Assert.IsInstanceOfType<AssertTests>(null);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     [TestMethod]

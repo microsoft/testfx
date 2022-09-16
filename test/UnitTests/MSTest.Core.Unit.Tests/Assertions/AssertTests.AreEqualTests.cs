@@ -16,7 +16,7 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreNotEqual(null, null);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualTypeWithMessage()
@@ -30,7 +30,7 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreNotEqual("A", "A");
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualStringWithMessage()
@@ -44,14 +44,14 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreNotEqual("A", "a", true);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualInt()
     {
         static void action() => Assert.AreNotEqual(1, 1);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualIntWithMessage()
@@ -65,7 +65,7 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreNotEqual(1L, 1L);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualLongWithMessage()
@@ -79,14 +79,14 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreNotEqual(1L, 2L, 1L);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualDecimal()
     {
         static void action() => Assert.AreNotEqual(0.1M, 0.1M);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualDecimalWithMessage()
@@ -100,14 +100,14 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreNotEqual(0.1M, 0.2M, 0.1M);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualDouble()
     {
         static void action() => Assert.AreNotEqual(0.1, 0.1);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualDoubleWithMessage()
@@ -121,14 +121,14 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreNotEqual(0.1, 0.2, 0.1);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenFloatDouble()
     {
         static void action() => Assert.AreNotEqual(100E-2, 100E-2);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenFloatDoubleWithMessage()
@@ -142,14 +142,14 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreNotEqual(100E-2, 200E-2, 100E-2);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualType()
     {
         static void action() => Assert.AreEqual(null, "string");
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualTypeWithMessage()
@@ -213,14 +213,14 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreEqual("A", "a", false);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualInt()
     {
         static void action() => Assert.AreEqual(1, 2);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualIntWithMessage()
@@ -234,7 +234,7 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreEqual(1L, 2L);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualLongWithMessage()
@@ -248,14 +248,14 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreEqual(10L, 20L, 5L);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualDouble()
     {
         static void action() => Assert.AreEqual(0.1, 0.2);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualDoubleWithMessage()
@@ -269,14 +269,14 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreEqual(0.1, 0.2, 0.05);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualDecimal()
     {
         static void action() => Assert.AreEqual(0.1M, 0.2M);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
    
     public void AreEqualShouldFailWhenNotEqualDecimalWithMessage()
@@ -290,14 +290,14 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreEqual(0.1M, 0.2M, 0.05M);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenFloatDouble()
     {
         static void action() => Assert.AreEqual(100E-2, 200E-2);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
     
     public void AreEqualShouldFailWhenFloatDoubleWithMessage()
@@ -311,6 +311,6 @@ public partial class AssertTests : TestContainer
     {
         static void action() => Assert.AreEqual(100E-2, 200E-2, 50E-2);
         var ex = VerifyThrows(action);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 }

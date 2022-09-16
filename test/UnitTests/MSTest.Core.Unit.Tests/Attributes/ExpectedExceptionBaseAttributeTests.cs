@@ -31,7 +31,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
         void a() => _sut.RethrowIfAssertException(new AssertFailedException());
 
         var ex = VerifyThrows(a);
-        Verify(ex.GetType() == typeof(AssertFailedException));
+        Verify(ex is AssertFailedException);
     }
 
     /// <summary>

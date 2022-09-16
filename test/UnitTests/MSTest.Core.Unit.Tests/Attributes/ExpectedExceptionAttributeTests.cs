@@ -21,7 +21,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
         static void a() => _ = new ExpectedExceptionAttribute(null, "Dummy");
 
         var ex = VerifyThrows(a);
-        Verify(ex.GetType() == typeof(ArgumentNullException));
+        Verify(ex is ArgumentNullException);
     }
 
     /// <summary>
