@@ -93,6 +93,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         Debug.Assert(stringWriter != null, "StringWriter is not null");
 #endif
 
+        Debug.Assert(stringWriter is ThreadSafeStringWriter, "Was expected stringWriter to be a ThreadSafeStringWriter");
 
         _testMethod = testMethod;
 
