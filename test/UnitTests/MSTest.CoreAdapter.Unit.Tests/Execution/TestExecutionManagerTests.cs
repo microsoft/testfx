@@ -17,6 +17,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplem
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using Moq;
 using MSTest.TestAdapter;
 
@@ -24,8 +26,6 @@ using TestFramework.ForTestingMSTest;
 
 using TestAdapterConstants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class TestExecutionManagerTests : TestContainer
 {
@@ -565,9 +565,9 @@ public class TestExecutionManagerTests : TestContainer
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
                 Returns((Assembly asm, Type type) =>
                 {
-                    if (type.FullName.Equals(typeof(UTF.ParallelizeAttribute).FullName))
+                    if (type.FullName.Equals(typeof(ParallelizeAttribute).FullName))
                     {
-                        return new object[] { new UTF.ParallelizeAttribute { Workers = 10, Scope = UTF.ExecutionScope.MethodLevel } };
+                        return new object[] { new ParallelizeAttribute { Workers = 10, Scope = ExecutionScope.MethodLevel } };
                     }
 
                     return originalReflectionOperation.GetCustomAttributes(asm, type);
@@ -618,9 +618,9 @@ public class TestExecutionManagerTests : TestContainer
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
                 Returns((Assembly asm, Type type) =>
                 {
-                    if (type.FullName.Equals(typeof(UTF.DoNotParallelizeAttribute).FullName))
+                    if (type.FullName.Equals(typeof(DoNotParallelizeAttribute).FullName))
                     {
-                        return new object[] { new UTF.DoNotParallelizeAttribute() };
+                        return new object[] { new DoNotParallelizeAttribute() };
                     }
 
                     return originalReflectionOperation.GetCustomAttributes(asm, type);
@@ -707,9 +707,9 @@ public class TestExecutionManagerTests : TestContainer
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
                 Returns((Assembly asm, Type type) =>
                 {
-                    if (type.FullName.Equals(typeof(UTF.ParallelizeAttribute).FullName))
+                    if (type.FullName.Equals(typeof(ParallelizeAttribute).FullName))
                     {
-                        return new object[] { new UTF.ParallelizeAttribute { Workers = 1 } };
+                        return new object[] { new ParallelizeAttribute { Workers = 1 } };
                     }
 
                     return originalReflectionOperation.GetCustomAttributes(asm, type);
@@ -773,10 +773,10 @@ public class TestExecutionManagerTests : TestContainer
 
     #region private methods
 
-    private TestCase GetTestCase(Type typeOfClass, string testName, bool ignore = false)
+    private static TestCase GetTestCase(Type typeOfClass, string testName, bool ignore = false)
     {
         var methodInfo = typeOfClass.GetMethod(testName);
-        var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName, Assembly.GetExecutingAssembly().FullName, isAsync: false);
+        var testMethod = new TestMethod(methodInfo.Name, typeOfClass.FullName, Assembly.GetExecutingAssembly().Location, isAsync: false);
         UnitTestElement element = new(testMethod)
         {
             Ignored = ignore
@@ -858,40 +858,40 @@ public class TestExecutionManagerTests : TestContainer
             set;
         }
 
-        public UTFExtension.TestContext TestContext { get; set; }
+        public TestContext TestContext { get; set; }
 
-        [UTF.TestMethod]
-        [UTF.TestCategory("Foo")]
+        [TestMethod]
+        [TestCategory("Foo")]
         public void PassingTest()
         {
             TestContextProperties = TestContext.Properties as IDictionary<string, object>;
         }
 
-        [UTF.TestMethod]
-        [UTF.TestCategory("Bar")]
+        [TestMethod]
+        [TestCategory("Bar")]
         public void FailingTest()
         {
-            UTF.Assert.Fail();
+            Assert.Fail();
         }
 
-        [UTF.TestMethod]
-        [UTF.Ignore]
+        [TestMethod]
+        [Ignore]
         public void IgnoredTest()
         {
-            UTF.Assert.Fail();
+            Assert.Fail();
         }
     }
 
     [DummyTestClass]
     private class DummyTestClassWithFailingCleanupMethods
     {
-        [UTF.ClassCleanup]
+        [ClassCleanup]
         public static void ClassCleanup()
         {
             throw new Exception("ClassCleanupException");
         }
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethod()
         {
         }
@@ -904,13 +904,13 @@ public class TestExecutionManagerTests : TestContainer
 
         public static void Cleanup() => ClassCleanupCount = 0;
 
-        [UTF.ClassCleanup]
+        [ClassCleanup]
         public static void ClassCleanup()
         {
             ClassCleanupCount++;
         }
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethod()
         {
         }
@@ -926,7 +926,7 @@ public class TestExecutionManagerTests : TestContainer
             ThreadIds.Clear();
         }
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethod1()
         {
             // Ensures stability.. for the thread to be not used for another test method
@@ -934,7 +934,7 @@ public class TestExecutionManagerTests : TestContainer
             ThreadIds.Add(Environment.CurrentManagedThreadId);
         }
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethod2()
         {
             // Ensures stability.. for the thread to be not used for another test method
@@ -953,7 +953,7 @@ public class TestExecutionManagerTests : TestContainer
             ThreadIds.Clear();
         }
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethod1()
         {
             // Ensures stability.. for the thread to be not used for another test method
@@ -961,7 +961,7 @@ public class TestExecutionManagerTests : TestContainer
             ThreadIds.Add(Environment.CurrentManagedThreadId);
         }
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethod2()
         {
             // Ensures stability.. for the thread to be not used for another test method
@@ -980,7 +980,7 @@ public class TestExecutionManagerTests : TestContainer
             ThreadIds.Clear();
         }
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethod1()
         {
             // Ensures stability.. for the thread to be not used for another test method
@@ -1012,7 +1012,7 @@ public class TestExecutionManagerTests : TestContainer
             s_isFirstUnParallelizedTestRunTimeSet = false;
         }
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethod1()
         {
             // Ensures stability.. for the thread to be not used for another test method
@@ -1023,7 +1023,7 @@ public class TestExecutionManagerTests : TestContainer
             LastParallelizableTestRun = DateTime.Now;
         }
 
-        [UTF.TestMethod]
+        [TestMethod]
         public void TestMethod2()
         {
             // Ensures stability.. for the thread to be not used for another test method
@@ -1034,8 +1034,8 @@ public class TestExecutionManagerTests : TestContainer
             LastParallelizableTestRun = DateTime.Now;
         }
 
-        [UTF.TestMethod]
-        [UTF.DoNotParallelize]
+        [TestMethod]
+        [DoNotParallelize]
         public void TestMethod3()
         {
             if (!s_isFirstUnParallelizedTestRunTimeSet)
@@ -1047,8 +1047,8 @@ public class TestExecutionManagerTests : TestContainer
             ThreadApartmentStates.Add(Thread.CurrentThread.GetApartmentState());
         }
 
-        [UTF.TestMethod]
-        [UTF.DoNotParallelize]
+        [TestMethod]
+        [DoNotParallelize]
         public void TestMethod4()
         {
             if (!s_isFirstUnParallelizedTestRunTimeSet)
@@ -1061,7 +1061,7 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
-    private class DummyTestClassAttribute : UTF.TestClassAttribute
+    private class DummyTestClassAttribute : TestClassAttribute
     {
     }
 
