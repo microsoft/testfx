@@ -1,4 +1,5 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
     <IsPackable>false</IsPackable>
@@ -7,9 +8,4 @@
     <AssemblyOriginatorKeyFile>$(RepoRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Legacy__MicrosoftNETTestSdkVersion)" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$(Legacy__MSTestTestAdapterVersion)" />
-    <PackageReference Include="MSTest.TestFramework" Version="$(Legacy__MSTestTestFrameworkVersion)" />
-  </ItemGroup>
 </Project>

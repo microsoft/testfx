@@ -3,28 +3,20 @@
 
 namespace PlatformServices.Desktop.ComponentTests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-using SampleFrameworkExtensions;
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using OwnerV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.OwnerAttribute;
-using TestCategoryV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using TestPropertyV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.TestPropertyAttribute;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
-public class ReflectionUtilityTests
+using SampleFrameworkExtensions;
+
+using TestFramework.ForTestingMSTest;
+
+public class ReflectionUtilityTests : TestContainer
 {
-    private readonly ReflectionUtility _reflectionUtility;
     private readonly Assembly _testAsset;
 
     /// <summary>
@@ -35,8 +27,6 @@ public class ReflectionUtilityTests
 
     public ReflectionUtilityTests()
     {
-        _reflectionUtility = new ReflectionUtility();
-
         var currentAssemblyDirectory = new FileInfo(typeof(ReflectionUtilityTests).Assembly.Location).Directory;
         var testAssetPath =
             Path.Combine(
@@ -49,230 +39,214 @@ public class ReflectionUtilityTests
         AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
     }
 
-    [TestMethod]
     public void GetCustomAttributesShouldReturnAllAttributes()
     {
-        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
+        var methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = ReflectionUtility.GetCustomAttributes(minfo, false);
+        var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(2, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 2);
 
-        var expectedAttribs = new string[] { "TestCategory : base", "Owner : base" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : base", "Owner : base" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
+        var methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = ReflectionUtility.GetCustomAttributes(minfo, false);
+        var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(2, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 2);
 
-        var expectedAttribs = new string[] { "TestCategory : derived", "Owner : derived" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : derived", "Owner : derived" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
-        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
+        var methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = ReflectionUtility.GetCustomAttributes(minfo, true);
+        var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(3, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 3);
 
         // Notice that the Owner on the base method does not show up since it can only be defined once.
-        var expectedAttribs = new string[] { "TestCategory : derived", "TestCategory : base", "Owner : derived" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : derived", "TestCategory : base", "Owner : derived" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
     {
-        var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
+        var typeInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
 
-        var attribs = ReflectionUtility.GetCustomAttributes(tinfo, false);
+        var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, false);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(1, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 1);
 
-        var expectedAttribs = new string[] { "TestCategory : ba" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : ba" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        var typeInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = ReflectionUtility.GetCustomAttributes(tinfo, false);
+        var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, false);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(1, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 1);
 
-        var expectedAttribs = new string[] { "TestCategory : a" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : a" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
-        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        var methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = ReflectionUtility.GetCustomAttributes(minfo, true);
+        var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(2, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 2);
 
-        var expectedAttribs = new string[] { "TestCategory : a", "TestCategory : ba" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : a", "TestCategory : ba" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetSpecificCustomAttributesShouldReturnAllAttributes()
     {
-        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
+        var methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), false);
+        var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), false);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(1, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 1);
 
-        var expectedAttribs = new string[] { "TestCategory : base" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : base" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
+        var methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), false);
+        var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), false);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(1, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 1);
 
-        var expectedAttribs = new string[] { "TestCategory : derived" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : derived" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetSpecificCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
-        var minfo =
+        var methodInfo =
             _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetMethod("DummyVTestMethod1");
 
-        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), true);
+        var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), true);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(2, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 2);
 
-        var expectedAttribs = new string[] { "TestCategory : derived", "TestCategory : base", };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : derived", "TestCategory : base", };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()
     {
-        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
+        var methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
 
-        var attribs = ReflectionUtility.GetCustomAttributes(minfo, null, true);
+        var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, null, true);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(3, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 3);
 
-        var expectedAttribs = new string[] { "Duration : superfast", "TestCategory : base", "Owner : base" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "Duration : superfast", "TestCategory : base", "Owner : base" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()
     {
-        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
+        var methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyVTestMethod1");
 
-        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(TestPropertyV2), true);
+        var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestPropertyAttribute), true);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(1, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 1);
 
-        var expectedAttribs = new string[] { "Duration : superfast" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "Duration : superfast" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetSpecificCustomAttributesShouldReturnArrayAttributesAsWell()
     {
-        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyTestMethod2");
+        var methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClassWithCustomAttributes").GetMethod("DummyTestMethod2");
 
-        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(CategoryArrayAttribute), true);
+        var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(CategoryArrayAttribute), true);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(1, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 1);
 
-        var expectedAttribs = new string[] { "CategoryAttribute : foo,foo2" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "CategoryAttribute : foo,foo2" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributes()
     {
-        var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
+        var typeInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestBaseClass").GetTypeInfo();
 
-        var attribs = ReflectionUtility.GetCustomAttributes(tinfo, typeof(TestCategoryV2), false);
+        var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, typeof(TestCategoryAttribute), false);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(1, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 1);
 
-        var expectedAttribs = new string[] { "TestCategory : ba" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : ba" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var tinfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        var typeInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = ReflectionUtility.GetCustomAttributes(tinfo, typeof(TestCategoryV2), false);
+        var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, typeof(TestCategoryAttribute), false);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(1, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 1);
 
-        var expectedAttribs = new string[] { "TestCategory : a" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : a" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
-        var minfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
+        var methodInfo = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").GetTypeInfo();
 
-        var attribs = ReflectionUtility.GetCustomAttributes(minfo, typeof(TestCategoryV2), true);
+        var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), true);
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(2, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 2);
 
-        var expectedAttribs = new string[] { "TestCategory : a", "TestCategory : ba" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : a", "TestCategory : ba" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    [TestMethod]
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
     {
         var asm = _testAsset.GetType("TestProjectForDiscovery.AttributeTestClass").Assembly;
 
-        var attribs = ReflectionUtility.GetCustomAttributes(asm, typeof(TestCategoryV2));
+        var attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(TestCategoryAttribute));
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(2, attribs.Length);
+        Verify(attributes is not null);
+        Verify(attributes.Length == 2);
 
-        var expectedAttribs = new string[] { "TestCategory : a1", "TestCategory : a2" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "TestCategory : a1", "TestCategory : a2" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     private Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
@@ -294,33 +268,33 @@ public class ReflectionUtilityTests
         return null;
     }
 
-    private string[] GetAttributeValuePairs(object[] attributes)
+    private static string[] GetAttributeValuePairs(object[] attributes)
     {
-        var attribValuePairs = new List<string>();
-        foreach (var attrib in attributes)
+        var attributeValuePairs = new List<string>();
+        foreach (var attribute in attributes)
         {
-            if (attrib is OwnerV2)
+            if (attribute is OwnerAttribute)
             {
-                var a = attrib as OwnerV2;
-                attribValuePairs.Add("Owner : " + a.Owner);
+                var a = attribute as OwnerAttribute;
+                attributeValuePairs.Add("Owner : " + a.Owner);
             }
-            else if (attrib is TestCategoryV2)
+            else if (attribute is TestCategoryAttribute)
             {
-                var a = attrib as TestCategoryV2;
-                attribValuePairs.Add("TestCategory : " + a.TestCategories.Aggregate((i, j) => { return i + "," + j; }));
+                var a = attribute as TestCategoryAttribute;
+                attributeValuePairs.Add("TestCategory : " + a.TestCategories.Aggregate((i, j) => { return i + "," + j; }));
             }
-            else if (attrib is DurationAttribute)
+            else if (attribute is DurationAttribute)
             {
-                var a = attrib as DurationAttribute;
-                attribValuePairs.Add("Duration : " + a.Duration);
+                var a = attribute as DurationAttribute;
+                attributeValuePairs.Add("Duration : " + a.Duration);
             }
-            else if (attrib is CategoryArrayAttribute)
+            else if (attribute is CategoryArrayAttribute)
             {
-                var a = attrib as CategoryArrayAttribute;
-                attribValuePairs.Add("CategoryAttribute : " + a.Value.Aggregate((i, j) => { return i + "," + j; }));
+                var a = attribute as CategoryArrayAttribute;
+                attributeValuePairs.Add("CategoryAttribute : " + a.Value.Aggregate((i, j) => { return i + "," + j; }));
             }
         }
 
-        return attribValuePairs.ToArray();
+        return attributeValuePairs.ToArray();
     }
 }

@@ -26,6 +26,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "E2ETests", "E2ETests", "{F1A27537-78D1-4BBD-8E76-ADB31BC0C2B4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestAssets", "TestAssets", "{D53BD452-F69F-4FB3-8B98-386EDA28A4C8}"
+	ProjectSection(SolutionItems) = preProject
+		test\E2ETests\TestAssets\Directory.Build.targets = test\E2ETests\TestAssets\Directory.Build.targets
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DesktopTestProjectx64Debug", "test\E2ETests\TestAssets\DesktopTestProjectx64Debug\DesktopTestProjectx64Debug.csproj", "{0C139DA9-AA81-43A0-8625-7A873C0E2873}"
 EndProject
@@ -38,6 +41,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ComponentTests", "ComponentTests", "{1A9F8CEF-7C03-40BD-B33C-1453114F9ABD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestAssets", "TestAssets", "{1899187D-8B9C-40C2-9F04-9E9A76C9A919}"
+	ProjectSection(SolutionItems) = preProject
+		test\ComponentTests\TestAssets\Directory.Build.targets = test\ComponentTests\TestAssets\Directory.Build.targets
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleFrameworkExtensions", "test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj", "{5C411BBF-FCC9-4430-AE08-07666D39FD04}"
 EndProject
@@ -157,7 +163,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeploymentTestProject", "te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompatTestProject", "test\E2ETests\TestAssets\CompatTestProject\CompatTestProject.csproj", "{2D2C5B73-F1F1-47C8-BC5C-A172E9BB3D16}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestProjectForAssemblyResolution", "test\ComponentTests\TestAssets\TestProjectForAssemblyResolution\TestProjectForAssemblyResolution.csproj", "{0B057B99-DCDD-417A-BC19-3E63DDD86F24}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleProjectForAssemblyResolution", "test\ComponentTests\TestAssets\SampleProjectForAssemblyResolution\SampleProjectForAssemblyResolution.csproj", "{0B057B99-DCDD-417A-BC19-3E63DDD86F24}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataRowTestProject", "test\E2ETests\TestAssets\DataRowTestProject\DataRowTestProject.csproj", "{7FB80AAB-7123-4416-B6CD-8D3D69AA83F1}"
 EndProject

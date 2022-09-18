@@ -8,5 +8,5 @@
 
   <ItemGroup>
     <ProjectCapability Remove="TestContainer" />
-  </ItemGroup>  
+  </ItemGroup>
 </Project>
