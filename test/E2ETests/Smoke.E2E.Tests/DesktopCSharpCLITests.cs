@@ -54,8 +54,7 @@ public class DesktopCSharpCLITests : CLITestBase
         RunAllTestsAndValidateResults(sources, RunSetting);
     }
 
-    // Made it private because it Was Ignored.
-    // TODO: no stack trace for failed test both for x86 and x64 but that's checked only for x86
+    // TODO: no stack trace for failed test both for x86 and x64 but that's checked only for x86 (Marked as private to ignore the test)
     private void RunAllTestsx86Release()
     {
         string[] sources = { X86ReleaseTestProject };
