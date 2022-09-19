@@ -129,11 +129,11 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
     }
 
     // Looking up base types.
-    private static bool IsAnyBaseClassInheritingTestContainer(Type typeInfo)
+    private static bool IsTestContainer(Type typeInfo)
     {
-        while(typeInfo != null)
+        while (typeInfo != null)
         {
-            if(typeInfo == typeof(TestContainer))
+            if (typeInfo == typeof(TestContainer))
                 return true;
             typeInfo = typeInfo.BaseType;
         }
@@ -157,7 +157,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
 
             var assembly = Assembly.LoadFrom(assemblyName);
             var assemblyTestContainerTypes = assembly.DefinedTypes.Where(typeInfo =>
-                IsAnyBaseClassInheritingTestContainer(typeInfo));
+                IsTestContainer(typeInfo));
 
             // TODO: Fail if no container?
 

@@ -9,8 +9,7 @@ public class TestDataSourceTests : CLITestBase
 {
     private const string TestAssembly = "DataSourceTestProject.dll";
 
-    // Made it private because it Was Ignored.
-    // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR
+    // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR (marked as private to ignore the test)
     private void ExecuteCsvTestDataSourceTests()
     {
         // Arrange & Act
