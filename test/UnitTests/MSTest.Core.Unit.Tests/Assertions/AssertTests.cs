@@ -20,7 +20,7 @@ public partial class AssertTests
 
     public void ThatShouldCacheAssertInstance()
     {
-        Verify(Assert.That == Assert.That);
+        Verify(object.ReferenceEquals(Assert.That, Assert.That));
 
     }
     #endregion
@@ -45,7 +45,7 @@ public partial class AssertTests
         var ex = VerifyThrows(() => Assert.BuildUserMessage("{", "arg"));
 
         Verify(ex is not null);
-        Verify(typeof(FormatException) == ex.GetType());
+        Verify(ex is FormatException);
     }
 
     // See https://github.com/dotnet/sdk/issues/25373

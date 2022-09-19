@@ -28,6 +28,6 @@ public partial class AssertTests
         var ex = VerifyThrows(() => Assert.Inconclusive("{", "arg"));
 
         Verify(ex is not null);
-        Verify(typeof(FormatException) == ex.GetType());
+        Verify(ex is FormatException);
     }
 }

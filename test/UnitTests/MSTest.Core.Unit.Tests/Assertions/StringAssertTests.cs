@@ -99,6 +99,6 @@ public class StringAssertTests : TestContainer
     {
         var ex = VerifyThrows(() => StringAssert.Contains("a", "b", "message {{0}", "arg"));
         Verify(ex is not null);
-        Verify(typeof(FormatException) == ex.GetType());
+        Verify(ex is FormatException);
     }
 }

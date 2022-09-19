@@ -262,6 +262,7 @@ public class DynamicDataAttributeTests : TestContainer
 /// <summary>
 /// The dummy test class.
 /// </summary>
+[TestClass]
 public class DummyTestClass
 {
     /// <summary>
@@ -410,6 +411,7 @@ public class DummyTestClass
     /// <summary>
     /// The test method 1.
     /// </summary>
+    [TestMethod]
     [DynamicData("ReusableTestDataProperty")]
     public void TestMethod1()
     {
@@ -418,6 +420,7 @@ public class DummyTestClass
     /// <summary>
     /// The test method 2.
     /// </summary>
+    [TestMethod]
     [DynamicData("ReusableTestDataMethod")]
     public void TestMethod2()
     {
@@ -426,6 +429,7 @@ public class DummyTestClass
     /// <summary>
     /// The test method 3.
     /// </summary>
+    [TestMethod]
     [DynamicData("WrongDataTypeProperty")]
     public void TestMethod3()
     {
@@ -434,6 +438,7 @@ public class DummyTestClass
     /// <summary>
     /// The test method 4.
     /// </summary>
+    [TestMethod]
     [DynamicData("NullProperty")]
     public void TestMethod4()
     {
@@ -442,6 +447,7 @@ public class DummyTestClass
     /// <summary>
     /// The test method 5.
     /// </summary>
+    [TestMethod]
     [DynamicData("EmptyProperty")]
     public void TestMethod5()
     {
@@ -453,6 +459,7 @@ public class DummyTestClass
     [DataRow("First", "Second", null)]
     [DataRow(null, "First", "Second")]
     [DataRow("First", null, "Second")]
+    [TestMethod]
     public void DataRowTestMethod()
     {
     }
