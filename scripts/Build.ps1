@@ -3,17 +3,23 @@
 
 # Build script for MSTest Test Framework.
 
-[CmdletBinding(PositionalBinding = $false)]
+[CmdletBinding(PositionalBinding = $false, DefaultParameterSetName = "OneVersion")]
 Param(
   [ValidateSet("Debug", "Release")]
   [Alias("c")]
   [string] $Configuration = "Debug",
 
   [Alias("fv")]
+  [Parameter(ParameterSetName = 'MultipleVersions')]
   [string] $FrameworkVersion = "99.99.99",
 
   [Alias("av")]
+  [Parameter(ParameterSetName = 'MultipleVersions')]
   [string] $AdapterVersion = "99.99.99",
+  
+  [Alias("v")]
+  [Parameter(ParameterSetName = 'OneVersion')]
+  [string] $Version,
 
   [Alias("vs")]
   [string] $VersionSuffix = "dev",
@@ -58,6 +64,10 @@ Param(
   [Alias("s")]
   [String[]] $Steps = @("UpdateTPVersion", "Restore", "Build", "Publish")
 )
+
+if ($Version) {
+  $FrameworkVersion = $AdapterVersion = $Version
+}
 
 . $PSScriptRoot\common.lib.ps1
 
