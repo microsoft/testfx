@@ -47,10 +47,9 @@ else {
 
 Write-Host "Generating release notes for $start..$end$(if ($EndWithLatestCommit) { " (expected tag: $tag)" })"
 
-$sourceBranch = $branch = git -C $Path rev-parse --abbrev-ref HEAD
-if ($sourceBranch -eq "HEAD") {
-    # when CI checks out just the single commit, https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml
-    $sourceBranch = $env:BUILD_SOURCEBRANCH -replace "^refs/heads/"
+$sourceBranch = $branch = $env:BUILD_SOURCEBRANCH -replace "^refs/heads/" # Get the source branch name from the CI if possible.
+if ([string]::IsNullOrWhiteSpace($branch)) {
+    $sourceBranch = $branch = git -C $Path rev-parse --abbrev-ref HEAD
 }
 
 if ([string]::IsNullOrWhiteSpace($branch)) {
