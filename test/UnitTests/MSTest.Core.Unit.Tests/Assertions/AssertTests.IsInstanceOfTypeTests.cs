@@ -3,107 +3,96 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
-using MSTestAdapter.TestUtilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using global::TestFramework.ForTestingMSTest;
 
 public partial class AssertTests
 {
-    [TestMethod]
-    public void IsInstanceOfType_WhenValueIsNull_Fails()
+    public void InstanceOfTypeShouldFailWhenValueIsNull()
     {
-        static void action() => TestFrameworkV2.Assert.IsInstanceOfType(null, typeof(AssertTests));
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        static void action() => Assert.IsInstanceOfType(null, typeof(AssertTests));
+        var ex = VerifyThrows(action);
+        Verify(ex is AssertFailedException);
     }
 
-    [TestMethod]
-    public void IsInstanceOfType_WhenTypeIsNull_Fails()
+    public void InstanceOfTypeShouldFailWhenTypeIsNull()
     {
-        static void action() => TestFrameworkV2.Assert.IsInstanceOfType(5, null);
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        static void action() => Assert.IsInstanceOfType(5, null);
+        var ex = VerifyThrows(action);
+        Verify(ex is AssertFailedException);
     }
 
-    [TestMethod]
-    public void IsInstanceOfType_OnSameInstance_DoesNotThrow()
+    public void InstanceOfTypeShouldPassOnSameInstance()
     {
-        TestFrameworkV2.Assert.IsInstanceOfType(5, typeof(int));
+        Assert.IsInstanceOfType(5, typeof(int));
     }
 
-    [TestMethod]
-    public void IsInstanceOfType_OnHigherInstance_DoesNotThrow()
+    public void InstanceOfTypeShouldPassOnHigherInstance()
     {
-        TestFrameworkV2.Assert.IsInstanceOfType(5, typeof(object));
+        Assert.IsInstanceOfType(5, typeof(object));
     }
 
-    [TestMethod]
-    public void IsNotInstanceOfType_WhenValueIsNull_DoesNotThrow()
+    public void InstanceNotOfTypeShouldFailWhenValueIsNull()
     {
-        TestFrameworkV2.Assert.IsNotInstanceOfType(null, typeof(object));
+        Assert.IsNotInstanceOfType(null, typeof(object));
     }
 
-    [TestMethod]
-    public void IsNotInstanceOfType_WhenTypeIsNull_Fails()
+    public void InstanceNotOfTypeShouldFailWhenTypeIsNull()
     {
-        static void action() => TestFrameworkV2.Assert.IsNotInstanceOfType(5, null);
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        static void action() => Assert.IsNotInstanceOfType(5, null);
+        var ex = VerifyThrows(action);
+        Verify(ex is AssertFailedException);
     }
 
-    [TestMethod]
-    public void IsNotInstanceOfType_OnWrongInstance_DoesNotThrow()
+    public void InstanceNotOfTypeShouldPassOnWrongInstance()
     {
-        TestFrameworkV2.Assert.IsNotInstanceOfType(5L, typeof(int));
+        Assert.IsNotInstanceOfType(5L, typeof(int));
     }
 
-    [TestMethod]
-    public void IsNotInstanceOfType_OnSubInstance_DoesNotThrow()
+    public void InstanceNotOfTypeShouldPassOnSubInstance()
     {
-        TestFrameworkV2.Assert.IsNotInstanceOfType(new object(), typeof(int));
+        Assert.IsNotInstanceOfType(new object(), typeof(int));
     }
 
     [TestMethod]
     public void IsInstanceOfTypeUsingGenericType_WhenValueIsNull_Fails()
     {
-        static void action() => TestFrameworkV2.Assert.IsInstanceOfType<AssertTests>(null);
-        ActionUtility.ActionShouldThrowExceptionOfType(action, typeof(TestFrameworkV2.AssertFailedException));
+        static void action() => Assert.IsInstanceOfType<AssertTests>(null);
+        var ex = VerifyThrows(action);
+        Verify(ex is AssertFailedException);
     }
 
     [TestMethod]
     public void IsInstanceOfTypeUsingGenericType_OnSameInstance_DoesNotThrow()
     {
-        TestFrameworkV2.Assert.IsInstanceOfType<int>(5);
+        Assert.IsInstanceOfType<int>(5);
     }
 
     [TestMethod]
     public void IsInstanceOfTypeUsingGenericType_OnHigherInstance_DoesNotThrow()
     {
-        TestFrameworkV2.Assert.IsInstanceOfType<object>(5);
+        Assert.IsInstanceOfType<object>(5);
     }
 
     [TestMethod]
     public void IsNotInstanceOfTypeUsingGenericType_WhenValueIsNull_DoesNotThrow()
     {
-        TestFrameworkV2.Assert.IsNotInstanceOfType<object>(null);
+        Assert.IsNotInstanceOfType<object>(null);
     }
 
     [TestMethod]
     public void IsNotInstanceOfType_OnWrongInstanceUsingGenericType_DoesNotThrow()
     {
-        TestFrameworkV2.Assert.IsNotInstanceOfType<int>(5L);
+        Assert.IsNotInstanceOfType<int>(5L);
     }
 
     [TestMethod]
     public void IsNotInstanceOfTypeUsingGenericType_OnSubInstance_DoesNotThrow()
     {
-        TestFrameworkV2.Assert.IsNotInstanceOfType<int>(new object());
+        Assert.IsNotInstanceOfType<int>(new object());
     }
 }

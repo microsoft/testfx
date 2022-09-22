@@ -3,38 +3,29 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
-using MSTestAdapter.TestUtilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using global::TestFramework.ForTestingMSTest;
 
 public partial class AssertTests
 {
-    [TestMethod]
     public void IsFalseNullableBooleansShouldFailWithNull()
     {
         bool? nullBool = null;
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.IsFalse(nullBool));
-        Assert.IsNotNull(ex);
-        StringAssert.Contains(ex.Message, "Assert.IsFalse failed");
+        var ex = VerifyThrows(() => Assert.IsFalse(nullBool));
+        Verify(ex is not null);
+        Verify(ex.Message.Contains("Assert.IsFalse failed"));
     }
 
-    [TestMethod]
     public void IsTrueNullableBooleansShouldFailWithNull()
     {
         bool? nullBool = null;
 
-        var ex = ActionUtility.PerformActionAndReturnException(() => TestFrameworkV2.Assert.IsTrue(nullBool));
-        Assert.IsNotNull(ex);
-        StringAssert.Contains(ex.Message, "Assert.IsTrue failed");
+        var ex = VerifyThrows(() => Assert.IsTrue(nullBool));
+        Verify(ex is not null);
+        Verify(ex.Message.Contains("Assert.IsTrue failed"));
     }
 }

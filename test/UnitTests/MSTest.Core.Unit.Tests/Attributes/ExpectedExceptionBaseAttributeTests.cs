@@ -3,28 +3,22 @@
 
 namespace UnitTestFramework.Tests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
-using MSTestAdapter.TestUtilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using TestFrameworkV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
+using global::TestFramework.ForTestingMSTest;
 
 /// <summary>
 /// Tests for class ExpectedExceptionBaseAttribute
 /// </summary>
-[TestFrameworkV1.TestClass]
-public class ExpectedExceptionBaseAttributeTests
+public class ExpectedExceptionBaseAttributeTests : TestContainer
 {
     private TestableExpectedExceptionBaseAttributeClass _sut = null;
 
     /// <summary>
     /// Test initialization function.
     /// </summary>
-    [TestFrameworkV1.TestInitialize]
-    public void TestInitialize()
+    public ExpectedExceptionBaseAttributeTests()
     {
         _sut = new TestableExpectedExceptionBaseAttributeClass();
     }
@@ -32,26 +26,25 @@ public class ExpectedExceptionBaseAttributeTests
     /// <summary>
     /// RethrowIfAssertException function will throw AssertFailedException if we pass AssertFailedException as parameter in it.
     /// </summary>
-    [TestFrameworkV1.TestMethod]
     public void RethrowIfAssertExceptionThrowsExceptionOnAssertFailure()
     {
-        void a() => _sut.RethrowIfAssertException(new TestFrameworkV2.AssertFailedException());
+        void a() => _sut.RethrowIfAssertException(new AssertFailedException());
 
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(TestFrameworkV2.AssertFailedException));
+        var ex = VerifyThrows(a);
+        Verify(ex is AssertFailedException);
     }
 
     /// <summary>
     /// RethrowIfAssertException function will throw AssertFailedException if we pass AssertInconclusiveException as parameter in it.
     /// </summary>
-    [TestFrameworkV1.TestMethod]
     public void RethrowIfAssertExceptionThrowsExceptionOnAssertInconclusive()
     {
-        void a() => _sut.RethrowIfAssertException(new TestFrameworkV2.AssertInconclusiveException());
+        void a() => _sut.RethrowIfAssertException(new AssertInconclusiveException());
 
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(TestFrameworkV2.AssertInconclusiveException));
+        var ex = VerifyThrows(a);
+        Verify(ex is AssertInconclusiveException);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void VerifyCorrectMessageIsGettingSetInVariablenoExceptionMessage()
     {
         string expected = "DummyString";
@@ -59,24 +52,23 @@ public class ExpectedExceptionBaseAttributeTests
 
         string result = _sut.GetNoExceptionMessage();
 
-        TestFrameworkV1.Assert.AreEqual(expected, result);
+        Verify(expected == result);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void VerifyEmptyMessageIsGettingSetInVariablenoExceptionMessage()
     {
         _sut = new TestableExpectedExceptionBaseAttributeClass(null);
 
         string result = _sut.GetNoExceptionMessage();
 
-        TestFrameworkV1.Assert.IsTrue(string.IsNullOrEmpty(result));
+        Verify(string.IsNullOrEmpty(result));
     }
 }
 
 /// <summary>
 /// Dummy class derived from Exception
 /// </summary>
-public class TestableExpectedExceptionBaseAttributeClass : TestFrameworkV2.ExpectedExceptionBaseAttribute
+public class TestableExpectedExceptionBaseAttributeClass : ExpectedExceptionBaseAttribute
 {
     public TestableExpectedExceptionBaseAttributeClass()
         : base()
