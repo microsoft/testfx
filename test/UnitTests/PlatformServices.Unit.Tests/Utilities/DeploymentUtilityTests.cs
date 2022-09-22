@@ -4,18 +4,6 @@
 #if !NET48
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
-#if NETFRAMEWORK
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#else
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#endif
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,9 +20,10 @@ using Moq;
 
 using MSTestAdapter.PlatformServices.Tests.Utilities;
 
-[TestClass]
+using TestFramework.ForTestingMSTest;
+
 #pragma warning disable SA1649 // File name must match first type name
-public class DeploymentUtilityTests
+public class DeploymentUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
 {
     private const string TestRunDirectory = "C:\\temp\\testRunDirectory";
@@ -42,17 +31,16 @@ public class DeploymentUtilityTests
     private const string DefaultDeploymentItemPath = @"c:\temp";
     private const string DefaultDeploymentItemOutputDirectory = "out";
 
-    private Mock<ReflectionUtility> _mockReflectionUtility;
-    private Mock<FileUtility> _mockFileUtility;
-    private Mock<AssemblyUtility> _mockAssemblyUtility;
-    private Mock<IRunContext> _mockRunContext;
-    private Mock<ITestExecutionRecorder> _mocktestExecutionRecorder;
+    private readonly Mock<ReflectionUtility> _mockReflectionUtility;
+    private readonly Mock<FileUtility> _mockFileUtility;
+    private readonly Mock<AssemblyUtility> _mockAssemblyUtility;
+    private readonly Mock<IRunContext> _mockRunContext;
+    private readonly Mock<ITestExecutionRecorder> _mocktestExecutionRecorder;
 
-    private DeploymentUtility _deploymentUtility;
+    private readonly DeploymentUtility _deploymentUtility;
     private IList<string> _warnings;
 
-    [TestInitialize]
-    public void TestInit()
+    public DeploymentUtilityTests()
     {
         _mockReflectionUtility = new Mock<ReflectionUtility>();
         _mockFileUtility = new Mock<FileUtility>();
@@ -70,7 +58,6 @@ public class DeploymentUtilityTests
 
     #region Deploy tests
 
-    [TestMethod]
     public void DeployShouldReturnFalseWhenNoDeploymentItemsOnTestCase()
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
@@ -88,8 +75,8 @@ public class DeploymentUtilityTests
             .Returns(new List<string> { });
 #endif
 
-        Assert.IsFalse(
-            _deploymentUtility.Deploy(
+        Verify(
+            !_deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
                 _mockRunContext.Object,
@@ -98,7 +85,6 @@ public class DeploymentUtilityTests
     }
 
 #if NETFRAMEWORK
-    [TestMethod]
     public void DeployShouldDeploySourceAndItsConfigFile()
     {
         var testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
@@ -114,7 +100,7 @@ public class DeploymentUtilityTests
             .Returns(new List<string> { });
 
         // Act.
-        Assert.IsTrue(
+        Verify(
             _deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
@@ -142,7 +128,6 @@ public class DeploymentUtilityTests
             Times.Once);
     }
 
-    [TestMethod]
     public void DeployShouldDeployDependentFiles()
     {
         var dependencyFile = "C:\\temp\\dependency.dll";
@@ -160,7 +145,7 @@ public class DeploymentUtilityTests
             .Returns(new List<string> { });
 
         // Act.
-        Assert.IsTrue(
+        Verify(
             _deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
@@ -180,7 +165,6 @@ public class DeploymentUtilityTests
             Times.Once);
     }
 
-    [TestMethod]
     public void DeployShouldDeploySatelliteAssemblies()
     {
         var testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
@@ -198,7 +182,7 @@ public class DeploymentUtilityTests
             .Returns(new List<string> { satelliteFullPath });
 
         // Act.
-        Assert.IsTrue(
+        Verify(
             _deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
@@ -219,7 +203,6 @@ public class DeploymentUtilityTests
     }
 #endif
 
-    [TestMethod]
     public void DeployShouldNotDeployIfOutputDirectoryIsInvalid()
     {
         var assemblyFullPath = Assembly.GetExecutingAssembly().Location;
@@ -241,7 +224,7 @@ public class DeploymentUtilityTests
 #endif
 
         // Act.
-        Assert.IsTrue(
+        Verify(
             _deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
@@ -272,7 +255,6 @@ public class DeploymentUtilityTests
             Times.Once);
     }
 
-    [TestMethod]
     public void DeployShouldDeployContentsOfADirectoryIfSpecified()
     {
         var assemblyFullPath = Assembly.GetExecutingAssembly().Location;
@@ -298,7 +280,7 @@ public class DeploymentUtilityTests
             fu => fu.AddFilesFromDirectory(DefaultDeploymentItemPath, It.IsAny<Func<string, bool>>(), It.IsAny<bool>())).Returns(directoryContentFiles);
 
         // Act.
-        Assert.IsTrue(
+        Verify(
             _deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
@@ -319,7 +301,6 @@ public class DeploymentUtilityTests
     }
 
 #if NETFRAMEWORK
-    [TestMethod]
     public void DeployShouldDeployPdbWithSourceIfPdbFileIsPresentInSourceDirectory()
     {
         var testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out var testRunDirectories);
@@ -343,7 +324,7 @@ public class DeploymentUtilityTests
                     });
 
         // Act.
-        Assert.IsTrue(
+        Verify(
             _deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,
@@ -370,7 +351,6 @@ public class DeploymentUtilityTests
             Times.Once);
     }
 
-    [TestMethod]
     public void DeployShouldNotDeployPdbFileOfAssemblyIfPdbFileIsNotPresentInAssemblyDirectory()
     {
         var dependencyFile = "C:\\temp\\dependency.dll";
@@ -399,7 +379,7 @@ public class DeploymentUtilityTests
                 });
 
         // Act.
-        Assert.IsTrue(
+        Verify(
             _deploymentUtility.Deploy(
                 new List<TestCase> { testCase },
                 testCase.Source,

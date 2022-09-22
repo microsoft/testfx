@@ -3,39 +3,27 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Services;
 
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
+using TestFramework.ForTestingMSTest;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
-[TestClass]
-public class TestSourceHostTests
+public class TestSourceHostTests : TestContainer
 {
-    private TestSourceHost _testSourceHost;
+    private readonly TestSourceHost _testSourceHost;
 
-    [TestInitialize]
-    public void TestInit()
+    public TestSourceHostTests()
     {
         _testSourceHost = new TestSourceHost(null, null, null);
     }
 
-    [TestMethod]
     public void CreateInstanceForTypeCreatesAnInstanceOfAGivenTypeThroughDefaultConstructor()
     {
         var type = _testSourceHost.CreateInstanceForType(typeof(DummyType), null) as DummyType;
 
-        Assert.IsNotNull(type);
-        Assert.IsTrue(type.IsDefaultConstructorCalled);
+        Verify(type is not null);
+        Verify(type.IsDefaultConstructorCalled);
     }
 }
 

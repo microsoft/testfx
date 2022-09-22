@@ -3,51 +3,37 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Services;
 
-extern alias FrameworkV2Extension;
-
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using Ignore = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
-
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using Moq;
+
 using MSTestAdapter.PlatformServices.Tests.Utilities;
 
-using TestFrameworkV2Extension = FrameworkV2Extension::Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class TestDeploymentTests
+public class TestDeploymentTests : TestContainer
 {
     private const string DefaultDeploymentItemPath = @"c:\temp";
     private const string DefaultDeploymentItemOutputDirectory = "out";
 
-    private Mock<ReflectionUtility> _mockReflectionUtility;
-    private Mock<FileUtility> _mockFileUtility;
+    private readonly Mock<ReflectionUtility> _mockReflectionUtility;
+    private readonly Mock<FileUtility> _mockFileUtility;
 
     private IList<string> _warnings;
 
-    [TestInitialize]
-    public void TestInit()
+    public TestDeploymentTests()
     {
         _mockReflectionUtility = new Mock<ReflectionUtility>();
         _mockFileUtility = new Mock<FileUtility>();
@@ -59,16 +45,14 @@ public class TestDeploymentTests
 
     #region GetDeploymentItems tests.
 
-    [TestMethod]
     public void GetDeploymentItemsReturnsNullWhenNoDeploymentItems()
     {
         var methodInfo =
             typeof(TestDeploymentTests).GetMethod("GetDeploymentItemsReturnsNullWhenNoDeploymentItems");
 
-        Assert.IsNull(new TestDeployment().GetDeploymentItems(methodInfo, typeof(TestDeploymentTests), _warnings));
+        Verify(new TestDeployment().GetDeploymentItems(methodInfo, typeof(TestDeploymentTests), _warnings) is null);
     }
 
-    [TestMethod]
     public void GetDeploymentItemsReturnsDeploymentItems()
     {
         // Arrange.
@@ -76,17 +60,17 @@ public class TestDeploymentTests
 
         // setup mocks
         var methodLevelDeploymentItems = new[]
-                                              {
-                                               new KeyValuePair<string, string>(
-                                                   DefaultDeploymentItemPath,
-                                                   DefaultDeploymentItemOutputDirectory)
-                                           };
+        {
+            new KeyValuePair<string, string>(
+                DefaultDeploymentItemPath,
+                DefaultDeploymentItemOutputDirectory)
+        };
         var classLevelDeploymentItems = new[]
-                                              {
-                                               new KeyValuePair<string, string>(
-                                                   DefaultDeploymentItemPath + "\\temp2",
-                                                   DefaultDeploymentItemOutputDirectory)
-                                           };
+        {
+            new KeyValuePair<string, string>(
+                DefaultDeploymentItemPath + "\\temp2",
+                DefaultDeploymentItemOutputDirectory)
+        };
         var memberInfo =
             typeof(TestDeploymentTests).GetMethod(
                 "GetDeploymentItemsReturnsDeploymentItems");
@@ -98,24 +82,23 @@ public class TestDeploymentTests
 
         // Assert.
         var expectedDeploymentItems = new KeyValuePair<string, string>[]
-                                          {
-                                              new KeyValuePair<string, string>(
-                                                  DefaultDeploymentItemPath,
-                                                  DefaultDeploymentItemOutputDirectory),
-                                              new KeyValuePair<string, string>(
-                                                  DefaultDeploymentItemPath + "\\temp2",
-                                                  DefaultDeploymentItemOutputDirectory)
-                                          };
+        {
+            new KeyValuePair<string, string>(
+                DefaultDeploymentItemPath,
+                DefaultDeploymentItemOutputDirectory),
+            new KeyValuePair<string, string>(
+                DefaultDeploymentItemPath + "\\temp2",
+                DefaultDeploymentItemOutputDirectory)
+        };
 
-        CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
+        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems));
     }
 
     #endregion
 
     #region Cleanup tests
 
-    [TestMethod]
-    public void CleanupShouldNotDeleteDirectoriesIfRunDirectoiresIsNull()
+    public void CleanupShouldNotDeleteDirectoriesIfRunDirectoriesIsNull()
     {
         var testDeployment = new TestDeployment(null, null, _mockFileUtility.Object);
 
@@ -124,7 +107,6 @@ public class TestDeploymentTests
         _mockFileUtility.Verify(fu => fu.DeleteDirectories(It.IsAny<string>()), Times.Never);
     }
 
-    [TestMethod]
     public void CleanupShouldNotDeleteDirectoriesIfRunSettingsSpecifiesSo()
     {
         string runSettingxml =
@@ -142,14 +124,13 @@ public class TestDeploymentTests
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Assert.IsTrue(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
         testDeployment.Cleanup();
 
         _mockFileUtility.Verify(fu => fu.DeleteDirectories(It.IsAny<string>()), Times.Never);
     }
 
-    [TestMethod]
     public void CleanupShouldDeleteRootDeploymentDirectory()
     {
         var testCase = GetTestCase(typeof(DeploymentUtilityTests).GetTypeInfo().Assembly.Location);
@@ -160,7 +141,7 @@ public class TestDeploymentTests
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Assert.IsTrue(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
         // Act.
         testDeployment.Cleanup();
@@ -172,13 +153,11 @@ public class TestDeploymentTests
 
     #region GetDeploymentDirectory tests
 
-    [TestMethod]
     public void GetDeploymentDirectoryShouldReturnNullIfDeploymentDirectoryIsNull()
     {
-        Assert.IsNull(new TestDeployment().GetDeploymentDirectory());
+        Verify(new TestDeployment().GetDeploymentDirectory() is null);
     }
 
-    [TestMethod]
     public void GetDeploymentDirectoryShouldReturnDeploymentOutputDirectory()
     {
         var testCase = GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
@@ -189,26 +168,25 @@ public class TestDeploymentTests
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Assert.IsTrue(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
         // Act.
-        Assert.AreEqual(testRunDirectories.OutDirectory, testDeployment.GetDeploymentDirectory());
+        Verify(testRunDirectories.OutDirectory == testDeployment.GetDeploymentDirectory());
     }
 
     #endregion
 
     #region Deploy tests
 
-    [TestMethod]
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseButHasDeploymentItems()
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
         var kvparray = new[]
-                {
-                    new KeyValuePair<string, string>(
-                        DefaultDeploymentItemPath,
-                        DefaultDeploymentItemOutputDirectory)
-                };
+        {
+            new KeyValuePair<string, string>(
+                DefaultDeploymentItemPath,
+                DefaultDeploymentItemOutputDirectory)
+        };
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvparray);
 
         var testDeployment = new TestDeployment(
@@ -224,13 +202,12 @@ public class TestDeploymentTests
         mstestSettingsProvider.Load(reader);
 
         // Deployment should not happen
-        Assert.IsFalse(testDeployment.Deploy(new List<TestCase> { testCase }, null, null));
+        Verify(!testDeployment.Deploy(new List<TestCase> { testCase }, null, null));
 
         // Deployment directories should not be created
-        Assert.IsNull(testDeployment.GetDeploymentDirectory());
+        Verify(testDeployment.GetDeploymentDirectory() is null);
     }
 
-    [TestMethod]
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseAndHasNoDeploymentItems()
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
@@ -248,13 +225,12 @@ public class TestDeploymentTests
         mstestSettingsProvider.Load(reader);
 
         // Deployment should not happen
-        Assert.IsFalse(testDeployment.Deploy(new List<TestCase> { testCase }, null, null));
+        Verify(!testDeployment.Deploy(new List<TestCase> { testCase }, null, null));
 
         // Deployment directories should get created
-        Assert.IsNotNull(testDeployment.GetDeploymentDirectory());
+        Verify(testDeployment.GetDeploymentDirectory() is not null);
     }
 
-    [TestMethod]
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToTrueButHasNoDeploymentItems()
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
@@ -272,14 +248,13 @@ public class TestDeploymentTests
         mstestSettingsProvider.Load(reader);
 
         // Deployment should not happen
-        Assert.IsFalse(testDeployment.Deploy(new List<TestCase> { testCase }, null, null));
+        Verify(!testDeployment.Deploy(new List<TestCase> { testCase }, null, null));
 
         // Deployment directories should get created
-        Assert.IsNotNull(testDeployment.GetDeploymentDirectory());
+        Verify(testDeployment.GetDeploymentDirectory() is not null);
     }
 
     // TODO: This test has to have mocks. It actually deploys stuff and we cannot assume that all the dependencies get copied over to bin\debug.
-    [TestMethod]
     [Ignore]
     public void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()
     {
@@ -304,17 +279,16 @@ public class TestDeploymentTests
         mstestSettingsProvider.Load(reader);
 
         // Deployment should happen
-        Assert.IsTrue(testDeployment.Deploy(new List<TestCase> { testCase }, null, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, null, new Mock<IFrameworkHandle>().Object));
 
         // Deployment directories should get created
-        Assert.IsNotNull(testDeployment.GetDeploymentDirectory());
+        Verify(testDeployment.GetDeploymentDirectory() is not null);
     }
 
     #endregion
 
     #region GetDeploymentInformation tests
 
-    [TestMethod]
     public void GetDeploymentInformationShouldReturnAppBaseDirectoryIfRunDirectoryIsNull()
     {
         TestDeployment.Reset();
@@ -322,47 +296,46 @@ public class TestDeploymentTests
 
         var applicationBaseDirectory = Path.GetDirectoryName(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
         var expectedProperties = new Dictionary<string, object>
-                                     {
-                                         {
-                                             TestContextPropertyStrings.TestRunDirectory,
-                                             applicationBaseDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.DeploymentDirectory,
-                                             applicationBaseDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.ResultsDirectory,
-                                             applicationBaseDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings
-                                             .TestRunResultsDirectory,
-                                             applicationBaseDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings
-                                             .TestResultsDirectory,
-                                             applicationBaseDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.TestDir,
-                                             applicationBaseDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.TestDeploymentDir,
-                                             applicationBaseDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.TestLogsDir,
-                                             applicationBaseDirectory
-                                         }
-                                     };
-        Assert.IsNotNull(properties);
-        CollectionAssert.AreEqual(expectedProperties.ToList(), properties.ToList());
+        {
+            {
+                TestContextPropertyStrings.TestRunDirectory,
+                applicationBaseDirectory
+            },
+            {
+                TestContextPropertyStrings.DeploymentDirectory,
+                applicationBaseDirectory
+            },
+            {
+                TestContextPropertyStrings.ResultsDirectory,
+                applicationBaseDirectory
+            },
+            {
+                TestContextPropertyStrings
+                .TestRunResultsDirectory,
+                applicationBaseDirectory
+            },
+            {
+                TestContextPropertyStrings
+                .TestResultsDirectory,
+                applicationBaseDirectory
+            },
+            {
+                TestContextPropertyStrings.TestDir,
+                applicationBaseDirectory
+            },
+            {
+                TestContextPropertyStrings.TestDeploymentDir,
+                applicationBaseDirectory
+            },
+            {
+                TestContextPropertyStrings.TestLogsDir,
+                applicationBaseDirectory
+            }
+        };
+        Verify(properties is not null);
+        Verify(expectedProperties.SequenceEqual(properties));
     }
 
-    [TestMethod]
     public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNull()
     {
         // Arrange.
@@ -374,55 +347,54 @@ public class TestDeploymentTests
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Assert.IsTrue(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
         // Act.
         var properties = TestDeployment.GetDeploymentInformation(null);
 
         // Assert.
         var expectedProperties = new Dictionary<string, object>
-                                     {
-                                         {
-                                             TestContextPropertyStrings.TestRunDirectory,
-                                             testRunDirectories.RootDeploymentDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.DeploymentDirectory,
-                                             testRunDirectories.OutDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.ResultsDirectory,
-                                             testRunDirectories.InDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings
-                                             .TestRunResultsDirectory,
-                                             testRunDirectories.InMachineNameDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings
-                                             .TestResultsDirectory,
-                                             testRunDirectories.InDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.TestDir,
-                                             testRunDirectories.RootDeploymentDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.TestDeploymentDir,
-                                             testRunDirectories.OutDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.TestLogsDir,
-                                             testRunDirectories.InMachineNameDirectory
-                                         }
-                                     };
+        {
+            {
+                TestContextPropertyStrings.TestRunDirectory,
+                testRunDirectories.RootDeploymentDirectory
+            },
+            {
+                TestContextPropertyStrings.DeploymentDirectory,
+                testRunDirectories.OutDirectory
+            },
+            {
+                TestContextPropertyStrings.ResultsDirectory,
+                testRunDirectories.InDirectory
+            },
+            {
+                TestContextPropertyStrings
+                .TestRunResultsDirectory,
+                testRunDirectories.InMachineNameDirectory
+            },
+            {
+                TestContextPropertyStrings
+                .TestResultsDirectory,
+                testRunDirectories.InDirectory
+            },
+            {
+                TestContextPropertyStrings.TestDir,
+                testRunDirectories.RootDeploymentDirectory
+            },
+            {
+                TestContextPropertyStrings.TestDeploymentDir,
+                testRunDirectories.OutDirectory
+            },
+            {
+                TestContextPropertyStrings.TestLogsDir,
+                testRunDirectories.InMachineNameDirectory
+            }
+        };
 
-        Assert.IsNotNull(properties);
-        CollectionAssert.AreEqual(expectedProperties.ToList(), properties.ToList());
+        Verify(properties is not null);
+        Verify(expectedProperties.SequenceEqual(properties));
     }
 
-    [TestMethod]
     public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNotNull()
     {
         // Arrange.
@@ -434,52 +406,52 @@ public class TestDeploymentTests
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
 
-        Assert.IsTrue(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
+        Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
         // Act.
         var properties = TestDeployment.GetDeploymentInformation(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
 
         // Assert.
         var expectedProperties = new Dictionary<string, object>
-                                     {
-                                         {
-                                             TestContextPropertyStrings.TestRunDirectory,
-                                             testRunDirectories.RootDeploymentDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.DeploymentDirectory,
-                                             testRunDirectories.OutDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.ResultsDirectory,
-                                             testRunDirectories.InDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings
-                                             .TestRunResultsDirectory,
-                                             testRunDirectories.InMachineNameDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings
-                                             .TestResultsDirectory,
-                                             testRunDirectories.InDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.TestDir,
-                                             testRunDirectories.RootDeploymentDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.TestDeploymentDir,
-                                             testRunDirectories.OutDirectory
-                                         },
-                                         {
-                                             TestContextPropertyStrings.TestLogsDir,
-                                             testRunDirectories.InMachineNameDirectory
-                                         }
-                                     };
+        {
+            {
+                TestContextPropertyStrings.TestRunDirectory,
+                testRunDirectories.RootDeploymentDirectory
+            },
+            {
+                TestContextPropertyStrings.DeploymentDirectory,
+                testRunDirectories.OutDirectory
+            },
+            {
+                TestContextPropertyStrings.ResultsDirectory,
+                testRunDirectories.InDirectory
+            },
+            {
+                TestContextPropertyStrings
+                .TestRunResultsDirectory,
+                testRunDirectories.InMachineNameDirectory
+            },
+            {
+                TestContextPropertyStrings
+                .TestResultsDirectory,
+                testRunDirectories.InDirectory
+            },
+            {
+                TestContextPropertyStrings.TestDir,
+                testRunDirectories.RootDeploymentDirectory
+            },
+            {
+                TestContextPropertyStrings.TestDeploymentDir,
+                testRunDirectories.OutDirectory
+            },
+            {
+                TestContextPropertyStrings.TestLogsDir,
+                testRunDirectories.InMachineNameDirectory
+            }
+        };
 
-        Assert.IsNotNull(properties);
-        CollectionAssert.AreEqual(expectedProperties.ToList(), properties.ToList());
+        Verify(properties is not null);
+        Verify(expectedProperties.SequenceEqual(properties));
     }
 
     #endregion
@@ -488,29 +460,29 @@ public class TestDeploymentTests
 
     private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
     {
-        var deploymentItemAttributes = new List<TestFrameworkV2Extension.DeploymentItemAttribute>();
+        var deploymentItemAttributes = new List<DeploymentItemAttribute>();
 
         foreach (var deploymentItem in deploymentItems)
         {
-            deploymentItemAttributes.Add(new TestFrameworkV2Extension.DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
+            deploymentItemAttributes.Add(new DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
         }
 
         _mockReflectionUtility.Setup(
             ru =>
             ru.GetCustomAttributes(
                 memberInfo,
-                typeof(TestFrameworkV2Extension.DeploymentItemAttribute))).Returns((object[])deploymentItemAttributes.ToArray());
+                typeof(DeploymentItemAttribute))).Returns((object[])deploymentItemAttributes.ToArray());
     }
 
-    private TestCase GetTestCase(string source)
+    private static TestCase GetTestCase(string source)
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), source);
         var kvpArray = new[]
-                {
-                    new KeyValuePair<string, string>(
-                        DefaultDeploymentItemPath,
-                        DefaultDeploymentItemOutputDirectory)
-                };
+        {
+            new KeyValuePair<string, string>(
+                DefaultDeploymentItemPath,
+                DefaultDeploymentItemOutputDirectory)
+        };
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
 
         return testCase;

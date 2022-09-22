@@ -4,8 +4,6 @@
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
-extern alias FrameworkV1;
-
 using System;
 using System.IO;
 using System.Reflection;
@@ -13,36 +11,28 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class DesktopFileOperationsTests
+public class DesktopFileOperationsTests : TestContainer
 {
-    private FileOperations _fileOperations;
+    private readonly FileOperations _fileOperations;
 
-    [TestInitialize]
-    public void TestInit()
+    public DesktopFileOperationsTests()
     {
         _fileOperations = new FileOperations();
     }
 
-    [TestMethod]
-    public void CreateNavigationSessionShouldReurnNullIfSourceIsNull()
+    public void CreateNavigationSessionShouldReturnNullIfSourceIsNull()
     {
-        Assert.IsNull(_fileOperations.CreateNavigationSession(null));
+        Verify(_fileOperations.CreateNavigationSession(null) is null);
     }
 
-    [TestMethod]
     public void CreateNavigationSessionShouldReturnDiaSession()
     {
         var diaSession = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
-        Assert.IsTrue(diaSession is DiaSession);
+        Verify(diaSession is DiaSession);
     }
 
-    [TestMethod]
     public void GetNavigationDataShouldReturnDataFromNavigationSession()
     {
         var diaSession = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
@@ -53,11 +43,10 @@ public class DesktopFileOperationsTests
             out var minLineNumber,
             out var fileName);
 
-        Assert.AreNotEqual(-1, minLineNumber);
-        Assert.IsNotNull(fileName);
+        Verify(-1 != minLineNumber);
+        Verify(fileName is not null);
     }
 
-    [TestMethod]
     public void GetNavigationDataShouldNotThrowOnNullNavigationSession()
     {
         _fileOperations.GetNavigationData(
@@ -67,11 +56,10 @@ public class DesktopFileOperationsTests
             out var minLineNumber,
             out var fileName);
 
-        Assert.AreEqual(-1, minLineNumber);
-        Assert.IsNull(fileName);
+        Verify(-1 == minLineNumber);
+        Verify(fileName is null);
     }
 
-    [TestMethod]
     public void DisposeNavigationSessionShouldDisposeNavigationSessionInstance()
     {
         var session = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
@@ -90,46 +78,40 @@ public class DesktopFileOperationsTests
             isExceptionThrown = true;
         }
 
-        Assert.IsTrue(isExceptionThrown);
+        Verify(isExceptionThrown);
     }
 
-    [TestMethod]
     public void DisposeNavigationSessionShouldNotThrowOnNullNavigationSession()
     {
         // This should not throw.
         _fileOperations.DisposeNavigationSession(null);
     }
 
-    [TestMethod]
     public void DoesFileExistReturnsFalseIfAssemblyNameIsNull()
     {
-        Assert.IsFalse(_fileOperations.DoesFileExist(null));
+        Verify(!_fileOperations.DoesFileExist(null));
     }
 
-    [TestMethod]
     public void DoesFileExistReturnsFalseIfFileDoesNotExist()
     {
-        Assert.IsFalse(_fileOperations.DoesFileExist("C:\\temp1foobar.txt"));
+        Verify(!_fileOperations.DoesFileExist("C:\\temp1foobar.txt"));
     }
 
-    [TestMethod]
     public void DoesFileExistReturnsTrueIfFileExists()
     {
-        Assert.IsTrue(_fileOperations.DoesFileExist(Assembly.GetExecutingAssembly().Location));
+        Verify(_fileOperations.DoesFileExist(Assembly.GetExecutingAssembly().Location));
     }
 
-    [TestMethod]
     public void GetFullFilePathShouldReturnAssemblyFileNameOnException()
     {
         var filePath = "temp<>txt";
-        Assert.AreEqual(filePath, _fileOperations.GetFullFilePath(filePath));
+        Verify(filePath == _fileOperations.GetFullFilePath(filePath));
     }
 
-    [TestMethod]
     public void GetFullFilePathShouldReturnFullFilePathForAFile()
     {
         var filePath = "temp1.txt";
-        Assert.AreEqual(Path.GetFullPath(filePath), _fileOperations.GetFullFilePath(filePath));
+        Verify(Path.GetFullPath(filePath) == _fileOperations.GetFullFilePath(filePath));
     }
 }
 #endif

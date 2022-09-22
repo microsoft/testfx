@@ -3,24 +3,14 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Services;
 
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
-
 using System;
 using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
-[TestClass]
-public class DiaSessionOperationsTests
+using TestFramework.ForTestingMSTest;
+
+#pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
+public class DiaSessionOperationsTests : TestContainer
 {
     private readonly FileOperations _fileOperations;
 
@@ -29,15 +19,14 @@ public class DiaSessionOperationsTests
         _fileOperations = new FileOperations();
     }
 
-    [TestMethod]
-    public void CreateNavigationSessionShouldReurnNullIfSourceIsNull()
+    public void CreateNavigationSessionShouldReturnNullIfSourceIsNull()
     {
         try
         {
             DiaSessionOperations.Initialize(typeof(MockDiaSession).AssemblyQualifiedName, typeof(MockDiaNavigationData).AssemblyQualifiedName);
 
-            Assert.IsNull(_fileOperations.CreateNavigationSession(null));
-            Assert.IsTrue(MockDiaSession.IsConstructorInvoked);
+            Verify(_fileOperations.CreateNavigationSession(null) is null);
+            Verify(MockDiaSession.IsConstructorInvoked);
         }
         finally
         {
@@ -45,15 +34,14 @@ public class DiaSessionOperationsTests
         }
     }
 
-    [TestMethod]
-    public void CreateNavigationSessionShuldReturnNullIfDiaSessionNotFound()
+    public void CreateNavigationSessionShouldReturnNullIfDiaSessionNotFound()
     {
         try
         {
             DiaSessionOperations.Initialize(string.Empty, string.Empty);
 
-            Assert.IsNull(_fileOperations.CreateNavigationSession(null));
-            Assert.IsFalse(MockDiaSession.IsConstructorInvoked);
+            Verify(_fileOperations.CreateNavigationSession(null) is null);
+            Verify(!MockDiaSession.IsConstructorInvoked);
         }
         finally
         {
@@ -61,7 +49,6 @@ public class DiaSessionOperationsTests
         }
     }
 
-    [TestMethod]
     public void CreateNavigationSessionShouldReturnDiaSession()
     {
         try
@@ -72,7 +59,7 @@ public class DiaSessionOperationsTests
 
             var diaSession = _fileOperations.CreateNavigationSession(typeof(DiaSessionOperationsTests).GetTypeInfo().Assembly.Location);
 
-            Assert.IsTrue(diaSession is MockDiaSession);
+            Verify(diaSession is MockDiaSession);
         }
         finally
         {
@@ -80,7 +67,6 @@ public class DiaSessionOperationsTests
         }
     }
 
-    [TestMethod]
     public void GetNavigationDataShouldReturnDataFromNavigationSession()
     {
         try
@@ -99,9 +85,9 @@ typeof(DiaSessionOperationsTests).FullName,
 out int minLineNumber,
 out string fileName);
 
-            Assert.AreEqual(navigationData.MinLineNumber, minLineNumber);
-            Assert.AreEqual(navigationData.FileName, fileName);
-            Assert.IsTrue(MockDiaSession.IsGetNavigationDataInvoked);
+            Verify(navigationData.MinLineNumber == minLineNumber);
+            Verify(navigationData.FileName == fileName);
+            Verify(MockDiaSession.IsGetNavigationDataInvoked);
         }
         finally
         {
@@ -109,7 +95,6 @@ out string fileName);
         }
     }
 
-    [TestMethod]
     public void GetNavigationDataShouldNotThrowOnNullNavigationSession()
     {
         DiaSessionOperations.Initialize(string.Empty, string.Empty);
@@ -121,11 +106,10 @@ out string fileName);
         out int minLineNumber,
         out string fileName);
 
-        Assert.AreEqual(-1, minLineNumber);
-        Assert.IsNull(fileName);
+        Verify(-1 == minLineNumber);
+        Verify(fileName is null);
     }
 
-    [TestMethod]
     public void GetNavigationDataShouldNotThrowOnMissingFileNameField()
     {
         try
@@ -144,8 +128,8 @@ out string fileName);
             out int minLineNumber,
             out string fileName);
 
-            Assert.AreEqual(86, minLineNumber);
-            Assert.IsNull(fileName);
+            Verify(86 == minLineNumber);
+            Verify(fileName is null);
         }
         finally
         {
@@ -153,7 +137,6 @@ out string fileName);
         }
     }
 
-    [TestMethod]
     public void GetNavigationDataShouldNotThrowOnMissingLineNumberField()
     {
         try
@@ -172,8 +155,8 @@ out string fileName);
             out int minLineNumber,
             out string fileName);
 
-            Assert.AreEqual(-1, minLineNumber);
-            Assert.AreEqual(navigationData.FileName, fileName);
+            Verify(-1 == minLineNumber);
+            Verify(navigationData.FileName == fileName);
         }
         finally
         {
@@ -181,7 +164,6 @@ out string fileName);
         }
     }
 
-    [TestMethod]
     public void DisposeNavigationSessionShouldDisposeDiaSession()
     {
         try
@@ -193,7 +175,7 @@ out string fileName);
             var diaSession = _fileOperations.CreateNavigationSession(typeof(DiaSessionOperationsTests).GetTypeInfo().Assembly.Location);
             _fileOperations.DisposeNavigationSession(diaSession);
 
-            Assert.IsTrue(MockDiaSession.IsDisposeInvoked);
+            Verify(MockDiaSession.IsDisposeInvoked);
         }
         finally
         {

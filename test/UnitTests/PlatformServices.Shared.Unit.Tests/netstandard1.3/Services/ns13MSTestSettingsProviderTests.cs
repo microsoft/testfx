@@ -3,18 +3,6 @@
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
-
 using System;
 using System.IO;
 using System.Xml;
@@ -22,43 +10,38 @@ using System.Xml;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
-using MSTestAdapter.TestUtilities;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
 #pragma warning disable SA1649 // File name must match first type name
-public class DesktopSettingsProviderTests
+public class DesktopSettingsProviderTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
 {
-    private MSTestSettingsProvider _settingsProvider;
+    private readonly MSTestSettingsProvider _settingsProvider;
 
-    [TestInitialize]
-    public void TestInit()
+    public DesktopSettingsProviderTests()
     {
         _settingsProvider = new MSTestSettingsProvider();
         MSTestSettingsProvider.Reset();
     }
 
-    [TestMethod]
     public void GetPropertiesShouldReturnDeploymentInformation()
     {
         // this is a base case and we just validating that properties does not remain un-initialized,
         // so passing 'null' source will also suffice.
         var properties = _settingsProvider.GetProperties(null);
 
-        Assert.IsNotNull(properties);
-        Assert.IsTrue(properties.Count > 0);
+        Verify(properties is not null);
+        Verify(properties.Count > 0);
     }
 
-    [TestMethod]
     public void SettingsShouldReturnDefaultSettingsIfNotInitialized()
     {
         var settings = MSTestSettingsProvider.Settings;
 
-        Assert.IsNotNull(settings);
-        Assert.IsTrue(settings.DeploymentEnabled);
+        Verify(settings is not null);
+        Verify(settings.DeploymentEnabled);
     }
 
-    [TestMethod]
     public void SettingsShouldReturnInitializedSettings()
     {
         string runSettingxml =
@@ -69,16 +52,15 @@ public class DesktopSettingsProviderTests
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         _settingsProvider.Load(reader);
-        Assert.IsFalse(MSTestSettingsProvider.Settings.DeploymentEnabled);
+        Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
     }
 
-    [TestMethod]
     public void LoadShouldThrowIfReaderIsNull()
     {
-        ActionUtility.ActionShouldThrowExceptionOfType(() => _settingsProvider.Load(null), typeof(ArgumentNullException));
+        var exception = VerifyThrows(() => _settingsProvider.Load(null));
+        Verify(exception is ArgumentNullException);
     }
 
-    [TestMethod]
     public void LoadShouldReadAndFillInSettings()
     {
         string runSettingxml =
@@ -89,6 +71,6 @@ public class DesktopSettingsProviderTests
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         _settingsProvider.Load(reader);
-        Assert.IsFalse(MSTestSettingsProvider.Settings.DeploymentEnabled);
+        Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
     }
 }

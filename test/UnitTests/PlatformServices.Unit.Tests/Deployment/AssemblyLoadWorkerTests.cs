@@ -4,11 +4,9 @@
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Deployment;
 
-extern alias FrameworkV1;
-
 using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
@@ -16,15 +14,10 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 
 using Moq;
 
-using Assert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class AssemblyLoadWorkerTests
+public class AssemblyLoadWorkerTests : TestContainer
 {
-    [TestMethod]
     public void GetFullPathToDependentAssembliesShouldReturnV1FrameworkAssembly()
     {
         // Arrange.
@@ -45,11 +38,10 @@ public class AssemblyLoadWorkerTests
         var dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out var warnings);
 
         // Assert.
-        var utfassembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
-        CollectionAssert.Contains(dependentAssemblies, utfassembly);
+        var utfAssembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
+        Verify(dependentAssemblies.Contains(utfAssembly));
     }
 
-    [TestMethod]
     public void GetFullPathToDependentAssembliesShouldReturnV1FrameworkReferencedInADependency()
     {
         // Arrange.
@@ -105,11 +97,11 @@ public class AssemblyLoadWorkerTests
         var dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out var warnings);
 
         // Assert.
-        var utfassembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
-        CollectionAssert.Contains(dependentAssemblies, utfassembly);
+        var utfAssembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
+        Verify(dependentAssemblies.Contains(utfAssembly));
     }
 
-#region Testable Implementations
+    #region Testable Implementations
 
     private class TestableAssembly : Assembly
     {
@@ -182,6 +174,6 @@ public class AssemblyLoadWorkerTests
         }
     }
 
-#endregion
+    #endregion
 }
 #endif

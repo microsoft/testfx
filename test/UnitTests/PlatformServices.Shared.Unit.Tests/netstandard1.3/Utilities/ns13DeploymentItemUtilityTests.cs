@@ -3,23 +3,6 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Utilities;
 
-extern alias FrameworkV2Extension;
-
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestFrameworkV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
-
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -28,14 +11,14 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
-using TestFrameworkV2Extension = FrameworkV2Extension::Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
 #pragma warning disable SA1649 // File name must match first type name
-public class DeploymentItemUtilityTests
+public class DeploymentItemUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
 {
     internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register(
@@ -45,15 +28,14 @@ public class DeploymentItemUtilityTests
         TestPropertyAttributes.Hidden,
         typeof(TestCase));
 
-    private Mock<ReflectionUtility> _mockReflectionUtility;
-    private DeploymentItemUtility _deploymentItemUtility;
-    private ICollection<string> _warnings;
+    private readonly Mock<ReflectionUtility> _mockReflectionUtility;
+    private readonly DeploymentItemUtility _deploymentItemUtility;
+    private readonly ICollection<string> _warnings;
 
     private readonly string _defaultDeploymentItemPath = @"c:\temp";
     private readonly string _defaultDeploymentItemOutputDirectory = "out";
 
-    [TestInitialize]
-    public void TestInit()
+    public DeploymentItemUtilityTests()
     {
         _mockReflectionUtility = new Mock<ReflectionUtility>();
         _deploymentItemUtility = new DeploymentItemUtility(_mockReflectionUtility.Object);
@@ -62,48 +44,45 @@ public class DeploymentItemUtilityTests
 
     #region GetClassLevelDeploymentItems tests
 
-    [TestMethod]
     public void GetClassLevelDeploymentItemsShouldReturnEmptyListWhenNoDeploymentItems()
     {
         var deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
 
-        Assert.IsNotNull(deploymentItems);
-        Assert.AreEqual(0, deploymentItems.Count);
+        Verify(deploymentItems is not null);
+        Verify(0 == deploymentItems.Count);
     }
 
-    [TestMethod]
     public void GetClassLevelDeploymentItemsShouldReturnADeploymentItem()
     {
         var kvpArray = new[]
-                {
-                    new KeyValuePair<string, string>(
-                        _defaultDeploymentItemPath,
-                        _defaultDeploymentItemOutputDirectory)
-                };
+        {
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory)
+        };
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), kvpArray);
 
         var deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
         var expectedDeploymentItems = new DeploymentItem[]
-                                          {
-                                              new DeploymentItem(
-                                                  _defaultDeploymentItemPath,
-                                                  _defaultDeploymentItemOutputDirectory)
-                                          };
-        CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
+        {
+            new DeploymentItem(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory)
+        };
+        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
     }
 
-    [TestMethod]
     public void GetClassLevelDeploymentItemsShouldReturnMoreThanOneDeploymentItems()
     {
         var deploymentItemAttributes = new[]
-                                           {
-                                               new KeyValuePair<string, string>(
-                                                   _defaultDeploymentItemPath,
-                                                   _defaultDeploymentItemOutputDirectory),
-                                               new KeyValuePair<string, string>(
-                                                   _defaultDeploymentItemPath + "\\temp2",
-                                                   _defaultDeploymentItemOutputDirectory)
-                                           };
+        {
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory),
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath + "\\temp2",
+                _defaultDeploymentItemOutputDirectory)
+        };
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
         var deploymentItems =
@@ -121,21 +100,20 @@ public class DeploymentItemUtilityTests
                                                   deploymentItemAttributes[1].Value)
                                           };
 
-        CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
+        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
     }
 
-    [TestMethod]
     public void GetClassLevelDeploymentItemsShouldNotReturnDuplicateDeploymentItemEntries()
     {
         var deploymentItemAttributes = new[]
-                                           {
-                                               new KeyValuePair<string, string>(
-                                                   _defaultDeploymentItemPath,
-                                                   _defaultDeploymentItemOutputDirectory),
-                                               new KeyValuePair<string, string>(
-                                                   _defaultDeploymentItemPath,
-                                                   _defaultDeploymentItemOutputDirectory)
-                                           };
+        {
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory),
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory)
+        };
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
         var deploymentItems =
@@ -144,27 +122,26 @@ public class DeploymentItemUtilityTests
                 _warnings);
 
         var expectedDeploymentItems = new[]
-                                          {
-                                              new DeploymentItem(
-                                                  _defaultDeploymentItemPath,
-                                                  _defaultDeploymentItemOutputDirectory)
-                                          };
+        {
+            new DeploymentItem(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory)
+        };
 
-        CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
+        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
     }
 
-    [TestMethod]
     public void GetClassLevelDeploymentItemsShouldReportWarningsForInvalidDeploymentItems()
     {
         var deploymentItemAttributes = new[]
-                                           {
-                                               new KeyValuePair<string, string>(
-                                                   _defaultDeploymentItemPath,
-                                                   _defaultDeploymentItemOutputDirectory),
-                                               new KeyValuePair<string, string>(
-                                                   null,
-                                                   _defaultDeploymentItemOutputDirectory)
-                                           };
+        {
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory),
+            new KeyValuePair<string, string>(
+                null,
+                _defaultDeploymentItemOutputDirectory)
+        };
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
         var deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
@@ -176,36 +153,34 @@ public class DeploymentItemUtilityTests
                                                   _defaultDeploymentItemOutputDirectory)
                                           };
 
-        CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
-        Assert.AreEqual(1, _warnings.Count);
-        StringAssert.Contains(_warnings.ToArray()[0], Resource.DeploymentItemPathCannotBeNullOrEmpty);
+        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
+        Verify(1 == _warnings.Count);
+        Verify(_warnings.ToArray()[0].Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty));
     }
 
     #endregion
 
     #region GetDeploymentItems tests
 
-    [TestMethod]
     public void GetDeploymentItemsShouldReturnNullOnNoDeploymentItems()
     {
-        Assert.IsNull(_deploymentItemUtility.GetDeploymentItems(
+        Verify(_deploymentItemUtility.GetDeploymentItems(
             typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems"),
             null,
-            _warnings));
+            _warnings) is null);
     }
 
-    [TestMethod]
     public void GetDeploymentItemsShouldReturnMethodLevelDeploymentItemsOnly()
     {
         var deploymentItemAttributes = new[]
-                                              {
-                                               new KeyValuePair<string, string>(
-                                                   _defaultDeploymentItemPath,
-                                                   _defaultDeploymentItemOutputDirectory),
-                                               new KeyValuePair<string, string>(
-                                                   _defaultDeploymentItemPath + "\\temp2",
-                                                   _defaultDeploymentItemOutputDirectory)
-                                           };
+        {
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory),
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath + "\\temp2",
+                _defaultDeploymentItemOutputDirectory)
+        };
         var memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
                 "GetDeploymentItemsShouldReturnNullOnNoDeploymentItems");
@@ -217,22 +192,21 @@ public class DeploymentItemUtilityTests
             null,
             _warnings);
 
-        CollectionAssert.AreEqual(deploymentItemAttributes, deploymentItems.ToArray());
+        Verify(deploymentItemAttributes.SequenceEqual(deploymentItems.ToArray()));
     }
 
-    [TestMethod]
     public void GetDeploymentItemsShouldReturnClassLevelDeploymentItemsOnly()
     {
         // Arrange.
         var classLevelDeploymentItems = new DeploymentItem[]
-                                            {
-                                                new DeploymentItem(
-                                                    _defaultDeploymentItemPath,
-                                                    _defaultDeploymentItemOutputDirectory),
-                                                new DeploymentItem(
-                                                    _defaultDeploymentItemPath + "\\temp2",
-                                                    _defaultDeploymentItemOutputDirectory)
-                                            };
+        {
+            new DeploymentItem(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory),
+            new DeploymentItem(
+                _defaultDeploymentItemPath + "\\temp2",
+                _defaultDeploymentItemOutputDirectory)
+        };
 
         // Act.
         var deploymentItems = _deploymentItemUtility.GetDeploymentItems(
@@ -242,39 +216,38 @@ public class DeploymentItemUtilityTests
 
         // Assert.
         var expectedDeploymentItems = new[]
-                                          {
-                                              new KeyValuePair<string, string>(
-                                                  _defaultDeploymentItemPath,
-                                                  _defaultDeploymentItemOutputDirectory),
-                                              new KeyValuePair<string, string>(
-                                                  _defaultDeploymentItemPath + "\\temp2",
-                                                  _defaultDeploymentItemOutputDirectory)
-                                          };
+        {
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory),
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath + "\\temp2",
+                _defaultDeploymentItemOutputDirectory)
+        };
 
-        CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
+        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
     }
 
-    [TestMethod]
     public void GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItems()
     {
         // Arrange.
         var deploymentItemAttributes = new[]
-                                              {
-                                               new KeyValuePair<string, string>(
-                                                   _defaultDeploymentItemPath,
-                                                   _defaultDeploymentItemOutputDirectory)
-                                           };
+        {
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory)
+        };
         var memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
                 "GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItems");
         SetupDeploymentItems(memberInfo, deploymentItemAttributes);
 
         var classLevelDeploymentItems = new[]
-                                            {
-                                                new DeploymentItem(
-                                                    _defaultDeploymentItemPath + "\\temp2",
-                                                    _defaultDeploymentItemOutputDirectory)
-                                            };
+        {
+            new DeploymentItem(
+                _defaultDeploymentItemPath + "\\temp2",
+                _defaultDeploymentItemOutputDirectory)
+        };
 
         // Act.
         var deploymentItems = _deploymentItemUtility.GetDeploymentItems(
@@ -284,45 +257,44 @@ public class DeploymentItemUtilityTests
 
         // Assert.
         var expectedDeploymentItems = new KeyValuePair<string, string>[]
-                                          {
-                                              new KeyValuePair<string, string>(
-                                                  _defaultDeploymentItemPath,
-                                                  _defaultDeploymentItemOutputDirectory),
-                                              new KeyValuePair<string, string>(
-                                                  _defaultDeploymentItemPath + "\\temp2",
-                                                  _defaultDeploymentItemOutputDirectory)
-                                          };
+        {
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory),
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath + "\\temp2",
+                _defaultDeploymentItemOutputDirectory)
+        };
 
-        CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
+        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems));
     }
 
-    [TestMethod]
     public void GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItemsWithoutDuplicates()
     {
         // Arrange.
         var deploymentItemAttributes = new[]
-                                              {
-                                               new KeyValuePair<string, string>(
-                                                   _defaultDeploymentItemPath,
-                                                   _defaultDeploymentItemOutputDirectory),
-                                               new KeyValuePair<string, string>(
-                                                   _defaultDeploymentItemPath + "\\temp2",
-                                                   _defaultDeploymentItemOutputDirectory)
-                                           };
+        {
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory),
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath + "\\temp2",
+                _defaultDeploymentItemOutputDirectory)
+        };
         var memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
                 "GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItems");
         SetupDeploymentItems(memberInfo, deploymentItemAttributes);
 
         var classLevelDeploymentItems = new DeploymentItem[]
-                                            {
-                                                new DeploymentItem(
-                                                    _defaultDeploymentItemPath,
-                                                    _defaultDeploymentItemOutputDirectory),
-                                                new DeploymentItem(
-                                                    _defaultDeploymentItemPath + "\\temp1",
-                                                    _defaultDeploymentItemOutputDirectory)
-                                            };
+        {
+            new DeploymentItem(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory),
+            new DeploymentItem(
+                _defaultDeploymentItemPath + "\\temp1",
+                _defaultDeploymentItemOutputDirectory)
+        };
 
         // Act.
         var deploymentItems = _deploymentItemUtility.GetDeploymentItems(
@@ -332,53 +304,49 @@ public class DeploymentItemUtilityTests
 
         // Assert.
         var expectedDeploymentItems = new KeyValuePair<string, string>[]
-                                          {
-                                              new KeyValuePair<string, string>(
-                                                  _defaultDeploymentItemPath,
-                                                  _defaultDeploymentItemOutputDirectory),
-                                              new KeyValuePair<string, string>(
-                                                  _defaultDeploymentItemPath + "\\temp2",
-                                                  _defaultDeploymentItemOutputDirectory),
-                                              new KeyValuePair<string, string>(
-                                                  _defaultDeploymentItemPath + "\\temp1",
-                                                  _defaultDeploymentItemOutputDirectory)
-                                          };
+        {
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory),
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath + "\\temp2",
+                _defaultDeploymentItemOutputDirectory),
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath + "\\temp1",
+                _defaultDeploymentItemOutputDirectory)
+        };
 
-        CollectionAssert.AreEqual(expectedDeploymentItems, deploymentItems.ToArray());
+        Verify(expectedDeploymentItems.SequenceEqual(deploymentItems));
     }
 
     #endregion
 
     #region IsValidDeploymentItem tests
 
-    [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsNull()
     {
-        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem(null, _defaultDeploymentItemOutputDirectory, out var warning));
+        Verify(!DeploymentItemUtility.IsValidDeploymentItem(null, _defaultDeploymentItemOutputDirectory, out var warning));
 
-        StringAssert.Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty, warning);
+        Verify(Resource.DeploymentItemPathCannotBeNullOrEmpty.Contains(warning));
     }
 
-    [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathIsEmpty()
     {
-        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem(string.Empty, _defaultDeploymentItemOutputDirectory, out var warning));
+        Verify(!DeploymentItemUtility.IsValidDeploymentItem(string.Empty, _defaultDeploymentItemOutputDirectory, out var warning));
 
-        StringAssert.Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty, warning);
+        Verify(Resource.DeploymentItemPathCannotBeNullOrEmpty.Contains(warning));
     }
 
-    [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsNull()
     {
-        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, null, out var warning));
+        Verify(!DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, null, out var warning));
 
         StringAssert.Contains(Resource.DeploymentItemOutputDirectoryCannotBeNull, warning);
     }
 
-    [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfSourcePathHasInvalidCharacters()
     {
-        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem("C:<>", _defaultDeploymentItemOutputDirectory, out var warning));
+        Verify(!DeploymentItemUtility.IsValidDeploymentItem("C:<>", _defaultDeploymentItemOutputDirectory, out var warning));
 
         StringAssert.Contains(
             string.Format(
@@ -388,10 +356,9 @@ public class DeploymentItemUtilityTests
             warning);
     }
 
-    [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfOutputDirectoryHasInvalidCharacters()
     {
-        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "<>", out var warning));
+        Verify(!DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "<>", out var warning));
 
         StringAssert.Contains(
             string.Format(
@@ -401,10 +368,9 @@ public class DeploymentItemUtilityTests
             warning);
     }
 
-    [TestMethod]
     public void IsValidDeploymentItemShouldReportWarningIfDeploymentOutputDirectoryIsRooted()
     {
-        Assert.IsFalse(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "C:\\temp", out var warning));
+        Verify(!DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, "C:\\temp", out var warning));
 
         StringAssert.Contains(
            string.Format(
@@ -413,39 +379,36 @@ public class DeploymentItemUtilityTests
            warning);
     }
 
-    [TestMethod]
     public void IsValidDeploymentItemShouldReturnTrueForAValidDeploymentItem()
     {
-        Assert.IsTrue(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, _defaultDeploymentItemOutputDirectory, out var warning));
+        Verify(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, _defaultDeploymentItemOutputDirectory, out var warning));
 
-        Assert.IsTrue(string.Empty.Equals(warning));
+        Verify(string.Empty.Equals(warning));
     }
     #endregion
 
     #region HasDeployItems tests
 
-    [TestMethod]
     public void HasDeployItemsShouldReturnFalseForNoDeploymentItems()
     {
         TestCase testCase = new("A.C.M", new System.Uri("executor://testExecutor"), "A");
         testCase.SetPropertyValue(DeploymentItemsProperty, null);
 
-        Assert.IsFalse(DeploymentItemUtility.HasDeploymentItems(testCase));
+        Verify(!DeploymentItemUtility.HasDeploymentItems(testCase));
     }
 
-    [TestMethod]
     public void HasDeployItemsShouldReturnTrueWhenDeploymentItemsArePresent()
     {
         TestCase testCase = new("A.C.M", new System.Uri("executor://testExecutor"), "A");
         var kvpArray = new[]
-                {
-                    new KeyValuePair<string, string>(
-                        _defaultDeploymentItemPath,
-                        _defaultDeploymentItemOutputDirectory)
-                };
+        {
+            new KeyValuePair<string, string>(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory)
+        };
         testCase.SetPropertyValue(DeploymentItemsProperty, kvpArray);
 
-        Assert.IsTrue(DeploymentItemUtility.HasDeploymentItems(testCase));
+        Verify(DeploymentItemUtility.HasDeploymentItems(testCase));
     }
 
     #endregion
@@ -454,18 +417,18 @@ public class DeploymentItemUtilityTests
 
     private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
     {
-        var deploymentItemAttributes = new List<TestFrameworkV2Extension.DeploymentItemAttribute>();
+        var deploymentItemAttributes = new List<DeploymentItemAttribute>();
 
         foreach (var deploymentItem in deploymentItems)
         {
-            deploymentItemAttributes.Add(new TestFrameworkV2Extension.DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
+            deploymentItemAttributes.Add(new DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
         }
 
         _mockReflectionUtility.Setup(
             ru =>
             ru.GetCustomAttributes(
                 memberInfo,
-                typeof(TestFrameworkV2Extension.DeploymentItemAttribute))).Returns((object[])deploymentItemAttributes.ToArray());
+                typeof(DeploymentItemAttribute))).Returns((object[])deploymentItemAttributes.ToArray());
     }
 
     #endregion

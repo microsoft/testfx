@@ -4,39 +4,32 @@
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
-extern alias FrameworkV1;
-
 using System;
 using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestCleanup = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class AppDomainUtilitiesTests
+public class AppDomainUtilitiesTests : TestContainer
 {
-    private TestableXmlUtilities _testableXmlUtilities;
+    private readonly TestableXmlUtilities _testableXmlUtilities;
 
-    [TestInitialize]
-    public void TestInit()
+    public AppDomainUtilitiesTests()
     {
         _testableXmlUtilities = new TestableXmlUtilities();
         AppDomainUtilities.XmlUtilities = _testableXmlUtilities;
     }
 
-    [TestCleanup]
-    public void TestCleanup()
+    protected override void Dispose(bool disposing)
     {
-        AppDomainUtilities.XmlUtilities = null;
+        if (!IsDisposed)
+        {
+            base.Dispose(disposing);
+            AppDomainUtilities.XmlUtilities = null;
+        }
     }
 
-    [TestMethod]
     public void SetConfigurationFileShouldSetOMRedirectionIfConfigFileIsPresent()
     {
         AppDomainSetup setup = new();
@@ -50,7 +43,7 @@ public class AppDomainUtilitiesTests
         AppDomainUtilities.SetConfigurationFile(setup, configFile);
 
         // Assert Config file being set.
-        Assert.AreEqual(configFile, setup.ConfigurationFile);
+        Verify(configFile == setup.ConfigurationFile);
 
         // Assert Config Bytes.
         var expectedRedir = "<dependentAssembly><assemblyIdentity name=\"Microsoft.VisualStudio.TestPlatform.ObjectModel\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"11.0.0.0\" newVersion=\"15.0.0.0\" />";
@@ -58,10 +51,9 @@ public class AppDomainUtilitiesTests
         var observedConfigBytes = setup.GetConfigurationBytes();
         var observedXml = System.Text.Encoding.UTF8.GetString(observedConfigBytes);
 
-        Assert.IsTrue(observedXml.Replace("\r\n", string.Empty).Replace(" ", string.Empty).Contains(expectedRedir.Replace(" ", string.Empty)), "Config must have OM redirection");
+        Verify(observedXml.Replace("\r\n", string.Empty).Replace(" ", string.Empty).Contains(expectedRedir.Replace(" ", string.Empty)), "Config must have OM redirection");
     }
 
-    [TestMethod]
     public void SetConfigurationFileShouldSetToCurrentDomainsConfigFileIfSourceDoesNotHaveAConfig()
     {
         AppDomainSetup setup = new();
@@ -69,31 +61,29 @@ public class AppDomainUtilitiesTests
         AppDomainUtilities.SetConfigurationFile(setup, null);
 
         // Assert Config file being set.
-        Assert.AreEqual(AppDomain.CurrentDomain.SetupInformation.ConfigurationFile, setup.ConfigurationFile);
+        Verify(AppDomain.CurrentDomain.SetupInformation.ConfigurationFile == setup.ConfigurationFile);
 
-        Assert.IsNull(setup.GetConfigurationBytes());
+        Verify(setup.GetConfigurationBytes() is null);
     }
 
-    [TestMethod]
     public void GetTargetFrameworkVersionFromVersionStringShouldReturnDefaultVersionIfversionIsPortable()
     {
         var expected = new Version();
 
         var version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETPortable,Version=v4.5,Profile=Profile259");
 
-        Assert.AreEqual(expected.Major, version.Major);
-        Assert.AreEqual(expected.Minor, version.Minor);
+        Verify(expected.Major == version.Major);
+        Verify(expected.Minor == version.Minor);
     }
 
-    [TestMethod]
     public void GetTargetFrameworkVersionFromVersionStringShouldReturnCurrectVersion()
     {
         var expected = new Version("4.5");
 
         var version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETFramework,Version=v4.5");
 
-        Assert.AreEqual(expected.Major, version.Major);
-        Assert.AreEqual(expected.Minor, version.Minor);
+        Verify(expected.Major == version.Major);
+        Verify(expected.Minor == version.Minor);
     }
 
     #region Testable Implementations

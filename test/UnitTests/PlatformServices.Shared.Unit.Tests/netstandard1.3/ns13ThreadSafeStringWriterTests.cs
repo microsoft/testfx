@@ -3,35 +3,21 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using StringAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-using UnitTestOutcome = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
-#endif
-
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
-[TestClass]
-public class ThreadSafeStringWriterTests
+using TestFramework.ForTestingMSTest;
+
+public class ThreadSafeStringWriterTests : TestContainer
 {
     private bool _task2flag;
 
-    [TestMethod]
     public void ThreadSafeStringWriterWritesLinesFromDifferentTasksSeparately()
     {
         // Suppress the flow of parent context here because this test method will run in
@@ -77,18 +63,19 @@ public class ThreadSafeStringWriterTests
 
             // there was no output in the current task, the output should be empty
             var content = stringWriter.ToString();
-            content.Should().BeNullOrWhiteSpace();
+            Verify(string.IsNullOrWhiteSpace(content));
 
             // task1 and task2 should output into their respective buckets
-            task1Output.Should().NotBeNullOrWhiteSpace();
-            task2Output.Should().NotBeNullOrWhiteSpace();
+            Verify(!string.IsNullOrWhiteSpace(task1Output));
+            Verify(!string.IsNullOrWhiteSpace(task2Output));
 
-            task1Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Should().OnlyContain(i => i == "content1").And.HaveCount(8);
-            task2Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Should().OnlyContain(i => i == "content2").And.HaveCount(8);
+            var task1Split = task1Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            Verify(task1Split.SequenceEqual(Enumerable.Repeat("content1", 8)));
+            var task2Split = task2Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            Verify(task2Split.SequenceEqual(Enumerable.Repeat("content2", 8)));
         }
     }
 
-    [TestMethod]
     public void ThreadSafeStringWriterWritesLinesIntoDifferentWritesSeparately()
     {
         // Suppress the flow of parent context here becuase this test method will run in
@@ -120,14 +107,14 @@ public class ThreadSafeStringWriterTests
             }).GetAwaiter().GetResult();
 
             // task1 and task2 should output into their respective buckets
-            result.Out.Should().NotBeNullOrWhiteSpace();
-            result.Debug.Should().NotBeNullOrWhiteSpace();
+            Verify(!string.IsNullOrWhiteSpace(result.Out));
+            Verify(!string.IsNullOrWhiteSpace(result.Debug));
 
             var output = result.Out.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            output.Should().OnlyContain(i => i == "out").And.HaveCount(2);
+            Verify(output.SequenceEqual(new[] { "out", "out" }));
 
             var debug = result.Debug.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            debug.Should().OnlyContain(i => i == "debug").And.HaveCount(2);
+            Verify(debug.SequenceEqual(new[] { "debug", "debug" }));
         }
     }
 }

@@ -3,38 +3,26 @@
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
-
 using System;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using TestUtilities;
+
+using TestFramework.ForTestingMSTest;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
-[TestClass]
-public class TraceListenerTests
+public class TraceListenerTests : TestContainer
 {
 #if !WIN_UI
-    [TestMethod]
     public void GetWriterShouldReturnInitializedWriter()
     {
         StringWriter writer = new(new StringBuilder("DummyTrace"));
         var traceListener = new TraceListenerWrapper(writer);
         var returnedWriter = traceListener.GetWriter();
-        Assert.AreEqual("DummyTrace", returnedWriter.ToString());
+        Verify("DummyTrace" == returnedWriter.ToString());
     }
 
-    [TestMethod]
     public void DisposeShouldDisposeCorrespondingTextWriter()
     {
         StringWriter writer = new(new StringBuilder("DummyTrace"));
@@ -43,7 +31,8 @@ public class TraceListenerTests
 
         // Trying to write after disposing textWriter should throw exception
         void shouldThrowException() => writer.WriteLine("Try to write something");
-        ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
+        var ex = VerifyThrows(shouldThrowException);
+        Verify(ex is ObjectDisposedException);
     }
 #endif
 }

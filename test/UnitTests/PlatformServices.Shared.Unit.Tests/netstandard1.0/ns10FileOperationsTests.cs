@@ -3,35 +3,22 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Services;
 
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
-
 using System;
 using System.IO;
 using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using MSTestAdapter.TestUtilities;
 
-[TestClass]
-public class FileOperationsTests
+using TestFramework.ForTestingMSTest;
+
+public class FileOperationsTests : TestContainer
 {
-    private FileOperations _fileOperations;
+    private readonly FileOperations _fileOperations;
 
-    [TestInitialize]
-    public void TestInit()
+    public FileOperationsTests()
     {
         _fileOperations = new FileOperations();
     }
 
-    [TestMethod]
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
     {
         var filePath = "temp<>txt";
@@ -44,18 +31,18 @@ public class FileOperationsTests
         expectedException = typeof(ArgumentException);
 #endif
 
-        ActionUtility.ActionShouldThrowExceptionOfType(a, expectedException);
+        var ex = VerifyThrows(a);
+        Verify(ex.GetType() == expectedException);
     }
 
-    [TestMethod]
     public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound()
     {
         var filePath = "temptxt";
         void a() => _fileOperations.LoadAssembly(filePath, false);
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
+        var ex = VerifyThrows(a);
+        Verify(ex is FileNotFoundException);
     }
 
-    [TestMethod]
     public void LoadAssemblyShouldLoadAssemblyInCurrentContext()
     {
         var filePath = typeof(FileOperationsTests).GetTypeInfo().Assembly.Location;
@@ -65,19 +52,17 @@ public class FileOperationsTests
     }
 
 #if !WIN_UI
-    [TestMethod]
     public void DoesFileExistReturnsTrueForAllFiles()
     {
-        Assert.IsTrue(_fileOperations.DoesFileExist(null));
-        Assert.IsTrue(_fileOperations.DoesFileExist("foobar"));
+        Verify(_fileOperations.DoesFileExist(null));
+        Verify(_fileOperations.DoesFileExist("foobar"));
     }
 #endif
 
-    [TestMethod]
     public void GetFullFilePathShouldReturnAssemblyFileName()
     {
-        Assert.IsNull(_fileOperations.GetFullFilePath(null));
-        Assert.AreEqual("assemblyFileName", _fileOperations.GetFullFilePath("assemblyFileName"));
+        Verify(_fileOperations.GetFullFilePath(null) is null);
+        Verify("assemblyFileName" == _fileOperations.GetFullFilePath("assemblyFileName"));
     }
 }
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
