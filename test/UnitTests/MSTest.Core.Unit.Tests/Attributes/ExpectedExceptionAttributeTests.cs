@@ -6,7 +6,7 @@ namespace UnitTestFramework.Tests;
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using global::TestFramework.ForTestingMSTest;
+using TestFramework.ForTestingMSTest;
 
 /// <summary>
 /// Tests for class ExpectedExceptionAttribute
