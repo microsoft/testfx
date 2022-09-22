@@ -3,9 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 
-using System;
 using System.Globalization;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using global::TestFramework.ForTestingMSTest;
