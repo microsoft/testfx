@@ -135,7 +135,7 @@ public class TestContextImplementationTests : TestContainer
         Verify(_testContextImplementation.Properties[property.Key].Equals(property.Value));
     }
 
-#if !WIN_UI
+#if !WIN_UI && !WINDOWS_UWP
     public void AddResultFileShouldThrowIfFileNameIsNull()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
