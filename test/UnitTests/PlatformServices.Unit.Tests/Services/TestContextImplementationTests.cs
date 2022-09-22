@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NET48
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 using System;
@@ -337,7 +336,7 @@ public class TestContextImplementationTests : TestContainer
         Verify(string.Empty == stringWriter.ToString());
     }
 
-#if NETFRAMEWORK
+#if NET462
     public void SetDataRowShouldSetDataRowObjectForCurrentRun()
     {
         var stringWriter = new ThreadSafeStringWriter(null, "test");
@@ -348,7 +347,7 @@ public class TestContextImplementationTests : TestContainer
         // create the table with the appropriate column names
         dataTable.Columns.Add("Id", typeof(int));
         dataTable.Columns.Add("Name", typeof(string));
-
+        
         dataTable.LoadDataRow(new object[] { 2, "Hello" }, true);
 
         _testContextImplementation.SetDataRow(dataTable.Select()[0]);
@@ -412,4 +411,3 @@ public class TestContextImplementationTests : TestContainer
 #endif
 #endif
 }
-#endif
