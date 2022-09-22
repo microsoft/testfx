@@ -29,12 +29,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\ns10DiaSessionOperationsTests.cs" Link="Services\ns10DiaSessionOperationsTests.cs" />
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\ns10TestSourceHostTests.cs" Link="Services\ns10TestSourceHostTests.cs" />
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\ns10AssemblyAttributes.cs" Link="Services\ns10AssemblyAttributes.cs" />
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\ns10ReflectionOperationsTests.cs" Link="Services\ns10ReflectionOperationsTests.cs" />
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\ns10TestContextImplementationTests.cs" Link="Services\ns10TestContextImplementationTests.cs" />
-    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\ns10ThreadOperationsTests.cs" Link="Services\ns10ThreadOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\DiaSessionOperationsTests.cs" Link="Services\DiaSessionOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\TestSourceHostTests.cs" Link="Services\TestSourceHostTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\AssemblyAttributes.cs" Link="Services\AssemblyAttributes.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\ReflectionOperationsTests.cs" Link="Services\ReflectionOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\TestContextImplementationTests.cs" Link="Services\TestContextImplementationTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\PlatformServices.Unit.Tests\Services\ThreadOperationsTests.cs" Link="Services\ThreadOperationsTests.cs" />
   </ItemGroup>
 
 </Project>
