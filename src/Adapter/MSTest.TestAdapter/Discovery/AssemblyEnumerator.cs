@@ -160,7 +160,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var map = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase); // Exception -> null.
         var errorDetails = new StringBuilder();
 
-        if (ex.LoaderExceptions != null)
+        if (ex.LoaderExceptions?.Length > 0)
         {
             // Loader exceptions can contain duplicates, leave only unique exceptions.
             foreach (var loaderException in ex.LoaderExceptions)
