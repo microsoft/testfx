@@ -4,22 +4,17 @@
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
-extern alias FrameworkV1;
-
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
 #pragma warning disable SA1649 // File name must match first type name
-public class ReflectionUtilityTests
+public class ReflectionUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
 {
     private readonly ReflectionUtility _reflectionUtility;
@@ -29,18 +24,17 @@ public class ReflectionUtilityTests
         _reflectionUtility = new ReflectionUtility();
     }
 
-    [TestMethod]
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
     {
         var asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
 
-        var attribs = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
+        var attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
-        Assert.IsNotNull(attribs);
-        Assert.AreEqual(2, attribs.Length);
+        Verify(attributes is not null);
+        Verify(2 == attributes.Length);
 
-        var expectedAttribs = new string[] { "DummyA : a1", "DummyA : a2" };
-        CollectionAssert.AreEqual(expectedAttribs, GetAttributeValuePairs(attribs));
+        var expectedAttributes = new string[] { "DummyA : a1", "DummyA : a2" };
+        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     internal static string[] GetAttributeValuePairs(object[] attributes)

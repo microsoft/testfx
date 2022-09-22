@@ -3,18 +3,6 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Utilities;
 
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -23,22 +11,22 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Moq;
 
-[TestClass]
+using TestFramework.ForTestingMSTest;
+
 #pragma warning disable SA1649 // File name must match first type name
-public class DeploymentUtilityTests
+public class DeploymentUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
 {
     private const string TestRunDirectory = "C:\\temp\\testRunDirectory";
     private const string RootDeploymentDirectory = "C:\\temp\\testRunDirectory\\Deploy";
 
-    private Mock<ReflectionUtility> _mockReflectionUtility;
-    private Mock<FileUtility> _mockFileUtility;
-    private Mock<AssemblyUtility> _mockAssemblyUtility;
-    private DeploymentUtility _deploymentUtility;
-    private Mock<IRunContext> _mockRunContext;
+    private readonly Mock<ReflectionUtility> _mockReflectionUtility;
+    private readonly Mock<FileUtility> _mockFileUtility;
+    private readonly Mock<AssemblyUtility> _mockAssemblyUtility;
+    private readonly DeploymentUtility _deploymentUtility;
+    private readonly Mock<IRunContext> _mockRunContext;
 
-    [TestInitialize]
-    public void TestInit()
+    public DeploymentUtilityTests()
     {
         _mockReflectionUtility = new Mock<ReflectionUtility>();
         _mockFileUtility = new Mock<FileUtility>();
@@ -54,7 +42,6 @@ public class DeploymentUtilityTests
 
     #region CreateDeploymentDirectories tests
 
-    [TestMethod]
     public void CreateDeploymentDirectoriesShouldCreateDeploymentDirectoryFromRunContext()
     {
         // Setup mocks
@@ -72,7 +59,6 @@ public class DeploymentUtilityTests
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
     }
 
-    [TestMethod]
     public void CreateDeploymentDirectoriesShouldCreateDefaultDeploymentDirectoryIfTestRunDirectoryIsNull()
     {
         // Setup mocks
@@ -90,7 +76,6 @@ public class DeploymentUtilityTests
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(Path.Combine(Path.Combine(RootDeploymentDirectory, TestRunDirectories.DeploymentInDirectorySuffix), Environment.MachineName)), Times.Once);
     }
 
-    [TestMethod]
     public void CreateDeploymentDirectoriesShouldCreateDefaultDeploymentDirectoryIfRunContextIsNull()
     {
         // Setup mocks

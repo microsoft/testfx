@@ -3,30 +3,17 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Services;
 
-#if NETCOREAPP1_0
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Moq;
 
-[TestClass]
-public class SettingsProviderTests
+using TestFramework.ForTestingMSTest;
+
+public class SettingsProviderTests : TestContainer
 {
-    [TestMethod]
     public void GetPropertiesShouldReturnEmptyDictionary()
     {
         MSTestSettingsProvider settings = new();
 
-        Assert.AreEqual(0, settings.GetProperties(It.IsAny<string>()).Count);
+        Verify(0 == settings.GetProperties(It.IsAny<string>()).Count);
     }
 }
-
-#pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
-

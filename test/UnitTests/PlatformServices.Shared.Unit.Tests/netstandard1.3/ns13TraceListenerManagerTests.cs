@@ -3,30 +3,19 @@
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
-
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using TestUtilities;
+
+using TestFramework.ForTestingMSTest;
 
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 
-[TestClass]
-public class TraceListenerManagerTests
+public class TraceListenerManagerTests : TestContainer
 {
 #if !WIN_UI
-    [TestMethod]
     public void AddShouldAddTraceListenerToListOfTraceListeners()
     {
         var stringWriter = new StringWriter();
@@ -37,11 +26,10 @@ public class TraceListenerManagerTests
         traceListenerManager.Add(traceListener);
         var newCount = Trace.Listeners.Count;
 
-        Assert.AreEqual(originalCount + 1, newCount);
-        Assert.IsTrue(Trace.Listeners.Contains(traceListener));
+        Verify(originalCount + 1 == newCount);
+        Verify(Trace.Listeners.Contains(traceListener));
     }
 
-    [TestMethod]
     public void RemoveShouldRemoveTraceListenerFromListOfTraceListeners()
     {
         var stringWriter = new StringWriter();
@@ -55,12 +43,11 @@ public class TraceListenerManagerTests
         traceListenerManager.Remove(traceListener);
         var countAfterRemoving = Trace.Listeners.Count;
 
-        Assert.AreEqual(originalCount + 1, countAfterAdding);
-        Assert.AreEqual(countAfterAdding - 1, countAfterRemoving);
-        Assert.IsFalse(Trace.Listeners.Contains(traceListener));
+        Verify(originalCount + 1 == countAfterAdding);
+        Verify(countAfterAdding - 1 == countAfterRemoving);
+        Verify(!Trace.Listeners.Contains(traceListener));
     }
 
-    [TestMethod]
     public void DisposeShouldCallDisposeOnCorrespondingTraceListener()
     {
         var stringWriter = new StringWriter();
@@ -73,7 +60,8 @@ public class TraceListenerManagerTests
 
         // Trying to write after closing textWriter should throw exception
         void shouldThrowException() => writer.WriteLine("Try to write something");
-        ActionUtility.ActionShouldThrowExceptionOfType(shouldThrowException, typeof(ObjectDisposedException));
+        var ex = VerifyThrows(shouldThrowException);
+        Verify(ex is ObjectDisposedException);
     }
 #endif
 }

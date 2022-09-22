@@ -3,30 +3,20 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Extensions;
 
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
 using System;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 
-[TestClass]
-public class ExceptionExtensionsTests
+using TestFramework.ForTestingMSTest;
+
+public class ExceptionExtensionsTests : TestContainer
 {
-    [TestMethod]
     public void GetExceptionMessageShouldReturnExceptionMessage()
     {
         Exception ex = new("something bad happened");
-        Assert.AreEqual("something bad happened", ex.GetExceptionMessage());
+        Verify("something bad happened" == ex.GetExceptionMessage());
     }
 
-    [TestMethod]
     public void GetExceptionMessageShouldReturnInnerExceptionMessageAsWell()
     {
         Exception ex = new("something bad happened", new Exception("inner exception", new Exception("the real exception")));
@@ -37,6 +27,6 @@ public class ExceptionExtensionsTests
             Environment.NewLine,
             "the real exception");
 
-        Assert.AreEqual(expectedMessage, ex.GetExceptionMessage());
+        Verify(expectedMessage == ex.GetExceptionMessage());
     }
 }

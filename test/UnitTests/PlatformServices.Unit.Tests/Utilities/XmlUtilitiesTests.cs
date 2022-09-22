@@ -4,31 +4,24 @@
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
-extern alias FrameworkV1;
-
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml;
 
+using TestFramework.ForTestingMSTest;
+
 using static AppDomainUtilitiesTests;
 
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-
-[TestClass]
-public class XmlUtilitiesTests
+public class XmlUtilitiesTests : TestContainer
 {
-    private TestableXmlUtilities _testableXmlUtilities;
+    private readonly TestableXmlUtilities _testableXmlUtilities;
 
-    [TestInitialize]
-    public void TestInit()
+    public XmlUtilitiesTests()
     {
         _testableXmlUtilities = new TestableXmlUtilities();
     }
 
-    [TestMethod]
     public void AddAssemblyRedirectionShouldAddRedirectionToAnEmptyXml()
     {
         _testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>";
@@ -53,10 +46,9 @@ public class XmlUtilitiesTests
             expectedConfigBytes = ms.ToArray();
         }
 
-        CollectionAssert.AreEqual(expectedConfigBytes, configBytes);
+        Verify(expectedConfigBytes.SequenceEqual(configBytes));
     }
 
-    [TestMethod]
     public void AddAssemblyRedirectionShouldAddRedirectionToAnEmptyConfig()
     {
         _testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
@@ -83,10 +75,9 @@ public class XmlUtilitiesTests
             expectedConfigBytes = ms.ToArray();
         }
 
-        CollectionAssert.AreEqual(expectedConfigBytes, configBytes);
+        Verify(expectedConfigBytes.SequenceEqual(configBytes));
     }
 
-    [TestMethod]
     public void AddAssemblyRedirectionShouldAddRedirectionToAConfigWithARuntimeSectionOnly()
     {
         _testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
@@ -115,10 +106,9 @@ public class XmlUtilitiesTests
             expectedConfigBytes = ms.ToArray();
         }
 
-        CollectionAssert.AreEqual(expectedConfigBytes, configBytes);
+        Verify(expectedConfigBytes.SequenceEqual(configBytes));
     }
 
-    [TestMethod]
     public void AddAssemblyRedirectionShouldAddRedirectionToAConfigWithRedirections()
     {
         _testableXmlUtilities.ConfigXml = "<?xml version=\"1.0\" encoding=\"utf-8\" ?><configuration><runtime><assemblyBinding xmlns=\"urn:schemas-microsoft-com:asm.v1\"><dependentAssembly><assemblyIdentity name=\"Random.UnitTests\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"99.99.99.99\" newVersion=\"14.0.0.0\" /></dependentAssembly></assemblyBinding></runtime></configuration>";
@@ -143,7 +133,7 @@ public class XmlUtilitiesTests
             expectedConfigBytes = ms.ToArray();
         }
 
-        CollectionAssert.AreEqual(expectedConfigBytes, configBytes);
+        Verify(expectedConfigBytes.SequenceEqual(configBytes));
     }
 }
 #endif

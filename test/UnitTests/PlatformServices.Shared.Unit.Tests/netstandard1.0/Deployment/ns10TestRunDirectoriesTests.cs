@@ -3,29 +3,20 @@
 
 namespace MSTestAdapter.PlatformServices.Tests.Deployment;
 
-#if NETCOREAPP
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-#else
-extern alias FrameworkV1;
-
-using Assert = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-#endif
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
-[TestClass]
-public class TestRunDirectoriesTests
+using TestFramework.ForTestingMSTest;
+
+public class TestRunDirectoriesTests : TestContainer
 {
     private readonly TestRunDirectories _testRunDirectories = new(@"C:\temp");
 
-    [TestMethod]
     public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory()
     {
-        Assert.AreEqual(
-            Path.Combine(@"C:\temp\In", Environment.MachineName),
-            _testRunDirectories.InMachineNameDirectory);
+        Verify(
+            Path.Combine(@"C:\temp\In", Environment.MachineName)
+            == _testRunDirectories.InMachineNameDirectory);
     }
 }
