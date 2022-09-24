@@ -1,10 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Adapter\MSTest.TestAdapter\Resources\xlf\Resource.xlf" PsrId="308" SrcCul="en-US" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx" TgtCul="de-DE">
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Adapter\MSTest.TestAdapter\Resources\xlf\Resource.xlf" PsrId="308" FileType="1" SrcCul="en-US" TgtCul="de-DE" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
     <Cmt Name="Rccx" />
   </OwnedComments>
+  <Settings Name="@vsLocTools@\default.lss" Type="Lss" />
   <Item ItemId=";Xliff file" ItemType="0" PsrId="308" Leaf="false">
     <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
     <Item ItemId=";Xliff Resources" ItemType="0" PsrId="308" Leaf="false">
@@ -12,405 +13,597 @@
       <Item ItemId=";AttachmentSetDisplayName" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[MSTestAdapterV2]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[MSTestAdapterV2]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Common_CannotBeNullOrEmpty" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The parameter should not be null or empty.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der Parameter darf nicht NULL oder leer sein.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Common_MustBeGreaterThanZero" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The parameter must be greater than zero.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der Parameter muss größer als Null sein.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CouldNotInspectTypeDuringDiscovery" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[MSTestAdapter failed to discover tests in class '{0}' of assembly '{1}' because {2}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fehler von 'MSTestAdapter' beim Ermitteln von Tests in der Klasse "{0}" der Assembly "{1}". Ursache: {2}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CouldNotInspectTypeDuringDiscovery1" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[MSTestAdapter failed to discover tests in class '{0}' of assembly '{1}'. Reason {2}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fehler von 'MSTestAdapter' beim Ermitteln von Tests in der Klasse "{0}" der Assembly "{1}". Ursache {2}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DataDrivenResultDisplayName" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} (Data Row {1})]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} (Datenzeile {1})]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DebugTraceBanner" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Debug Trace:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Debugablaufverfolgung:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DiscoveryWarning" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[[MSTest]5D;[Discovery]5D;[{0}]5D; {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[[MSTest]5D;[Discovery]5D;[{0}]5D; {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";EnumeratorLoadTypeErrorFormat" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0}: {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0}: {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Execution_Test_Cancelled" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test '{0}' execution has been aborted.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Ausführung des Tests "{0}" wurde abgebrochen.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Execution_Test_Timeout" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test '{0}' exceeded execution timeout period.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der Test "{0}" hat das Ausführungstimeout überschritten.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InvalidParallelScopeValue" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ungültiger Wert "{0}" für "Scope" angegeben. Unterstützte Bereiche: {1}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA['Scope' is a setting name that shouldn't be localized.;]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InvalidParallelWorkersValue" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ungültiger Wert "{0}" für "Workers" angegeben. Der Wert muss eine nicht negative Ganzzahl sein.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
-        <Cmts>
-          <Cmt Name="Dev"><![CDATA[`Workers` is a setting name that shouldn't be localized.;]]></Cmt>
-        </Cmts>
       </Item>
       <Item ItemId=";InvalidSettingsXmlAttribute" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ungültige Einstellungen "{0}". Unerwartetes XmlAttribute: "{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InvalidSettingsXmlElement" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid settings '{0}'. Unexpected XmlElement: '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ungültige Einstellungen "{0}". Unerwartetes XmlElement: "{1}".]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";LegacyScenariosNotSupportedWarning" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Warnung: Eine TESTSETTINGS-Datei oder eine VSMDI-Datei wird vom MSTest-V2-Adapter nicht unterstützt.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";SourcesNotSupported" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Running tests in any of the provided sources is not supported for the selected platform]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Das Ausführen von Tests in einer der angegebenen Quellen wird für die ausgewählte Plattform nicht unterstützt.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TestAssembly_AssemblyDiscoveryFailure" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to discover tests from assembly {0}. Reason:{1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fehler beim Ermitteln von Tests aus der Assembly "{0}". Ursache:{1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TestAssembly_FileDoesNotExist" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[File does not exist: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Datei ist nicht vorhanden: {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TestContextIsNull" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[TestContext cannot be Null.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA["TestContext" darf nicht NULL sein.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TestContextMessageBanner" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[TestContext Messages:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[TestContext-Meldungen:]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TestNotFound" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test method {0} was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Testmethode "{0}" wurde nicht gefunden.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TestParallelizationBanner" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[MSTest Executor: Test Parallelization enabled for {0} (Workers: {1}, Scope: {2}).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[MSTest-Executor: Testparallelisierung für "{0}" aktiviert (Worker: {1}, Bereich: {2}).]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TypeLoadFailed" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to load types from the test source '{0}'. Some or all of the tests in this source may not be discovered.]D;]A;Error: {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fehler beim Laden von Typen aus der Testquelle "{0}". Möglicherweise werden einige oder alle Tests in dieser Quelle nicht ermittelt.]D;]A;Fehler: {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_AssemblyCleanupMethodWasUnsuccesful" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fehler bei der Methode "{0}.{1}" für die Assemblybereinigung. Fehlermeldung: {2}. "StackTrace": {3}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_AssemblyInitMethodThrows" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Assembly Initialization method {0}.{1} threw exception. {2}: {3}. Aborting test execution.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Methode "{0}.{1}" für die Assemblyinitialisierung hat eine Ausnahme ausgelöst. {2}: {3}. Die Ausführung des Tests wird abgebrochen.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ClassCleanupMethodWasUnsuccesful" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Class Cleanup method {0}.{1} failed. Error Message: {2}. Stack Trace: {3}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fehler bei der Methode "{0}.{1}" für die Klassenbereinigung. Fehlermeldung: {2}. Stapelüberwachung: {3}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ClassInitMethodThrows" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Class Initialization method {0}.{1} threw exception. {2}: {3}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Methode "{0}.{1}" für die Klasseninitialisierung hat eine Ausnahme ausgelöst. {2}: {3}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ClassOrAssemblyCleanupMethodHasWrongSignature" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Methode "{0}.{1}" weist eine falsche Signatur auf. Die Methode muss statisch und öffentlich sein, gibt keinen Wert zurück und sollte keinen Parameter annehmen. Wenn Sie außerdem in der Methode "async-await" verwenden, muss der Rückgabetyp "Task" sein.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ClassOrAssemblyInitializeMethodHasWrongSignature" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be Task.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Methode {0}.{1} weist eine falsche Signatur auf. Die Methode muss statisch und öffentlich sein, gibt keinen Wert zurück und sollte einen einzigen Parameter vom Typ "TestContext" annehmen. Wenn Sie außerdem in der Methode "async-await" verwenden, muss der Rückgabetyp "Task" sein.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_CleanupMethodThrows" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[TestCleanup method {0}.{1} threw exception. {2}: {3}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die TestCleanup-Methode "{0}.{1}" hat eine Ausnahme ausgelöst. {2}: {3}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_CleanupMethodThrowsGeneralError" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error calling Test Cleanup method for test class {0}: {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fehler beim Aufruf der Testbereinigungsmethode für die Testklasse "{0}": {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_CleanupStackTrace" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[TestCleanup Stack Trace]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[TestCleanup-Stapelüberwachung]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_EndOfInnerExceptionTrace" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[--- End of inner exception stack trace ---]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[--- Ende der internen Ausnahmestapelüberwachung ---]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorGenericTestMethod" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA015: Eine generische Methode kann keine Testmethode sein. '{0}.{1}' weist eine ungültige Signatur auf.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorInValidTestContextSignature" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, public and must not be read-only. For example: public TestContext TestContext.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA031: Die Klasse '{0}' weist keine gültige Eigenschaft 'TestContext' auf. 'TestContext' muss vom Typ 'TestContext', nicht statisch und öffentlich sein und darf nicht schreibgeschützt sein. Beispiel: 'public TestContext TestContext'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorIncorrectTestMethodSignature" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod]5D; attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be Task. Example: public async Task Test.Class1.Test2()]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA007: Die in der Klasse {0} definierte Methode {1} weist nicht die richtige Signatur auf. Die mit dem [TestMethod]5D;-Attribut markierte Testmethode muss nicht statisch und öffentlich sein, muss den Rückgabetyp "void" aufweisen und darf keine Parameter annehmen. Beispiel: "public void Test.Class1.Test()". Wenn Sie "async-await" in der Testmethode verwenden, muss der Rückgabetyp außerdem "Task" sein. Beispiel: "public async Task Test.Class1.Test2()"]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorInvalidTimeout" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA054: "{0}.{1}" weist ein ungültiges Attribut "Timeout" auf. Das Timeout muss ein gültiger ganzzahliger Wert sein und darf nicht kleiner als 0 sein.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorMultiAssemblyClean" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA014: {0}: Cannot define more than one method with the AssemblyCleanup attribute inside an assembly.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA014: {0}: Es darf nur eine Methode mit dem Attribut 'AssemblyCleanup' innerhalb einer Assembly definiert werden.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorMultiAssemblyInit" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA013: {0}: Cannot define more than one method with the AssemblyInitialize attribute inside an assembly.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA013: {0}: Es darf nur eine Methode mit dem Attribut 'AssemblyInitialize' innerhalb einer Assembly definiert werden.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorMultiClassClean" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA026: {0}: Cannot define more than one method with the ClassCleanup attribute inside a class.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA026: {0}: Es darf nur eine Methode mit dem Attribut 'ClassCleanup' innerhalb einer Klasse definiert werden.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorMultiClassInit" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA025: {0}: Cannot define more than one method with the ClassInitialize attribute inside a class.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA025: {0}: Es darf nur eine Methode mit dem Attribut 'ClassInitialize' innerhalb einer Klasse definiert werden.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorMultiClean" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA024: {0}: Cannot define more than one method with the TestCleanup attribute.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA024: {0}: Es darf nur eine Methode mit dem Attribut 'TestCleanup' definiert werden.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorMultiInit" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA018: {0}: Cannot define more than one method with the TestInitialize attribute.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA018: {0}: Es darf nur eine Methode mit dem Attribut 'TestInitialize' definiert werden.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorNonPublicTestClass" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA001: TestClass attribute defined on non-public class {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA001: Für die nicht öffentliche Klasse '{0}' definiertes Attribut 'TestClass'.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorPredefinedTestProperty" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA023: {0}: Cannot define predefined property {2} on method {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA023: {0}: Die vordefinierte Eigenschaft "{2}" kann nicht für die Methode "{1}" definiert werden.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorTestPropertyAlreadyDefined" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA022: {0}.{1}: The custom property "{2}" is already defined. Using "{3}" as value.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA022: {0}.{1}: Die benutzerdefinierte Eigenschaft "{2}" ist bereits definiert. "{3}" wird als Wert verwendet.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorTestPropertyNullOrEmpty" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UTA021: {0}: Für die Methode "{1}" wurde eine benutzerdefinierte Eigenschaft mit dem Wert NULL oder eine benutzerdefinierte leere Eigenschaft definiert. Die benutzerdefinierte Eigenschaft muss einen gültigen Namen aufweisen.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ExecuteThrewException" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Während der Ausführung des Tests wurde eine Ausnahme ausgelöst. Wenn Sie eine Extension von "TestMethodAttribute" verwenden, wenden Sie sich bitte an den Anbieter. Fehlermeldung: {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ExpectedExceptionAttributeConstructionException" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The ExpectedException attribute defined on test method {0}.{1} threw an exception during construction.]D;]A;{2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Das für die Testmethode "{0}.{1}" definierte ExpectedException-Attribut hat während der Konstruktion eine Ausnahme ausgelöst.]D;]A;{2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_FailedToGetTestMethodException" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to obtain the exception thrown by test method {0}.{1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fehler beim Abrufen der von der Testmethode "{0}.{1}" ausgelösten Ausnahme.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_InitMethodThrows" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Initialization method {0}.{1} threw exception. {2}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Initialisierungsmethode '{0}.{1}' hat eine Ausnahme ausgelöst. {2}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_InstanceCreationError" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to create instance of class {0}. Error: {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Es kann keine Instanz der Klasse '{0}' erstellt werden. Fehler: {1}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_MethodDoesNotExists" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Method {0}.{1} does not exist.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Methode "{0}.{1}" ist nicht vorhanden.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_MultipleExpectedExceptionsOnTestMethod" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The test method {0}.{1} has multiple attributes derived from ExpectedExceptionBaseAttribute defined on it. Only one such attribute is allowed.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Für die Testmethode "{0}.{1}" sind mehrere Attribute definiert, die von ExpectedExceptionBaseAttribute abgeleitet werden. Nur ein einziges solches Attribut ist zulässig.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_NoDefaultConstructor" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to get default constructor for class {0}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der Standardkonstruktor für die Klasse "{0}" kann nicht abgerufen werden.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_NoTestResult" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fehler beim Ausführen des Tests. Von der Extension wurde kein Ergebnis zurückgegeben. Wenn Sie eine Extension von "TestMethodAttribute" verwenden, wenden Sie sich bitte an den Anbieter.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_TestContextLoadError" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to find property {0}.TestContext. Error:{1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Eigenschaft "{0}.TestContext" wurde nicht gefunden. Fehler: {1}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_TestContextSetError" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to set TestContext property for the class {0}. Error: {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Eigenschaft 'TestContext' für die Klasse '{0}' kann nicht festgelegt werden. Fehler: {1}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_TestContextTypeMismatchLoadError" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The {0}.TestContext has incorrect type.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA["{0}.TestContext" weist einen falschen Typ auf.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_TestInitializeAndCleanupMethodHasWrongSignature" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Methode "{0}.{1}" weist eine falsche Signatur auf. Die Methode muss nicht statisch und öffentlich sein, gibt keinen Wert zurück und sollte keinen Parameter annehmen. Wenn Sie außerdem in der Methode "async-await" verwenden, muss der Rückgabetyp "Task" sein.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_TestMethodExpectedParameters" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Only data driven test methods can have parameters. Did you intend to use [DataRow]5D; or [DynamicData]5D;?]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nur datengesteuerte Testmethoden können Parameter aufweisen. Wollten Sie [DataRow]5D; oder [DynamicData]5D; verwenden?]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_TestMethodThrows" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test method {0}.{1} threw exception: ]D;]A;{2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Testmethode "{0}.{1}" hat eine Ausnahme ausgelöst: ]D;]A;{2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_TypeLoadError" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unable to get type {0}. Error: {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der Typ "{0}" kann nicht abgerufen werden. Fehler: {1}.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_WrongThread" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} For UWP projects, if you are using UI objects in test consider using [UITestMethod]5D; attribute instead of [TestMethod]5D; to execute test in UI thread.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0}: Erwägen Sie für UWP-Projekte bei Einsatz von UI-Objekten im Test die Verwendung des [UITestMethod]5D;-Attributs anstelle von "[TestMethod]5D;", um den Test im UI-Thread auszuführen.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTF_FailedToGetExceptionMessage" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[(Failed to get the message for an exception of type {0} due to an exception.)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[(Fehler beim Abrufen der Meldung für eine Ausnahme vom Typ "{0}" aufgrund einer Ausnahme.)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
     </Item>
   </Item>
-<Settings Name="@vsLocTools@\default.lss" Type="Lss" /></LCX>
+</LCX>
