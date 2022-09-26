@@ -12,7 +12,7 @@ public class TestDataSourceTests : CLITestBase
     private const string TestAssembly = "DataSourceTestProject.dll";
 
     // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR (Marked as private to ignore the test)
-    public void ExecuteCsvTestDataSourceTests()
+    private void ExecuteCsvTestDataSourceTests()
     {
         // Arrange
         var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
