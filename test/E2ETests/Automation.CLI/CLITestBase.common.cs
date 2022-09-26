@@ -62,7 +62,8 @@ public partial class CLITestBase : TestContainer
     protected string GetAssetFullPath(string assetName)
     {
         var assetPath = Path.GetFullPath(Path.Combine(GetAssetFolderPath(), assetName));
-        Assert.IsTrue(File.Exists(assetPath), "GetTestAsset: Path not found: {0}.", assetPath);
+        // GetTestAsset: Path not found.
+        Verify(File.Exists(assetPath));
         return assetPath;
     }
 

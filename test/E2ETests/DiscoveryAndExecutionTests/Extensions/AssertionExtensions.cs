@@ -5,54 +5,55 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using TestFramework.ForTestingMSTest;
 
 using System.Collections.Generic;
 using System.Linq;
 
-using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using TestContainer = TestFramework.ForTestingMSTest.TestContainer;
 
-public static class AssertionExtensions
+public static class AssertionExtensions 
 {
-    public static void ContainsTestsDiscovered(this Assert _, IEnumerable<TestCase> actualTests, IEnumerable<string> expectedTests)
+    public static void ContainsTestsDiscovered(IEnumerable<TestCase> actualTests, IEnumerable<string> expectedTests)
         => ContainsTestsDiscovered(actualTests, expectedTests);
 
-    public static void PassedTestCount(this Assert _, IEnumerable<TestResult> actual, int expectedCount)
+    public static void PassedTestCount(IEnumerable<TestResult> actual, int expectedCount)
         => AssertOutcomeCount(actual, TestOutcome.Passed, expectedCount);
 
-    public static void FailedTestCount(this Assert _, IEnumerable<TestResult> actual, int expectedCount)
+    public static void FailedTestCount(IEnumerable<TestResult> actual, int expectedCount)
         => AssertOutcomeCount(actual, TestOutcome.Failed, expectedCount);
 
-    public static void TestsDiscovered(this Assert _, IEnumerable<TestCase> actualTests, IEnumerable<string> expectedTests)
+    public static void TestsDiscovered(IEnumerable<TestCase> actualTests, IEnumerable<string> expectedTests)
         => ContainsTestsDiscovered(actualTests, expectedTests, true);
 
-    public static void TestsDiscovered(this Assert _, IEnumerable<TestCase> actualTests, params string[] expectedTests)
+    public static void TestsDiscovered(IEnumerable<TestCase> actualTests, params string[] expectedTests)
         => ContainsTestsDiscovered(actualTests, expectedTests, true);
 
-    public static void AtLeastTestsDiscovered(this Assert _, IEnumerable<TestCase> actualTests, params string[] expectedTests)
+    public static void AtLeastTestsDiscovered(IEnumerable<TestCase> actualTests, params string[] expectedTests)
         => ContainsTestsDiscovered(actualTests, expectedTests, false);
 
-    public static void TestsPassed(this Assert _, IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
+    public static void TestsPassed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
         => ContainsExpectedTestsWithOutcome(actual, testCases, TestOutcome.Passed, expectedTests, true, settings);
 
-    public static void TestsPassed(this Assert _, IEnumerable<TestResult> actual, params string[] expectedTests)
+    public static void TestsPassed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests, true);
 
-    public static void TestsFailed(this Assert _, IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
+    public static void TestsFailed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
       => ContainsExpectedTestsWithOutcome(actual, testCases, TestOutcome.Failed, expectedTests, true, settings);
 
-    public static void TestsFailed(this Assert _, IEnumerable<TestResult> actual, params string[] expectedTests)
+    public static void TestsFailed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests, true);
 
-    public static void ContainsTestsPassed(this Assert _, IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
+    public static void ContainsTestsPassed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
         => ContainsExpectedTestsWithOutcome(actual, testCases, TestOutcome.Passed, expectedTests, false, settings);
 
-    public static void ContainsTestsPassed(this Assert _, IEnumerable<TestResult> actual, params string[] expectedTests)
+    public static void ContainsTestsPassed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests);
 
-    public static void ContainsTestsFailed(this Assert _, IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
+    public static void ContainsTestsFailed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
         => ContainsExpectedTestsWithOutcome(actual, testCases, TestOutcome.Failed, expectedTests, false, settings);
 
-    public static void ContainsTestsFailed(this Assert _, IEnumerable<TestResult> actual, params string[] expectedTests)
+    public static void ContainsTestsFailed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests);
 
     private static void ContainsTestsDiscovered(IEnumerable<TestCase> discoveredTests, IEnumerable<string> expectedTests, bool matchCount = false)
@@ -71,9 +72,8 @@ public static class AssertionExtensions
                 p => test.Equals(p.FullyQualifiedName)
                      || test.Equals(p.DisplayName)
                      || test.Equals(p.DisplayName));
-
-            Assert.IsTrue(testFound,
-                $"Test Discovery run was expecting to discover \"{test}\", but it has not discovered.");
+            // Test Discovery run was expecting to discover \"{test}\", but it has not discovered.
+            TestContainer.Verify(testFound);
         }
     }
 
@@ -92,7 +92,7 @@ public static class AssertionExtensions
                      || test.Equals(p.DisplayName)
                      || test.Equals(p.TestCase.DisplayName));
 
-            Assert.IsTrue(testFound, GetOutcomeAssertString(test, expectedOutcome));
+            TestContainer.Verify(testFound);
         }
     }
 
@@ -108,7 +108,7 @@ public static class AssertionExtensions
         {
             var testFound = outcomedTests.Any(p => p.DisplayName == test);
 
-            Assert.IsTrue(testFound, GetOutcomeAssertString(test, expectedOutcome));
+            TestContainer.Verify(testFound);
         }
     }
 
@@ -134,10 +134,12 @@ public static class AssertionExtensions
     }
     private static void AssertOutcomeCount(int actualCount, int expectedCount)
     {
-        Assert.AreEqual(expectedCount, actualCount, $"Test run expected to contain {expectedCount} tests, but ran {actualCount}.");
+        // Test run expected to contain {expectedCount} tests, but ran {actualCount}.
+        TestContainer.Verify(expectedCount == actualCount);
     }
     private static void AssertDiscoveryCount(int actualCount, int expectedCount)
     {
-        Assert.AreEqual(expectedCount, actualCount, $"Test discovery expected to contain {expectedCount} tests, but ran {actualCount}.");
+        // Test discovery expected to contain {expectedCount} tests, but ran {actualCount}.
+        TestContainer.Verify(expectedCount == actualCount);
     }
 }

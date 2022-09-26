@@ -10,15 +10,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using System.Linq;
 
-[TestClass]
 public class DataSourceTests : CLITestBase
 {
     private const string TestAssembly = "DataSourceTestProject.dll";
 
-    // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR
-    [Ignore]
-    [TestMethod]
-    public void ExecuteCsvTestDataSourceTests()
+    // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR (Marked as private to ignore the test)
+    private void ExecuteCsvTestDataSourceTests()
     {
         // Arrange
         var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
@@ -28,12 +25,11 @@ public class DataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.ContainsTestsPassed(testResults,
+        AssertionExtensions.ContainsTestsPassed(testResults,
             "CsvTestMethod (Data Row 0)",
             "CsvTestMethod (Data Row 2)"
         );
-
-        Assert.That.ContainsTestsFailed(testResults,
+        AssertionExtensions.ContainsTestsFailed(testResults,
             "CsvTestMethod (Data Row 1)",
             "CsvTestMethod (Data Row 3)"
         );

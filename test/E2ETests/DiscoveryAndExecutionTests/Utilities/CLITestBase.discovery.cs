@@ -18,7 +18,9 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 
-public partial class CLITestBase
+using TestFramework.ForTestingMSTest;
+
+public partial class CLITestBase : TestContainer
 {
     internal ReadOnlyCollection<TestCase> DiscoverTests(string assemblyPath, string testCaseFilter = null)
     {

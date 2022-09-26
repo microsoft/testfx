@@ -9,12 +9,10 @@ using System.IO;
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
 public class DiscoverInternalsTests : CLITestBase
 {
     private const string TestAssembly = "DiscoverInternalsProject.dll";
 
-    [TestMethod]
     public void InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
     {
         // Arrange
@@ -25,14 +23,13 @@ public class DiscoverInternalsTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.AtLeastTestsDiscovered(
+        AssertionExtensions.AtLeastTestsDiscovered(
             testCases,
             "TopLevelInternalClass_TestMethod1",
             "NestedInternalClass_TestMethod1"
         );
     }
 
-    [TestMethod]
     public void AnInternalTestClassDerivedFromAPublicAbstractGenericBaseClassForAnInternalTypeIsDiscovered()
     {
         // Arrange
@@ -42,13 +39,12 @@ public class DiscoverInternalsTests : CLITestBase
         var testCases = DiscoverTests(assemblyPath);
 
         // Assert
-        Assert.That.AtLeastTestsDiscovered(
+        AssertionExtensions.AtLeastTestsDiscovered(
             testCases,
             "EqualityIsCaseInsensitive"
         );
     }
 
-    [TestMethod]
     public void AnInternalTypeCanBeUsedInADynamicDataTestMethod()
     {
         var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
@@ -61,7 +57,7 @@ public class DiscoverInternalsTests : CLITestBase
         var testResults = RunTests(assemblyPath, targetTestCases);
 
         // Assert
-        Assert.That.TestsPassed(
+        AssertionExtensions.TestsPassed(
             testResults,
             "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)"
         );

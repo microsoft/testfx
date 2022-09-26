@@ -10,14 +10,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using System.Linq;
 
-[TestClass]
 public class TestDataSourceTests : CLITestBase
 {
     private const string TestAssembly = "DataSourceTestProject.dll";
 
-    // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR
-    [Ignore]
-    [TestMethod]
+    // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR (Marked as private to ignore the test)
     public void ExecuteCsvTestDataSourceTests()
     {
         // Arrange
@@ -28,18 +25,17 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.ContainsTestsPassed(testResults,
+        AssertionExtensions.ContainsTestsPassed(testResults,
             "CsvTestMethod (Data Row 0)",
             "CsvTestMethod (Data Row 2)"
         );
 
-        Assert.That.ContainsTestsFailed(testResults,
+        AssertionExtensions.ContainsTestsFailed(testResults,
             "CsvTestMethod (Data Row 1)",
             "CsvTestMethod (Data Row 3)"
         );
     }
 
-    [TestMethod]
     public void ExecuteDynamicDataTests()
     {
         // Arrange
@@ -50,14 +46,13 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.ContainsTestsPassed(testResults,
+        AssertionExtensions.ContainsTestsPassed(testResults,
             "DynamicDataTest (John;Doe,DataSourceTestProject.ITestDataSourceTests.User)"
         );
 
-        Assert.That.FailedTestCount(testResults, 0);
+        AssertionExtensions.FailedTestCount(testResults, 0);
     }
 
-    [TestMethod]
     public void ExecuteDataRowTests_Enums()
     {
         // Arrange
@@ -68,7 +63,7 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRowEnums_SByte (Alfa)",
             "DataRowEnums_SByte (Beta)",
             "DataRowEnums_SByte (Gamma)",
@@ -132,10 +127,9 @@ public class TestDataSourceTests : CLITestBase
             "DataRowEnums_MixedTypes_Byte (Gamma,True,3)"
         );
 
-        Assert.That.FailedTestCount(testResults, 0);
+        AssertionExtensions.FailedTestCount(testResults, 0);
     }
 
-    [TestMethod]
     public void ExecuteDataRowTests_NonSerializablePaths()
     {
         // Arrange
@@ -146,14 +140,13 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRowNonSerializable (System.String)",
             "DataRowNonSerializable (System.Int32)",
             "DataRowNonSerializable (DataSourceTestProject.ITestDataSourceTests.DataRowTests_Enums)");
-        Assert.That.FailedTestCount(testResults, 0);
+        AssertionExtensions.FailedTestCount(testResults, 0);
     }
 
-    [TestMethod]
     public void ExecuteRegular_DataRowTests()
     {
         // Arrange
@@ -164,7 +157,7 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRow1 (10)",
             "DataRow1 (20)",
             "DataRow1 (30)",
@@ -185,6 +178,6 @@ public class TestDataSourceTests : CLITestBase
             "NullValueInData (john.doe@example.com,abc123,)",
             "NullValueInData (john.doe@example.com,abc123,/unit/test)");
 
-        Assert.That.FailedTestCount(testResults, 0);
+        AssertionExtensions.FailedTestCount(testResults, 0);
     }
 }

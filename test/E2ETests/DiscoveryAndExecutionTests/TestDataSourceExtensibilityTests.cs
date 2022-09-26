@@ -10,7 +10,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using System.Linq;
 
-[TestClass]
 public class TestDataSourceExtensibilityTests : CLITestBase
 {
     private const string TestAssembly = "FxExtensibilityTestProject.dll";
@@ -21,7 +20,6 @@ public class TestDataSourceExtensibilityTests : CLITestBase
          - Ignored tests are not expanded (DataRow, DataSource, etc)
      */
 
-    [TestMethod]
     public void CustomTestDataSourceTests()
     {
         // Arrange
@@ -32,10 +30,9 @@ public class TestDataSourceExtensibilityTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.ContainsTestsPassed(testResults, "CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
+        AssertionExtensions.ContainsTestsPassed(testResults, "CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
     }
 
-    [TestMethod]
     public void AssertExtensibilityTests()
     {
         // Arrange
@@ -46,11 +43,10 @@ public class TestDataSourceExtensibilityTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.ContainsTestsPassed(testResults, "BasicAssertExtensionTest", "ChainedAssertExtensionTest");
-        Assert.That.ContainsTestsFailed(testResults, "BasicFailingAssertExtensionTest", "ChainedFailingAssertExtensionTest");
+        AssertionExtensions.ContainsTestsPassed(testResults, "BasicAssertExtensionTest", "ChainedAssertExtensionTest");
+        AssertionExtensions.ContainsTestsFailed(testResults, "BasicFailingAssertExtensionTest", "ChainedFailingAssertExtensionTest");
     }
 
-    [TestMethod]
     public void ExecuteCustomTestExtensibilityTests()
     {
         // Arrange
@@ -61,7 +57,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.ContainsTestsPassed(testResults,
+        AssertionExtensions.ContainsTestsPassed(testResults,
             "CustomTestMethod1 - Execution number 1",
             "CustomTestMethod1 - Execution number 2",
             "CustomTestMethod1 - Execution number 4",
@@ -72,13 +68,12 @@ public class TestDataSourceExtensibilityTests : CLITestBase
             "CustomTestClass1 - Execution number 5"
         );
 
-        Assert.That.ContainsTestsFailed(testResults,
+        AssertionExtensions.ContainsTestsFailed(testResults,
             "CustomTestMethod1 - Execution number 3",
             "CustomTestClass1 - Execution number 3"
         );
     }
 
-    [TestMethod]
     public void ExecuteCustomTestExtensibilityWithTestDataTests()
     {
         // Arrange
@@ -89,13 +84,13 @@ public class TestDataSourceExtensibilityTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "CustomTestMethod2 (B)",
             "CustomTestMethod2 (B)",
             "CustomTestMethod2 (B)"
         );
 
-        Assert.That.TestsFailed(testResults,
+        AssertionExtensions.TestsFailed(testResults,
             "CustomTestMethod2 (A)",
             "CustomTestMethod2 (A)",
             "CustomTestMethod2 (A)",
@@ -105,7 +100,6 @@ public class TestDataSourceExtensibilityTests : CLITestBase
         );
     }
 
-    [TestMethod]
     public void BailOutWhenDuplicateTestDisplayName()
     {
         // Arrange
@@ -116,7 +110,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsDiscovered(testCases, "FxExtensibilityTestProject.DynamicDataDiscoveryBailOutTests.DynamicDataDiscoveryBailOutTestMethod1");
-        Assert.That.PassedTestCount(testResults, 3);
+        AssertionExtensions.TestsDiscovered(testCases, "FxExtensibilityTestProject.DynamicDataDiscoveryBailOutTests.DynamicDataDiscoveryBailOutTestMethod1");
+        AssertionExtensions.PassedTestCount(testResults, 3);
     }
 }

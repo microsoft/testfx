@@ -6,16 +6,12 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System.IO;
 
-
-[TestClass]
 public class DataRowTests : CLITestBase
 {
     private const string TestAssembly = "DataRowTestProject.dll";
 
-    [TestMethod]
     public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerviedClassHasDataRows_SimpleDataRows()
     {
         // Arrange
@@ -26,7 +22,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRowTestMethod (BaseString1)",
             "DataRowTestMethod (BaseString2)",
             "DataRowTestMethod (BaseString3)",
@@ -35,7 +31,6 @@ public class DataRowTests : CLITestBase
         );
     }
 
-    [TestMethod]
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
         // Arrange
@@ -46,13 +41,12 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRowTestMethod (DerivedString1)",
             "DataRowTestMethod (DerivedString2)"
         );
     }
 
-    [TestMethod]
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
     {
         // Arrange
@@ -63,14 +57,13 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRowTestMethodWithSomeOptionalParameters (123)",
             "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString1)",
             "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString2,DerivedOptionalString3)"
         );
     }
 
-    [TestMethod]
     public void DataRowsExecuteWithParamsArrayParameter()
     {
         // Arrange
@@ -81,7 +74,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRowTestMethodWithParamsParameters (2)",
             "DataRowTestMethodWithParamsParameters (2,DerivedSingleParamsArg)",
             "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2)",
@@ -89,7 +82,6 @@ public class DataRowTests : CLITestBase
         );
     }
 
-    [TestMethod]
     public void DataRowsFailWhenInvalidArgumentsProvided()
     {
         // Arrange
@@ -100,14 +92,13 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
             "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)"
         );
     }
 
-    [TestMethod]
     public void DataRowsShouldSerializeDoublesProperly()
     {
         // Arrange
@@ -118,13 +109,12 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRowTestDouble (10.01,20.01)",
             "DataRowTestDouble (10.02,20.02)"
         );
     }
 
-    [TestMethod]
     public void DataRowsShouldSerializeMixedTypesProperly()
     {
         // Arrange
@@ -135,12 +125,11 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRowTestMixed (10,10,10,10,10,10,10,10)"
         );
     }
 
-    [TestMethod]
     public void DataRowsShouldSerializeEnumsProperly()
     {
         // Arrange
@@ -151,7 +140,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRowEnums ()",
             "DataRowEnums (Alfa)",
             "DataRowEnums (Beta)",
@@ -159,7 +148,6 @@ public class DataRowTests : CLITestBase
         );
     }
 
-    [TestMethod]
     public void DataRowsShouldHandleNonSerializableValues()
     {
         // Arrange
@@ -170,11 +158,11 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsDiscovered(testCases,
+        AssertionExtensions.TestsDiscovered(testCases,
             "DataRowNonSerializable"
         );
 
-        Assert.That.TestsPassed(testResults,
+        AssertionExtensions.TestsPassed(testResults,
             "DataRowNonSerializable (System.String)",
             "DataRowNonSerializable (System.Int32)",
             "DataRowNonSerializable (DataRowTestProject.DerivedClass)"
