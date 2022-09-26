@@ -4,25 +4,18 @@
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using CollectionAssert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class AssemblyResolverTests
+public class AssemblyResolverTests : TestContainer
 {
-    [TestMethod]
     public void AddSubDirectoriesShouldReturnSubDirectoriesInDfsOrder()
     {
         // Arrange.
@@ -63,12 +56,11 @@ public class AssemblyResolverTests
         assemblyResolver.AddSubdirectories(path, searchDirectories);
 
         // Assert.
-        Assert.AreEqual(4, searchDirectories.Count, "searchDirectories should have only 5 elements");
+        Verify(4 == searchDirectories.Count);
 
-        CollectionAssert.AreEqual(resultDirectories, searchDirectories, StringComparer.OrdinalIgnoreCase);
+        Verify(resultDirectories.SequenceEqual(searchDirectories, StringComparer.OrdinalIgnoreCase));
     }
 
-    [TestMethod]
     public void OnResolveShouldAddSearchDirectoryListOnANeedToBasis()
     {
         int count = 0;
@@ -112,37 +104,37 @@ public class AssemblyResolverTests
                 {
                     // First time SearchAssemblyInTheFollowingLocation should get call with one directory which is in
                     // m_searchDirectories variable
-                    Assert.AreEqual(1, listPath.Count);
-                    Assert.AreEqual(0, string.Compare(listPath[0], dummyDirectories[0], true));
+                    Verify(1 == listPath.Count);
+                    Verify(0 == string.Compare(listPath[0], dummyDirectories[0], true));
                     count++;
                 }
                 else if (count == 1)
                 {
                     // Second time SearchAssemblyInTheFollowingLocation should get call with directory C:\unitTesting
                     // and with all its sub directory, as its isRecursive property is true
-                    Assert.AreEqual(3, listPath.Count);
-                    Assert.AreEqual(0, string.Compare(listPath[0], @"C:\unitTesting", true));
-                    Assert.AreEqual(0, string.Compare(listPath[1], @"C:\unitTesting\a", true));
-                    Assert.AreEqual(0, string.Compare(listPath[2], @"C:\unitTesting\b", true));
+                    Verify(3 == listPath.Count);
+                    Verify(0 == string.Compare(listPath[0], @"C:\unitTesting", true));
+                    Verify(0 == string.Compare(listPath[1], @"C:\unitTesting\a", true));
+                    Verify(0 == string.Compare(listPath[2], @"C:\unitTesting\b", true));
                     count++;
                 }
                 else if (count == 2)
                 {
                     // Third time SearchAssemblyInTheFollowingLocation should get call with directory C:\FunctionalTesting
                     // as its isRecursive property is false
-                    Assert.AreEqual(1, listPath.Count);
-                    Assert.AreEqual(0, string.Compare(listPath[0], @"C:\FunctionalTesting", true));
+                    Verify(1 == listPath.Count);
+                    Verify(0 == string.Compare(listPath[0], @"C:\FunctionalTesting", true));
                     count++;
                 }
                 else if (count == 3)
                 {
                     // call will come here when we will call onResolve second time.
-                    Assert.AreEqual(5, listPath.Count);
-                    Assert.AreEqual(0, string.Compare(listPath[0], dummyDirectories[0], true));
-                    Assert.AreEqual(0, string.Compare(listPath[1], @"C:\unitTesting", true));
-                    Assert.AreEqual(0, string.Compare(listPath[2], @"C:\unitTesting\a", true));
-                    Assert.AreEqual(0, string.Compare(listPath[3], @"C:\unitTesting\b", true));
-                    Assert.AreEqual(0, string.Compare(listPath[4], @"C:\FunctionalTesting", true));
+                    Verify(5 == listPath.Count);
+                    Verify(0 == string.Compare(listPath[0], dummyDirectories[0], true));
+                    Verify(0 == string.Compare(listPath[1], @"C:\unitTesting", true));
+                    Verify(0 == string.Compare(listPath[2], @"C:\unitTesting\a", true));
+                    Verify(0 == string.Compare(listPath[3], @"C:\unitTesting\b", true));
+                    Verify(0 == string.Compare(listPath[4], @"C:\FunctionalTesting", true));
                     count++;
                 }
 
@@ -157,7 +149,6 @@ public class AssemblyResolverTests
         assemblyResolver.OnResolve(null, dummyArgs);
     }
 
-    [TestMethod]
     public void ReflectionOnlyOnResolveShouldNotReturnACachedDefaultLoadedAssembly()
     {
         var currentAssembly = typeof(AssemblyResolverTests).Assembly;
@@ -185,8 +176,8 @@ public class AssemblyResolverTests
         // Simulate loading the assembly in default context first.
         assemblyResolver.OnResolve(null, new ResolveEventArgs(currentAssembly.FullName));
 
-        Assert.IsTrue(isAssemblyLoaded);
-        Assert.IsFalse(isAssemblyReflectionOnlyLoaded);
+        Verify(isAssemblyLoaded);
+        Verify(!isAssemblyReflectionOnlyLoaded);
 
         // Reset.
         isAssemblyLoaded = false;
@@ -195,8 +186,8 @@ public class AssemblyResolverTests
         assemblyResolver.ReflectionOnlyOnResolve(null, new ResolveEventArgs(currentAssembly.FullName));
 
         // The below assertions ensure that a cached version is not returned out because it actually Reflection only loads the assembly.
-        Assert.IsFalse(isAssemblyLoaded);
-        Assert.IsTrue(isAssemblyReflectionOnlyLoaded);
+        Verify(!isAssemblyLoaded);
+        Verify(isAssemblyReflectionOnlyLoaded);
     }
 }
 

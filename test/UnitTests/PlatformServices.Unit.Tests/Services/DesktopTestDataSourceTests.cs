@@ -4,52 +4,43 @@
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-extern alias FrameworkV2Extension;
-
 using System.Collections.Generic;
 using System.Data;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using DesktopTestFrameworkV2 = FrameworkV2Extension::Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestFrameworkV2 = FrameworkV2::Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestInitialize = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class DesktopTestDataSourceTests
+using ITestMethod = Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod;
+
+public class DesktopTestDataSourceTests : TestContainer
 {
-    private Mock<TestFrameworkV2.ITestMethod> _mockTestMethodInfo;
-    private Mock<ITestMethod> _testMethod;
-    private IDictionary<string, object> _properties;
-    private Mock<ITestContext> _mockTestContext;
+    private readonly Mock<ITestMethod> _mockTestMethodInfo;
+    private readonly Mock<ITestMethod> _testMethod;
+    private readonly IDictionary<string, object> _properties;
+    private readonly Mock<ITestContext> _mockTestContext;
 
-    [TestInitialize]
-    public void TestInit()
+    public DesktopTestDataSourceTests()
     {
         _testMethod = new Mock<ITestMethod>();
         _properties = new Dictionary<string, object>();
-        _mockTestMethodInfo = new Mock<TestFrameworkV2.ITestMethod>();
+        _mockTestMethodInfo = new Mock<ITestMethod>();
         _mockTestContext = new Mock<ITestContext>();
     }
 
-    [TestMethod]
     public void GetDataShouldReadDataFromGivenDataSource()
     {
         var methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
-        TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new(
-            "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", TestFrameworkV2.DataAccessMethod.Sequential);
+        DataSourceAttribute dataSourceAttribute = new(
+            "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", DataAccessMethod.Sequential);
 
-        _mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
-            .Returns(new TestFrameworkV2.DataSourceAttribute[] { dataSourceAttribute });
+        _mockTestMethodInfo.Setup(ds => ds.GetAttributes<DataSourceAttribute>(false))
+            .Returns(new DataSourceAttribute[] { dataSourceAttribute });
         _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
         TestDataSource testDataSource = new();
@@ -57,19 +48,18 @@ public class DesktopTestDataSourceTests
 
         foreach (DataRow dataRow in dataRows)
         {
-            Assert.AreEqual("v1", dataRow[3]);
+            Verify("v1".Equals(dataRow[3]));
         }
     }
 
-    [TestMethod]
     public void GetDataShouldSetDataConnectionInTestContextObject()
     {
         var methodInfo = typeof(DummyTestClass).GetMethod("PassingTest");
-        TestFrameworkV2.DataSourceAttribute dataSourceAttribute = new(
-            "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", TestFrameworkV2.DataAccessMethod.Sequential);
+        DataSourceAttribute dataSourceAttribute = new(
+            "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", DataAccessMethod.Sequential);
 
-        _mockTestMethodInfo.Setup(ds => ds.GetAttributes<TestFrameworkV2.DataSourceAttribute>(false))
-            .Returns(new TestFrameworkV2.DataSourceAttribute[] { dataSourceAttribute });
+        _mockTestMethodInfo.Setup(ds => ds.GetAttributes<DataSourceAttribute>(false))
+            .Returns(new DataSourceAttribute[] { dataSourceAttribute });
         _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
         TestDataSource testDataSource = new();
@@ -82,26 +72,26 @@ public class DesktopTestDataSourceTests
 
     public class DummyTestClass
     {
-        private DesktopTestFrameworkV2.TestContext _testContextInstance;
+        private TestContext _testContextInstance;
 
-        public DesktopTestFrameworkV2.TestContext TestContext
+        public TestContext TestContext
         {
             get { return _testContextInstance; }
             set { _testContextInstance = value; }
         }
 
-        [TestFrameworkV2.TestMethod]
+        [TestMethod]
         public void PassingTest()
         {
-            Assert.AreEqual("v1", _testContextInstance.DataRow["adapter"].ToString());
-            Assert.AreEqual("x86", _testContextInstance.DataRow["targetPlatform"].ToString());
+            Verify("v1" == _testContextInstance.DataRow["adapter"].ToString());
+            Verify("x86" == _testContextInstance.DataRow["targetPlatform"].ToString());
             TestContext.AddResultFile("C:\\temp.txt");
         }
 
-        [TestFrameworkV2.TestMethod]
+        [TestMethod]
         public void FailingTest()
         {
-            Assert.AreEqual("Release", _testContextInstance.DataRow["configuration"].ToString());
+            Verify("Release" == _testContextInstance.DataRow["configuration"].ToString());
         }
     }
 

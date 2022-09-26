@@ -3,13 +3,8 @@
 
   <PropertyGroup>
     <TargetFrameworks>net462</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <RootNamespace>MSTestAdapter.PlatformServices.Desktop.ComponentTests</RootNamespace>
     <AssemblyName>PlatformServices.Desktop.ComponentTests</AssemblyName>
-    <IsCodedUITest>False</IsCodedUITest>
-    <TestProjectType>UnitTest</TestProjectType>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

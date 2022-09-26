@@ -3,79 +3,68 @@
 
 namespace UnitTestFramework.Tests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
-using MSTestAdapter.TestUtilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using TestFrameworkV1 = FrameworkV1.Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestFrameworkV2 = FrameworkV2.Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestFramework.ForTestingMSTest;
 
 /// <summary>
 /// Tests for class GenericParameterHelper
 /// </summary>
-[TestFrameworkV1.TestClass]
-public class GenericParameterHelperTests
+public class GenericParameterHelperTests : TestContainer
 {
-    private TestFrameworkV2.GenericParameterHelper _sut = null;
+    private GenericParameterHelper _sut = null;
 
     /// <summary>
     /// Test initialization function.
     /// </summary>
-    [TestFrameworkV1.TestInitialize]
-    public void TestInitialize()
+    public GenericParameterHelperTests()
     {
-        _sut = new TestFrameworkV2.GenericParameterHelper(10);
+        _sut = new GenericParameterHelper(10);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void EqualsShouldReturnFalseIfEachObjectHasDefaultDataValue()
     {
-        TestFrameworkV2.GenericParameterHelper firstObject = new();
-        TestFrameworkV2.GenericParameterHelper secondObject = new();
+        GenericParameterHelper firstObject = new();
+        GenericParameterHelper secondObject = new();
 
-        TestFrameworkV1.Assert.IsFalse(firstObject.Equals(secondObject));
+        Verify(!firstObject.Equals(secondObject));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void EqualsShouldReturnTrueIfTwoObjectHasSameDataValue()
     {
-        TestFrameworkV2.GenericParameterHelper objectToCompare = new(10);
+        GenericParameterHelper objectToCompare = new(10);
 
-        TestFrameworkV1.Assert.IsTrue(_sut.Equals(objectToCompare));
+        Verify(_sut.Equals(objectToCompare));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void EqualsShouldReturnFalseIfTwoObjectDoesNotHaveSameDataValue()
     {
-        TestFrameworkV2.GenericParameterHelper objectToCompare = new(5);
+        GenericParameterHelper objectToCompare = new(5);
 
-        TestFrameworkV1.Assert.IsFalse(_sut.Equals(objectToCompare));
+        Verify(!_sut.Equals(objectToCompare));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void CompareToShouldReturnZeroIfTwoObjectHasSameDataValue()
     {
-        TestFrameworkV2.GenericParameterHelper objectToCompare = new(10);
+        GenericParameterHelper objectToCompare = new(10);
 
-        TestFrameworkV1.Assert.AreEqual(0, _sut.CompareTo(objectToCompare));
+        Verify(0 == _sut.CompareTo(objectToCompare));
     }
 
-    [TestFrameworkV1.TestMethod]
     public void CompareToShouldThrowExceptionIfSpecifiedObjectIsNotOfTypeGenericParameterHelper()
     {
         int objectToCompare = 5;
 
         void a() => _sut.CompareTo(objectToCompare);
 
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(NotSupportedException));
+        var ex = VerifyThrows(a);
+        Verify(ex is NotSupportedException);
     }
 
-    [TestFrameworkV1.TestMethod]
     public void GenericParameterHelperShouldImplementIEnumerator()
     {
-        _sut = new TestFrameworkV2.GenericParameterHelper(15);
+        _sut = new GenericParameterHelper(15);
 
         int expectedLenghtOfList = 5;  // (15%10)
         int result = 0;
@@ -85,6 +74,6 @@ public class GenericParameterHelperTests
             result++;
         }
 
-        TestFrameworkV1.Assert.AreEqual(result, expectedLenghtOfList);
+        Verify(result == expectedLenghtOfList);
     }
 }

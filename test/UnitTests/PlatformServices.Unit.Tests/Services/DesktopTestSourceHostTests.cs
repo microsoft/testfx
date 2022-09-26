@@ -4,9 +4,6 @@
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests;
 
-extern alias FrameworkV1;
-extern alias FrameworkV2;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,14 +17,10 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 using Moq;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
+using TestFramework.ForTestingMSTest;
 
-[TestClass]
-public class DesktopTestSourceHostTests
+public class DesktopTestSourceHostTests : TestContainer
 {
-    [TestMethod]
     public void GetResolutionPathsShouldAddPublicAndPrivateAssemblyPath()
     {
         // Setup
@@ -40,16 +33,15 @@ public class DesktopTestSourceHostTests
         // Assert
         if (!string.IsNullOrWhiteSpace(VSInstallationUtilities.PathToPublicAssemblies))
         {
-            Assert.IsTrue(result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
+            Verify(result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
         }
 
         if (!string.IsNullOrWhiteSpace(VSInstallationUtilities.PathToPrivateAssemblies))
         {
-            Assert.IsTrue(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
+            Verify(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
         }
     }
 
-    [TestMethod]
     public void GetResolutionPathsShouldNotAddPublicAndPrivateAssemblyPathInPortableMode()
     {
         // Setup
@@ -60,11 +52,10 @@ public class DesktopTestSourceHostTests
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: true);
 
         // Assert
-        Assert.IsFalse(result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
-        Assert.IsFalse(result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
+        Verify(!result.Contains(VSInstallationUtilities.PathToPublicAssemblies));
+        Verify(!result.Contains(VSInstallationUtilities.PathToPrivateAssemblies));
     }
 
-    [TestMethod]
     public void GetResolutionPathsShouldAddAdapterFolderPath()
     {
         // Setup
@@ -74,10 +65,9 @@ public class DesktopTestSourceHostTests
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
 
         // Assert
-        Assert.IsFalse(result.Contains(typeof(TestSourceHost).Assembly.Location));
+        Verify(!result.Contains(typeof(TestSourceHost).Assembly.Location));
     }
 
-    [TestMethod]
     public void GetResolutionPathsShouldAddTestPlatformFolderPath()
     {
         // Setup
@@ -87,15 +77,14 @@ public class DesktopTestSourceHostTests
         List<string> result = sut.GetResolutionPaths("DummyAssembly.dll", isPortableMode: false);
 
         // Assert
-        Assert.IsFalse(result.Contains(typeof(AssemblyHelper).Assembly.Location));
+        Verify(!result.Contains(typeof(AssemblyHelper).Assembly.Location));
     }
 
-    [TestMethod]
     public void CreateInstanceForTypeShouldCreateTheTypeInANewAppDomain()
     {
         // Setup
-        DummyClass dummyclass = new();
-        int currentAppDomainId = dummyclass.AppDomainId;
+        DummyClass dummyClass = new();
+        int currentAppDomainId = dummyClass.AppDomainId;
 
         TestSourceHost sut = new(Assembly.GetExecutingAssembly().Location, null, null);
         sut.SetupHost();
@@ -109,14 +98,13 @@ public class DesktopTestSourceHostTests
         }
 
         // Assert
-        Assert.AreNotEqual(currentAppDomainId, newAppDomainId);
+        Verify(currentAppDomainId != newAppDomainId);
     }
 
-    [TestMethod]
     public void SetupHostShouldSetChildDomainsAppBaseToTestSourceLocation()
     {
         // Arrange
-        DummyClass dummyclass = new();
+        DummyClass dummyClass = new();
 
         var location = typeof(TestSourceHost).Assembly.Location;
         Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
@@ -128,7 +116,7 @@ public class DesktopTestSourceHostTests
             var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
             // Assert
-            Assert.AreEqual(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location), expectedObject.AppDomainAppBase);
+            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject.AppDomainAppBase);
         }
         finally
         {
@@ -136,15 +124,14 @@ public class DesktopTestSourceHostTests
         }
     }
 
-    [TestMethod]
     public void SetupHostShouldHaveParentDomainsAppBaseSetToTestSourceLocation()
     {
         // Arrange
-        DummyClass dummyclass = new();
+        DummyClass dummyClass = new();
         string runSettingxml =
         @"<RunSettings>   
                 <RunConfiguration>  
-                    <DisableAppDomain>True</DisableAppDomain>   
+                    <DisableAppDomain>False</DisableAppDomain>   
                 </RunConfiguration>  
             </RunSettings>";
 
@@ -152,28 +139,27 @@ public class DesktopTestSourceHostTests
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
-        Mock<TestSourceHost> sourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
+        TestSourceHost sourceHost = new(location, mockRunSettings.Object, null);
 
         try
         {
             // Act
-            sourceHost.Object.SetupHost();
-            var expectedObject = sourceHost.Object.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
+            sourceHost.SetupHost();
+            var expectedObject = sourceHost.CreateInstanceForType(typeof(DummyClass), null) as DummyClass;
 
             // Assert
-            Assert.AreEqual(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location), expectedObject.AppDomainAppBase);
+            Verify(Path.GetDirectoryName(typeof(DesktopTestSourceHostTests).Assembly.Location) == expectedObject.AppDomainAppBase);
         }
         finally
         {
-            sourceHost.Object.Dispose();
+            sourceHost.Dispose();
         }
     }
 
-    [TestMethod]
     public void SetupHostShouldSetResolutionsPaths()
     {
         // Arrange
-        DummyClass dummyclass = new();
+        DummyClass dummyClass = new();
 
         var location = typeof(TestSourceHost).Assembly.Location;
         Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
@@ -192,7 +178,6 @@ public class DesktopTestSourceHostTests
         }
     }
 
-    [TestMethod]
     public void DisposeShouldSetTestHostShutdownOnIssueWithAppDomainUnload()
     {
         // Arrange
@@ -211,11 +196,10 @@ public class DesktopTestSourceHostTests
         frameworkHandle.VerifySet(fh => fh.EnableShutdownAfterTestRun = true);
     }
 
-    [TestMethod]
     public void NoAppDomainShouldGetCreatedWhenDisableAppDomainIsSetToTrue()
     {
         // Arrange
-        DummyClass dummyclass = new();
+        DummyClass dummyClass = new();
         string runSettingxml =
         @"<RunSettings>   
                 <RunConfiguration>  
@@ -233,7 +217,7 @@ public class DesktopTestSourceHostTests
         {
             // Act
             testSourceHost.Object.SetupHost();
-            Assert.IsNull(testSourceHost.Object.AppDomain);
+            Verify(testSourceHost.Object.AppDomain is null);
         }
         finally
         {
@@ -241,11 +225,10 @@ public class DesktopTestSourceHostTests
         }
     }
 
-    [TestMethod]
     public void AppDomainShouldGetCreatedWhenDisableAppDomainIsSetToFalse()
     {
         // Arrange
-        DummyClass dummyclass = new();
+        DummyClass dummyClass = new();
         string runSettingxml =
         @"<RunSettings>   
                 <RunConfiguration>  
@@ -263,7 +246,7 @@ public class DesktopTestSourceHostTests
         {
             // Act
             testSourceHost.Object.SetupHost();
-            Assert.IsNotNull(testSourceHost.Object.AppDomain);
+            Verify(testSourceHost.Object.AppDomain is not null);
         }
         finally
         {

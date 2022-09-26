@@ -19,11 +19,6 @@ internal class Constants
 
     public const string TargetFrameworkName = "TargetFrameworkName";
 
-    /// <summary>
-    /// Constants for MSTest in Portable Mode
-    /// </summary>
-    public const string PortableVsTestLocation = "PortableVsTestLocation";
-
     public const string PublicAssemblies = "PublicAssemblies";
 
     public const string PrivateAssemblies = "PrivateAssemblies";

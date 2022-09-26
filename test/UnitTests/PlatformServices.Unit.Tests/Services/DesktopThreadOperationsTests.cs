@@ -4,22 +4,15 @@
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
-extern alias FrameworkV1;
-
 using System;
 using System.Reflection;
 using System.Threading;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
-using MSTestAdapter.TestUtilities;
+using TestFramework.ForTestingMSTest;
 
-using Assert = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using TestClass = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute;
-using TestMethod = FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
-
-[TestClass]
-public class DesktopThreadOperationsTests
+public class DesktopThreadOperationsTests : TestContainer
 {
     private readonly ThreadOperations _asyncOperations;
 
@@ -28,7 +21,6 @@ public class DesktopThreadOperationsTests
         _asyncOperations = new ThreadOperations();
     }
 
-    [TestMethod]
     public void ExecuteShouldRunActionOnANewThread()
     {
         int actionThreadID = 0;
@@ -38,11 +30,10 @@ public class DesktopThreadOperationsTests
             actionThreadID = Environment.CurrentManagedThreadId;
         }
 
-        Assert.IsTrue(_asyncOperations.Execute(action, 1000, cancellationTokenSource.Token));
-        Assert.AreNotEqual(Environment.CurrentManagedThreadId, actionThreadID);
+        Verify(_asyncOperations.Execute(action, 1000, cancellationTokenSource.Token));
+        Verify(Environment.CurrentManagedThreadId != actionThreadID);
     }
 
-    [TestMethod]
     public void ExecuteShouldKillTheThreadExecutingAsyncOnTimeout()
     {
         ManualResetEvent timeoutMutex = new(false);
@@ -71,16 +62,15 @@ public class DesktopThreadOperationsTests
             }
         }
 
-        Assert.IsFalse(_asyncOperations.Execute(action, 1, cancellationTokenSource.Token));
+        Verify(!_asyncOperations.Execute(action, 1, cancellationTokenSource.Token));
         timeoutMutex.Set();
         actionCompleted.WaitOne();
 
-        Assert.IsFalse(hasReachedEnd, "Execution Completed successfully");
-        Assert.IsTrue(isThreadAbortThrown, "ThreadAbortException not thrown");
+        Verify(!hasReachedEnd, "Execution Completed successfully");
+        Verify(isThreadAbortThrown, "ThreadAbortException not thrown");
     }
 
-    [TestMethod]
-    public void ExecuteShouldSpwanOfAthreadWithSpecificAttributes()
+    public void ExecuteShouldSpawnThreadWithSpecificAttributes()
     {
         var name = string.Empty;
         var apartmentState = ApartmentState.Unknown;
@@ -93,26 +83,24 @@ public class DesktopThreadOperationsTests
             isBackground = Thread.CurrentThread.IsBackground;
         }
 
-        Assert.IsTrue(_asyncOperations.Execute(action, 100, cancellationTokenSource.Token));
+        Verify(_asyncOperations.Execute(action, 100, cancellationTokenSource.Token));
 
-        Assert.AreEqual("MSTestAdapter Thread", name);
-        Assert.AreEqual(Thread.CurrentThread.GetApartmentState(), apartmentState);
-        Assert.IsTrue(isBackground);
+        Verify("MSTestAdapter Thread" == name);
+        Verify(Thread.CurrentThread.GetApartmentState() == apartmentState);
+        Verify(isBackground);
     }
 
-    [TestMethod]
     public void ExecuteWithAbortSafetyShouldCatchThreadAbortExceptionsAndResetAbort()
     {
         static void action() => Thread.CurrentThread.Abort();
 
-        var exception = ActionUtility.PerformActionAndReturnException(() => _asyncOperations.ExecuteWithAbortSafety(action));
+        var exception = VerifyThrows(() => _asyncOperations.ExecuteWithAbortSafety(action));
 
-        Assert.IsNotNull(exception);
-        Assert.AreEqual(typeof(TargetInvocationException), exception.GetType());
-        Assert.AreEqual(typeof(ThreadAbortException), exception.InnerException.GetType());
+        Verify(exception is not null);
+        Verify(typeof(TargetInvocationException) == exception.GetType());
+        Verify(typeof(ThreadAbortException) == exception.InnerException.GetType());
     }
 
-    [TestMethod]
     public void TokenCancelShouldAbortExecutingAction()
     {
         // setup
@@ -123,11 +111,10 @@ public class DesktopThreadOperationsTests
         var result = _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
 
         // validate
-        Assert.IsFalse(result, "The execution failed to abort");
+        Verify(!result, "The execution failed to abort");
     }
 
-    [TestMethod]
-    public void TokenCancelShouldAbortIfAlreadycanceled()
+    public void TokenCancelShouldAbortIfAlreadyCanceled()
     {
         // setup
         var cancellationTokenSource = new CancellationTokenSource();
@@ -137,7 +124,7 @@ public class DesktopThreadOperationsTests
         var result = _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
 
         // validate
-        Assert.IsFalse(result, "The execution failed to abort");
+        Verify(!result, "The execution failed to abort");
     }
 }
 #endif

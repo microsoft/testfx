@@ -3,27 +3,23 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP.UnitTests;
 
-extern alias FrameworkV1;
-
 using System;
 using System.IO;
 using System.Reflection;
-using FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting;
-using global::MSTestAdapter.TestUtilities;
+
+using TestFramework.ForTestingMSTest;
 
 /// <summary>
 /// The universal file operations tests.
 /// </summary>
-[TestClass]
-public class UniversalFileOperationsTests
+public class UniversalFileOperationsTests : TestContainer
 {
-    private FileOperations _fileOperations;
+    private readonly FileOperations _fileOperations;
 
     /// <summary>
     /// The test initialization.
     /// </summary>
-    [TestInitialize]
-    public void TestInit()
+    public UniversalFileOperationsTests()
     {
         _fileOperations = new FileOperations();
     }
@@ -31,29 +27,28 @@ public class UniversalFileOperationsTests
     /// <summary>
     /// The load assembly should throw exception if the file name has invalid characters.
     /// </summary>
-    [TestMethod]
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
     {
         var filePath = "temp<>txt";
         void a() => _fileOperations.LoadAssembly(filePath, false);
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(ArgumentException));
+        var ex = VerifyThrows(a);
+        Verify(ex is ArgumentException);
     }
 
     /// <summary>
     /// The load assembly should throw exception if file is not found.
     /// </summary>
-    [TestMethod]
     public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound()
     {
         var filePath = "temptxt";
         void a() => _fileOperations.LoadAssembly(filePath, false);
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
+        var ex = VerifyThrows(a);
+        Verify(ex is FileNotFoundException);
     }
 
     /// <summary>
     /// The load assembly should load assembly in current context.
     /// </summary>
-    [TestMethod]
     public void LoadAssemblyShouldLoadAssemblyInCurrentContext()
     {
         var filePath = Assembly.GetExecutingAssembly().Location;
@@ -65,11 +60,10 @@ public class UniversalFileOperationsTests
     /// <summary>
     /// The does file exist returns false if file name has invalid characters.
     /// </summary>
-    [TestMethod]
     public void DoesFileExistReturnsFalseIfFileNameHasInvalidCharacters()
     {
         var filePath = "temp<>txt";
-        Assert.IsFalse(_fileOperations.DoesFileExist(filePath));
+        Verify(!_fileOperations.DoesFileExist(filePath));
     }
 
     /// This Test is not yet validated. Will validate with new adapter.
@@ -81,7 +75,8 @@ public class UniversalFileOperationsTests
     {
         var filePath = "C:\\footemp.txt";
         void a() => _fileOperations.DoesFileExist(filePath);
-        ActionUtility.ActionShouldThrowExceptionOfType(a, typeof(FileNotFoundException));
+        var ex = VerifyThrows(a);
+        Verify(ex is FileNotFoundException);
     }
 
     /// This Test is not yet validated. Will validate with new adapter.
@@ -92,26 +87,24 @@ public class UniversalFileOperationsTests
     public void DoesFileExistReturnsTrueWhenFileExists()
     {
         var filePath = Assembly.GetExecutingAssembly().Location;
-        Assert.IsTrue(_fileOperations.DoesFileExist(filePath));
+        Verify(_fileOperations.DoesFileExist(filePath));
     }
 
     /// <summary>
     /// The create navigation session should return null for all sources.
     /// </summary>
-    [TestMethod]
-    [Ignore] // TODO: Re-enable this tests when we have merged projects
-    public void CreateNavigationSessionShouldReturnNullForAllSources()
+    // TODO: Re-enable this tests when we have merged projects (make public to re-include)
+    private void CreateNavigationSessionShouldReturnNullForAllSources()
     {
-        Assert.IsNull(_fileOperations.CreateNavigationSession(null));
-        Assert.IsNull(_fileOperations.CreateNavigationSession("foobar"));
+        Verify(_fileOperations.CreateNavigationSession(null) is null);
+        Verify(_fileOperations.CreateNavigationSession("foobar") is null);
     }
 
-    [TestMethod]
     public void GetNavigationDataShouldReturnNullFileName()
     {
         _fileOperations.GetNavigationData(null, null, null, out var minLineNumber, out var fileName);
-        Assert.IsNull(fileName);
-        Assert.AreEqual(-1, minLineNumber);
+        Verify(fileName is null);
+        Verify(-1 == minLineNumber);
     }
 
     // Enable these tests when we take dependency on TpV2 object model
@@ -168,10 +161,9 @@ public class UniversalFileOperationsTests
     /// <summary>
     /// The get full file path should return assembly file name.
     /// </summary>
-    [TestMethod]
     public void GetFullFilePathShouldReturnAssemblyFileName()
     {
-        Assert.IsNull(_fileOperations.GetFullFilePath(null));
-        Assert.AreEqual("assemblyFileName", _fileOperations.GetFullFilePath("assemblyFileName"));
+        Verify(_fileOperations.GetFullFilePath(null) is null);
+        Verify("assemblyFileName" == _fileOperations.GetFullFilePath("assemblyFileName"));
     }
 }

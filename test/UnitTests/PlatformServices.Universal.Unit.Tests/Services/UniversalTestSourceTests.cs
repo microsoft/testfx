@@ -3,25 +3,24 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP.UnitTests;
 
-extern alias FrameworkV1;
-
 using System.Linq;
 using System.Reflection;
-using FrameworkV1::Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using TestFramework.ForTestingMSTest;
 
 /// <summary>
 /// The universal test source validator tests.
 /// </summary>
-[TestClass]
-public class UniversalTestSourceTests
+public class UniversalTestSourceTests : TestContainer
 {
-    private TestSource _testSource;
+    private readonly TestSource _testSource;
 
     /// <summary>
     /// The test initialization.
     /// </summary>
-    [TestInitialize]
-    public void TestInit()
+    public UniversalTestSourceTests()
     {
         _testSource = new TestSource();
     }
@@ -29,63 +28,56 @@ public class UniversalTestSourceTests
     /// <summary>
     /// The valid source extensions should contain .dll as extension.
     /// </summary>
-    [TestMethod]
     public void ValidSourceExtensionsShouldContainDllExtensions()
     {
-        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".dll");
+        Verify(_testSource.ValidSourceExtensions.Contains(".dll"));
     }
 
     /// <summary>
     /// The valid source extensions should contain .exe as extension.
     /// </summary>
-    [TestMethod]
     public void ValidSourceExtensionsShouldContainExeExtensions()
     {
-        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".exe");
+        Verify(_testSource.ValidSourceExtensions.Contains(".exe"));
     }
 
     /// <summary>
     /// The valid source extensions should contain .appx as extension.
     /// </summary>
-    [TestMethod]
     public void ValidSourceExtensionsShouldContainAppxExtensions()
     {
-        CollectionAssert.Contains(_testSource.ValidSourceExtensions.ToList(), ".appx");
+        Verify(_testSource.ValidSourceExtensions.Contains(".appx"));
     }
 
     /// <summary>
     /// The is assembly referenced should return true if assembly name is null.
     /// </summary>
-    [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueIfAssemblyNameIsNull()
     {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(null, "DummySource"));
+        Verify(_testSource.IsAssemblyReferenced(null, "DummySource"));
     }
 
     /// <summary>
     /// The is assembly referenced should return true if source is null.
     /// </summary>
-    [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueIfSourceIsNull()
     {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(Assembly.GetExecutingAssembly().GetName(), null));
+        Verify(_testSource.IsAssemblyReferenced(Assembly.GetExecutingAssembly().GetName(), null));
     }
 
     /// <summary>
     /// The is assembly referenced should return true if an assembly is referenced in source.
     /// </summary>
-    [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueIfAnAssemblyIsReferencedInSource()
     {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(typeof(TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location));
+        Verify(_testSource.IsAssemblyReferenced(typeof(TestMethodAttribute).Assembly.GetName(), Assembly.GetExecutingAssembly().Location));
     }
 
     /// <summary>
     /// The is assembly referenced should return false if an assembly is not referenced in source.
     /// </summary>
-    [TestMethod]
     public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames()
     {
-        Assert.IsTrue(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
+        Verify(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
     }
 }
