@@ -9,10 +9,11 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.RegularExpressions;
+
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
 using OM = Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class OutputTests : CLITestBase
 {

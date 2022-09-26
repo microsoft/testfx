@@ -6,8 +6,8 @@ using System.Linq;
 namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 
 using System.IO;
+
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public class DiscoverInternalsTests : CLITestBase
 {

@@ -9,8 +9,6 @@ using System.Xml;
 
 using TestFramework.ForTestingMSTest;
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 public partial class CLITestBase : TestContainer
 {
     private const string TestAssetsFolder = "TestAssets";

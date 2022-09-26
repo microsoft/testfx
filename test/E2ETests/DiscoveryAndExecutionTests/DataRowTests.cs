@@ -4,8 +4,7 @@
 namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using System.IO;
 
 public class DataRowTests : CLITestBase

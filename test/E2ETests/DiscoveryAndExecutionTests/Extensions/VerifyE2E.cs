@@ -5,7 +5,6 @@ namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using TestFramework.ForTestingMSTest;
 
 using System.Collections.Generic;
 using System.Linq;

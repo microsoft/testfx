@@ -4,8 +4,6 @@
 namespace MSTestAdapter.Smoke.E2ETests;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using global::TestFramework.ForTestingMSTest;
-
 
 public class AssertExtensibilityTests : CLITestBase
 {
