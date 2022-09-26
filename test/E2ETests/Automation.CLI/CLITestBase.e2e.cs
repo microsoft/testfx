@@ -66,8 +66,7 @@ public partial class CLITestBase : TestContainer
     /// <returns>Full path to <c>vstest.console.exe</c></returns>
     public string GetConsoleRunnerPath()
     {
-        var packagesFolder = Path.Combine(Environment.CurrentDirectory, GetRelativeRepositoryRootPath(), PackagesFolder);
-        var vstestConsolePath = Path.Combine(packagesFolder, TestPlatformCLIPackageName, GetTestPlatformVersion(), VstestConsoleRelativePath);
+        var vstestConsolePath = Path.Combine(Environment.CurrentDirectory, PackagesFolder, TestPlatformCLIPackageName, GetTestPlatformVersion(), VstestConsoleRelativePath);
 
         Assert.IsTrue(File.Exists(vstestConsolePath), "GetConsoleRunnerPath: Path not found: {0}", vstestConsolePath);
 
