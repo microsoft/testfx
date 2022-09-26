@@ -25,11 +25,11 @@ public class DataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.ContainsTestsPassed(testResults,
+        VerifyE2E.ContainsTestsPassed(testResults,
             "CsvTestMethod (Data Row 0)",
             "CsvTestMethod (Data Row 2)"
         );
-        AssertionExtensions.ContainsTestsFailed(testResults,
+        VerifyE2E.ContainsTestsFailed(testResults,
             "CsvTestMethod (Data Row 1)",
             "CsvTestMethod (Data Row 3)"
         );

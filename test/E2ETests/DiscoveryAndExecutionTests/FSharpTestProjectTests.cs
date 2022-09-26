@@ -23,8 +23,8 @@ public class FSharpTestProjectTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults, "Test method passing with a . in it");
-        AssertionExtensions.PassedTestCount(testResults, 1);
-        AssertionExtensions.FailedTestCount(testResults, 0);
+        VerifyE2E.TestsPassed(testResults, "Test method passing with a . in it");
+        VerifyE2E.PassedTestCount(testResults, 1);
+        VerifyE2E.FailedTestCount(testResults, 0);
     }
 }

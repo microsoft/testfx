@@ -23,7 +23,7 @@ public class DiscoverInternalsTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.AtLeastTestsDiscovered(
+        VerifyE2E.AtLeastTestsDiscovered(
             testCases,
             "TopLevelInternalClass_TestMethod1",
             "NestedInternalClass_TestMethod1"
@@ -39,7 +39,7 @@ public class DiscoverInternalsTests : CLITestBase
         var testCases = DiscoverTests(assemblyPath);
 
         // Assert
-        AssertionExtensions.AtLeastTestsDiscovered(
+        VerifyE2E.AtLeastTestsDiscovered(
             testCases,
             "EqualityIsCaseInsensitive"
         );
@@ -57,7 +57,7 @@ public class DiscoverInternalsTests : CLITestBase
         var testResults = RunTests(assemblyPath, targetTestCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(
+        VerifyE2E.TestsPassed(
             testResults,
             "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)"
         );

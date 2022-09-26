@@ -25,12 +25,12 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.ContainsTestsPassed(testResults,
+        VerifyE2E.ContainsTestsPassed(testResults,
             "CsvTestMethod (Data Row 0)",
             "CsvTestMethod (Data Row 2)"
         );
 
-        AssertionExtensions.ContainsTestsFailed(testResults,
+        VerifyE2E.ContainsTestsFailed(testResults,
             "CsvTestMethod (Data Row 1)",
             "CsvTestMethod (Data Row 3)"
         );
@@ -46,11 +46,11 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.ContainsTestsPassed(testResults,
+        VerifyE2E.ContainsTestsPassed(testResults,
             "DynamicDataTest (John;Doe,DataSourceTestProject.ITestDataSourceTests.User)"
         );
 
-        AssertionExtensions.FailedTestCount(testResults, 0);
+        VerifyE2E.FailedTestCount(testResults, 0);
     }
 
     public void ExecuteDataRowTests_Enums()
@@ -63,7 +63,7 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRowEnums_SByte (Alfa)",
             "DataRowEnums_SByte (Beta)",
             "DataRowEnums_SByte (Gamma)",
@@ -127,7 +127,7 @@ public class TestDataSourceTests : CLITestBase
             "DataRowEnums_MixedTypes_Byte (Gamma,True,3)"
         );
 
-        AssertionExtensions.FailedTestCount(testResults, 0);
+        VerifyE2E.FailedTestCount(testResults, 0);
     }
 
     public void ExecuteDataRowTests_NonSerializablePaths()
@@ -140,11 +140,11 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRowNonSerializable (System.String)",
             "DataRowNonSerializable (System.Int32)",
             "DataRowNonSerializable (DataSourceTestProject.ITestDataSourceTests.DataRowTests_Enums)");
-        AssertionExtensions.FailedTestCount(testResults, 0);
+        VerifyE2E.FailedTestCount(testResults, 0);
     }
 
     public void ExecuteRegular_DataRowTests()
@@ -157,7 +157,7 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRow1 (10)",
             "DataRow1 (20)",
             "DataRow1 (30)",
@@ -178,6 +178,6 @@ public class TestDataSourceTests : CLITestBase
             "NullValueInData (john.doe@example.com,abc123,)",
             "NullValueInData (john.doe@example.com,abc123,/unit/test)");
 
-        AssertionExtensions.FailedTestCount(testResults, 0);
+        VerifyE2E.FailedTestCount(testResults, 0);
     }
 }

@@ -30,7 +30,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.ContainsTestsPassed(testResults, "CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
+        VerifyE2E.ContainsTestsPassed(testResults, "CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
     }
 
     public void AssertExtensibilityTests()
@@ -43,8 +43,8 @@ public class TestDataSourceExtensibilityTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.ContainsTestsPassed(testResults, "BasicAssertExtensionTest", "ChainedAssertExtensionTest");
-        AssertionExtensions.ContainsTestsFailed(testResults, "BasicFailingAssertExtensionTest", "ChainedFailingAssertExtensionTest");
+        VerifyE2E.ContainsTestsPassed(testResults, "BasicAssertExtensionTest", "ChainedAssertExtensionTest");
+        VerifyE2E.ContainsTestsFailed(testResults, "BasicFailingAssertExtensionTest", "ChainedFailingAssertExtensionTest");
     }
 
     public void ExecuteCustomTestExtensibilityTests()
@@ -57,7 +57,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.ContainsTestsPassed(testResults,
+        VerifyE2E.ContainsTestsPassed(testResults,
             "CustomTestMethod1 - Execution number 1",
             "CustomTestMethod1 - Execution number 2",
             "CustomTestMethod1 - Execution number 4",
@@ -68,7 +68,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
             "CustomTestClass1 - Execution number 5"
         );
 
-        AssertionExtensions.ContainsTestsFailed(testResults,
+        VerifyE2E.ContainsTestsFailed(testResults,
             "CustomTestMethod1 - Execution number 3",
             "CustomTestClass1 - Execution number 3"
         );
@@ -84,13 +84,13 @@ public class TestDataSourceExtensibilityTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "CustomTestMethod2 (B)",
             "CustomTestMethod2 (B)",
             "CustomTestMethod2 (B)"
         );
 
-        AssertionExtensions.TestsFailed(testResults,
+        VerifyE2E.TestsFailed(testResults,
             "CustomTestMethod2 (A)",
             "CustomTestMethod2 (A)",
             "CustomTestMethod2 (A)",
@@ -110,7 +110,7 @@ public class TestDataSourceExtensibilityTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsDiscovered(testCases, "FxExtensibilityTestProject.DynamicDataDiscoveryBailOutTests.DynamicDataDiscoveryBailOutTestMethod1");
-        AssertionExtensions.PassedTestCount(testResults, 3);
+        VerifyE2E.TestsDiscovered(testCases, "FxExtensibilityTestProject.DynamicDataDiscoveryBailOutTests.DynamicDataDiscoveryBailOutTestMethod1");
+        VerifyE2E.PassedTestCount(testResults, 3);
     }
 }

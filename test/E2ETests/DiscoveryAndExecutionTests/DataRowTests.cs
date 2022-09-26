@@ -22,7 +22,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRowTestMethod (BaseString1)",
             "DataRowTestMethod (BaseString2)",
             "DataRowTestMethod (BaseString3)",
@@ -41,7 +41,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRowTestMethod (DerivedString1)",
             "DataRowTestMethod (DerivedString2)"
         );
@@ -57,7 +57,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRowTestMethodWithSomeOptionalParameters (123)",
             "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString1)",
             "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString2,DerivedOptionalString3)"
@@ -74,7 +74,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRowTestMethodWithParamsParameters (2)",
             "DataRowTestMethodWithParamsParameters (2,DerivedSingleParamsArg)",
             "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2)",
@@ -92,7 +92,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
             "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)"
@@ -109,7 +109,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRowTestDouble (10.01,20.01)",
             "DataRowTestDouble (10.02,20.02)"
         );
@@ -125,7 +125,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRowTestMixed (10,10,10,10,10,10,10,10)"
         );
     }
@@ -140,7 +140,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRowEnums ()",
             "DataRowEnums (Alfa)",
             "DataRowEnums (Beta)",
@@ -158,11 +158,11 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        AssertionExtensions.TestsDiscovered(testCases,
+        VerifyE2E.TestsDiscovered(testCases,
             "DataRowNonSerializable"
         );
 
-        AssertionExtensions.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(testResults,
             "DataRowNonSerializable (System.String)",
             "DataRowNonSerializable (System.Int32)",
             "DataRowNonSerializable (DataRowTestProject.DerivedClass)"

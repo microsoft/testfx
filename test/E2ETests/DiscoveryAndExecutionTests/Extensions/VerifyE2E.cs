@@ -12,7 +12,7 @@ using System.Linq;
 
 using TestContainer = TestFramework.ForTestingMSTest.TestContainer;
 
-public static class AssertionExtensions 
+public static class VerifyE2E
 {
     public static void ContainsTestsDiscovered(IEnumerable<TestCase> actualTests, IEnumerable<string> expectedTests)
         => ContainsTestsDiscovered(actualTests, expectedTests);
