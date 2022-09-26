@@ -252,8 +252,11 @@ public class TestSourceHost : ITestSourceHost
         _currentDirectory = Environment.CurrentDirectory;
         try
         {
+            // If the source is in the format of an assembly qualified name, then calls to
+            // Path.GetDirectoryName will return empty string. But if we use Path.GetFullPath first
+            // then directory resolution works properly.
+            var dirName = Path.GetDirectoryName(Path.GetFullPath(source));
 #if WIN_UI
-            var dirName = Path.GetDirectoryName(source);
             if (string.IsNullOrEmpty(dirName))
             {
                 dirName = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
@@ -261,7 +264,7 @@ public class TestSourceHost : ITestSourceHost
 
             Directory.SetCurrentDirectory(dirName);
 #else
-            Environment.CurrentDirectory = Path.GetDirectoryName(source);
+            Environment.CurrentDirectory = dirName;
 #if NETFRAMEWORK
             EqtTrace.Info("MSTestExecutor: Changed the working directory to {0}", Environment.CurrentDirectory);
 #endif

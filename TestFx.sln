@@ -11,8 +11,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.TestAdapter", "src\A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Interface", "src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj", "{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Portable", "src\Adapter\PlatformServices.Portable\PlatformServices.Portable.csproj", "{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices", "src\Adapter\PlatformServices\PlatformServices.csproj", "{5D153CAA-80C2-4551-9549-6C406FCEEFB1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFramework", "TestFramework", "{E48AC786-E150-4F41-9A16-32F02E4493D8}"
@@ -28,6 +26,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "E2ETests", "E2ETests", "{F1A27537-78D1-4BBD-8E76-ADB31BC0C2B4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestAssets", "TestAssets", "{D53BD452-F69F-4FB3-8B98-386EDA28A4C8}"
+	ProjectSection(SolutionItems) = preProject
+		test\E2ETests\TestAssets\Directory.Build.targets = test\E2ETests\TestAssets\Directory.Build.targets
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DesktopTestProjectx64Debug", "test\E2ETests\TestAssets\DesktopTestProjectx64Debug\DesktopTestProjectx64Debug.csproj", "{0C139DA9-AA81-43A0-8625-7A873C0E2873}"
 EndProject
@@ -40,6 +41,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ComponentTests", "ComponentTests", "{1A9F8CEF-7C03-40BD-B33C-1453114F9ABD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestAssets", "TestAssets", "{1899187D-8B9C-40C2-9F04-9E9A76C9A919}"
+	ProjectSection(SolutionItems) = preProject
+		test\ComponentTests\TestAssets\Directory.Build.targets = test\ComponentTests\TestAssets\Directory.Build.targets
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleFrameworkExtensions", "test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj", "{5C411BBF-FCC9-4430-AE08-07666D39FD04}"
 EndProject
@@ -159,7 +163,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeploymentTestProject", "te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CompatTestProject", "test\E2ETests\TestAssets\CompatTestProject\CompatTestProject.csproj", "{2D2C5B73-F1F1-47C8-BC5C-A172E9BB3D16}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestProjectForAssemblyResolution", "test\ComponentTests\TestAssets\TestProjectForAssemblyResolution\TestProjectForAssemblyResolution.csproj", "{0B057B99-DCDD-417A-BC19-3E63DDD86F24}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleProjectForAssemblyResolution", "test\ComponentTests\TestAssets\SampleProjectForAssemblyResolution\SampleProjectForAssemblyResolution.csproj", "{0B057B99-DCDD-417A-BC19-3E63DDD86F24}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataRowTestProject", "test\E2ETests\TestAssets\DataRowTestProject\DataRowTestProject.csproj", "{7FB80AAB-7123-4416-B6CD-8D3D69AA83F1}"
 EndProject
@@ -267,30 +271,6 @@ Global
 		{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}.Release|x64.Build.0 = Debug|Any CPU
 		{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}.Release|x86.ActiveCfg = Debug|Any CPU
 		{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}.Release|x86.Build.0 = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Code Analysis Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Code Analysis Debug|Any CPU.Build.0 = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Code Analysis Debug|ARM.ActiveCfg = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Code Analysis Debug|ARM.Build.0 = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Code Analysis Debug|x64.ActiveCfg = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Code Analysis Debug|x64.Build.0 = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Code Analysis Debug|x86.ActiveCfg = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Code Analysis Debug|x86.Build.0 = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Debug|ARM.Build.0 = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Debug|x64.Build.0 = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Debug|x86.Build.0 = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Release|ARM.ActiveCfg = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Release|ARM.Build.0 = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Release|x64.ActiveCfg = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Release|x64.Build.0 = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Release|x86.ActiveCfg = Debug|Any CPU
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D}.Release|x86.Build.0 = Debug|Any CPU
 		{5D153CAA-80C2-4551-9549-6C406FCEEFB1}.Code Analysis Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5D153CAA-80C2-4551-9549-6C406FCEEFB1}.Code Analysis Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D153CAA-80C2-4551-9549-6C406FCEEFB1}.Code Analysis Debug|ARM.ActiveCfg = Debug|Any CPU
@@ -1163,7 +1143,6 @@ Global
 		{24088844-2107-4DB2-8F3F-CBCA94FC4B28} = {FF8B1B72-55A1-4FFE-809E-7B79323ED8D0}
 		{98BA6D2C-1F3D-4636-8E1D-D4932B7A253D} = {24088844-2107-4DB2-8F3F-CBCA94FC4B28}
 		{BBC99A6B-4490-49DD-9C12-AF2C1E95576E} = {24088844-2107-4DB2-8F3F-CBCA94FC4B28}
-		{58BDD63D-5E58-4D23-BDF5-592E5E03D29D} = {24088844-2107-4DB2-8F3F-CBCA94FC4B28}
 		{5D153CAA-80C2-4551-9549-6C406FCEEFB1} = {24088844-2107-4DB2-8F3F-CBCA94FC4B28}
 		{E48AC786-E150-4F41-9A16-32F02E4493D8} = {FF8B1B72-55A1-4FFE-809E-7B79323ED8D0}
 		{7252D9E3-267D-442C-96BC-C73AEF3241D6} = {E48AC786-E150-4F41-9A16-32F02E4493D8}

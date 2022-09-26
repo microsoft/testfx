@@ -3,17 +3,23 @@
 
 # Build script for MSTest Test Framework.
 
-[CmdletBinding(PositionalBinding = $false)]
+[CmdletBinding(PositionalBinding = $false, DefaultParameterSetName = "OneVersion")]
 Param(
   [ValidateSet("Debug", "Release")]
   [Alias("c")]
   [string] $Configuration = "Debug",
 
   [Alias("fv")]
+  [Parameter(ParameterSetName = 'MultipleVersions')]
   [string] $FrameworkVersion = "99.99.99",
 
   [Alias("av")]
+  [Parameter(ParameterSetName = 'MultipleVersions')]
   [string] $AdapterVersion = "99.99.99",
+
+  [Alias("v")]
+  [Parameter(ParameterSetName = 'OneVersion')]
+  [string] $Version,
 
   [Alias("vs")]
   [string] $VersionSuffix = "dev",
@@ -58,6 +64,10 @@ Param(
   [Alias("s")]
   [String[]] $Steps = @("UpdateTPVersion", "Restore", "Build", "Publish")
 )
+
+if ($Version) {
+  $FrameworkVersion = $AdapterVersion = $Version
+}
 
 . $PSScriptRoot\common.lib.ps1
 
@@ -135,25 +145,6 @@ function Print-Help {
 
   Write-Host -object ""
   Exit 0
-}
-
-function Install-WindowsSDK {
-  Push-Location
-  $temp = [System.IO.Path]::GetTempFileName();
-  Remove-Item $temp
-  New-Item $temp -Type Directory | Out-Null
-  Set-Location $temp
-
-  try {
-    Invoke-WebRequest -Method Get -Uri https://go.microsoft.com/fwlink/p/?LinkId=838916 -OutFile sdksetup.exe -UseBasicParsing
-    Start-Process -Wait sdksetup.exe -ArgumentList "/q", "/norestart", "/ceip off", "/features OptionId.WindowsSoftwareDevelopmentKit" -PassThru
-  }
-  finally {
-    Pop-Location
-
-    Remove-Item $temp -Force -Recurse | Out-Null
-  }
-
 }
 
 #
@@ -336,10 +327,6 @@ Print-Help
 
 if (ShouldRunStep @("UpdateTPVersion")) {
   Sync-PackageVersions
-}
-
-if (ShouldRunStep @("Install-WindowsSDK")) {
-  Install-WindowsSDK
 }
 
 if (ShouldRunStep @("UpdateTPVersion", "Restore")) {
