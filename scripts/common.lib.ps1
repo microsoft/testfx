@@ -34,7 +34,8 @@ $env:TF_SRC_DIR = $TF_SRC_DIR
 $env:TF_TEST_DIR = $TF_TEST_DIR
 $env:TF_PACKAGES_DIR = $TF_PACKAGES_DIR
 $env:TF_TOOLS_DIR = $TF_TOOLS_DIR
-$env:DOTNET_CLI_VERSION = "6.0.100-alpha.1.21067.8"
+$GlobalJson = Get-Content -Raw -Path (Join-Path $env:TF_ROOT_DIR 'global.json') | ConvertFrom-Json
+$env:DOTNET_CLI_VERSION = $GlobalJson.tools.dotnet
 
 if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
   $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
@@ -271,18 +272,14 @@ function Install-DotNetCli {
   # Not passing -Version 'X.Y.Z' allows to always install the latest patch
 
   & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Channel '2.1' -Architecture x64 -NoPath
-  $env:DOTNET_ROOT = $dotnetInstallPath
-  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Channel '2.1' -Architecture x86 -NoPath
-  ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
-
   & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Channel '3.1' -Architecture x64 -NoPath
-  $env:DOTNET_ROOT = $dotnetInstallPath
-  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Channel '3.1' -Architecture x86 -NoPath
-  ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
-
   & $dotnetInstallScript -InstallDir "$dotnetInstallPath" -Runtime 'dotnet' -Channel '6.0' -Architecture x64 -NoPath
-  $env:DOTNET_ROOT = $dotnetInstallPath
+
+  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Channel '2.1' -Architecture x86 -NoPath
+  & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Channel '3.1' -Architecture x86 -NoPath
   & $dotnetInstallScript -InstallDir "${dotnetInstallPath}_x86" -Runtime 'dotnet' -Channel '6.0' -Architecture x86 -NoPath
+
+  $env:DOTNET_ROOT= $dotnetInstallPath
   ${env:DOTNET_ROOT(x86)} = "${dotnetInstallPath}_x86"
 
   $env:DOTNET_MULTILEVEL_LOOKUP = 0
