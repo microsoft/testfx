@@ -7,11 +7,10 @@ using System;
 using System.IO;
 using System.Xml;
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestFramework.ForTestingMSTest;
 
-public partial class CLITestBase
+public partial class CLITestBase : TestContainer
 {
-    private const string E2ETestsRelativePath = @"..\..\..\..\";
     private const string TestAssetsFolder = "TestAssets";
     private const string ArtifactsFolder = "artifacts";
     private const string PackagesFolder = "packages";
@@ -23,7 +22,7 @@ public partial class CLITestBase
 
     protected XmlDocument ReadVersionProps()
     {
-        var versionPropsFilePath = Path.Combine(Environment.CurrentDirectory, GetRelativeRepositoryRootPath(), EngineeringFolder, "Versions.props");
+        var versionPropsFilePath = Path.Combine(Environment.CurrentDirectory, EngineeringFolder, "Versions.props");
         using var fileStream = File.OpenRead(versionPropsFilePath);
         using var xmlTextReader = new XmlTextReader(fileStream) { Namespaces = false };
         var versionPropsXml = new XmlDocument();
@@ -38,19 +37,13 @@ public partial class CLITestBase
         var testSdkVersion = versionPropsXml.DocumentElement.SelectSingleNode($"PropertyGroup/MicrosoftNETTestSdkVersion");
 
         return testSdkVersion.InnerText;
-    }
-
-    /// <summary>
-    /// Gets the relative path of repository root from start-up directory.
-    /// </summary>
-    /// <returns>Relative path of the repository root</returns>
-    protected virtual string GetRelativeRepositoryRootPath() => E2ETestsRelativePath;
+    }    
 
     /// <summary>
     /// Gets the path of test assets folder
     /// </summary>
     /// <returns>Path to testassets folder</returns>
-    protected string GetAssetFolderPath() => Path.Combine(Environment.CurrentDirectory, GetRelativeRepositoryRootPath(), ArtifactsFolder, TestAssetsFolder);
+    protected string GetAssetFolderPath() => Path.Combine(Environment.CurrentDirectory, ArtifactsFolder, TestAssetsFolder);
 
     /// <summary>
     /// Gets the full path to a test asset.
@@ -67,18 +60,14 @@ public partial class CLITestBase
     protected string GetAssetFullPath(string assetName)
     {
         var assetPath = Path.GetFullPath(Path.Combine(GetAssetFolderPath(), assetName));
-        Assert.IsTrue(File.Exists(assetPath), "GetTestAsset: Path not found: {0}.", assetPath);
+        // GetTestAsset: Path not found.
+        Verify(File.Exists(assetPath));
         return assetPath;
     }
 
     protected string GetTestAdapterPath()
     {
-        var testAdapterPath = Path.Combine(
-            Environment.CurrentDirectory,
-            GetRelativeRepositoryRootPath(),
-            ArtifactsFolder,
-            TestAssetsFolder);
-
+        var testAdapterPath = Path.Combine(Environment.CurrentDirectory, ArtifactsFolder, TestAssetsFolder);
         return testAdapterPath;
     }
 

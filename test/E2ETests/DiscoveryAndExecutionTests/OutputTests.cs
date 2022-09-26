@@ -9,23 +9,21 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.RegularExpressions;
+
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using OM = Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
+using OM = Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
 public class OutputTests : CLITestBase
 {
     private const string TestAssembly = "OutputTestProject.dll";
 
-    [TestMethod]
     public void OutputIsNotMixedWhenTestsRunInParallel()
     {
         ValidateOutputForClass(TestAssembly, "UnitTest1");
     }
 
-    [TestMethod]
     public void OutputIsNotMixedWhenAsyncTestsRunInParallel()
     {
         ValidateOutputForClass(TestAssembly, "UnitTest2");
@@ -44,7 +42,7 @@ public class OutputTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.AreEqual(3, testResults.Count);
+        Verify(3 == testResults.Count);
 
         // TODO: Re-enable this once we figure out how to make that pass in our CI pipeline.
         //// Ensure that some tests are running in parallel, because otherwise the output just works correctly.
@@ -81,21 +79,24 @@ public class OutputTests : CLITestBase
     {
         // Make sure that the output between methods is not mixed. And that every method has test initialize and cleanup.
         var testMethod = testResults.Single(t => t.DisplayName == methodName);
-        Assert.IsNotNull(testMethod, $"Test method {methodName} was not found.");
+        // Test method {methodName} was not found.
+        Verify(testMethod is not null);
         var message = testMethod.Messages.SingleOrDefault(messageFilter);
-        Assert.IsNotNull(message, $"Message for {testMethod.DisplayName} was not found. All messages: { string.Join(Environment.NewLine, testMethod.Messages.Select(m => $"{m.Category} - {m.Text}")) }");
-        StringAssert.Matches(message.Text, new Regex(methodName), testMethod.DisplayName);
-        StringAssert.Matches(message.Text, new Regex("TestInitialize"), testMethod.DisplayName);
-        StringAssert.Matches(message.Text, new Regex("TestCleanup"), testMethod.DisplayName);
-        StringAssert.DoesNotMatch(message.Text, new Regex(string.Join("|", shouldNotContain)), testMethod.DisplayName);
+        // Message for {testMethod.DisplayName} was not found. All messages: { string.Join(Environment.NewLine, testMethod.Messages.Select(m => $"{m.Category} - {m.Text}")) }
+        Verify(message is not null);
+        Verify(new Regex(methodName).IsMatch(message.Text));
+        Verify(new Regex(methodName).IsMatch(message.Text));
+        Verify(new Regex("TestInitialize").IsMatch(message.Text));
+        Verify(new Regex("TestCleanup").IsMatch(message.Text));
+        Verify(!new Regex(string.Join("|", shouldNotContain)).IsMatch(message.Text));
     }
 
     private static void ValidateInitializeAndCleanup(ReadOnlyCollection<OM.TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
     {
         // It is not deterministic where the class initialize and class cleanup will run, so we look at all tests, to make sure it is includes somewhere.
         var output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));
-        Assert.IsNotNull(output);
-        StringAssert.Matches(output, new Regex("ClassInitialize"));
-        StringAssert.Matches(output, new Regex("ClassCleanup"));
+        Verify(output is not null);
+        Verify(new Regex("ClassInitialize").IsMatch(output));
+        Verify(new Regex("ClassCleanup").IsMatch(output));
     }
 }

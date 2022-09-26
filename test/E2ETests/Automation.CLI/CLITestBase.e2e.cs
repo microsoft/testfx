@@ -8,12 +8,12 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml;
-
+using global::TestFramework.ForTestingMSTest;
 using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-public partial class CLITestBase
+public partial class CLITestBase : TestContainer
 {
     private static VsTestConsoleWrapper s_vsTestConsoleWrapper;
     private DiscoveryEventsHandler _discoveryEventsHandler;
@@ -66,8 +66,7 @@ public partial class CLITestBase
     /// <returns>Full path to <c>vstest.console.exe</c></returns>
     public string GetConsoleRunnerPath()
     {
-        var packagesFolder = Path.Combine(Environment.CurrentDirectory, GetRelativeRepositoryRootPath(), PackagesFolder);
-        var vstestConsolePath = Path.Combine(packagesFolder, TestPlatformCLIPackageName, GetTestPlatformVersion(), VstestConsoleRelativePath);
+        var vstestConsolePath = Path.Combine(Environment.CurrentDirectory, PackagesFolder, TestPlatformCLIPackageName, GetTestPlatformVersion(), VstestConsoleRelativePath);
 
         Assert.IsTrue(File.Exists(vstestConsolePath), "GetConsoleRunnerPath: Path not found: {0}", vstestConsolePath);
 

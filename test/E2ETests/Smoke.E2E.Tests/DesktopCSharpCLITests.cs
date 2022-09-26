@@ -4,9 +4,7 @@
 namespace Microsoft.MSTestV2.Smoke.E2ETests;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
 public class DesktopCSharpCLITests : CLITestBase
 {
     private const string X86DebugTestProject = "DesktopTestProjectx86Debug.dll";
@@ -20,57 +18,49 @@ public class DesktopCSharpCLITests : CLITestBase
                 </RunConfiguration>  
             </RunSettings>";
 
-    [TestMethod]
     public void DiscoverTestsx86Debug()
     {
         string[] sources = { X86DebugTestProject };
         DoDiscoveryAndValidateDiscoveredTests(sources);
     }
 
-    [TestMethod]
     public void DiscoverTestsx64Debug()
     {
         string[] sources = { X64DebugTestProject };
         DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
     }
 
-    [TestMethod]
     public void DiscoverTestsx86Release()
     {
         string[] sources = { X86ReleaseTestProject };
         DoDiscoveryAndValidateDiscoveredTests(sources);
     }
 
-    [TestMethod]
     public void DiscoverTestsx64Release()
     {
         string[] sources = { X64ReleaseTestProject };
         DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
     }
 
-    [TestMethod]
     public void RunAllTestsx86Debug()
     {
         string[] sources = { X86DebugTestProject };
         RunAllTestsAndValidateResults(sources);
     }
 
-    [TestMethod]
     public void RunAllTestsx64Debug()
     {
         string[] sources = { X64DebugTestProject };
         RunAllTestsAndValidateResults(sources, RunSetting);
     }
 
-    [TestMethod]
-    [Ignore] // TODO: no stack trace for failed test both for x86 and x64 but that's checked only for x86
-    public void RunAllTestsx86Release()
+    // TODO: no stack trace for failed test both for x86 and x64 but that's checked only for x86 (Marked as private to ignore the test)
+    private void RunAllTestsx86Release()
     {
         string[] sources = { X86ReleaseTestProject };
         RunAllTestsAndValidateResults(sources);
     }
 
-    [TestMethod]
     public void RunAllTestsx64Release()
     {
         string[] sources = { X64ReleaseTestProject };

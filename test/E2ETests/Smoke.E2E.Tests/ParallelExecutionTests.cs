@@ -4,9 +4,7 @@
 namespace MSTestAdapter.Smoke.E2ETests;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[TestClass]
 public class ParallelExecutionTests : CLITestBase
 {
     private const string ClassParallelTestAssembly = "ParallelClassesTestProject.dll";
@@ -15,7 +13,6 @@ public class ParallelExecutionTests : CLITestBase
     private const int TestMethodWaitTimeInMS = 1000;
     private const int OverheadTimeInMS = 3000;
 
-    [TestMethod]
     public void AllMethodsShouldRunInParallel()
     {
         InvokeVsTestForExecution(new string[] { MethodParallelTestAssembly });
@@ -37,7 +34,6 @@ public class ParallelExecutionTests : CLITestBase
             "ParallelMethodsTestProject.UnitTest2.SimpleTest22");
     }
 
-    [TestMethod]
     public void AllClassesShouldRunInParallel()
     {
         InvokeVsTestForExecution(new string[] { ClassParallelTestAssembly });
@@ -60,7 +56,6 @@ public class ParallelExecutionTests : CLITestBase
             "ParallelClassesTestProject.UnitTest3.SimpleTest32");
     }
 
-    [TestMethod]
     public void NothingShouldRunInParallel()
     {
         const string RunSetting =

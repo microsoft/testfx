@@ -4,17 +4,13 @@
 namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using System.IO;
 
-[TestClass]
 public class FSharpTestProjectTests : CLITestBase
 {
     private const string TestAssembly = "FSharpTestProject.dll";
 
-    [TestMethod]
     public void TestFSharpTestsWithSpaceAndDotInName()
     {
         // Arrange
@@ -25,8 +21,8 @@ public class FSharpTestProjectTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Assert.That.TestsPassed(testResults, "Test method passing with a . in it");
-        Assert.That.PassedTestCount(testResults, 1);
-        Assert.That.FailedTestCount(testResults, 0);
+        VerifyE2E.TestsPassed(testResults, "Test method passing with a . in it");
+        VerifyE2E.PassedTestCount(testResults, 1);
+        VerifyE2E.FailedTestCount(testResults, 0);
     }
 }
