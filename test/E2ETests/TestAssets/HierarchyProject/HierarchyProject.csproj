@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>$(RepoRoot)artifacts\TestAssets\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)\src\TestFramework\Extension\Extension.csproj" />
+    <ProjectReference Include="$(RepoRoot)\src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+  </ItemGroup>
+  
+</Project>
