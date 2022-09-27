@@ -1359,9 +1359,6 @@ public class TestMethodInfoTests : TestContainer
                 {
                     a.Invoke();
                 });
-            testablePlatformServiceProvider.MockThreadOperations.
-                Setup(tho => tho.ExecuteWithAbortSafety(It.IsAny<Action>())).
-                Callback((Action a) => { a.Invoke(); });
 
             action.Invoke();
         }

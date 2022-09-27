@@ -19,10 +19,4 @@ public interface IThreadOperations
     /// <param name="cancelToken">Token to cancel the execution</param>
     /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
     bool Execute(Action action, int timeout, CancellationToken cancelToken);
-
-    /// <summary>
-    /// Execute an action with handling for Thread Aborts (if possible) so the main thread of the adapter does not die.
-    /// </summary>
-    /// <param name="action"> The action to execute. </param>
-    void ExecuteWithAbortSafety(Action action);
 }

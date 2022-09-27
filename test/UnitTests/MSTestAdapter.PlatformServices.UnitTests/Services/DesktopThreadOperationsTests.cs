@@ -90,17 +90,6 @@ public class DesktopThreadOperationsTests : TestContainer
         Verify(isBackground);
     }
 
-    public void ExecuteWithAbortSafetyShouldCatchThreadAbortExceptionsAndResetAbort()
-    {
-        static void action() => Thread.CurrentThread.Abort();
-
-        var exception = VerifyThrows(() => _asyncOperations.ExecuteWithAbortSafety(action));
-
-        Verify(exception is not null);
-        Verify(typeof(TargetInvocationException) == exception.GetType());
-        Verify(typeof(ThreadAbortException) == exception.InnerException.GetType());
-    }
-
     public void TokenCancelShouldAbortExecutingAction()
     {
         // setup

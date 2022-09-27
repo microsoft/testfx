@@ -836,10 +836,7 @@ public class TestExecutionManagerTests : TestContainer
                     });
 
         testablePlatformService.MockSettingsProvider.Setup(sp => sp.GetProperties(It.IsAny<string>()))
-            .Returns(new Dictionary<string, object>());
-
-        testablePlatformService.MockThreadOperations.Setup(ao => ao.ExecuteWithAbortSafety(It.IsAny<Action>()))
-            .Callback((Action action) => action.Invoke());
+            .Returns(new Dictionary<string, object>());        
 
         return testablePlatformService;
     }

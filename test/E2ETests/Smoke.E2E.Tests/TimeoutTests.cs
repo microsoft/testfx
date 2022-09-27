@@ -3,6 +3,7 @@
 
 namespace MSTestAdapter.Smoke.E2ETests;
 
+using System.Collections.Generic;
 using System.IO;
 
 using Microsoft.MSTestV2.CLIAutomation;
@@ -10,38 +11,40 @@ using Microsoft.MSTestV2.CLIAutomation;
 public class TimeoutTests : CLITestBase
 {
     private const string TimeoutTestAssembly = "TimeoutTestProject.dll";
-    private const string TimeoutTestAssemblyNetCore = "netcoreapp3.1\\TimeoutTestProjectNetCore.dll";
-    private const int TestMethodWaitTimeInMs = 6000;
-    private const int OverheadTimeInMs = 2500;
-    private const string TimeoutFileToValidateNetCore = "netcoreapp3.1\\TimeoutTestOutputNetCore.txt";
-    private const string TimeoutFileToValidate = "TimeoutTestOutput.txt";
 
-    public void ValidateTimeoutTests()
+    public void ValidateTimeoutTests_net462()
     {
-        Validate(TimeoutTestAssembly, TimeoutFileToValidate);
+        ValidateTimeoutTests("net462");
     }
 
-    public void ValidateTimeoutTestsNetCore()
+    public void ValidateTimeoutTests_netcoreapp31()
     {
-        Validate(TimeoutTestAssemblyNetCore, TimeoutFileToValidateNetCore);
+        ValidateTimeoutTests("netcoreapp3.1");
     }
 
-    private void Validate(string testAssembly, string fileToValidate)
+    private void ValidateTimeoutTests(string targetFramework)
     {
-        InvokeVsTestForExecution(new string[] { testAssembly });
+        InvokeVsTestForExecution(new string[] { targetFramework + "\\" + TimeoutTestAssembly }, testCaseFilter: "TimeoutTest|RegularTest");
 
-        ValidateTestRunTime(TestMethodWaitTimeInMs + OverheadTimeInMs);
+        ValidateFailedTestsCount(targetFramework == "net462" ? 5 : 4);
 
-        ValidateFailedTestsCount(2);
+        var failedTests = new List<string>
+        {
+            "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenUserCancelsTestContextToken_AbortTest",
+            "TimeoutTestProject.TimeoutTestClass.RegularTest_WhenUserCancelsTestContextToken_TestContinues",
+            "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenTimeoutReached_CancelsTestContextToken",
+            "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenTimeoutReached_ForcesTestAbort",
+        };
 
-        ValidateFailedTestsContain(
-            testAssembly,
-            false,
-            "TimeoutTestProject.TerminateLongRunningTasksUsingTokenTestClass.TerminateLongRunningTasksUsingToken",
-            "TimeoutTestProject.SelfTerminatingTestClass.SelfTerminatingTestMethod");
-        // Unable to locate the TimeoutTestOutput.txt file.
-        Verify(File.Exists(GetAssetFullPath(fileToValidate)));
+        if (targetFramework == "net462")
+        {
+            failedTests.Add("TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenUserCallsThreadAbort_AbortTest");
+        }
+
+        ValidateFailedTestsContain(TimeoutTestAssembly, false, failedTests.ToArray());
+
+        // We should find the <TargetFramework>/TimeoutTestOutput.txt file, as it's our way to validate
+        // that when the timeout expires it cancels the test context token.
+        Verify(File.Exists(GetAssetFullPath(targetFramework + "\\" + "TimeoutTestOutput.txt")));
     }
-
-    // TODO @haplois | @evangelink: We should add netcoreapp2.1 tests here.
 }
