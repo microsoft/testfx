@@ -471,7 +471,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="classInstance">Instance of TestClass.</param>
     /// <param name="result">Instance of TestResult.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private void RunTestCleanupMethod(object classInstance, TestResult result)
+    private async void RunTestCleanupMethod(object classInstance, TestResult result)
     {
         Debug.Assert(classInstance != null, "classInstance != null");
         Debug.Assert(result != null, "result != null");
@@ -494,6 +494,9 @@ public class TestMethodInfo : ITestMethod
             finally
             {
                 (classInstance as IDisposable)?.Dispose();
+#if NET6_0_OR_GREATER
+                await (classInstance as IAsyncDisposable)?.DisposeAsync().AsTask();
+#endif
             }
         }
         catch (Exception ex)
