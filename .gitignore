@@ -86,7 +86,6 @@ packages
 artifacts
 Tools
 .dotnet
-TestAssets
 
 # ===========================
 # Tools
