@@ -10,7 +10,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <ProjectReference Include="$(RepoRoot)samples\FxExtensibility\FxExtensibility.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\MSTest.Core\MSTest.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
   </ItemGroup>
 
 </Project>

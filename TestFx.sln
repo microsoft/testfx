@@ -9,19 +9,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Adapter", "Adapter", "{2408
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.TestAdapter", "src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj", "{98BA6D2C-1F3D-4636-8E1D-D4932B7A253D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Interface", "src\Adapter\PlatformServices.Interface\PlatformServices.Interface.csproj", "{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTestAdapter.PlatformServices.Interface", "src\Adapter\MSTestAdapter.PlatformServices.Interface\MSTestAdapter.PlatformServices.Interface.csproj", "{BBC99A6B-4490-49DD-9C12-AF2C1E95576E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices", "src\Adapter\PlatformServices\PlatformServices.csproj", "{5D153CAA-80C2-4551-9549-6C406FCEEFB1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTestAdapter.PlatformServices", "src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj", "{5D153CAA-80C2-4551-9549-6C406FCEEFB1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestFramework", "TestFramework", "{E48AC786-E150-4F41-9A16-32F02E4493D8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Core", "src\TestFramework\MSTest.Core\MSTest.Core.csproj", "{7252D9E3-267D-442C-96BC-C73AEF3241D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFramework", "src\TestFramework\TestFramework\TestFramework.csproj", "{7252D9E3-267D-442C-96BC-C73AEF3241D6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A9596292-7E67-4566-9096-143DDAA4E8D8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AdapterTests", "AdapterTests", "{F2D0BF2C-38F2-4244-80E3-4AAD1C3F4C89}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Extension", "src\TestFramework\Extension\Extension.csproj", "{DF131865-84EE-4540-8112-E88ACEBDEA09}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFramework.Extensions", "src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj", "{DF131865-84EE-4540-8112-E88ACEBDEA09}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "E2ETests", "E2ETests", "{F1A27537-78D1-4BBD-8E76-ADB31BC0C2B4}"
 EndProject
@@ -85,7 +85,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Package", "Package", "{E374
 		src\Package\MSTest.TestFramework.symbols.nuspec = src\Package\MSTest.TestFramework.symbols.nuspec
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Desktop.Component.Tests", "test\ComponentTests\PlatformServices.Desktop.Component.Tests\PlatformServices.Desktop.Component.Tests.csproj", "{4EA6EED3-0579-4C7C-94EA-52B2AD2A9D39}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Desktop.ComponentTests", "test\ComponentTests\PlatformServices.Desktop.ComponentTests\PlatformServices.Desktop.ComponentTests.csproj", "{4EA6EED3-0579-4C7C-94EA-52B2AD2A9D39}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Smoke.E2E.Tests", "test\E2ETests\Smoke.E2E.Tests\Smoke.E2E.Tests.csproj", "{A94E3FCA-2FB3-4C79-9F39-5B652B6992F0}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -105,17 +105,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Automation.CLI", "test\E2ET
 		{C6AC27D2-975B-4CF3-B16B-9C17907B2268} = {C6AC27D2-975B-4CF3-B16B-9C17907B2268}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.CoreAdapter.Unit.Tests", "test\UnitTests\MSTest.CoreAdapter.Unit.Tests\MSTest.CoreAdapter.Unit.Tests.csproj", "{1CEB5743-70BF-475E-91BC-0AEBD63835B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTestAdapter.UnitTests", "test\UnitTests\MSTestAdapter.UnitTests\MSTestAdapter.UnitTests.csproj", "{1CEB5743-70BF-475E-91BC-0AEBD63835B7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Unit.Tests", "test\UnitTests\PlatformServices.Unit.Tests\PlatformServices.Unit.Tests.csproj", "{599833DC-EC5A-40CA-B5CF-DEF719548EEF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTestAdapter.PlatformServices.UnitTests", "test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\MSTestAdapter.PlatformServices.UnitTests.csproj", "{599833DC-EC5A-40CA-B5CF-DEF719548EEF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Universal.Unit.Tests", "test\UnitTests\PlatformServices.Universal.Unit.Tests\PlatformServices.Universal.Unit.Tests.csproj", "{FA7C719F-A400-45AF-8091-7C23435617A8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlatformServices.Universal.UnitTests", "test\UnitTests\PlatformServices.Universal.UnitTests\PlatformServices.Universal.UnitTests.csproj", "{FA7C719F-A400-45AF-8091-7C23435617A8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DF131865-84EE-4540-8112-E88ACEBDEA09} = {DF131865-84EE-4540-8112-E88ACEBDEA09}
 		{5D153CAA-80C2-4551-9549-6C406FCEEFB1} = {5D153CAA-80C2-4551-9549-6C406FCEEFB1}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Core.Unit.Tests", "test\UnitTests\MSTest.Core.Unit.Tests\MSTest.Core.Unit.Tests.csproj", "{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFramework.UnitTests", "test\UnitTests\TestFramework.UnitTests\TestFramework.UnitTests.csproj", "{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "toolPackages", "toolPackages", "{1701E9E5-E06B-45FE-B860-6A83BBAEE6A9}"
 	ProjectSection(SolutionItems) = preProject

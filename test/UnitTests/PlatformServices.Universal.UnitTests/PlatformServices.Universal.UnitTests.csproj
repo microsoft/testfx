@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="MSBuild.Sdk.Extras">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(UwpMinimum)</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP.UnitTests</RootNamespace>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UWP.UnitTests</AssemblyName>
+    <NoWarn>1685</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
+    <ProjectReference Include="$(RepoRoot)test\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="Moq" Version="$(MoqVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\Services\DiaSessionOperationsTests.cs" Link="Services\DiaSessionOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\Services\TestSourceHostTests.cs" Link="Services\TestSourceHostTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\Services\AssemblyAttributes.cs" Link="Services\AssemblyAttributes.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\Services\ReflectionOperationsTests.cs" Link="Services\ReflectionOperationsTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\Services\TestContextImplementationTests.cs" Link="Services\TestContextImplementationTests.cs" />
+    <Compile Include="$(RepoRoot)test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\Services\ThreadOperationsTests.cs" Link="Services\ThreadOperationsTests.cs" />
+  </ItemGroup>
+
+</Project>
