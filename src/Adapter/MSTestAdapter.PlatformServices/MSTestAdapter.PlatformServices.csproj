@@ -50,7 +50,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices.Interface\MSTestAdapter.PlatformServices.Interface.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
