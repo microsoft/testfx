@@ -25,7 +25,7 @@ public class ThreadOperations : IThreadOperations
     {
         try
         {
-            var executionTask = Task.Factory.StartNew(action, cancelToken);
+            var executionTask = Task.Run(action, cancelToken);
             if (executionTask.Wait(timeout, cancelToken))
             {
                 return true;

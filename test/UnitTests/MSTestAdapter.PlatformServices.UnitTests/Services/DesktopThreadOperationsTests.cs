@@ -32,63 +32,7 @@ public class DesktopThreadOperationsTests : TestContainer
 
         Verify(_asyncOperations.Execute(action, 1000, cancellationTokenSource.Token));
         Verify(Environment.CurrentManagedThreadId != actionThreadID);
-    }
-
-    public void ExecuteShouldKillTheThreadExecutingAsyncOnTimeout()
-    {
-        ManualResetEvent timeoutMutex = new(false);
-        ManualResetEvent actionCompleted = new(false);
-        var hasReachedEnd = false;
-        var isThreadAbortThrown = false;
-        var cancellationTokenSource = new CancellationTokenSource();
-
-        void action()
-        {
-            try
-            {
-                timeoutMutex.WaitOne();
-                hasReachedEnd = true;
-            }
-            catch (ThreadAbortException)
-            {
-                isThreadAbortThrown = true;
-
-                // Resetting abort because there is a warning being thrown in the tests pane.
-                Thread.ResetAbort();
-            }
-            finally
-            {
-                actionCompleted.Set();
-            }
-        }
-
-        Verify(!_asyncOperations.Execute(action, 1, cancellationTokenSource.Token));
-        timeoutMutex.Set();
-        actionCompleted.WaitOne();
-
-        Verify(!hasReachedEnd, "Execution Completed successfully");
-        Verify(isThreadAbortThrown, "ThreadAbortException not thrown");
-    }
-
-    public void ExecuteShouldSpawnThreadWithSpecificAttributes()
-    {
-        var name = string.Empty;
-        var apartmentState = ApartmentState.Unknown;
-        var isBackground = false;
-        var cancellationTokenSource = new CancellationTokenSource();
-        void action()
-        {
-            name = Thread.CurrentThread.Name;
-            apartmentState = Thread.CurrentThread.GetApartmentState();
-            isBackground = Thread.CurrentThread.IsBackground;
-        }
-
-        Verify(_asyncOperations.Execute(action, 100, cancellationTokenSource.Token));
-
-        Verify("MSTestAdapter Thread" == name);
-        Verify(Thread.CurrentThread.GetApartmentState() == apartmentState);
-        Verify(isBackground);
-    }
+    }        
 
     public void TokenCancelShouldAbortExecutingAction()
     {
