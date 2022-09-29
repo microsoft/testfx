@@ -70,7 +70,7 @@ public class TestMethodRunnerTests : TestContainer
 
         _globaltestMethodOptions = new TestMethodOptions()
         {
-            Timeout = 3600 * 1000,
+            TimeoutContext = new(3600 * 1000),
             Executor = _testMethodAttribute,
             TestContext = _testContextImplementation,
             ExpectedException = null
@@ -84,7 +84,7 @@ public class TestMethodRunnerTests : TestContainer
 
         _testMethodOptions = new TestMethodOptions()
         {
-            Timeout = 200,
+            TimeoutContext = new(200),
             Executor = _testMethodAttribute,
             TestContext = _testContextImplementation,
             ExpectedException = null
@@ -252,7 +252,7 @@ public class TestMethodRunnerTests : TestContainer
 
         var localTestMethodOptions = new TestMethodOptions
         {
-            Timeout = 200,
+            TimeoutContext = new(200),
             Executor = testMethodAttributeMock.Object,
             TestContext = _testContextImplementation,
             ExpectedException = null

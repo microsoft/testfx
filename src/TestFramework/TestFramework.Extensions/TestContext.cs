@@ -24,9 +24,23 @@ public abstract class TestContext
     public abstract IDictionary Properties { get; }
 
     /// <summary>
-    /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted
+    /// Gets or sets the cancellation token source.
+    /// This token source is canceled when test times out. Also when explicitly canceled the test will be aborted.
     /// </summary>
+    /// <remarks>
+    /// Cancelling the token source for a test not marked with <see cref="TimeoutAttribute"/> will result in a no-op.
+    /// </remarks>
     public virtual CancellationTokenSource CancellationTokenSource { get; protected set; }
+
+    /// <summary>
+    /// Gets or sets the test cleanup cancellation token source. This token source is canceled when test cleanup times out (after that a test timed out).
+    /// Also when explicitly canceled the test cleanup will be aborted.
+    /// </summary>
+    /// <remarks>
+    /// Cancelling the token source for a test not marked with <see cref="TimeoutAttribute"/> or when <see cref="CancellationTokenSource"/>
+    /// is not canceled will result in a no-op.
+    /// </remarks>
+    public virtual CancellationTokenSource CleanupCancellationTokenSource { get; protected set; }
 
 #if NETFRAMEWORK
     /// <summary>

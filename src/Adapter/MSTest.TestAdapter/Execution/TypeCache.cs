@@ -603,10 +603,14 @@ internal class TypeCache : MarshalByRefObject
             return null;
         }
 
-        var expectedExceptionAttribute = _reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
-        var timeout = GetTestTimeout(methodInfo, testMethod);
-
-        var testMethodOptions = new TestMethodOptions() { Timeout = timeout, Executor = GetTestMethodAttribute(methodInfo, testClassInfo), ExpectedException = expectedExceptionAttribute, TestContext = testContext, CaptureDebugTraces = captureDebugTraces };
+        var testMethodOptions = new TestMethodOptions
+        {
+            TimeoutContext = GetTestTimeout(methodInfo, testMethod),
+            Executor = GetTestMethodAttribute(methodInfo, testClassInfo),
+            ExpectedException = _reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod),
+            TestContext = testContext,
+            CaptureDebugTraces = captureDebugTraces
+        };
         var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testMethodOptions);
 
         SetCustomProperties(testMethodInfo, testContext);
@@ -715,28 +719,30 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="methodInfo"> The method Info. </param>
     /// <param name="testMethod"> The test Method. </param>
     /// <returns> The timeout value if defined in milliseconds. 0 if not defined. </returns>
-    private int GetTestTimeout(MethodInfo methodInfo, TestMethod testMethod)
+    private static TimeoutAttribute GetTestTimeout(MethodInfo methodInfo, TestMethod testMethod)
     {
         Debug.Assert(methodInfo != null, "TestMethod should be non-null");
-        var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
-        var globalTimeout = MSTestSettings.CurrentSettings.TestTimeout;
 
-        if (timeoutAttribute != null)
+        var timeoutAttributes = ReflectHelper.GetCustomAttributes(methodInfo, typeof(TimeoutAttribute), false);
+        if (timeoutAttributes?.Length == 1 && timeoutAttributes[0] is TimeoutAttribute timeoutAttribute)
         {
-            if (!methodInfo.HasCorrectTimeout())
+            if (timeoutAttribute.Timeout < 0)
             {
                 var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, testMethod.FullClassName, testMethod.Name);
                 throw new TypeInspectionException(message);
             }
 
-            return timeoutAttribute.Timeout;
-        }
-        else if (globalTimeout > 0)
-        {
-            return globalTimeout;
+            if (timeoutAttribute.CleanupTimeout < 0)
+            {
+                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidCleanupTimeout, testMethod.FullClassName, testMethod.Name);
+                throw new TypeInspectionException(message);
+            }
+
+            return timeoutAttribute;
         }
 
-        return TestMethodInfo.TimeoutWhenNotSet;
+        var globalTimeout = MSTestSettings.CurrentSettings.TestTimeout;
+        return globalTimeout > 0 ? new(globalTimeout) : new(TestMethodInfo.TimeoutWhenNotSet);
     }
 
     /// <summary>

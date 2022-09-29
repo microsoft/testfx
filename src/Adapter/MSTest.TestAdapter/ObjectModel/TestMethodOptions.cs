@@ -14,7 +14,7 @@ internal class TestMethodOptions
     /// <summary>
     /// Gets or sets the timeout specified for a test method.
     /// </summary>
-    internal int Timeout { get; set; }
+    internal TimeoutAttribute TimeoutContext { get; set; }
 
     /// <summary>
     /// Gets or sets the ExpectedException attribute adorned on a test method.

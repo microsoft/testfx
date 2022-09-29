@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -87,28 +88,6 @@ internal static class MethodInfoExtensions
     }
 
     /// <summary>
-    /// Checks whether test method has correct Timeout attribute.
-    /// </summary>
-    /// <param name="method">The method to verify.</param>
-    /// <returns>True if the method has the right test timeout signature.</returns>
-    internal static bool HasCorrectTimeout(this MethodInfo method)
-    {
-        Debug.Assert(method != null, "method should not be null.");
-
-        // There should be one and only one TimeoutAttribute.
-        var attributes = ReflectHelper.GetCustomAttributes(method, typeof(TimeoutAttribute), false);
-        if (attributes?.Length != 1)
-        {
-            return false;
-        }
-
-        // Timeout cannot be less than 0.
-        var attribute = attributes[0] as TimeoutAttribute;
-
-        return !(attribute?.Timeout < 0);
-    }
-
-    /// <summary>
     /// Check is return type is void for non async and Task for async methods.
     /// </summary>
     /// <param name="method">The method to verify.</param>
@@ -160,4 +139,30 @@ internal static class MethodInfoExtensions
         // If methodInfo is an Async method, wait for returned task
         task?.GetAwaiter().GetResult();
     }
+
+    internal static Task InvokeAsTask(this MethodInfo methodInfo, object classInstance, CancellationToken cancellationToken, params object[] parameters)
+    {
+        var methodParameters = methodInfo.GetParameters();
+
+        // check if testmethod expected parameter values but no testdata was provided,
+        // throw error with appropriate message.
+        if (methodParameters != null && methodParameters.Length > 0 && parameters == null)
+        {
+            throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, Resource.UTA_TestMethodExpectedParameters);
+        }
+
+        return methodInfo.ReturnType == typeof(Task)
+            ? Task.Run(async () => await (methodInfo.Invoke(classInstance, parameters) as Task), cancellationToken)
+            : Task.Run(() => methodInfo.Invoke(classInstance, parameters), cancellationToken);
+    }
+
+    /// <summary>
+    /// Wrap the awaited <see cref="MethodInfo"/> call (sync or async) inside a cancellable
+    /// awaited <see cref="Task.Run(System.Action, System.Threading.CancellationToken)"/> call.
+    /// </summary>
+    internal static void InvokeAsCancellableSynchronousTask(this MethodInfo methodInfo, object classInstance, CancellationToken cancellationToken, params object[] parameters)
+        => Task.Run(
+                () => methodInfo.InvokeAsSynchronousTask(classInstance, parameters),
+                cancellationToken)
+            .Wait(cancellationToken);
 }

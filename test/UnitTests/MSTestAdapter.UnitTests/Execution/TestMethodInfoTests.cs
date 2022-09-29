@@ -73,7 +73,7 @@ public class TestMethodInfoTests : TestContainer
         _expectedException = new UTF.ExpectedExceptionAttribute(typeof(DivideByZeroException));
         _testMethodOptions = new TestMethodOptions()
         {
-            Timeout = 3600 * 1000,
+            TimeoutContext = new(3600 * 1000),
             Executor = _testMethodAttribute,
             ExpectedException = null,
             TestContext = _testContextImplementation
@@ -946,7 +946,7 @@ public class TestMethodInfoTests : TestContainer
     public void HandleMethodExceptionShouldInvokeVerifyOfCustomExpectedException()
     {
         CustomExpectedExceptionAttribute customExpectedException = new(typeof(DivideByZeroException), "Attempted to divide by zero");
-        _testMethodOptions.Timeout = 0;
+        _testMethodOptions.TimeoutContext = new(0);
         _testMethodOptions.ExpectedException = customExpectedException;
         var method = new TestMethodInfo(
             _methodInfo,
@@ -962,7 +962,7 @@ public class TestMethodInfoTests : TestContainer
     public void HandleMethodExceptionShouldSetOutcomeAsFailedIfVerifyOfExpectedExceptionThrows()
     {
         CustomExpectedExceptionAttribute customExpectedException = new(typeof(DivideByZeroException), "Custom Exception");
-        _testMethodOptions.Timeout = 0;
+        _testMethodOptions.TimeoutContext = new(0);
         _testMethodOptions.ExpectedException = customExpectedException;
         var method = new TestMethodInfo(
             _methodInfo,
@@ -978,7 +978,7 @@ public class TestMethodInfoTests : TestContainer
     public void HandleMethodExceptionShouldSetOutcomeAsInconclusveIfVerifyOfExpectedExceptionThrowsAssertInconclusiveException()
     {
         CustomExpectedExceptionAttribute customExpectedException = new(typeof(DivideByZeroException), "Custom Exception");
-        _testMethodOptions.Timeout = 0;
+        _testMethodOptions.TimeoutContext = new(0);
         _testMethodOptions.ExpectedException = customExpectedException;
         var method = new TestMethodInfo(
             _methodInfo,
@@ -995,7 +995,7 @@ public class TestMethodInfoTests : TestContainer
     public void HandleMethodExceptionShouldInvokeVerifyOfDerivedCustomExpectedException()
     {
         DerivedCustomExpectedExceptionAttribute derivedCustomExpectedException = new(typeof(DivideByZeroException), "Attempted to divide by zero");
-        _testMethodOptions.Timeout = 0;
+        _testMethodOptions.TimeoutContext = new(0);
         _testMethodOptions.ExpectedException = derivedCustomExpectedException;
         var method = new TestMethodInfo(
             _methodInfo,
@@ -1014,7 +1014,7 @@ public class TestMethodInfoTests : TestContainer
         {
             AllowDerivedTypes = true
         };
-        _testMethodOptions.Timeout = 0;
+        _testMethodOptions.TimeoutContext = new(0);
         _testMethodOptions.ExpectedException = expectedException;
         var method = new TestMethodInfo(
             _methodInfo,
@@ -1032,7 +1032,7 @@ public class TestMethodInfoTests : TestContainer
         {
             AllowDerivedTypes = true
         };
-        _testMethodOptions.Timeout = 0;
+        _testMethodOptions.TimeoutContext = new(0);
         _testMethodOptions.ExpectedException = expectedException;
         var method = new TestMethodInfo(
             _methodInfo,
@@ -1053,7 +1053,7 @@ public class TestMethodInfoTests : TestContainer
         {
             AllowDerivedTypes = true
         };
-        _testMethodOptions.Timeout = 0;
+        _testMethodOptions.TimeoutContext = new(0);
         _testMethodOptions.ExpectedException = expectedException;
         var method = new TestMethodInfo(
             _methodInfo,
@@ -1073,7 +1073,7 @@ public class TestMethodInfoTests : TestContainer
         {
             AllowDerivedTypes = true
         };
-        _testMethodOptions.Timeout = 0;
+        _testMethodOptions.TimeoutContext = new(0);
         _testMethodOptions.ExpectedException = expectedException;
         var method = new TestMethodInfo(
             _methodInfo,
@@ -1090,7 +1090,7 @@ public class TestMethodInfoTests : TestContainer
     public void VerifyShouldThrowIfThrownExceptionIsNotSameAsExpectedException()
     {
         UTF.ExpectedExceptionAttribute expectedException = new(typeof(Exception));
-        _testMethodOptions.Timeout = 0;
+        _testMethodOptions.TimeoutContext = new(0);
         _testMethodOptions.ExpectedException = expectedException;
         var method = new TestMethodInfo(
             _methodInfo,
@@ -1108,7 +1108,7 @@ public class TestMethodInfoTests : TestContainer
     public void VerifyShouldRethrowIfThrownExceptionIsAssertExceptionWhichIsNotSameAsExpectedException()
     {
         UTF.ExpectedExceptionAttribute expectedException = new(typeof(Exception));
-        _testMethodOptions.Timeout = 0;
+        _testMethodOptions.TimeoutContext = new(0);
         _testMethodOptions.ExpectedException = expectedException;
         var method = new TestMethodInfo(
             _methodInfo,
@@ -1168,7 +1168,7 @@ public class TestMethodInfoTests : TestContainer
 
             testablePlatformServiceProvider.MockThreadOperations.Setup(
              to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
-            _testMethodOptions.Timeout = 1;
+            _testMethodOptions.TimeoutContext = new(1);
             var method = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions);
 
             var result = method.Invoke(null);
@@ -1196,7 +1196,7 @@ public class TestMethodInfoTests : TestContainer
 
             testablePlatformServiceProvider.MockThreadOperations.Setup(
              to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
-            _testMethodOptions.Timeout = 1;
+            _testMethodOptions.TimeoutContext = new(1);
 
             var method = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions);
             var result = method.Invoke(null);
@@ -1227,7 +1227,7 @@ public class TestMethodInfoTests : TestContainer
                  }
              });
 
-            _testMethodOptions.Timeout = 100000;
+            _testMethodOptions.TimeoutContext = new(100000);
             _testContextImplementation.CancellationTokenSource.CancelAfter(100);
             var method = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions);
             var result = method.Invoke(null);

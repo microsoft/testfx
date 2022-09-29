@@ -19,9 +19,15 @@ public sealed class TimeoutAttribute : Attribute
     /// <param name="timeout">
     /// The timeout in milliseconds.
     /// </param>
-    public TimeoutAttribute(int timeout)
+    /// <param name="cleanupTimeout">
+    /// The cleanup timeout in milliseconds.
+    /// This represents the time allowed for the cleanup (TestCleanup, Dispose) to complete when the test times out.
+    /// The default value is infinite, meaning that all cleanup will be called and left infinite time to process.
+    /// </param>
+    public TimeoutAttribute(int timeout, int cleanupTimeout = int.MaxValue)
     {
         Timeout = timeout;
+        CleanupTimeout = cleanupTimeout;
     }
 
     /// <summary>
@@ -31,8 +37,8 @@ public sealed class TimeoutAttribute : Attribute
     /// The timeout
     /// </param>
     public TimeoutAttribute(TestTimeout timeout)
+        : this((int)timeout)
     {
-        Timeout = (int)timeout;
     }
 
     #endregion
@@ -43,6 +49,12 @@ public sealed class TimeoutAttribute : Attribute
     /// Gets the timeout in milliseconds.
     /// </summary>
     public int Timeout { get; }
+
+    /// <summary>
+    /// Gets the cleanup timeout in milliseconds.
+    /// This represents the time allowed for the cleanup (TestCleanup, Dispose) to complete when the test times out.
+    /// </summary>
+    public int CleanupTimeout { get; }
 
     #endregion
 }

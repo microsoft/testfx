@@ -13,6 +13,9 @@ namespace TimeoutTestProject;
 [TestClass]
 public class TimeoutTestClass
 {
+    private bool _waitInCleanup = false;
+    private bool _cancelInCleanup = false;
+
     public TestContext TestContext { get; set; }
 
     [TestMethod]
@@ -54,6 +57,36 @@ public class TimeoutTestClass
     public void TimeoutTest_WhenTimeoutReached_ForcesTestAbort()
     {
         Thread.Sleep(100_000);
+    }
+
+    [TestMethod]
+    [Timeout(50, cleanupTimeout: 100)]
+    public void TimeoutTest_WaitInCleanup()
+    {
+        _waitInCleanup = true;
+    }
+
+    [TestMethod]
+    [Timeout(50)]
+    public void TimeoutTest_CancelInCleanup()
+    {
+        _cancelInCleanup = true;
+    }
+
+    [TestCleanup]
+    public void TestCleanup()
+    {
+        if (_waitInCleanup)
+        {
+            Thread.Sleep(100_000);
+            Assert.Fail("Should not have been called.");
+        }
+
+        if (_cancelInCleanup)
+        {
+            TestContext.CleanupCancellationTokenSource.Cancel();
+            Assert.Fail("Should not have been called.");
+        }
     }
 
     private void ExecuteLong()

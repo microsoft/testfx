@@ -885,7 +885,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         Verify(methodInfo == testMethodInfo.TestMethod);
-        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(0 == testMethodInfo.TestMethodOptions.TimeoutContext.Timeout);
         Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
@@ -905,7 +905,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         Verify(methodInfo == testMethodInfo.TestMethod);
-        Verify(10 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(10 == testMethodInfo.TestMethodOptions.TimeoutContext.Timeout);
         Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
@@ -931,7 +931,7 @@ public class TypeCacheTests : TestContainer
 
         var expectedMessage =
             string.Format(
-                "UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0.",
+                "UTA054: {0}.{1} has invalid TimeoutContext attribute. The timeout must be a valid integer value and cannot be less than 0.",
                 testMethod.FullClassName,
                 testMethod.Name);
 
@@ -958,7 +958,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(4000 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(4000 == testMethodInfo.TestMethodOptions.TimeoutContext.Timeout);
     }
 
     public void GetTestMethodInfoWhenTimeoutAttributeSetShouldReturnTimeoutBasedOnAtrributeEvenIfGlobalTimeoutSet()
@@ -984,7 +984,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(10 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(10 == testMethodInfo.TestMethodOptions.TimeoutContext.Timeout);
     }
 
     public void GetTestMethodInfoForInvalidGLobalTimeoutShouldReturnTestMethodInfoWithTimeoutZero()
@@ -1007,7 +1007,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(0 == testMethodInfo.TestMethodOptions.TimeoutContext.Timeout);
     }
 
     public void GetTestMethodInfoShouldReturnTestMethodInfoForMethodsAdornedWithADerivedTestMethodAttribute()
@@ -1022,7 +1022,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         Verify(methodInfo == testMethodInfo.TestMethod);
-        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(0 == testMethodInfo.TestMethodOptions.TimeoutContext.Timeout);
         Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
         Verify(testMethodInfo.TestMethodOptions.Executor is DerivedTestMethodAttribute);
@@ -1137,7 +1137,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         Verify(methodInfo == testMethodInfo.TestMethod);
-        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(0 == testMethodInfo.TestMethodOptions.TimeoutContext.Timeout);
         Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
@@ -1154,7 +1154,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         Verify(methodInfo == testMethodInfo.TestMethod);
-        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(0 == testMethodInfo.TestMethodOptions.TimeoutContext.Timeout);
         Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
@@ -1177,7 +1177,7 @@ public class TypeCacheTests : TestContainer
         // The two MethodInfo instances will have different ReflectedType properties,
         // so cannot be compared directly. Use MethodHandle to verify it's the same.
         Verify(methodInfo.MethodHandle == testMethodInfo.TestMethod.MethodHandle);
-        Verify(0 == testMethodInfo.TestMethodOptions.Timeout);
+        Verify(0 == testMethodInfo.TestMethodOptions.TimeoutContext.Timeout);
         Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }

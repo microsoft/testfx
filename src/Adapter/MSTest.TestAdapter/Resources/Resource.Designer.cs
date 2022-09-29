@@ -504,6 +504,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to UTA055: {0}.{1} has invalid CleanupTimeout property on Timeout attribute. The timeout must be a valid integer value and cannot be less than 0..
+        /// </summary>
+        internal static string UTA_ErrorInvalidCleanupTimeout {
+            get {
+                return ResourceManager.GetString("UTA_ErrorInvalidCleanupTimeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, public and must not be read-only. For example: public TestContext TestContext..
         /// </summary>
         internal static string UTA_ErrorInValidTestContextSignature {
