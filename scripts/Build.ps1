@@ -325,6 +325,9 @@ function ShouldRunStep([string[]]$CurrentSteps) {
 
 Print-Help
 
+# We want to install required .NET CLI before restoring/building to ensure we always use latest patched version.
+Install-DotNetCli
+
 if (ShouldRunStep @("UpdateTPVersion")) {
   Sync-PackageVersions
 }
