@@ -4,7 +4,6 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -24,47 +23,9 @@ public class ThreadOperations : IThreadOperations
     /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
     public bool Execute(Action action, int timeout, CancellationToken cancelToken)
     {
-#if NETFRAMEWORK
-        bool executionAborted = false;
-        Thread executionThread = new(new ThreadStart(action))
-        {
-            IsBackground = true,
-            Name = "MSTestAdapter Thread"
-        };
-
-        executionThread.SetApartmentState(Thread.CurrentThread.GetApartmentState());
-        executionThread.Start();
-        cancelToken.Register(() =>
-        {
-            executionAborted = true;
-            AbortThread(executionThread);
-        });
-
-        if (JoinThread(timeout, executionThread))
-        {
-            if (executionAborted)
-            {
-                return false;
-            }
-
-            // Successfully completed
-            return true;
-        }
-        else if (executionAborted)
-        {
-            // Execution aborted due to user choice
-            return false;
-        }
-        else
-        {
-            // Timed out
-            AbortThread(executionThread);
-            return false;
-        }
-#else
-        var executionTask = Task.Factory.StartNew(action);
         try
         {
+            var executionTask = Task.Run(action, cancelToken);
             if (executionTask.Wait(timeout, cancelToken))
             {
                 return true;
@@ -80,65 +41,5 @@ public class ThreadOperations : IThreadOperations
             // Task execution canceled.
             return false;
         }
-#endif
     }
-
-    /// <summary>
-    /// Execute an action with handling for Thread Aborts (if possible) so the main thread of the adapter does not die.
-    /// </summary>
-    /// <param name="action"> The action to execute. </param>
-    public void ExecuteWithAbortSafety(Action action)
-    {
-#if NETFRAMEWORK
-        try
-        {
-            action.Invoke();
-        }
-        catch (ThreadAbortException exception)
-        {
-            Thread.ResetAbort();
-
-            // Throwing an exception so that the test is marked as failed.
-            // This is a TargetInvocation exception because we want just the ThreadAbort exception to be shown to the user and not something we create here.
-            // TargetInvocation exceptions are stripped off by the test failure handler surfacing the actual exception.
-            throw new TargetInvocationException(exception);
-        }
-#else
-        // There is no Thread abort scenarios yet in .Net Core. Once we move the core platform service to support Thread abort related API's
-        // then this logic would be similar to the desktop platform service. UWP would then be the only diverging platform service since it does not have Thread APIs exposed.
-        action.Invoke();
-#endif
-    }
-
-#if NETFRAMEWORK
-    private static bool JoinThread(int timeout, Thread executionThread)
-    {
-        try
-        {
-            return executionThread.Join(timeout);
-        }
-        catch (ThreadStateException)
-        {
-            // Join was called on a thread not started
-        }
-
-        return false;
-    }
-
-    private static void AbortThread(Thread executionThread)
-    {
-        try
-        {
-            // Abort test thread after timeout.
-            executionThread.Abort();
-        }
-        catch (ThreadStateException)
-        {
-            // Catch and discard ThreadStateException. If Abort is called on a thread that has been suspended,
-            // a ThreadStateException is thrown in the thread that called Abort,
-            // and AbortRequested is added to the ThreadState property of the thread being aborted.
-            // A ThreadAbortException is not thrown in the suspended thread until Resume is called.
-        }
-    }
-#endif
 }

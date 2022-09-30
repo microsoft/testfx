@@ -35,21 +35,11 @@ public class ThreadOperationsTests : TestContainer
         Verify(Environment.CurrentManagedThreadId != actionThreadID);
     }
 
-    public void ExecuteShouldReturnFalseIftheActionTimesout()
+    public void ExecuteShouldReturnFalseIfTheActionTimesOut()
     {
         static void action() => Task.Delay(100).Wait();
 
         CancellationTokenSource tokenSource = new();
         Verify(!_asyncOperations.Execute(action, 1, tokenSource.Token));
-    }
-
-    public void ExecuteWithAbortSafetyShouldInvokeTheAction()
-    {
-        var isInvoked = false;
-        void action() => isInvoked = true;
-
-        _asyncOperations.ExecuteWithAbortSafety(action);
-
-        Verify(isInvoked);
     }
 }
