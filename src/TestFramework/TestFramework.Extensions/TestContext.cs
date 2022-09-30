@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NETSTANDARD || (NETCOREAPP && !WIN_UI)
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using System;
@@ -28,6 +28,7 @@ public abstract class TestContext
     /// </summary>
     public virtual CancellationTokenSource CancellationTokenSource { get; protected set; }
 
+#if NETFRAMEWORK
     /// <summary>
     /// Gets the current data row when test is used for data driven testing.
     /// </summary>
@@ -36,7 +37,8 @@ public abstract class TestContext
     /// <summary>
     /// Gets current data connection row when test is used for data driven testing.
     /// </summary>
-    public abstract DbConnection DataConnection { get; }
+    public abstract DbConnection DataConnection { get; } 
+#endif
 
     #region Test run deployment directories
 
@@ -122,6 +124,28 @@ public abstract class TestContext
     public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
 
     /// <summary>
+    /// Adds a file name to the list in TestResult.ResultFileNames
+    /// </summary>
+    /// <param name="fileName">
+    /// The file Name.
+    /// </param>
+    public abstract void AddResultFile(string fileName);
+
+#if NETFRAMEWORK
+    /// <summary>
+    /// Begins a timer with the specified name
+    /// </summary>
+    /// <param name="timerName"> Name of the timer.</param>
+    public abstract void BeginTimer(string timerName);
+
+    /// <summary>
+    /// Ends a timer with the specified name
+    /// </summary>
+    /// <param name="timerName"> Name of the timer.</param>
+    public abstract void EndTimer(string timerName); 
+#endif
+
+    /// <summary>
     /// Used to write trace messages while the test is running
     /// </summary>
     /// <param name="message">formatted message string</param>
@@ -146,26 +170,6 @@ public abstract class TestContext
     /// <param name="format">format string</param>
     /// <param name="args">the arguments</param>
     public abstract void WriteLine(string format, params object[] args);
-
-    /// <summary>
-    /// Adds a file name to the list in TestResult.ResultFileNames
-    /// </summary>
-    /// <param name="fileName">
-    /// The file Name.
-    /// </param>
-    public abstract void AddResultFile(string fileName);
-
-    /// <summary>
-    /// Begins a timer with the specified name
-    /// </summary>
-    /// <param name="timerName"> Name of the timer.</param>
-    public abstract void BeginTimer(string timerName);
-
-    /// <summary>
-    /// Ends a timer with the specified name
-    /// </summary>
-    /// <param name="timerName"> Name of the timer.</param>
-    public abstract void EndTimer(string timerName);
 
     private T GetProperty<T>(string name)
         where T : class
