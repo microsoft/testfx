@@ -120,6 +120,7 @@ public class TestMethodInfo : ITestMethod
             {
                 result = IsTimeoutSet
                     ? ExecuteInternalWithTimeout(arguments)
+                    // TODO: Break public API and flow up async/await call. In the meantime, let's use blocking call.
                     : ExecuteInternal(arguments, CancellationToken.None, CancellationToken.None).GetAwaiter().GetResult();
             }
             finally
@@ -785,6 +786,7 @@ public class TestMethodInfo : ITestMethod
         {
             try
             {
+                // TODO: Rewrite ThreadOperations to accept async/await pattern. In the meantime, we have to use blocking call.
                 result = ExecuteInternal(arguments, testRunCancellationToken, cleanupTokenSource.Token).GetAwaiter().GetResult();
             }
             catch (Exception ex)
