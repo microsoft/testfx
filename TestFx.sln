@@ -180,9 +180,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetCore", "NetCore", "{D11C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Net6", "Net6", "{35D010CC-CDF2-4115-BCFB-E2E3D21C1055}"
 	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\Net5\MSTest.TestAdapter.props = src\Adapter\Build\Net5\MSTest.TestAdapter.props
-		src\Adapter\Build\Net5\MSTest.TestAdapter.targets = src\Adapter\Build\Net5\MSTest.TestAdapter.targets
-		src\Adapter\Build\Net5\MSTest.TestFramework.targets = src\Adapter\Build\Net5\MSTest.TestFramework.targets
+		src\Adapter\Build\Net6\MSTest.TestAdapter.props = src\Adapter\Build\Net6\MSTest.TestAdapter.props
+		src\Adapter\Build\Net6\MSTest.TestAdapter.targets = src\Adapter\Build\Net6\MSTest.TestAdapter.targets
+		src\Adapter\Build\Net6\MSTest.TestFramework.targets = src\Adapter\Build\Net6\MSTest.TestFramework.targets
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReferencedProjectFromDataSourceTest", "test\E2ETests\TestAssets\ReferencedProjectFromDataSourceTest\ReferencedProjectFromDataSourceTest.csproj", "{6B4DE65C-4162-4C52-836A-8F9FA901814A}"
