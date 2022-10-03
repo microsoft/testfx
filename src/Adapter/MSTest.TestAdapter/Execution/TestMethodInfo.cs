@@ -478,7 +478,8 @@ public class TestMethodInfo : ITestMethod
                 // Current TestClass -> Parent -> Grandparent
                 if (testCleanupMethod is not null)
                 {
-                    await testCleanupMethod.InvokeAsTask(classInstance, cancellationToken, null).WithCancellation(cancellationToken);
+                    await testCleanupMethod.InvokeAsTask(classInstance, cancellationToken, null)
+                        .WithCancellation(cancellationToken);
                 }
 
                 var baseTestCleanupQueue = new Queue<MethodInfo>(Parent.BaseTestCleanupMethodsQueue);
@@ -487,7 +488,8 @@ public class TestMethodInfo : ITestMethod
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
                     if (testCleanupMethod is not null)
                     {
-                        await testCleanupMethod.InvokeAsTask(classInstance, cancellationToken, null).WithCancellation(cancellationToken);
+                        await testCleanupMethod.InvokeAsTask(classInstance, cancellationToken, null)
+                            .WithCancellation(cancellationToken);
                     }
                 }
             }
@@ -495,7 +497,8 @@ public class TestMethodInfo : ITestMethod
             {
                 if (classInstance is IDisposable disposable)
                 {
-                    await Task.Run(disposable.Dispose, cancellationToken).WithCancellation(cancellationToken);
+                    await Task.Run(disposable.Dispose, cancellationToken)
+                        .WithCancellation(cancellationToken);
                 }
             }
         }
