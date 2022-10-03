@@ -735,7 +735,7 @@ public class TestMethodInfo : ITestMethod
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private TestResult ExecuteInternalWithTimeout(object[] arguments)
     {
-        Debug.Assert(IsTimeoutSet, "TimeoutContext should be set");
+        Debug.Assert(IsTimeoutSet, "Timeout should be set");
 
         TestResult result = null;
         Exception failure = null;
