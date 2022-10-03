@@ -296,7 +296,7 @@ function Install-DotNetCli {
         & "${env:DOTNET_ROOT(x86)}\dotnet.exe" --info 2> $null
     }
     catch {}
-    Write-Log "Install-DotNetCli: Complete in {$(Get-ElapsedTime($timer))}"
+    Write-Log "Install-DotNetCli: Completed. {$(Get-ElapsedTime($timer))}"
 }
 
 function Unzip {
