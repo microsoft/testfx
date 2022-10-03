@@ -688,7 +688,8 @@ public class TestMethodInfo : ITestMethod
         object classInstance = null;
         try
         {
-            classInstance = await Task.Run(() => Parent.Constructor.Invoke(null), cancellationToken).WithCancellation(cancellationToken);
+            classInstance = await Task.Run(() => Parent.Constructor.Invoke(null), cancellationToken)
+                .WithCancellation(cancellationToken);
         }
         catch (Exception ex)
         {
