@@ -807,21 +807,25 @@ public class TestMethodInfoTests : TestContainer
     }
 
 #if NET6_0_OR_GREATER
-    public void TestMethodInfoInvokeShouldCallDiposeAsyncForAsyncDisposableTestClass()
+    public void TestMethodInfoInvoke_WhenTestClassIsAsyncDisposable_ShouldDisposeAsync()
     {
+        //Arrange
         var asyncDisposeCalled = false;
         DummyTestClassWithAsyncDisposable.DisposeAsyncMethodBody = () => asyncDisposeCalled = true;
         var ctorInfo = typeof(DummyTestClassWithAsyncDisposable).GetConstructors().Single();
         var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposable), ctorInfo, null, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
+        //Act
         method.Invoke(null);
 
+        //Assert
         Verify(asyncDisposeCalled);
     }
 
-    public void TestMethodInfoInvokeShouldCallAsyncDiposeThenDiposeForDisposableAsyncDisposableTestClass()
+    public void TestMethodInfoInvoke_WhenTestClassIsDisposableAndAsyncDisposable_ShouldCallAsyncDiposeThenDipose()
     {
+        //Arrange
         var order = 0;
         var disposeCalledOrder = 0;
         var disposeAsyncCalledOrder = 0;
@@ -833,8 +837,10 @@ public class TestMethodInfoTests : TestContainer
         var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable), ctorInfo, null, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
 
+        //Act
         method.Invoke(null);
 
+        //Assert
         Verify(disposeCalledOrder == 2);
         Verify(disposeAsyncCalledOrder == 1);
     }
@@ -1600,7 +1606,6 @@ public class TestMethodInfoTests : TestContainer
 #if NET6_0_OR_GREATER
     public class DummyTestClassWithAsyncDisposable : IAsyncDisposable
     {
-
         public static Action DisposeAsyncMethodBody { get; set; }
 
         public static Action<DummyTestClassWithDisposable> DummyTestCleanupMethodBody { get; set; }

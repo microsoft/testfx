@@ -494,6 +494,7 @@ public class TestMethodInfo : ITestMethod
             finally
             {
 #if NET6_0_OR_GREATER
+                // If you implement IAsyncDisposable without calling the DisposeAsync this would result a resource leak.
                 (classInstance as IAsyncDisposable)?.DisposeAsync().AsTask().Wait();
 #endif
                 (classInstance as IDisposable)?.Dispose();
