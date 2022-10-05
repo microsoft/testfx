@@ -25,6 +25,7 @@ internal class TypeEnumerator
     private readonly string _assemblyName;
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
+    private readonly TestIdGenerationStrategy _testIdGenerationStrategy;
     private readonly ReflectHelper _reflectHelper;
 
     /// <summary>
@@ -35,13 +36,15 @@ internal class TypeEnumerator
     /// <param name="reflectHelper"> An instance to reflection helper for type information. </param>
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
-    internal TypeEnumerator(Type type, string assemblyName, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator)
+    /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
+    internal TypeEnumerator(Type type, string assemblyName, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, TestIdGenerationStrategy testIdGenerationStrategy)
     {
         _type = type;
         _assemblyName = assemblyName;
         _reflectHelper = reflectHelper;
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
+        _testIdGenerationStrategy = testIdGenerationStrategy;
     }
 
     /// <summary>
@@ -87,7 +90,9 @@ internal class TypeEnumerator
             if (_testMethodValidator.IsValidTestMethod(method, _type, warnings))
             {
                 foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.Name);
-                tests.Add(GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings));
+                var testMethod = GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings);
+
+                tests.Add(testMethod);
             }
         }
 
@@ -132,7 +137,7 @@ internal class TypeEnumerator
         // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.
         var isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
 
-        var testMethod = new TestMethod(method, method.Name, _type.FullName, _assemblyName, isAsync);
+        var testMethod = new TestMethod(method, method.Name, _type.FullName, _assemblyName, isAsync, _testIdGenerationStrategy);
 
         if (!method.DeclaringType.FullName.Equals(_type.FullName))
         {

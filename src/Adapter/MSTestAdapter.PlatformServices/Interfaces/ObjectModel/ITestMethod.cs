@@ -54,6 +54,11 @@ public interface ITestMethod
     string ManagedMethodName { get; }
 
     /// <summary>
+    /// Gets the <see cref="TestIdGenerationStrategy"/> used to generate <c>TestCase.Id</c>.
+    /// </summary>
+    TestIdGenerationStrategy TestIdGenerationStrategy { get; }
+
+    /// <summary>
     /// Gets a value indicating whether both <see cref="ManagedTypeName"/> and <see cref="ManagedMethodName"/> are not null or whitespace.
     /// </summary>
     bool HasManagedMethodAndTypeProperties { get; }

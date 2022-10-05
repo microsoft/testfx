@@ -231,6 +231,29 @@ internal class UnitTestElement
         {
         }
 
+        switch (TestMethod.TestIdGenerationStrategy)
+        {
+            case TestTools.UnitTesting.TestIdGenerationStrategy.Legacy:
+                // Legacy Id generation is handled by TestPlatform.
+                break;
+
+            case TestTools.UnitTesting.TestIdGenerationStrategy.DisplayName:
+                testCase.Id = GenerateTestIdUsingDisplayName(testCase, fileName);
+                break;
+
+            case TestTools.UnitTesting.TestIdGenerationStrategy.Data:
+                testCase.Id = GenerateTestIdUsingTestData(testCase, fileName);
+                break;
+
+            default:
+                throw new NotImplementedException($"Requested Id generation strategy ({TestMethod.TestIdGenerationStrategy}) is not implemented.");
+        }
+
+        return testCase;
+    }
+
+    private Guid GenerateTestIdUsingTestData(TestCase testCase, string fileName)
+    {
         var idProvider = new TestIdProvider();
         idProvider.AppendString(testCase.ExecutorUri?.ToString());
         idProvider.AppendString(fileName);
@@ -249,9 +272,38 @@ internal class UnitTestElement
             idProvider.AppendString(testCase.DisplayName);
         }
 
-        testCase.Id = idProvider.GetId();
+        if (TestMethod.SerializedData != null)
+        {
+            foreach (var item in TestMethod.SerializedData)
+            {
+                idProvider.AppendString(item == null ? "null" : item);
+            }
+        }
 
-        return testCase;
+        return idProvider.GetId();
+    }
+
+    private Guid GenerateTestIdUsingDisplayName(TestCase testCase, string fileName)
+    {
+        var idProvider = new TestIdProvider();
+        idProvider.AppendString(testCase.ExecutorUri?.ToString());
+        idProvider.AppendString(fileName);
+        if (TestMethod.HasManagedMethodAndTypeProperties)
+        {
+            idProvider.AppendString(TestMethod.ManagedTypeName);
+            idProvider.AppendString(TestMethod.ManagedMethodName);
+        }
+        else
+        {
+            idProvider.AppendString(testCase.FullyQualifiedName);
+        }
+
+        if (TestMethod.DataType != DynamicDataType.None)
+        {
+            idProvider.AppendString(testCase.DisplayName);
+        }
+
+        return idProvider.GetId();
     }
 
     private string GetDisplayName()

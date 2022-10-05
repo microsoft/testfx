@@ -93,7 +93,19 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         var types = GetTypes(assembly, assemblyFileName, warningMessages);
         var discoverInternals = assembly.GetCustomAttribute<UTF.DiscoverInternalsAttribute>() != null;
-        var testDataSourceDiscovery = assembly.GetCustomAttribute<UTF.TestDataSourceDiscoveryAttribute>()?.DiscoveryOption ?? UTF.TestDataSourceDiscoveryOption.DuringDiscovery;
+        var testIdGenerationStrategy = assembly.GetCustomAttribute<UTF.TestIdGenerationStrategyAttribute>()?.Strategy ?? UTF.TestIdGenerationStrategy.DisplayName;
+
+        UTF.TestDataSourceDiscoveryOption testDataSourceDiscovery;
+        if (assembly.GetCustomAttribute<UTF.TestDataSourceDiscoveryAttribute>() is UTF.TestDataSourceDiscoveryAttribute attr)
+        {
+            testDataSourceDiscovery = attr.DiscoveryOption;
+        } 
+        else
+        {
+            testDataSourceDiscovery = testIdGenerationStrategy == UTF.TestIdGenerationStrategy.Legacy
+                ? UTF.TestDataSourceDiscoveryOption.DuringExecution
+                : UTF.TestDataSourceDiscoveryOption.DuringDiscovery;
+        }
 
         foreach (var type in types)
         {
@@ -102,7 +114,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            var testsInType = DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals, testDataSourceDiscovery);
+            var testsInType = DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages,
+                discoverInternals, testDataSourceDiscovery, testIdGenerationStrategy);
             tests.AddRange(testsInType);
         }
 
@@ -189,16 +202,22 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The reflected assembly name.</param>
     /// <param name="discoverInternals">True to discover test classes which are declared internal in
     /// addition to test classes which are declared public.</param>
+    /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
     /// <returns>a TypeEnumerator instance.</returns>
-    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals = false)
+    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, UTF.TestIdGenerationStrategy testIdGenerationStrategy)
     {
         var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
         var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
 
-        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator);
+        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
     }
 
-    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly, Type type, List<string> warningMessages, bool discoverInternals = false, UTF.TestDataSourceDiscoveryOption discoveryOption = UTF.TestDataSourceDiscoveryOption.DuringExecution)
+    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly, Type type,
+        List<string> warningMessages,
+        bool discoverInternals = false,
+        UTF.TestDataSourceDiscoveryOption discoveryOption = UTF.TestDataSourceDiscoveryOption.DuringExecution,
+        UTF.TestIdGenerationStrategy testIdGenerationStrategy = UTF.TestIdGenerationStrategy.Legacy
+    )
     {
         var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
         sourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(sourceLevelParameters)
@@ -211,7 +230,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             typeFullName = type.FullName;
-            var testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals);
+            var testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
             var unitTestCases = testTypeEnumerator.Enumerate(out var warningsFromTypeEnumerator);
             var typeIgnored = ReflectHelper.IsAttributeDefined(type, typeof(UTF.IgnoreAttribute), false);
 
@@ -286,7 +305,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             throw new InvalidOperationException(message);
         }
 
-        // dataSourceAttributes.Length == 1
+        // when dataSourceAttributes.Length == 1
         try
         {
             return ProcessDataSourceTests(test, testMethodInfo, testContext, tests);

@@ -10,13 +10,17 @@ public enum TestDataSourceDiscoveryOption
 {
     /// <summary>
     /// Discover tests during execution.
-    /// This was the default option on version 2.2.3 and before.
     /// </summary>
+    /// <remarks>
+    /// This was the default option on version 2.2.3 and before.
+    /// </remarks>
     DuringExecution = 1,
 
     /// <summary>
     /// Discover and expand ITestDataSource based tests.
-    /// This is the default behavior after version 2.2.3.
     /// </summary>
-    DuringDiscovery = 2,
+    /// <remarks>
+    /// This is the default behavior after version 2.2.3.
+    /// </remarks>
+    DuringDiscovery = 2
 }

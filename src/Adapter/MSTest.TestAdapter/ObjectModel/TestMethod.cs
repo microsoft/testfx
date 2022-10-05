@@ -9,6 +9,7 @@ using System.Reflection;
 
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
+using TestIdGenerationStrategy = TestTools.UnitTesting.TestIdGenerationStrategy;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
@@ -53,9 +54,16 @@ public sealed class TestMethod : ITestMethod
         hierarchy[HierarchyConstants.Levels.TestGroupIndex] = name;
 
         _hierarchy = new ReadOnlyCollection<string>(hierarchy);
+        TestIdGenerationStrategy = TestIdGenerationStrategy.DisplayName;
     }
 
-    internal TestMethod(MethodBase method, string name, string fullClassName, string assemblyName, bool isAsync)
+    internal TestMethod(string name, string fullClassName, string assemblyName, bool isAsync, TestIdGenerationStrategy testIdGenerationStrategy)
+        :this(name, fullClassName, assemblyName, isAsync)
+    {
+        TestIdGenerationStrategy = testIdGenerationStrategy;
+    }
+
+    internal TestMethod(MethodBase method, string name, string fullClassName, string assemblyName, bool isAsync, TestIdGenerationStrategy testIdGenerationStrategy)
         : this(name, fullClassName, assemblyName, isAsync)
     {
         if (method == null)
@@ -68,14 +76,16 @@ public sealed class TestMethod : ITestMethod
 
         ManagedTypeName = managedType;
         ManagedMethodName = managedMethod;
+        TestIdGenerationStrategy = testIdGenerationStrategy;
         _hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
     }
 
-    internal TestMethod(string managedTypeName, string managedMethodName, string[] hierarchyValues, string name, string fullClassName, string assemblyName, bool isAsync)
+    internal TestMethod(string managedTypeName, string managedMethodName, string[] hierarchyValues, string name, string fullClassName, string assemblyName, bool isAsync, TestIdGenerationStrategy testIdGenerationStrategy)
         : this(name, fullClassName, assemblyName, isAsync)
     {
         ManagedTypeName = managedTypeName;
         ManagedMethodName = managedMethodName;
+        TestIdGenerationStrategy = testIdGenerationStrategy;
         _hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
     }
 
@@ -141,6 +151,9 @@ public sealed class TestMethod : ITestMethod
 
     /// <inheritdoc />
     public IReadOnlyCollection<string> Hierarchy => _hierarchy;
+
+    /// <inheritdoc />
+    public TestIdGenerationStrategy TestIdGenerationStrategy { get; }
 
     /// <summary>
     /// Gets or sets type of dynamic data if any.

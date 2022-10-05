@@ -6,16 +6,21 @@ using System;
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Specifies how to discover ITestDataSource tests.
+/// Specifies how to discover <see cref="ITestDataSource"/> tests.
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
 public class TestDataSourceDiscoveryAttribute : Attribute
 {
     /// <summary>
+    /// Gets the default <see cref="TestDataSourceDiscoveryOption"/>.
+    /// </summary>
+    public const TestDataSourceDiscoveryOption DefaultDiscoveryOption = TestDataSourceDiscoveryOption.DuringDiscovery;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="TestDataSourceDiscoveryAttribute"/> class.
     /// </summary>
     /// <param name="discoveryOption">
-    /// Sets which <see cref="TestDataSourceDiscoveryOption"/> to use when discovering ITestDataSource tests.
+    /// Sets which <see cref="TestDataSourceDiscoveryOption"/> to use when discovering <see cref="ITestDataSource"/> tests.
     /// </param>
     public TestDataSourceDiscoveryAttribute(TestDataSourceDiscoveryOption discoveryOption)
     {
