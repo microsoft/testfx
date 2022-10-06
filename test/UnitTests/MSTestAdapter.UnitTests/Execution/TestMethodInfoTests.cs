@@ -806,6 +806,46 @@ public class TestMethodInfoTests : TestContainer
         Verify(disposeCalled);
     }
 
+#if NET6_0_OR_GREATER
+    public void TestMethodInfoInvoke_WhenTestClassIsAsyncDisposable_ShouldDisposeAsync()
+    {
+        //Arrange
+        var asyncDisposeCalled = false;
+        DummyTestClassWithAsyncDisposable.DisposeAsyncMethodBody = () => asyncDisposeCalled = true;
+        var ctorInfo = typeof(DummyTestClassWithAsyncDisposable).GetConstructors().Single();
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposable), ctorInfo, null, _classAttribute, _testAssemblyInfo);
+        var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
+
+        //Act
+        method.Invoke(null);
+
+        //Assert
+        Verify(asyncDisposeCalled);
+    }
+
+    public void TestMethodInfoInvoke_WhenTestClassIsDisposableAndAsyncDisposable_ShouldCallAsyncDiposeThenDipose()
+    {
+        //Arrange
+        var order = 0;
+        var disposeCalledOrder = 0;
+        var disposeAsyncCalledOrder = 0;
+
+        DummyTestClassWithAsyncDisposableAndDisposable.DisposeMethodBody = () => disposeCalledOrder = ++order;
+        DummyTestClassWithAsyncDisposableAndDisposable.DisposeAsyncMethodBody = () => disposeAsyncCalledOrder = ++order;
+
+        var ctorInfo = typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetConstructors().Single();
+        var testClass = new TestClassInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable), ctorInfo, null, _classAttribute, _testAssemblyInfo);
+        var method = new TestMethodInfo(typeof(DummyTestClassWithAsyncDisposableAndDisposable).GetMethod("DummyTestMethod"), testClass, _testMethodOptions);
+
+        //Act
+        method.Invoke(null);
+
+        //Assert
+        Verify(disposeCalledOrder == 2);
+        Verify(disposeAsyncCalledOrder == 1);
+    }
+#endif
+
     public void TestMethodInfoInvokeShouldCallDiposeForDisposableTestClassIfTestCleanupThrows()
     {
         var disposeCalled = false;
@@ -1559,5 +1599,47 @@ public class TestMethodInfoTests : TestContainer
     }
 
     #endregion
+
+#if NET6_0_OR_GREATER
+    public class DummyTestClassWithAsyncDisposable : IAsyncDisposable
+    {
+        public static Action DisposeAsyncMethodBody { get; set; }
+
+        public static Action<DummyTestClassWithDisposable> DummyTestCleanupMethodBody { get; set; }
+
+        public void DummyTestMethod()
+        {
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            DisposeAsyncMethodBody();
+            return ValueTask.CompletedTask;
+        }
+    }
+
+    public class DummyTestClassWithAsyncDisposableAndDisposable : IAsyncDisposable, IDisposable
+    {
+        public static Action DisposeMethodBody { get; set; }
+        public static Action DisposeAsyncMethodBody { get; set; }
+        public static Action<DummyTestClassWithDisposable> DummyTestCleanupMethodBody { get; set; }
+
+        public void DummyTestMethod()
+        {
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            DisposeAsyncMethodBody();
+            return ValueTask.CompletedTask;
+        }
+
+        public void Dispose()
+        {
+            DisposeMethodBody();
+        }
+    }
+#endif
+
 }
 #endregion
