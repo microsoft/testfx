@@ -1,0 +1,69 @@
+﻿<Project Sdk="MSBuild.Sdk.Extras">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
+    <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</AssemblyName>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
+    <!-- Following path will be overridden by specific TFMs -->
+    <LocDocumentationSubPath>Extensions\Core</LocDocumentationSubPath>
+  </PropertyGroup>
+
+  <!-- WinUI specific properties -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
+    <LocDocumentationSubPath>Extensions\WinUI</LocDocumentationSubPath>
+    <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
+    <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <!-- UWP specific properties -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
+    <DefineConstants>$(DefineConstants);NETFX_CORE;WINDOWS_UWP</DefineConstants>
+    <LocDocumentationSubPath>Extensions\UWP</LocDocumentationSubPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
+    <LocDocumentationSubPath>Extensions\Desktop</LocDocumentationSubPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
+    <Prefer32Bit Condition=" '$(Platform)' != 'AnyCPU' ">true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <UseVSHostingProcess Condition=" '$(Platform)' != 'AnyCPU' ">false</UseVSHostingProcess>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Private="True" />
+    <ProjectReference Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWindowsAppSDKVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Update="Properties\Extension.UWP.rd.xml" />
+  </ItemGroup>
+
+</Project>

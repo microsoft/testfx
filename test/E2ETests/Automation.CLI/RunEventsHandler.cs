@@ -38,7 +38,7 @@ public class RunEventsHandler : ITestRunEventsHandler
 
     public void HandleLogMessage(TestMessageLevel level, string message)
     {
-        switch ((TestMessageLevel)level)
+        switch (level)
         {
             case TestMessageLevel.Informational:
                 EqtTrace.Info(message);

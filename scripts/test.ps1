@@ -169,5 +169,4 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
 }
 
 Print-Help
-Install-DotNetCli
 Invoke-Test

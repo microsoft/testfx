@@ -269,8 +269,7 @@ public class TestMethodInfo : ITestMethod
                     if (RunTestInitializeMethod(classInstance, result))
                     {
                         hasTestInitializePassed = true;
-                        PlatformServiceProvider.Instance.ThreadOperations.ExecuteWithAbortSafety(
-                            () => TestMethod.InvokeAsSynchronousTask(classInstance, arguments));
+                        TestMethod.InvokeAsSynchronousTask(classInstance, arguments);
                         result.Outcome = UTF.UnitTestOutcome.Passed;
                     }
                 }

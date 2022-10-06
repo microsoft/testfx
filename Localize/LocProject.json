@@ -28,11 +28,11 @@
             "LanguageSet": "VS_Main_Languages",
             "LocItems": [
                 {
-                    "SourceFile": "src\\TestFramework\\MSTest.Core\\Resources\\xlf\\FrameworkMessages.xlf",
+                    "SourceFile": "src\\TestFramework\\TestFramework\\Resources\\xlf\\FrameworkMessages.xlf",
                     "Languages": "",
                     "CopyOption": "LangIDOnName",
-                    "OutputPath": "src\\TestFramework\\MSTest.Core\\Resources\\xlf\\",
-                    "LclFile": "Localize\\lcl\\{Lang}\\src\\TestFramework\\MSTest.Core\\Resources\\xlf\\FrameworkMessages.xlf.lcl"
+                    "OutputPath": "src\\TestFramework\\TestFramework\\Resources\\xlf\\",
+                    "LclFile": "Localize\\lcl\\{Lang}\\src\\TestFramework\\TestFramework\\Resources\\xlf\\FrameworkMessages.xlf.lcl"
                 }
             ]
         }

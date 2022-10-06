@@ -6,7 +6,7 @@
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
-    <MicrosoftNETTestSdkVersion>17.4.0-release-20220926-01</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>17.4.0-preview-20221003-03</MicrosoftNETTestSdkVersion>
     <!-- Toolset -->
     <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
     <NuGetFrameworksVersion>5.11.0</NuGetFrameworksVersion>
@@ -17,7 +17,7 @@
       'microsoft.dotnet.arcade.sdk' otherwise only the arcade version gets restored
       -->
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
-    <!-- keep in sync with test\UnitTests\PlatformServices.Unit.Tests\Utilities\XmlUtilitiesTests.cs -->
+    <!-- keep in sync with test\UnitTests\MSTestAdapter.PlatformServices.UnitTests\Utilities\XmlUtilitiesTests.cs -->
     <MsTestInternalTestFxLocalizedDocumentationVersion>1.0.0-build-20170420-1</MsTestInternalTestFxLocalizedDocumentationVersion>
     <FmDevXlfToolVersion>0.1.3</FmDevXlfToolVersion>
     <VisualStudioQualityToolsUnitTestFrameworkVersion>16.9.0-preview-4267359</VisualStudioQualityToolsUnitTestFrameworkVersion>
@@ -110,8 +110,8 @@
     <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>8.0.0-beta.22473.1</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>8.0.0-beta.22473.1</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>8.0.0-beta.22480.2</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>8.0.0-beta.22480.2</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
@@ -121,7 +121,7 @@
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.20258.6</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftSourceLinkGitHubVersion>1.1.0-beta-21228-01</MicrosoftSourceLinkGitHubVersion>
     <MicrosoftSourceLinkAzureReposGitVersion>1.1.0-beta-21228-01</MicrosoftSourceLinkAzureReposGitVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>8.0.0-beta.22473.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>8.0.0-beta.22480.2</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <XliffTasksVersion>1.0.0-beta.21265.1</XliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.21228.1</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21264.3</MicrosoftDotNetXHarnessCLIVersion>

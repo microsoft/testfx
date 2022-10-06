@@ -1,0 +1,198 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Threading;
+
+/// <summary>
+/// Used to store information that is provided to unit tests.
+/// </summary>
+public abstract class TestContext
+{
+    /// <summary>
+    /// Gets test properties for a test.
+    /// </summary>
+    public abstract IDictionary Properties { get; }
+
+    /// <summary>
+    /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted
+    /// </summary>
+    public virtual CancellationTokenSource CancellationTokenSource { get; protected set; }
+
+#if NETFRAMEWORK
+    /// <summary>
+    /// Gets the current data row when test is used for data driven testing.
+    /// </summary>
+    public abstract DataRow DataRow { get; }
+
+    /// <summary>
+    /// Gets current data connection row when test is used for data driven testing.
+    /// </summary>
+    public abstract DbConnection DataConnection { get; } 
+#endif
+
+#if !WINDOWS_UWP && !WIN_UI
+    #region Test run deployment directories
+
+    /// <summary>
+    /// Gets base directory for the test run, under which deployed files and result files are stored.
+    /// </summary>
+    public virtual string TestRunDirectory => GetProperty<string>("TestRunDirectory");
+
+    /// <summary>
+    /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
+    /// </summary>
+    public virtual string DeploymentDirectory => GetProperty<string>("DeploymentDirectory");
+
+    /// <summary>
+    /// Gets base directory for results from the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
+    /// </summary>
+    public virtual string ResultsDirectory => GetProperty<string>("ResultsDirectory");
+
+    /// <summary>
+    /// Gets directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
+    /// </summary>
+    public virtual string TestRunResultsDirectory => GetProperty<string>("TestRunResultsDirectory");
+
+    /// <summary>
+    /// Gets directory for test result files.
+    /// </summary>
+    [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", Justification = "Compat")]
+    public virtual string TestResultsDirectory => GetProperty<string>("TestResultsDirectory");
+
+    #region Old names, for backwards compatibility
+
+    /// <summary>
+    /// Gets base directory for the test run, under which deployed files and result files are stored.
+    /// Same as <see cref="TestRunDirectory"/>. Use that property instead.
+    /// </summary>
+    public virtual string TestDir => GetProperty<string>("TestDir");
+
+    /// <summary>
+    /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
+    /// Same as <see cref="DeploymentDirectory"/>. Use that property instead.
+    /// </summary>
+    public virtual string TestDeploymentDir => GetProperty<string>("TestDeploymentDir");
+
+    /// <summary>
+    /// Gets directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
+    /// Same as <see cref="TestRunResultsDirectory"/>. Use that property for test run result files, or
+    /// <see cref="TestResultsDirectory"/> for test-specific result files instead.
+    /// </summary>
+    public virtual string TestLogsDir => GetProperty<string>("TestLogsDir");
+
+    #endregion
+
+    #endregion  
+#endif
+
+    /// <summary>
+    /// Gets the Fully-qualified name of the class containing the test method currently being executed
+    /// </summary>
+    /// <remarks>
+    /// This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.
+    /// Those attributes have access to the test context, and provide messages that are included
+    /// in the test results. Users can benefit from messages that include the fully-qualified
+    /// class name in addition to the name of the test method currently being executed.
+    /// </remarks>
+    public virtual string FullyQualifiedTestClassName => GetProperty<string>("FullyQualifiedTestClassName");
+
+    /// <summary>
+    /// Gets the fully specified type name metadata format.
+    /// </summary>
+    public virtual string ManagedType => GetProperty<string>(nameof(ManagedType));
+
+    /// <summary>
+    /// Gets the fully specified method name metadata format.
+    /// </summary>
+    public virtual string ManagedMethod => GetProperty<string>(nameof(ManagedMethod));
+
+    /// <summary>
+    /// Gets the name of the test method currently being executed
+    /// </summary>
+    public virtual string TestName => GetProperty<string>("TestName");
+
+    /// <summary>
+    /// Gets the current test outcome.
+    /// </summary>
+    public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
+
+    /// <summary>
+    /// Adds a file name to the list in TestResult.ResultFileNames
+    /// </summary>
+    /// <param name="fileName">
+    /// The file Name.
+    /// </param>
+    public abstract void AddResultFile(string fileName);
+
+#if NETFRAMEWORK
+    /// <summary>
+    /// Begins a timer with the specified name
+    /// </summary>
+    /// <param name="timerName"> Name of the timer.</param>
+    public abstract void BeginTimer(string timerName);
+
+    /// <summary>
+    /// Ends a timer with the specified name
+    /// </summary>
+    /// <param name="timerName"> Name of the timer.</param>
+    public abstract void EndTimer(string timerName); 
+#endif
+
+    /// <summary>
+    /// Used to write trace messages while the test is running
+    /// </summary>
+    /// <param name="message">formatted message string</param>
+    public abstract void Write(string message);
+
+    /// <summary>
+    /// Used to write trace messages while the test is running
+    /// </summary>
+    /// <param name="format">format string</param>
+    /// <param name="args">the arguments</param>
+    public abstract void Write(string format, params object[] args);
+
+    /// <summary>
+    /// Used to write trace messages while the test is running
+    /// </summary>
+    /// <param name="message">formatted message string</param>
+    public abstract void WriteLine(string message);
+
+    /// <summary>
+    /// Used to write trace messages while the test is running
+    /// </summary>
+    /// <param name="format">format string</param>
+    /// <param name="args">the arguments</param>
+    public abstract void WriteLine(string format, params object[] args);
+
+    private T GetProperty<T>(string name)
+        where T : class
+    {
+#if WINDOWS_UWP || WIN_UI
+        if (!((IDictionary<string, object>)Properties).TryGetValue(name, out object propertyValue))
+        {
+            return null;
+        }
+#else
+        object propertyValue = Properties[name];
+#endif
+
+        // If propertyValue has a value, but it's not the right type
+        if (propertyValue is not null and not T)
+        {
+            Debug.Fail("How did an invalid value get in here?");
+            throw new InvalidCastException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.InvalidPropertyType, name, propertyValue.GetType(), typeof(T)));
+        }
+
+        return (T)propertyValue;
+    }
+}

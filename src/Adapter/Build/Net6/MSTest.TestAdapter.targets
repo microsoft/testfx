@@ -16,11 +16,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
     </TestAdapterContent>
-    <TestAdapterContent Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll">
-      <Link>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>False</Visible>
-    </TestAdapterContent>
     <TestAdapterContent Include="$(__TestAdapterPlatformServicesRoot)Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll">
       <Link>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

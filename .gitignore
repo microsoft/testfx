@@ -82,11 +82,11 @@ ehthumbs.db
 # ===========================
 # Folder ignores
 # ===========================
-packages
-artifacts
-Tools
-.dotnet
-TestAssets
+/packages/
+/artifacts/
+/Tools/
+/.dotnet/
+/TestAssets/
 
 # ===========================
 # Tools
