@@ -8,9 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="System" />
     <ProjectReference Include="$(RepoRoot)samples\FxExtensibility\FxExtensibility.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
   </ItemGroup>
 
 </Project>
