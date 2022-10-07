@@ -21,7 +21,6 @@ public partial class CLITestBase : TestContainer
 
     public CLITestBase()
     {
-        Environment.CurrentDirectory = @"C:\Users\enjieid\source\repos\testfx";
         s_vsTestConsoleWrapper = new VsTestConsoleWrapper(GetConsoleRunnerPath());
         s_vsTestConsoleWrapper.StartSession();
     }
@@ -47,12 +46,12 @@ public partial class CLITestBase : TestContainer
     /// <param name="sources">List of test assemblies.</param>
     /// <param name="runSettings">Run settings for execution.</param>
     /// <param name="testCaseFilter">Test Case filter for execution.</param>
-    public void InvokeVsTestForExecution(string[] sources, string runSettings = "", string testCaseFilter = null)
+    public void InvokeVsTestForExecution(string[] sources, string runSettings = "", string testCaseFilter = null, string targetFramework = "")
     {
         ExpandTestSourcePaths(sources);
 
         _runEventsHandler = new RunEventsHandler();
-        string runSettingXml = GetRunSettingXml(runSettings, GetTestAdapterPath());
+        string runSettingXml = GetRunSettingXml(runSettings, GetTestAdapterPath(), targetFramework);
 
         s_vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, _runEventsHandler);
         if (_runEventsHandler.Errors.Any())
