@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 
@@ -13,7 +12,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -227,24 +225,24 @@ internal class TestMethodRunner
                 {
                     Outcome = aggregateOutcome,
                     Duration = parentStopwatch.Elapsed,
-                    ExecutionId = Guid.NewGuid()
+                    ExecutionId = Guid.NewGuid(),
                 };
 
                 results = UpdateResultsWithParentInfo(results, parentResult);
             }
             else
             {
-                results = UpdateResultsWithParentInfo(results, Guid.NewGuid());
+                results = UpdateResultsWithParentInfo(results);
             }
         }
 
         // Set a result in case no result is present.
-        if (!results.Any())
+        if (results.Count == 0)
         {
             UTF.TestResult emptyResult = new()
             {
                 Outcome = aggregateOutcome,
-                TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult)
+                TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult),
             };
 
             results.Add(emptyResult);
@@ -428,7 +426,7 @@ internal class TestMethodRunner
     private static UTF.UnitTestOutcome GetAggregateOutcome(List<UTF.TestResult> results)
     {
         // In case results are not present, set outcome as unknown.
-        if (!results.Any())
+        if (results.Count == 0)
         {
             return UTF.UnitTestOutcome.Unknown;
         }
@@ -450,10 +448,10 @@ internal class TestMethodRunner
     /// <param name="results">Results.</param>
     /// <param name="executionId">Current execution id.</param>
     /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
-    private static List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results, Guid executionId)
+    private static List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results)
     {
         // Return results in case there are no results.
-        if (!results.Any())
+        if (results.Count == 0)
         {
             return results;
         }
@@ -461,10 +459,10 @@ internal class TestMethodRunner
         // UpdatedResults contain parent result at first position and remaining results has parent info updated.
         var updatedResults = new List<UTF.TestResult>();
 
-        foreach (var result in results)
+        foreach (var result in results) 
         {
             result.ExecutionId = Guid.NewGuid();
-            result.ParentExecId = executionId;
+            result.ParentExecId = Guid.NewGuid();
 
             updatedResults.Add(result);
         }
@@ -479,19 +477,17 @@ internal class TestMethodRunner
     /// <param name="results">Results.</param>
     /// <param name="parentResult">Parent results.</param>
     /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
-    private static List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results, UTF.TestResult parentResult)
+    private static List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results,
+        UTF.TestResult parentResult)
     {
         // Return results in case there are no results.
-        if (!results.Any())
+        if (results.Count == 0)
         {
             return results;
         }
 
         // UpdatedResults contain parent result at first position and remaining results has parent info updated.
-        List<UTF.TestResult> updatedResults = new()
-        {
-            parentResult
-        };
+        List<UTF.TestResult> updatedResults = new() { parentResult };
 
         foreach (var result in results)
         {

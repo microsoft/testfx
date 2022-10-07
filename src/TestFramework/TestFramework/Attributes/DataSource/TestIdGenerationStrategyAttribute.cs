@@ -6,21 +6,16 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
 /// <summary>
-/// Specifies how to calculate id of a test.
+/// Specifies how to generate test ID.
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
 public class TestIdGenerationStrategyAttribute : Attribute
 {
     /// <summary>
-    /// Gets the default <see cref="TestIdGenerationStrategy"/>.
-    /// </summary>
-    public const TestIdGenerationStrategy DefaultStrategy = TestIdGenerationStrategy.Legacy;
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="TestIdGenerationStrategyAttribute"/> class.
     /// </summary>
     /// <param name="strategy">
-    /// Sets which <see cref="TestIdGenerationStrategy"/> to use when generating the id of a test.
+    /// The <see cref="TestIdGenerationStrategy"/> to use when generating the test ID.
     /// </param>
     public TestIdGenerationStrategyAttribute(TestIdGenerationStrategy strategy)
     {
@@ -28,7 +23,7 @@ public class TestIdGenerationStrategyAttribute : Attribute
     }
 
     /// <summary>
-    /// Gets specified strategy option.
+    /// Gets the test ID generation strategy.
     /// </summary>
     public TestIdGenerationStrategy Strategy { get; }
 }

@@ -16,8 +16,9 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+using FrameworkITestDataSource = TestTools.UnitTesting.ITestDataSource;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 
@@ -92,21 +93,14 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
         var types = GetTypes(assembly, assemblyFileName, warningMessages);
-        var discoverInternals = assembly.GetCustomAttribute<UTF.DiscoverInternalsAttribute>() != null;
-        var testIdGenerationStrategy = assembly.GetCustomAttribute<UTF.TestIdGenerationStrategyAttribute>()?.Strategy ?? UTF.TestIdGenerationStrategy.DisplayName;
+        var discoverInternals = assembly.GetCustomAttribute<DiscoverInternalsAttribute>() != null;
+        var testIdGenerationStrategy = assembly.GetCustomAttribute<TestIdGenerationStrategyAttribute>()?.Strategy
+            ?? TestIdGenerationStrategy.Data;
 
-        UTF.TestDataSourceDiscoveryOption testDataSourceDiscovery;
-        if (assembly.GetCustomAttribute<UTF.TestDataSourceDiscoveryAttribute>() is UTF.TestDataSourceDiscoveryAttribute attr)
-        {
-            testDataSourceDiscovery = attr.DiscoveryOption;
-        } 
-        else
-        {
-            testDataSourceDiscovery = testIdGenerationStrategy == UTF.TestIdGenerationStrategy.Legacy
-                ? UTF.TestDataSourceDiscoveryOption.DuringExecution
-                : UTF.TestDataSourceDiscoveryOption.DuringDiscovery;
-        }
-
+        var testDataSourceDiscovery = assembly.GetCustomAttribute<TestDataSourceDiscoveryAttribute>()?.DiscoveryOption
+            ?? (testIdGenerationStrategy == TestIdGenerationStrategy.Legacy
+                ? TestDataSourceDiscoveryOption.DuringExecution
+                : TestDataSourceDiscoveryOption.DuringDiscovery);
         foreach (var type in types)
         {
             if (type == null)
@@ -204,7 +198,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// addition to test classes which are declared public.</param>
     /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
     /// <returns>a TypeEnumerator instance.</returns>
-    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, UTF.TestIdGenerationStrategy testIdGenerationStrategy)
+    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
     {
         var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
         var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
@@ -212,12 +206,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
     }
 
-    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly, Type type,
-        List<string> warningMessages,
-        bool discoverInternals = false,
-        UTF.TestDataSourceDiscoveryOption discoveryOption = UTF.TestDataSourceDiscoveryOption.DuringExecution,
-        UTF.TestIdGenerationStrategy testIdGenerationStrategy = UTF.TestIdGenerationStrategy.Legacy
-    )
+    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly,
+        Type type, List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
+        TestIdGenerationStrategy testIdGenerationStrategy)
     {
         var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
         sourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(sourceLevelParameters)
@@ -232,7 +223,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             typeFullName = type.FullName;
             var testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
             var unitTestCases = testTypeEnumerator.Enumerate(out var warningsFromTypeEnumerator);
-            var typeIgnored = ReflectHelper.IsAttributeDefined(type, typeof(UTF.IgnoreAttribute), false);
+            var typeIgnored = ReflectHelper.IsAttributeDefined(type, typeof(IgnoreAttribute), false);
 
             if (warningsFromTypeEnumerator != null)
             {
@@ -243,7 +234,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             {
                 foreach (var test in unitTestCases)
                 {
-                    if (discoveryOption == UTF.TestDataSourceDiscoveryOption.DuringDiscovery)
+                    if (discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
                     {
                         if (DynamicDataAttached(sourceLevelParameters, assembly, test, tests))
                         {
@@ -292,7 +283,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
     private static bool TryProcessDataSource(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
     {
-        var dataSourceAttributes = ReflectHelper.GetAttributes<UTF.DataSourceAttribute>(testMethodInfo.MethodInfo, false);
+        var dataSourceAttributes = ReflectHelper.GetAttributes<DataSourceAttribute>(testMethodInfo.MethodInfo, false);
         if (dataSourceAttributes == null)
         {
             return false;
@@ -355,7 +346,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
     {
         var methodInfo = testMethodInfo.MethodInfo;
-        var testDataSources = ReflectHelper.GetAttributes<Attribute>(methodInfo, false)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
+        var testDataSources = ReflectHelper.GetAttributes<Attribute>(methodInfo, false)?.Where(a => a is FrameworkITestDataSource).OfType<FrameworkITestDataSource>().ToArray();
         if (testDataSources == null || testDataSources.Length == 0)
         {
             return false;
@@ -373,7 +364,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, UTF.ITestDataSource[] testDataSources, List<UnitTestElement> tests)
+    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, FrameworkITestDataSource[] testDataSources, List<UnitTestElement> tests)
     {
         foreach (var dataSource in testDataSources)
         {

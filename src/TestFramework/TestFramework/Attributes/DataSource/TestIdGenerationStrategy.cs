@@ -4,29 +4,32 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Supported test id generation modes.
+/// The supported test ID generation strategies.
 /// </summary>
 public enum TestIdGenerationStrategy
 {
     /// <summary>
-    /// Uses legacy test id generation. <see cref="ITestDataSource"/> tests will not be discovered and instead they will be collapsed into one parent test.
+    /// Uses legacy test ID generation. <see cref="ITestDataSource"/> tests will not be discovered and instead they will be collapsed into one parent test.
     /// </summary>
     /// <remarks>
-    /// This option is incompatible with <see cref="TestDataSourceDiscoveryOption.DuringDiscovery"/> option of <see cref="TestDataSourceDiscoveryAttribute"/>. If you set this, that option will be ignored.
-    /// This was the default option on version 2.2.3 and before.
+    /// This option is incompatible with <see cref="TestDataSourceDiscoveryOption.DuringDiscovery"/> option of <see cref="TestDataSourceDiscoveryAttribute"/> and will be ignored.
+    /// This was the default option until version 2.2.3.
     /// </remarks>
     Legacy = 1,
 
     /// <summary>
-    /// Use the display name of a test to generate its id. 
+    /// Uses the test display name to generate the test ID. 
     /// </summary>
     /// <remarks>
-    /// This is the default behavior after version 2.2.3.
+    /// This is the default behavior between versions 2.2.4 and 3.0.0.
     /// </remarks>
     DisplayName = 2,
 
     /// <summary>
-    /// Test id generation is identical to <see cref="DisplayName"/>, but when there is data attached to a test that also affect its id.
+    /// Uses a combination of test display name and test data to generate the test ID.
     /// </summary>
-    Data = 3
+    /// <remarks>
+    /// This is the default behavior starting with version 3.0.0.
+    /// </remarks>
+    Data = 3,
 }

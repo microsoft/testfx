@@ -54,16 +54,18 @@ public sealed class TestMethod : ITestMethod
         hierarchy[HierarchyConstants.Levels.TestGroupIndex] = name;
 
         _hierarchy = new ReadOnlyCollection<string>(hierarchy);
-        TestIdGenerationStrategy = TestIdGenerationStrategy.DisplayName;
+        TestIdGenerationStrategy = TestIdGenerationStrategy.Data;
     }
 
-    internal TestMethod(string name, string fullClassName, string assemblyName, bool isAsync, TestIdGenerationStrategy testIdGenerationStrategy)
-        :this(name, fullClassName, assemblyName, isAsync)
+    internal TestMethod(string name, string fullClassName, string assemblyName, bool isAsync,
+        TestIdGenerationStrategy testIdGenerationStrategy)
+        : this(name, fullClassName, assemblyName, isAsync)
     {
         TestIdGenerationStrategy = testIdGenerationStrategy;
     }
 
-    internal TestMethod(MethodBase method, string name, string fullClassName, string assemblyName, bool isAsync, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal TestMethod(MethodBase method, string name, string fullClassName, string assemblyName, bool isAsync,
+        TestIdGenerationStrategy testIdGenerationStrategy)
         : this(name, fullClassName, assemblyName, isAsync)
     {
         if (method == null)
@@ -80,7 +82,8 @@ public sealed class TestMethod : ITestMethod
         _hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
     }
 
-    internal TestMethod(string managedTypeName, string managedMethodName, string[] hierarchyValues, string name, string fullClassName, string assemblyName, bool isAsync, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal TestMethod(string managedTypeName, string managedMethodName, string[] hierarchyValues, string name,
+        string fullClassName, string assemblyName, bool isAsync, TestIdGenerationStrategy testIdGenerationStrategy)
         : this(name, fullClassName, assemblyName, isAsync)
     {
         ManagedTypeName = managedTypeName;

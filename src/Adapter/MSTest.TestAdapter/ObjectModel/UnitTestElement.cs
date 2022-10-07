@@ -238,25 +238,27 @@ internal class UnitTestElement
                 break;
 
             case TestTools.UnitTesting.TestIdGenerationStrategy.DisplayName:
-                testCase.Id = GenerateTestIdUsingDisplayName(testCase, fileName);
+                testCase.Id = GenerateTestId(testCase, fileName, false);
                 break;
 
             case TestTools.UnitTesting.TestIdGenerationStrategy.Data:
-                testCase.Id = GenerateTestIdUsingTestData(testCase, fileName);
+                testCase.Id = GenerateTestId(testCase, fileName, true);
                 break;
 
             default:
-                throw new NotImplementedException($"Requested Id generation strategy ({TestMethod.TestIdGenerationStrategy}) is not implemented.");
+                throw new NotSupportedException($"Requested test ID generation strategy ({TestMethod.TestIdGenerationStrategy}) is not supported.");
         }
 
         return testCase;
-    }
+    }    
 
-    private Guid GenerateTestIdUsingTestData(TestCase testCase, string fileName)
+    private Guid GenerateTestId(TestCase testCase, string fileName, bool appendData)
     {
+        if (!Debugger.IsAttached) Debugger.Launch();
         var idProvider = new TestIdProvider();
         idProvider.AppendString(testCase.ExecutorUri?.ToString());
         idProvider.AppendString(fileName);
+        
         if (TestMethod.HasManagedMethodAndTypeProperties)
         {
             idProvider.AppendString(TestMethod.ManagedTypeName);
@@ -272,35 +274,12 @@ internal class UnitTestElement
             idProvider.AppendString(testCase.DisplayName);
         }
 
-        if (TestMethod.SerializedData != null)
+        if (appendData && TestMethod.SerializedData != null)
         {
             foreach (var item in TestMethod.SerializedData)
             {
-                idProvider.AppendString(item == null ? "null" : item);
+                idProvider.AppendString(item ?? "null");
             }
-        }
-
-        return idProvider.GetId();
-    }
-
-    private Guid GenerateTestIdUsingDisplayName(TestCase testCase, string fileName)
-    {
-        var idProvider = new TestIdProvider();
-        idProvider.AppendString(testCase.ExecutorUri?.ToString());
-        idProvider.AppendString(fileName);
-        if (TestMethod.HasManagedMethodAndTypeProperties)
-        {
-            idProvider.AppendString(TestMethod.ManagedTypeName);
-            idProvider.AppendString(TestMethod.ManagedMethodName);
-        }
-        else
-        {
-            idProvider.AppendString(testCase.FullyQualifiedName);
-        }
-
-        if (TestMethod.DataType != DynamicDataType.None)
-        {
-            idProvider.AppendString(testCase.DisplayName);
         }
 
         return idProvider.GetId();
