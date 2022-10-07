@@ -3,8 +3,9 @@
 
 using System;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
+#if NET6_0_OR_GREATER
+using System.Threading.Tasks; 
+#endif
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -41,8 +42,6 @@ public sealed class SuiteLifeCycleTestClass : IDisposable
     [TestMethod]
     public void TestMethod()
     {
-        Debugger.Launch();
-        Debugger.Break();
         TestContext.WriteLine("TestMethod was called");
     }
 
@@ -62,13 +61,12 @@ public sealed class SuiteLifeCycleTestClass : IDisposable
     {
         TestContext.WriteLine("DisposeAsync was called");
         return ValueTask.CompletedTask;
-
     }
 #endif
 
     [ClassCleanup]
-    public void ClassCleanup()
+    public static void ClassCleanup()
     {
-        TestContext.WriteLine("ClassCleanup was called");
+        s_testContext.WriteLine("ClassCleanup was called");
     }
 }
