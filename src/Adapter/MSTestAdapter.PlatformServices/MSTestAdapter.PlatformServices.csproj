@@ -10,6 +10,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <!-- Properties specific to UWP -->
@@ -64,6 +65,15 @@
   <ItemGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(WinUiMinimum)' ">
     <!-- CVE-2019-0981, CVE-2019-0980, CVE-2019-0657 -->
     <PackageReference Include="System.Private.Uri" Version="$(SystemPrivateUriVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- API that is common to all frameworks that we build for. -->
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+    <!-- Framework specific API -->
+    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
