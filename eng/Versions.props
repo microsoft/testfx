@@ -50,13 +50,15 @@
     <MoqVersion>4.18.1</MoqVersion>
     <CastleCoreVersion>5.0.0</CastleCoreVersion>
     <FluentAssertionsVersion>6.7.0</FluentAssertionsVersion>
-    <StyleCopAnalyzersVersion>1.0.0</StyleCopAnalyzersVersion>
     <!-- These are used to test compability with legacy MSTest, please do not update -->
     <Legacy__MicrosoftNETTestSdkVersion>15.7.0</Legacy__MicrosoftNETTestSdkVersion>
     <Legacy__MSTestTestAdapterVersion>1.2.0</Legacy__MSTestTestAdapterVersion>
     <Legacy__MSTestTestFrameworkVersion>1.2.0</Legacy__MSTestTestFrameworkVersion>
     <!-- / These are used to test compability with legacy MSTest, please do not update -->
     <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
+    <!-- Code analyzers -->
+    <StyleCopAnalyzersVersion>1.0.0</StyleCopAnalyzersVersion>
+    <RoslynPublicApiAnalyzersVersion>3.3.4-beta1.21554.2</RoslynPublicApiAnalyzersVersion>
     <!-- Libs -->
     <CommandLineParserVersion>2.2.1</CommandLineParserVersion>
     <CredentialManagementVersion>1.0.2</CredentialManagementVersion>

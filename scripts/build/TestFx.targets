@@ -16,6 +16,19 @@
     <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup>-->
 
+  <!--
+    Include PublicApi analyzers into all projects that are in our src directory, this can't use TestProject == true
+    because some projects in test are not tests, but we don't want to analyze those for public apis, because we
+    don't ship them.
+    Use relative path between the project and the root to avoid including the analyzer if the path above the root contains 'src' (e.g. C:\src\vstest).
+  -->
+  <ItemGroup Condition="$([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src/')) OR $([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src\'))">
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(RoslynPublicApiAnalyzersVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
   <!-- WARNING remove this when SDK-style project conversion is being done. -->
   <!--
        We are generating an AssemblyInfo file with certain attributes here,

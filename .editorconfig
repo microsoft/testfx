@@ -177,6 +177,8 @@ dotnet_diagnostic.CA1854.severity = warning
 # CA1806: Do not ignore method results
 dotnet_diagnostic.CA1806.severity = warning
 
+dotnet_diagnostic.RS0037.severity = none
+
 #### Naming styles ####
 
 # Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)
