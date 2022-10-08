@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
 using System.Collections.Generic;
@@ -14,8 +13,10 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+
 /// <summary>
-/// Utilities for AppDomain
+/// Utilities for AppDomain.
 /// </summary>
 internal static class AppDomainUtilities
 {
@@ -45,9 +46,9 @@ internal static class AppDomainUtilities
     }
 
     /// <summary>
-    /// Set the target framework for app domain setup if target framework of dll is > 4.5
+    /// Set the target framework for app domain setup if target framework of dll is > 4.5.
     /// </summary>
-    /// <param name="setup">AppdomainSetup for app domain creation</param>
+    /// <param name="setup">AppdomainSetup for app domain creation.</param>
     /// <param name="frameworkVersionString">The target framework version of the test source.</param>
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
@@ -61,10 +62,10 @@ internal static class AppDomainUtilities
     }
 
     /// <summary>
-    /// Get target framework version string from the given dll
+    /// Get target framework version string from the given dll.
     /// </summary>
     /// <param name="testSourcePath">
-    /// The path of the dll
+    /// The path of the dll.
     /// </param>
     /// <returns>
     /// Framework string
@@ -75,7 +76,7 @@ internal static class AppDomainUtilities
     {
         AppDomainSetup appDomainSetup = new()
         {
-            LoaderOptimization = LoaderOptimization.MultiDomainHost
+            LoaderOptimization = LoaderOptimization.MultiDomainHost,
         };
 
         SetConfigurationFile(appDomainSetup, new DeploymentUtility().GetConfigFile(testSourcePath));
@@ -99,7 +100,7 @@ internal static class AppDomainUtilities
                 var resolutionPaths = new List<string>
                 {
                     Path.GetDirectoryName(typeof(TestCase).Assembly.Location),
-                    Path.GetDirectoryName(testSourcePath)
+                    Path.GetDirectoryName(testSourcePath),
                 };
 
                 CreateInstance(
@@ -225,10 +226,10 @@ internal static class AppDomainUtilities
     }
 
     /// <summary>
-    /// Get the Version for the target framework version string
+    /// Get the Version for the target framework version string.
     /// </summary>
-    /// <param name="version">Target framework string</param>
-    /// <returns>Framework Version</returns>
+    /// <param name="version">Target framework string.</param>
+    /// <returns>Framework Version.</returns>
     internal static Version GetTargetFrameworkVersionFromVersionString(string version)
     {
         try

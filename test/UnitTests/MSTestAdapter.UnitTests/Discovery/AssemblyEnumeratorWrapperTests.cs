@@ -1,28 +1,30 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+
 using Moq;
 
 using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 public class AssemblyEnumeratorWrapperTests : TestContainer
 {
     private readonly AssemblyEnumeratorWrapper _testableAssemblyEnumeratorWrapper;
-    private ICollection<string> _warnings;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
+
+    private ICollection<string> _warnings;
 
     public AssemblyEnumeratorWrapperTests()
     {

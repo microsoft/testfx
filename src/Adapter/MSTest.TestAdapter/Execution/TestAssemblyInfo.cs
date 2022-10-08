@@ -1,30 +1,28 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
-using Extensions;
-
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using ObjectModel;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+
 /// <summary>
-/// Defines TestAssembly Info object
+/// Defines TestAssembly Info object.
 /// </summary>
 public class TestAssemblyInfo
 {
-    private MethodInfo _assemblyCleanupMethod;
+    private readonly object _assemblyInfoExecuteSyncObject;
 
     private MethodInfo _assemblyInitializeMethod;
-    private readonly object _assemblyInfoExecuteSyncObject;
+    private MethodInfo _assemblyCleanupMethod;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestAssemblyInfo"/> class.
@@ -191,7 +189,7 @@ public class TestAssemblyInfo
     }
 
     /// <summary>
-    /// Run assembly cleanup methods
+    /// Run assembly cleanup methods.
     /// </summary>
     /// <returns>
     /// Any exception that can be thrown as part of a assembly cleanup as warning messages.

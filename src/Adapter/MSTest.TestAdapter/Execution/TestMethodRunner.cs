@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,7 +9,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
-using Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -19,13 +17,15 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+
 /// <summary>
 /// This class is responsible to running tests and converting framework TestResults to adapter TestResults.
 /// </summary>
 internal class TestMethodRunner
 {
     /// <summary>
-    /// Test context which needs to be passed to the various methods of the test
+    /// Test context which needs to be passed to the various methods of the test.
     /// </summary>
     private readonly ITestContext _testContext;
 
@@ -35,12 +35,12 @@ internal class TestMethodRunner
     private readonly TestMethod _test;
 
     /// <summary>
-    /// TestMethod referred by the above test element
+    /// TestMethod referred by the above test element.
     /// </summary>
     private readonly TestMethodInfo _testMethodInfo;
 
     /// <summary>
-    /// Specifies whether debug traces should be captured or not
+    /// Specifies whether debug traces should be captured or not.
     /// </summary>
     private readonly bool _captureDebugTraces;
 
@@ -101,7 +101,7 @@ internal class TestMethodRunner
     }
 
     /// <summary>
-    /// Executes a test
+    /// Executes a test.
     /// </summary>
     /// <returns>The test results.</returns>
     internal UnitTestResult[] Execute()
@@ -154,7 +154,7 @@ internal class TestMethodRunner
                 StandardError = result[result.Length - 1].StandardError,
                 DebugTrace = result[result.Length - 1].DebugTrace,
                 TestContextMessages = result[result.Length - 1].TestContextMessages,
-                Duration = result[result.Length - 1].Duration
+                Duration = result[result.Length - 1].Duration,
             };
             result[result.Length - 1] = newResult;
         }
@@ -171,7 +171,7 @@ internal class TestMethodRunner
     }
 
     /// <summary>
-    /// Runs the test method
+    /// Runs the test method.
     /// </summary>
     /// <returns>The test results.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
@@ -258,7 +258,7 @@ internal class TestMethodRunner
                     var inconclusiveResult = new UTF.TestResult
                     {
                         Outcome = UTF.UnitTestOutcome.Inconclusive,
-                        Duration = watch.Elapsed
+                        Duration = watch.Elapsed,
                     };
                     results.Add(inconclusiveResult);
                 }
@@ -288,7 +288,7 @@ internal class TestMethodRunner
                 {
                     Outcome = UTF.UnitTestOutcome.Error,
                     TestFailureException = ex,
-                    Duration = watch.Elapsed
+                    Duration = watch.Elapsed,
                 };
                 results.Add(failedResult);
             }
@@ -394,8 +394,8 @@ internal class TestMethodRunner
             {
                 new UTF.TestResult()
                 {
-                    TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex?.Message, ex?.StackTrace), ex)
-                }
+                    TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex?.Message, ex?.StackTrace), ex),
+                },
             };
         }
     }

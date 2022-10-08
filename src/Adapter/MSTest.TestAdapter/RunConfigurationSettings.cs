@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-
 using System;
 using System.IO;
 using System.Xml;
@@ -11,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 public class RunConfigurationSettings
 {
     /// <summary>
@@ -32,7 +31,7 @@ public class RunConfigurationSettings
     public bool CollectSourceInformation { get; private set; }
 
     /// <summary>
-    /// Populate adapter settings from the context
+    /// Populate adapter settings from the context.
     /// </summary>
     /// <param name="context">
     /// The discovery context that contains the runsettings.
@@ -91,10 +90,10 @@ public class RunConfigurationSettings
     }
 
     /// <summary>
-    /// Convert the parameter xml to TestSettings
+    /// Convert the parameter xml to TestSettings.
     /// </summary>
     /// <param name="reader">Reader to load the settings from.</param>
-    /// <returns>An instance of the <see cref="MSTestSettings"/> class</returns>
+    /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static RunConfigurationSettings ToSettings(XmlReader reader)
     {
         ValidateArg.NotNull<XmlReader>(reader, "reader");

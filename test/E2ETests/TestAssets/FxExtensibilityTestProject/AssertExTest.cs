@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace FxExtensibilityTestProject;
 
 using System;
 using System.Runtime.CompilerServices;
@@ -10,6 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using MSTest.Extensibility.Samples;
 
+namespace FxExtensibilityTestProject;
 [TestClass]
 public class AssertExTest
 {

@@ -1,13 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.Smoke.E2ETests;
-
 using System.Collections.Generic;
 using System.IO;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
+namespace MSTestAdapter.Smoke.E2ETests;
 public class TimeoutTests : CLITestBase
 {
     private const string TimeoutTestAssembly = "TimeoutTestProject.dll";

@@ -1,17 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
-
 using System;
 using System.Linq;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 using Moq;
-
-using MSTest.TestAdapter.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
@@ -19,6 +16,7 @@ using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.O
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class TestAssemblyInfoTests : TestContainer
 {
     private readonly TestAssemblyInfo _testAssemblyInfo;
@@ -36,24 +34,25 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void TestAssemblyInfoAssemblyInitializeMethodThrowsForMultipleAssemblyInitializeMethods()
     {
-        void action()
+        void Action()
         {
             _testAssemblyInfo.AssemblyInitializeMethod = _dummyMethodInfo;
             _testAssemblyInfo.AssemblyInitializeMethod = _dummyMethodInfo;
         }
-        var ex = VerifyThrows(action);
+
+        var ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(TypeInspectionException));
     }
 
     public void TestAssemblyInfoAssemblyCleanupMethodThrowsForMultipleAssemblyCleanupMethods()
     {
-        void action()
+        void Action()
         {
             _testAssemblyInfo.AssemblyCleanupMethod = _dummyMethodInfo;
             _testAssemblyInfo.AssemblyCleanupMethod = _dummyMethodInfo;
         }
 
-        var ex = VerifyThrows(action);
+        var ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(TypeInspectionException));
     }
 
@@ -88,7 +87,7 @@ public class TestAssemblyInfoTests : TestContainer
 
         _testAssemblyInfo.RunAssemblyInitialize(null);
 
-        Verify(0 == assemblyInitCallCount);
+        Verify(assemblyInitCallCount == 0);
     }
 
     public void RunAssemblyInitializeShouldThrowIfTestContextIsNull()
@@ -97,9 +96,9 @@ public class TestAssemblyInfoTests : TestContainer
 
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        void action() => _testAssemblyInfo.RunAssemblyInitialize(null);
+        void Action() => _testAssemblyInfo.RunAssemblyInitialize(null);
 
-        var ex = VerifyThrows(action);
+        var ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(NullReferenceException));
     }
 
@@ -113,7 +112,7 @@ public class TestAssemblyInfoTests : TestContainer
 
         _testAssemblyInfo.RunAssemblyInitialize(_testContext);
 
-        Verify(0 == assemblyInitCallCount);
+        Verify(assemblyInitCallCount == 0);
     }
 
     public void RunAssemblyInitializeShouldExecuteAssemblyInitialize()
@@ -124,7 +123,7 @@ public class TestAssemblyInfoTests : TestContainer
 
         _testAssemblyInfo.RunAssemblyInitialize(_testContext);
 
-        Verify(1 == assemblyInitCallCount);
+        Verify(assemblyInitCallCount == 1);
     }
 
     public void RunAssemblyInitializeShouldSetAssemblyInitializeExecutedFlag()
@@ -156,10 +155,10 @@ public class TestAssemblyInfoTests : TestContainer
         var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
 
         Verify(exception is not null);
-        Verify(UnitTestOutcome.Failed == exception.Outcome);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
-            "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure. Aborting test execution."
-            == exception.Message);
+            exception.Message
+            == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure. Aborting test execution.");
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyInitializeShouldThrowTestFailedExceptionOnAssertionFailure>"));
@@ -174,10 +173,10 @@ public class TestAssemblyInfoTests : TestContainer
         var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
 
         Verify(exception is not null);
-        Verify(UnitTestOutcome.Inconclusive == exception.Outcome);
+        Verify(exception.Outcome == UnitTestOutcome.Inconclusive);
         Verify(
-            "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive. Aborting test execution."
-            == exception.Message);
+            exception.Message
+            == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive. Aborting test execution.");
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive>"));
@@ -192,10 +191,10 @@ public class TestAssemblyInfoTests : TestContainer
         var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
 
         Verify(exception is not null);
-        Verify(UnitTestOutcome.Failed == exception.Outcome);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
-            "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.ArgumentException: Some exception message. Aborting test execution."
-            == exception.Message);
+            exception.Message
+            == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.ArgumentException: Some exception message. Aborting test execution.");
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
             "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>"));
@@ -212,8 +211,8 @@ public class TestAssemblyInfoTests : TestContainer
         var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
 
         Verify(exception is not null);
-        Verify(UnitTestOutcome.Failed == exception.Outcome);
-        Verify("Cached Test failure" == exception.Message);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Message == "Cached Test failure");
     }
 
     public void RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
@@ -236,7 +235,7 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.AssemblyCleanupMethod = null;
 
         Verify(_testAssemblyInfo.RunAssemblyCleanup() is null);
-        Verify(0 == assemblycleanupCallCount);
+        Verify(assemblycleanupCallCount == 0);
     }
 
     public void RunAssemblyCleanupShouldInvokeIfAssemblyCleanupMethod()
@@ -247,7 +246,7 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod");
 
         Verify(_testAssemblyInfo.RunAssemblyCleanup() is null);
-        Verify(1 == assemblycleanupCallCount);
+        Verify(assemblycleanupCallCount == 1);
     }
 
     public void RunAssemblyCleanupShouldReturnAssertFailureExceptionDetails()

@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+
 using Moq;
 
 using TestFramework.ForTestingMSTest;
@@ -17,6 +17,7 @@ using TestFramework.ForTestingMSTest;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 public class TypeValidatorTests : TestContainer
 {
     #region private variables
@@ -73,7 +74,7 @@ public class TypeValidatorTests : TestContainer
     {
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(InternalTestClass), _warnings);
-        Verify(1 == _warnings.Count);
+        Verify(_warnings.Count == 1);
         Verify(_warnings.Contains(string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(InternalTestClass).FullName)));
     }
 
@@ -87,7 +88,7 @@ public class TypeValidatorTests : TestContainer
     {
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), _warnings);
-        Verify(1 == _warnings.Count);
+        Verify(_warnings.Count == 1);
         Verify(_warnings.Contains(string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(OuterClass.NestedInternalClass).FullName)));
     }
 
@@ -121,7 +122,7 @@ public class TypeValidatorTests : TestContainer
 
         SetupTestClass();
         typeValidator.IsValidTestClass(typeof(InternalTestClass), _warnings);
-        Verify(0 == _warnings.Count);
+        Verify(_warnings.Count == 0);
     }
 
     public void WhenInternalDiscoveryIsEnabledIsValidTestClassShouldReturnTrueForNestedInternalTestClasses()
@@ -158,7 +159,7 @@ public class TypeValidatorTests : TestContainer
 
         SetupTestClass();
         typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), _warnings);
-        Verify(0 == _warnings.Count);
+        Verify(_warnings.Count == 0);
     }
 
     #endregion
@@ -175,7 +176,7 @@ public class TypeValidatorTests : TestContainer
     {
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(GenericClass<>), _warnings);
-        Verify(1 == _warnings.Count);
+        Verify(_warnings.Count == 1);
         Verify(_warnings.Contains(string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(GenericClass<>).FullName)));
     }
 
@@ -193,7 +194,7 @@ public class TypeValidatorTests : TestContainer
     {
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), _warnings);
-        Verify(1 == _warnings.Count);
+        Verify(_warnings.Count == 1);
         Verify(_warnings.Contains(string.Format(Resource.UTA_ErrorInValidTestContextSignature, typeof(ClassWithTestContextGetterOnly).FullName)));
     }
 
@@ -217,14 +218,14 @@ public class TypeValidatorTests : TestContainer
     {
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(AbstractTestClass), _warnings);
-        Verify(0 == _warnings.Count);
+        Verify(_warnings.Count == 0);
     }
 
     public void IsValidTestClassShouldReturnFalseForGenericAbstractTestClasses()
     {
         SetupTestClass();
         Verify(!_typeValidator.IsValidTestClass(typeof(AbstractGenericClass<>), _warnings));
-        Verify(0 == _warnings.Count);
+        Verify(_warnings.Count == 0);
     }
 
     #endregion

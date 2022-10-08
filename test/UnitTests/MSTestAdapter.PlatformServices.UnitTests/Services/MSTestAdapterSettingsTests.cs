@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.UnitTests;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,6 +13,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 using TestFramework.ForTestingMSTest;
 
+namespace MSTestAdapter.PlatformServices.UnitTests;
 #pragma warning disable SA1649 // File name must match first type name
 public class MSTestAdapterSettingsTests : TestContainer
 
@@ -39,13 +38,13 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         var adapterSettings = new TestableMSTestAdapterSettings
         {
-            DoesDirectoryExistSetter = (str) => true
+            DoesDirectoryExistSetter = (str) => true,
         };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(0 == string.Compare(result, expectedResult, true));
+        Verify(string.Compare(result, expectedResult, true) == 0);
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWithAnEnvironmentVariable()
@@ -57,13 +56,13 @@ public class MSTestAdapterSettingsTests : TestContainer
         var adapterSettings = new TestableMSTestAdapterSettings
         {
             ExpandEnvironmentVariablesSetter = (str) => str.Replace("%temp%", "C:\\foo"),
-            DoesDirectoryExistSetter = (str) => true
+            DoesDirectoryExistSetter = (str) => true,
         };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(0 == string.Compare(result, expectedResult, true));
+        Verify(string.Compare(result, expectedResult, true) == 0);
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePathWithoutDot()
@@ -74,13 +73,13 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         var adapterSettings = new TestableMSTestAdapterSettings
         {
-            DoesDirectoryExistSetter = (str) => true
+            DoesDirectoryExistSetter = (str) => true,
         };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(0 == string.Compare(result, expectedResult, true));
+        Verify(string.Compare(result, expectedResult, true) == 0);
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePathWithDot()
@@ -91,13 +90,13 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         var adapterSettings = new TestableMSTestAdapterSettings
         {
-            DoesDirectoryExistSetter = (str) => true
+            DoesDirectoryExistSetter = (str) => true,
         };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(0 == string.Compare(result, expectedResult, true));
+        Verify(string.Compare(result, expectedResult, true) == 0);
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePath()
@@ -114,13 +113,13 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         var adapterSettings = new TestableMSTestAdapterSettings
         {
-            DoesDirectoryExistSetter = (str) => true
+            DoesDirectoryExistSetter = (str) => true,
         };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(0 == string.Compare(result, expectedResult, true));
+        Verify(string.Compare(result, expectedResult, true) == 0);
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedNetworkPath()
@@ -132,13 +131,13 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         var adapterSettings = new TestableMSTestAdapterSettings
         {
-            DoesDirectoryExistSetter = (str) => true
+            DoesDirectoryExistSetter = (str) => true,
         };
 
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(0 == string.Compare(result, expectedResult, true));
+        Verify(string.Compare(result, expectedResult, true) == 0);
     }
 
     public void ResolveEnvironmentVariableShouldReturnFalseForInvalidPath()
@@ -162,22 +161,22 @@ public class MSTestAdapterSettingsTests : TestContainer
         List<RecursiveDirectoryPath> expectedResult = new()
         {
             new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true),
-            new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false)
+            new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false),
         };
 
         var adapterSettings = new TestableMSTestAdapterSettings(expectedResult)
         {
             ExpandEnvironmentVariablesSetter = (str) => str.Replace("%temp%", "C:\\foo"),
-            DoesDirectoryExistSetter = (str) => true
+            DoesDirectoryExistSetter = (str) => true,
         };
 
         IList<RecursiveDirectoryPath> result = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
         Verify(result is not null);
-        Verify(2 == result.Count);
+        Verify(result.Count == 2);
 
         for (int i = 0; i < 2; i++)
         {
-            Verify(0 == string.Compare(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase));
+            Verify(string.Compare(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase) == 0);
             Verify(result[i].IncludeSubDirectories == expectedResult[i].IncludeSubDirectories);
         }
     }
@@ -222,9 +221,9 @@ public class MSTestAdapterSettingsTests : TestContainer
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
 
-        void shouldThrowException() => MSTestAdapterSettings.ToSettings(reader);
+        void ShouldThrowException() => MSTestAdapterSettings.ToSettings(reader);
 
-        var ex = VerifyThrows(shouldThrowException);
+        var ex = VerifyThrows(ShouldThrowException);
         Verify(ex is SettingsException);
     }
 

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,12 +14,13 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 internal class ReflectHelper : MarshalByRefObject
 {
     private static readonly Lazy<ReflectHelper> InstanceValue = new(() => new ReflectHelper());
 
     /// <summary>
-    /// Contains the memberInfo Vs the name/type of the attributes defined on that member. (FYI: - MemberInfo denotes properties, fields, methods, events)
+    /// Contains the memberInfo Vs the name/type of the attributes defined on that member. (FYI: - MemberInfo denotes properties, fields, methods, events).
     /// </summary>
     private readonly Dictionary<MemberInfo, Dictionary<string, object>> _attributeCache = new();
 
@@ -34,9 +33,9 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Checks to see if the parameter memberInfo contains the parameter attribute or not.
     /// </summary>
-    /// <param name="memberInfo">Member/Type to test</param>
-    /// <param name="attributeType">Attribute to search for</param>
-    /// <param name="inherit">Look through inheritance or not</param>
+    /// <param name="memberInfo">Member/Type to test.</param>
+    /// <param name="attributeType">Attribute to search for.</param>
+    /// <param name="inherit">Look through inheritance or not.</param>
     /// <returns>True if the attribute of the specified type is defined.</returns>
     public virtual bool IsAttributeDefined(MemberInfo memberInfo, Type attributeType, bool inherit)
     {
@@ -75,9 +74,9 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Checks to see if the parameter memberInfo contains the parameter attribute or not.
     /// </summary>
-    /// <param name="type">Member/Type to test</param>
-    /// <param name="attributeType">Attribute to search for</param>
-    /// <param name="inherit">Look through inheritance or not</param>
+    /// <param name="type">Member/Type to test.</param>
+    /// <param name="attributeType">Attribute to search for.</param>
+    /// <param name="inherit">Look through inheritance or not.</param>
     /// <returns>True if the specified attribute is defined on the type.</returns>
     public virtual bool IsAttributeDefined(Type type, Type attributeType, bool inherit)
     {
@@ -295,17 +294,17 @@ internal class ReflectHelper : MarshalByRefObject
     /// Returns the first attribute of the specified type or null if no attribute
     /// of the specified type is set on the method.
     /// </summary>
-    /// <typeparam name="AttributeType">The type of attribute to return.</typeparam>
+    /// <typeparam name="TAttributeType">The type of attribute to return.</typeparam>
     /// <param name="method">The method on which the attribute is defined.</param>
     /// <returns>The attribute or null if none exists.</returns>
-    internal AttributeType GetAttribute<AttributeType>(MethodInfo method)
-        where AttributeType : class
+    internal TAttributeType GetAttribute<TAttributeType>(MethodInfo method)
+        where TAttributeType : class
     {
-        if (IsAttributeDefined(method, typeof(AttributeType), false))
+        if (IsAttributeDefined(method, typeof(TAttributeType), false))
         {
-            object[] attributes = GetCustomAttributes(method, typeof(AttributeType), false);
+            object[] attributes = GetCustomAttributes(method, typeof(TAttributeType), false);
             Debug.Assert(attributes.Length == 1, "Should only be one attribute.");
-            return attributes[0] as AttributeType;
+            return attributes[0] as TAttributeType;
         }
 
         return null;
@@ -341,7 +340,7 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
-    /// Get categories applied to the test method
+    /// Get categories applied to the test method.
     /// </summary>
     /// <param name="categoryAttributeProvider">The member to inspect.</param>
     /// <param name="owningType">The reflected type that owns <paramref name="categoryAttributeProvider"/>.</param>
@@ -407,9 +406,9 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Gets custom attributes at the class and assembly for a method.
     /// </summary>
-    /// <param name="attributeProvider">Method Info or Member Info or a Type</param>
+    /// <param name="attributeProvider">Method Info or Member Info or a Type.</param>
     /// <param name="owningType">The type that owns <paramref name="attributeProvider"/>.</param>
-    /// <param name="type"> What type of CustomAttribute you need. For instance: TestCategory, Owner etc.,</param>
+    /// <param name="type"> What type of CustomAttribute you need. For instance: TestCategory, Owner etc..</param>
     /// <returns>The categories of the specified type on the method. </returns>
     internal IEnumerable<object> GetCustomAttributesRecursively(MemberInfo attributeProvider, Type owningType, Type type)
     {
@@ -447,7 +446,7 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
-    /// Gets the custom attributes of the provided type on a memberInfo
+    /// Gets the custom attributes of the provided type on a memberInfo.
     /// </summary>
     /// <param name="attributeProvider"> The member to reflect on. </param>
     /// <param name="type"> The attribute type. </param>
@@ -458,7 +457,7 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
-    /// Gets the first custom attribute of the provided type on a memberInfo
+    /// Gets the first custom attribute of the provided type on a memberInfo.
     /// </summary>
     /// <param name="attributeProvider"> The member to reflect on. </param>
     /// <param name="type"> The attribute type. </param>
@@ -497,7 +496,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// KeyValue pairs that are provided by TestPriorityAttributes of the given test method.
     /// </summary>
-    /// <param name="testPriority">The priority</param>
+    /// <param name="testPriority">The priority.</param>
     /// <returns>The corresponding trait.</returns>
     internal virtual Trait GetTestPriorityAsTraits(int? testPriority)
     {
@@ -513,7 +512,7 @@ internal class ReflectHelper : MarshalByRefObject
 
     /// <summary>
     /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
-    /// else null;
+    /// else null.
     /// </summary>
     /// <param name="priorityAttributeProvider">The member to inspect.</param>
     /// <returns>Priority value if defined. Null otherwise.</returns>
@@ -531,7 +530,7 @@ internal class ReflectHelper : MarshalByRefObject
 
     /// <summary>
     /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
-    /// else null;
+    /// else null.
     /// </summary>
     /// <param name="ignoreAttributeProvider">The member to inspect.</param>
     /// <returns>Priority value if defined. Null otherwise.</returns>
@@ -592,12 +591,12 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Get attribute defined on a method which is of given type of subtype of given type.
     /// </summary>
-    /// <typeparam name="AttributeType">The attribute type.</typeparam>
+    /// <typeparam name="TAttributeType">The attribute type.</typeparam>
     /// <param name="memberInfo">The member to inspect.</param>
     /// <param name="inherit">Look at inheritance chain.</param>
     /// <returns>An instance of the attribute.</returns>
-    internal AttributeType GetDerivedAttribute<AttributeType>(MemberInfo memberInfo, bool inherit)
-        where AttributeType : Attribute
+    internal TAttributeType GetDerivedAttribute<TAttributeType>(MemberInfo memberInfo, bool inherit)
+        where TAttributeType : Attribute
     {
         Dictionary<string, object> attributes = GetAttributes(memberInfo, inherit);
         if (attributes == null)
@@ -611,9 +610,9 @@ internal class ReflectHelper : MarshalByRefObject
             Debug.Assert(attribute != null, "ReflectHeler.DefinesAttributeDerivedFrom: internal error: wrong value in the attrs dictionary.");
 
             Type attributeType = attribute.GetType();
-            if (attributeType.Equals(typeof(AttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(AttributeType)))
+            if (attributeType.Equals(typeof(TAttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttributeType)))
             {
-                return attribute as AttributeType;
+                return attribute as TAttributeType;
             }
         }
 
@@ -623,12 +622,12 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Get attribute defined on a method which is of given type of subtype of given type.
     /// </summary>
-    /// <typeparam name="AttributeType">The attribute type.</typeparam>
+    /// <typeparam name="TAttributeType">The attribute type.</typeparam>
     /// <param name="type">The type to inspect.</param>
     /// <param name="inherit">Look at inheritance chain.</param>
     /// <returns>An instance of the attribute.</returns>
-    internal static AttributeType GetDerivedAttribute<AttributeType>(Type type, bool inherit)
-        where AttributeType : Attribute
+    internal static TAttributeType GetDerivedAttribute<TAttributeType>(Type type, bool inherit)
+        where TAttributeType : Attribute
     {
         var attributes = GetCustomAttributes(type.GetTypeInfo(), inherit);
         if (attributes == null)
@@ -642,9 +641,9 @@ internal class ReflectHelper : MarshalByRefObject
             Debug.Assert(attribute != null, "ReflectHeler.DefinesAttributeDerivedFrom: internal error: wrong value in the attrs dictionary.");
 
             Type attributeType = attribute.GetType();
-            if (attributeType.Equals(typeof(AttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(AttributeType)))
+            if (attributeType.Equals(typeof(TAttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttributeType)))
             {
-                return attribute as AttributeType;
+                return attribute as TAttributeType;
             }
         }
 
@@ -652,10 +651,10 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
-    /// Returns owner if attribute is applied to TestMethod, else null;
+    /// Returns owner if attribute is applied to TestMethod, else null.
     /// </summary>
     /// <param name="ownerAttributeProvider">The member to inspect.</param>
-    /// <returns>owner if attribute is applied to TestMethod, else null;</returns>
+    /// <returns>owner if attribute is applied to TestMethod, else null.</returns>
     private static string GetOwner(MemberInfo ownerAttributeProvider)
     {
         var ownerAttribute = GetCustomAttributes(ownerAttributeProvider, typeof(OwnerAttribute), true).ToArray();
@@ -669,7 +668,7 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
-    /// Return TestProperties attributes applied to TestMethod
+    /// Return TestProperties attributes applied to TestMethod.
     /// </summary>
     /// <param name="propertyAttributeProvider">The member to inspect.</param>
     /// <returns>TestProperty attributes if defined. Empty otherwise.</returns>

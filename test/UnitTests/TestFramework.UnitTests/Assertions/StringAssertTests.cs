@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
-
 using System;
 using System.Text.RegularExpressions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using global::TestFramework.ForTestingMSTest;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
 public class StringAssertTests : TestContainer
 {
     public void ThatShouldReturnAnInstanceOfStringAssert()

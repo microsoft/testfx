@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,6 +9,8 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 
 /// <summary>
 /// Determines if a method is a valid test method.

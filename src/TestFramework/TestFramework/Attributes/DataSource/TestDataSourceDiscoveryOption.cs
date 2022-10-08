@@ -4,7 +4,7 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Supported TestDataSource discovery modes
+/// Supported TestDataSource discovery modes.
 /// </summary>
 public enum TestDataSourceDiscoveryOption
 {
@@ -18,5 +18,5 @@ public enum TestDataSourceDiscoveryOption
     /// Discover and expand ITestDataSource based tests.
     /// This is the default behavior after version 2.2.3.
     /// </summary>
-    DuringDiscovery = 2
+    DuringDiscovery = 2,
 }

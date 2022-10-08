@@ -25,22 +25,22 @@ internal static class ConfigurationNames
     internal const string DataSourcesSectionName = "dataSources";
 
     /// <summary>
-    /// Attribute name for 'Name'
+    /// Attribute name for 'Name'.
     /// </summary>
     internal const string NameAttributeName = "name";
 
     /// <summary>
-    /// Attribute name for 'ConnectionString'
+    /// Attribute name for 'ConnectionString'.
     /// </summary>
     internal const string ConnectionStringAttributeName = "connectionString";
 
     /// <summary>
-    /// Attribute name for 'DataAccessMethod'
+    /// Attribute name for 'DataAccessMethod'.
     /// </summary>
     internal const string DataAccessMethodAttributeName = "dataAccessMethod";
 
     /// <summary>
-    /// Attribute name for 'DataTable'
+    /// Attribute name for 'DataTable'.
     /// </summary>
     internal const string DataTableAttributeName = "dataTableName";
 }

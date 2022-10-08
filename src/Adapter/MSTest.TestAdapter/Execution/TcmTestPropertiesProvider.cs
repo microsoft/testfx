@@ -1,10 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-
 using System.Collections.Generic;
+
 using TestPlatformObjectModel = Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
 /// Reads and parses the TcmTestProperties in order to populate them in TestRunParameters.

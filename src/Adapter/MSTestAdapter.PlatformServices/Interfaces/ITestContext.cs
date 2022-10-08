@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-
 using System.Collections.Generic;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 /// <summary>
 /// Operations on the TestContext object that is implemented differently for each platform.
@@ -40,17 +41,17 @@ public interface ITestContext
     /// <summary>
     /// Set data row for particular run of TestMethod.
     /// </summary>
-    /// <param name="dataRow">data row</param>
+    /// <param name="dataRow">data row.</param>
     void SetDataRow(object dataRow);
 
     /// <summary>
-    /// Set connection for TestContext
+    /// Set connection for TestContext.
     /// </summary>
     /// <param name="dbConnection">db Connection.</param>
     void SetDataConnection(object dbConnection);
 
     /// <summary>
-    /// Gets the attached Result files
+    /// Gets the attached Result files.
     /// </summary>
     /// <returns>
     /// The list of result files.
@@ -58,7 +59,7 @@ public interface ITestContext
     IList<string> GetResultFiles();
 
     /// <summary>
-    /// Gets the diagnostics messages written to TestContext.WriteLine()
+    /// Gets the diagnostics messages written to TestContext.WriteLine().
     /// </summary>
     /// <returns>The test context messages added so far.</returns>
     string GetDiagnosticMessages();

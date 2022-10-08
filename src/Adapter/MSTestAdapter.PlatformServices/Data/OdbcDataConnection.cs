@@ -2,12 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
-using System;
 using System.Collections.Generic;
 using System.Data.Odbc;
 using System.Diagnostics;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
 ///      Utility classes to access databases, and to handle quoted strings etc for ODBC.
@@ -63,7 +63,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
             NameColumn = "TABLE_NAME",
             TableTypeColumn = "TABLE_TYPE",
             ValidTableTypes = new string[] { "TABLE", "SYSTEM TABLE" },
-            InvalidSchemas = null
+            InvalidSchemas = null,
         };
         SchemaMetaData data2 = new()
         {
@@ -72,7 +72,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
             NameColumn = "TABLE_NAME",
             TableTypeColumn = "TABLE_TYPE",
             ValidTableTypes = new string[] { "VIEW" },
-            InvalidSchemas = new string[] { "sys", "INFORMATION_SCHEMA" }
+            InvalidSchemas = new string[] { "sys", "INFORMATION_SCHEMA" },
         };
         return new SchemaMetaData[] { data1, data2 };
     }

@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System.Collections.Generic;
 using System.Reflection;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Test data source for data driven tests.

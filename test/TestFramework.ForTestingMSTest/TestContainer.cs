@@ -19,17 +19,16 @@ public abstract class TestContainer : IDisposable
     protected bool IsDisposed { get; private set; }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="TestContainer"/> class.
     /// Constructor is used to provide some initialization before each test.
     /// </summary>
     public TestContainer()
     {
-
     }
 
     /// <summary>
     /// Override this method to provide some cleanup after each test.
     /// </summary>
-    /// <param name="disposing"></param>
     protected virtual void Dispose(bool disposing)
     {
         if (!IsDisposed)
@@ -52,17 +51,21 @@ public abstract class TestContainer : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public static void Verify(bool condition,
+    public static void Verify(
+        bool condition,
         [CallerArgumentExpression(nameof(condition))] string? expression = default,
         [CallerMemberName] string? caller = default,
         [CallerFilePath] string? filePath = default,
         [CallerLineNumber] int lineNumber = default)
     {
         if (!condition)
+        {
             Throw(expression, caller, filePath, lineNumber);
+        }
     }
 
-    public static Exception VerifyThrows(Action action,
+    public static Exception VerifyThrows(
+        Action action,
         [CallerArgumentExpression(nameof(action))] string? expression = default,
         [CallerMemberName] string? caller = default,
         [CallerFilePath] string? filePath = default,
@@ -81,11 +84,12 @@ public abstract class TestContainer : IDisposable
         return null;
     }
 
-    public static void Fail([CallerMemberName] string? caller = default,
+    public static void Fail(
+        [CallerMemberName] string? caller = default,
         [CallerFilePath] string? filePath = default,
         [CallerLineNumber] int lineNumber = default)
     {
-        Throw("", caller, filePath, lineNumber);
+        Throw(string.Empty, caller, filePath, lineNumber);
     }
 
     [DoesNotReturn]

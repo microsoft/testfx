@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,6 +13,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 
 /// <summary>
 /// Enumerates through the type looking for Valid Test Methods to execute.
@@ -45,7 +45,7 @@ internal class TypeEnumerator
     }
 
     /// <summary>
-    /// Walk through all methods in the type, and find out the test methods
+    /// Walk through all methods in the type, and find out the test methods.
     /// </summary>
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> list of test cases.</returns>

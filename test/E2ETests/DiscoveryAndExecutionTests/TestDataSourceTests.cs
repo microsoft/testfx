@@ -1,37 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+using System.IO;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-using System.IO;
-
+namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 public class TestDataSourceTests : CLITestBase
 {
     private const string TestAssembly = "DataSourceTestProject.dll";
-
-    // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR (Marked as private to ignore the test)
-    private void ExecuteCsvTestDataSourceTests()
-    {
-        // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
-
-        // Act
-        var testCases = DiscoverTests(assemblyPath, "CsvTestMethod");
-        var testResults = RunTests(assemblyPath, testCases);
-
-        // Assert
-        VerifyE2E.ContainsTestsPassed(testResults,
-            "CsvTestMethod (Data Row 0)",
-            "CsvTestMethod (Data Row 2)"
-        );
-
-        VerifyE2E.ContainsTestsFailed(testResults,
-            "CsvTestMethod (Data Row 1)",
-            "CsvTestMethod (Data Row 3)"
-        );
-    }
 
     public void ExecuteDynamicDataTests()
     {
@@ -43,9 +20,9 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.ContainsTestsPassed(testResults,
-            "DynamicDataTest (John;Doe,DataSourceTestProject.ITestDataSourceTests.User)"
-        );
+        VerifyE2E.ContainsTestsPassed(
+            testResults,
+            "DynamicDataTest (John;Doe,DataSourceTestProject.ITestDataSourceTests.User)");
 
         VerifyE2E.FailedTestCount(testResults, 0);
     }
@@ -60,7 +37,8 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(
+            testResults,
             "DataRowEnums_SByte (Alfa)",
             "DataRowEnums_SByte (Beta)",
             "DataRowEnums_SByte (Gamma)",
@@ -85,7 +63,6 @@ public class TestDataSourceTests : CLITestBase
             "DataRowEnum_ULong (Alfa)",
             "DataRowEnum_ULong (Beta)",
             "DataRowEnum_ULong (Gamma)",
-
             "DataRowEnums_Nullable_SByte ()",
             "DataRowEnums_Nullable_SByte (Alfa)",
             "DataRowEnums_Nullable_SByte (Beta)",
@@ -118,11 +95,9 @@ public class TestDataSourceTests : CLITestBase
             "DataRowEnums_Nullable_ULong (Alfa)",
             "DataRowEnums_Nullable_ULong (Beta)",
             "DataRowEnums_Nullable_ULong (Gamma)",
-
             "DataRowEnums_MixedTypes_Byte (Alfa,True,1)",
             "DataRowEnums_MixedTypes_Byte (Beta,False,2)",
-            "DataRowEnums_MixedTypes_Byte (Gamma,True,3)"
-        );
+            "DataRowEnums_MixedTypes_Byte (Gamma,True,3)");
 
         VerifyE2E.FailedTestCount(testResults, 0);
     }
@@ -137,7 +112,8 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(
+            testResults,
             "DataRowNonSerializable (System.String)",
             "DataRowNonSerializable (System.Int32)",
             "DataRowNonSerializable (DataSourceTestProject.ITestDataSourceTests.DataRowTests_Enums)");
@@ -154,7 +130,8 @@ public class TestDataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(
+            testResults,
             "DataRow1 (10)",
             "DataRow1 (20)",
             "DataRow1 (30)",
@@ -176,5 +153,27 @@ public class TestDataSourceTests : CLITestBase
             "NullValueInData (john.doe@example.com,abc123,/unit/test)");
 
         VerifyE2E.FailedTestCount(testResults, 0);
+    }
+
+    // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR (Marked as private to ignore the test)
+    private void ExecuteCsvTestDataSourceTests()
+    {
+        // Arrange
+        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
+
+        // Act
+        var testCases = DiscoverTests(assemblyPath, "CsvTestMethod");
+        var testResults = RunTests(assemblyPath, testCases);
+
+        // Assert
+        VerifyE2E.ContainsTestsPassed(
+            testResults,
+            "CsvTestMethod (Data Row 0)",
+            "CsvTestMethod (Data Row 2)");
+
+        VerifyE2E.ContainsTestsFailed(
+            testResults,
+            "CsvTestMethod (Data Row 1)",
+            "CsvTestMethod (Data Row 3)");
     }
 }

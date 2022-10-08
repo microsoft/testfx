@@ -1,12 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 internal static class DictionaryHelper
 {
     public static IDictionary<TKey, TValue> ConcatWithOverwrites<TKey, TValue>(

@@ -1,16 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+using System.Collections.Generic;
+using System.Linq;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-using System.Collections.Generic;
-using System.Linq;
-
 using TestContainer = TestFramework.ForTestingMSTest.TestContainer;
 
+namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 public static class VerifyE2E
 {
     public static void ContainsTestsDiscovered(IEnumerable<TestCase> actualTests, IEnumerable<string> expectedTests)
@@ -71,6 +70,7 @@ public static class VerifyE2E
                 p => test.Equals(p.FullyQualifiedName)
                      || test.Equals(p.DisplayName)
                      || test.Equals(p.DisplayName));
+
             // Test Discovery run was expecting to discover \"{test}\", but it has not discovered.
             TestContainer.Verify(testFound);
         }
@@ -131,11 +131,13 @@ public static class VerifyE2E
 
         AssertOutcomeCount(actualCount, expectedCount);
     }
+
     private static void AssertOutcomeCount(int actualCount, int expectedCount)
     {
         // Test run expected to contain {expectedCount} tests, but ran {actualCount}.
         TestContainer.Verify(expectedCount == actualCount);
     }
+
     private static void AssertDiscoveryCount(int actualCount, int expectedCount)
     {
         // Test discovery expected to contain {expectedCount} tests, but ran {actualCount}.

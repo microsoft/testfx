@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -16,8 +14,11 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using TPOM = Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
 /// The runner that runs a single unit test. Also manages the assembly and class cleanup methods at the end of the run.
@@ -25,17 +26,17 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 internal class UnitTestRunner : MarshalByRefObject
 {
     /// <summary>
-    /// Type cache
+    /// Type cache.
     /// </summary>
     private readonly TypeCache _typeCache;
 
     /// <summary>
-    /// Reflect helper
+    /// Reflect helper.
     /// </summary>
     private readonly ReflectHelper _reflectHelper;
 
     /// <summary>
-    /// Class cleanup manager
+    /// Class cleanup manager.
     /// </summary>
     private ClassCleanupManager _classCleanupManager;
 
@@ -82,8 +83,8 @@ internal class UnitTestRunner : MarshalByRefObject
     /// Initialized the class cleanup manager for the unit test runner. Note, this can run over process-isolation,
     /// and all inputs must be serializable from host process.
     /// </summary>
-    /// <param name="testsToRun">the list of tests that will be run in this execution</param>
-    /// <param name="classCleanupLifecycle">The assembly level class cleanup lifecycle</param>
+    /// <param name="testsToRun">the list of tests that will be run in this execution.</param>
+    /// <param name="classCleanupLifecycle">The assembly level class cleanup lifecycle.</param>
     internal void InitializeClassCleanupManager(ICollection<UnitTestElement> testsToRun, int? classCleanupLifecycle)
     {
         // We can't transport the enum across AppDomain boundaries because of backwards and forwards compatibility.
@@ -157,7 +158,7 @@ internal class UnitTestRunner : MarshalByRefObject
 
     /// <summary>
     /// Runs the class cleanup method.
-    /// It returns any error information during the execution of the cleanup method
+    /// It returns any error information during the execution of the cleanup method.
     /// </summary>
     /// <returns> The <see cref="RunCleanupResult"/>. </returns>
     internal RunCleanupResult RunCleanup()
@@ -232,12 +233,12 @@ internal class UnitTestRunner : MarshalByRefObject
     }
 
     /// <summary>
-    /// Whether the given testMethod is runnable
+    /// Whether the given testMethod is runnable.
     /// </summary>
-    /// <param name="testMethod">The testMethod</param>
-    /// <param name="testMethodInfo">The testMethodInfo</param>
-    /// <param name="notRunnableResult">The results to return if the test method is not runnable</param>
-    /// <returns>whether the given testMethod is runnable</returns>
+    /// <param name="testMethod">The testMethod.</param>
+    /// <param name="testMethodInfo">The testMethodInfo.</param>
+    /// <param name="notRunnableResult">The results to return if the test method is not runnable.</param>
+    /// <returns>whether the given testMethod is runnable.</returns>
     private bool IsTestMethodRunnable(
         TestMethod testMethod,
         TestMethodInfo testMethodInfo,
@@ -251,7 +252,7 @@ internal class UnitTestRunner : MarshalByRefObject
                 {
                     new UnitTestResult(
                         ObjectModel.UnitTestOutcome.NotFound,
-                        string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name))
+                        string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name)),
                 };
                 return false;
             }
@@ -262,7 +263,9 @@ internal class UnitTestRunner : MarshalByRefObject
         {
             {
                 notRunnableResult = new UnitTestResult[]
-                    { new UnitTestResult(ObjectModel.UnitTestOutcome.NotRunnable, testMethodInfo.NotRunnableReason) };
+                {
+                    new UnitTestResult(ObjectModel.UnitTestOutcome.NotRunnable, testMethodInfo.NotRunnableReason),
+                };
                 return false;
             }
         }
@@ -296,7 +299,7 @@ internal class UnitTestRunner : MarshalByRefObject
     }
 
     /// <summary>
-    /// Run assembly cleanup methods
+    /// Run assembly cleanup methods.
     /// </summary>
     /// <param name="assemblyInfoCache"> The assembly Info Cache. </param>
     /// <param name="warnings"> The warnings. </param>
@@ -315,7 +318,7 @@ internal class UnitTestRunner : MarshalByRefObject
     }
 
     /// <summary>
-    /// Run class cleanup methods
+    /// Run class cleanup methods.
     /// </summary>
     /// <param name="classInfoCache"> The class Info Cache. </param>
     /// <param name="warnings"> The warnings. </param>

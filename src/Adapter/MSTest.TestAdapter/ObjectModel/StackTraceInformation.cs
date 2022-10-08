@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-
 using System;
 using System.Diagnostics;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 [Serializable]
 internal class StackTraceInformation
 {
@@ -27,12 +26,12 @@ internal class StackTraceInformation
     }
 
     /// <summary>
-    /// Gets stack Trace associated with the test failure
+    /// Gets stack Trace associated with the test failure.
     /// </summary>
     public string ErrorStackTrace { get; private set; }
 
     /// <summary>
-    /// Gets source code FilePath where the error occurred
+    /// Gets source code FilePath where the error occurred.
     /// </summary>
     public string ErrorFilePath { get; private set; }
 

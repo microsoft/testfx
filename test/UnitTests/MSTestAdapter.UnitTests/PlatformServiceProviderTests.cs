@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
-
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,6 +12,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 public class PlatformServiceProviderTests : TestContainer
 {
     protected override void Dispose(bool disposing)
@@ -82,8 +81,8 @@ public class PlatformServiceProviderTests : TestContainer
         var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, writer, properties);
 
         // Assert.
-        Verify("A.C.M" == testContext.Context.FullyQualifiedTestClassName);
-        Verify("M" == testContext.Context.TestName);
+        Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");
+        Verify(testContext.Context.TestName == "M");
         Verify(testContext.Context.Properties.Contains(properties.ToArray()[0].Key));
         Verify(((IDictionary<string, object>)testContext.Context.Properties).Contains(properties.ToArray()[0]));
     }

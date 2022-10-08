@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace SampleUnitTestProject;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace SampleUnitTestProject;
 [TestClass]
 public class UnitTest1
 {

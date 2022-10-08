@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NET462
-namespace MSTestAdapter.PlatformServices.Tests.Services;
-
 using System;
 using System.IO;
 using System.Reflection;
@@ -12,6 +9,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
+#if !NET462
+namespace MSTestAdapter.PlatformServices.Tests.Services;
 public class FileOperationsTests : TestContainer
 {
     private readonly FileOperations _fileOperations;
@@ -24,7 +23,7 @@ public class FileOperationsTests : TestContainer
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
     {
         var filePath = "temp<>txt";
-        void a() => _fileOperations.LoadAssembly(filePath, false);
+        void A() => _fileOperations.LoadAssembly(filePath, false);
 
         Type expectedException;
 #if NETCOREAPP
@@ -33,15 +32,15 @@ public class FileOperationsTests : TestContainer
         expectedException = typeof(ArgumentException);
 #endif
 
-        var ex = VerifyThrows(a);
+        var ex = VerifyThrows(A);
         Verify(ex.GetType() == expectedException);
     }
 
     public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound()
     {
         var filePath = "temptxt";
-        void a() => _fileOperations.LoadAssembly(filePath, false);
-        var ex = VerifyThrows(a);
+        void A() => _fileOperations.LoadAssembly(filePath, false);
+        var ex = VerifyThrows(A);
         Verify(ex is FileNotFoundException);
     }
 
@@ -64,7 +63,7 @@ public class FileOperationsTests : TestContainer
     public void GetFullFilePathShouldReturnAssemblyFileName()
     {
         Verify(_fileOperations.GetFullFilePath(null) is null);
-        Verify("assemblyFileName" == _fileOperations.GetFullFilePath("assemblyFileName"));
+        Verify(_fileOperations.GetFullFilePath("assemblyFileName") == "assemblyFileName");
     }
 }
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

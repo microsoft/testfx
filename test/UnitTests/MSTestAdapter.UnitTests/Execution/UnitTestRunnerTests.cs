@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,13 +22,13 @@ using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.O
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class UnitTestRunnerTests : TestContainer
 {
-    private UnitTestRunner _unitTestRunner;
-
     private readonly Dictionary<string, object> _testRunParameters;
-
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
+
+    private UnitTestRunner _unitTestRunner;
 
     public UnitTestRunnerTests()
     {
@@ -77,7 +75,7 @@ public class UnitTestRunnerTests : TestContainer
         var assemblyEnumerator = new UnitTestRunner(adapterSettings);
 
         Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
-        Verify("DummyPath\\TestSettings1.testsettings" == MSTestSettings.CurrentSettings.TestSettingsFile);
+        Verify(MSTestSettings.CurrentSettings.TestSettingsFile == "DummyPath\\TestSettings1.testsettings");
     }
 
     #endregion
@@ -86,16 +84,16 @@ public class UnitTestRunnerTests : TestContainer
 
     public void RunSingleTestShouldThrowIfTestMethodIsNull()
     {
-        void a() => _unitTestRunner.RunSingleTest(null, null);
-        var ex = VerifyThrows(a);
+        void A() => _unitTestRunner.RunSingleTest(null, null);
+        var ex = VerifyThrows(A);
         Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void RunSingleTestShouldThrowIfTestRunParamtersIsNull()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-        void a() => _unitTestRunner.RunSingleTest(testMethod, null);
-        var ex = VerifyThrows(a);
+        void A() => _unitTestRunner.RunSingleTest(testMethod, null);
+        var ex = VerifyThrows(A);
         Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
@@ -109,9 +107,9 @@ public class UnitTestRunnerTests : TestContainer
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
-        Verify(1 == results.Length);
-        Verify(UnitTestOutcome.NotFound == results[0].Outcome);
-        Verify("Test method M was not found." == results[0].ErrorMessage);
+        Verify(results.Length == 1);
+        Verify(results[0].Outcome == UnitTestOutcome.NotFound);
+        Verify(results[0].ErrorMessage == "Test method M was not found.");
     }
 
     public void RunSingleTestShouldReturnTestResultIndicatingNotRunnableTestIfTestMethodCannotBeRun()
@@ -131,8 +129,8 @@ public class UnitTestRunnerTests : TestContainer
             methodInfo.Name);
 
         Verify(results is not null);
-        Verify(1 == results.Length);
-        Verify(UnitTestOutcome.NotRunnable == results[0].Outcome);
+        Verify(results.Length == 1);
+        Verify(results[0].Outcome == UnitTestOutcome.NotRunnable);
         Verify(expectedMessage == results[0].ErrorMessage);
     }
 
@@ -148,9 +146,9 @@ public class UnitTestRunnerTests : TestContainer
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
-        Verify(1 == results.Length);
-        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
-        Verify("IgnoreTestClassMessage" == results[0].ErrorMessage);
+        Verify(results.Length == 1);
+        Verify(results[0].Outcome == UnitTestOutcome.Ignored);
+        Verify(results[0].ErrorMessage == "IgnoreTestClassMessage");
     }
 
     public void ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassButHasNoMessage()
@@ -165,9 +163,9 @@ public class UnitTestRunnerTests : TestContainer
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
-        Verify(1 == results.Length);
-        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
-        Verify(string.Empty == results[0].ErrorMessage);
+        Verify(results.Length == 1);
+        Verify(results[0].Outcome == UnitTestOutcome.Ignored);
+        Verify(results[0].ErrorMessage == string.Empty);
     }
 
     public void ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodAndHasMessage()
@@ -182,9 +180,9 @@ public class UnitTestRunnerTests : TestContainer
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
-        Verify(1 == results.Length);
-        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
-        Verify("IgnoreTestMessage" == results[0].ErrorMessage);
+        Verify(results.Length == 1);
+        Verify(results[0].Outcome == UnitTestOutcome.Ignored);
+        Verify(results[0].ErrorMessage == "IgnoreTestMessage");
     }
 
     public void ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodButHasNoMessage()
@@ -199,9 +197,9 @@ public class UnitTestRunnerTests : TestContainer
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
-        Verify(1 == results.Length);
-        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
-        Verify(string.Empty == results[0].ErrorMessage);
+        Verify(results.Length == 1);
+        Verify(results[0].Outcome == UnitTestOutcome.Ignored);
+        Verify(results[0].ErrorMessage == string.Empty);
     }
 
     public void ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethod()
@@ -216,9 +214,9 @@ public class UnitTestRunnerTests : TestContainer
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
-        Verify(1 == results.Length);
-        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
-        Verify("IgnoreTestClassMessage" == results[0].ErrorMessage);
+        Verify(results.Length == 1);
+        Verify(results[0].Outcome == UnitTestOutcome.Ignored);
+        Verify(results[0].ErrorMessage == "IgnoreTestClassMessage");
     }
 
     public void ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethodButClassHasNoMessage()
@@ -233,9 +231,9 @@ public class UnitTestRunnerTests : TestContainer
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
-        Verify(1 == results.Length);
-        Verify(UnitTestOutcome.Ignored == results[0].Outcome);
-        Verify("IgnoreTestMessage" == results[0].ErrorMessage);
+        Verify(results.Length == 1);
+        Verify(results[0].Outcome == UnitTestOutcome.Ignored);
+        Verify(results[0].ErrorMessage == "IgnoreTestMessage");
     }
 
     public void RunSingleTestShouldReturnTestResultIndicatingFailureIfThereIsAnyTypeInspectionExceptionWhenInspectingTestMethod()
@@ -254,8 +252,8 @@ public class UnitTestRunnerTests : TestContainer
             testMethod.Name);
 
         Verify(results is not null);
-        Verify(1 == results.Length);
-        Verify(UnitTestOutcome.Failed == results[0].Outcome);
+        Verify(results.Length == 1);
+        Verify(results[0].Outcome == UnitTestOutcome.Failed);
         Verify(expectedMessage == results[0].ErrorMessage);
     }
 
@@ -271,8 +269,8 @@ public class UnitTestRunnerTests : TestContainer
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
-        Verify(1 == results.Length);
-        Verify(UnitTestOutcome.Passed == results[0].Outcome);
+        Verify(results.Length == 1);
+        Verify(results[0].Outcome == UnitTestOutcome.Passed);
         Verify(results[0].ErrorMessage is null);
     }
 
@@ -289,8 +287,8 @@ public class UnitTestRunnerTests : TestContainer
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
-        Verify(1 == results.Length);
-        Verify(UnitTestOutcome.Passed == results[0].Outcome);
+        Verify(results.Length == 1);
+        Verify(results[0].Outcome == UnitTestOutcome.Passed);
     }
 
     public void RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
@@ -317,7 +315,7 @@ public class UnitTestRunnerTests : TestContainer
 
         _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
-        Verify(1 == validator);
+        Verify(validator == 1);
     }
 
     #endregion
@@ -357,9 +355,9 @@ public class UnitTestRunnerTests : TestContainer
 
         var cleanupresult = _unitTestRunner.RunCleanup();
 
-        Verify(1 == assemblyCleanupCount);
-        Verify(1 == classCleanupCount);
-        Verify(2 == cleanupresult.Warnings.Count);
+        Verify(assemblyCleanupCount == 1);
+        Verify(classCleanupCount == 1);
+        Verify(cleanupresult.Warnings.Count == 2);
         Verify(cleanupresult.Warnings.All(w => w.Contains("NotImplemented")));
     }
 

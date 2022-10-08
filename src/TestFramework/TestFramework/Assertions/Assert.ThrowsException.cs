@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Threading.Tasks;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// A collection of helper classes to test various conditions within
@@ -192,9 +192,9 @@ public sealed partial class Assert
                     FrameworkMessages.WrongExceptionThrown,
                     userMessage,
                     typeof(T).Name,
-                ex.GetType().Name,
-                ex.Message,
-                ex.StackTrace);
+                    ex.GetType().Name,
+                    ex.Message,
+                    ex.StackTrace);
                 ThrowAssertFailed("Assert.ThrowsException", finalMessage);
             }
 
@@ -304,9 +304,9 @@ public sealed partial class Assert
                     FrameworkMessages.WrongExceptionThrown,
                     userMessage,
                     typeof(T).Name,
-                ex.GetType().Name,
-                ex.Message,
-                ex.StackTrace);
+                    ex.GetType().Name,
+                    ex.Message,
+                    ex.StackTrace);
                 ThrowAssertFailed("Assert.ThrowsException", finalMessage);
             }
 

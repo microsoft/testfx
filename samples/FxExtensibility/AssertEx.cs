@@ -1,10 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTest.Extensibility.Samples;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace MSTest.Extensibility.Samples;
 public static class AssertEx
 {
     private static AssertIs s_assertIs;

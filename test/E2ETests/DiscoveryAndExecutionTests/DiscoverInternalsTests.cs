@@ -1,14 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Linq;
-
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
-
 using System.IO;
+using System.Linq;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
+namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 public class DiscoverInternalsTests : CLITestBase
 {
     private const string TestAssembly = "DiscoverInternalsProject.dll";
@@ -26,8 +24,7 @@ public class DiscoverInternalsTests : CLITestBase
         VerifyE2E.AtLeastTestsDiscovered(
             testCases,
             "TopLevelInternalClass_TestMethod1",
-            "NestedInternalClass_TestMethod1"
-        );
+            "NestedInternalClass_TestMethod1");
     }
 
     public void AnInternalTestClassDerivedFromAPublicAbstractGenericBaseClassForAnInternalTypeIsDiscovered()
@@ -41,8 +38,7 @@ public class DiscoverInternalsTests : CLITestBase
         // Assert
         VerifyE2E.AtLeastTestsDiscovered(
             testCases,
-            "EqualityIsCaseInsensitive"
-        );
+            "EqualityIsCaseInsensitive");
     }
 
     public void AnInternalTypeCanBeUsedInADynamicDataTestMethod()
@@ -59,7 +55,6 @@ public class DiscoverInternalsTests : CLITestBase
         // Assert
         VerifyE2E.TestsPassed(
             testResults,
-            "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)"
-        );
+            "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)");
     }
 }

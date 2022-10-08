@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 using System;
 using System.Collections;
@@ -16,6 +15,8 @@ using System.IO;
 using System.Text;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
 ///      Utility classes to access databases, and to handle quoted strings etc for comma separated value files.
@@ -48,7 +49,7 @@ internal sealed class CsvDataConnection : TestDataConnection
     {
         List<string> tableNames = new(1)
         {
-            TableName
+            TableName,
         };
         return tableNames;
     }
@@ -96,6 +97,7 @@ internal sealed class CsvDataConnection : TestDataConnection
         using OleDbDataAdapter dataAdapter = new();
         using OleDbCommandBuilder commandBuilder = new();
         using OleDbCommand command = new();
+
         // We have to use the name of the folder which contains the CSV file in the connection string
         // If target platform is x64, then use CsvConnectionTemplate64 connection string.
         if (IntPtr.Size == 8)
@@ -160,7 +162,7 @@ internal sealed class CsvDataConnection : TestDataConnection
 
         DataTable table = new()
         {
-            Locale = CultureInfo.InvariantCulture
+            Locale = CultureInfo.InvariantCulture,
         };
         dataAdapter.Fill(table);
         return table;

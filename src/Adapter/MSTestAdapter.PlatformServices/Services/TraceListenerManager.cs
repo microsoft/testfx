@@ -1,13 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System;
 using System.Diagnostics;
 using System.IO;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
 /// Internal implementation of TraceListenerManager exposed to the user.
@@ -17,12 +17,12 @@ public class TraceListenerManager : ITraceListenerManager
 {
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
-    /// Original output stream
+    /// Original output stream.
     /// </summary>
     private readonly TextWriter _origStdOut;
 
     /// <summary>
-    /// Original error stream
+    /// Original error stream.
     /// </summary>
     private readonly TextWriter _origStdErr;
 #endif
@@ -84,7 +84,7 @@ public class TraceListenerManager : ITraceListenerManager
 
 #if WIN_UI || WINDOWS_UWP
     /// <summary>
-    /// Returning as this feature is not supported in ASP .net and UWP
+    /// Returning as this feature is not supported in ASP .net and UWP.
     /// </summary>
     /// <param name="traceListener">The trace listener instance.</param>
     public void Close(ITraceListener traceListener)

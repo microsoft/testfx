@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Timeout attribute; used to specify the timeout of a unit test.
@@ -25,10 +25,10 @@ public sealed class TimeoutAttribute : Attribute
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TimeoutAttribute"/> class with a preset timeout
+    /// Initializes a new instance of the <see cref="TimeoutAttribute"/> class with a preset timeout.
     /// </summary>
     /// <param name="timeout">
-    /// The timeout
+    /// The timeout.
     /// </param>
     public TimeoutAttribute(TestTimeout timeout)
     {

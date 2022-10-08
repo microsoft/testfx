@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,10 +10,12 @@ using System.Reflection;
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 
-using MSTestAdapter.PlatformServices.Interface.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 /// <summary>
-/// TestMethod contains information about a unit test method that needs to be executed
+/// TestMethod contains information about a unit test method that needs to be executed.
 /// </summary>
 [Serializable]
 public sealed class TestMethod : ITestMethod
@@ -143,22 +143,22 @@ public sealed class TestMethod : ITestMethod
     public IReadOnlyCollection<string> Hierarchy => _hierarchy;
 
     /// <summary>
-    /// Gets or sets type of dynamic data if any
+    /// Gets or sets type of dynamic data if any.
     /// </summary>
     internal DynamicDataType DataType { get; set; }
 
     /// <summary>
-    /// Gets or sets the serialized data
+    /// Gets or sets the serialized data.
     /// </summary>
     internal string[] SerializedData { get; set; }
 
     /// <summary>
-    /// Gets or sets the test group set during discovery
+    /// Gets or sets the test group set during discovery.
     /// </summary>
     internal string TestGroup { get; set; }
 
     /// <summary>
-    /// Gets or sets the display name set during discovery
+    /// Gets or sets the display name set during discovery.
     /// </summary>
     internal string DisplayName { get; set; }
 

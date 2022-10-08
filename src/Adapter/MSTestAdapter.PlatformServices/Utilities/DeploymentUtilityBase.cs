@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
 using System.Collections.Generic;
@@ -18,6 +17,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 internal abstract class DeploymentUtilityBase
 {
     protected const string TestAssemblyConfigFileExtension = ".config";
@@ -55,7 +55,7 @@ internal abstract class DeploymentUtilityBase
     }
 
     /// <summary>
-    /// Create deployment directories
+    /// Create deployment directories.
     /// </summary>
     /// <param name="runContext">The run context.</param>
     /// <returns>TestRunDirectories instance.</returns>
@@ -104,7 +104,7 @@ internal abstract class DeploymentUtilityBase
     }
 
     /// <summary>
-    /// Get root deployment directory
+    /// Get root deployment directory.
     /// </summary>
     /// <param name="baseDirectory">The base directory.</param>
     /// <returns>Root deployment directory.</returns>
@@ -133,13 +133,13 @@ internal abstract class DeploymentUtilityBase
     }
 
     /// <summary>
-    /// Does the deployment of parameter deployment items & the testSource to the parameter directory.
+    /// Does the deployment of parameter deployment items and the testSource to the parameter directory.
     /// </summary>
     /// <param name="deploymentItems">The deployment item.</param>
     /// <param name="testSource">The test source.</param>
     /// <param name="deploymentDirectory">The deployment directory.</param>
-    /// <param name="resultsDirectory">Root results directory</param>
-    /// <returns>Returns a list of deployment warnings</returns>
+    /// <param name="resultsDirectory">Root results directory.</param>
+    /// <returns>Returns a list of deployment warnings.</returns>
     protected IEnumerable<string> Deploy(IList<DeploymentItem> deploymentItems, string testSource, string deploymentDirectory, string resultsDirectory)
     {
         Validate.IsFalse(string.IsNullOrWhiteSpace(deploymentDirectory), "Deployment directory is null or empty");
@@ -183,7 +183,7 @@ internal abstract class DeploymentUtilityBase
                 // List of files to deploy, by default, just itemFile.
                 var filesToDeploy = new List<string>(1)
                 {
-                    deploymentItemFile
+                    deploymentItemFile,
                 };
 
                 // Find dependencies of test deployment items and deploy them at the same time as the main file.
@@ -281,7 +281,7 @@ internal abstract class DeploymentUtilityBase
     /// </summary>
     /// <param name="deploymentItem">Deployment Item.</param>
     /// <param name="testSource">The test source.</param>
-    /// <param name="resultsDirectory">Results directory which should be skipped for deployment</param>
+    /// <param name="resultsDirectory">Results directory which should be skipped for deployment.</param>
     /// <param name="warnings">Warnings.</param>
     /// <param name="isDirectory">Is this a directory.</param>
     /// <returns>Paths to items to deploy.</returns>
@@ -402,7 +402,7 @@ internal abstract class DeploymentUtilityBase
     }
 
     /// <summary>
-    /// Log the parameter warnings on the parameter logger
+    /// Log the parameter warnings on the parameter logger.
     /// </summary>
     /// <param name="testExecutionRecorder">Execution recorder.</param>
     /// <param name="warnings">Warnings.</param>

@@ -1,20 +1,19 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 internal static class UnitTestOutcomeHelper
 {
     /// <summary>
-    /// Converts the parameter unitTestOutcome to testOutcome
+    /// Converts the parameter unitTestOutcome to testOutcome.
     /// </summary>
     /// <param name="unitTestOutcome"> The unit Test Outcome. </param>
-    /// <param name="currentSettings">Current MSTest settings</param>
+    /// <param name="currentSettings">Current MSTest settings.</param>
     /// <returns>The Test platforms outcome.</returns>
     internal static TestOutcome ToTestOutcome(UnitTestOutcome unitTestOutcome, MSTestSettings currentSettings)
     {

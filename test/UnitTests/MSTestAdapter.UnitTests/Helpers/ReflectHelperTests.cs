@@ -1,22 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
-
 using System;
 using System.Linq;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-using Moq;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
-using TestableImplementations;
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 public class ReflectHelperTests : TestContainer
 {
     private readonly TestableReflectHelper _reflectHelper;
@@ -44,7 +43,7 @@ public class ReflectHelperTests : TestContainer
     }
 
     /// <summary>
-    /// Testing test category attribute adorned at class level
+    /// Testing test category attribute adorned at class level.
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtClassLevel()
     {
@@ -91,7 +90,7 @@ public class ReflectHelperTests : TestContainer
     }
 
     /// <summary>
-    /// Testing test category attributes adorned at assembly level
+    /// Testing test category attributes adorned at assembly level.
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtAssemblyLevel()
     {
@@ -105,7 +104,7 @@ public class ReflectHelperTests : TestContainer
     }
 
     /// <summary>
-    /// Testing multiple test category attribute adorned at class level
+    /// Testing multiple test category attribute adorned at class level.
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeMultipleTestCategoriesAtClassLevel()
     {
@@ -118,7 +117,7 @@ public class ReflectHelperTests : TestContainer
     }
 
     /// <summary>
-    /// Testing multiple test category attributes adorned at assembly level
+    /// Testing multiple test category attributes adorned at assembly level.
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeMultipleTestCategoriesAtAssemblyLevel()
     {
@@ -130,7 +129,7 @@ public class ReflectHelperTests : TestContainer
     }
 
     /// <summary>
-    /// Testing test category attributes adorned at method level - regression
+    /// Testing test category attributes adorned at method level - regression.
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtMethodLevel()
     {

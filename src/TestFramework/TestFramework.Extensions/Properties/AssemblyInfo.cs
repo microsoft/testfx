@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Runtime.InteropServices;
 using System.Resources;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 #if !WIN_UI

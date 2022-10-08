@@ -4,7 +4,7 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// unit test outcomes
+/// unit test outcomes.
 /// </summary>
 public enum UnitTestOutcome : int
 {
@@ -46,12 +46,12 @@ public enum UnitTestOutcome : int
     Aborted,
 
     /// <summary>
-    /// Test is in an unknown state
+    /// Test is in an unknown state.
     /// </summary>
     Unknown,
 
     /// <summary>
     /// Test cannot be executed.
     /// </summary>
-    NotRunnable
+    NotRunnable,
 }

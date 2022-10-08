@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// A collection of helper classes to test various conditions within
@@ -61,13 +61,13 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Helper function that creates and throws an AssertionFailedException
+    /// Helper function that creates and throws an AssertionFailedException.
     /// </summary>
     /// <param name="assertionName">
-    /// name of the assertion throwing an exception
+    /// name of the assertion throwing an exception.
     /// </param>
     /// <param name="message">
-    /// The assertion failure message
+    /// The assertion failure message.
     /// </param>
     [DoesNotReturn]
     internal static void ThrowAssertFailed(string assertionName, string message)
@@ -79,7 +79,7 @@ public sealed partial class Assert
     /// Builds the formatted message using the given user format message and parameters.
     /// </summary>
     /// <param name="format">
-    /// A composite format string
+    /// A composite format string.
     /// </param>
     /// <param name="parameters">
     /// An object array that contains zero or more objects to format.
@@ -105,7 +105,7 @@ public sealed partial class Assert
     }
 
     /// <summary>
-    /// Checks the parameter for valid conditions
+    /// Checks the parameter for valid conditions.
     /// </summary>
     /// <param name="param">
     /// The parameter.
@@ -114,10 +114,10 @@ public sealed partial class Assert
     /// The assertion Name.
     /// </param>
     /// <param name="parameterName">
-    /// parameter name
+    /// parameter name.
     /// </param>
     /// <param name="message">
-    /// message for the invalid parameter exception
+    /// message for the invalid parameter exception.
     /// </param>
     /// <param name="parameters">
     /// The parameters.
@@ -171,14 +171,15 @@ public sealed partial class Assert
     }
 
     #region EqualsAssertion
+
     /// <summary>
     /// Static equals overloads are used for comparing instances of two types for reference
     /// equality. This method should <b>not</b> be used for comparison of two instances for
     /// equality. This object will <b>always</b> throw with Assert.Fail. Please use
     /// Assert.AreEqual and associated overloads in your unit tests.
     /// </summary>
-    /// <param name="objA"> Object A </param>
-    /// <param name="objB"> Object B </param>
+    /// <param name="objA"> Object A. </param>
+    /// <param name="objB"> Object B. </param>
     /// <returns> False, always. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
     public static new bool Equals(object objA, object objB)

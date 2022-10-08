@@ -1,13 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Linq;
-
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
-
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 using Microsoft.MSTestV2.CLIAutomation;
@@ -15,6 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using OM = Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 public class OutputTests : CLITestBase
 {
     private const string TestAssembly = "OutputTestProject.dll";
@@ -42,13 +40,15 @@ public class OutputTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Verify(3 == testResults.Count);
+        Verify(testResults.Count == 3);
 
         // TODO: Re-enable this once we figure out how to make that pass in our CI pipeline.
-        //// Ensure that some tests are running in parallel, because otherwise the output just works correctly.
-        //var firstEnd = testResults.Min(t => t.EndTime);
-        //var someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
-        //Assert.IsTrue(someStartedBeforeFirstEnded, "Tests must run in parallel, but there were no other tests that started, before the first one ended.");
+        /*
+        // Ensure that some tests are running in parallel, because otherwise the output just works correctly.
+        var firstEnd = testResults.Min(t => t.EndTime);
+        var someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
+        Assert.IsTrue(someStartedBeforeFirstEnded, "Tests must run in parallel, but there were no other tests that started, before the first one ended.");
+        */
 
         ValidateOutputsAreNotMixed(testResults, "TestMethod1", new[] { "TestMethod2", "TestMethod3" });
         ValidateOutputsAreNotMixed(testResults, "TestMethod2", new[] { "TestMethod1", "TestMethod3" });
@@ -79,9 +79,11 @@ public class OutputTests : CLITestBase
     {
         // Make sure that the output between methods is not mixed. And that every method has test initialize and cleanup.
         var testMethod = testResults.Single(t => t.DisplayName == methodName);
+
         // Test method {methodName} was not found.
         Verify(testMethod is not null);
         var message = testMethod.Messages.SingleOrDefault(messageFilter);
+
         // Message for {testMethod.DisplayName} was not found. All messages: { string.Join(Environment.NewLine, testMethod.Messages.Select(m => $"{m.Category} - {m.Text}")) }
         Verify(message is not null);
         Verify(new Regex(methodName).IsMatch(message.Text));

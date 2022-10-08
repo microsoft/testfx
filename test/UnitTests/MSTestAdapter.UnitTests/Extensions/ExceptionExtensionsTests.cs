@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
-
 using System;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -11,6 +9,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
 /// <summary>
 /// Tests for <see cref="ExceptionExtensions"/> class.
@@ -31,9 +31,9 @@ public class ExceptionExtensionsTests : TestContainer
 
     public void ExceptionGetInnerExceptionOrDefaultShouldNotThrowForNullException()
     {
-        static void action() => ((Exception)null).GetInnerExceptionOrDefault();
+        static void Action() => ((Exception)null).GetInnerExceptionOrDefault();
 
-        action();
+        Action();
     }
 
     public void ExceptionGetInnerExceptionOrDefaultShouldReturnNullForNullException()
@@ -60,14 +60,14 @@ public class ExceptionExtensionsTests : TestContainer
     {
         var exception = new Exception("dummyMessage");
 
-        Verify("dummyMessage" == exception.TryGetMessage());
+        Verify(exception.TryGetMessage() == "dummyMessage");
     }
 
     public void ExceptionTryGetMessageReturnsEmptyStringIfExceptionMessageIsNull()
     {
         var exception = new DummyException(() => null);
 
-        Verify(string.Empty == exception.TryGetMessage());
+        Verify(exception.TryGetMessage() == string.Empty);
     }
 
     public void ExceptionTryGetMessageReturnsErrorMessageIfExceptionIsNull()
@@ -114,7 +114,7 @@ public class ExceptionExtensionsTests : TestContainer
 
         Verify(stackTraceInformation.ErrorStackTrace.StartsWith("    at A()"));
         Verify(stackTraceInformation.ErrorFilePath is null);
-        Verify(0 == stackTraceInformation.ErrorLineNumber);
+        Verify(stackTraceInformation.ErrorLineNumber == 0);
     }
 
     public void TryGetStackTraceInformationShouldThrowIfStackTraceThrows()
@@ -176,8 +176,8 @@ public class ExceptionExtensionsTests : TestContainer
 
         exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo);
 
-        Verify(UTF.UnitTestOutcome.Inconclusive == outcome);
-        Verify("Dummy Message" == exceptionMessage);
+        Verify(outcome == UTF.UnitTestOutcome.Inconclusive);
+        Verify(exceptionMessage == "Dummy Message");
     }
 
     public void IsUnitTestAssertExceptionSetsOutcomeAsFailedIfAssertFailedException()
@@ -187,8 +187,8 @@ public class ExceptionExtensionsTests : TestContainer
 
         exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo);
 
-        Verify(UTF.UnitTestOutcome.Failed == outcome);
-        Verify("Dummy Message" == exceptionMessage);
+        Verify(outcome == UTF.UnitTestOutcome.Failed);
+        Verify(exceptionMessage == "Dummy Message");
     }
     #endregion
 }

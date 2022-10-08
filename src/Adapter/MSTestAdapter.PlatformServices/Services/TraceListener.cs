@@ -1,13 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System.Diagnostics;
 using System.IO;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
 /// Internal implementation of TraceListener exposed to the user.
@@ -22,15 +22,21 @@ public class TraceListenerWrapper :
 #endif
     ITraceListener
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TraceListenerWrapper"/> class
 #if !WINDOWS_UWP && !WIN_UI
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TraceListenerWrapper"/> class.
     /// that derives from System.Diagnostics.TextWriterTraceListener
-    /// class and initializes TextWriterTraceListener object using the specified writer as recipient of the tracing or debugging output
-#endif
-    /// .
+    /// class and initializes TextWriterTraceListener object using the specified writer as recipient of the tracing or debugging output.
     /// </summary>
     /// <param name="textWriter">Writer instance for tracing or debugging output.</param>
+#else
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TraceListenerWrapper"/> class.
+    /// that derives from System.Diagnostics.TextWriterTraceListener
+    /// class and initializes TextWriterTraceListener object using the specified writer as recipient of the tracing or debugging output.
+    /// </summary>
+    /// <param name="textWriter">Writer instance for tracing or debugging output.</param>
+#endif
     public TraceListenerWrapper(TextWriter textWriter)
 #if !WINDOWS_UWP && !WIN_UI
         : base(textWriter)
@@ -40,14 +46,14 @@ public class TraceListenerWrapper :
 
 #if WIN_UI || WINDOWS_UWP
     /// <summary>
-    /// Returning as this feature is not supported in ASP .NET and UWP
+    /// Returning as this feature is not supported in ASP .NET and UWP.
     /// </summary>
     public void Dispose()
     {
     }
 
     /// <summary>
-    /// Returning as this feature is not supported in ASP .NET and UWP
+    /// Returning as this feature is not supported in ASP .NET and UWP.
     /// </summary>
     public void Close()
         => Dispose();

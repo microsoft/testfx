@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,6 +11,8 @@ using System.Linq;
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 /// <summary>
 /// The unit test element.
@@ -38,17 +38,17 @@ internal class UnitTestElement
     }
 
     /// <summary>
-    /// Gets the test method which should be executed as part of this test case
+    /// Gets the test method which should be executed as part of this test case.
     /// </summary>
     public TestMethod TestMethod { get; private set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether the unit test should be ignored at run-time
+    /// Gets or sets a value indicating whether the unit test should be ignored at run-time.
     /// </summary>
     public bool Ignored { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether it is a async test
+    /// Gets or sets a value indicating whether it is a async test.
     /// </summary>
     public bool IsAsync { get; set; }
 
@@ -78,7 +78,7 @@ internal class UnitTestElement
     public KeyValuePair<string, string>[] DeploymentItems { get; set; }
 
     /// <summary>
-    /// Gets or sets the DisplayName
+    /// Gets or sets the DisplayName.
     /// </summary>
     public string DisplayName { get; set; }
 
@@ -132,7 +132,7 @@ internal class UnitTestElement
 
         TestCase testCase = new(fullName, TestAdapter.Constants.ExecutorUri, TestMethod.AssemblyName)
         {
-            DisplayName = GetDisplayName()
+            DisplayName = GetDisplayName(),
         };
 
         if (TestMethod.HasManagedMethodAndTypeProperties)

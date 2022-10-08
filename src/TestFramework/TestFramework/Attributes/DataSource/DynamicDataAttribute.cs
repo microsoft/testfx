@@ -1,13 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Enum to specify whether the data is stored as property or in method.
@@ -22,7 +22,7 @@ public enum DynamicDataSourceType
     /// <summary>
     /// Data is declared in method.
     /// </summary>
-    Method = 1
+    Method = 1,
 }
 
 /// <summary>
@@ -32,10 +32,9 @@ public enum DynamicDataSourceType
 public sealed class DynamicDataAttribute : Attribute, ITestDataSource
 {
     private readonly string _dynamicDataSourceName;
+    private readonly DynamicDataSourceType _dynamicDataSourceType;
 
     private Type _dynamicDataDeclaringType;
-
-    private readonly DynamicDataSourceType _dynamicDataSourceType;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
@@ -123,7 +122,6 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                     _dynamicDataSourceName,
                     _dynamicDataDeclaringType.FullName));
         }
-
 
         if (obj is not IEnumerable<object[]> enumerable)
         {

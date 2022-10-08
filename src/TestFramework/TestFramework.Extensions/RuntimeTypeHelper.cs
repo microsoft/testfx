@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+
+#if NETFRAMEWORK
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Provides method signature discovery for generic methods.
@@ -17,8 +17,8 @@ internal class RuntimeTypeHelper
     /// <summary>
     /// Compares the method signatures of these two methods.
     /// </summary>
-    /// <param name="m1">Method1</param>
-    /// <param name="m2">Method2</param>
+    /// <param name="m1">Method1.</param>
+    /// <param name="m2">Method2.</param>
     /// <returns>True if they are similar.</returns>
     internal static bool CompareMethodSigAndName(MethodBase m1, MethodBase m2)
     {
@@ -112,8 +112,8 @@ internal class RuntimeTypeHelper
     /// the criteria.
     /// </summary>
     /// <param name="bindingAttr">Binding specification.</param>
-    /// <param name="match">Candidate matches</param>
-    /// <param name="types">Types</param>
+    /// <param name="match">Candidate matches.</param>
+    /// <param name="types">Types.</param>
     /// <param name="modifiers">Parameter modifiers.</param>
     /// <returns>Matching method. Null if none matches.</returns>
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
@@ -239,11 +239,11 @@ internal class RuntimeTypeHelper
     /// <summary>
     /// Finds the most specific method in the two methods provided.
     /// </summary>
-    /// <param name="m1">Method 1</param>
-    /// <param name="paramOrder1">Parameter order for Method 1</param>
+    /// <param name="m1">Method 1.</param>
+    /// <param name="paramOrder1">Parameter order for Method 1.</param>
     /// <param name="paramArrayType1">Parameter array type.</param>
-    /// <param name="m2">Method 2</param>
-    /// <param name="paramOrder2">Parameter order for Method 2</param>
+    /// <param name="m2">Method 2.</param>
+    /// <param name="paramOrder2">Parameter order for Method 2.</param>
     /// <param name="paramArrayType2">>Parameter array type.</param>
     /// <param name="types">Types to search in.</param>
     /// <param name="args">Args.</param>
@@ -304,11 +304,11 @@ internal class RuntimeTypeHelper
     /// <summary>
     /// Finds the most specific method in the two methods provided.
     /// </summary>
-    /// <param name="p1">Method 1</param>
-    /// <param name="paramOrder1">Parameter order for Method 1</param>
+    /// <param name="p1">Method 1.</param>
+    /// <param name="paramOrder1">Parameter order for Method 1.</param>
     /// <param name="paramArrayType1">Parameter array type.</param>
-    /// <param name="p2">Method 2</param>
-    /// <param name="paramOrder2">Parameter order for Method 2</param>
+    /// <param name="p2">Method 2.</param>
+    /// <param name="paramOrder2">Parameter order for Method 2.</param>
     /// <param name="paramArrayType2">>Parameter array type.</param>
     /// <param name="types">Types to search in.</param>
     /// <param name="args">Args.</param>
@@ -428,9 +428,9 @@ internal class RuntimeTypeHelper
     /// <summary>
     /// Finds the most specific type in the two provided.
     /// </summary>
-    /// <param name="c1">Type 1</param>
-    /// <param name="c2">Type 2</param>
-    /// <param name="t">The defining type</param>
+    /// <param name="c1">Type 1.</param>
+    /// <param name="c2">Type 2.</param>
+    /// <param name="t">The defining type.</param>
     /// <returns>An int representing the match.</returns>
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
     internal static int FindMostSpecificType(Type c1, Type c2, Type t)

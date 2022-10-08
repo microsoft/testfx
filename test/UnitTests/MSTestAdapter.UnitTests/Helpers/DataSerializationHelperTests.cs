@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
-
 using System;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 using TestFramework.ForTestingMSTest;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 public class DataSerializationHelperTests : TestContainer
 {
     public void DataSerializerShouldRoundTripDateTimeOffset()

@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
 /// <summary>
-/// AssertFailedException class. Used to indicate failure for a test case
+/// AssertFailedException class. Used to indicate failure for a test case.
 /// </summary>
 [Serializable]
 public partial class AssertFailedException : UnitTestAssertException

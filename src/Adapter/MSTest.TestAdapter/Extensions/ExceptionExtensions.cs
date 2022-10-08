@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-
 using System;
 using System.Globalization;
 using System.Text;
-using Execution;
+
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 /// <summary>
 /// Extensions to <see cref="Exception"/> type.
@@ -30,8 +32,8 @@ internal static class ExceptionExtensions
     /// <summary>
     /// Get the exception message if available, empty otherwise.
     /// </summary>
-    /// <param name="exception">An <see cref="Exception"/> object</param>
-    /// <returns>Exception message</returns>
+    /// <param name="exception">An <see cref="Exception"/> object.</param>
+    /// <returns>Exception message.</returns>
     internal static string TryGetMessage(this Exception exception)
     {
         if (exception == null)
@@ -47,7 +49,7 @@ internal static class ExceptionExtensions
     /// Gets the <see cref="StackTraceInformation"/> for an exception.
     /// </summary>
     /// <param name="exception">An <see cref="Exception"/> instance.</param>
-    /// <returns>StackTraceInformation for the exception</returns>
+    /// <returns>StackTraceInformation for the exception.</returns>
     internal static StackTraceInformation TryGetStackTraceInformation(this Exception exception)
     {
         if (!string.IsNullOrEmpty(exception?.StackTrace))
@@ -59,12 +61,12 @@ internal static class ExceptionExtensions
     }
 
     /// <summary>
-    /// Checks whether exception is an Assert exception
+    /// Checks whether exception is an Assert exception.
     /// </summary>
     /// <param name="exception">An <see cref="Exception"/> instance.</param>
     /// <param name="outcome"> Framework's Outcome depending on type of assertion.</param>
     /// <param name="exceptionMessage">Exception message.</param>
-    /// <param name="exceptionStackTrace">StackTraceInformation for the exception</param>
+    /// <param name="exceptionStackTrace">StackTraceInformation for the exception.</param>
     /// <returns>True, if Assert exception. False, otherwise.</returns>
     internal static bool TryGetUnitTestAssertException(this Exception exception, out UTF.UnitTestOutcome outcome, out string exceptionMessage, out StackTraceInformation exceptionStackTrace)
     {

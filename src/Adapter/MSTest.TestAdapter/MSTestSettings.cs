@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-
 using System;
 using System.Globalization;
 using System.IO;
@@ -16,8 +14,10 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
 /// <summary>
-/// Adapter Settings for the run
+/// Adapter Settings for the run.
 /// </summary>
 [Serializable]
 public class MSTestSettings
@@ -35,12 +35,12 @@ public class MSTestSettings
     private const string ParallelizeSettingsName = "Parallelize";
 
     /// <summary>
-    /// Member variable for Adapter settings
+    /// Member variable for Adapter settings.
     /// </summary>
     private static MSTestSettings s_currentSettings;
 
     /// <summary>
-    /// Member variable for RunConfiguration settings
+    /// Member variable for RunConfiguration settings.
     /// </summary>
     private static RunConfigurationSettings s_runConfigurationSettings;
 
@@ -146,12 +146,12 @@ public class MSTestSettings
     /// Gets a value indicating whether the assembly can be parallelized.
     /// </summary>
     /// <remarks>
-    /// This is also re-used to disable parallelization on format errors
+    /// This is also re-used to disable parallelization on format errors.
     /// </remarks>
     public bool DisableParallelization { get; private set; }
 
     /// <summary>
-    ///  Gets specified global test case timeout
+    ///  Gets specified global test case timeout.
     /// </summary>
     public int TestTimeout { get; private set; }
 
@@ -186,7 +186,7 @@ public class MSTestSettings
     }
 
     /// <summary>
-    /// Populate adapter settings from the context
+    /// Populate adapter settings from the context.
     /// </summary>
     /// <param name="context">
     /// The discovery context that contains the runsettings.
@@ -227,7 +227,7 @@ public class MSTestSettings
     }
 
     /// <summary>
-    /// Get the MSTestV1 adapter settings from the context
+    /// Get the MSTestV1 adapter settings from the context.
     /// </summary>
     /// <param name="logger"> The logger for messages. </param>
     /// <returns> Returns true if test settings is provided.. </returns>
@@ -246,7 +246,7 @@ public class MSTestSettings
     /// Gets the adapter specific settings from the xml.
     /// </summary>
     /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
-    /// <param name="settingName"> The name of the adapter settings to fetch - Its either MSTest or MSTestV2 </param>
+    /// <param name="settingName"> The name of the adapter settings to fetch - Its either MSTest or MSTestV2. </param>
     /// <returns> The settings if found. Null otherwise. </returns>
     internal static MSTestSettings GetSettings(string runSettingsXml, string settingName)
     {
@@ -291,10 +291,10 @@ public class MSTestSettings
     }
 
     /// <summary>
-    /// Convert the parameter xml to TestSettings
+    /// Convert the parameter xml to TestSettings.
     /// </summary>
     /// <param name="reader">Reader to load the settings from.</param>
-    /// <returns>An instance of the <see cref="MSTestSettings"/> class</returns>
+    /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static MSTestSettings ToSettings(XmlReader reader)
     {
         ValidateArg.NotNull<XmlReader>(reader, "reader");

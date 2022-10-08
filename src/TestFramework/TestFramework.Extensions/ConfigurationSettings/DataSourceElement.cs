@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Configuration;
+
 #if NETFRAMEWORK
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using System.Configuration;
 
 /// <summary>
 /// The Data Source element.
@@ -21,7 +21,7 @@ public sealed class DataSourceElement : ConfigurationElement
         NameValue,
         ConnectionStringValue,
         DataAccessMethodValue,
-        DataTableNameValue
+        DataTableNameValue,
     };
 
     /// <summary>

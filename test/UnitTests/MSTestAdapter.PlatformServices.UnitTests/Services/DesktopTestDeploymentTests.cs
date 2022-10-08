@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
-namespace MSTestAdapter.PlatformServices.UnitTests.Services;
-
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -21,6 +18,8 @@ using MSTestAdapter.PlatformServices.Tests.Utilities;
 
 using TestFramework.ForTestingMSTest;
 
+#if NET462
+namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 public class DesktopTestDeploymentTests : TestContainer
 {
     private const string DefaultDeploymentItemPath = @"c:\temp";
@@ -41,7 +40,7 @@ public class DesktopTestDeploymentTests : TestContainer
         MSTestSettingsProvider.Reset();
     }
 
-    #region Deploy tests
+#region Deploy tests
 
     public void DeployShouldDeployFilesInASourceAndReturnTrue()
     {
@@ -114,9 +113,9 @@ public class DesktopTestDeploymentTests : TestContainer
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(testRunDirectories.RootDeploymentDirectory), Times.Once);
     }
 
-    #endregion
+#endregion
 
-    #region private methods
+#region private methods
 
     private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
     {
@@ -141,7 +140,7 @@ public class DesktopTestDeploymentTests : TestContainer
                 {
                     new KeyValuePair<string, string>(
                         DefaultDeploymentItemPath,
-                        DefaultDeploymentItemOutputDirectory)
+                        DefaultDeploymentItemOutputDirectory),
                 };
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
 
@@ -173,7 +172,7 @@ public class DesktopTestDeploymentTests : TestContainer
             new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, _mockFileUtility.Object),
             _mockFileUtility.Object);
     }
-    #endregion
+#endregion
 }
 
 #endif

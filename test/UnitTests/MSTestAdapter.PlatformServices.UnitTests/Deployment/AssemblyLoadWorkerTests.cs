@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
-namespace MSTestAdapter.PlatformServices.UnitTests.Deployment;
-
 using System;
 using System.IO;
 using System.Linq;
@@ -16,6 +13,8 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+#if NET462
+namespace MSTestAdapter.PlatformServices.UnitTests.Deployment;
 public class AssemblyLoadWorkerTests : TestContainer
 {
     public void GetFullPathToDependentAssembliesShouldReturnV1FrameworkAssembly()
@@ -24,7 +23,7 @@ public class AssemblyLoadWorkerTests : TestContainer
         var v1AssemblyName = new AssemblyName("Microsoft.VisualStudio.QualityTools.UnitTestFramework");
         var testableAssembly = new TestableAssembly
         {
-            GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName }
+            GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName },
         };
 
         var mockAssemblyUtility = new Mock<IAssemblyUtility>();
@@ -50,12 +49,12 @@ public class AssemblyLoadWorkerTests : TestContainer
         var dependentAssemblyName = new AssemblyName("Common.TestFramework");
         var dependentAssembly = new TestableAssembly(dependentAssemblyName.Name)
         {
-            GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName }
+            GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName },
         };
 
         var testableAssembly = new TestableAssembly
         {
-            GetReferencedAssembliesSetter = () => new AssemblyName[] { dependentAssemblyName }
+            GetReferencedAssembliesSetter = () => new AssemblyName[] { dependentAssemblyName },
         };
 
         var mockAssemblyUtility = new Mock<IAssemblyUtility>();
@@ -101,7 +100,7 @@ public class AssemblyLoadWorkerTests : TestContainer
         Verify(dependentAssemblies.Contains(utfAssembly));
     }
 
-    #region Testable Implementations
+#region Testable Implementations
 
     private class TestableAssembly : Assembly
     {
@@ -174,6 +173,6 @@ public class AssemblyLoadWorkerTests : TestContainer
         }
     }
 
-    #endregion
+#endregion
 }
 #endif

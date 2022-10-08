@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
-
 using System;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -16,6 +14,7 @@ using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class LogMessageListenerTests : TestContainer
 {
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
