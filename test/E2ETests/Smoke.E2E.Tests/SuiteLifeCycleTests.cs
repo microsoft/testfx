@@ -28,6 +28,7 @@ public class SuiteLifeCycleTests : CLITestBase
         foreach (var testMethod in _runEventsHandler.PassedTests)
         {
             Verify(testMethod.Outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+            // Class cleanup doesn't appear in the logs becouse it's happing after retriving the result. 
             if (targetFramework == "net462")
             {
                 Verify(testMethod.Messages.Single().Text.Contains(
@@ -35,10 +36,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     ClassInitialize was called
                     Ctor was called
                     TestInitialize was called
-                    TestMethod was called                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+                    TestMethod was called
                     TestCleanup was called
                     Dispose was called
-                    ClassCleanup was called
                     """));
             }
             else
@@ -52,7 +52,6 @@ public class SuiteLifeCycleTests : CLITestBase
                     TestCleanup was called
                     DisposeAsync was called
                     Dispose was called
-                    ClassCleanup was called
                     """));
             }
         }
