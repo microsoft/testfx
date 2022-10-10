@@ -25,34 +25,36 @@ public class SuiteLifeCycleTests : CLITestBase
         InvokeVsTestForExecution(new[] { targetFramework + "\\" + Assembly }, targetFramework: targetFramework);
         Verify(_runEventsHandler.PassedTests.Count == 3);
 
-        var testMethod = _runEventsHandler.PassedTests.Single();
-        Verify(testMethod.Outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        if (targetFramework == "net462")
+        foreach (var testMethod in _runEventsHandler.PassedTests)
         {
-            Verify(testMethod.Messages.Single().Text.Contains(
-                """
-                ClassInitialize was called
-                Ctor was called
-                TestInitialize was called
-                TestMethod was called
-                TestCleanup was called
-                Dispose was called
-                ClassCleanup was called
-                """));
-        }
-        else
-        {
-            Verify(testMethod.Messages.Single().Text.Contains(
-                """
-                ClassInitialize was called
-                Ctor was called
-                TestInitialize was called
-                TestMethod was called
-                TestCleanup was called
-                DisposeAsync was called
-                Dispose was called
-                ClassCleanup was called
-                """));
+            Verify(testMethod.Outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+            if (targetFramework == "net462")
+            {
+                Verify(testMethod.Messages.Single().Text.Contains(
+                    """
+                    ClassInitialize was called
+                    Ctor was called
+                    TestInitialize was called
+                    TestMethod was called                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+                    TestCleanup was called
+                    Dispose was called
+                    ClassCleanup was called
+                    """));
+            }
+            else
+            {
+                Verify(testMethod.Messages.Single().Text.Contains(
+                    """
+                    ClassInitialize was called
+                    Ctor was called
+                    TestInitialize was called
+                    TestMethod was called
+                    TestCleanup was called
+                    DisposeAsync was called
+                    Dispose was called
+                    ClassCleanup was called
+                    """));
+            }
         }
     }
 }
