@@ -4,8 +4,11 @@ This article will help you build, test and consume local builds of the MSTest Fr
 
 ## Prerequisites
 
-Please install `Visual Studio 2017` with the `.Net desktop development`, `Universal Windows Platform development` and `.Net Core cross-platform development` workloads installed. See download
-link [here](https://www.microsoft.com/net/core#windowsvs2017).
+Please install [Visual Studio 2017](https://www.microsoft.com/net/core#windowsvs2017) with the following workloads:
+
+- `.NET desktop development`
+- `Universal Windows Platform development`
+- `.Net Core cross-platform development`
 
 ## Recommended workflow
 
