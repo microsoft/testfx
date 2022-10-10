@@ -29,7 +29,7 @@ public sealed class StringAssert
     /// Users can use this to plug-in custom assertions through C# extension methods.
     /// For instance, the signature of a custom assertion provider could be "public static void ContainsWords(this StringAssert customAssert, string value, ICollection substrings)"
     /// Users could then use a syntax similar to the default assertions which in this case is "StringAssert.That.ContainsWords(value, substrings);"
-    /// More documentation is at "https://github.com/Microsoft/testfx-docs".
+    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
     /// </remarks>
     public static StringAssert That
     {
