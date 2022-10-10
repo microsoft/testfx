@@ -15,6 +15,11 @@ public class SuiteLifeCycleTests : CLITestBase
         ValidateTestRunLifecycle("net6.0");
     }
 
+    public void ValidateTestRunLifecycle_net462()
+    {
+        ValidateTestRunLifecycle("net462");
+    }
+
     private void ValidateTestRunLifecycle(string targetFramework)
     {
         InvokeVsTestForExecution(new[] { targetFramework + "\\" + Assembly }, targetFramework: targetFramework);
