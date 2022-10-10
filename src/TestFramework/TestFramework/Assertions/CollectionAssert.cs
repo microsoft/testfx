@@ -32,7 +32,7 @@ public sealed class CollectionAssert
     /// Users can use this to plug-in custom assertions through C# extension methods.
     /// For instance, the signature of a custom assertion provider could be "public static void AreEqualUnordered(this CollectionAssert customAssert, ICollection expected, ICollection actual)"
     /// Users could then use a syntax similar to the default assertions which in this case is "CollectionAssert.That.AreEqualUnordered(list1, list2);"
-    /// More documentation is at "https://github.com/Microsoft/testfx-docs".
+    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
     /// </remarks>
     public static CollectionAssert That
     {
