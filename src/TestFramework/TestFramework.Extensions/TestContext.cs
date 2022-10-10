@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,6 +10,8 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Threading;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Used to store information that is provided to unit tests.
@@ -24,7 +24,7 @@ public abstract class TestContext
     public abstract IDictionary Properties { get; }
 
     /// <summary>
-    /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted
+    /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted.
     /// </summary>
     public virtual CancellationTokenSource CancellationTokenSource { get; protected set; }
 
@@ -37,7 +37,7 @@ public abstract class TestContext
     /// <summary>
     /// Gets current data connection row when test is used for data driven testing.
     /// </summary>
-    public abstract DbConnection DataConnection { get; } 
+    public abstract DbConnection DataConnection { get; }
 #endif
 
 #if !WINDOWS_UWP && !WIN_UI
@@ -92,11 +92,11 @@ public abstract class TestContext
 
     #endregion
 
-    #endregion  
+    #endregion
 #endif
 
     /// <summary>
-    /// Gets the Fully-qualified name of the class containing the test method currently being executed
+    /// Gets the Fully-qualified name of the class containing the test method currently being executed.
     /// </summary>
     /// <remarks>
     /// This property can be useful in attributes derived from ExpectedExceptionBaseAttribute.
@@ -117,7 +117,7 @@ public abstract class TestContext
     public virtual string ManagedMethod => GetProperty<string>(nameof(ManagedMethod));
 
     /// <summary>
-    /// Gets the name of the test method currently being executed
+    /// Gets the name of the test method currently being executed.
     /// </summary>
     public virtual string TestName => GetProperty<string>("TestName");
 
@@ -127,7 +127,7 @@ public abstract class TestContext
     public virtual UnitTestOutcome CurrentTestOutcome => UnitTestOutcome.Unknown;
 
     /// <summary>
-    /// Adds a file name to the list in TestResult.ResultFileNames
+    /// Adds a file name to the list in TestResult.ResultFileNames.
     /// </summary>
     /// <param name="fileName">
     /// The file Name.
@@ -136,42 +136,42 @@ public abstract class TestContext
 
 #if NETFRAMEWORK
     /// <summary>
-    /// Begins a timer with the specified name
+    /// Begins a timer with the specified name.
     /// </summary>
     /// <param name="timerName"> Name of the timer.</param>
     public abstract void BeginTimer(string timerName);
 
     /// <summary>
-    /// Ends a timer with the specified name
+    /// Ends a timer with the specified name.
     /// </summary>
     /// <param name="timerName"> Name of the timer.</param>
-    public abstract void EndTimer(string timerName); 
+    public abstract void EndTimer(string timerName);
 #endif
 
     /// <summary>
-    /// Used to write trace messages while the test is running
+    /// Used to write trace messages while the test is running.
     /// </summary>
-    /// <param name="message">formatted message string</param>
+    /// <param name="message">formatted message string.</param>
     public abstract void Write(string message);
 
     /// <summary>
-    /// Used to write trace messages while the test is running
+    /// Used to write trace messages while the test is running.
     /// </summary>
-    /// <param name="format">format string</param>
-    /// <param name="args">the arguments</param>
+    /// <param name="format">format string.</param>
+    /// <param name="args">the arguments.</param>
     public abstract void Write(string format, params object[] args);
 
     /// <summary>
-    /// Used to write trace messages while the test is running
+    /// Used to write trace messages while the test is running.
     /// </summary>
-    /// <param name="message">formatted message string</param>
+    /// <param name="message">formatted message string.</param>
     public abstract void WriteLine(string message);
 
     /// <summary>
-    /// Used to write trace messages while the test is running
+    /// Used to write trace messages while the test is running.
     /// </summary>
-    /// <param name="format">format string</param>
-    /// <param name="args">the arguments</param>
+    /// <param name="format">format string.</param>
+    /// <param name="args">the arguments.</param>
     public abstract void WriteLine(string format, params object[] args);
 
     private T GetProperty<T>(string name)

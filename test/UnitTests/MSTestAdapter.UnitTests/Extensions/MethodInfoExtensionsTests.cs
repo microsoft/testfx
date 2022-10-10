@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
-
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -15,6 +14,7 @@ using TestFramework.ForTestingMSTest;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 public class MethodInfoExtensionsTests : TestContainer
 {
     #region HasCorrectClassOrAssemblyInitializeSignature tests
@@ -323,8 +323,8 @@ public class MethodInfoExtensionsTests : TestContainer
         DummyTestClass2.DummyAsyncMethodBody = (x, y) => Task.Run(
             () =>
             {
-                Verify(10 == x);
-                Verify(20 == y);
+                Verify(x == 10);
+                Verify(y == 20);
                 testMethodCalled = true;
             });
 
@@ -341,8 +341,8 @@ public class MethodInfoExtensionsTests : TestContainer
         var testMethodCalled = false;
         DummyTestClass2.DummyMethodBody = (x, y) =>
         {
-            Verify(10 == x);
-            Verify(20 == y);
+            Verify(x == 10);
+            Verify(y == 20);
             testMethodCalled = true;
             return true;
         };
@@ -378,8 +378,8 @@ public class MethodInfoExtensionsTests : TestContainer
         var dummyTestClass = new DummyTestClass2();
         var dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
 
-        void action() => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
-        action();
+        void Action() => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
+        Action();
     }
 
     #endregion

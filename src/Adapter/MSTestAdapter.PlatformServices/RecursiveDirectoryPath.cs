@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Security;
+
+#if !WINDOWS_UWP
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
 /// Mstest settings in runsettings look like this
@@ -18,7 +18,7 @@ using System.Security;
 ///     </AssemblyResolution>
 /// </MSTestV2>
 ///
-/// For each directory we need to have two info 1) path 2) includeSubDirectories
+/// For each directory we need to have two info 1) path 2) includeSubDirectories.
 /// </summary>
 [Serializable]
 [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1603:DocumentationMustContainValidXml", Justification = "Reviewed. Suppression is ok here.")]
@@ -29,7 +29,7 @@ public class RecursiveDirectoryPath : MarshalByRefObject
     /// </summary>
     /// <param name="dirPath">The directory path.</param>
     /// <param name="includeSubDirectories">
-    /// True if to include subdirectory else false
+    /// True if to include subdirectory else false.
     /// </param>
     public RecursiveDirectoryPath(string dirPath, bool includeSubDirectories)
     {

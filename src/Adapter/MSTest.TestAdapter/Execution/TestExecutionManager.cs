@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -22,22 +20,23 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+
 /// <summary>
-/// Class responsible for execution of tests at assembly level and sending tests via framework handle
+/// Class responsible for execution of tests at assembly level and sending tests via framework handle.
 /// </summary>
 public class TestExecutionManager
 {
     /// <summary>
-    /// Specifies whether the test run is canceled or not
-    /// </summary>
-    private TestRunCancellationToken _cancellationToken;
-
-    /// <summary>
-    /// Dictionary for test run parameters
+    /// Dictionary for test run parameters.
     /// </summary>
     private readonly IDictionary<string, object> _sessionParameters;
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Justification = "Need to over-write the keys in dictionary.")]
+    /// <summary>
+    /// Specifies whether the test run is canceled or not.
+    /// </summary>
+    private TestRunCancellationToken _cancellationToken;
+
     public TestExecutionManager()
     {
         TestMethodFilter = new TestMethodFilter();
@@ -45,7 +44,7 @@ public class TestExecutionManager
     }
 
     /// <summary>
-    /// Gets or sets method filter for filtering tests
+    /// Gets or sets method filter for filtering tests.
     /// </summary>
     private TestMethodFilter TestMethodFilter { get; set; }
 
@@ -60,7 +59,7 @@ public class TestExecutionManager
     /// <param name="tests">Tests to be run.</param>
     /// <param name="runContext">Context to use when executing the tests.</param>
     /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
-    /// <param name="runCancellationToken">Test run cancellation token</param>
+    /// <param name="runCancellationToken">Test run cancellation token.</param>
     public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
     {
         Debug.Assert(tests != null, "tests");
@@ -125,7 +124,7 @@ public class TestExecutionManager
     }
 
     /// <summary>
-    /// Execute the parameter tests
+    /// Execute the parameter tests.
     /// </summary>
     /// <param name="tests">Tests to execute.</param>
     /// <param name="runContext">The run context.</param>
@@ -200,7 +199,7 @@ public class TestExecutionManager
     }
 
     /// <summary>
-    /// Execute the parameter tests present in parameter source
+    /// Execute the parameter tests present in parameter source.
     /// </summary>
     /// <param name="tests">Tests to execute.</param>
     /// <param name="runContext">The run context.</param>
@@ -217,6 +216,7 @@ public class TestExecutionManager
         }
 
         using var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
+
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
@@ -328,9 +328,9 @@ public class TestExecutionManager
                                 }
                             }
                         },
-                    CancellationToken.None,
-                    TaskCreationOptions.LongRunning,
-                    TaskScheduler.Default));
+                        CancellationToken.None,
+                        TaskCreationOptions.LongRunning,
+                        TaskScheduler.Default));
                 }
 
                 Task.WaitAll(tasks.ToArray());
@@ -475,7 +475,7 @@ public class TestExecutionManager
     }
 
     /// <summary>
-    /// Log the parameter warnings on the parameter logger
+    /// Log the parameter warnings on the parameter logger.
     /// </summary>
     /// <param name="testExecutionRecorder">Handle to record test start/end/results/messages.</param>
     /// <param name="result">Result of the run operation.</param>

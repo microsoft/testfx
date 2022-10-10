@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,6 +19,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+
 /// <summary>
 /// Enumerates through all types in the assembly in search of valid test methods.
 /// </summary>
@@ -32,7 +32,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     private static readonly ReflectHelper ReflectHelper = ReflectHelper.Instance;
 
     /// <summary>
-    /// Type cache
+    /// Type cache.
     /// </summary>
     private readonly TypeCache _typeCache = new(ReflectHelper);
 

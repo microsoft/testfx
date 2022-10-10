@@ -1,23 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace UnitTestFramework.Tests;
-
 using System;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using TestFramework.ForTestingMSTest;
 
+namespace UnitTestFramework.Tests;
+
 /// <summary>
-/// Tests for class ExpectedExceptionBaseAttribute
+/// Tests for class ExpectedExceptionBaseAttribute.
 /// </summary>
 public class ExpectedExceptionBaseAttributeTests : TestContainer
 {
     private TestableExpectedExceptionBaseAttributeClass _sut = null;
 
-    /// <summary>
-    /// Test initialization function.
-    /// </summary>
     public ExpectedExceptionBaseAttributeTests()
     {
         _sut = new TestableExpectedExceptionBaseAttributeClass();
@@ -28,9 +26,9 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
     /// </summary>
     public void RethrowIfAssertExceptionThrowsExceptionOnAssertFailure()
     {
-        void a() => _sut.RethrowIfAssertException(new AssertFailedException());
+        void A() => _sut.RethrowIfAssertException(new AssertFailedException());
 
-        var ex = VerifyThrows(a);
+        var ex = VerifyThrows(A);
         Verify(ex is AssertFailedException);
     }
 
@@ -39,9 +37,9 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
     /// </summary>
     public void RethrowIfAssertExceptionThrowsExceptionOnAssertInconclusive()
     {
-        void a() => _sut.RethrowIfAssertException(new AssertInconclusiveException());
+        void A() => _sut.RethrowIfAssertException(new AssertInconclusiveException());
 
-        var ex = VerifyThrows(a);
+        var ex = VerifyThrows(A);
         Verify(ex is AssertInconclusiveException);
     }
 
@@ -66,7 +64,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
 }
 
 /// <summary>
-/// Dummy class derived from Exception
+/// Dummy class derived from Exception.
 /// </summary>
 public class TestableExpectedExceptionBaseAttributeClass : ExpectedExceptionBaseAttribute
 {
@@ -86,9 +84,9 @@ public class TestableExpectedExceptionBaseAttributeClass : ExpectedExceptionBase
     }
 
     /// <summary>
-    /// Re-throw the exception if it is an AssertFailedException or an AssertInconclusiveException
+    /// Re-throw the exception if it is an AssertFailedException or an AssertInconclusiveException.
     /// </summary>
-    /// <param name="exception">The exception to re-throw if it is an assertion exception</param>
+    /// <param name="exception">The exception to re-throw if it is an assertion exception.</param>
     public new void RethrowIfAssertException(Exception exception)
     {
         base.RethrowIfAssertException(exception);

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Tests.Utilities;
-
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -17,6 +15,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+namespace MSTestAdapter.PlatformServices.Tests.Utilities;
 #pragma warning disable SA1649 // File name must match first type name
 public class DeploymentItemUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
@@ -49,7 +48,7 @@ public class DeploymentItemUtilityTests : TestContainer
         var deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
 
         Verify(deploymentItems is not null);
-        Verify(0 == deploymentItems.Count);
+        Verify(deploymentItems.Count == 0);
     }
 
     public void GetClassLevelDeploymentItemsShouldReturnADeploymentItem()
@@ -58,7 +57,7 @@ public class DeploymentItemUtilityTests : TestContainer
         {
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), kvpArray);
 
@@ -67,7 +66,7 @@ public class DeploymentItemUtilityTests : TestContainer
         {
             new DeploymentItem(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
     }
@@ -81,7 +80,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
@@ -97,7 +96,7 @@ public class DeploymentItemUtilityTests : TestContainer
                                                   deploymentItemAttributes[0].Value),
                                               new DeploymentItem(
                                                   deploymentItemAttributes[1].Key,
-                                                  deploymentItemAttributes[1].Value)
+                                                  deploymentItemAttributes[1].Value),
                                           };
 
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
@@ -112,7 +111,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
@@ -125,7 +124,7 @@ public class DeploymentItemUtilityTests : TestContainer
         {
             new DeploymentItem(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
 
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
@@ -140,7 +139,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 null,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
@@ -150,11 +149,11 @@ public class DeploymentItemUtilityTests : TestContainer
                                           {
                                               new DeploymentItem(
                                                   _defaultDeploymentItemPath,
-                                                  _defaultDeploymentItemOutputDirectory)
+                                                  _defaultDeploymentItemOutputDirectory),
                                           };
 
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
-        Verify(1 == _warnings.Count);
+        Verify(_warnings.Count == 1);
         Verify(_warnings.ToArray()[0].Contains(Resource.DeploymentItemPathCannotBeNullOrEmpty));
     }
 
@@ -179,7 +178,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
         var memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
@@ -205,7 +204,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new DeploymentItem(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
 
         // Act.
@@ -222,7 +221,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
 
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
@@ -235,7 +234,7 @@ public class DeploymentItemUtilityTests : TestContainer
         {
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
         var memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
@@ -246,7 +245,7 @@ public class DeploymentItemUtilityTests : TestContainer
         {
             new DeploymentItem(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
 
         // Act.
@@ -263,7 +262,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
 
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems));
@@ -279,7 +278,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
         var memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
@@ -293,7 +292,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new DeploymentItem(
                 _defaultDeploymentItemPath + "\\temp1",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
 
         // Act.
@@ -313,7 +312,7 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp1",
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
 
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems));
@@ -404,7 +403,7 @@ public class DeploymentItemUtilityTests : TestContainer
         {
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory)
+                _defaultDeploymentItemOutputDirectory),
         };
         testCase.SetPropertyValue(DeploymentItemsProperty, kvpArray);
 

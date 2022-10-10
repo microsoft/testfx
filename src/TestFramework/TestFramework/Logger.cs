@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
 /// <summary>
 /// Enables users to log/write traces from unit tests for diagnostics.

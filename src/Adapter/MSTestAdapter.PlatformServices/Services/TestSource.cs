@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +12,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppCont
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
 /// This platform service is responsible for any data or operations to validate
@@ -71,7 +71,7 @@ public class TestSource : ITestSource
 #elif WINDOWS_UWP || WIN_UI
                 Constants.AppxPackageExtension,
 #endif
-                Constants.ExeExtension
+                Constants.ExeExtension,
             };
         }
     }
@@ -191,7 +191,7 @@ public class TestSource : ITestSource
 #endif
 
 #if WIN_UI
-        /// <summary>
+    /// <summary>
     /// Checks if given list of sources contains any ".appx" source.
     /// </summary>
     /// <param name="sources">The list of sources.</param>

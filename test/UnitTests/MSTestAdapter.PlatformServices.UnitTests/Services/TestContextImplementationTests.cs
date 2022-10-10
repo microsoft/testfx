@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.UnitTests.Services;
-
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,10 +10,12 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using Moq;
 
-using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
-using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
 using TestFramework.ForTestingMSTest;
 
+using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
+using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
+
+namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 public class TestContextImplementationTests : TestContainer
 {
     private readonly Mock<ITestMethod> _testMethod;
@@ -54,7 +54,7 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Verify(UnitTestOutcome.Failed == _testContextImplementation.CurrentTestOutcome);
+        Verify(_testContextImplementation.CurrentTestOutcome == UnitTestOutcome.Failed);
     }
 
     public void CurrentTestOutcomeShouldReturnOutcomeSet()
@@ -63,7 +63,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.SetOutcome(UnitTestOutcome.InProgress);
 
-        Verify(UnitTestOutcome.InProgress == _testContextImplementation.CurrentTestOutcome);
+        Verify(_testContextImplementation.CurrentTestOutcome == UnitTestOutcome.InProgress);
     }
 
     public void FullyQualifiedTestClassNameShouldReturnTestMethodsFullClassName()
@@ -72,7 +72,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Verify("A.C.M" == _testContextImplementation.FullyQualifiedTestClassName);
+        Verify(_testContextImplementation.FullyQualifiedTestClassName == "A.C.M");
     }
 
     public void TestNameShouldReturnTestMethodsName()
@@ -81,7 +81,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Verify("M" == _testContextImplementation.TestName);
+        Verify(_testContextImplementation.TestName == "M");
     }
 
     public void PropertiesShouldReturnPropertiesPassedToTestContext()
@@ -105,7 +105,7 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
         Verify(_testContextImplementation.Context is not null);
-        Verify("M" == _testContextImplementation.Context.TestName);
+        Verify(_testContextImplementation.Context.TestName == "M");
     }
 
     public void TryGetPropertyValueShouldReturnTrueIfPropertyIsPresent()
@@ -333,7 +333,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.ClearDiagnosticMessages();
 
-        Verify(string.Empty == stringWriter.ToString());
+        Verify(stringWriter.ToString() == string.Empty);
     }
 
 #if NET462
@@ -347,7 +347,7 @@ public class TestContextImplementationTests : TestContainer
         // create the table with the appropriate column names
         dataTable.Columns.Add("Id", typeof(int));
         dataTable.Columns.Add("Name", typeof(string));
-        
+
         dataTable.LoadDataRow(new object[] { 2, "Hello" }, true);
 
         _testContextImplementation.SetDataRow(dataTable.Select()[0]);
@@ -367,8 +367,8 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.SetDataConnection(connection);
 
-        Verify("Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5"
-            == _testContextImplementation.DataConnection.ConnectionString);
+        Verify(_testContextImplementation.DataConnection.ConnectionString
+            == "Dsn=Excel Files;dbq=.\\data.xls;defaultdir=.; driverid=790;maxbuffersize=2048;pagetimeout=5");
     }
 #endif
 

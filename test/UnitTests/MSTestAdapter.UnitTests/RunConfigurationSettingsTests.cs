@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
-
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -12,6 +10,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 public class RunConfigurationSettingsTests : TestContainer
 {
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;

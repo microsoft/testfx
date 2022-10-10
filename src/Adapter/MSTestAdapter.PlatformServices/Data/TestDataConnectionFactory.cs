@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+
+#if NETFRAMEWORK
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
 /// Defines a class that creates TestDataConnection instances to connect to data sources.
@@ -35,11 +35,11 @@ internal class TestDataConnectionFactory
 
     /// <summary>
     /// Construct a wrapper for a database connection, what is actually returned indirectly depends
-    /// on the invariantProviderName, and the specific call knows how to deal with database variations
+    /// on the invariantProviderName, and the specific call knows how to deal with database variations.
     /// </summary>
     /// <param name="invariantProviderName">The provider name.</param>
     /// <param name="connectionString">The connection string.</param>
-    /// <param name="dataFolders">null, or a list of locations to check when fixing up connection string</param>
+    /// <param name="dataFolders">null, or a list of locations to check when fixing up connection string.</param>
     /// <returns>The TestDataConnection instance.</returns>
     public virtual TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders)
     {
@@ -63,7 +63,7 @@ internal class TestDataConnectionFactory
         }
     }
 
-#region TestDataConnectionFactories
+    #region TestDataConnectionFactories
 
     private class XmlTestDataConnectionFactory : TestDataConnectionFactory
     {
@@ -81,7 +81,7 @@ internal class TestDataConnectionFactory
         }
     }
 
-#endregion TestDataConnectionFactories
+    #endregion TestDataConnectionFactories
 }
 
 #endif

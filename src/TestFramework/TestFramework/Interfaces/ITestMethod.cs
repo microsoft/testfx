@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Reflection;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// TestMethod for execution.
@@ -49,7 +49,7 @@ public interface ITestMethod
     /// Invokes the test method.
     /// </summary>
     /// <param name="arguments">
-    /// Arguments to pass to test method. (E.g. For data driven)
+    /// Arguments to pass to test method. (E.g. For data driven).
     /// </param>
     /// <returns>
     /// Result of test method invocation.
@@ -73,13 +73,13 @@ public interface ITestMethod
     /// <summary>
     /// Get attribute of specific type.
     /// </summary>
-    /// <typeparam name="AttributeType"> System.Attribute type. </typeparam>
+    /// <typeparam name="TAttributeType"> System.Attribute type. </typeparam>
     /// <param name="inherit">
     /// Whether attribute defined in parent class is valid.
     /// </param>
     /// <returns>
     /// The attributes of the specified type.
     /// </returns>
-    AttributeType[] GetAttributes<AttributeType>(bool inherit)
-        where AttributeType : Attribute;
+    TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
+        where TAttributeType : Attribute;
 }

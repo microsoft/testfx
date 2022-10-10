@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
-
 using System.Collections.Generic;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
 /// <summary>
 /// TestMethod structure that is shared between adapter and platform services only.
@@ -11,12 +11,12 @@ using System.Collections.Generic;
 public interface ITestMethod
 {
     /// <summary>
-    /// Gets the name of the test method
+    /// Gets the name of the test method.
     /// </summary>
     string Name { get; }
 
     /// <summary>
-    /// Gets the full class name of the test method
+    /// Gets the full class name of the test method.
     /// </summary>
     string FullClassName { get; }
 
@@ -28,12 +28,12 @@ public interface ITestMethod
     string DeclaringClassFullName { get; }
 
     /// <summary>
-    /// Gets the name of the test assembly
+    /// Gets the name of the test assembly.
     /// </summary>
     string AssemblyName { get; }
 
     /// <summary>
-    /// Gets a value indicating whether test method is async
+    /// Gets a value indicating whether test method is async.
     /// </summary>
     bool IsAsync { get; }
 
@@ -41,7 +41,7 @@ public interface ITestMethod
     /// Gets the fully specified type name metadata format.
     /// </summary>
     /// <example>
-    ///     <c>NamespaceA.NamespaceB.ClassName`1+InnerClass`2</c>
+    ///     <c>NamespaceA.NamespaceB.ClassName`1+InnerClass`2</c>.
     /// </example>
     string ManagedTypeName { get; }
 
@@ -49,7 +49,7 @@ public interface ITestMethod
     /// Gets the fully specified method name metadata format.
     /// </summary>
     /// <example>
-    ///     <c>MethodName`2(ParamTypeA,ParamTypeB,...)</c>
+    ///     <c>MethodName`2(ParamTypeA,ParamTypeB,...)</c>.
     /// </example>
     string ManagedMethodName { get; }
 

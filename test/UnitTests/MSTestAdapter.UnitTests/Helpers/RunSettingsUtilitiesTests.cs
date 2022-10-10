@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers;
-
 using System.Collections.Generic;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -10,13 +8,14 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers;
 public class RunSettingsUtilitiesTests : TestContainer
 {
     public void GetTestRunParametersReturnsEmptyDictionaryOnNullRunSettings()
     {
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(null);
         Verify(trp is not null);
-        Verify(0 == trp.Count);
+        Verify(trp.Count == 0);
     }
 
     public void GetTestRunParametersReturnsEmptyDictionaryWhenNoTestRunParameters()
@@ -33,7 +32,7 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
-        Verify(0 == trp.Count);
+        Verify(trp.Count == 0);
     }
 
     public void GetTestRunParametersReturnsEmptyDictionaryForEmptyTestRunParametersNode()
@@ -52,7 +51,7 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
-        Verify(0 == trp.Count);
+        Verify(trp.Count == 0);
     }
 
     public void GetTestRunParametersReturns1EntryOn1TestRunParameter()
@@ -72,7 +71,7 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
-        Verify(1 == trp.Count);
+        Verify(trp.Count == 1);
 
         // Verify Parameter Values.
         Verify(trp.ContainsKey("webAppUrl"));
@@ -98,7 +97,7 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
-        Verify(3 == trp.Count);
+        Verify(trp.Count == 3);
 
         // Verify Parameter Values.
         Verify(trp.ContainsKey("webAppUrl"));
@@ -165,6 +164,6 @@ public class RunSettingsUtilitiesTests : TestContainer
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
-        Verify(0 == trp.Count);
+        Verify(trp.Count == 0);
     }
 }

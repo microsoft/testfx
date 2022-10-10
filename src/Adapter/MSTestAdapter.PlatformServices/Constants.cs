@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System.Collections.Generic;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 internal class Constants
 {
 #if NETFRAMEWORK
@@ -32,6 +31,7 @@ internal class Constants
 
 #if NETFRAMEWORK
     internal const string PhoneAppxPackageExtension = ".appx";
+
     // These are tied to a specific VS version. Can be changed to have a list of supported version instead.
     internal const string VisualStudioRootRegKey32ForDev14 = @"SOFTWARE\Microsoft\VisualStudio\" + VisualStudioVersion;
     internal const string VisualStudioRootRegKey64ForDev14 = @"SOFTWARE\Wow6432Node\Microsoft\VisualStudio\" + VisualStudioVersion;

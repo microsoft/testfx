@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +14,8 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
 /// <summary>
 /// A host that loads the test source. This can be in isolation for desktop using an AppDomain or just loading the source in the current context.
 /// </summary>
@@ -27,29 +27,32 @@ public class TestSourceHost : ITestSourceHost
 #endif
 
 #if NETFRAMEWORK
-    /// <summary>
-    /// Child AppDomain used to discover/execute tests
-    /// </summary>
-    private AppDomain _domain;
 
     /// <summary>
-    /// Assembly resolver used in the current app-domain
+    /// Determines whether child-appdomain needs to be created based on DisableAppDomain Flag set in runsettings.
     /// </summary>
-    private AssemblyResolver _parentDomainAssemblyResolver;
-
-    /// <summary>
-    /// Assembly resolver used in the new child app-domain created for discovery/execution
-    /// </summary>
-    private AssemblyResolver _childDomainAssemblyResolver;
-
-    /// <summary>
-    /// Determines whether child-appdomain needs to be created based on DisableAppDomain Flag set in runsettings
-    /// </summary>
+#pragma warning disable SA1214 // Readonly fields should appear before non-readonly fields
     private readonly bool _isAppDomainCreationDisabled;
+#pragma warning restore SA1214 // Readonly fields should appear before non-readonly fields
 
     private readonly IRunSettings _runSettings;
     private readonly IFrameworkHandle _frameworkHandle;
     private readonly IAppDomain _appDomain;
+
+    /// <summary>
+    /// Child AppDomain used to discover/execute tests.
+    /// </summary>
+    private AppDomain _domain;
+
+    /// <summary>
+    /// Assembly resolver used in the current app-domain.
+    /// </summary>
+    private AssemblyResolver _parentDomainAssemblyResolver;
+
+    /// <summary>
+    /// Assembly resolver used in the new child app-domain created for discovery/execution.
+    /// </summary>
+    private AssemblyResolver _childDomainAssemblyResolver;
 
     private string _targetFrameworkVersion;
 #endif
@@ -116,6 +119,7 @@ public class TestSourceHost : ITestSourceHost
             _parentDomainAssemblyResolver = new AssemblyResolver(resolutionPaths);
             AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_parentDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName));
         }
+
         // Create child-appdomain and set assembly resolver on it
         else
         {
@@ -239,7 +243,7 @@ public class TestSourceHost : ITestSourceHost
     /// Sets context required for running tests.
     /// </summary>
     /// <param name="source">
-    /// source parameter used for setting context
+    /// source parameter used for setting context.
     /// </param>
     private void SetContext(string source)
     {
@@ -286,7 +290,7 @@ public class TestSourceHost : ITestSourceHost
     }
 
     /// <summary>
-    /// Resets the context as it was before calling SetContext()
+    /// Resets the context as it was before calling SetContext().
     /// </summary>
     private void ResetContext()
     {
@@ -301,7 +305,7 @@ public class TestSourceHost : ITestSourceHost
     /// <summary>
     /// Gets child-domain's appbase to point to appropriate location.
     /// </summary>
-    /// <returns>Appbase path that should be set for child appdomain</returns>
+    /// <returns>Appbase path that should be set for child appdomain.</returns>
     internal string GetAppBaseAsPerPlatform()
     {
         // The below logic of preferential setting the appdomains appbase is needed because:
@@ -338,7 +342,7 @@ public class TestSourceHost : ITestSourceHost
         List<string> resolutionPaths = new()
         {
             // Add path of test assembly in resolution path. Mostly will be used for resolving winmd.
-            Path.GetDirectoryName(sourceFileName)
+            Path.GetDirectoryName(sourceFileName),
         };
 
         if (!isPortableMode)

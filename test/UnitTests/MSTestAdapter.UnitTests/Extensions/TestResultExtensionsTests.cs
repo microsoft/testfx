@@ -1,10 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
-
 using System;
 using System.Collections.Generic;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 using TestFramework.ForTestingMSTest;
@@ -12,6 +11,7 @@ using TestFramework.ForTestingMSTest;
 using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 public class TestResultExtensionsTests : TestContainer
 {
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithFailureOutcome()
@@ -19,7 +19,7 @@ public class TestResultExtensionsTests : TestContainer
         var results = new[] { new UTF.TestResult() { TestFailureException = new Exception() } };
         var convertedResults = results.ToUnitTestResults();
 
-        Verify(AdapterTestOutcome.Failed == convertedResults[0].Outcome);
+        Verify(convertedResults[0].Outcome == AdapterTestOutcome.Failed);
     }
 
     public void ToUnitTestResultsForTestResultWithExceptionConvertsToUnitTestResultsWithInconclusiveOutcome()
@@ -27,7 +27,7 @@ public class TestResultExtensionsTests : TestContainer
         var results = new[] { new UTF.TestResult() { TestFailureException = new Exception(), Outcome = UTF.UnitTestOutcome.Inconclusive } };
         var convertedResults = results.ToUnitTestResults();
 
-        Verify(AdapterTestOutcome.Inconclusive == convertedResults[0].Outcome);
+        Verify(convertedResults[0].Outcome == AdapterTestOutcome.Inconclusive);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetLoggingDataForConvertedUnitTestResults()
@@ -37,18 +37,22 @@ public class TestResultExtensionsTests : TestContainer
         {
             new UTF.TestResult()
             {
-                DebugTrace = "debugTrace", DisplayName = "displayName", Duration = timespan, LogOutput = "logOutput",
-                                                     LogError = "logError", DatarowIndex = 1
-            }
+                DebugTrace = "debugTrace",
+                DisplayName = "displayName",
+                Duration = timespan,
+                LogOutput = "logOutput",
+                LogError = "logError",
+                DatarowIndex = 1,
+            },
         };
         var convertedResults = results.ToUnitTestResults();
 
-        Verify("logOutput" == convertedResults[0].StandardOut);
-        Verify("logError" == convertedResults[0].StandardError);
-        Verify("displayName" == convertedResults[0].DisplayName);
-        Verify("debugTrace" == convertedResults[0].DebugTrace);
+        Verify(convertedResults[0].StandardOut == "logOutput");
+        Verify(convertedResults[0].StandardError == "logError");
+        Verify(convertedResults[0].DisplayName == "displayName");
+        Verify(convertedResults[0].DebugTrace == "debugTrace");
         Verify(timespan == convertedResults[0].Duration);
-        Verify(1 == convertedResults[0].DatarowIndex);
+        Verify(convertedResults[0].DatarowIndex == 1);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetStandardOut()
@@ -57,12 +61,12 @@ public class TestResultExtensionsTests : TestContainer
         {
             new UTF.TestResult()
             {
-                LogOutput = "logOutput"
-            }
+                LogOutput = "logOutput",
+            },
         };
         var convertedResults = results.ToUnitTestResults();
 
-        Verify("logOutput" == convertedResults[0].StandardOut);
+        Verify(convertedResults[0].StandardOut == "logOutput");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetStandardError()
@@ -71,13 +75,13 @@ public class TestResultExtensionsTests : TestContainer
         {
             new UTF.TestResult()
             {
-                LogError = "logError"
-            }
+                LogError = "logError",
+            },
         };
 
         var convertedResults = results.ToUnitTestResults();
 
-        Verify("logError" == convertedResults[0].StandardError);
+        Verify(convertedResults[0].StandardError == "logError");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDebugTrace()
@@ -86,13 +90,13 @@ public class TestResultExtensionsTests : TestContainer
         {
             new UTF.TestResult()
             {
-                DebugTrace = "debugTrace"
-            }
+                DebugTrace = "debugTrace",
+            },
         };
 
         var convertedResults = results.ToUnitTestResults();
 
-        Verify("debugTrace" == convertedResults[0].DebugTrace);
+        Verify(convertedResults[0].DebugTrace == "debugTrace");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetTestContextMessages()
@@ -101,13 +105,13 @@ public class TestResultExtensionsTests : TestContainer
         {
             new UTF.TestResult()
             {
-                TestContextMessages = "Context"
-            }
+                TestContextMessages = "Context",
+            },
         };
 
         var convertedResults = results.ToUnitTestResults();
 
-        Verify("Context" == convertedResults[0].TestContextMessages);
+        Verify(convertedResults[0].TestContextMessages == "Context");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDuration()
@@ -117,8 +121,8 @@ public class TestResultExtensionsTests : TestContainer
         {
             new UTF.TestResult()
             {
-                Duration = timespan
-            }
+                Duration = timespan,
+            },
         };
 
         var convertedResults = results.ToUnitTestResults();
@@ -132,13 +136,13 @@ public class TestResultExtensionsTests : TestContainer
         {
             new UTF.TestResult()
             {
-                DisplayName = "displayName"
-            }
+                DisplayName = "displayName",
+            },
         };
 
         var convertedResults = results.ToUnitTestResults();
 
-        Verify("displayName" == convertedResults[0].DisplayName);
+        Verify(convertedResults[0].DisplayName == "displayName");
     }
 
     public void ToUnitTestResultsForTestResultShouldSetDataRowIndex()
@@ -147,13 +151,13 @@ public class TestResultExtensionsTests : TestContainer
         {
             new UTF.TestResult()
             {
-                DatarowIndex = 1
-            }
+                DatarowIndex = 1,
+            },
         };
 
         var convertedResults = results.ToUnitTestResults();
 
-        Verify(1 == convertedResults[0].DatarowIndex);
+        Verify(convertedResults[0].DatarowIndex == 1);
     }
 
     public void ToUnitTestResultsForTestResultShouldSetParentInfo()
@@ -168,8 +172,8 @@ public class TestResultExtensionsTests : TestContainer
             {
                 ExecutionId = executionId,
                 ParentExecId = parentExecId,
-                InnerResultsCount = innerResultsCount
-            }
+                InnerResultsCount = innerResultsCount,
+            },
         };
 
         var convertedResults = results.ToUnitTestResults();
@@ -183,6 +187,6 @@ public class TestResultExtensionsTests : TestContainer
     {
         var results = new[] { new UTF.TestResult() { ResultFiles = new List<string>() { "DummyFile.txt" } } };
         var convertedResults = results.ToUnitTestResults();
-        Verify("DummyFile.txt" == convertedResults[0].ResultFiles[0]);
+        Verify(convertedResults[0].ResultFiles[0] == "DummyFile.txt");
     }
 }

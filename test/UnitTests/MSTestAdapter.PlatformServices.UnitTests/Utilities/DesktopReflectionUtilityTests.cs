@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
-namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +10,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 
 using TestFramework.ForTestingMSTest;
 
+#if NET462
+namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 #pragma warning disable SA1649 // File name must match first type name
 public class ReflectionUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
@@ -31,7 +30,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
-        Verify(2 == attributes.Length);
+        Verify(attributes.Length == 2);
 
         var expectedAttributes = new string[] { "DummyA : a1", "DummyA : a2" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));

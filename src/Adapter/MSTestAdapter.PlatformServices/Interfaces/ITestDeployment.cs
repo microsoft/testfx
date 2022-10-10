@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 /// <summary>
 /// The TestDeployment interface.

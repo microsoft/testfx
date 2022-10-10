@@ -1,17 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Xml;
 
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
-using TestPlatform.ObjectModel;
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal class RunSettingsUtilities
 {
@@ -25,7 +24,7 @@ internal class RunSettingsUtilities
             var settings = new XmlReaderSettings
             {
                 IgnoreComments = true,
-                IgnoreWhitespace = true
+                IgnoreWhitespace = true,
             };
             return settings;
         }
@@ -63,7 +62,7 @@ internal class RunSettingsUtilities
                 string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.InvalidSettingsXmlAttribute,
-                    Constants.RunConfigurationSettingsName,
+                    TestPlatform.ObjectModel.Constants.RunConfigurationSettingsName,
                     reader.Name));
         }
     }

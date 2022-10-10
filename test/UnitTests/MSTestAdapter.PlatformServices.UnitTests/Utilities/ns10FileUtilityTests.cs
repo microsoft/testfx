@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Tests.Utilities;
-
 using System;
 using System.IO;
 using System.Linq;
@@ -13,6 +11,7 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+namespace MSTestAdapter.PlatformServices.Tests.Utilities;
 public class FileUtilityTests : TestContainer
 {
     private readonly Mock<FileUtility> _fileUtility;
@@ -20,7 +19,7 @@ public class FileUtilityTests : TestContainer
     public FileUtilityTests()
         => _fileUtility = new Mock<FileUtility>
         {
-            CallBase = true
+            CallBase = true,
         };
 
     public void ReplaceInvalidFileNameCharactersShouldReturnFileNameIfItHasNoInvalidChars()
@@ -32,7 +31,7 @@ public class FileUtilityTests : TestContainer
     public void ReplaceInvalidFileNameCharactersShouldReplaceInvalidChars()
     {
         var fileName = "galaxy<>far:far?away";
-        Verify("galaxy__far_far_away" == FileUtility.ReplaceInvalidFileNameCharacters(fileName));
+        Verify(FileUtility.ReplaceInvalidFileNameCharacters(fileName) == "galaxy__far_far_away");
     }
 
     #region AddFilesFromDirectory tests

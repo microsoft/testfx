@@ -1,19 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
-
 using System.Globalization;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using global::TestFramework.ForTestingMSTest;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 public partial class AssertTests : TestContainer
 {
     public void AreNotEqualShouldFailWhenNotEqualType()
     {
-        static void action() => Assert.AreNotEqual(null, null);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual(null, null);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -26,8 +26,8 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEqualShouldFailWhenNotEqualString()
     {
-        static void action() => Assert.AreNotEqual("A", "A");
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual("A", "A");
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -40,15 +40,15 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEqualShouldFailWhenNotEqualStringAndCaseIgnored()
     {
-        static void action() => Assert.AreNotEqual("A", "a", true);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual("A", "a", true);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualInt()
     {
-        static void action() => Assert.AreNotEqual(1, 1);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual(1, 1);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -61,8 +61,8 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEqualShouldFailWhenNotEqualLong()
     {
-        static void action() => Assert.AreNotEqual(1L, 1L);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual(1L, 1L);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -75,15 +75,15 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEqualShouldFailWhenNotEqualLongWithDelta()
     {
-        static void action() => Assert.AreNotEqual(1L, 2L, 1L);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual(1L, 2L, 1L);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualDecimal()
     {
-        static void action() => Assert.AreNotEqual(0.1M, 0.1M);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual(0.1M, 0.1M);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -96,15 +96,15 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEqualShouldFailWhenNotEqualDecimalWithDelta()
     {
-        static void action() => Assert.AreNotEqual(0.1M, 0.2M, 0.1M);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual(0.1M, 0.2M, 0.1M);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualDouble()
     {
-        static void action() => Assert.AreNotEqual(0.1, 0.1);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual(0.1, 0.1);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -117,15 +117,15 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEqualShouldFailWhenNotEqualDoubleWithDelta()
     {
-        static void action() => Assert.AreNotEqual(0.1, 0.2, 0.1);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual(0.1, 0.2, 0.1);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenFloatDouble()
     {
-        static void action() => Assert.AreNotEqual(100E-2, 100E-2);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual(100E-2, 100E-2);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -138,15 +138,15 @@ public partial class AssertTests : TestContainer
 
     public void AreNotEqualShouldFailWhenNotEqualFloatWithDelta()
     {
-        static void action() => Assert.AreNotEqual(100E-2, 200E-2, 100E-2);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreNotEqual(100E-2, 200E-2, 100E-2);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualType()
     {
-        static void action() => Assert.AreEqual(null, "string");
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreEqual(null, "string");
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -209,15 +209,15 @@ public partial class AssertTests : TestContainer
 
     public void AreEqualShouldFailWhenNotEqualStringAndCaseIgnored()
     {
-        static void action() => Assert.AreEqual("A", "a", false);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreEqual("A", "a", false);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualInt()
     {
-        static void action() => Assert.AreEqual(1, 2);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreEqual(1, 2);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -230,8 +230,8 @@ public partial class AssertTests : TestContainer
 
     public void AreEqualShouldFailWhenNotEqualLong()
     {
-        static void action() => Assert.AreEqual(1L, 2L);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreEqual(1L, 2L);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -244,15 +244,15 @@ public partial class AssertTests : TestContainer
 
     public void AreEqualShouldFailWhenNotEqualLongWithDelta()
     {
-        static void action() => Assert.AreEqual(10L, 20L, 5L);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreEqual(10L, 20L, 5L);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualDouble()
     {
-        static void action() => Assert.AreEqual(0.1, 0.2);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreEqual(0.1, 0.2);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -265,18 +265,18 @@ public partial class AssertTests : TestContainer
 
     public void AreEqualShouldFailWhenNotEqualDoubleWithDelta()
     {
-        static void action() => Assert.AreEqual(0.1, 0.2, 0.05);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreEqual(0.1, 0.2, 0.05);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenNotEqualDecimal()
     {
-        static void action() => Assert.AreEqual(0.1M, 0.2M);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreEqual(0.1M, 0.2M);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
-   
+
     public void AreEqualShouldFailWhenNotEqualDecimalWithMessage()
     {
         var ex = VerifyThrows(() => Assert.AreEqual(0.1M, 0.2M, "A Message"));
@@ -286,29 +286,29 @@ public partial class AssertTests : TestContainer
 
     public void AreEqualShouldFailWhenNotEqualDecimalWithDelta()
     {
-        static void action() => Assert.AreEqual(0.1M, 0.2M, 0.05M);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreEqual(0.1M, 0.2M, 0.05M);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void AreEqualShouldFailWhenFloatDouble()
     {
-        static void action() => Assert.AreEqual(100E-2, 200E-2);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreEqual(100E-2, 200E-2);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
-    
+
     public void AreEqualShouldFailWhenFloatDoubleWithMessage()
     {
         var ex = VerifyThrows(() => Assert.AreEqual(100E-2, 200E-2, "A Message"));
         Verify(ex is not null);
         Verify(ex.Message.Contains("A Message"));
     }
-   
+
     public void AreEqualShouldFailWhenNotEqualFloatWithDelta()
     {
-        static void action() => Assert.AreEqual(100E-2, 200E-2, 50E-2);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.AreEqual(100E-2, 200E-2, 50E-2);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 }

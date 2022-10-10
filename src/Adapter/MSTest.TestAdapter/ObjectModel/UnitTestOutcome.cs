@@ -4,7 +4,7 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 /// <summary>
-/// Outcome of a test
+/// Outcome of a test.
 /// </summary>
 public enum UnitTestOutcome : int
 {
@@ -20,13 +20,13 @@ public enum UnitTestOutcome : int
     Failed,
 
     /// <summary>
-    /// The test timed out
+    /// The test timed out.
     /// </summary>
     Timeout,
 
     /// <summary>
     /// Test has completed, but we can't say if it passed or failed.
-    /// (Used in Assert.InConclusive scenario)
+    /// (Used in Assert.InConclusive scenario).
     /// </summary>
     Inconclusive,
 

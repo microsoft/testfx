@@ -1,17 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
-
 using System;
 using System.Linq;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 using Moq;
-
-using MSTest.TestAdapter.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
@@ -19,6 +16,7 @@ using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.O
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class TestClassInfoTests : TestContainer
 {
     private readonly Type _testClassType;
@@ -90,25 +88,25 @@ public class TestClassInfoTests : TestContainer
 
     public void TestClassInfoClassInitializeMethodSetShouldThrowForMultipleClassInitializeMethods()
     {
-        void action()
+        void Action()
         {
             _testClassInfo.ClassInitializeMethod = _testClassType.GetMethods().First();
             _testClassInfo.ClassInitializeMethod = _testClassType.GetMethods().First();
         }
 
-        var ex = VerifyThrows(action);
+        var ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(TypeInspectionException));
     }
 
     public void TestClassInfoClassCleanupMethodSetShouldThrowForMultipleClassCleanupMethods()
     {
-        void action()
+        void Action()
         {
             _testClassInfo.ClassCleanupMethod = _testClassType.GetMethods().First();
             _testClassInfo.ClassCleanupMethod = _testClassType.GetMethods().First();
         }
 
-        var ex = VerifyThrows(action);
+        var ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(TypeInspectionException));
     }
 
@@ -123,7 +121,7 @@ public class TestClassInfoTests : TestContainer
         var ret = _testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
         Verify(ret is null);
-        Verify(0 == classcleanupCallCount);
+        Verify(classcleanupCallCount == 0);
     }
 
     public void TestClassInfoClassCleanupMethodShouldNotInvokeBaseClassCleanupMethodsWhenNoTestClassInitializedIsCalled()
@@ -140,7 +138,7 @@ public class TestClassInfoTests : TestContainer
         var ret = _testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
         Verify(ret is null);
-        Verify(0 == classcleanupCallCount);
+        Verify(classcleanupCallCount == 0);
     }
 
     public void TestClassInfoClassCleanupMethodShouldInvokeWhenTestClassInitializedIsCalled()
@@ -155,7 +153,7 @@ public class TestClassInfoTests : TestContainer
         var ret = _testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
         Verify(ret is null);
-        Verify(1 == classcleanupCallCount);
+        Verify(classcleanupCallCount == 1);
     }
 
     public void TestClassInfoClassCleanupMethodShouldInvokeBaseClassCleanupMethodWhenTestClassInitializedIsCalled()
@@ -172,7 +170,7 @@ public class TestClassInfoTests : TestContainer
         var ret = _testClassInfo.RunClassCleanup();
 
         Verify(ret is null);
-        Verify(1 == classcleanupCallCount);
+        Verify(classcleanupCallCount == 1);
     }
 
     public void TestClassInfoHasExecutableCleanupMethodShouldReturnFalseIfClassDoesNotHaveCleanupMethod()
@@ -206,7 +204,7 @@ public class TestClassInfoTests : TestContainer
 
         _testClassInfo.RunClassInitialize(null);
 
-        Verify(0 == classInitCallCount);
+        Verify(classInitCallCount == 0);
     }
 
     public void RunClassInitializeShouldThrowIfTestContextIsNull()
@@ -215,9 +213,9 @@ public class TestClassInfoTests : TestContainer
 
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        void action() => _testClassInfo.RunClassInitialize(null);
+        void Action() => _testClassInfo.RunClassInitialize(null);
 
-        var ex = VerifyThrows(action);
+        var ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(NullReferenceException));
     }
 
@@ -231,7 +229,7 @@ public class TestClassInfoTests : TestContainer
 
         _testClassInfo.RunClassInitialize(_testContext);
 
-        Verify(0 == classInitCallCount);
+        Verify(classInitCallCount == 0);
     }
 
     public void RunClassInitializeShouldExecuteClassInitialize()
@@ -242,7 +240,7 @@ public class TestClassInfoTests : TestContainer
 
         _testClassInfo.RunClassInitialize(_testContext);
 
-        Verify(1 == classInitCallCount);
+        Verify(classInitCallCount == 1);
     }
 
     public void RunClassInitializeShouldSetClassInitializeExecutedFlag()
@@ -264,7 +262,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.RunClassInitialize(_testContext);
         _testClassInfo.RunClassInitialize(_testContext);
 
-        Verify(1 == classInitCallCount, "Class Initialize called only once");
+        Verify(classInitCallCount == 1, "Class Initialize called only once");
     }
 
     public void RunClassInitializeShouldRunOnlyOnceIfThereIsNoDerivedClassInitializeAndSetClassInitializeExecutedFlag()
@@ -278,7 +276,7 @@ public class TestClassInfoTests : TestContainer
         Verify(_testClassInfo.IsClassInitializeExecuted);
 
         _testClassInfo.RunClassInitialize(_testContext);
-        Verify(1 == classInitCallCount);
+        Verify(classInitCallCount == 1);
     }
 
     public void RunClassInitializeShouldSetClassInitializationExceptionOnException()
@@ -305,7 +303,7 @@ public class TestClassInfoTests : TestContainer
 
         _testClassInfo.RunClassInitialize(_testContext);
 
-        Verify(2 == classInitCallCount);
+        Verify(classInitCallCount == 2);
     }
 
     public void RunClassInitializeShouldNotExecuteBaseClassInitializeMethodIfClassInitializeHasExecuted()
@@ -325,7 +323,7 @@ public class TestClassInfoTests : TestContainer
         Verify(_testClassInfo.IsClassInitializeExecuted);
 
         _testClassInfo.RunClassInitialize(_testContext); // this one shouldn't run
-        Verify(3 == classInitCallCount);
+        Verify(classInitCallCount == 3);
     }
 
     public void RunClassInitializeShouldExecuteBaseClassInitializeIfDerivedClassInitializeIsNull()
@@ -340,7 +338,7 @@ public class TestClassInfoTests : TestContainer
 
         _testClassInfo.RunClassInitialize(_testContext);
 
-        Verify(1 == classInitCallCount);
+        Verify(classInitCallCount == 1);
     }
 
     public void RunClassInitializeShouldNotExecuteBaseClassIfBaseClassInitializeIsNull()
@@ -353,7 +351,7 @@ public class TestClassInfoTests : TestContainer
 
         _testClassInfo.RunClassInitialize(_testContext);
 
-        Verify(1 == classInitCallCount);
+        Verify(classInitCallCount == 1);
     }
 
     public void RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions()
@@ -367,10 +365,10 @@ public class TestClassInfoTests : TestContainer
         var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
 
         Verify(exception is not null);
-        Verify(UnitTestOutcome.Failed == exception.Outcome);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
-            "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.InitBaseClassMethod threw exception. System.ArgumentException: Some exception message."
-            == exception.Message);
+            exception.Message
+            == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.InitBaseClassMethod threw exception. System.ArgumentException: Some exception message.");
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
             "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions>"));
@@ -386,10 +384,10 @@ public class TestClassInfoTests : TestContainer
         var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
 
         Verify(exception is not null);
-        Verify(UnitTestOutcome.Failed == exception.Outcome);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
-            "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure."
-            == exception.Message);
+            exception.Message
+            == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failure.");
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionOnAssertionFailure>"));
@@ -404,10 +402,10 @@ public class TestClassInfoTests : TestContainer
         var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
 
         Verify(exception is not null);
-        Verify(UnitTestOutcome.Inconclusive == exception.Outcome);
+        Verify(exception.Outcome == UnitTestOutcome.Inconclusive);
         Verify(
-            "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive."
-            == exception.Message);
+            exception.Message
+            == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test Inconclusive.");
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithInconclusiveOnAssertInconclusive>"));
@@ -422,10 +420,10 @@ public class TestClassInfoTests : TestContainer
         var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
 
         Verify(exception is not null);
-        Verify(UnitTestOutcome.Failed == exception.Outcome);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
-            "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.ArgumentException: Argument exception."
-            == exception.Message);
+            exception.Message
+            == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.ArgumentException: Argument exception.");
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
             "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.<>c.<RunClassInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>"));
@@ -440,8 +438,8 @@ public class TestClassInfoTests : TestContainer
         var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
 
         Verify(exception is not null);
-        Verify(UnitTestOutcome.Failed == exception.Outcome);
-        Verify("Cached Test failure" == exception.Message);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.Message == "Cached Test failure");
     }
 
     public void RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
@@ -468,7 +466,7 @@ public class TestClassInfoTests : TestContainer
 
         // Assert
         Verify(classCleanup is null);
-        Verify(1 == classcleanupCallCount);
+        Verify(classcleanupCallCount == 1);
     }
 
     public void RunClassCleanupShouldNotInvokeIfClassCleanupIsNull()
@@ -483,7 +481,7 @@ public class TestClassInfoTests : TestContainer
 
         // Assert
         Verify(classCleanup is null);
-        Verify(0 == classcleanupCallCount);
+        Verify(classcleanupCallCount == 0);
     }
 
     public void RunClassCleanupShouldReturnAssertFailureExceptionDetails()
@@ -565,7 +563,7 @@ public class TestClassInfoTests : TestContainer
         // Assert
         Verify(_testClassInfo.HasExecutableCleanupMethod);
         Verify(classCleanup is null);
-        Verify(1 == classcleanupCallCount, "DummyBaseTestClass.CleanupClassMethod call count");
+        Verify(classcleanupCallCount == 1, "DummyBaseTestClass.CleanupClassMethod call count");
     }
 
     #endregion

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -20,13 +18,15 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+
 /// <summary>
-/// Defines type cache which reflects upon a type and cache its test artifacts
+/// Defines type cache which reflects upon a type and cache its test artifacts.
 /// </summary>
 internal class TypeCache : MarshalByRefObject
 {
     /// <summary>
-    /// Test context property name
+    /// Test context property name.
     /// </summary>
     private const string TestContextPropertyName = "TestContext";
 
@@ -41,12 +41,12 @@ internal class TypeCache : MarshalByRefObject
     private readonly ReflectHelper _reflectionHelper;
 
     /// <summary>
-    /// Assembly info cache
+    /// Assembly info cache.
     /// </summary>
     private readonly ConcurrentDictionary<Assembly, TestAssemblyInfo> _testAssemblyInfoCache = new();
 
     /// <summary>
-    /// ClassInfo cache
+    /// ClassInfo cache.
     /// </summary>
     private readonly ConcurrentDictionary<string, TestClassInfo> _classInfoCache = new(StringComparer.Ordinal);
 
@@ -70,13 +70,13 @@ internal class TypeCache : MarshalByRefObject
     }
 
     /// <summary>
-    /// Gets Class Info cache which has cleanup methods to execute
+    /// Gets Class Info cache which has cleanup methods to execute.
     /// </summary>
     public IEnumerable<TestClassInfo> ClassInfoListWithExecutableCleanupMethods =>
         _classInfoCache.Values.Where(classInfo => classInfo.HasExecutableCleanupMethod).ToList();
 
     /// <summary>
-    /// Gets Assembly Info cache which has cleanup methods to execute
+    /// Gets Assembly Info cache which has cleanup methods to execute.
     /// </summary>
     public IEnumerable<TestAssemblyInfo> AssemblyInfoListWithExecutableCleanupMethods =>
         _testAssemblyInfoCache.Values.Where(assemblyInfo => assemblyInfo.HasExecutableCleanupMethod).ToList();
@@ -92,7 +92,7 @@ internal class TypeCache : MarshalByRefObject
     public IEnumerable<TestClassInfo> ClassInfoCache => _classInfoCache.Values.ToList();
 
     /// <summary>
-    /// Get the test method info corresponding to the parameter test Element
+    /// Get the test method info corresponding to the parameter test Element.
     /// </summary>
     /// <param name="testMethod"> The test Method. </param>
     /// <param name="testContext"> The test Context. </param>
@@ -175,7 +175,7 @@ internal class TypeCache : MarshalByRefObject
     }
 
     /// <summary>
-    /// Loads the parameter type from the parameter assembly
+    /// Loads the parameter type from the parameter assembly.
     /// </summary>
     /// <param name="typeName"> The type Name. </param>
     /// <param name="assemblyName"> The assembly Name. </param>
@@ -217,7 +217,7 @@ internal class TypeCache : MarshalByRefObject
     }
 
     /// <summary>
-    /// Create the class Info
+    /// Create the class Info.
     /// </summary>
     /// <param name="classType"> The class Type. </param>
     /// <param name="testMethod"> The test Method. </param>
@@ -288,7 +288,7 @@ internal class TypeCache : MarshalByRefObject
     }
 
     /// <summary>
-    /// Resolves the test context property
+    /// Resolves the test context property.
     /// </summary>
     /// <param name="classType"> The class Type. </param>
     /// <returns> The <see cref="PropertyInfo"/> for TestContext property. Null if not defined. </returns>
@@ -324,7 +324,7 @@ internal class TypeCache : MarshalByRefObject
     #region AssemblyInfo creation and cache logic.
 
     /// <summary>
-    /// Get the assembly info for the parameter type
+    /// Get the assembly info for the parameter type.
     /// </summary>
     /// <param name="type"> The type. </param>
     /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
@@ -455,7 +455,7 @@ internal class TypeCache : MarshalByRefObject
     }
 
     /// <summary>
-    /// Update the classInfo if the parameter method is a classInitialize/cleanup method
+    /// Update the classInfo if the parameter method is a classInitialize/cleanup method.
     /// </summary>
     /// <param name="classInfo"> The Class Info. </param>
     /// <param name="methodInfo"> The Method Info. </param>
@@ -510,7 +510,7 @@ internal class TypeCache : MarshalByRefObject
     }
 
     /// <summary>
-    /// Update the classInfo if the parameter method is a testInitialize/cleanup method
+    /// Update the classInfo if the parameter method is a testInitialize/cleanup method.
     /// </summary>
     /// <param name="classInfo"> The class Info. </param>
     /// <param name="methodInfo"> The method Info. </param>
@@ -619,7 +619,7 @@ internal class TypeCache : MarshalByRefObject
     /// </summary>
     /// <param name="methodInfo"> The method info. </param>
     /// <param name="testClassInfo"> The test class info. </param>
-    /// <returns>Test Method Attribute</returns>
+    /// <returns>Test Method Attribute.</returns>
     private TestMethodAttribute GetTestMethodAttribute(MethodInfo methodInfo, TestClassInfo testClassInfo)
     {
         // Get the derived TestMethod attribute from reflection
@@ -710,7 +710,7 @@ internal class TypeCache : MarshalByRefObject
     }
 
     /// <summary>
-    /// Gets the test timeout for the parameter test method
+    /// Gets the test timeout for the parameter test method.
     /// </summary>
     /// <param name="methodInfo"> The method Info. </param>
     /// <param name="testMethod"> The test Method. </param>
@@ -740,7 +740,7 @@ internal class TypeCache : MarshalByRefObject
     }
 
     /// <summary>
-    /// Set custom properties
+    /// Set custom properties.
     /// </summary>
     /// <param name="testMethodInfo"> The test Method Info. </param>
     /// <param name="testContext"> The test Context. </param>

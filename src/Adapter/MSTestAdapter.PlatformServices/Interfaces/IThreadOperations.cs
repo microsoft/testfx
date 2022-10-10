@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-
 using System;
 using System.Threading;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 /// <summary>
 /// This service is responsible for any thread operations specific to a platform.
@@ -16,7 +16,7 @@ public interface IThreadOperations
     /// </summary>
     /// <param name="action">The action to execute.</param>
     /// <param name="timeout">Timeout for the specified action in milliseconds.</param>
-    /// <param name="cancelToken">Token to cancel the execution</param>
+    /// <param name="cancelToken">Token to cancel the execution.</param>
     /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
     bool Execute(Action action, int timeout, CancellationToken cancelToken);
 }

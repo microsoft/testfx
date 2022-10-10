@@ -1,21 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
-
 using System;
 using System.Xml;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
 using Moq;
 
 using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 public class MSTestSettingsTests : TestContainer
 {
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
@@ -216,7 +217,7 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Verify(4000 == adapterSettings.TestTimeout);
+        Verify(adapterSettings.TestTimeout == 4000);
     }
 
     public void TestTimeoutShouldBeSetToZeroIfNotSpecifiedInRunSettings()
@@ -229,7 +230,7 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Verify(0 == adapterSettings.TestTimeout);
+        Verify(adapterSettings.TestTimeout == 0);
     }
 
     public void TreatClassCleanupWarningsAsErrorsShouldBeFalseByDefault()
@@ -322,7 +323,7 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Verify(2 == adapterSettings.ParallelizationWorkers);
+        Verify(adapterSettings.ParallelizationWorkers == 2);
     }
 
     public void ParallelizationWorkersShouldBeSetToProcessorCountWhenSetToZero()
@@ -354,7 +355,7 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
-        Verify(UTF.ExecutionScope.ClassLevel == adapterSettings.ParallelizationScope);
+        Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.ClassLevel);
     }
 
     public void ParallelizationSettingsShouldBeSetToDefaultsOnAnEmptyParalleizeSetting()
@@ -369,7 +370,7 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
-        Verify(UTF.ExecutionScope.ClassLevel == adapterSettings.ParallelizationScope);
+        Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.ClassLevel);
     }
 
     public void ParallelizationSettingsShouldBeConsumedFromRunSettingsWhenSpecified()
@@ -386,8 +387,8 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Verify(127 == adapterSettings.ParallelizationWorkers);
-        Verify(UTF.ExecutionScope.MethodLevel == adapterSettings.ParallelizationScope);
+        Verify(adapterSettings.ParallelizationWorkers == 127);
+        Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.MethodLevel);
     }
 
     public void GetSettingsShouldThrowIfParallelizationScopeIsNotValid()
@@ -421,7 +422,7 @@ public class MSTestSettingsTests : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
-        Verify(UTF.ExecutionScope.MethodLevel == adapterSettings.ParallelizationScope);
+        Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.MethodLevel);
     }
 
     public void GetSettingsShouldThrowWhenParallelizeHasInvalidElements()
@@ -474,8 +475,8 @@ public class MSTestSettingsTests : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.TestSettingsFile is not null);
-        Verify(127 == adapterSettings.ParallelizationWorkers);
-        Verify(UTF.ExecutionScope.MethodLevel == adapterSettings.ParallelizationScope);
+        Verify(adapterSettings.ParallelizationWorkers == 127);
+        Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.MethodLevel);
     }
 
     public void GetSettingsShouldBeAbleToReadAfterParallelizationSettingsOnEmptyParallelizationNode()
@@ -608,6 +609,7 @@ public class MSTestSettingsTests : TestContainer
                                         dummyPlatformSpecificSetting = result;
                                     }
                                 }
+
                                 break;
                             default:
                                 {
@@ -625,7 +627,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(dummyPlatformSpecificSetting);
         Verify(adapterSettings.MapInconclusiveToFailed);
         Verify(adapterSettings.MapNotRunnableToFailed);
-        Verify("DummyPath\\\\TestSettings1.testsettings" == adapterSettings.TestSettingsFile);
+        Verify(adapterSettings.TestSettingsFile == "DummyPath\\\\TestSettings1.testsettings");
     }
 
     public void GetSettingsShouldBeAbleToReadSettingsIfThePlatformServiceDoesNotUnderstandASetting()
@@ -663,6 +665,7 @@ public class MSTestSettingsTests : TestContainer
                                         dummyPlatformSpecificSetting = result;
                                     }
                                 }
+
                                 break;
                             default:
                                 {
@@ -682,7 +685,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(adapterSettings.MapNotRunnableToFailed);
         Verify(adapterSettings.ForcedLegacyMode);
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
-        Verify("DummyPath\\\\TestSettings1.testsettings" == adapterSettings.TestSettingsFile);
+        Verify(adapterSettings.TestSettingsFile == "DummyPath\\\\TestSettings1.testsettings");
     }
 
     public void GetSettingsShouldOnlyReadTheAdapterSection()
@@ -714,6 +717,7 @@ public class MSTestSettingsTests : TestContainer
                                     reader.ReadInnerXml();
                                     outOfScopeCall = true;
                                 }
+
                                 break;
                             default:
                                 {
@@ -769,6 +773,7 @@ public class MSTestSettingsTests : TestContainer
                                         dummyPlatformSpecificSetting = result;
                                     }
                                 }
+
                                 break;
                             default:
                                 {

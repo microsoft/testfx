@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTestV2.CLIAutomation;
-
 using System.Xml;
 
+namespace Microsoft.MSTestV2.CLIAutomation;
 public static class XmlRunSettingsUtilities
 {
     /// <summary>
-    /// Create a default run settings
+    /// Create a default run settings.
     /// </summary>
     /// <returns>The runsettings xml string.</returns>
     public static string CreateDefaultRunSettings()

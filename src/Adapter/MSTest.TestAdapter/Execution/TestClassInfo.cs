@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,14 +9,16 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
-using Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ObjectModel;
 
-using ObjectModelUnitTestOutcome = ObjectModel.UnitTestOutcome;
+using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
-/// Defines the TestClassInfo object
+/// Defines the TestClassInfo object.
 /// </summary>
 public class TestClassInfo
 {
@@ -341,9 +341,9 @@ public class TestClassInfo
     }
 
     /// <summary>
-    /// Run class cleanup methods
+    /// Run class cleanup methods.
     /// </summary>
-    /// <param name="classCleanupLifecycle">The current lifecyle position that ClassCleanup is executing from</param>
+    /// <param name="classCleanupLifecycle">The current lifecyle position that ClassCleanup is executing from.</param>
     /// <returns>
     /// Any exception that can be thrown as part of a class cleanup as warning messages.
     /// </returns>

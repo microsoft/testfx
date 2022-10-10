@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
 /// <summary>
-/// Base class for attributes that specify to expect an exception from a unit test
+/// Base class for attributes that specify to expect an exception from a unit test.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
 public abstract class ExpectedExceptionBaseAttribute : Attribute
@@ -17,7 +17,7 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     #region Constructors
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ExpectedExceptionBaseAttribute"/> class with a default no-exception message
+    /// Initializes a new instance of the <see cref="ExpectedExceptionBaseAttribute"/> class with a default no-exception message.
     /// </summary>
     protected ExpectedExceptionBaseAttribute()
         : this(string.Empty)
@@ -26,11 +26,11 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ExpectedExceptionBaseAttribute"/> class with a no-exception message
+    /// Initializes a new instance of the <see cref="ExpectedExceptionBaseAttribute"/> class with a no-exception message.
     /// </summary>
     /// <param name="noExceptionMessage">
     /// Message to include in the test result if the test fails due to not throwing an
-    /// exception
+    /// exception.
     /// </param>
     protected ExpectedExceptionBaseAttribute(string noExceptionMessage)
     {
@@ -47,7 +47,7 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     // TODO: Test Context needs to be put in here for source compat.
 
     /// <summary>
-    /// Gets the message to include in the test result if the test fails due to not throwing an exception
+    /// Gets the message to include in the test result if the test fails due to not throwing an exception.
     /// </summary>
     protected internal virtual string NoExceptionMessage
     {
@@ -66,7 +66,7 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     }
 
     /// <summary>
-    /// Gets the message to include in the test result if the test fails due to not throwing an exception
+    /// Gets the message to include in the test result if the test fails due to not throwing an exception.
     /// </summary>
     protected string SpecifiedNoExceptionMessage { get; private set; }
 
@@ -75,10 +75,10 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     #region Methods
 
     /// <summary>
-    /// Gets the default no-exception message
+    /// Gets the default no-exception message.
     /// </summary>
-    /// <param name="expectedExceptionAttributeTypeName">The ExpectedException attribute type name</param>
-    /// <returns>The default no-exception message</returns>
+    /// <param name="expectedExceptionAttributeTypeName">The ExpectedException attribute type name.</param>
+    /// <returns>The default no-exception message.</returns>
     internal static string GetDefaultNoExceptionMessage(string expectedExceptionAttributeTypeName)
     {
         return string.Format(
@@ -95,13 +95,13 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     /// convenience. If <see cref="Assert.Inconclusive()"/> is used and the assertion fails,
     /// then the test outcome is set to Inconclusive.
     /// </summary>
-    /// <param name="exception">The exception thrown by the unit test</param>
+    /// <param name="exception">The exception thrown by the unit test.</param>
     protected internal abstract void Verify(Exception exception);
 
     /// <summary>
-    /// Rethrow the exception if it is an AssertFailedException or an AssertInconclusiveException
+    /// Rethrow the exception if it is an AssertFailedException or an AssertInconclusiveException.
     /// </summary>
-    /// <param name="exception">The exception to rethrow if it is an assertion exception</param>
+    /// <param name="exception">The exception to rethrow if it is an assertion exception.</param>
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API.")]
     protected void RethrowIfAssertException(Exception exception)
     {

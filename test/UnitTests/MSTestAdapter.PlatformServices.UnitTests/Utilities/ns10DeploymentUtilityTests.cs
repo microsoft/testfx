@@ -1,18 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Tests.Utilities;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+
 using Moq;
 
 using TestFramework.ForTestingMSTest;
 
+namespace MSTestAdapter.PlatformServices.Tests.Utilities;
 #pragma warning disable SA1649 // File name must match first type name
 public class DeploymentUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name

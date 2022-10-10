@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
 using System;
 using System.Collections.Generic;
@@ -13,6 +12,8 @@ using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
 /// <summary>
 /// Utility function for Assembly related info
@@ -67,7 +68,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         List<string> result = new();
         HashSet<string> visitedAssemblies = new()
         {
-            assembly.FullName
+            assembly.FullName,
         };
 
         ProcessChildren(assembly, result, visitedAssemblies, warnings);
@@ -86,10 +87,10 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     }
 
     /// <summary>
-    /// Get the target dotNet framework string for the assembly
+    /// Get the target dotNet framework string for the assembly.
     /// </summary>
-    /// <param name="path">Path of the assembly file</param>
-    /// <returns> String representation of the target dotNet framework e.g. .NETFramework,Version=v4.0 </returns>
+    /// <param name="path">Path of the assembly file.</param>
+    /// <returns> String representation of the target dotNet framework e.g. .NETFramework,Version=v4.0. </returns>
     internal string GetTargetFrameworkVersionStringFromPath(string path)
     {
         if (File.Exists(path))
@@ -119,10 +120,10 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     }
 
     /// <summary>
-    /// Get the target dot net framework string for the assembly
+    /// Get the target dot net framework string for the assembly.
     /// </summary>
-    /// <param name="assembly">Assembly from which target framework has to find</param>
-    /// <returns>String representation of the target dot net framework e.g. .NETFramework,Version=v4.0 </returns>
+    /// <param name="assembly">Assembly from which target framework has to find.</param>
+    /// <returns>String representation of the target dot net framework e.g. .NETFramework,Version=v4.0. </returns>
     private static string GetTargetFrameworkStringFromAssembly(Assembly assembly)
     {
         string dotNetVersion = string.Empty;

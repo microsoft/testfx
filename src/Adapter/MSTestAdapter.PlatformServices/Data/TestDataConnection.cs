@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,10 +11,13 @@ using System.Globalization;
 using System.IO;
 using System.Security;
 
+#if NETFRAMEWORK
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
+
 /// <summary>
 /// This used to be "DataUtility", a helper class to handle quoted strings etc for different
 /// data providers but the purpose has been expanded to be a general abstraction over a
-/// connection, including the ability to read data and metadata (tables and columns)
+/// connection, including the ability to read data and metadata (tables and columns).
 /// </summary>
 internal abstract class TestDataConnection : IDisposable
 {
@@ -36,7 +36,7 @@ internal abstract class TestDataConnection : IDisposable
     /// <summary>
     /// Gets the connection.
     /// </summary>
-    /// <remarks>This will only return non-null for true DB based connections (TestDataConnectionSql)</remarks>
+    /// <remarks>This will only return non-null for true DB based connections (TestDataConnectionSql).</remarks>
     public virtual DbConnection Connection
     {
         get { return null; }
@@ -66,25 +66,25 @@ internal abstract class TestDataConnection : IDisposable
     }
 
     /// <summary>
-    /// Get a list of tables and views for this connection. Filters out "system" tables
+    /// Get a list of tables and views for this connection. Filters out "system" tables.
     /// </summary>
-    /// <returns>List of names or null if error</returns>
+    /// <returns>List of names or null if error.</returns>
     public abstract List<string> GetDataTablesAndViews();
 
     /// <summary>
-    /// Given a table name, return a list of column names
+    /// Given a table name, return a list of column names.
     /// </summary>
     /// <param name="tableName">The name of the table.</param>
-    /// <returns>List of names or null if error</returns>
+    /// <returns>List of names or null if error.</returns>
     public abstract List<string> GetColumns(string tableName);
 
     /// <summary>
     /// Read the content of a table or view into memory
-    /// Try to limit to columns specified, if columns is null, read all columns
+    /// Try to limit to columns specified, if columns is null, read all columns.
     /// </summary>
-    /// <param name="tableName">Minimally quoted table name</param>
-    /// <param name="columns">Array of columns</param>
-    /// <returns>Data table or null if error</returns>
+    /// <param name="tableName">Minimally quoted table name.</param>
+    /// <param name="columns">Array of columns.</param>
+    /// <returns>Data table or null if error.</returns>
     public abstract DataTable ReadTable(string tableName, IEnumerable columns);
 
     // It is critical that is class be disposed of properly, otherwise

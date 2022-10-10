@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
-
 using System;
 using System.Diagnostics;
 using System.Globalization;
+
+#if !WINDOWS_UWP
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
 /// <summary>
 /// Specifies type of deployment item origin, where the item comes from.
@@ -79,7 +79,7 @@ internal class DeploymentItem
     }
 
     /// <summary>
-    /// Gets the full path to the 'source' deployment item
+    /// Gets the full path to the 'source' deployment item.
     /// </summary>
     internal string SourcePath
     {
@@ -99,7 +99,7 @@ internal class DeploymentItem
     /// </summary>
     internal DeploymentItemOriginType OriginType { get; private set; }
 
-    #region Object - overrides
+#region Object - overrides
 
     /// <summary>
     /// Equals implementation.
@@ -145,6 +145,6 @@ internal class DeploymentItem
                 string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItemWithOutputDirectory, SourcePath, RelativeOutputDirectory);
     }
 
-    #endregion
+#endregion
 }
 #endif

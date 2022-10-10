@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
-namespace MSTestAdapter.PlatformServices.UnitTests;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +11,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
+#if NET462
+namespace MSTestAdapter.PlatformServices.UnitTests;
 public class AssemblyResolverTests : TestContainer
 {
     public void AddSubDirectoriesShouldReturnSubDirectoriesInDfsOrder()
@@ -27,7 +26,7 @@ public class AssemblyResolverTests : TestContainer
             @"C:\unitTesting\a",
             @"C:\unitTesting\a\c",
             @"C:\unitTesting\a\c\d",
-            @"C:\unitTesting\b"
+            @"C:\unitTesting\b",
         };
 
         TestableAssemblyResolver assemblyResolver = new(new List<string> { @"c:\dummy" })
@@ -49,14 +48,14 @@ public class AssemblyResolverTests : TestContainer
                 }
 
                 return new List<string>().ToArray();
-            }
+            },
         };
 
         // Act.
         assemblyResolver.AddSubdirectories(path, searchDirectories);
 
         // Assert.
-        Verify(4 == searchDirectories.Count);
+        Verify(searchDirectories.Count == 4);
 
         Verify(resultDirectories.SequenceEqual(searchDirectories, StringComparer.OrdinalIgnoreCase));
     }
@@ -68,12 +67,12 @@ public class AssemblyResolverTests : TestContainer
         List<RecursiveDirectoryPath> recursiveDirectoryPath = new()
         {
             new RecursiveDirectoryPath(@"C:\unitTesting", true),
-            new RecursiveDirectoryPath(@"C:\FunctionalTesting", false)
+            new RecursiveDirectoryPath(@"C:\FunctionalTesting", false),
         };
 
         List<string> dummyDirectories = new()
         {
-            @"c:\dummy"
+            @"c:\dummy",
         };
         TestableAssemblyResolver assemblyResolver = new(dummyDirectories);
 
@@ -104,37 +103,37 @@ public class AssemblyResolverTests : TestContainer
                 {
                     // First time SearchAssemblyInTheFollowingLocation should get call with one directory which is in
                     // m_searchDirectories variable
-                    Verify(1 == listPath.Count);
-                    Verify(0 == string.Compare(listPath[0], dummyDirectories[0], true));
+                    Verify(listPath.Count == 1);
+                    Verify(string.Compare(listPath[0], dummyDirectories[0], true) == 0);
                     count++;
                 }
                 else if (count == 1)
                 {
                     // Second time SearchAssemblyInTheFollowingLocation should get call with directory C:\unitTesting
                     // and with all its sub directory, as its isRecursive property is true
-                    Verify(3 == listPath.Count);
-                    Verify(0 == string.Compare(listPath[0], @"C:\unitTesting", true));
-                    Verify(0 == string.Compare(listPath[1], @"C:\unitTesting\a", true));
-                    Verify(0 == string.Compare(listPath[2], @"C:\unitTesting\b", true));
+                    Verify(listPath.Count == 3);
+                    Verify(string.Compare(listPath[0], @"C:\unitTesting", true) == 0);
+                    Verify(string.Compare(listPath[1], @"C:\unitTesting\a", true) == 0);
+                    Verify(string.Compare(listPath[2], @"C:\unitTesting\b", true) == 0);
                     count++;
                 }
                 else if (count == 2)
                 {
                     // Third time SearchAssemblyInTheFollowingLocation should get call with directory C:\FunctionalTesting
                     // as its isRecursive property is false
-                    Verify(1 == listPath.Count);
-                    Verify(0 == string.Compare(listPath[0], @"C:\FunctionalTesting", true));
+                    Verify(listPath.Count == 1);
+                    Verify(string.Compare(listPath[0], @"C:\FunctionalTesting", true) == 0);
                     count++;
                 }
                 else if (count == 3)
                 {
                     // call will come here when we will call onResolve second time.
-                    Verify(5 == listPath.Count);
-                    Verify(0 == string.Compare(listPath[0], dummyDirectories[0], true));
-                    Verify(0 == string.Compare(listPath[1], @"C:\unitTesting", true));
-                    Verify(0 == string.Compare(listPath[2], @"C:\unitTesting\a", true));
-                    Verify(0 == string.Compare(listPath[3], @"C:\unitTesting\b", true));
-                    Verify(0 == string.Compare(listPath[4], @"C:\FunctionalTesting", true));
+                    Verify(listPath.Count == 5);
+                    Verify(string.Compare(listPath[0], dummyDirectories[0], true) == 0);
+                    Verify(string.Compare(listPath[1], @"C:\unitTesting", true) == 0);
+                    Verify(string.Compare(listPath[2], @"C:\unitTesting\a", true) == 0);
+                    Verify(string.Compare(listPath[3], @"C:\unitTesting\b", true) == 0);
+                    Verify(string.Compare(listPath[4], @"C:\FunctionalTesting", true) == 0);
                     count++;
                 }
 

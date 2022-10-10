@@ -1,17 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Diagnostics.CodeAnalysis;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Specifies connection string, table name and row access method for data driven testing.
 /// </summary>
 /// <example>
 /// [DataSource("Provider=SQLOLEDB.1;Data Source=source;Integrated Security=SSPI;Initial Catalog=EqtCoverage;Persist Security Info=False", "MyTable")]
-/// [DataSource("dataSourceNameFromConfigFile")]
+/// [DataSource("dataSourceNameFromConfigFile")].
 /// </example>
 [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments", Justification = "Compat")]
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
@@ -34,7 +34,7 @@ public sealed class DataSourceAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="DataSourceAttribute"/> class. This instance will be initialized with a data provider, connection string, data table and data access method to access the data source.
     /// </summary>
-    /// <param name="providerInvariantName">Invariant data provider name, such as System.Data.SqlClient</param>
+    /// <param name="providerInvariantName">Invariant data provider name, such as System.Data.SqlClient.</param>
     /// <param name="connectionString">
     /// Data provider specific connection string.
     /// WARNING: The connection string can contain sensitive data (for example, a password).

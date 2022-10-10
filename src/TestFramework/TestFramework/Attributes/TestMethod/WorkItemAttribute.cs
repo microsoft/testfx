@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// WorkItem attribute; used to specify a work item associated with this test.

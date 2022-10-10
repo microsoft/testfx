@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-
 using System.Collections.Generic;
 using System.Globalization;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal class UnitTestDiscoverer
 {
     private readonly AssemblyEnumeratorWrapper _assemblyEnumeratorWrapper;
@@ -22,7 +22,7 @@ internal class UnitTestDiscoverer
     }
 
     /// <summary>
-    /// Gets or sets method filter for filtering tests
+    /// Gets or sets method filter for filtering tests.
     /// </summary>
     private TestMethodFilter TestMethodFilter { get; set; }
 
@@ -46,7 +46,7 @@ internal class UnitTestDiscoverer
     }
 
     /// <summary>
-    /// Get the tests from the parameter source
+    /// Get the tests from the parameter source.
     /// </summary>
     /// <param name="source"> The source. </param>
     /// <param name="logger"> The logger. </param>

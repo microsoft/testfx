@@ -53,16 +53,19 @@ end_of_line = crlf
 
 #### .NET Coding Conventions ####
 
-# Organize usings
+## Organize usings
 
 dotnet_separate_import_directive_groups = true
 dotnet_sort_system_directives_first = true
 
-# License header
+# IDE0065: Misplaced using directive
+csharp_using_directive_placement = outside_namespace
+
+## License header
 
 file_header_template = Copyright (c) Microsoft Corporation. All rights reserved.\nLicensed under the MIT license. See LICENSE file in the project root for full license information.
 
-# Styling conventions
+## Styling conventions
 
 end_of_line = crlf
 
@@ -179,9 +182,41 @@ dotnet_diagnostic.CA1806.severity = warning
 
 dotnet_diagnostic.RS0037.severity = none
 
+# SA1101: Prefix local calls with this
+dotnet_diagnostic.SA1101.severity = none
+
+# SA1117: Parameters should be on same line or separate lines
+dotnet_diagnostic.SA1117.severity = none
+
+# SA1202: Elements should be ordered by access
+dotnet_diagnostic.SA1202.severity = none
+
+# SA1204: Static elements should appear before instance elements
+dotnet_diagnostic.SA1204.severity = none
+
+# SA1308: Variable names should not be prefixed
+dotnet_diagnostic.SA1308.severity = none
+
+# SA1309: Field names should not begin with underscore
+dotnet_diagnostic.SA1309.severity = none
+
+# SA1600: Elements should be documented
+# Globally disabled but enabled for src folder
+dotnet_diagnostic.SA1600.severity = none
+
+# SA1601: Partial elements should be documented
+# Globally disabled but enabled for src folder
+dotnet_diagnostic.SA1601.severity = none
+
+# SA1611: Element parameters should be documented
+dotnet_diagnostic.SA1611.severity = none
+
+# SA1615: Element return value should be documented
+dotnet_diagnostic.SA1615.severity = none
+
 #### Naming styles ####
 
-# Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)
+## Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)
 
 dotnet_naming_rule.interface_should_be_begins_with_i.severity = suggestion
 dotnet_naming_rule.interface_should_be_begins_with_i.symbols = interface
@@ -211,7 +246,7 @@ dotnet_naming_rule.private_fields_should_be_underscore_camel_case.severity = war
 dotnet_naming_rule.private_fields_should_be_underscore_camel_case.symbols = private_fields
 dotnet_naming_rule.private_fields_should_be_underscore_camel_case.style = underscore_camel_case
 
-# Symbol specifications (define symbol groups using dotnet_naming_symbols.<group_name>.<options>)
+## Symbol specifications (define symbol groups using dotnet_naming_symbols.<group_name>.<options>)
 
 dotnet_naming_symbols.interface.applicable_kinds = interface
 dotnet_naming_symbols.interface.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
@@ -237,7 +272,7 @@ dotnet_naming_symbols.private_static_fields.required_modifiers = static
 dotnet_naming_symbols.private_fields.applicable_kinds = field
 dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 
-# Naming styles (define naming style using dotnet_naming_style.<style_name>.<option>)
+## Naming styles (define naming style using dotnet_naming_style.<style_name>.<option>)
 
 dotnet_naming_style.begins_with_i.required_prefix = I
 dotnet_naming_style.begins_with_i.required_suffix =

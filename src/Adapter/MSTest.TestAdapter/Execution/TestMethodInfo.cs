@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,13 +18,15 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+
 /// <summary>
-/// Defines the TestMethod Info object
+/// Defines the TestMethod Info object.
 /// </summary>
 public class TestMethodInfo : ITestMethod
 {
     /// <summary>
-    /// Specifies the timeout when it is not set in a test case
+    /// Specifies the timeout when it is not set in a test case.
     /// </summary>
     public const int TimeoutWhenNotSet = 0;
 
@@ -51,12 +51,12 @@ public class TestMethodInfo : ITestMethod
     public bool IsTimeoutSet => TestMethodOptions.Timeout != TimeoutWhenNotSet;
 
     /// <summary>
-    /// Gets the reason why the test is not runnable
+    /// Gets the reason why the test is not runnable.
     /// </summary>
     public string NotRunnableReason { get; internal set; }
 
     /// <summary>
-    /// Gets a value indicating whether test is runnable
+    /// Gets a value indicating whether test is runnable.
     /// </summary>
     public bool IsRunnable => string.IsNullOrEmpty(NotRunnableReason);
 
@@ -73,12 +73,12 @@ public class TestMethodInfo : ITestMethod
     public object[] Arguments => _arguments;
 
     /// <summary>
-    /// Gets testMethod referred by this object
+    /// Gets testMethod referred by this object.
     /// </summary>
     internal MethodInfo TestMethod { get; private set; }
 
     /// <summary>
-    /// Gets the parent class Info object
+    /// Gets the parent class Info object.
     /// </summary>
     internal TestClassInfo Parent { get; private set; }
 
@@ -101,7 +101,7 @@ public class TestMethodInfo : ITestMethod
     /// Execute test method. Capture failures, handle async and return result.
     /// </summary>
     /// <param name="arguments">
-    ///  Arguments to pass to test method. (E.g. For data driven)
+    ///  Arguments to pass to test method. (E.g. For data driven).
     /// </param>
     /// <returns>Result of test method invocation.</returns>
     public virtual TestResult Invoke(object[] arguments)
@@ -283,12 +283,15 @@ public class TestMethodInfo : ITestMethod
                     // Expected Exception was thrown, so Pass the test
                     result.Outcome = UTF.UnitTestOutcome.Passed;
                 }
-                else                         // This block should not throw. If it needs to throw, then handling of
+                else
+                {
+                    // This block should not throw. If it needs to throw, then handling of
                     // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
                     result.TestFailureException ??= HandleMethodException(
                         ex,
                         TestClassName,
                         TestMethodName);
+                }
 
                 if (result.Outcome != UTF.UnitTestOutcome.Passed)
                 {
@@ -409,9 +412,9 @@ public class TestMethodInfo : ITestMethod
 
     /// <summary>
     /// Handles the exception that is thrown by a test method. The exception can either
-    /// be expected or not expected
+    /// be expected or not expected.
     /// </summary>
-    /// <param name="ex">Exception that was thrown</param>
+    /// <param name="ex">Exception that was thrown.</param>
     /// <param name="className">The class name.</param>
     /// <param name="methodName">The method name.</param>
     /// <returns>Test framework exception with details.</returns>
@@ -621,7 +624,7 @@ public class TestMethodInfo : ITestMethod
     }
 
     /// <summary>
-    /// Sets the <see cref="TestContext"/> on <see cref="classInstance"/>.
+    /// Sets the <see cref="TestContext"/> on <paramref name="classInstance"/>.
     /// </summary>
     /// <param name="classInstance">
     /// Reference to instance of TestClass.
@@ -718,7 +721,7 @@ public class TestMethodInfo : ITestMethod
     }
 
     /// <summary>
-    /// Execute test with a timeout
+    /// Execute test with a timeout.
     /// </summary>
     /// <param name="arguments">The arguments to be passed.</param>
     /// <returns>The result of execution.</returns>
@@ -730,7 +733,7 @@ public class TestMethodInfo : ITestMethod
         TestResult result = null;
         Exception failure = null;
 
-        void executeAsyncAction()
+        void ExecuteAsyncAction()
         {
             try
             {
@@ -743,7 +746,7 @@ public class TestMethodInfo : ITestMethod
         }
 
         CancellationToken cancelToken = TestMethodOptions.TestContext.Context.CancellationTokenSource.Token;
-        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(executeAsyncAction, TestMethodOptions.Timeout, cancelToken))
+        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.Timeout, cancelToken))
         {
             if (failure != null)
             {

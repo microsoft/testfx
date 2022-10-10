@@ -2,11 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
 /// Permutation of integers from 0 to (numberOfObjects - 1) returned by increment of 1.

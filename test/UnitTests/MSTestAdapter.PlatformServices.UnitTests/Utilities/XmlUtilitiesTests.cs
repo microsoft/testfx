@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 using System.IO;
 using System.Linq;
@@ -11,8 +10,9 @@ using System.Xml;
 
 using TestFramework.ForTestingMSTest;
 
-using static AppDomainUtilitiesTests;
+using static MSTestAdapter.PlatformServices.UnitTests.Utilities.AppDomainUtilitiesTests;
 
+namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 public class XmlUtilitiesTests : TestContainer
 {
     private readonly TestableXmlUtilities _testableXmlUtilities;

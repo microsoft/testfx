@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
 using System.Diagnostics;
@@ -11,20 +10,21 @@ using System.Runtime.InteropServices;
 
 using static System.String;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 public static class VSInstallationUtilities
 {
     /// <summary>
-    /// Public assemblies directory name
+    /// Public assemblies directory name.
     /// </summary>
     private const string PublicAssembliesDirectoryName = "PublicAssemblies";
 
     /// <summary>
-    /// Folder name of private assemblies
+    /// Folder name of private assemblies.
     /// </summary>
     private const string PrivateAssembliesFolderName = "PrivateAssemblies";
 
     /// <summary>
-    /// The manifest file name to determine if it is running in portable mode
+    /// The manifest file name to determine if it is running in portable mode.
     /// </summary>
     private const string PortableVsTestManifestFilename = "Portable.VsTest.Manifest";
 
@@ -35,7 +35,7 @@ public static class VSInstallationUtilities
     /// <summary>
     /// Gets the visual studio installation path on the local machine.
     /// </summary>
-    /// <returns>VS install path</returns>
+    /// <returns>VS install path.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Need to ignore failures to read the registry settings")]
     public static string VSInstallPath
     {
@@ -85,19 +85,19 @@ public static class VSInstallationUtilities
     public static string PathToPrivateAssemblies => GetFullPath(PrivateAssembliesFolderName);
 
     /// <summary>
-    /// Is Current process running in Portable Mode
+    /// Is Current process running in Portable Mode.
     /// </summary>
-    /// <returns>True, if portable mode; false, otherwise</returns>
+    /// <returns>True, if portable mode; false, otherwise.</returns>
     public static bool IsCurrentProcessRunningInPortableMode()
     {
         return IsProcessRunningInPortableMode(Process.GetCurrentProcess().MainModule.FileName);
     }
 
     /// <summary>
-    /// Is the EXE specified running in Portable Mode
+    /// Is the EXE specified running in Portable Mode.
     /// </summary>
     /// <param name="exeName">EXE name.</param>
-    /// <returns>True, if portable mode; false, otherwise</returns>
+    /// <returns>True, if portable mode; false, otherwise.</returns>
     public static bool IsProcessRunningInPortableMode(string exeName)
     {
         // Get the directory of the exe
@@ -246,7 +246,7 @@ public static class VSInstallationUtilities
         /// <summary>
         /// Gets the instance for the given path.
         /// </summary>
-        /// <param name="wzPath">Path used to determine instance</param>
+        /// <param name="wzPath">Path used to determine instance.</param>
         /// <returns>The instance for the given path.</returns>
         [return: MarshalAs(UnmanagedType.Interface)]
         ISetupInstance GetInstanceForPath([In, MarshalAs(UnmanagedType.LPWStr)] string wzPath);

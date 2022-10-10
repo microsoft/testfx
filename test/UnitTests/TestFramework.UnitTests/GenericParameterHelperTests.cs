@@ -1,23 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace UnitTestFramework.Tests;
-
 using System;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using TestFramework.ForTestingMSTest;
 
+namespace UnitTestFramework.Tests;
+
 /// <summary>
-/// Tests for class GenericParameterHelper
+/// Tests for class GenericParameterHelper.
 /// </summary>
 public class GenericParameterHelperTests : TestContainer
 {
     private GenericParameterHelper _sut = null;
 
-    /// <summary>
-    /// Test initialization function.
-    /// </summary>
     public GenericParameterHelperTests()
     {
         _sut = new GenericParameterHelper(10);
@@ -49,16 +47,16 @@ public class GenericParameterHelperTests : TestContainer
     {
         GenericParameterHelper objectToCompare = new(10);
 
-        Verify(0 == _sut.CompareTo(objectToCompare));
+        Verify(_sut.CompareTo(objectToCompare) == 0);
     }
 
     public void CompareToShouldThrowExceptionIfSpecifiedObjectIsNotOfTypeGenericParameterHelper()
     {
         int objectToCompare = 5;
 
-        void a() => _sut.CompareTo(objectToCompare);
+        void A() => _sut.CompareTo(objectToCompare);
 
-        var ex = VerifyThrows(a);
+        var ex = VerifyThrows(A);
         Verify(ex is NotSupportedException);
     }
 

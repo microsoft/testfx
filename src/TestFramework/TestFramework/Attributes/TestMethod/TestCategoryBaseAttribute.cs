@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Collections.Generic;
 
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
 /// <summary>
-/// Base class for the "Category" attribute
+/// Base class for the "Category" attribute.
 /// </summary>
 /// <remarks>
 /// The reason for this attribute is to let the users create their own implementation of test categories.
@@ -22,7 +22,7 @@ public abstract class TestCategoryBaseAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="TestCategoryBaseAttribute"/> class.
     /// Applies the category to the test. The strings returned by TestCategories
-    /// are used with the /category command to filter tests
+    /// are used with the /category command to filter tests.
     /// </summary>
     protected TestCategoryBaseAttribute()
     {

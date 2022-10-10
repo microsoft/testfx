@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
-namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 using System;
 using System.Linq;
@@ -14,6 +13,7 @@ using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 using TestFramework.ForTestingMSTest;
 
+namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 public class DesktopReflectionOperationsTests : TestContainer
 {
     private readonly ReflectionOperations _reflectionOperations;
@@ -30,7 +30,7 @@ public class DesktopReflectionOperationsTests : TestContainer
         var attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
 
         Verify(attributes is not null);
-        Verify(2 == attributes.Length);
+        Verify(attributes.Length == 2);
 
         var expectedAttributes = new string[] { "DummyA : base", "DummySingleA : base" };
         Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
@@ -43,7 +43,7 @@ public class DesktopReflectionOperationsTests : TestContainer
         var attributes = _reflectionOperations.GetCustomAttributes(typeInfo, false);
 
         Verify(attributes is not null);
-        Verify(1 == attributes.Length);
+        Verify(attributes.Length == 1);
 
         var expectedAttributes = new string[] { "DummyA : ba" };
         Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
@@ -56,7 +56,7 @@ public class DesktopReflectionOperationsTests : TestContainer
         var attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(ReflectionUtilityTests.DummyAAttribute));
 
         Verify(attributes is not null);
-        Verify(2 == attributes.Length);
+        Verify(attributes.Length == 2);
 
         var expectedAttributes = new string[] { "DummyA : a1", "DummyA : a2" };
         Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));

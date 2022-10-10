@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if WIN_UI
-namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
-
 using System;
 using System.Globalization;
+
+#if WIN_UI
+namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
 /// <summary>
 /// Specifies <see cref="Microsoft.UI.Xaml.Application" /> derived class to run UI tests on.

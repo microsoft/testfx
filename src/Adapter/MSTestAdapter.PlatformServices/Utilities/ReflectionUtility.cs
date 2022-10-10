@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
 #if NETFRAMEWORK
@@ -13,13 +12,15 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+
 /// <summary>
-/// Utility for reflection API's
+/// Utility for reflection API's.
 /// </summary>
 internal class ReflectionUtility
 {
     /// <summary>
-    /// Gets the custom attributes of the provided type on a memberInfo
+    /// Gets the custom attributes of the provided type on a memberInfo.
     /// </summary>
     /// <param name="attributeProvider"> The member to reflect on. </param>
     /// <param name="type"> The attribute type. </param>

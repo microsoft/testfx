@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 using TestFramework.ForTestingMSTest;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 public class DictionaryHelperTests : TestContainer
 {
     public void ConcatenatingDictionariesReturnsEmptyDictionaryWhenBothSidesAreNullOrEmpty()
@@ -84,7 +84,6 @@ public class DictionaryHelperTests : TestContainer
 
             // this is present in source and overwrite, take it from overwrite
             ["bbb"] = "overwrite",
-
         };
 
         var sortedActual = from entry in actual orderby entry.Key ascending select entry;

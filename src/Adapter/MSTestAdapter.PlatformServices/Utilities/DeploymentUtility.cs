@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
 using System.Collections.Generic;
@@ -16,6 +15,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deploym
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 internal class DeploymentUtility : DeploymentUtilityBase
 {
     public DeploymentUtility()
@@ -56,7 +56,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
     }
 
     /// <summary>
-    /// Get root deployment directory
+    /// Get root deployment directory.
     /// </summary>
     /// <param name="baseDirectory">The base directory.</param>
     /// <returns>Root deployment directory.</returns>

@@ -1,13 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 /// <summary>
 /// A testable implementation of reflect helper.
@@ -19,7 +20,7 @@ internal class TestableReflectHelper : ReflectHelper
     /// the Type of custom attribute and the level its applied at :
     /// MemberTypes.All for assembly level
     /// MemberTypes.TypeInfo for class level
-    /// MemberTypes.Method for method level
+    /// MemberTypes.Method for method level.
     /// </summary>
     private readonly Dictionary<int, Attribute[]> _customAttributes;
 

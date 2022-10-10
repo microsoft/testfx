@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTestV2.CLIAutomation;
-
 using System.Xml;
+
+namespace Microsoft.MSTestV2.CLIAutomation;
 
 /// <summary>
 /// Stores information about a run setting.
@@ -16,7 +16,7 @@ public class RunConfiguration
     public string SettingsName { get; set; }
 
     /// <summary>
-    /// Gets the paths at which engine should look for test adapters
+    /// Gets the paths at which engine should look for test adapters.
     /// </summary>
     public string[] TestAdaptersPaths { get; }
 

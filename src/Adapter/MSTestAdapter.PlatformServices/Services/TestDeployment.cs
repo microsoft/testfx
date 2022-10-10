@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -20,6 +18,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
 /// The test deployment.
@@ -241,7 +241,7 @@ public class TestDeployment : ITestDeployment
     }
 
     /// <summary>
-    /// Returns whether deployment can happen or not
+    /// Returns whether deployment can happen or not.
     /// </summary>
     /// <returns>True if deployment can be done.</returns>
     private bool CanDeploy()

@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 /// <summary>
 /// Contains the discovery logic for this adapter.
@@ -30,7 +31,7 @@ public class MSTestDiscoverer : ITestDiscoverer
     /// <param name="logger">Logger used to log messages.</param>
     /// <param name="discoverySink">Used to send testcases and discovery related events back to Discoverer manager.</param>
     [System.Security.SecurityCritical]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification ="Discovery context can be null.")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "Discovery context can be null.")]
     public void DiscoverTests(
         IEnumerable<string> sources,
         IDiscoveryContext discoveryContext,
@@ -69,7 +70,7 @@ public class MSTestDiscoverer : ITestDiscoverer
     /// <summary>
     /// Verifies if the sources are valid for the target platform.
     /// </summary>
-    /// <param name="sources">The test sources</param>
+    /// <param name="sources">The test sources.</param>
     /// <remarks>Sources cannot be null.</remarks>
     /// <returns>True if the source has a valid extension for the current platform.</returns>
     internal static bool AreValidSources(IEnumerable<string> sources)

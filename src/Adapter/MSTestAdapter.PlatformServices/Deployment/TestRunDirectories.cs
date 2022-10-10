@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
-
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+
+#if !WINDOWS_UWP
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
 /// <summary>
 /// The test run directories.
@@ -40,12 +40,12 @@ public class TestRunDirectories
     }
 
     /// <summary>
-    /// Gets or sets the root deployment directory
+    /// Gets or sets the root deployment directory.
     /// </summary>
     public string RootDeploymentDirectory { get; set; }
 
     /// <summary>
-    /// Gets the In directory
+    /// Gets the In directory.
     /// </summary>
     public string InDirectory
     {
@@ -56,7 +56,7 @@ public class TestRunDirectories
     }
 
     /// <summary>
-    /// Gets the Out directory
+    /// Gets the Out directory.
     /// </summary>
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string OutDirectory
@@ -72,7 +72,7 @@ public class TestRunDirectories
     }
 
     /// <summary>
-    /// Gets In\MachineName directory
+    /// Gets In\MachineName directory.
     /// </summary>
     public string InMachineNameDirectory
     {

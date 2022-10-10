@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 [Serializable]
 [DebuggerDisplay("{DisplayName} ({Outcome})")]
 public class UnitTestResult
@@ -57,57 +56,57 @@ public class UnitTestResult
     }
 
     /// <summary>
-    /// Gets the display name for the result
+    /// Gets the display name for the result.
     /// </summary>
     public string DisplayName { get; internal set; }
 
     /// <summary>
-    /// Gets the outcome of the result
+    /// Gets the outcome of the result.
     /// </summary>
     public UnitTestOutcome Outcome { get; internal set; }
 
     /// <summary>
-    /// Gets the errorMessage of the result
+    /// Gets the errorMessage of the result.
     /// </summary>
     public string ErrorMessage { get; internal set; }
 
     /// <summary>
-    /// Gets the stackTrace of the result
+    /// Gets the stackTrace of the result.
     /// </summary>
     public string ErrorStackTrace { get; internal set; }
 
     /// <summary>
-    /// Gets the execution id of the result
+    /// Gets the execution id of the result.
     /// </summary>
     public Guid ExecutionId { get; internal set; }
 
     /// <summary>
-    /// Gets the parent execution id of the result
+    /// Gets the parent execution id of the result.
     /// </summary>
     public Guid ParentExecId { get; internal set; }
 
     /// <summary>
-    /// Gets the inner results count of the result
+    /// Gets the inner results count of the result.
     /// </summary>
     public int InnerResultsCount { get; internal set; }
 
     /// <summary>
-    /// Gets the duration of the result
+    /// Gets the duration of the result.
     /// </summary>
     public TimeSpan Duration { get; internal set; }
 
     /// <summary>
-    /// Gets the standard output of the result
+    /// Gets the standard output of the result.
     /// </summary>
     public string StandardOut { get; internal set; }
 
     /// <summary>
-    /// Gets the Standard Error of the result
+    /// Gets the Standard Error of the result.
     /// </summary>
     public string StandardError { get; internal set; }
 
     /// <summary>
-    /// Gets the debug trace of the result
+    /// Gets the debug trace of the result.
     /// </summary>
     public string DebugTrace { get; internal set; }
 
@@ -143,7 +142,7 @@ public class UnitTestResult
     public IList<string> ResultFiles { get; internal set; }
 
     /// <summary>
-    /// Convert parameter unitTestResult to testResult
+    /// Convert parameter unitTestResult to testResult.
     /// </summary>
     /// <param name="testCase"> The test Case. </param>
     /// <param name="startTime"> The start Time. </param>
@@ -162,7 +161,7 @@ public class UnitTestResult
             ErrorStackTrace = ErrorStackTrace,
             Outcome = UnitTestOutcomeHelper.ToTestOutcome(Outcome, currentSettings),
             StartTime = startTime,
-            EndTime = endTime
+            EndTime = endTime,
         };
 
         testResult.SetPropertyValue<Guid>(Constants.ExecutionIdProperty, ExecutionId);

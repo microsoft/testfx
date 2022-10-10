@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,8 +10,10 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+
 /// <summary>
-/// Extension Methods for TestCase Class
+/// Extension Methods for TestCase Class.
 /// </summary>
 internal static class TestCaseExtensions
 {
@@ -48,7 +48,7 @@ internal static class TestCaseExtensions
         owner: typeof(TestCase));
 
     /// <summary>
-    /// The test name
+    /// The test name.
     /// </summary>
     /// <param name="testCase"> The test case. </param>
     /// <param name="testClassName"> The test case's class name. </param>
@@ -108,7 +108,7 @@ internal static class TestCaseExtensions
             IsAsync = isAsync,
             TestCategory = testCase.GetPropertyValue(Constants.TestCategoryProperty) as string[],
             Priority = testCase.GetPropertyValue(Constants.PriorityProperty) as int?,
-            DisplayName = testCase.DisplayName
+            DisplayName = testCase.DisplayName,
         };
 
         if (testCase.Traits.Any())

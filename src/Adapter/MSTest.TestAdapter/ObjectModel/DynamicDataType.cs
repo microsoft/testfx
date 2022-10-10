@@ -3,9 +3,23 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
+/// <summary>
+/// The kind of dynamic data.
+/// </summary>
 internal enum DynamicDataType : int
 {
+    /// <summary>
+    /// Not a dynamic data.
+    /// </summary>
     None = 0,
+
+    /// <summary>
+    /// Dynamic data from <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute"/>.
+    /// </summary>
     DataSourceAttribute = 1,
-    ITestDataSource = 2
+
+    /// <summary>
+    /// Dynamic data from <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource"/>.
+    /// </summary>
+    ITestDataSource = 2,
 }

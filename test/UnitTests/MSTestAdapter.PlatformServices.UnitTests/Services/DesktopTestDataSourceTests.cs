@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
-namespace MSTestAdapter.PlatformServices.UnitTests.Services;
-
 using System.Collections.Generic;
 using System.Data;
 
@@ -18,6 +15,8 @@ using TestFramework.ForTestingMSTest;
 
 using ITestMethod = Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod;
 
+#if NET462
+namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 public class DesktopTestDataSourceTests : TestContainer
 {
     private readonly Mock<ITestMethod> _mockTestMethodInfo;
@@ -68,7 +67,7 @@ public class DesktopTestDataSourceTests : TestContainer
         _mockTestContext.Verify(tc => tc.SetDataConnection(It.IsAny<object>()), Times.Once);
     }
 
-    #region Dummy implementation
+#region Dummy implementation
 
     public class DummyTestClass
     {
@@ -83,19 +82,19 @@ public class DesktopTestDataSourceTests : TestContainer
         [TestMethod]
         public void PassingTest()
         {
-            Verify("v1" == _testContextInstance.DataRow["adapter"].ToString());
-            Verify("x86" == _testContextInstance.DataRow["targetPlatform"].ToString());
+            Verify(_testContextInstance.DataRow["adapter"].ToString() == "v1");
+            Verify(_testContextInstance.DataRow["targetPlatform"].ToString() == "x86");
             TestContext.AddResultFile("C:\\temp.txt");
         }
 
         [TestMethod]
         public void FailingTest()
         {
-            Verify("Release" == _testContextInstance.DataRow["configuration"].ToString());
+            Verify(_testContextInstance.DataRow["configuration"].ToString() == "Release");
         }
     }
 
-#endregion
+    #endregion
 }
 
 #endif

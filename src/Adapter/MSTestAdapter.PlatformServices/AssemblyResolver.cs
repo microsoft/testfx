@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,6 +13,8 @@ using System.Security;
 using System.Security.Permissions;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
 /// Helps resolve MSTestFramework assemblies for CLR loader.
@@ -72,7 +72,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// Initializes a new instance of the <see cref="AssemblyResolver"/> class.
     /// </summary>
     /// <param name="directories">
-    /// A list of directories for resolution path
+    /// A list of directories for resolution path.
     /// </param>
     /// <remarks>
     /// If there are additional paths where a recursive search is required

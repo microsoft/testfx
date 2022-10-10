@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -20,10 +18,12 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
 /// <summary>
 /// Internal implementation of TestContext exposed to the user.
 /// The virtual string properties of the TestContext are retrieved from the property dictionary
-/// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName");
+/// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName").
 /// </summary>
 public class TestContextImplementation : UTF.TestContext, ITestContext
 {
@@ -36,44 +36,44 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 
 #if !WINDOWS_UWP
     /// <summary>
-    /// List of result files associated with the test
+    /// List of result files associated with the test.
     /// </summary>
     private readonly IList<string> _testResultFiles;
 #endif
 
     /// <summary>
-    /// Properties
-    /// </summary>
-    private IDictionary<string, object> _properties;
-
-    /// <summary>
-    /// Unit test outcome
-    /// </summary>
-    private UTF.UnitTestOutcome _outcome;
-
-    /// <summary>
-    /// Writer on which the messages given by the user should be written
+    /// Writer on which the messages given by the user should be written.
     /// </summary>
     private readonly ThreadSafeStringWriter _threadSafeStringWriter;
 
     /// <summary>
-    /// Specifies whether the writer is disposed or not
+    /// Test Method.
+    /// </summary>
+    private readonly ITestMethod _testMethod;
+
+    /// <summary>
+    /// Specifies whether the writer is disposed or not.
     /// </summary>
     private bool _stringWriterDisposed = false;
 
     /// <summary>
-    /// Test Method
+    /// Properties.
     /// </summary>
-    private readonly ITestMethod _testMethod;
+    private IDictionary<string, object> _properties;
+
+    /// <summary>
+    /// Unit test outcome.
+    /// </summary>
+    private UTF.UnitTestOutcome _outcome;
 
 #if NETFRAMEWORK
     /// <summary>
-    /// DB connection for test context
+    /// DB connection for test context.
     /// </summary>
     private DbConnection _dbConnection;
 
     /// <summary>
-    /// Data row for TestContext
+    /// Data row for TestContext.
     /// </summary>
     private DataRow _dataRow;
 #endif
@@ -92,7 +92,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 #if NETFRAMEWORK
         Debug.Assert(stringWriter != null, "StringWriter is not null");
 #endif
-        
+
         Debug.Assert(stringWriter is ThreadSafeStringWriter, "Was expected stringWriter to be a ThreadSafeStringWriter");
 
         _testMethod = testMethod;
@@ -404,7 +404,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     }
 
     /// <summary>
-    /// Set the unit-test outcome
+    /// Set the unit-test outcome.
     /// </summary>
     /// <param name="outcome">The test outcome.</param>
     public void SetOutcome(UTF.UnitTestOutcome outcome)
@@ -428,7 +428,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     }
 
     /// <summary>
-    /// Set connection for TestContext
+    /// Set connection for TestContext.
     /// </summary>
     /// <param name="dbConnection">db Connection.</param>
     public void SetDataConnection(object dbConnection)
@@ -439,7 +439,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     }
 
     /// <summary>
-    /// Returns whether property with parameter name is present or not
+    /// Returns whether property with parameter name is present or not.
     /// </summary>
     /// <param name="propertyName">The property name.</param>
     /// <param name="propertyValue">The property value.</param>
@@ -456,7 +456,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     }
 
     /// <summary>
-    /// Adds the parameter name/value pair to property bag
+    /// Adds the parameter name/value pair to property bag.
     /// </summary>
     /// <param name="propertyName">The property name.</param>
     /// <param name="propertyValue">The property value.</param>
@@ -468,7 +468,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     }
 
     /// <summary>
-    /// Result files attached
+    /// Result files attached.
     /// </summary>
     /// <returns>Results files generated in run.</returns>
     public IList<string> GetResultFiles()
@@ -492,7 +492,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     }
 
     /// <summary>
-    /// Gets messages from the testContext writeLines
+    /// Gets messages from the testContext writeLines.
     /// </summary>
     /// <returns>The test context messages added so far.</returns>
     public string GetDiagnosticMessages()
@@ -514,8 +514,8 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <summary>
     /// Helper to safely fetch a property value.
     /// </summary>
-    /// <param name="propertyName">Property Name</param>
-    /// <returns>Property value</returns>
+    /// <param name="propertyName">Property Name.</param>
+    /// <returns>Property value.</returns>
     private object GetPropertyValue(string propertyName)
     {
         _properties.TryGetValue(propertyName, out var propertyValue);
@@ -526,10 +526,10 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 
 #if NETFRAMEWORK
     /// <summary>
-    /// Converts the parameter outcome to UTF outcome
+    /// Converts the parameter outcome to UTF outcome.
     /// </summary>
     /// <param name="outcome">The UTF outcome.</param>
-    /// <returns>test outcome</returns>
+    /// <returns>test outcome.</returns>
     private static UTF.UnitTestOutcome ToUTF(UTF.UnitTestOutcome outcome)
     {
         switch (outcome)
@@ -553,8 +553,8 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <summary>
     /// Helper to safely fetch a property value.
     /// </summary>
-    /// <param name="propertyName">Property Name</param>
-    /// <returns>Property value</returns>
+    /// <param name="propertyName">Property Name.</param>
+    /// <returns>Property value.</returns>
     private string GetStringPropertyValue(string propertyName)
     {
         _properties.TryGetValue(propertyName, out var propertyValue);
