@@ -23,7 +23,7 @@ public class SuiteLifeCycleTests : CLITestBase
     private void ValidateTestRunLifecycle(string targetFramework)
     {
         InvokeVsTestForExecution(new[] { targetFramework + "\\" + Assembly }, targetFramework: targetFramework);
-        Verify(_runEventsHandler.PassedTests.Count == 1);
+        Verify(_runEventsHandler.PassedTests.Count == 3);
 
         var testMethod = _runEventsHandler.PassedTests.Single();
         Verify(testMethod.Outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
