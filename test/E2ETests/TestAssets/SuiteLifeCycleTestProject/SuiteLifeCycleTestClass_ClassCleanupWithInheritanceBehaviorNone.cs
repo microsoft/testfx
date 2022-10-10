@@ -12,7 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace SuiteLifeCycleTestProject;
 
 [TestClass]
-public sealed class SuiteLifeCycleTestClass : IDisposable
+public sealed class SuiteLifeCycleTestClass_ClassCleanupWithInheritanceBehaviorNone : IDisposable
 #if NET6_0_OR_GREATER
         , IAsyncDisposable 
 #endif
@@ -21,7 +21,7 @@ public sealed class SuiteLifeCycleTestClass : IDisposable
 
     public TestContext TestContext { get; set; }
 
-    public SuiteLifeCycleTestClass()
+    public SuiteLifeCycleTestClass_ClassCleanupWithInheritanceBehaviorNone()
     {
         s_testContext.WriteLine("Ctor was called");
     }
@@ -64,7 +64,7 @@ public sealed class SuiteLifeCycleTestClass : IDisposable
     }
 #endif
 
-    [ClassCleanup]
+    [ClassCleanup(InheritanceBehavior.None)]
     public static void ClassCleanup()
     {
         s_testContext.WriteLine("ClassCleanup was called");
