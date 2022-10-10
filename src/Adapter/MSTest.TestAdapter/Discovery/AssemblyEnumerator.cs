@@ -18,7 +18,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using FrameworkITestDataSource = TestTools.UnitTesting.ITestDataSource;
+using FrameworkITestDataSource = Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 

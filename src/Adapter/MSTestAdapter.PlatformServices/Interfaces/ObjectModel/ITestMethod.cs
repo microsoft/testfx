@@ -3,6 +3,8 @@
 
 using System.Collections.Generic;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
 /// <summary>

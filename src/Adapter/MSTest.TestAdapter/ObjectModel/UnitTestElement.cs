@@ -250,15 +250,14 @@ internal class UnitTestElement
         }
 
         return testCase;
-    }    
+    }
 
     private Guid GenerateTestId(TestCase testCase, string fileName, bool appendData)
     {
-        if (!Debugger.IsAttached) Debugger.Launch();
         var idProvider = new TestIdProvider();
         idProvider.AppendString(testCase.ExecutorUri?.ToString());
         idProvider.AppendString(fileName);
-        
+
         if (TestMethod.HasManagedMethodAndTypeProperties)
         {
             idProvider.AppendString(TestMethod.ManagedTypeName);

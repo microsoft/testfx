@@ -18,7 +18,7 @@ public enum TestIdGenerationStrategy
     Legacy = 1,
 
     /// <summary>
-    /// Uses the test display name to generate the test ID. 
+    /// Uses the test display name to generate the test ID.
     /// </summary>
     /// <remarks>
     /// This is the default behavior between versions 2.2.4 and 3.0.0.

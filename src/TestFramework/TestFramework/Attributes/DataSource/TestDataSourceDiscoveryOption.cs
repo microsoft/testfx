@@ -22,5 +22,5 @@ public enum TestDataSourceDiscoveryOption
     /// <remarks>
     /// This is the default behavior after version 2.2.3.
     /// </remarks>
-    DuringDiscovery = 2
+    DuringDiscovery = 2,
 }

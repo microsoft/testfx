@@ -19,7 +19,6 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 public class TypeEnumeratorTests : TestContainer
 {

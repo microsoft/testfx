@@ -446,7 +446,6 @@ internal class TestMethodRunner
     /// Add parent results as first result in updated result.
     /// </summary>
     /// <param name="results">Results.</param>
-    /// <param name="executionId">Current execution id.</param>
     /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
     private static List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results)
     {
@@ -459,7 +458,7 @@ internal class TestMethodRunner
         // UpdatedResults contain parent result at first position and remaining results has parent info updated.
         var updatedResults = new List<UTF.TestResult>();
 
-        foreach (var result in results) 
+        foreach (var result in results)
         {
             result.ExecutionId = Guid.NewGuid();
             result.ParentExecId = Guid.NewGuid();
@@ -477,7 +476,8 @@ internal class TestMethodRunner
     /// <param name="results">Results.</param>
     /// <param name="parentResult">Parent results.</param>
     /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
-    private static List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results,
+    private static List<UTF.TestResult> UpdateResultsWithParentInfo(
+        List<UTF.TestResult> results,
         UTF.TestResult parentResult)
     {
         // Return results in case there are no results.

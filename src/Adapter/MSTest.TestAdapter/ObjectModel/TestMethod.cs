@@ -9,9 +9,10 @@ using System.Reflection;
 
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
-using TestIdGenerationStrategy = TestTools.UnitTesting.TestIdGenerationStrategy;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+
+using TestIdGenerationStrategy = Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
