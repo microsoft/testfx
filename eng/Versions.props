@@ -58,7 +58,7 @@
     <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
     <!-- Code analyzers -->
     <StyleCopAnalyzersVersion>1.0.0</StyleCopAnalyzersVersion>
-    <RoslynPublicApiAnalyzersVersion>3.3.4-beta1.21554.2</RoslynPublicApiAnalyzersVersion>
+    <RoslynPublicApiAnalyzersVersion>3.3.4-beta1.22403.2</RoslynPublicApiAnalyzersVersion>
     <!-- Libs -->
     <CommandLineParserVersion>2.2.1</CommandLineParserVersion>
     <CredentialManagementVersion>1.0.2</CredentialManagementVersion>
