@@ -119,7 +119,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource.GetDisplayName(Syst
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.Arguments.get -> object[]
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.GetAllAttributes(bool inherit) -> System.Attribute[]
-Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.GetAttributes<AttributeType>(bool inherit) -> AttributeType[]
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.GetAttributes<TAttributeType>(bool inherit) -> TAttributeType[]
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.Invoke(object[] arguments) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.MethodInfo.get -> System.Reflection.MethodInfo
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod.ParameterTypes.get -> System.Reflection.ParameterInfo[]
