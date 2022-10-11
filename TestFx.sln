@@ -188,7 +188,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Net6", "Net6", "{35D010CC-C
 		src\Adapter\Build\Net6\MSTest.TestFramework.targets = src\Adapter\Build\Net6\MSTest.TestFramework.targets
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReferencedProjectFromDataSourceTest", "test\E2ETests\TestAssets\ReferencedProjectFromDataSourceTest\ReferencedProjectFromDataSourceTest.csproj", "{6B4DE65C-4162-4C52-836A-8F9FA901814A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibProjectReferencedByDataSourceTest", "test\E2ETests\TestAssets\LibProjectReferencedByDataSourceTest\LibProjectReferencedByDataSourceTest.csproj", "{6B4DE65C-4162-4C52-836A-8F9FA901814A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiscoverInternalsProject", "test\E2ETests\TestAssets\DiscoverInternalsProject\DiscoverInternalsProject.csproj", "{44A504D9-A0D6-427D-BFB2-DB144A74F0D5}"
 EndProject
@@ -197,6 +197,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFramework.ForTestingMSTest", "test\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj", "{0685FBC3-C3A9-43A9-B15C-15BAA39705FE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HierarchyProject", "test\E2ETests\TestAssets\HierarchyProject\HierarchyProject.csproj", "{94A4DAA8-9645-4161-91F6-11EB1AD70EFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicDataTestProject", "test\E2ETests\TestAssets\DynamicDataTestProject\DynamicDataTestProject.csproj", "{B90E0931-2E90-4CE9-B107-ECD8E40C6B6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -344,6 +346,10 @@ Global
 		{94A4DAA8-9645-4161-91F6-11EB1AD70EFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94A4DAA8-9645-4161-91F6-11EB1AD70EFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94A4DAA8-9645-4161-91F6-11EB1AD70EFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B90E0931-2E90-4CE9-B107-ECD8E40C6B6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B90E0931-2E90-4CE9-B107-ECD8E40C6B6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B90E0931-2E90-4CE9-B107-ECD8E40C6B6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B90E0931-2E90-4CE9-B107-ECD8E40C6B6C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -403,6 +409,7 @@ Global
 		{66608D86-416A-49AF-A937-C47F7E4586AE} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
 		{0685FBC3-C3A9-43A9-B15C-15BAA39705FE} = {33D3029D-E653-4929-BB31-C714178C4BEE}
 		{94A4DAA8-9645-4161-91F6-11EB1AD70EFC} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
+		{B90E0931-2E90-4CE9-B107-ECD8E40C6B6C} = {D53BD452-F69F-4FB3-8B98-386EDA28A4C8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}
