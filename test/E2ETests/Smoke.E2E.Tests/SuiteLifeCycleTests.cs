@@ -28,7 +28,7 @@ public class SuiteLifeCycleTests : CLITestBase
         foreach (var testMethod in _runEventsHandler.PassedTests)
         {
             Verify(testMethod.Outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-            // Class cleanup doesn't appear in the logs becouse it's happing after retriving the result. 
+            // Class cleanup doesn't appear in the logs because it's happing after retrieving the result. 
             if (targetFramework == "net462")
             {
                 Verify(testMethod.Messages.Single().Text.Contains(
