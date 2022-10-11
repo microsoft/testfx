@@ -23,13 +23,20 @@ public class SuiteLifeCycleTests : CLITestBase
     private void ValidateTestRunLifecycle(string targetFramework)
     {
         InvokeVsTestForExecution(new[] { targetFramework + "\\" + Assembly }, targetFramework: targetFramework);
-        Verify(RunEventsHandler.PassedTests.Count == 3);
+        Verify(RunEventsHandler.PassedTests.Count == 4);
 
+        int noOfassemblyInitCalled = 0;
+        bool isClassCleanupCalled = false;
+        bool isAssemblyCleanupCalled = false;
         foreach (var testMethod in RunEventsHandler.PassedTests)
         {
             Verify(testMethod.Outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
 
-            // Class cleanup doesn't appear in the logs because it's happing after retrieving the result.
+            noOfassemblyInitCalled += testMethod.Messages.Single().Text.Contains("AssemblyInit was called") ? 1 : 0;
+            isClassCleanupCalled |= testMethod.Messages.Single().Text.Contains("ClassCleanup was called");
+            isAssemblyCleanupCalled |= testMethod.Messages.Single().Text.Contains("AssemblyCleanup was called");
+
+            // Assembly and Class cleanup doesn't appear in the logs because it's happing after retrieving the result.
             if (targetFramework == "net462")
             {
                 Verify(testMethod.Messages.Single().Text.Contains(
@@ -56,5 +63,9 @@ public class SuiteLifeCycleTests : CLITestBase
                     """));
             }
         }
+
+        Verify(noOfassemblyInitCalled == 1);
+        Verify(!isClassCleanupCalled);
+        Verify(!isAssemblyCleanupCalled);
     }
 }
