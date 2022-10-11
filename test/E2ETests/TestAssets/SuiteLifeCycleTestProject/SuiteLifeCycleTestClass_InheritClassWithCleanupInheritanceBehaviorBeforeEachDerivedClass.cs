@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace SuiteLifeCycleTestProject;
 
 [TestClass]
-public sealed class SuiteLifeCycleTestClass_InheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass : SuiteLifeCycleTestClass_ClassCleanupWithInheritanceBehaviorBeforeEachDerivedClass
+public sealed class SuiteLifeCycleTestClass_InheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass : SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBehaviorBeforeEachDerivedClass
 {
     private static TestContext s_testContext;
 

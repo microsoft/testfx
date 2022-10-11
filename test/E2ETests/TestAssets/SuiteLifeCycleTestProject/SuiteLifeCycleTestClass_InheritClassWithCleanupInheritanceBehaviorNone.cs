@@ -9,13 +9,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace SuiteLifeCycleTestProject;
 
 [TestClass]
-public sealed class SuiteLifeCycleTestClass_InheretClassWithCleanupInheritanceBehaviorNone : SuiteLifeCycleTestClass_ClassCleanupWithInheritanceBehaviorNone
+public sealed class SuiteLifeCycleTestClass_InheritClassWithCleanupInheritanceBehaviorNone : SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBehaviorNone
 {
     private static TestContext s_testContext;
 
     public TestContext DerivedClassTestContext { get; set; }
 
-    public SuiteLifeCycleTestClass_InheretClassWithCleanupInheritanceBehaviorNone()
+    public SuiteLifeCycleTestClass_InheritClassWithCleanupInheritanceBehaviorNone()
     {
         s_testContext.WriteLine("Derived class Ctor was called");
     }
